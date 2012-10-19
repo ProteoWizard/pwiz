@@ -145,6 +145,17 @@ namespace pwiz.Skyline.Model
                     {
                         if (!allowDuplicates)
                             listMasses.Add(modArr);
+                        double mass;
+                        string massString = Encoding.Default.GetString(modArr);
+                        if (!double.TryParse(massString,
+                                             NumberStyles.Float | NumberStyles.AllowThousands,
+                                             CultureInfo.InvariantCulture,
+                                             out mass))
+                        {
+                            // Get more information on a failure that was posted to the exception web page
+                            throw new FormatException(string.Format("The number '{0}' is not in the correct format.", massString));
+                        }
+
                         yield return new AAModInfo
                         {
                             IndexAA = indexAA,
@@ -153,7 +164,7 @@ namespace pwiz.Skyline.Model
                                 AA = (char)prevAA,
                                 Terminus = terminus,
                                 AppearsToBeSpecificMod = isSpecificHeavy,
-                                Mass = double.Parse(Encoding.Default.GetString(modArr), CultureInfo.InvariantCulture),
+                                Mass = mass,
                                 RoundedTo = 1
                             }
                         };
@@ -270,6 +281,9 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode GetModifiedNode(LibKey key, string seqUnmod, SrmSettings settings, SrmSettingsDiff diff)
         {
+            if (string.IsNullOrEmpty(seqUnmod))
+                return null;
+
             var peptide = new Peptide(null, seqUnmod, null, null,
                                   settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
             // First try and create the match from the settings created to match the library explorer.

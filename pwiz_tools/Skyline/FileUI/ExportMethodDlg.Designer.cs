@@ -58,8 +58,13 @@
             this.labelMethodNum = new System.Windows.Forms.Label();
             this.panelThermoColumns = new System.Windows.Forms.Panel();
             this.panelAbSciexTOF = new System.Windows.Forms.Panel();
+            this.panelTriggered = new System.Windows.Forms.Panel();
+            this.textPrimaryCount = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
+            this.panelTriggered.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -124,9 +129,6 @@
             // 
             this.comboTargetType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboTargetType.FormattingEnabled = true;
-            this.comboTargetType.Items.AddRange(new object[] {
-            resources.GetString("comboTargetType.Items"),
-            resources.GetString("comboTargetType.Items1")});
             resources.ApplyResources(this.comboTargetType, "comboTargetType");
             this.comboTargetType.Name = "comboTargetType";
             this.comboTargetType.SelectedIndexChanged += new System.EventHandler(this.comboTargetType_SelectedIndexChanged);
@@ -252,12 +254,37 @@
             resources.ApplyResources(this.panelAbSciexTOF, "panelAbSciexTOF");
             this.panelAbSciexTOF.Name = "panelAbSciexTOF";
             // 
+            // panelTriggered
+            // 
+            this.panelTriggered.Controls.Add(this.textPrimaryCount);
+            this.panelTriggered.Controls.Add(this.label5);
+            this.panelTriggered.Controls.Add(this.label3);
+            resources.ApplyResources(this.panelTriggered, "panelTriggered");
+            this.panelTriggered.Name = "panelTriggered";
+            // 
+            // textPrimaryCount
+            // 
+            resources.ApplyResources(this.textPrimaryCount, "textPrimaryCount");
+            this.textPrimaryCount.Name = "textPrimaryCount";
+            this.textPrimaryCount.TextChanged += new System.EventHandler(this.textPrimaryCount_TextChanged);
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.panelTriggered);
             this.Controls.Add(this.labelMethodNum);
             this.Controls.Add(this.labelMethods);
             this.Controls.Add(this.label1);
@@ -292,6 +319,8 @@
             this.panelThermoColumns.PerformLayout();
             this.panelAbSciexTOF.ResumeLayout(false);
             this.panelAbSciexTOF.PerformLayout();
+            this.panelTriggered.ResumeLayout(false);
+            this.panelTriggered.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -327,5 +356,9 @@
         private System.Windows.Forms.Panel panelThermoColumns;
         private System.Windows.Forms.Panel panelAbSciexTOF;
         private System.Windows.Forms.CheckBox cbExportMultiQuant;
+        private System.Windows.Forms.Panel panelTriggered;
+        private System.Windows.Forms.TextBox textPrimaryCount;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label3;
     }
 }

@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// of ions are covered:
     /// <list type="numbered">
     /// <item>Special fragment ions, which use terms similar to enzyme cleave to express
-    /// where they occur in peptids</item>
+    /// where they occur in peptides</item>
     /// <item>Reporter ions, which can be free form chemical formulas or even constant masses</item>
     /// </list>
     /// </summary>

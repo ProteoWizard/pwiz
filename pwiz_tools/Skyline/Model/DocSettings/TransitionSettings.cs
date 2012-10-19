@@ -256,26 +256,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static OptimizedMethodType GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (OptimizedMethodType)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<OptimizedMethodType>(enumValue, LOCALIZED_VALUES);
         }
 
         public static OptimizedMethodType GetEnum(string enumValue, OptimizedMethodType defaultValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (OptimizedMethodType)i;
-                }
-            }
-            return defaultValue;
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
         }  
     }
 
@@ -327,32 +313,27 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionPrediction ChangePrecursorMassType(MassType prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.PrecursorMassType = v, prop);
+            return ChangeProp(ImClone(this), im => im.PrecursorMassType = prop);
         }
 
         public TransitionPrediction ChangeFragmentMassType(MassType prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.FragmentMassType = v, prop);
+            return ChangeProp(ImClone(this), im => im.FragmentMassType = prop);
         }
 
         public TransitionPrediction ChangeCollisionEnergy(CollisionEnergyRegression prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.CollisionEnergy = v, prop);
+            return ChangeProp(ImClone(this), im => im.CollisionEnergy = prop);
         }
 
         public TransitionPrediction ChangeDeclusteringPotential(DeclusteringPotentialRegression prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.DeclusteringPotential = v, prop);
+            return ChangeProp(ImClone(this), im => im.DeclusteringPotential = prop);
         }
 
         public TransitionPrediction ChangeOptimizedMethodType(OptimizedMethodType prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.OptimizedMethodType = v, prop);
-        }
-        
-        public TransitionPrediction ChangeRetentionTime(RetentionTimeRegression prop)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.RetentionTime = v, prop);
+            return ChangeProp(ImClone(this), im => im.OptimizedMethodType = prop);
         }
 
         #endregion
@@ -1347,26 +1328,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static FullScanAcquisitionMethod GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (FullScanAcquisitionMethod)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<FullScanAcquisitionMethod>(enumValue, LOCALIZED_VALUES);
         }
 
         public static FullScanAcquisitionMethod GetEnum(string enumValue, FullScanAcquisitionMethod defaultEnum)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (FullScanAcquisitionMethod)i;
-                }
-            }
-            return defaultEnum;
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultEnum);
         }
     }
     public enum FullScanPrecursorIsotopes { None, Count, Percent }
@@ -1385,26 +1352,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static FullScanPrecursorIsotopes GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (FullScanPrecursorIsotopes)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<FullScanPrecursorIsotopes>(enumValue, LOCALIZED_VALUES);
         }
 
         public static FullScanPrecursorIsotopes GetEnum(string enumValue, FullScanPrecursorIsotopes defaultEnum)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (FullScanPrecursorIsotopes)i;
-                }
-            }
-            return defaultEnum;
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultEnum);
         }
     }
 // ReSharper restore InconsistentNaming

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -195,6 +196,27 @@ namespace pwiz.Skyline.Model
                 }
             }
             return null;
+        }
+
+        public int? GetRank(TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran, int? replicateIndex)
+        {
+            if (nodeGroupPrimary == null || ReferenceEquals(this, nodeGroupPrimary))
+                return nodeTran.GetRank(replicateIndex, HasResultRanks);
+
+            var nodeTranEquivalent = nodeGroupPrimary.FindEquivalentTransition(nodeTran);
+            if (nodeTranEquivalent == null)
+                return null;
+            return nodeTranEquivalent.GetRank(replicateIndex, nodeGroupPrimary.HasResultRanks);
+        }
+
+        public bool HasLibRanks
+        {
+            get { return Transitions.Any(nodeTran => nodeTran.HasLibInfo && nodeTran.LibInfo.Rank > 0); }
+        }
+
+        public bool HasResultRanks
+        {
+            get { return Transitions.Any(nodeTran => nodeTran.ResultsRank.HasValue); }
         }
 
         public float? GetPeakCountRatio(int i)
@@ -800,10 +822,20 @@ namespace pwiz.Skyline.Model
                 return false;
             for (int i = 0; i < children1.Count; i++)
             {
-                if (!Equals(((TransitionDocNode)children1[i]).Key, ((TransitionDocNode)children2[i]).Key))
+                TransitionDocNode nodeTran1 = (TransitionDocNode)children1[i];
+                TransitionDocNode nodeTran2 = (TransitionDocNode)children2[i];
+                if (!nodeTran1.Transition.Equivalent(nodeTran2.Transition))
+                    return false;
+                // Losses must also be equal
+                if (!Equals(nodeTran1.Losses, nodeTran2.Losses))
                     return false;
             }
             return true;
+        }
+
+        private TransitionDocNode FindEquivalentTransition(TransitionDocNode nodeTran)
+        {
+            return Transitions.FirstOrDefault(t => t.Key.Equivalent(nodeTran.Key));
         }
 
         private Dictionary<TransitionLossKey, DocNode> CreateTransitionLossToChildMap()
@@ -1145,7 +1177,7 @@ namespace pwiz.Skyline.Model
         {
             private readonly TransitionGroupDocNode _nodeGroup;
             private readonly List<TransitionGroupChromInfoListCalculator> _listResultCalcs;
-            private readonly List<IList<TransitionChromInfo>>[] _arrayChromInfoSets;
+            private readonly TransitionChromInfoSet[] _arrayTransitionChromInfoSets;
             // Allow look-up of former result position
             private readonly Dictionary<int, int> _dictChromIdIndex;
 
@@ -1163,23 +1195,23 @@ namespace pwiz.Skyline.Model
                 int countTransitions = nodeGroup.Children.Count;
                 Debug.Assert(countTransitions > 0);
                 _listResultCalcs = new List<TransitionGroupChromInfoListCalculator>();
-                _arrayChromInfoSets = new List<IList<TransitionChromInfo>>[countTransitions];
+                _arrayTransitionChromInfoSets = new TransitionChromInfoSet[countTransitions];
                 for (int iTran = 0; iTran < countTransitions; iTran++)
-                    _arrayChromInfoSets[iTran] = new List<IList<TransitionChromInfo>>();
+                    _arrayTransitionChromInfoSets[iTran] = new TransitionChromInfoSet();
             }
 
             private SrmSettings Settings { get; set; }
 
             public void AddTransitionChromInfo(int iTran, IList<TransitionChromInfo> info)
             {
-                var listInfo = _arrayChromInfoSets[iTran];
+                var listInfo = _arrayTransitionChromInfoSets[iTran].ChromInfoLists;
                 int iNext = listInfo.Count;
                 listInfo.Add(info);
 
                 // Make sure the list of group result calculators has iNext entries
                 while (_listResultCalcs.Count <= iNext)
                 {
-                    int transitionCount = _arrayChromInfoSets.Length;
+                    int transitionCount = _arrayTransitionChromInfoSets.Length;
                     ChromInfoList<TransitionGroupChromInfo> listChromInfo = null;
                     int iResult = _listResultCalcs.Count;
                     if (_nodeGroup.HasResults)
@@ -1234,17 +1266,24 @@ namespace pwiz.Skyline.Model
 
             private TransitionDocNode UpdateTranisitionNode(TransitionDocNode nodeTran, int iTran)
             {
-                var listChromInfoLists = _arrayChromInfoSets[iTran];
-                var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, listChromInfoLists);
-                if (Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
-                    return nodeTran;
-                return nodeTran.ChangeResults(results);
+                var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
+                var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
+                if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
+                    nodeTran = nodeTran.ChangeResults(results);
+                if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
+                    nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
+                return nodeTran;
             }
 
             private void RankAndCorrelateTransitions(TransitionGroupDocNode nodeGroup)
             {
-                int countTransitions = _arrayChromInfoSets.Length;
+                int countTransitions = _arrayTransitionChromInfoSets.Length;
+                
                 var arrayRanked = new KeyValuePair<int, TransitionChromInfo>[countTransitions];
+                var arrayRankedAverage = new KeyValuePair<int, MeanArea>[countTransitions];
+                for (int i = 0; i < countTransitions; i++)
+                    arrayRankedAverage[i] = new KeyValuePair<int, MeanArea>(i, new MeanArea());
+
                 bool isFullScanMs = Settings.TransitionSettings.FullScan.IsEnabledMs;
                 double[] peakAreas = null, libIntensities = null;
                 if (nodeGroup.HasLibInfo)
@@ -1268,26 +1307,24 @@ namespace pwiz.Skyline.Model
                         isoProportionsMs = new double[countTransMs];
                     }
                 }
-                for (int i = 0; i < _listResultCalcs.Count; i++)
+                for (int iChrom = 0; iChrom < _listResultCalcs.Count; iChrom++)
                 {
-                    for (int iInfo = 0; /* internal break */ ; iInfo++)
+                    foreach (var fileStep in GetTransitionFileSteps(iChrom).ToArray())
                     {
                         int countInfo = 0, countLibTrans = 0, countIsoTrans = 0;
-                        ChromFileInfoId fileId = null;
-                        int optStep = 0;
+                        ChromFileInfoId fileId = fileStep.FileId;
+                        int optStep = fileStep.OptimizationStep;
                         for (int iTran = 0; iTran < countTransitions; iTran++)
                         {
-                            var results = _arrayChromInfoSets[iTran][i];
-                            var chromInfo = (results != null && iInfo < results.Count ? results[iInfo] : null);
-                            arrayRanked[iTran] =
-                                new KeyValuePair<int, TransitionChromInfo>(iTran, chromInfo);
+                            // CONSIDER: Current TransitionChromInfo lookup is O(n^2), but on usually very small
+                            //           lists.  Using a faster lookup for large lists would be slower for the
+                            //           most common case.
+                            var chromInfo = GetTranitionChromInfo(iTran, iChrom, fileId, optStep);
+                            arrayRanked[iTran] = new KeyValuePair<int, TransitionChromInfo>(iTran, chromInfo);
+                            arrayRankedAverage[iTran].Value.AddArea(GetSafeArea(chromInfo));
                             // Count non-null info
                             if (chromInfo != null)
-                            {
                                 countInfo++;
-                                fileId = chromInfo.FileId;
-                                optStep = chromInfo.OptimizationStep;
-                            }
 
                             // Store information for correlation score
                             var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
@@ -1311,9 +1348,9 @@ namespace pwiz.Skyline.Model
 
                         // Calculate correlation score
                         if (peakAreas != null)
-                            _listResultCalcs[i].SetLibInfo(fileId, optStep, peakAreas, libIntensities);
+                            _listResultCalcs[iChrom].SetLibInfo(fileId, optStep, peakAreas, libIntensities);
                         if (peakAreasMs != null)
-                            _listResultCalcs[i].SetIsotopeDistInfo(fileId, optStep, peakAreasMs, isoProportionsMs);
+                            _listResultCalcs[iChrom].SetIsotopeDistInfo(fileId, optStep, peakAreasMs, isoProportionsMs);
 
                         // Sort by area descending
                         Array.Sort(arrayRanked, (p1, p2) =>
@@ -1327,12 +1364,49 @@ namespace pwiz.Skyline.Model
                                 continue;
                             int rank = (pair.Value.Area > 0 ? iRank + 1 : 0);
                             if (pair.Value.Rank != rank)
-                                _arrayChromInfoSets[pair.Key][i][iInfo] = pair.Value.ChangeRank(rank);
+                                SetTransitionChromInfo(pair.Key, iChrom, fileId, optStep, pair.Value.ChangeRank(rank));
                         }
                     }
                 }
+
+                // Store average ranks
+                Array.Sort(arrayRankedAverage, (m1, m2) =>
+                                               Comparer<double>.Default.Compare(m2.Value.Mean, m1.Value.Mean));
+                for (int iRank = 0; iRank < countTransitions; iRank++)
+                {
+                    var rankedAverage = arrayRankedAverage[iRank];
+                    if (rankedAverage.Value.Mean == 0)
+                        break;
+                    _arrayTransitionChromInfoSets[rankedAverage.Key].AverageRank = iRank + 1;
+                }
             }
 
+            private IEnumerable<FileStep> GetTransitionFileSteps(int iChrom)
+            {
+                return _arrayTransitionChromInfoSets
+                    .Where(s => s.ChromInfoLists[iChrom] != null)
+                    .SelectMany(s => s.ChromInfoLists[iChrom])
+                    .Select(info => new FileStep(info.FileId, info.OptimizationStep))
+                    .Distinct();
+            }
+
+            private TransitionChromInfo GetTranitionChromInfo(int iTran, int iChrom, ChromFileInfoId fileId, int optStep)
+            {
+                var chromInfoList = _arrayTransitionChromInfoSets[iTran].ChromInfoLists[iChrom];
+                if (chromInfoList == null)
+                    return null;
+                return chromInfoList.FirstOrDefault(chromInfo =>
+                    Equals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep);
+            }
+
+            private void SetTransitionChromInfo(int iTran, int iChrom, ChromFileInfoId fileId, int optStep,
+                                                TransitionChromInfo transitionChromInfo)
+            {
+                var chromInfoList = _arrayTransitionChromInfoSets[iTran].ChromInfoLists[iChrom];
+                int chromInfoIndex = chromInfoList.IndexOf(chromInfo =>
+                    Equals(fileId, chromInfo.FileId) && optStep == chromInfo.OptimizationStep);
+                chromInfoList[chromInfoIndex] = transitionChromInfo;
+            }
 
             private static float GetSafeArea(TransitionChromInfo info)
             {
@@ -1352,6 +1426,66 @@ namespace pwiz.Skyline.Model
             private static float GetSafeIsotopeDistProportion(TransitionDocNode nodeTran)
             {
                 return (nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0);
+            }
+
+            private class TransitionChromInfoSet
+            {
+                public TransitionChromInfoSet()
+                {
+                    ChromInfoLists = new List<IList<TransitionChromInfo>>();
+                }
+
+                public int? AverageRank { get; set; }
+                public List<IList<TransitionChromInfo>> ChromInfoLists { get; private set; }
+            }
+
+            private struct FileStep
+            {
+                public FileStep(ChromFileInfoId fileId, int optimizationStep) : this()
+                {
+                    FileId = fileId;
+                    OptimizationStep = optimizationStep;
+                }
+
+                public ChromFileInfoId FileId { get; private set; }
+                public int OptimizationStep { get; private set; }
+
+                #region object overrides
+                
+                private bool Equals(FileStep other)
+                {
+                    return Equals(other.FileId, FileId) &&
+                        other.OptimizationStep == OptimizationStep;
+                }
+
+                public override bool Equals(object obj)
+                {
+                    if (ReferenceEquals(null, obj)) return false;
+                    if (obj.GetType() != typeof(FileStep)) return false;
+                    return Equals((FileStep)obj);
+                }
+
+                public override int GetHashCode()
+                {
+                    unchecked
+                    {
+                        return (FileId.GetHashCode() * 397) ^ OptimizationStep;
+                    }
+                }
+
+                #endregion
+            }
+
+            private class MeanArea
+            {
+                private int Count { get; set; }
+                public double Mean { get; private set; }
+
+                public void AddArea(double area)
+                {
+                    Count++;
+                    Mean += (area - Mean)/Count;
+                }
             }
         }
 
@@ -1641,19 +1775,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public bool EquivalentChildren(TransitionGroupDocNode nodeGroup)
         {
-            if (Children.Count != nodeGroup.Children.Count)
-                return false;
-            for (int i = 0; i < Children.Count; i++)
-            {
-                TransitionDocNode nodeTran1 = (TransitionDocNode) Children[i];
-                TransitionDocNode nodeTran2 = (TransitionDocNode) nodeGroup.Children[i];
-                if (!nodeTran1.Transition.Equivalent(nodeTran2.Transition))
-                    return false;
-                // Losses must also be equal
-                if (!Equals(nodeTran1.Losses, nodeTran2.Losses))
-                    return false;
-            }
-            return true;
+            return AreEquivalentChildren(Children, nodeGroup.Children);
         }
 
         #region Property change methods

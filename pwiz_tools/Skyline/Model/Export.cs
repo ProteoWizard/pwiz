@@ -52,36 +52,23 @@ namespace pwiz.Skyline.Model
 
         public static ExportStrategy GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (ExportStrategy)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<ExportStrategy>(enumValue, LOCALIZED_VALUES);
         }
 
         public static ExportStrategy GetEnum(string enumValue, ExportStrategy defaultValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (ExportStrategy)i;
-                }
-            }
-            return defaultValue;
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
         }  
     }
 
-    public enum ExportMethodType { Standard, Scheduled }
+    public enum ExportMethodType { Standard, Scheduled, Triggered }
     public static class ExportMethodTypeExtension
     {
         private static readonly string[] LOCALIZED_VALUES = new[]
                                                                 {
                                                                     Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Standard,
-                                                                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled
+                                                                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled,
+                                                                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered
                                                                 };
         public static string GetLocalizedString(this ExportMethodType val)
         {
@@ -90,17 +77,9 @@ namespace pwiz.Skyline.Model
 
         public static ExportMethodType GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (ExportMethodType) i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<ExportMethodType>(enumValue, LOCALIZED_VALUES);
         }  
     }
-
 
     public enum ExportSchedulingAlgorithm { Average, Trends, Single }
     public static class ExportSchedulingAlgorithmExtension
@@ -118,14 +97,7 @@ namespace pwiz.Skyline.Model
 
         public static ExportSchedulingAlgorithm GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (ExportSchedulingAlgorithm)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<ExportSchedulingAlgorithm>(enumValue, LOCALIZED_VALUES);
         }  
     }
 
@@ -145,14 +117,7 @@ namespace pwiz.Skyline.Model
 
         public static ExportFileType GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (ExportFileType)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<ExportFileType>(enumValue, LOCALIZED_VALUES);
         }  
     }
 
@@ -259,10 +224,23 @@ namespace pwiz.Skyline.Model
         public static bool CanSchedule(string instrumentType, SrmDocument doc)
         {
             return CanScheduleInstrumentType(instrumentType, doc) &&
-                   doc.Settings.PeptideSettings.Prediction.CanSchedule(doc,
-                                                                       IsSingleWindowInstrumentType(instrumentType)
-                                                                           ? PeptidePrediction.SchedulingStrategy.single_window
-                                                                           : PeptidePrediction.SchedulingStrategy.all_variable_window);
+                doc.CanSchedule(IsSingleWindowInstrumentType(instrumentType));
+        }
+
+        public static bool CanTriggerInstrumentType(string type)
+        {
+            return Equals(type, AGILENT) ||
+                   Equals(type, AGILENT6400) ||
+                   Equals(type, THERMO)
+                // TODO: TSQ Method writing API does not yet support triggered methods
+                // || Equals(type, THERMO_TSQ)
+                   ;
+        }
+
+        public static bool CanTrigger(string instrumentType, SrmDocument document)
+        {
+            return CanTriggerInstrumentType(instrumentType) &&
+                document.CanTrigger();
         }
 
         public static bool IsSingleWindowInstrumentType(string type)
@@ -287,6 +265,7 @@ namespace pwiz.Skyline.Model
         public virtual int SchedulingReplicateNum { get; set; }
         public virtual ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
 
+        public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
         public virtual bool AddTriggerReference { get; set; }
@@ -317,6 +296,7 @@ namespace pwiz.Skyline.Model
             exporter.OptimizeType = OptimizeType;
             exporter.OptimizeStepSize = OptimizeStepSize;
             exporter.OptimizeStepCount = OptimizeStepCount;
+            exporter.PrimaryTransitionCount = PrimaryTransitionCount;
             exporter.SchedulingReplicateIndex = SchedulingReplicateNum;
             exporter.SchedulingAlgorithm = SchedulingAlgorithm;
             return exporter;
@@ -578,6 +558,7 @@ namespace pwiz.Skyline.Model
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
@@ -587,11 +568,11 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            if (MethodType == ExportMethodType.Scheduled)
+            if (MethodType != ExportMethodType.Standard)
             {
                 if (AddEnergyRamp)
                 {
-                    writer.Write('1');  // Energy Ramp // Not L10N: Number
+                    writer.Write(1);  // Energy Ramp
                     writer.Write(FieldSeparator);                                        
                 }
 
@@ -613,34 +594,58 @@ namespace pwiz.Skyline.Model
                     writer.Write(FieldSeparator);
                     writer.Write(FieldSeparator);
                 }
-                writer.Write('1');  // Polarity // Not L10N: Number
+                writer.Write(1);  // Polarity
                 writer.Write(FieldSeparator);                    
 
-                if (AddTriggerReference)
+                if (MethodType == ExportMethodType.Triggered)
                 {
                     if (_setRTStandards.Contains(Document.Settings.GetModifiedSequence(nodePep)))
                     {
-                        writer.Write("1000");  // Trigger // Not L10N: Number
+                        writer.Write(1000);  // Trigger
                         writer.Write(FieldSeparator);
-                        writer.Write("1");  // Reference // Not L10N: Number
+                        writer.Write(2);     // Reference
+                        writer.Write(FieldSeparator);
+                    }
+                    else if (IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran))
+                    {
+                        writer.Write(1000);  // Trigger
+                        writer.Write(FieldSeparator);
+                        writer.Write(0);     // Primary
                         writer.Write(FieldSeparator);
                     }
                     else
                     {
                         writer.Write("1.0E+10");  // Trigger // Not L10N: Number
                         writer.Write(FieldSeparator);
-                        writer.Write("0");  // Reference // Not L10N: Number
+                        writer.Write(1);          // Secondary
+                        writer.Write(FieldSeparator);
+                    }                    
+                }
+                else if (AddTriggerReference)
+                {
+                    if (_setRTStandards.Contains(Document.Settings.GetModifiedSequence(nodePep)))
+                    {
+                        writer.Write(1000);  // Trigger
+                        writer.Write(FieldSeparator);
+                        writer.Write(2);     // Reference
+                        writer.Write(FieldSeparator);
+                    }
+                    else
+                    {
+                        writer.Write("1.0E+10");  // Trigger // Not L10N: Number
+                        writer.Write(FieldSeparator);
+                        writer.Write(0);     // Reference
                         writer.Write(FieldSeparator);
                     }
                 }
             }
             else if (RunLength.HasValue)
             {
-                writer.Write('0');    // No negative retention times // Not L10N: Number
+                writer.Write(0);    // No negative retention times
                 writer.Write(FieldSeparator);
                 writer.Write(RunLength);
                 writer.Write(FieldSeparator);
-                writer.Write('1');  // Polarity // Not L10N: Number
+                writer.Write(1);  // Polarity
                 writer.Write(FieldSeparator);                                    
             }
             writer.Write(nodePep.Peptide.Sequence);
@@ -758,6 +763,7 @@ namespace pwiz.Skyline.Model
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
@@ -1041,6 +1047,8 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
+            writer.Write("Compound Group"); // Not L10N
+            writer.Write(FieldSeparator);
             writer.Write("Compound Name"); // Not L10N
             writer.Write(FieldSeparator);
             writer.Write("ISTD?"); // Not L10N
@@ -1057,6 +1065,13 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write("Dwell"); // Not L10N                
             }
+            else if (MethodType == ExportMethodType.Triggered)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write("Primary");
+                writer.Write(FieldSeparator);
+                writer.Write("Trigger");
+            }
             writer.Write(FieldSeparator);
             writer.Write("Fragmentor"); // Not L10N
             writer.Write(FieldSeparator);
@@ -1071,8 +1086,6 @@ namespace pwiz.Skyline.Model
                 writer.Write("Delta Ret Time"); // Not L10N
             }
             writer.Write(FieldSeparator);
-            writer.Write("Protein"); // Not L10N
-            writer.Write(FieldSeparator);
             writer.Write("Ion Name"); // Not L10N
             if (Document.Settings.PeptideSettings.Libraries.HasLibraries)
             {
@@ -1086,13 +1099,16 @@ namespace pwiz.Skyline.Model
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            writer.Write(nodePepGroup.Name);
+            writer.Write(FieldSeparator);
             writer.Write(nodePep.Peptide.Sequence);
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
-            writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)
+            writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)    // ISTD?
                              ? "TRUE" // Not L10N
                              : "FALSE"); // Not L10N
             writer.Write(FieldSeparator);
@@ -1103,14 +1119,28 @@ namespace pwiz.Skyline.Model
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write("Unit");   // MS2 Res // Not L10N
-            writer.Write(FieldSeparator);
 
             if (MethodType == ExportMethodType.Standard)
             {
+                writer.Write(FieldSeparator);
                 writer.Write(Math.Round(DwellTime, 2).ToString(CultureInfo));
-                writer.Write(FieldSeparator);                
+            }
+            else if (MethodType == ExportMethodType.Triggered)
+            {
+                if (nodeTranGroupPrimary == null)
+                    Console.WriteLine("??");
+                writer.Write(FieldSeparator);
+                int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
+                writer.Write(rank.HasValue && rank.Value <= PrimaryTransitionCount  // Primary
+                    ? "TRUE"    // Not L10N
+                    : "FALSE"); // Not L10N
+                writer.Write(FieldSeparator);
+                writer.Write(rank.HasValue && rank.Value == 1   // Trigger
+                    ? "TRUE"    // Not L10N
+                    : "FALSE"); // Not L10N
             }
 
+            writer.Write(FieldSeparator);
             writer.Write(Fragmentor.ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
@@ -1141,8 +1171,6 @@ namespace pwiz.Skyline.Model
             }
 
             // Extra information not used by instrument
-            writer.Write(nodePepGroup.Name);
-            writer.Write(FieldSeparator);
             writer.Write(nodeTran.Transition.FragmentIonName);
             writer.Write(FieldSeparator);
             if (nodeTran.HasLibInfo)
@@ -1217,6 +1245,7 @@ namespace pwiz.Skyline.Model
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
@@ -1291,6 +1320,7 @@ namespace pwiz.Skyline.Model
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
@@ -1386,6 +1416,7 @@ namespace pwiz.Skyline.Model
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {

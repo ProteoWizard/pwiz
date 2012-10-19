@@ -55,6 +55,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public static int PrimaryTransitionCount
+        {
+            get { return Settings.Default.PrimaryTransitionCountGraph; }
+            set { Settings.Default.PrimaryTransitionCountGraph = value; }
+        }
+
         public RTScheduleGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -129,11 +135,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     double timeWindow;
                     double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup, SchedulingReplicateIndex,                        
                         SchedulingAlgorithm, singleWindow, out timeWindow);
+                    var nodeGroupPrimary = PrimaryTransitionCount > 0
+                                               ? nodePep.GetPrimaryResultsGroup(nodeGroup)
+                                               : null;
 
                     if (retentionTime.HasValue)
                     {
                         // TODO: Make it possible to see transition scheduling when full-scan enabled.
-                        var schedule = new PrecursorScheduleBase(nodeGroup, retentionTime.Value, timeWindow, fullScan, 0);
+                        var schedule = new PrecursorScheduleBase(nodeGroup,
+                                                                 nodeGroupPrimary,
+                                                                 retentionTime.Value,
+                                                                 timeWindow,
+                                                                 fullScan,
+                                                                 SchedulingReplicateIndex,
+                                                                 PrimaryTransitionCount,
+                                                                 0);
                         xMin = Math.Min(xMin, schedule.StartTime);
                         xMax = Math.Max(xMax, schedule.EndTime);
                         listSchedules.Add(schedule);

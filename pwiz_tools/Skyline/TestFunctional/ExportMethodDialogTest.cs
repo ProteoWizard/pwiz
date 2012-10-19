@@ -18,6 +18,7 @@
  */
 using System;
 using System.Globalization;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -26,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -40,6 +42,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestExportMethodDlg()
         {
+            TestFilesZip = @"TestFunctional\ExportMethodDialogTest.zip";
             RunFunctionalTest();
         }
 
@@ -55,6 +58,8 @@ namespace pwiz.SkylineTestFunctional
             AbiQtrapTest();
 
             AbiTofTest();
+
+            AgilentThermoTriggeredTest();
         }
 
         private static void ThermoTsqTest()
@@ -64,50 +69,105 @@ namespace pwiz.SkylineTestFunctional
             DisableMS1Filtering();
             DisableMS2Filtering();
 
-
-            RunDlg<ExportMethodDlg>(
-                (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method)),
-                exportMethodDlg =>
+            string tsqTriggeredFailureMessage = TextUtil.LineSeparate(Resources.ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_,
+                                                                      Resources.ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_);
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+                RunUI(() =>
+                          {
+                              exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_TSQ;
+                              Assert.AreEqual(ExportMethodDlg.TRANS_PER_SAMPLE_INJ_TXT, exportMethodDlg.GetMaxLabelText);
+                              Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
+                              Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
+                              //Assert.IsTrue(exportMethodDlg.IsRunLengthVisible);
+                              Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
+                          });
+                RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Scheduled,
+                    dlg =>
                     {
-                        exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_TSQ;
-                        Assert.AreEqual(ExportMethodDlg.TRANS_PER_SAMPLE_INJ_TXT, exportMethodDlg.GetMaxLabelText);
-                        Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
-                        Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
-                        //Assert.IsTrue(exportMethodDlg.IsRunLengthVisible);
-                        Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
-
-                        exportMethodDlg.CancelButton.PerformClick();
-                    }
-            );
+                        AssertEx.AreComparableStrings(Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction_or_import_results_for_all_peptides_in_the_document,
+                            dlg.Message, 0);
+                        dlg.OkDialog();
+                    });
+                RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Triggered,
+                    dlg =>
+                    {
+                        AssertEx.AreComparableStrings(tsqTriggeredFailureMessage,
+                            dlg.Message, 2);
+                        dlg.OkDialog();
+                    });
+                RunUI(exportMethodDlg.CancelButton.PerformClick);
+                WaitForClosedForm(exportMethodDlg);
+            }
 
 
             // Select the dummy RT regression so that we can select the "Scheduled" method type
             SelectDummyRTRegression();
 
-            RunDlg<ExportMethodDlg>(
-                (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method)),
-                exportMethodDlg =>
-                {
-                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_TSQ;
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
 
+                RunUI(() =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_TSQ;
+                        Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
+                        Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
+                        Assert.AreEqual(ExportMethodDlg.RUN_DURATION_TXT, exportMethodDlg.GetDwellTimeLabel);
+                        Assert.IsTrue(exportMethodDlg.IsRunLengthVisible);
+                        Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
+
+                        exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                        Assert.AreEqual(ExportMethodDlg.CONCUR_TRANS_TXT, exportMethodDlg.GetMaxLabelText);
+
+                        Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
+                        Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
+                    });
+
+                RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Triggered,
+                    dlg =>
+                    {
+                        AssertEx.AreComparableStrings(tsqTriggeredFailureMessage,
+                            dlg.Message, 2);
+                        dlg.OkDialog();
+                    });
+
+                RunUI(exportMethodDlg.CancelButton.PerformClick);
+                WaitForClosedForm(exportMethodDlg);
+            }
+
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
                     Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
                     Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
-                    Assert.AreEqual(ExportMethodDlg.RUN_DURATION_TXT, exportMethodDlg.GetDwellTimeLabel);
-                    Assert.IsTrue(exportMethodDlg.IsRunLengthVisible);
+                    Assert.AreEqual(ExportMethodDlg.DWELL_TIME_TXT, exportMethodDlg.GetDwellTimeLabel);
+                    Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
                     Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
 
                     exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                    Assert.IsNull(FindOpenForm<MessageDlg>());
                     Assert.AreEqual(ExportMethodDlg.CONCUR_TRANS_TXT, exportMethodDlg.GetMaxLabelText);
 
                     Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
                     Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
+                });
 
-                    exportMethodDlg.CancelButton.PerformClick();
-                }
-            );
+                RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Triggered,
+                    dlg =>
+                    {
+                        AssertEx.AreComparableStrings(Resources.ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_,
+                            dlg.Message, 0);
+                        dlg.OkDialog();
+                    });
+
+                RunUI(exportMethodDlg.CancelButton.PerformClick);
+                WaitForClosedForm(exportMethodDlg);
+            }
 
             DeselectDummyRTRegression();
-
         }
 
         private static void ThermoLtqTest()
@@ -216,7 +276,6 @@ namespace pwiz.SkylineTestFunctional
             DisableMS1Filtering();
             DisableMS2Filtering();
 
-
             RunDlg<ExportMethodDlg>(
                 (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method)),
                 exportMethodDlg =>
@@ -233,28 +292,36 @@ namespace pwiz.SkylineTestFunctional
                 }
             );
 
-
             // Select the dummy RT regression so that we can select the "Scheduled" method type
             SelectDummyRTRegression();
 
-            RunDlg<ExportMethodDlg>(
-                (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method)),
-                exportMethodDlg =>
-                {
-                    exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_QTRAP;
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
+                    SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
 
-                    Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
-                    Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
+                RunUI(() =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_QTRAP;
 
-                    exportMethodDlg.MethodType = ExportMethodType.Scheduled;
-                    Assert.AreEqual(ExportMethodDlg.CONCUR_TRANS_TXT, exportMethodDlg.GetMaxLabelText);
+                        Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
+                        Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
 
-                    Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
-                    Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
+                        exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                        Assert.AreEqual(ExportMethodDlg.CONCUR_TRANS_TXT, exportMethodDlg.GetMaxLabelText);
 
-                    exportMethodDlg.CancelButton.PerformClick();
-                }
-            );
+                        Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
+                        Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
+                    });
+                RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Triggered,
+                    dlg =>
+                    {
+                        AssertEx.AreComparableStrings(Resources.ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_,
+                            dlg.Message, 1);
+                        dlg.OkDialog();
+                    });
+                RunUI(exportMethodDlg.CancelButton.PerformClick);
+                WaitForClosedForm(exportMethodDlg);
+            }
 
             DeselectDummyRTRegression();
         }
@@ -262,7 +329,7 @@ namespace pwiz.SkylineTestFunctional
         private static void AbiTofTest()
         {
 
-            DeselectDummyRTRegression();
+            SelectDummyRTRegression();
             DisableMS1Filtering();
             DisableMS2Filtering();
  
@@ -289,7 +356,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Select the dummy RT regression AND enable MS1 filtering
             // Now we can export an inclusion list method.
-            SelectDummyRTRegression();
             EnableMS1Filtering();
             DisableMS2Filtering();
 
@@ -329,6 +395,101 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        private void AgilentThermoTriggeredTest()
+        {
+            // Failure trying to export to file with a peptide lacking results or library match
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-missing.sky")));
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT;
+                    exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                });
+
+                RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Triggered,
+                    dlg =>
+                    {
+                        AssertEx.AreComparableStrings(Resources.ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_,
+                            dlg.Message, 0);
+                        dlg.OkDialog();
+                    });
+
+                RunUI(exportMethodDlg.CancelButton.PerformClick);
+                WaitForClosedForm(exportMethodDlg);
+            }
+
+            // Success cases exporting for document with both results on some peptides and a library match on
+            // a peptide without results
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-trigger.sky")));
+            string agilentExpected = TestFilesDir.GetTestPath("TranListTriggered.csv");
+            string agilentActual = TestFilesDir.GetTestPath("TranListTriggered-actual.csv");
+            string thermoExpected = TestFilesDir.GetTestPath("TranListIsrm.csv");
+            string thermoActual = TestFilesDir.GetTestPath("TranListIsrm-actual.csv");
+            string agilentActualMeth = TestFilesDir.GetTestPath("TranListTriggered-actual.m");
+            string agilentTemplateMeth = TestFilesDir.GetTestPath("cm-HSA-2_1mm-tMRM-TH100B.m");
+            // Agilent transition list
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT;
+                        exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+
+                        // change Method type to "Triggered"
+                        exportMethodDlg.MethodType = ExportMethodType.Triggered;
+                        Assert.IsTrue(exportMethodDlg.IsPrimaryCountVisible);
+                        Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                        exportMethodDlg.PrimaryCount = 2;
+                    });
+
+                RunDlg<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(agilentActual),
+                    dlg => dlg.Btn0Click());
+                WaitForClosedForm(exportMethodDlg);
+            }
+
+            AssertEx.NoDiff(File.ReadAllText(agilentExpected), File.ReadAllText(agilentActual));
+
+            // Thermo transition list
+            {
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List),
+                    exportMethodDlg =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
+                        exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+
+                        // change Method type to "Triggered"
+                        exportMethodDlg.MethodType = ExportMethodType.Triggered;
+                        Assert.IsTrue(exportMethodDlg.IsPrimaryCountVisible);
+                        Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                        exportMethodDlg.OkDialog(thermoActual);
+                    });
+            }
+
+            AssertEx.NoDiff(File.ReadAllText(thermoExpected), File.ReadAllText(thermoActual));
+
+            // Agilent method
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+                RunUI(() =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT6400;
+                        exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                        exportMethodDlg.SetTemplateFile(agilentTemplateMeth);
+
+                        // change Method type to "Triggered"
+                        exportMethodDlg.MethodType = ExportMethodType.Triggered;
+                        Assert.IsTrue(exportMethodDlg.IsPrimaryCountVisible);
+                        Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                    });
+
+                RunDlg<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(agilentActualMeth),
+                                          dlg => dlg.Btn0Click());
+                WaitForClosedForm(exportMethodDlg);
+            }
+            Assert.IsTrue(Directory.Exists(agilentActualMeth));
+        }
+
         private static void CreateDummyRTRegression()
         {
             
@@ -366,13 +527,13 @@ namespace pwiz.SkylineTestFunctional
 
         private static void DeselectDummyRTRegression()
         {
-            SetDocument(doc=> doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(predict =>
-                predict.ChangeRetentionTime(RetentionTimeList.GetDefault()))));
+            SetDocument(doc=> doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
+                predict.ChangeRetentionTime(null))));
         }
 
         private static void SelectDummyRTRegression()
         {
-            SetDocument(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(predict =>
+            SetDocument(doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
                 predict.ChangeRetentionTime(Settings.Default.RetentionTimeList["EditMethodDialogTest"]))));
         }
 

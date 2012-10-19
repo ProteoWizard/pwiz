@@ -167,9 +167,8 @@ namespace pwiz.Skyline.SettingsUI
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries + " (*" + BiblioSpecLiteSpec.EXT + ",*" + XHunterLibSpec.EXT + ",*" + NistLibSpec.EXT + ",*" + SpectrastSpec.EXT + ")|*" + // Not L10N
-                                                        BiblioSpecLiteSpec.EXT + ";*" + XHunterLibSpec.EXT + ";*" + NistLibSpec.EXT + ";*" + SpectrastSpec.EXT, // Not L10N
-                                                        TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT))
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries, BiblioSpecLiteSpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT),
+                                                       TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT))
             })
             {
                 if (fileName != null)

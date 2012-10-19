@@ -189,6 +189,11 @@ namespace pwiz.Skyline.SettingsUI
             Converter<string, TVal> conv, out TVal valueT)
         {
             valueT = default(TVal);
+            if (cell.Value == null)
+            {
+                InvalidCell(e, cell, Resources.EditCEDlg_ValidateCell_A_value_is_required);
+                return false;
+            }
             string value = cell.Value.ToString();
             try
             {

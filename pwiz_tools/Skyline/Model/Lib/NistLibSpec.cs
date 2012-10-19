@@ -605,10 +605,16 @@ namespace pwiz.Skyline.Model.Lib
             // If loading from the cache failed, rebuild it.
             if (cached)
             {
-                // Reset readStream so we don't read corrupt file.
-                _readStream = null;
-                if (Load(loader, status, false))
-                    return true;
+                // Not sure the cause, but found a case where LibraryPath was CachePath (.splc)
+                if (Equals(FilePath, CachePath))
+                    loader.UpdateProgress(status.ChangeErrorException(new IOException(string.Format(Resources.NistLibraryBase_Load_The_file___0___is_not_a_valid_library_, FilePath))));
+                else
+                {
+                    // Reset readStream so we don't read corrupt file.
+                    _readStream = null;
+                    if (Load(loader, status, false))
+                        return true;
+                }
             }
 
             return false;
@@ -717,7 +723,6 @@ namespace pwiz.Skyline.Model.Lib
 
                 // Create the stream from which the spectra will be read
                 CreateStream(loader);
-
                 
                 return true;
             }

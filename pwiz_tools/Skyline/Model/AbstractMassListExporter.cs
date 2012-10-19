@@ -34,6 +34,10 @@ namespace pwiz.Skyline.Model
 {
     public abstract class AbstractMassListExporter
     {
+        public const int PRIMARY_COUNT_MIN = 1;
+        public const int PRIMARY_COUNT_MAX = 10;
+        public const int PRIMARY_COUNT_DEFAULT = 2;
+
         public const int DWELL_TIME_MIN = 1;
         public const int DWELL_TIME_MAX = 1000;
         public const int DWELL_TIME_DEFAULT = 20;
@@ -65,6 +69,7 @@ namespace pwiz.Skyline.Model
         public bool IsolationList { get; set; }
         public int? MaxTransitions { get; set; }
         public int MinTransitions { get; set; }
+        public int PrimaryTransitionCount { get; set; }
         public bool IgnoreProteins { get; set; }
 
         public string OptimizeType { get; set; }
@@ -140,7 +145,7 @@ namespace pwiz.Skyline.Model
 
                 fileIterator.Init();
 
-                if (MethodType == ExportMethodType.Scheduled && Strategy == ExportStrategy.Buckets)
+                if (MethodType != ExportMethodType.Standard && Strategy == ExportStrategy.Buckets)
                     ExportScheduledBuckets(fileIterator);
                 else
                     ExportNormal(fileIterator, single);
@@ -266,19 +271,27 @@ namespace pwiz.Skyline.Model
 
                         if (IsolationList)
                         {
-                            fileIterator.WriteTransition(this, seq, peptide, group, null, 0);
+                            fileIterator.WriteTransition(this, seq, peptide, group, null, null, 0);
                         }
                         else
                         {
+                            var groupPrimary = PrimaryTransitionCount > 0
+                                                       ? peptide.GetPrimaryResultsGroup(group)
+                                                       : null;
+
                             foreach (TransitionDocNode transition in group.Children)
                             {
                                 if (OptimizeType == null)
-                                    fileIterator.WriteTransition(this, seq, peptide, group, transition, 0);
+                                    fileIterator.WriteTransition(this, seq, peptide, group, groupPrimary, transition, 0);
                                 else
                                 {
                                     // -step through step
                                     for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
-                                        fileIterator.WriteTransition(this, seq, peptide, group, transition, i);
+                                    {
+                                        // But avoid writing zero or negative CE values, which will just mess up actuisition
+                                        if (GetCollisionEnergy(peptide, group, transition, i) > 0)
+                                            fileIterator.WriteTransition(this, seq, peptide, group, groupPrimary, transition, i);
+                                    }
                                 }
                             }
                         }
@@ -328,18 +341,23 @@ namespace pwiz.Skyline.Model
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                     {
                         double timeWindow;
-                        double? retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
-                            SchedulingAlgorithm, singleWindow, out timeWindow);
-                        if (retentionTime.HasValue)
-                        {
-                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup,
-                                retentionTime.Value, timeWindow, IsPrecursorLimited, OptimizeStepCount));
-                        }
-                        else
-                        {
-                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup,
-                                0, 0, IsPrecursorLimited, OptimizeStepCount));
-                        }
+                        double retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
+                            SchedulingAlgorithm, singleWindow, out timeWindow) ?? 0;
+                        var nodeTranGroupPrimary = PrimaryTransitionCount > 0
+                                                   ? nodePep.GetPrimaryResultsGroup(nodeTranGroup)
+                                                   : null;
+
+                        var ps = new PrecursorSchedule(nodePepGroup,
+                                                       nodePep,
+                                                       nodeTranGroup,
+                                                       nodeTranGroupPrimary,
+                                                       retentionTime,
+                                                       timeWindow,
+                                                       IsPrecursorLimited,
+                                                       SchedulingReplicateIndex,
+                                                       PrimaryTransitionCount,
+                                                       OptimizeStepCount);
+                        peptideSchedule.Add(ps);
                     }
                     if (RequiredPeptides.IsRequired(nodePep))
                     {
@@ -483,6 +501,7 @@ namespace pwiz.Skyline.Model
                 var nodePepGroup = schedule.PeptideGroup;
                 var nodePep = schedule.Peptide;
                 var nodeGroup = schedule.TransitionGroup;
+                var nodeGroupPrimary = schedule.TransitionGroupPrimary;
                 // Write required peptides at the end, like unscheduled methods
                 if (RequiredPeptides.IsRequired(nodePep))
                     continue;
@@ -495,12 +514,12 @@ namespace pwiz.Skyline.Model
                 foreach (TransitionDocNode transition in nodeGroup.Children)
                 {
                     if (OptimizeType == null)
-                        fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, transition, 0);
+                        fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, transition, 0);
                     else
                     {
                         // -step through step
                         for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
-                            fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, transition, i);
+                            fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, transition, i);
                     }
                 }
             }
@@ -622,10 +641,18 @@ namespace pwiz.Skyline.Model
 
         private sealed class PrecursorSchedule : PrecursorScheduleBase
         {
-            public PrecursorSchedule(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
-                    TransitionGroupDocNode nodeTranGroup, double retentionTime, double timeWindow,
-                    bool isPrecursorLimited, int optimizeStepCount)
-                : base(nodeTranGroup, retentionTime, timeWindow, isPrecursorLimited, optimizeStepCount)
+            public PrecursorSchedule(PeptideGroupDocNode nodePepGroup,
+                                     PeptideDocNode nodePep,
+                                     TransitionGroupDocNode nodeTranGroup,
+                                     TransitionGroupDocNode nodePrimaryGroup,
+                                     double retentionTime,
+                                     double timeWindow,
+                                     bool isPrecursorLimited,
+                                     int? replicateIndex,
+                                     int primaryTransitionCount,
+                                     int optimizeStepCount)
+                : base(nodeTranGroup, nodePrimaryGroup, retentionTime, timeWindow, isPrecursorLimited,
+                       replicateIndex, primaryTransitionCount, optimizeStepCount)
             {
                 PeptideGroup = nodePepGroup;
                 Peptide = nodePep;
@@ -645,6 +672,7 @@ namespace pwiz.Skyline.Model
                                                 PeptideGroupDocNode nodePepGroup,
                                                 PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
                                                 TransitionDocNode nodeTran,
                                                 int step);
 
@@ -689,6 +717,21 @@ namespace pwiz.Skyline.Model
             }
 
             return Document.GetOptimizedDeclusteringPotential(nodePep, nodeGroup, nodeTran);
+        }
+
+        protected int? GetRank(TransitionGroupDocNode nodeGroup,
+                               TransitionGroupDocNode nodeGroupPrimary,
+                               TransitionDocNode nodeTran)
+        {
+            return nodeGroup.GetRank(nodeGroupPrimary, nodeTran, SchedulingReplicateIndex);
+        }
+
+        protected bool IsPrimary(TransitionGroupDocNode nodeGroup,
+                                TransitionGroupDocNode nodeGroupPrimary,
+                                TransitionDocNode nodeTran)
+        {
+            int? rank = GetRank(nodeGroup, nodeGroupPrimary, nodeTran);
+            return (rank.HasValue && rank.Value <= PrimaryTransitionCount);
         }
 
         private bool ExceedsMax(int count)
@@ -839,13 +882,14 @@ namespace pwiz.Skyline.Model
                                         PeptideGroupDocNode seq,
                                         PeptideDocNode peptide,
                                         TransitionGroupDocNode group,
+                                        TransitionGroupDocNode groupPrimary,
                                         TransitionDocNode transition,
                                         int step)
             {
                 if (!HasFile)
                     throw new IOException(Resources.FileIterator_WriteTransition_Unexpected_failure_writing_transitions);
 
-                exporter.WriteTransition(_writer, seq, peptide, group, transition, step);
+                exporter.WriteTransition(_writer, seq, peptide, group, groupPrimary, transition, step);
 
                 // If not full-scan, count transtions
                 if (!_isPrecursorLimited)
@@ -869,7 +913,7 @@ namespace pwiz.Skyline.Model
                     {
                         foreach (var transition in group.Transitions)
                         {
-                            WriteTransition(exporter, seq, peptide, group, transition, 0);
+                            WriteTransition(exporter, seq, peptide, group, null, transition, 0);
                         }
                     }
                 }
@@ -879,33 +923,57 @@ namespace pwiz.Skyline.Model
 
     internal class PrecursorScheduleBase
     {
-        public PrecursorScheduleBase(TransitionGroupDocNode nodeGroup, double retentionTime,
-                                     double timeWindow, bool isPrecursorLimited, int optimizeStepCount)
+        public PrecursorScheduleBase(TransitionGroupDocNode nodeGroup,
+                                     TransitionGroupDocNode nodeGroupPrimary,
+                                     double retentionTime,
+                                     double timeWindow,
+                                     bool isPrecursorLimited,
+                                     int? replicateIndex,
+                                     int primaryTransitionCount,
+                                     int optimizeStepCount)
         {
             TransitionGroup = nodeGroup;
+            TransitionGroupPrimary = nodeGroupPrimary;
             StartTime = retentionTime - (timeWindow / 2);
             EndTime = StartTime + timeWindow;
             IsPrecursorLimited = isPrecursorLimited;
+            ReplicateIndex = replicateIndex;
+            PrimaryTransitionCount = primaryTransitionCount;
             OptimizeStepCount = optimizeStepCount;
+
+            if (IsPrecursorLimited)
+                TransitionCount = 1;
+            else if (PrimaryTransitionCount == 0)
+                TransitionCount = TransitionGroup.TransitionCount;
+            else
+            {
+                // Figure out how many transitions actually meet the rank
+                // restriction for primary transitions.  Secondary transitions
+                // are not considered for scheduling.
+                TransitionCount = TransitionGroup.Transitions.Where(IsPrimary).Count();
+            }
+            TransitionCount *= (OptimizeStepCount * 2 + 1);
         }
 
         public TransitionGroupDocNode TransitionGroup { get; private set; }
-        public int TransitionCount
-        {
-            get
-            {
-                int count = IsPrecursorLimited ? 1 : TransitionGroup.TransitionCount;
-                return count * (OptimizeStepCount * 2 + 1);
-            }
-        }
-        public double StartTime { get; set; }
-        public double EndTime { get; set; }
-        public bool IsPrecursorLimited { get; set; }
-        public int OptimizeStepCount { get; set; }
+        public TransitionGroupDocNode TransitionGroupPrimary { get; private set; }
+        public int TransitionCount { get; private set; }
+        public double StartTime { get; private set; }
+        public double EndTime { get; private set; }
+        public bool IsPrecursorLimited { get; private set; }
+        public int? ReplicateIndex { get; private set; }
+        public int PrimaryTransitionCount { get; private set; }
+        public int OptimizeStepCount { get; private set; }
 
         public bool ContainsTime(double time)
         {
             return StartTime <= time && time <= EndTime;
+        }
+
+        public bool IsPrimary(TransitionDocNode nodeTran)
+        {
+            int? rank = TransitionGroup.GetRank(TransitionGroupPrimary, nodeTran, ReplicateIndex);
+            return rank.HasValue && rank <= PrimaryTransitionCount;
         }
 
         public int GetOverlapCount<TBase>(IList<TBase> schedules)

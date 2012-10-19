@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -31,23 +32,8 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         public static GraphTypeRT GraphType
         {
-            get
-            {
-                try
-                {
-                    return (GraphTypeRT)Enum.Parse(typeof(GraphTypeRT),
-                                                   Settings.Default.RTGraphType);
-                }
-                catch (Exception)
-                {
-                    return GraphTypeRT.regression;
-                }
-            }
-
-            set
-            {
-                Settings.Default.RTGraphType = value.ToString();
-            }
+            get { return Helpers.ParseEnum(Settings.Default.RTGraphType, GraphTypeRT.replicate); }
+            set { Settings.Default.RTGraphType = value.ToString(); }
         }
 
         public static double OutThreshold { get { return Settings.Default.RTResidualRThreshold; } }

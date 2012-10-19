@@ -83,18 +83,27 @@ namespace pwiz.Skyline.Alerts
             Height += Math.Min(MAX_HEIGHT, Math.Max(0, labelMessage.Height - height * 3));
         }
 
+        /// <summary>
+        /// Click the left-most button
+        /// </summary>
         public void Btn0Click()
         {
             CheckDisposed();
             btn0.PerformClick();
         }
 
+        /// <summary>
+        /// Click the middle button
+        /// </summary>
         public void Btn1Click()
         {
             CheckDisposed();
             btn1.PerformClick();
         }
 
+        /// <summary>
+        /// Click the right-most button
+        /// </summary>
         public void BtnCancelClick()
         {
             CheckDisposed();

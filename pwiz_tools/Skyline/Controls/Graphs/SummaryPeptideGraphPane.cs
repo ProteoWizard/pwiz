@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Determine the shortest possible unique ID for each peptide
                 var uniqueSeq = new List<KeyValuePair<string, string>>();
                 foreach (var nodePep in document.Peptides)
-                    AddUniqePrefix(uniqueSeq, nodePep.Peptide.Sequence, 3);
+                    AddUniqePrefix(uniqueSeq, nodePep.Peptide.Sequence, Math.Min(3, nodePep.Peptide.Sequence.Length));
                 // Flip the dictionary from ID - peptide to peptide - ID
                 var seqId = new Dictionary<string, string>();
                 foreach (var seqPair in uniqueSeq)

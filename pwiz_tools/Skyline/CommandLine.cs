@@ -216,6 +216,20 @@ namespace pwiz.Skyline
 
         public bool IgnoreProteins { get; private set; }
 
+        private int _primaryTransitionCount;
+        public int PrimaryTransitionCount
+        {
+            get { return _primaryTransitionCount; }
+            set
+            {
+                if (value < AbstractMassListExporter.PRIMARY_COUNT_MIN || value > AbstractMassListExporter.PRIMARY_COUNT_MAX)
+                {
+                    throw new ArgumentException(string.Format("The primary transition count {0} must be between {1} and {2}.", value, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX));
+                }
+                _primaryTransitionCount = value;
+            }
+        }
+
         private int _dwellTime;
         public int DwellTime
         {
@@ -280,6 +294,7 @@ namespace pwiz.Skyline
             OptimizeType = ExportOptimize.NONE;
             ExportStrategy = ExportStrategy.Single;
             ExportMethodType = ExportMethodType.Standard;
+            PrimaryTransitionCount = AbstractMassListExporter.PRIMARY_COUNT_DEFAULT;
             DwellTime = AbstractMassListExporter.DWELL_TIME_DEFAULT;
             RunLength = AbstractMassListExporter.RUN_LENGTH_DEFAULT;
         }
@@ -606,6 +621,10 @@ namespace pwiz.Skyline
                     {
                         ExportMethodType = ExportMethodType.Scheduled;
                     }
+                    if (type.Equals("triggered", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        ExportMethodType = ExportMethodType.Triggered;
+                    }
                     else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase))
                     {
                         //default
@@ -613,7 +632,7 @@ namespace pwiz.Skyline
                     else
                     {
                         _out.WriteLine(
-                            "Warning: The method type {0} is invalid. It must be \"standard\" or \"scheduled\".",
+                            "Warning: The method type {0} is invalid. It must be \"standard\", \"scheduled\" or \"triggered\".",
                             pair.Value);
                         _out.WriteLine("Defaulting to standard.");
                     }
@@ -665,6 +684,22 @@ namespace pwiz.Skyline
                 else if (IsNameOnly(pair, "exp-ignore-proteins"))
                 {
                     IgnoreProteins = true;
+                    RequiresSkylineDocument = true;
+                }
+                else if (IsNameValue(pair, "exp-primary-count"))
+                {
+                    try
+                    {
+                        PrimaryTransitionCount = pair.ValueInt;
+                    }
+                    catch
+                    {
+                        _out.WriteLine(
+                            "Warning: The primary transition count {0} is invalid. it must be a number between {1} and {2}.",
+                            pair.Value,
+                            AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX);
+                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.PRIMARY_COUNT_DEFAULT);
+                    }
                     RequiresSkylineDocument = true;
                 }
                 else if (IsNameValue(pair, "exp-dwell-time"))
@@ -869,7 +904,7 @@ namespace pwiz.Skyline
                 !string.IsNullOrEmpty(commandArgs.MethodInstrumentType))
             {
                 _out.WriteLine("Error: You cannot simultaneously export a transition list and a method.");
-                _out.WriteLine("Neither will be exported. Please change your command line parameters.");
+                _out.WriteLine("Neither will be exported. Please change the command line parameters.");
             }
             else
             {
@@ -1277,7 +1312,7 @@ namespace pwiz.Skyline
             if (reportSpec == null)
             {
                 _out.WriteLine("Error: The report {0} does not exist. If it has spaces in its name,", reportName);
-                _out.WriteLine("use \"double quotes\" around your entire list of command parameters.");
+                _out.WriteLine("use \"double quotes\" around the entire list of command parameters.");
                 return;
             }
 
@@ -1339,7 +1374,7 @@ namespace pwiz.Skyline
                 return;
             }
             // Check if the command is of a supported type and not a URL
-            else if (!ConfigureToolsDlg.checkExtension(command) && !ToolDescription.IsWebPageCommand(command))
+            else if (!ConfigureToolsDlg.CheckExtension(command) && !ToolDescription.IsWebPageCommand(command))
             {
                 string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS);
                 supportedTypes = supportedTypes.Replace(".", "*.");
@@ -1708,12 +1743,23 @@ namespace pwiz.Skyline
                 TransitionFullScan.MassAnalyzerToString(
                     _doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
-            if(Equals(args.ExportMethodType, ExportMethodType.Scheduled))
+            if(!Equals(args.ExportMethodType, ExportMethodType.Standard))
             {
 
+                if (Equals(args.ExportMethodType, ExportMethodType.Triggered))
+                {
+                    if (!ExportInstrumentType.CanTrigger(args.MethodInstrumentType, _doc))
+                    {
+                        _out.WriteLine("Error: the specified instrument {0} is not compatible with triggered methods.",
+                                       args.TransListInstrumentType);
+                        _out.WriteLine("No method will be exported.");
+                        return;
+                    }
+                    _exportProperties.PrimaryTransitionCount = args.PrimaryTransitionCount;
+                }
                 if (Equals(type, ExportFileType.Method) && !ExportInstrumentType.CanSchedule(args.MethodInstrumentType, _doc))
                 {
-                    _out.WriteLine("Error: your specified instrument {0} is not compatible with scheduled methods.",
+                    _out.WriteLine("Error: the specified instrument {0} is not compatible with scheduled methods.",
                                    args.TransListInstrumentType);
                     _out.WriteLine("No method will be exported.");
                     return;
@@ -1734,7 +1780,7 @@ namespace pwiz.Skyline
                         //check whether the given replicate exists
                         if (!_doc.Settings.MeasuredResults.ContainsChromatogram(args.SchedulingReplicate))
                         {
-                            _out.WriteLine("Error: the specified replicate {0} does not exist in your document.",
+                            _out.WriteLine("Error: the specified replicate {0} does not exist in the document.",
                                            args.SchedulingReplicate);
                             _out.WriteLine("No {0} will be exported.", Equals(type, ExportFileType.Method) ? "method" : "transition list");
                             return;

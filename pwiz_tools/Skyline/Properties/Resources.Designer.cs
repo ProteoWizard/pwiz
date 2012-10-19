@@ -2647,6 +2647,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A value is required..
+        /// </summary>
+        public static string EditCEDlg_ValidateCell_A_value_is_required {
+            get {
+                return ResourceManager.GetString("EditCEDlg_ValidateCell_A_value_is_required", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The entry {0} is not valid..
         /// </summary>
         public static string EditCEDlg_ValidateCell_The_entry__0__is_not_valid {
@@ -4274,6 +4283,56 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The {0} instrument lacks support for direct method export for triggered acquisition..
+        /// </summary>
+        public static string ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_dire" +
+                        "ct_method_export_for_triggered_acquisition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The current document contains peptides without enough information to rank transitions for triggered acquisition..
+        /// </summary>
+        public static string ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_wi" +
+                        "thout_enough_information_to_rank_transitions_for_triggered_acquisition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The instrument type {0} does not support triggered acquisition..
+        /// </summary>
+        public static string ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_" +
+                        "triggered_acquisition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Triggered acquistion requires a spectral library or imported results in order to rank transitions..
+        /// </summary>
+        public static string ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_" +
+                        "library_or_imported_results_in_order_to_rank_transitions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must export a {0} transition list and manually import it into a method file using vendor software..
+        /// </summary>
+        public static string ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and" +
+                        "_manually_import_it_into_a_method_file_using_vendor_software_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scheduled.
         /// </summary>
         public static string ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled {
@@ -4288,6 +4347,15 @@ namespace pwiz.Skyline.Properties {
         public static string ExportMethodTypeExtension_LOCALIZED_VALUES_Standard {
             get {
                 return ResourceManager.GetString("ExportMethodTypeExtension_LOCALIZED_VALUES_Standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Triggered.
+        /// </summary>
+        public static string ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered {
+            get {
+                return ResourceManager.GetString("ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered", resourceCulture);
             }
         }
         
@@ -7136,6 +7204,15 @@ namespace pwiz.Skyline.Properties {
         public static string NistLibraryBase_Load_Loading__0__library {
             get {
                 return ResourceManager.GetString("NistLibraryBase_Load_Loading__0__library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file &apos;{0}&apos; is not a valid library..
+        /// </summary>
+        public static string NistLibraryBase_Load_The_file___0___is_not_a_valid_library_ {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_Load_The_file___0___is_not_a_valid_library_", resourceCulture);
             }
         }
         

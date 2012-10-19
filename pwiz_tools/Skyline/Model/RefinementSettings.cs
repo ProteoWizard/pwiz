@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model
 
             if (MaxPepPeakRank.HasValue)
             {
-                // Calculate the average peak area for each transition
+                // Calculate the average peak area for each peptide
                 int countPeps = listPeptides.Count;
                 var listAreaIndexes = new List<PepAreaSortInfo>();
                 var internalStandardTypes = document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Model
                     arrayAreaIndexes[areaIndex.Index] = areaIndex;
                 }
 
-                // Add back all transitions with low enough rank.
+                // Add back all peptides with low enough rank.
                 listPeptides.Clear();
                 foreach (var areaIndex in arrayAreaIndexes)
                 {

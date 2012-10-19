@@ -163,6 +163,8 @@ namespace pwiz.Skyline.Model
 
         public Results<TransitionChromInfo> Results { get; private set; }
 
+        public int? ResultsRank { get; private set; }
+
         public bool HasResults { get { return Results != null; } }
 
         public IEnumerable<TransitionChromInfo> GetChromInfos(int? i)
@@ -265,6 +267,20 @@ namespace pwiz.Skyline.Model
             return chromInfo.Rank;            
         }
 
+        public int? GetRank(int? i, bool useResults)
+        {
+            if (useResults && HasResults)
+            {
+                if (i.HasValue)
+                    return GetPeakRank(i.Value);
+                else
+                    return ResultsRank;
+            }
+            else if (!useResults && HasLibInfo && LibInfo.Rank > 0)
+                return LibInfo.Rank;
+            return null;
+        }
+
         public float? GetPeakAreaRatio(int i)
         {
             return GetPeakAreaRatio(i, 0);
@@ -311,12 +327,17 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode ChangeLibInfo(TransitionLibInfo prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.LibInfo = v, prop);
+            return ChangeProp(ImClone(this), im => im.LibInfo = prop);
         }
 
         public TransitionDocNode ChangeResults(Results<TransitionChromInfo> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Results = v, prop);
+            return ChangeProp(ImClone(this), im => im.Results = prop);
+        }
+
+        public TransitionDocNode ChangeResultsRank(int? prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ResultsRank = prop);
         }
 
         public DocNode ChangePeak(int indexSet, ChromFileInfoId fileId, int step, ChromPeak peak, int ratioCount)

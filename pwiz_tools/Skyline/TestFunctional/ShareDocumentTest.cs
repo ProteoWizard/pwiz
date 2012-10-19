@@ -363,7 +363,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(doc.Settings.IsLoaded);
                 Assert.AreEqual(doc.RevisionIndex, SkylineWindow.Document.RevisionIndex);
-                Assert.AreNotSame(doc, SkylineWindow.Document);
+                AssertEx.DocumentCloned(doc, SkylineWindow.Document);
                 Assert.IsTrue(setSuccess);                
             }
             Assert.IsFalse(ReferenceEquals(SkylineWindow.Document, doc));

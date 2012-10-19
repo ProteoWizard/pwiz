@@ -91,23 +91,20 @@ namespace pwiz.Skyline.FileUI
                 comboInstrument.Items.Add(typeName);
 
             // Init dialog values from settings.
-            ExportStrategy = ExportStrategyExtension.GetEnum(Settings.Default.ExportMethodStrategy, ExportStrategy.Single);
+            ExportStrategy = Helpers.ParseEnum(Settings.Default.ExportMethodStrategy, ExportStrategy.Single);
 
             IgnoreProteins = Settings.Default.ExportIgnoreProteins;
 
-            try
+            ExportMethodType mType = Helpers.ParseEnum(Settings.Default.ExportMethodType, ExportMethodType.Standard);
+            if ((mType != ExportMethodType.Standard && !CanSchedule) ||
+                (mType == ExportMethodType.Triggered && !CanTrigger))
             {
-                ExportMethodType mType = (ExportMethodType)
-                    Enum.Parse(typeof(ExportMethodType), Settings.Default.ExportMethodType);
-                if (mType == ExportMethodType.Scheduled && !CanSchedule)
-                    mType = ExportMethodType.Standard;
-
-                MethodType = mType;
+                mType = ExportMethodType.Standard;
             }
-            catch (ArgumentException)
-            {
-                MethodType = ExportMethodType.Standard;
-            }
+            comboTargetType.Items.Add(ExportMethodType.Standard.GetLocalizedString());
+            comboTargetType.Items.Add(ExportMethodType.Scheduled.GetLocalizedString());
+            comboTargetType.Items.Add(ExportMethodType.Triggered.GetLocalizedString());
+            MethodType = mType;
 
             // Instrument type may force method type to standard, so it must
             // be calculated after method type.
@@ -140,10 +137,11 @@ namespace pwiz.Skyline.FileUI
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
             cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
+            textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(CultureInfo.CurrentCulture);
             // Reposition from design layout
             panelThermoColumns.Top = labelDwellTime.Top;
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
-
+            panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
 
             // Add optimizable regressions
             comboOptimizing.Items.Add(ExportOptimize.NONE);
@@ -171,7 +169,7 @@ namespace pwiz.Skyline.FileUI
                 _instrumentType = value;
 
                 // If scheduled method selected
-                if (Equals(ExportMethodType.Scheduled.GetLocalizedString().ToLower(),
+                if (!Equals(ExportMethodType.Standard.GetLocalizedString().ToLower(),
                         comboTargetType.SelectedItem.ToString().ToLower()))
                 {
                     // If single window state changing, and it is no longer possible to
@@ -245,6 +243,16 @@ namespace pwiz.Skyline.FileUI
         private bool CanSchedule
         {
             get { return ExportInstrumentType.CanSchedule(InstrumentType, _document); }
+        }
+
+        private bool CanTriggerInstrumentType
+        {
+            get { return ExportInstrumentType.CanTriggerInstrumentType(InstrumentType); }
+        }
+
+        private bool CanTrigger
+        {
+            get { return ExportInstrumentType.CanTrigger(InstrumentType, _document); }
         }
 
         private ExportSchedulingAlgorithm SchedulingAlgorithm
@@ -351,9 +359,10 @@ namespace pwiz.Skyline.FileUI
             set { _exportProperties.ExportMultiQuant = cbExportMultiQuant.Checked = value; }
         }
 
-        private void UpdateThermoColumns(bool standard)
+        private void UpdateThermoColumns(ExportMethodType targetType)
         {
-            panelThermoColumns.Visible = !standard && InstrumentType == ExportInstrumentType.THERMO;
+            panelThermoColumns.Visible = targetType == ExportMethodType.Scheduled &&
+                InstrumentType == ExportInstrumentType.THERMO;
         }
 
         private void UpdateAbSciexControls()
@@ -385,12 +394,22 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.MethodType = value;
-                 comboTargetType.SelectedItem = _exportProperties.MethodType.GetLocalizedString();
+                comboTargetType.SelectedItem = _exportProperties.MethodType.GetLocalizedString();
+            }
+        }
+
+        public int PrimaryCount
+        {
+            get { return _exportProperties.PrimaryTransitionCount; }
+            set
+            {
+                _exportProperties.PrimaryTransitionCount = value;
+                textPrimaryCount.Text = _exportProperties.PrimaryTransitionCount.ToString(CultureInfo.CurrentCulture);
             }
         }
 
         /// <summary>
-        /// Specific dwell time in milliseconds for non-scheduled runs.
+        /// Specific dwell time in milliseconds for non-scheduled runs
         /// </summary>
         public int DwellTime
         {
@@ -402,6 +421,9 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        /// <summary>
+        /// Length of run in minutes for non-scheduled runs
+        /// </summary>
         public double RunLength
         {
             get { return _exportProperties.RunLength; }
@@ -412,6 +434,9 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        /// <summary>
+        /// Used for maximum transitions/precursors, maximum concurrent transitions/precursors for SRM/full-scan
+        /// </summary>
         public int? MaxTransitions
         {
             get { return _exportProperties.MaxTransitions; }
@@ -525,6 +550,12 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            //This will populate _exportProperties
+            if (!ValidateSettings(e, helper))
+            {
+                return;
+            }
+
             // Full-scan method building ignores CE and DP regression values
             if (!ExportInstrumentType.IsFullScanInstrumentType(InstrumentType))
             {
@@ -563,24 +594,21 @@ namespace pwiz.Skyline.FileUI
                           .AppendLine(dpName ?? Resources.ExportMethodDlg_OkDialog_None);
                     }
                     sb.AppendLine().Append(Resources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
-                    var result = MessageBox.Show(this, sb.ToString(), Program.Name, MessageBoxButtons.YesNoCancel);
-                    if (result == DialogResult.Yes)
+                    using (var dlg = new MultiButtonMsgDlg(sb.ToString(), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                     {
-                        documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);
-                    }
-                    if (result == DialogResult.Cancel)
-                    {
-                        comboInstrument.Focus();
-                        e.Cancel = true;
-                        return;
+                        var result = dlg.ShowDialog(this);
+                        if (result == DialogResult.Yes)
+                        {
+                            documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);
+                        }
+                        else if (result == DialogResult.Cancel)
+                        {
+                            comboInstrument.Focus();
+                            e.Cancel = true;
+                            return;
+                        }
                     }
                 }
-            }
-
-            //This will populate _exportProperties
-            if(!ValidateSettings(e, helper))
-            {
-                return;
             }
 
             if (outputPath == null)
@@ -655,6 +683,8 @@ namespace pwiz.Skyline.FileUI
                     MaxTransitions.Value.ToString(CultureInfo.InvariantCulture) : null);
             }
             Settings.Default.ExportMethodType = _exportProperties.MethodType.ToString();
+            if (textPrimaryCount.Visible)
+                Settings.Default.PrimaryTransitionCount = PrimaryCount;
             if (textDwellTime.Visible)
                 Settings.Default.ExportMethodDwellTime = DwellTime;
             if (textRunLength.Visible)
@@ -680,9 +710,6 @@ namespace pwiz.Skyline.FileUI
         /// boolean whether or not it succeeded. It can show MessageBoxes or not based
         /// on a parameter.
         /// </summary>
-        /// <param name="e"></param>
-        /// <param name="helper"></param>
-        /// <returns></returns>
         public bool ValidateSettings(CancelEventArgs e, MessageBoxHelper helper)
         {
             // ReSharper disable ConvertIfStatementToConditionalTernaryExpression
@@ -766,6 +793,14 @@ namespace pwiz.Skyline.FileUI
 
             _exportProperties.MethodType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
 
+            if (textPrimaryCount.Visible)
+            {
+                int primaryCount;
+                if (!helper.ValidateNumberTextBox(e, textPrimaryCount, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX, out primaryCount))
+                    return false;
+
+                _exportProperties.PrimaryTransitionCount = primaryCount;
+            }
             if (textDwellTime.Visible)
             {
                 int dwellTime;
@@ -785,7 +820,7 @@ namespace pwiz.Skyline.FileUI
 
             // If export method type is scheduled, and allows multiple scheduling options
             // ask the user which to use.
-            if (_exportProperties.MethodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(_document))
+            if (_exportProperties.MethodType != ExportMethodType.Standard && HasMultipleSchedulingOptions(_document))
             {
                 if (!helper.ShowMessages)
                 {
@@ -967,23 +1002,9 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.GetLocalizedString());
-            if (!standard && !CanSchedule)
-            {
-                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
-                return;
-            }                
-
-            // Always keep the comboTargetType (Method type) enabled. Throw and error if the 
-            // user selects "Scheduled" and it is not supported by the instrument.
-            // comboTargetType.Enabled = CanScheduleInstrumentType;
-            
             comboOptimizing.Enabled = !IsFullScanInstrument;
+            OptimizeType = ExportOptimize.NONE;
 
-            UpdateDwellControls(standard);
-            UpdateThermoColumns(standard);
-            UpdateAbSciexControls();
-            UpdateMaxLabel(standard);
             if (wasFullScanInstrument != IsFullScanInstrument)
                 UpdateMaxTransitions();
 
@@ -992,19 +1013,93 @@ namespace pwiz.Skyline.FileUI
                 ? templateFile.FilePath
                 : string.Empty;
 
+            var targetType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
+            bool standard = (targetType == ExportMethodType.Standard);
+            bool triggered = (targetType == ExportMethodType.Triggered);
+            if ((!standard && !CanSchedule) || (triggered && !CanTrigger))
+            {
+                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
+                // Change in target type will update the instrument controls and calc method count
+                return;
+            }                
+
+            // Always keep the comboTargetType (Method type) enabled. Throw and error if the 
+            // user selects "Scheduled" or "Triggered" and it is not supported by the instrument.
+            // comboTargetType.Enabled = CanScheduleInstrumentType;
+            
+            UpdateInstrumentControls(targetType);
+
             CalcMethodCount();
         }
 
         private void comboTargetType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.GetLocalizedString());
-            if (!standard && IsDia)
+            var targetType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
+            bool standard = (targetType == ExportMethodType.Standard);
+            bool triggered = (targetType == ExportMethodType.Triggered);
+            if (!standard && !VerifySchedulingAllowed(triggered))
+            {
+                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
+                targetType = ExportMethodType.Standard;
+            }
+
+            UpdateInstrumentControls(targetType);
+
+            CalcMethodCount();
+        }
+
+        private void UpdateInstrumentControls(ExportMethodType targetType)
+        {
+            bool standard = (targetType == ExportMethodType.Standard);
+            bool triggered = (targetType == ExportMethodType.Triggered);
+            comboOptimizing.Enabled = !triggered && !IsFullScanInstrument;
+            if (triggered)
+                OptimizeType = ExportOptimize.NONE;
+
+            UpdateTriggerControls(targetType);
+            UpdateDwellControls(standard);
+            UpdateThermoColumns(targetType);
+            UpdateAbSciexControls();
+            UpdateMaxLabel(standard);
+        }
+
+        private void textPrimaryCount_TextChanged(object sender, EventArgs e)
+        {
+            CalcMethodCount();
+        }
+
+        private bool VerifySchedulingAllowed(bool triggered)
+        {
+            if (IsDia)
             {
                 MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Scheduled_methods_are_not_yet_supported_for_DIA_acquisition);
-                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
-                return;
+                return false;
             }
-            if (!standard && !CanSchedule)
+            if (triggered)
+            {
+                if (!CanTriggerInstrumentType)
+                {
+                    // Give a clearer message for the Thermo TSQ, since it does actually support triggered acquisition,
+                    // but we are unable to export directly to mehtods.
+                    if (Equals(InstrumentType, ExportInstrumentType.THERMO_TSQ))
+                        MessageDlg.Show(this, TextUtil.LineSeparate(string.Format(Resources.ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_, InstrumentType),
+                                                                    string.Format(Resources.ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_, ExportInstrumentType.THERMO)));
+                    else
+                        MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_, InstrumentType));
+                    return false;
+                }
+                if (!_document.Settings.HasResults && !_document.Settings.HasLibraries)
+                {
+                    MessageDlg.Show(this, Resources.ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_);
+                    return false;
+                }
+                if (!CanTrigger)
+                {
+                    MessageDlg.Show(this, Resources.ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_);
+                    return false;
+                }
+            }
+            if (!CanSchedule)
             {
                 var prediction = _document.Settings.PeptideSettings.Prediction;
 
@@ -1012,16 +1107,16 @@ namespace pwiz.Skyline.FileUI
                 // selects "Scheduled" for an instrument that does not support scheduled methods (e.g LTQ, ABI TOF)
                 // However, if we are exporting inclusion lists (MS1 filtering enabled AND MS2 filtering disabled) 
                 // the user should be able to select "Scheduled" for LTQ and ABI TOF instruments.
-                if(!CanScheduleInstrumentType)
+                if (!CanScheduleInstrumentType)
                 {
-                    MessageDlg.Show(this, SCHED_NOT_SUPPORTED_ERR_TXT);    
+                    MessageDlg.Show(this, SCHED_NOT_SUPPORTED_ERR_TXT);
                 }
                 else if (prediction.RetentionTime == null)
                 {
                     if (prediction.UseMeasuredRTs)
                         MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction_or_import_results_for_all_peptides_in_the_document);
                     else
-                        MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction);                    
+                        MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction);
                 }
                 else if (!prediction.RetentionTime.Calculator.IsUsable)
                 {
@@ -1039,15 +1134,14 @@ namespace pwiz.Skyline.FileUI
                 {
                     MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_import_results_for_all_peptides_in_the_document);
                 }
-                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
-                return;
+                return false;
             }
+            return true;
+        }
 
-            UpdateDwellControls(standard);
-            UpdateThermoColumns(standard);
-            UpdateMaxLabel(standard);
-
-            CalcMethodCount();
+        private void UpdateTriggerControls(ExportMethodType targetType)
+        {
+            panelTriggered.Visible = (targetType == ExportMethodType.Triggered);
         }
 
         private void UpdateMaxLabel(bool standard)
@@ -1323,6 +1417,11 @@ namespace pwiz.Skyline.FileUI
         public bool IsRunLengthVisible
         {
             get{ return textRunLength.Visible; }
+        }
+
+        public bool IsPrimaryCountVisible
+        {
+            get { return textPrimaryCount.Visible; }
         }
 
         public int CalculationTime

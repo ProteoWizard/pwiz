@@ -1553,22 +1553,6 @@ namespace pwiz.Skyline.Properties
         {
             return new SrmSettingsList();
         }
-
-        #region Overrides of SettingsList<SrmSettings>
-
-        public override SrmSettings EditItem(Control owner, SrmSettings item, IEnumerable<SrmSettings> existing, object tag)
-        {
-            // Should never be called
-            throw new InvalidOperationException();
-        }
-
-        public override SrmSettings CopyItem(SrmSettings item)
-        {
-            // Should never be called
-            throw new InvalidOperationException();
-        }
-
-        #endregion
     }
 
     public interface IReportDatabaseProvider
@@ -1589,7 +1573,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
-    public class ReportSpecList : SerializableSettingsList<ReportSpec>
+    public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
         public const string EXT_REPORTS = ".skyr"; // Not L10N
 
@@ -1717,7 +1701,12 @@ namespace pwiz.Skyline.Properties
             return listDefaults;
         }
 
-        public override ReportSpec EditItem(Control owner, ReportSpec item,
+        public ReportSpec NewItem(Control owner, IEnumerable<ReportSpec> existing, object tag)
+        {
+            return EditItem(owner, null, existing, tag);
+        }
+
+        public ReportSpec EditItem(Control owner, ReportSpec item,
             IEnumerable<ReportSpec> existing, object tag)
         {
             using (PivotReportDlg editReport = new PivotReportDlg(existing ?? this))
@@ -1744,7 +1733,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public override ReportSpec CopyItem(ReportSpec item)
+        public ReportSpec CopyItem(ReportSpec item)
         {
             return (ReportSpec) item.ChangeName(string.Empty);
         }
@@ -1849,7 +1838,7 @@ namespace pwiz.Skyline.Properties
         }        
     }
 
-    public abstract class SerializableSettingsList<TItem> : SettingsList<TItem>, IListSerializer<TItem>
+    public abstract class SerializableSettingsList<TItem> : SettingsListBase<TItem>, IListSerializer<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
         #region Implementation of IListSerializer<TItem>

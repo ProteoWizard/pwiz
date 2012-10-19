@@ -36,12 +36,12 @@ namespace pwiz.Skyline.SettingsUI
     {
         private int _selectedIndexLast;
 
-        public SettingsListComboDriver(ComboBox combo, SettingsList<TItem> list)
+        public SettingsListComboDriver(ComboBox combo, SettingsListBase<TItem> list)
             : this(combo, list, true)
         {            
         }
 
-        public SettingsListComboDriver(ComboBox combo, SettingsList<TItem> list, bool isVisibleEditting)
+        public SettingsListComboDriver(ComboBox combo, SettingsListBase<TItem> list, bool isVisibleEditting)
         {
             IsVisibleEditting = isVisibleEditting;
             Combo = combo;
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI
         public bool IsVisibleEditting { get; private set; }
         public bool IsInSelectedIndexChangedEvent { get; private set; }
         public ComboBox Combo { get; private set; }
-        public SettingsList<TItem> List { get; private set; }
+        public SettingsListBase<TItem> List { get; private set; }
 
         public void LoadList(string selectedItemLast)
         {
@@ -71,8 +71,11 @@ namespace pwiz.Skyline.SettingsUI
                     Combo.Items.Add(string.Empty);
                 if (IsVisibleEditting)
                 {
-                    Combo.Items.Add(Resources.SettingsListComboDriver_Add);
-                    Combo.Items.Add(Resources.SettingsListComboDriver_Edit_current);
+                    if (List is IItemEditor<TItem>)
+                    {
+                        Combo.Items.Add(Resources.SettingsListComboDriver_Add);
+                        Combo.Items.Add(Resources.SettingsListComboDriver_Edit_current);
+                    }
                     Combo.Items.Add(Resources.SettingsListComboDriver_Edit_list);
                 }
                 if (Combo.SelectedIndex < 0)
@@ -149,7 +152,11 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddItem()
         {
-            TItem itemNew = List.NewItem(Combo.TopLevelControl, null, null);
+            var itemEditor = List as IItemEditor<TItem>;
+            if (itemEditor == null)
+                return;
+
+            TItem itemNew = itemEditor.NewItem(Combo.TopLevelControl, null, null);
             if (!Equals(itemNew, default(TItem)))
             {
                 List.Add(itemNew);
@@ -164,10 +171,14 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditCurrent()
         {
+            var itemEditor = List as IItemEditor<TItem>;
+            if (itemEditor == null)
+                return;
+
             int i = _selectedIndexLast;
             TItem itemNew = default(TItem);
             if (i >= List.ExcludeDefaults)
-                itemNew = List.EditItem(Combo.TopLevelControl, List[i], List, null);
+                itemNew = itemEditor.EditItem(Combo.TopLevelControl, List[i], List, null);
             if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
             {
                 List[i] = itemNew;

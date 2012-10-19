@@ -209,6 +209,7 @@
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="ExportMethodDialogTest.zip" />
     <None Include="FullScanIdTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="InsertTest.zip" />

@@ -127,26 +127,12 @@ namespace pwiz.Skyline.EditUI
         }
         public static GroupGraphsType GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
-                {
-                    return (GroupGraphsType)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<GroupGraphsType>(enumValue, LOCALIZED_VALUES);
         }
 
         public static GroupGraphsType GetEnum(string enumValue, GroupGraphsType defaultValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
-                {
-                    return (GroupGraphsType)i;
-                }
-            }
-            return defaultValue;
+            return Helpers.EnumFromLocalizedString<GroupGraphsType>(enumValue, LOCALIZED_VALUES, defaultValue);
         }
     }
 
@@ -167,26 +153,12 @@ namespace pwiz.Skyline.EditUI
 
         public static GroupGraphsOrder GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
-                {
-                    return (GroupGraphsOrder)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<GroupGraphsOrder>(enumValue, LOCALIZED_VALUES);
         }
 
         public static GroupGraphsOrder GetEnum(string enumValue, GroupGraphsOrder defaultValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
-                {
-                    return (GroupGraphsOrder)i;
-                }
-            }
-            return defaultValue;
+            return Helpers.EnumFromLocalizedString<GroupGraphsOrder>(enumValue, LOCALIZED_VALUES, defaultValue);
         }
     }
 

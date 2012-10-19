@@ -34,6 +34,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textTimeWindows = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textPrimaryTransitionCount = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -65,12 +67,24 @@
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
+            // textPrimaryTransitionCount
+            // 
+            resources.ApplyResources(this.textPrimaryTransitionCount, "textPrimaryTransitionCount");
+            this.textPrimaryTransitionCount.Name = "textPrimaryTransitionCount";
+            // 
             // SchedulingGraphPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textPrimaryTransitionCount);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textTimeWindows);
             this.Controls.Add(this.label1);
@@ -93,5 +107,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textTimeWindows;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textPrimaryTransitionCount;
     }
 }

@@ -183,9 +183,8 @@ namespace pwiz.SkylineTestFunctional
                         messageDlg.OkDialog();
                     });
                 RunUI(() => renameProteinsDlg.CancelButton.PerformClick());
+                WaitForClosedForm(renameProteinsDlg);
             }
-
-
         }
 
         private void SetClipboardFileText(string filepath)

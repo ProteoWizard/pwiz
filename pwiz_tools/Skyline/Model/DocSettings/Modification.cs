@@ -61,26 +61,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static RelativeRT GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (RelativeRT)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<RelativeRT>(enumValue, LOCALIZED_VALUES);
         }
 
         public static RelativeRT GetEnum(string enumValue, RelativeRT defaultEnum)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (RelativeRT)i;
-                }
-            }
-            return defaultEnum;
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultEnum);
         }
 
     }

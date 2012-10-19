@@ -730,7 +730,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("regression")]
+        [global::System.Configuration.DefaultSettingValueAttribute("replicate")]
         public string RTGraphType {
             get {
                 return ((string)(this["RTGraphType"]));
@@ -1566,22 +1566,7 @@ namespace pwiz.Skyline.Properties {
                 this["ShowAlignedPeptideIdTimes"] = value;
             }
         }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowUnalignedPeptideIdTimes
-        {
-            get
-            {
-                return ((bool)(this["ShowUnalignedPeptideIdTimes"]));
-            }
-            set
-            {
-                this["ShowUnalignedPeptideIdTimes"] = value;
-            }
-        }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -1603,6 +1588,42 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ShowPeptides"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public int PrimaryTransitionCount {
+            get {
+                return ((int)(this["PrimaryTransitionCount"]));
+            }
+            set {
+                this["PrimaryTransitionCount"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowUnalignedPeptideIdTimes {
+            get {
+                return ((bool)(this["ShowUnalignedPeptideIdTimes"]));
+            }
+            set {
+                this["ShowUnalignedPeptideIdTimes"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int PrimaryTransitionCountGraph {
+            get {
+                return ((int)(this["PrimaryTransitionCountGraph"]));
+            }
+            set {
+                this["PrimaryTransitionCountGraph"] = value;
             }
         }
     }

@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -40,26 +41,12 @@ namespace pwiz.Skyline.Model
 
         public static IonType GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (IonType)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<IonType>(enumValue, LOCALIZED_VALUES);
         }
 
         public static IonType GetEnum(string enumValue, IonType defaultValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (IonType)i;
-                }
-            }
-            return defaultValue;
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
         }
     }
 
@@ -376,6 +363,11 @@ namespace pwiz.Skyline.Model
 
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
+
+        public bool Equivalent(TransitionLossKey other)
+        {
+            return other.Transition.Equivalent(Transition) && Equals(other.Losses, Losses);
+        }
 
         #region object overrides
 

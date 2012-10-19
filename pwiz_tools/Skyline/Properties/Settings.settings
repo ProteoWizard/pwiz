@@ -180,7 +180,7 @@
       <Value Profile="(Default)">2,5,10</Value>
     </Setting>
     <Setting Name="RTGraphType" Type="System.String" Scope="User">
-      <Value Profile="(Default)">regression</Value>
+      <Value Profile="(Default)">replicate</Value>
     </Setting>
     <Setting Name="EditFindUp" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -394,6 +394,15 @@
     </Setting>
     <Setting Name="ShowPeptides" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="PrimaryTransitionCount" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="ShowUnalignedPeptideIdTimes" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PrimaryTransitionCountGraph" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -386,8 +386,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return Children.Contains(node =>
-                                         !((TransitionGroupDocNode) node).TransitionGroup.LabelType.IsLight);
+                return TransitionGroups.Contains(nodeGroup => !nodeGroup.TransitionGroup.LabelType.IsLight);
             }
         }
 
@@ -395,7 +394,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return Children.Contains(node => ((TransitionGroupDocNode)node).HasLibInfo);
+                return TransitionGroups.Contains(nodeGroup => nodeGroup.HasLibInfo);
             }
         }
 
@@ -405,8 +404,53 @@ namespace pwiz.Skyline.Model
             {
                 if (!Annotations.IsEmpty)
                     return true;
-                return Children.Cast<TransitionGroupDocNode>().Contains(nodeGroup => nodeGroup.IsUserModified);
+                return TransitionGroups.Contains(nodeGroup => nodeGroup.IsUserModified);
             }
+        }
+
+        /// <summary>
+        /// Given a <see cref="TransitionGroupDocNode"/> returns a <see cref="TransitionGroupDocNode"/> for which
+        /// transition rankings based on imported results should be used for determining primary transitions
+        /// in triggered-MRM (iSRM).  This ensures that light and isotope labeled precursors with the same
+        /// transitions use the same ranking, and that only one isotope label type need be measured to
+        /// produce a method for a document with light-heavy pairs.
+        /// </summary>
+        public TransitionGroupDocNode GetPrimaryResultsGroup(TransitionGroupDocNode nodeGroup)
+        {
+            TransitionGroupDocNode nodeGroupPrimary = nodeGroup;
+            if (TransitionGroupCount > 1)
+            {
+                double maxArea = nodeGroup.AveragePeakArea ?? 0;
+                int precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
+                foreach (var nodeGroupChild in TransitionGroups.Where(g =>
+                        g.TransitionGroup.PrecursorCharge == precursorCharge &&
+                        !ReferenceEquals(g, nodeGroup)))
+                {
+                    // Only when children match can one precursor provide primary values for another
+                    if (!nodeGroup.EquivalentChildren(nodeGroupChild))
+                        continue;
+
+                    float peakArea = nodeGroupChild.AveragePeakArea ?? 0;
+                    if (peakArea > maxArea)
+                    {
+                        maxArea = peakArea;
+                        nodeGroupPrimary = nodeGroupChild;
+                    }
+                }
+            }
+            return nodeGroupPrimary;
+        }
+
+        public bool CanTrigger()
+        {
+            foreach (var nodeGroup in TransitionGroups)
+            {
+                var nodeGroupPrimary = GetPrimaryResultsGroup(nodeGroup);
+                // Return false, if any primary group lacks the ranking information necessary for tMRM/iSRM
+                if (!nodeGroupPrimary.HasResultRanks && !nodeGroupPrimary.HasLibRanks)
+                    return false;
+            }
+            return true;
         }
 
         public PeptideDocNode Merge(PeptideDocNode nodePepMerge)

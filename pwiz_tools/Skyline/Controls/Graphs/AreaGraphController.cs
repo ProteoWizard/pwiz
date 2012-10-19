@@ -19,6 +19,7 @@
 using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -32,44 +33,20 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         public static GraphTypeArea GraphType
         {
-            get
-            {
-                return (GraphTypeArea)Enum.Parse(typeof(GraphTypeArea),
-                                               Settings.Default.AreaGraphType);
-            }
-
-            set
-            {
-                Settings.Default.AreaGraphType = value.ToString();
-            }
+            get { return Helpers.ParseEnum(Settings.Default.AreaGraphType, GraphTypeArea.replicate); }
+            set { Settings.Default.AreaGraphType = value.ToString(); }
         }
 
         public static AreaNormalizeToView AreaView
         {
-            get
-            {
-                return (AreaNormalizeToView)Enum.Parse(typeof(AreaNormalizeToView),
-                                                       Settings.Default.AreaNormalizeToView);
-            }
-
-            set
-            {
-                Settings.Default.AreaNormalizeToView = value.ToString();
-            }
+            get { return Helpers.ParseEnum(Settings.Default.AreaNormalizeToView, AreaNormalizeToView.none); }
+            set { Settings.Default.AreaNormalizeToView = value.ToString(); }
         }
 
         public static AreaScope AreaScope
         {
-            get
-            {
-                return (AreaScope)Enum.Parse(typeof(AreaScope),
-                                                       Settings.Default.PeakAreaScope);
-            }
-
-            set
-            {
-                Settings.Default.PeakAreaScope = value.ToString();
-            }
+            get { return Helpers.ParseEnum(Settings.Default.PeakAreaScope, AreaScope.document); }
+            set { Settings.Default.PeakAreaScope = value.ToString(); }
         }
 
         public GraphSummary GraphSummary { get; set; }

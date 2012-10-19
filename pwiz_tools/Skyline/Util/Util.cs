@@ -969,12 +969,35 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                return (TEnum)Enum.Parse(typeof(TEnum), value);
+                return (TEnum)Enum.Parse(typeof(TEnum), value, true);
             }
             catch (Exception)
             {
                 return defaultValue;
             }                            
+        }
+
+        /// <summary>
+        /// Given a localized string and an array of localized strings with the
+        /// index of each localized string matching the desired enum value for
+        /// an enum type, returns the enum value corresponding to the localized string.
+        /// </summary>
+        /// <typeparam name="TEnum">The enum type</typeparam>
+        /// <param name="value">The localized string for which the enum value is desired</param>
+        /// <param name="localizedStrings">Array of all localized strings</param>
+        /// <returns>An enum value of type <see cref="TEnum"/></returns>
+        public static TEnum EnumFromLocalizedString<TEnum>(string value, string[] localizedStrings)
+        {
+            int i = localizedStrings.IndexOf(v => Equals(v, value));
+            if (i == -1)
+                throw new ArgumentException(string.Format("The string '{0}' does not match an enum value", value));
+            return (TEnum) (object) i;            
+        }
+
+        public static TEnum EnumFromLocalizedString<TEnum>(string value, string[] localizedStrings, TEnum defaultValue)
+        {
+            int i = localizedStrings.IndexOf(v => Equals(v, value));
+            return (i == -1 ? defaultValue : (TEnum) (object) i);
         }
 
         public static string MakeId(IEnumerable<char> name)

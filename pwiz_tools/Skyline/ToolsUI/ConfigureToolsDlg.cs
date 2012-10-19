@@ -211,10 +211,11 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat", ".py", ".pl"};
 
-        public static bool checkExtension(string path)
+        public static bool CheckExtension(string path)
         {
-            string s = Path.GetExtension(path);
-            return EXTENSIONS.Any(extension => s != null && extension == s.ToLower());
+            // Avoid Path.GetExtension() because it throws an exception for an invalid path
+            path = path.ToLower();
+            return EXTENSIONS.Any(extension => path.EndsWith(extension));
         }
 
         public bool CheckPassTool(int toolIndex)
@@ -224,6 +225,7 @@ namespace pwiz.Skyline.ToolsUI
                 listTools.SelectedIndex = toolIndex;
             return pass;
         }
+
         private bool CheckPassToolInternal(int toolIndex)
         {
             ToolDescription tool;
@@ -264,7 +266,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             string supportedTypes = String.Join("; ", EXTENSIONS);
             supportedTypes = supportedTypes.Replace(".", "*.");
-            if (!checkExtension(tool.Command))
+            if (!CheckExtension(tool.Command))
             {
                 MessageDlg.Show(this, string.Format(TextUtil.LineSeparate(
                             Resources.ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type,

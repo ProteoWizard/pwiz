@@ -454,7 +454,8 @@ namespace pwiz.SkylineTestUtil
         {
             // Split strings on placeholders
             string[] expectedParts = Regex.Split(expected,@"{\d}");
-            Assert.AreEqual(replacements, expectedParts.Length - 1);
+            Assert.AreEqual(replacements, expectedParts.Length - 1,
+                string.Format("Expected {0} replacements in string resource '{1}'", replacements, expected));
 
             int startIndex = 0;
             foreach (var expectedPart in expectedParts)

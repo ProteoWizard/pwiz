@@ -161,9 +161,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public Library TryGetLibrary(LibrarySpec spec)
         {
-            Library library;
-            _loadedLibraries.TryGetValue(spec.Name, out library);
-            return library;
+            lock (_loadedLibraries)
+            {
+                Library library;
+                _loadedLibraries.TryGetValue(spec.Name, out library);
+                return library;
+            }
         }
 
         public delegate bool BuildFunction(IDocumentContainer documentContainer, ILibraryBuilder libraryBuilder);

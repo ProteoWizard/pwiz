@@ -358,7 +358,19 @@ namespace pwiz.Skyline.Model
                 i++;
             return baseId + i;
         }
-        
+
+        public bool CanTrigger()
+        {
+            return Peptides.All(p => p.CanTrigger());
+        }
+
+        public bool CanSchedule(bool singleWindow)
+        {
+            return Settings.PeptideSettings.Prediction.CanSchedule(this, singleWindow
+                        ? PeptidePrediction.SchedulingStrategy.single_window
+                        : PeptidePrediction.SchedulingStrategy.all_variable_window);
+        }
+
         /// <summary>
         /// Make sure every new copy of a document gets an incremented value
         /// for <see cref="RevisionIndex"/>.

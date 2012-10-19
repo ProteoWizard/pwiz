@@ -4847,4 +4847,28 @@ Are you sure you want to continue?</value>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library">
     <value xml:space="preserve">Add document spectral library</value>
   </data>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered">
+    <value xml:space="preserve">Triggered</value>
+  </data>
+  <data name="EditCEDlg_ValidateCell_A_value_is_required">
+    <value xml:space="preserve">A value is required.</value>
+  </data>
+  <data name="NistLibraryBase_Load_The_file___0___is_not_a_valid_library_">
+    <value xml:space="preserve">The file '{0}' is not a valid library.</value>
+  </data>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_">
+    <value xml:space="preserve">The instrument type {0} does not support triggered acquisition.</value>
+  </data>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_">
+    <value xml:space="preserve">Triggered acquistion requires a spectral library or imported results in order to rank transitions.</value>
+  </data>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_">
+    <value xml:space="preserve">The current document contains peptides without enough information to rank transitions for triggered acquisition.</value>
+  </data>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_">
+    <value xml:space="preserve">The {0} instrument lacks support for direct method export for triggered acquisition.</value>
+  </data>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_">
+    <value xml:space="preserve">You must export a {0} transition list and manually import it into a method file using vendor software.</value>
+  </data>
 </root>

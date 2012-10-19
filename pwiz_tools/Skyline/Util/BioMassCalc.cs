@@ -49,26 +49,12 @@ namespace pwiz.Skyline.Util
 
         public static MassType GetEnum(string enumValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (MassType)i;
-                }
-            }
-            throw new Exception("String does not match an enum");
+            return Helpers.EnumFromLocalizedString<MassType>(enumValue, LOCALIZED_VALUES);
         }
 
         public static MassType GetEnum(string enumValue, MassType defaultValue)
         {
-            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
-            {
-                if (LOCALIZED_VALUES[i] == enumValue)
-                {
-                    return (MassType)i;
-                }
-            }
-            return defaultValue;
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
         } 
     }
 

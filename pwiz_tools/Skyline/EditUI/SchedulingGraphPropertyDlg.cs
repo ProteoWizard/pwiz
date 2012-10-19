@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using System.Linq;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
@@ -36,17 +37,34 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
 
             TimeWindows = RTScheduleGraphPane.ScheduleWindows;
+            PrimaryTransitionCount = RTScheduleGraphPane.PrimaryTransitionCount;
         }
 
         public double[] TimeWindows
         {
-            get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); } // TODO: Not L10N?
+            get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); } // Not L10N
             set { textTimeWindows.Text = WindowsToString(value); }
+        }
+
+        public int PrimaryTransitionCount
+        {
+            get
+            {
+                return string.IsNullOrEmpty(textPrimaryTransitionCount.Text)
+                           ? 0
+                           : int.Parse(textPrimaryTransitionCount.Text);
+            }
+            set
+            {
+                textPrimaryTransitionCount.Text = value == 0
+                    ? string.Empty
+                    : value.ToString(CultureInfo.CurrentCulture);
+            }
         }
 
         private static string WindowsToString(IEnumerable<double> windows)
         {
-            return string.Join(", ", windows.Select(v => v.ToString(CultureInfo.CurrentCulture)).ToArray()); // TODO: Not L10N?
+            return string.Join(", ", windows.Select(v => v.ToString(CultureInfo.CurrentCulture)).ToArray()); // Not L10N
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -63,9 +81,22 @@ namespace pwiz.Skyline.EditUI
             if (!helper.ValidateDecimalListTextBox(e, textTimeWindows, 1, 200, out timeWindows))
                 return;
 
+            int primaryTransitionCount = 0;
+            if (!string.IsNullOrEmpty(textPrimaryTransitionCount.Text))
+            {
+                if (!helper.ValidateNumberTextBox(e,
+                                                  textPrimaryTransitionCount,
+                                                  AbstractMassListExporter.PRIMARY_COUNT_MIN,
+                                                  AbstractMassListExporter.PRIMARY_COUNT_MAX,
+                                                  out primaryTransitionCount))
+                    return;
+            }
+
             Array.Sort(timeWindows);
 
             RTScheduleGraphPane.ScheduleWindows = timeWindows;
+            RTScheduleGraphPane.PrimaryTransitionCount = primaryTransitionCount;
+
             DialogResult = DialogResult.OK;
         }
     }

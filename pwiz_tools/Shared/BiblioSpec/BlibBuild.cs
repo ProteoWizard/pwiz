@@ -53,7 +53,7 @@ namespace pwiz.BiblioSpec
                     return (LibraryBuildAction)i;
                 }
             }
-            throw new Exception("String does not match an enum");
+            throw new ArgumentException(string.Format("The string '{0}' does not match an enum value", enumValue));
         }
 
         public static LibraryBuildAction GetEnum(string enumValue, LibraryBuildAction defaultValue)
