@@ -1357,9 +1357,6 @@ Are you sure you want to continue?</value>
   <data name="StaticMod_Validate_Formula_not_allowed_with_labeled_atoms" xml:space="preserve">
     <value>Formula not allowed with labeled atoms.</value>
   </data>
-  <data name="StaticMod_Validate_Modification_settings_do_not_match_the_expected_values_for_Unimod_ID__0__" xml:space="preserve">
-    <value>Modification settings do not match the expected values for Unimod ID {0}.</value>
-  </data>
   <data name="StaticMod_ToModTerminus_Invalid_terminus__0__" xml:space="preserve">
     <value>Invalid terminus '{0}'.</value>
   </data>

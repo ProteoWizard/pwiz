@@ -12105,16 +12105,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Modification settings do not match the expected values for Unimod ID {0}..
-        /// </summary>
-        public static string StaticMod_Validate_Modification_settings_do_not_match_the_expected_values_for_Unimod_ID__0__ {
-            get {
-                return ResourceManager.GetString("StaticMod_Validate_Modification_settings_do_not_match_the_expected_values_for_Uni" +
-                        "mod_ID__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Modification with a formula may not specify modification masses..
         /// </summary>
         public static string StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses {

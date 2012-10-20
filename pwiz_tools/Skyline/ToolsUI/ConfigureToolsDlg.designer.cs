@@ -77,7 +77,8 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // comboReport
             // 
-            this.comboReport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboReport.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.comboReport.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboReport.FormattingEnabled = true;
             this.comboReport.Location = new System.Drawing.Point(15, 294);
@@ -89,7 +90,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // btnInitialDirectoryMacros
             // 
-            this.btnInitialDirectoryMacros.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnInitialDirectoryMacros.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnInitialDirectoryMacros.Image = ((System.Drawing.Image)(resources.GetObject("btnInitialDirectoryMacros.Image")));
             this.btnInitialDirectoryMacros.Location = new System.Drawing.Point(326, 244);
             this.btnInitialDirectoryMacros.Name = "btnInitialDirectoryMacros";
@@ -103,7 +104,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // btnArguments
             // 
-            this.btnArguments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnArguments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnArguments.Image = ((System.Drawing.Image)(resources.GetObject("btnArguments.Image")));
             this.btnArguments.Location = new System.Drawing.Point(326, 215);
             this.btnArguments.Name = "btnArguments";
@@ -117,7 +118,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // btnInitialDirectory
             // 
-            this.btnInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnInitialDirectory.Location = new System.Drawing.Point(296, 244);
             this.btnInitialDirectory.Name = "btnInitialDirectory";
             this.btnInitialDirectory.Size = new System.Drawing.Size(24, 23);
@@ -129,7 +130,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // btnFindCommand
             // 
-            this.btnFindCommand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnFindCommand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnFindCommand.Location = new System.Drawing.Point(326, 186);
             this.btnFindCommand.Name = "btnFindCommand";
             this.btnFindCommand.Size = new System.Drawing.Size(24, 23);
@@ -141,7 +142,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // textInitialDirectory
             // 
-            this.textInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.textInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textInitialDirectory.Location = new System.Drawing.Point(102, 246);
             this.textInitialDirectory.Name = "textInitialDirectory";
@@ -153,7 +154,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // textArguments
             // 
-            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textArguments.Location = new System.Drawing.Point(102, 217);
             this.textArguments.Name = "textArguments";
@@ -165,7 +166,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // textCommand
             // 
-            this.textCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.textCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textCommand.Location = new System.Drawing.Point(102, 188);
             this.textCommand.Name = "textCommand";
@@ -176,7 +177,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // textTitle
             // 
-            this.textTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.textTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textTitle.Location = new System.Drawing.Point(102, 159);
             this.textTitle.Name = "textTitle";
@@ -210,7 +211,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // label6
             // 
-            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(12, 278);
             this.label6.Name = "label6";
@@ -220,6 +221,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // cbOutputImmediateWindow
             // 
+            this.cbOutputImmediateWindow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cbOutputImmediateWindow.AutoSize = true;
             this.cbOutputImmediateWindow.Location = new System.Drawing.Point(194, 296);
             this.cbOutputImmediateWindow.Name = "cbOutputImmediateWindow";
@@ -231,7 +233,8 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // listTools
             // 
-            this.listTools.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.listTools.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listTools.FormattingEnabled = true;
             this.listTools.Location = new System.Drawing.Point(15, 25);
@@ -242,8 +245,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // label5
             // 
-            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(12, 249);
             this.label5.Name = "label5";
@@ -253,8 +255,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // label4
             // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(12, 220);
             this.label4.Name = "label4";
@@ -264,8 +265,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // label3
             // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(12, 191);
             this.label3.Name = "label3";
@@ -275,8 +275,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // label2
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(12, 162);
             this.label2.Name = "label2";
@@ -380,7 +379,6 @@ namespace pwiz.Skyline.ToolsUI
             this.Controls.Add(this.btnApply);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

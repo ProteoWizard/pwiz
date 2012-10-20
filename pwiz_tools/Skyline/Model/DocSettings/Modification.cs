@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -349,8 +348,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
                 }
             }
+            // Just remove the Unimod ID, if this modification does not match.
+            // Sometimes Unimod definitions change, and throwing an error when they do causes document load failures
             if (!UniMod.ValidateID(this))
-                throw new InvalidDataException(string.Format(Resources.StaticMod_Validate_Modification_settings_do_not_match_the_expected_values_for_Unimod_ID__0__, UnimodId));
+                UnimodId = null;
         }
 
         private static ModTerminus ToModTerminus(String value)

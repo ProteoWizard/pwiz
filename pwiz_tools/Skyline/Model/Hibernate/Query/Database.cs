@@ -307,10 +307,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             DbProtein dbProtein, PeptideDocNode nodePeptide)
         {
             Peptide peptide = nodePeptide.Peptide;
+            var calcPre = docInfo.Settings.GetPrecursorCalc(IsotopeLabelType.light, nodePeptide.ExplicitMods);
+            string seq = peptide.Sequence;
+            string seqModified = calcPre.GetModifiedSequence(seq, true);
             DbPeptide dbPeptide = new DbPeptide
             {
                 Protein = dbProtein,
-                Sequence = peptide.Sequence,
+                Sequence = seq,
+                ModifiedSequence = seqModified,
                 BeginPos = peptide.Begin,
                 // Convert from a non-inclusive end to an inclusive end
                 EndPos = (peptide.End.HasValue ? peptide.End.Value - 1 : (int?) null),

@@ -280,6 +280,11 @@ namespace pwiz.Skyline.Controls.Graphs
             // where each dot product annotation (if showing) should be placed
             var sumAreas = new double[graphData.ReplicateGroups.Count];
 
+            // If only one bar to show, then use cluster instead of stack bar type, since nothing to stack
+            // Important for mean error bar checking below
+            if (BarSettings.Type == BarType.Stack && countNodes == 1 && graphData.PointPairLists[0].Count == 1)
+                BarSettings.Type = BarType.Cluster;
+
             int iColor = 0, iCharge = -1, charge = -1;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             for (int i = 0; i < countNodes; i++)
@@ -326,7 +331,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         label = string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Step__0_, step);
                     BarItem curveItem;
                     // Only use a MeanErrorBarItem if bars are not going to be stacked.
-                    // TODO(nicksh): If there is only one PointPairList, then we should be able to use MeanErrorBarItem.
                     // TODO(nicksh): AreaGraphData.NormalizeTo does not know about MeanErrorBarItem 
                     if (BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
                     {
