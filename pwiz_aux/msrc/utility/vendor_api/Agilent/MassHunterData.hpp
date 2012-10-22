@@ -245,6 +245,7 @@ class PWIZ_API_DECL MassHunterData
     virtual MSScanType getScanTypes() const = 0;
     virtual MSStorageMode getSpectraFormat() const = 0;
     virtual int getTotalScansPresent() const = 0;
+    virtual bool hasProfileData() const = 0;
 
     virtual const std::set<Transition>& getTransitions() const = 0;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const = 0;

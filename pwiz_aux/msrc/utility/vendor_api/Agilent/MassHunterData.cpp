@@ -93,6 +93,7 @@ class MassHunterDataImpl : public MassHunterData
     virtual MSScanType getScanTypes() const;
     virtual MSStorageMode getSpectraFormat() const;
     virtual int getTotalScansPresent() const;
+    virtual bool hasProfileData() const;
 
     virtual const set<Transition>& getTransitions() const;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
@@ -123,6 +124,7 @@ class MassHunterDataImpl : public MassHunterData
     // unable to achieve identical results with cached SIM chromatograms
     // gcroot<array<MHDAC::IBDAChromData^>^> chromSim_;
 
+    bool hasProfileData_;
 };
 
 typedef boost::shared_ptr<MassHunterDataImpl> MassHunterDataImplPtr;
@@ -231,6 +233,8 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
             if (!reader_->OpenDataFile(ToSystemString(path)))
             {}    // TODO: log warning about incomplete acquisition, possibly indicating corrupt data
         }
+
+        hasProfileData_ = bfs::exists(bfs::path(path) / "AcqData/MSProfile.bin");
 
         scanFileInfo_ = reader_->MSScanFileInformation;
 
@@ -368,6 +372,11 @@ int MassHunterDataImpl::getTotalScansPresent() const
     try {return (int) scanFileInfo_->TotalScansPresent;} CATCH_AND_FORWARD
 }
 
+bool MassHunterDataImpl::hasProfileData() const
+{
+    return hasProfileData_;
+}
+
 const set<Transition>& MassHunterDataImpl::getTransitions() const
 {
     return transitions_;
@@ -426,6 +435,7 @@ ScanRecordPtr MassHunterDataImpl::getScanRecord(int rowNumber) const
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumByRow(int rowNumber) const
 {
+    if (!hasProfileData()) return getPeakSpectrumByRow(rowNumber);
     try {return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, nullptr, nullptr, MHDAC::DesiredMSStorageType::ProfileElsePeak)));} CATCH_AND_FORWARD
 }
 
@@ -445,6 +455,7 @@ SpectrumPtr MassHunterDataImpl::getPeakSpectrumByRow(int rowNumber, PeakFilterPt
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumById(int scanId) const
 {
+    if (!hasProfileData()) return getPeakSpectrumById(scanId);
     try {return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId, true), nullptr)[0]));} CATCH_AND_FORWARD
 }
 
