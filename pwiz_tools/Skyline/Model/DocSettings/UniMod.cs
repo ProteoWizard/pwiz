@@ -213,8 +213,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (!_completed)
                 throw new InvalidOperationException(Resources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
-            return _aaMassLookups[structural ? Char.ToLower(aa) : Char.ToUpper(aa)]
-                .ClosestMatch(mass, roundTo, terminus, specific);
+            var massLookup = _aaMassLookups[structural ? Char.ToLower(aa) : Char.ToUpper(aa)];
+            return massLookup != null ? massLookup.ClosestMatch(mass, roundTo, terminus, specific) : null;
         }
 
         public void Complete()
