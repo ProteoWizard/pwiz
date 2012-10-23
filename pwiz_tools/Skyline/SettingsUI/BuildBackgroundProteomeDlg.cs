@@ -376,8 +376,17 @@ namespace pwiz.Skyline.SettingsUI
             if (BuildNew)
             {
                 string path = textPath.Text;
+                string fullPath;
+                try
+                {
+                    fullPath = Path.GetFullPath(path);
+                }
+                catch (Exception)
+                {
+                    fullPath = null;
+                }
                 bool browse = string.IsNullOrEmpty(path) ||
-                              path != Path.GetFullPath(path) ||
+                              !Equals(path, fullPath) ||
                               Directory.Exists(path);
                 if (!browse)
                 {

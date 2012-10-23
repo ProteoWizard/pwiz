@@ -4889,4 +4889,7 @@ Are you sure you want to continue?</value>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_">
     <value xml:space="preserve">You must export a {0} transition list and manually import it into a method file using vendor software.</value>
   </data>
+  <data name="SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__">
+    <value xml:space="preserve">No formula found for the amino acid '{0}'</value>
+  </data>
 </root>

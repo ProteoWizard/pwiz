@@ -129,45 +129,53 @@ namespace pwiz.Skyline.Model
                     ModTerminus? terminus = null;
                     int startIndex = index + 1;
                     int endIndex = sequence.IndexOf(seqByte => seqByte == (byte)']', startIndex);
+                    if (endIndex == -1)
+                        endIndex = sequence.Length;
                     if (index == 2)
                         terminus = ModTerminus.N;
                     if (endIndex == sequence.Length - 1)
                         terminus = ModTerminus.C;
-                    List<byte[]> listMasses;
-                    if (!_dictAAMassPairs.TryGetValue(new AATermKey(prevAA, terminus), out listMasses))
+                    // Only if prevAA is an amino acid character should AAModInfo be created
+                    // Some libraries, for instance, have been created with the sequence starting
+                    // with a modification before any amino acid, as an attempt at a n-terminal modification
+                    if (AminoAcid.IsExAA((char)prevAA))
                     {
-                        listMasses = new List<byte[]>();
-                        _dictAAMassPairs.Add(new AATermKey(prevAA, terminus), listMasses);
-                    }
-                    var modArr = new byte[endIndex - startIndex];
-                    Array.Copy(sequence, startIndex, modArr, 0, endIndex - startIndex);
-                    if (allowDuplicates || !listMasses.Contains(arr => ArrayUtil.EqualsDeep(arr, modArr)))
-                    {
-                        if (!allowDuplicates)
-                            listMasses.Add(modArr);
-                        double mass;
-                        string massString = Encoding.Default.GetString(modArr);
-                        if (!double.TryParse(massString,
-                                             NumberStyles.Float | NumberStyles.AllowThousands,
-                                             CultureInfo.InvariantCulture,
-                                             out mass))
+                        List<byte[]> listMasses;
+                        if (!_dictAAMassPairs.TryGetValue(new AATermKey(prevAA, terminus), out listMasses))
                         {
-                            // Get more information on a failure that was posted to the exception web page
-                            throw new FormatException(string.Format("The number '{0}' is not in the correct format.", massString));
+                            listMasses = new List<byte[]>();
+                            _dictAAMassPairs.Add(new AATermKey(prevAA, terminus), listMasses);
                         }
-
-                        yield return new AAModInfo
+                        var modArr = new byte[endIndex - startIndex];
+                        Array.Copy(sequence, startIndex, modArr, 0, endIndex - startIndex);
+                        if (allowDuplicates || !listMasses.Contains(arr => ArrayUtil.EqualsDeep(arr, modArr)))
                         {
-                            IndexAA = indexAA,
-                            ModKey = new AAModKey
+                            if (!allowDuplicates)
+                                listMasses.Add(modArr);
+                            double mass;
+                            string massString = Encoding.Default.GetString(modArr);
+                            if (!double.TryParse(massString,
+                                                 NumberStyles.Float | NumberStyles.AllowThousands,
+                                                 CultureInfo.InvariantCulture,
+                                                 out mass))
                             {
-                                AA = (char)prevAA,
-                                Terminus = terminus,
-                                AppearsToBeSpecificMod = isSpecificHeavy,
-                                Mass = mass,
-                                RoundedTo = 1
+                                // Get more information on a failure that was posted to the exception web page
+                                throw new FormatException(string.Format("The number '{0}' is not in the correct format.", massString));
                             }
-                        };
+
+                            yield return new AAModInfo
+                            {
+                                IndexAA = indexAA,
+                                ModKey = new AAModKey
+                                {
+                                    AA = (char)prevAA,
+                                    Terminus = terminus,
+                                    AppearsToBeSpecificMod = isSpecificHeavy,
+                                    Mass = mass,
+                                    RoundedTo = 1
+                                }
+                            };
+                        }
                     }
                     prevAA = 0;
                     index = endIndex;

@@ -9925,6 +9925,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No formula found for the amino acid &apos;{0}&apos;.
+        /// </summary>
+        public static string SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__ {
+            get {
+                return ResourceManager.GetString("SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid ion type.
         /// </summary>
         public static string SequenceMassCalc_GetTermMass_Invalid_ion_type {

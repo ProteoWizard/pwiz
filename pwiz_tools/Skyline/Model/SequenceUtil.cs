@@ -897,6 +897,8 @@ namespace pwiz.Skyline.Model
         public static string GetHeavyFormula(char aa, LabelAtoms labelAtoms)
         {
             string formulaAA = AMINO_FORMULAS[aa];
+            if (string.IsNullOrEmpty(formulaAA))
+                throw new ArgumentOutOfRangeException(string.Format(Resources.SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__, aa));
             string formulaHeavy = formulaAA;
             if ((labelAtoms & LabelAtoms.C13) != 0)
                 formulaHeavy = formulaHeavy.Replace(BioMassCalc.C, BioMassCalc.C13);
