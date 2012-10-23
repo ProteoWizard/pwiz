@@ -338,40 +338,54 @@ namespace pwiz.ProteowizardWrapper
             int i;
             int maxIndex = Math.Min(500, SpectrumCount);
             int precursorsPerScan = 0;
+            int furthestPrecursorDistance = 0;
             for (i = 1; i < maxIndex; ++i )
             {
                 if (GetMsLevel(i) != 2)
                     continue;
                 var precursors = GetPrecursors(i);
-                if (precursors.Length < 1 || !precursors[0].PrecursorMz.HasValue)
-                    continue;
                 // if MS/MS spectrum only has a single precursor, this data
                 // is assumed to not be multiplexed
                 if (precursors.Length < 2)
                     return false;
+                // all of the precursors should have m/z values associated with them
+                if (! precursors.All(prec=> prec.PrecursorMz.HasValue))
+                    return false;
                 precursorsPerScan = precursors.Length;
+                furthestPrecursorDistance = (int)precursors.Max(prec => prec.PrecursorMz.Value) -
+                                            (int)precursors.Min(prec => prec.PrecursorMz.Value);
                 break;
             }
+            if (precursorsPerScan == 0)
+                return false;
 
             // there was an MS/MS in the first 500 scans w/ multiple precursors
             // check that the next 20 MS/MS scans have the same number of precursors
-            
+            // additionally check if two furthest precursors remain the same distance apart
+            // for 10 scans... if they do, this is indicative of a multi-fill technique that is not MSX
+            // because MSX scans have randomly-chosen precursors 
             int msMsChecked = 1;
-            for (; i < SpectrumCount && msMsChecked <=20; ++i )
+            bool distanceChange = false;
+            for (; i < SpectrumCount && msMsChecked <=10; ++i )
             {
                 if (GetMsLevel(i) != 2)
                     continue;
                 var precursors = GetPrecursors(i);
-                if (precursors.Length < 1 || !precursors[0].PrecursorMz.HasValue)
-                    continue;
-                int numPrecursors = precursors.Length;
-                if (numPrecursors!=precursorsPerScan)
+                if (precursors.Length != precursorsPerScan)
                     return false;
+                if (! precursors.All(prec=> prec.PrecursorMz.HasValue))
+                    return false;
+                if (!distanceChange)
+                {
+                    var farPrecDistance = (int) precursors.Max(prec => prec.PrecursorMz.Value) -
+                                          (int) precursors.Min(prec => prec.PrecursorMz.Value);
+                    if (farPrecDistance != furthestPrecursorDistance)
+                        distanceChange = true;
+                }
                 ++msMsChecked;
             }
-
-            // return false; // for testing
-            return true;
+            return distanceChange;
+            // return false; // for testing -- import MSX data with out applying de-multiplexing
         }
 
         private ChromatogramList ChromatogramList

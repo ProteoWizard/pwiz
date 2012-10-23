@@ -870,7 +870,7 @@ namespace pwiz.Skyline.Model.Results
 
             // All filter pairs have a shot at filtering the MS1 scans
             var isoWin = GetIsolationWindows(precursors).FirstOrDefault();
-            foreach (var filterPair in FindMs1FilterPairs(isoWin.IsolationMz, isoWin.IsolationWidth))
+            foreach (var filterPair in FindMs1FilterPairs(isoWin))
             {
                 if (!filterPair.ContainsTime(time.Value))
                     continue;
@@ -888,7 +888,7 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var isoWin in GetIsolationWindows(precursors))
             {
-                foreach (var filterPair in FindFilterPairs(isoWin.IsolationMz, isoWin.IsolationWidth, _acquisitionMethod))
+                foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod))
                 {
                     if (!filterPair.ContainsTime(time.Value))
                         continue;
@@ -926,44 +926,73 @@ namespace pwiz.Skyline.Model.Results
 
             public double? IsolationMz { get; private set; }
             public double? IsolationWidth { get; private set; }
+
+            #region object overrides
+
+            private bool Equals(IsolationWindowFilter other)
+            {
+                return other.IsolationMz.Equals(IsolationMz) &&
+                    other.IsolationWidth.Equals(IsolationWidth);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (obj.GetType() != typeof(IsolationWindowFilter)) return false;
+                return Equals((IsolationWindowFilter)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((IsolationMz.HasValue ? IsolationMz.Value.GetHashCode() : 0) * 397) ^
+                        (IsolationWidth.HasValue ? IsolationWidth.Value.GetHashCode() : 0);
+                }
+            }
+
+            #endregion
         }
 
-        private readonly Dictionary<double, IList<SpectrumFilterPair>> _filterPairDictionary =
-            new Dictionary<double, IList<SpectrumFilterPair>>();
+        private readonly Dictionary<IsolationWindowFilter, IList<SpectrumFilterPair>> _filterPairDictionary =
+            new Dictionary<IsolationWindowFilter, IList<SpectrumFilterPair>>();
 
-        private IEnumerable<SpectrumFilterPair> FindFilterPairs(double? isolationMz, double? isolationWidth,
+        private IEnumerable<SpectrumFilterPair> FindFilterPairs(IsolationWindowFilter isoWin,
             FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false)
         {
             List<SpectrumFilterPair> filterPairs = new List<SpectrumFilterPair>();
-            if (!isolationMz.HasValue)
+            
+            if (!isoWin.IsolationMz.HasValue)
                 return filterPairs; // empty
 
             // Return cached value from dictionary if we've seen this target previously.
-            double isolationTargetMz = isolationMz.Value;
             IList<SpectrumFilterPair> filterPairsCached;
-            if (_filterPairDictionary.TryGetValue(isolationTargetMz, out filterPairsCached))
+            if (_filterPairDictionary.TryGetValue(isoWin, out filterPairsCached))
             {
                 return filterPairsCached;
             }
 
             if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
+                double isoTargMz = isoWin.IsolationMz.Value;
+                double? isoTargWidth = isoWin.IsolationWidth;
                 if (!ignoreIsolationScheme)
                 {
-                    CalcDiaIsolationValues(ref isolationTargetMz, ref isolationWidth);
+                    CalcDiaIsolationValues(ref isoTargMz, ref isoTargWidth);
+                    isoWin = new IsolationWindowFilter(isoTargMz, isoTargWidth);
                 }
-                if (!isolationWidth.HasValue)
+                if (!isoTargWidth.HasValue)
                 {
                     return filterPairs; // empty
                 }
 
                 // For multiple case, find the first possible value, and iterate until
                 // no longer matching or the end of the array is encountered
-                int iFilter = IndexOfFilter(isolationTargetMz, isolationWidth.Value);
+                int iFilter = IndexOfFilter(isoTargMz, isoTargWidth.Value);
                 if (iFilter != -1)
                 {
-                    while (iFilter < _filterMzValues.Length && CompareMz(isolationTargetMz,
-                            _filterMzValues[iFilter].Q1, isolationWidth.Value) == 0)
+                    while (iFilter < _filterMzValues.Length && CompareMz(isoTargMz,
+                            _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
                         filterPairs.Add(_filterMzValues[iFilter++]);
                 }
             }
@@ -974,13 +1003,13 @@ namespace pwiz.Skyline.Model.Results
                 SpectrumFilterPair filterPairBest = null;
                 double minMzDelta = double.MaxValue;
 
-                // Isolation width for single is based on the instrumet m/z match tolerance
-                isolationWidth = _instrument.MzMatchTolerance*2;
+                // Isolation width for single is based on the instrument m/z match tolerance
+                double isoTargMz = isoWin.IsolationMz.Value;
+                isoWin = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance*2);
 
-                foreach (var filterPair in FindFilterPairs(isolationTargetMz, isolationWidth,
-                                                           FullScanAcquisitionMethod.DIA, true))
+                foreach (var filterPair in FindFilterPairs(isoWin, FullScanAcquisitionMethod.DIA, true))
                 {
-                    double mzDelta = Math.Abs(isolationTargetMz - filterPair.Q1);
+                    double mzDelta = Math.Abs(isoTargMz - filterPair.Q1);
                     if (mzDelta < minMzDelta)
                     {
                         minMzDelta = mzDelta;
@@ -992,7 +1021,7 @@ namespace pwiz.Skyline.Model.Results
                     filterPairs.Add(filterPairBest);
             }
 
-            _filterPairDictionary[isolationMz.Value] = filterPairs;
+            _filterPairDictionary[isoWin] = filterPairs;
             return filterPairs;
         }
 
@@ -1063,7 +1092,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (isolationWindow == null)
                 {
-                    _filterPairDictionary[isolationTargetMz] = new List<SpectrumFilterPair>();
+                    _filterPairDictionary[new IsolationWindowFilter(isolationTargetMz, isolationWidth)] = new List<SpectrumFilterPair>();
                     isolationWidth = null;
                     return;
                 }
@@ -1086,11 +1115,11 @@ namespace pwiz.Skyline.Model.Results
             isolationWidth = isolationWidthValue;
         }
 
-        private IEnumerable<SpectrumFilterPair> FindMs1FilterPairs(double? isolationMz, double? isolationWidth)
+        private IEnumerable<SpectrumFilterPair> FindMs1FilterPairs(IsolationWindowFilter isoWin)
         {
-            if (!isolationMz.HasValue)
+            if (!isoWin.IsolationMz.HasValue)
                 return _filterMzValues; // survey scan
-            return FindFilterPairs(isolationMz, isolationWidth, FullScanAcquisitionMethod.DIA, true);  // SIM scan
+            return FindFilterPairs(isoWin, FullScanAcquisitionMethod.DIA, true);  // SIM scan
         }
 
         private int IndexOfFilter(double precursorMz, double window)
