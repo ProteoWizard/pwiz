@@ -29,9 +29,9 @@
                 maxOccurs="1"/>
             <xs:element name="transition_settings" type="transition_settings_type" minOccurs="1"
                 maxOccurs="1"/>
+            <xs:element name="data_settings" type="data_settings_type" minOccurs="1" maxOccurs="1"/>
             <xs:element name="measured_results" type="measured_results_type" minOccurs="0"
                 maxOccurs="1"/>
-            <xs:element name="data_settings" type="data_settings_type" minOccurs="1" maxOccurs="1"/>
           <xs:element name="doc_rt_alignments" type="doc_rt_alignments_type" minOccurs="0" maxOccurs="1" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required"/>

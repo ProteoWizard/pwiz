@@ -1169,8 +1169,21 @@ namespace pwiz.Skyline.Model.DocSettings
             reader.ReadStartElement();
             PeptideSettings = reader.DeserializeElement<PeptideSettings>();
             TransitionSettings = reader.DeserializeElement<TransitionSettings>();
-            MeasuredResults = reader.DeserializeElement<MeasuredResults>();
-            DataSettings = reader.DeserializeElement<DataSettings>() ?? new DataSettings(new AnnotationDef[0]);
+
+            // 10.23.12 -- The order of <measured_results> and <data_settings> has been switched to enable parsing (in Panorama)
+            // of all annotation definitions before reading any replicate annotations in <measured_results>.
+            // We want Skyline to be able to read older documents where <measured_results> come before <data_settings>
+            if (reader.IsStartElement(new XmlElementHelper<MeasuredResults>().ElementNames[0]))
+            {
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                DataSettings = reader.DeserializeElement<DataSettings>() ?? new DataSettings(new AnnotationDef[0]);   
+            }
+            else
+            {
+                DataSettings = reader.DeserializeElement<DataSettings>() ?? new DataSettings(new AnnotationDef[0]);
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+            }
+            
             DocumentRetentionTimes = reader.DeserializeElement<DocumentRetentionTimes>() ?? DocumentRetentionTimes.EMPTY;
             reader.ReadEndElement();
             ValidateLoad();
@@ -1182,9 +1195,9 @@ namespace pwiz.Skyline.Model.DocSettings
             base.WriteXml(writer);
             writer.WriteElement(PeptideSettings);
             writer.WriteElement(TransitionSettings);
+            writer.WriteElement(DataSettings);
             if (MeasuredResults != null)
                 writer.WriteElement(MeasuredResults);
-            writer.WriteElement(DataSettings);
             if (!DocumentRetentionTimes.IsEmpty)
                 writer.WriteElement(DocumentRetentionTimes);
         }
