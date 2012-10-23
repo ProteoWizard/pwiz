@@ -23,9 +23,9 @@
 
 #define PWIZ_SOURCE
 
-#include "IterationListener.hpp" 
-#include "pwiz/utility/misc/Std.hpp"
-#include <ctime>
+#include "Std.hpp"
+#include "DateTime.hpp"
+#include "IterationListener.hpp"
 
 
 namespace pwiz {
@@ -43,20 +43,17 @@ class IterationListenerRegistry::Impl
 
     void addListener(const IterationListenerPtr& listener, size_t iterationPeriod)
     {
-        listeners_.push_back(listener);
-        callbackInfo_[listener.get()] = iterationPeriod;
+        listeners_[listener] = iterationPeriod;
     }
 
     void addListenerWithTimer(const IterationListenerPtr& listener, double timePeriod)
     {
-        listeners_.push_back(listener);
-        callbackInfo_[listener.get()] = CallbackInfo(timePeriod, true);
+        listeners_[listener] = CallbackInfo(timePeriod, true);
     }
 
     void removeListener(const IterationListenerPtr& listener)
     {
-        listeners_.erase(remove(listeners_.begin(), listeners_.end(), listener)); 
-        callbackInfo_.erase(listener.get());
+        listeners_.erase(listener);
     }
 
     IterationListener::Status broadcastUpdateMessage(
@@ -64,19 +61,20 @@ class IterationListenerRegistry::Impl
     {
         IterationListener::Status result = IterationListener::Status_Ok;
 
-        BOOST_FOREACH(const IterationListenerPtr& listener, listeners_)
+        bpt::ptime now = bpt::microsec_clock::local_time();
+
+        for (Listeners::const_iterator itr = listeners_.begin(); itr != listeners_.end(); ++itr)
         {
-            time_t now;
-            time(&now);
-
-            CallbackInfo& callbackInfo = callbackInfo_[listener.get()];
+            const IterationListenerPtr& listener = itr->first;
+            const CallbackInfo& callbackInfo = itr->second;
             CallbackInfo::PeriodType periodType = callbackInfo.periodType;
+            bpt::time_duration timeElapsed = now - callbackInfo.timestamp;
 
-            bool shouldUpdate = 
+            bool shouldUpdate =
                 updateMessage.iterationIndex == 0 ||
                 (updateMessage.iterationCount > 0 && updateMessage.iterationIndex+1 >= updateMessage.iterationCount) ||
                 (periodType == CallbackInfo::PeriodType_Iteration && (updateMessage.iterationIndex+1) % callbackInfo.iterationPeriod == 0) ||
-                (periodType == CallbackInfo::PeriodType_Time && difftime(now, callbackInfo.timestamp) >= callbackInfo.timePeriod);
+                (periodType == CallbackInfo::PeriodType_Time && timeElapsed.total_milliseconds()/1000.0 >= callbackInfo.timePeriod);
 
             if (shouldUpdate)
             {
@@ -93,9 +91,6 @@ class IterationListenerRegistry::Impl
 
     private:
 
-    typedef vector<IterationListenerPtr> Listeners;
-    Listeners listeners_;
-
     struct CallbackInfo
     {
         enum PeriodType {PeriodType_Iteration, PeriodType_Time};
@@ -104,7 +99,7 @@ class IterationListenerRegistry::Impl
         size_t iterationPeriod;
         double timePeriod; // seconds
 
-        time_t timestamp;
+        mutable bpt::ptime timestamp;
 
         CallbackInfo(size_t _iterationPeriod = 1)
         :   periodType(PeriodType_Iteration),
@@ -122,8 +117,9 @@ class IterationListenerRegistry::Impl
         }
 
     };
-
-    mutable map<IterationListener*, CallbackInfo> callbackInfo_;
+    
+    typedef map<IterationListenerPtr, CallbackInfo> Listeners;
+    mutable Listeners listeners_;
 };
 
 

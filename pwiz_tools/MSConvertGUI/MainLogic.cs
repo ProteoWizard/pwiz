@@ -445,10 +445,10 @@ namespace MSConvertGUI
                                      ProgressBarStyle.Continuous, _info);
 
                     // write out the new data file
-                    IterationListenerRegistry ilr = null;
-                    ilr = new IterationListenerRegistry();
+                    var ilr = new IterationListenerRegistry();
                     ilr.addListener(this, 100);
                     MSDataFile.write(msd, outputFilename, config.WriteConfig, ilr);
+                    ilr.removeListener(this);
                 }
             }
         }

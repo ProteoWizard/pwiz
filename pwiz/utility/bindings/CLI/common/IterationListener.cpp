@@ -78,28 +78,43 @@ IterationListenerRegistry::IterationListenerRegistry()
     _listeners = gcnew Dictionary<IterationListener^, KeyValuePair<IterationListenerUpdate^, System::IntPtr> >();
 }
 
+IterationListenerRegistry::~IterationListenerRegistry()
+{
+    LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), true);
+    SAFEDELETE(base_);
+
+    for each (KeyValuePair<IterationListener^, KeyValuePair<IterationListenerUpdate^, System::IntPtr> > kvp in _listeners)
+    {
+        IterationListenerPtr* forwarder = static_cast<b::IterationListenerPtr*>(kvp.Value.Value.ToPointer());
+        delete forwarder;
+    }
+    _listeners->Clear();
+}
+
 
 void IterationListenerRegistry::addListener(IterationListener^ listener, System::UInt32 iterationPeriod)
 {
     IterationListenerUpdate^ handler = gcnew IterationListenerUpdate(listener, &IterationListener::update);
-    IterationListenerPtr forwarder(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate(handler).ToPointer()));
-    _listeners->Add(listener, KeyValuePair<IterationListenerUpdate^, System::IntPtr>(handler, System::IntPtr(&forwarder)));
-    base().addListener(forwarder, (size_t) iterationPeriod);
+    IterationListenerPtr* forwarder = new IterationListenerPtr(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate(handler).ToPointer()));
+    _listeners->Add(listener, KeyValuePair<IterationListenerUpdate^, System::IntPtr>(handler, System::IntPtr(forwarder)));
+    base().addListener(*forwarder, (size_t) iterationPeriod);
 }
 
 
 void IterationListenerRegistry::addListenerWithTimer(IterationListener^ listener, double timePeriod)
 {
     IterationListenerUpdate^ handler = gcnew IterationListenerUpdate(listener, &IterationListener::update);
-    IterationListenerPtr forwarder(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate(handler).ToPointer()));
-    _listeners->Add(listener, KeyValuePair<IterationListenerUpdate^, System::IntPtr>(handler, System::IntPtr(&forwarder)));
-    base().addListenerWithTimer(forwarder, timePeriod);
+    IterationListenerPtr* forwarder = new IterationListenerPtr(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate(handler).ToPointer()));
+    _listeners->Add(listener, KeyValuePair<IterationListenerUpdate^, System::IntPtr>(handler, System::IntPtr(forwarder)));
+    base().addListenerWithTimer(*forwarder, timePeriod);
 }
 
 
 void IterationListenerRegistry::removeListener(IterationListener^ listener)
 {
-    base().removeListener(*static_cast<b::IterationListenerPtr*>(_listeners[listener].Value.ToPointer()));
+    IterationListenerPtr* forwarder = static_cast<b::IterationListenerPtr*>(_listeners[listener].Value.ToPointer());
+    base().removeListener(*forwarder);
+    delete forwarder;
     _listeners->Remove(listener);
 }
 

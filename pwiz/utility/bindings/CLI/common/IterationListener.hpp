@@ -57,7 +57,13 @@ public delegate IterationListener::Status IterationListenerUpdate(IterationListe
 
 public ref class IterationListenerRegistry
 {
-    DEFINE_INTERNAL_BASE_CODE(IterationListenerRegistry, pwiz::util::IterationListenerRegistry);
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
+    INTERNAL: IterationListenerRegistry(pwiz::util::IterationListenerRegistry* base) : base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+              virtual ~IterationListenerRegistry(); \
+              !IterationListenerRegistry() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType)) delete this;} \
+              pwiz::util::IterationListenerRegistry* base_; \
+              pwiz::util::IterationListenerRegistry& base() {return *base_;}
+
     System::Collections::Generic::Dictionary<IterationListener^,
                                              System::Collections::Generic::KeyValuePair<IterationListenerUpdate^,
                                                                                         System::IntPtr> >^ _listeners;
