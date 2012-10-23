@@ -407,11 +407,14 @@ namespace pwiz.Skyline.SettingsUI
             LibrarySpec selectedLibrarySpec = _selectedSpec = _driverLibraries.SelectedItem;
             if (_selectedLibrary != null)
                 _selectedLibrary.ReadStream.CloseStream();
-            _selectedLibrary = _libraryManager.TryGetLibrary(selectedLibrarySpec);
+            _selectedLibrary = selectedLibrarySpec != null ? _libraryManager.TryGetLibrary(selectedLibrarySpec) : null;
             if (_selectedLibrary == null)
             {
                 btnAddAll.Enabled = false;
                 btnAdd.Enabled = false;
+                if (selectedLibrarySpec == null)
+                    return;
+
                 var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library };
                 try
                 {

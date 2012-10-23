@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (LibrarySpec spec in libraries.LibrarySpecsUnloaded)
                 {
-                    if (spec == null)
+                    if (spec == null || dictLibraries.ContainsKey(spec.Name))
                         continue;
                     var library = LoadLibrary(container, spec);
                     if (library == null || !ReferenceEquals(document.Id, container.Document.Id))

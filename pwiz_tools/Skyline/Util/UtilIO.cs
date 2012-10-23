@@ -373,7 +373,15 @@ namespace pwiz.Skyline.Util
                 // from when it was opened, then it is considered unmodified.  This is
                 // because, differences of ~70 ticks (< 0.01 millisecond) where seen
                 // after ZIP file extraction of shared files to a network drive.
-                return !IsOpen && Math.Abs(FileTime.Ticks - File.GetLastWriteTime(FilePath).Ticks) > MILLISECOND_TICKS;
+                try
+                {
+                    return !IsOpen && Math.Abs(FileTime.Ticks - File.GetLastWriteTime(FilePath).Ticks) > MILLISECOND_TICKS;
+                }
+                catch (IOException)
+                {
+                    // May have been removed, reporting IsModified better than throwing an unhandled exception
+                    return true;
+                }
             }
         }
 

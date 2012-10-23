@@ -660,10 +660,15 @@ namespace pwiz.Skyline.FileUI
             {
                 _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
             }
+            catch(UnauthorizedAccessException x)
+            {
+                MessageDlg.Show(this, x.Message);
+                _exportProperties.ShowMessages = wasShowMessageValue;
+                return;
+            }
             catch (IOException x)
             {
-                MessageBox.Show(this, x.Message, Program.Name);
-                e.Cancel = true;
+                MessageDlg.Show(this, x.Message);
                 _exportProperties.ShowMessages = wasShowMessageValue;
                 return;
             }
