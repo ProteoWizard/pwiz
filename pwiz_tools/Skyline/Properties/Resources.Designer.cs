@@ -632,6 +632,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid value.
+        /// </summary>
+        public static string AnnotationDef_ValidationErrorMessage_Invalid_value {
+            get {
+                return ResourceManager.GetString("AnnotationDef_ValidationErrorMessage_Invalid_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value must be a number.
+        /// </summary>
+        public static string AnnotationDef_ValidationErrorMessage_Value_must_be_a_number {
+            get {
+                return ResourceManager.GetString("AnnotationDef_ValidationErrorMessage_Value_must_be_a_number", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Annotations:.
         /// </summary>
         public static string AnnotationDefList_Label_Annotations {

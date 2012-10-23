@@ -20,6 +20,7 @@
 using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -244,6 +245,8 @@ namespace pwiz.SkylineTestTutorial
                 {
                     importResultsSamplesDlg.CheckAll(false);
                     importResultsSamplesDlg.IncludeSample(1);
+                    importResultsSamplesDlg.IncludeSample(2);
+                    importResultsSamplesDlg.IncludeSample(11);
                     importResultsSamplesDlg.IncludeSample(12);
                     importResultsSamplesDlg.OkDialog();
                 });
@@ -304,7 +307,50 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowCVValues();
                 SkylineWindow.ShowPeptideOrder(SummaryPeptideOrder.document);
             });
-
+            // Annotating replicates with concentration values
+            var chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
+            RunUI(editListDlg.ResetList);
+            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
+            RunUI(() =>
+            {
+                defineAnnotationDlg.AnnotationName = "Concentration";
+                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.number;
+                defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+            });
+            PauseForScreenShot();
+            OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
+            OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.OK);
+            RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
+            PauseForScreenShot();
+            OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
+            RunUI(() => SkylineWindow.ShowResultsGrid(true));
+            RunUI(() =>
+                      {
+                          SkylineWindow.SelectedPath =
+                              new IdentityPath(SkylineWindow.DocumentUI.PeptideGroups.First().Id);
+                      });
+            WaitForGraphs();
+            RunUI(()=>{
+                          var resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
+                          var colConcentration =
+                              resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText);
+                          SetCellValue(resultsGrid, 0, colConcentration.Index, 0f);
+                          SetCellValue(resultsGrid, 1, colConcentration.Index, 0f);
+                          SetCellValue(resultsGrid, 2, colConcentration.Index, 175f);
+                          SetCellValue(resultsGrid, 3, colConcentration.Index, 175f);
+                          var protein =
+                              SkylineWindow.DocumentUI.PeptideGroups.First(peptideGroup => "HRP" == peptideGroup.Name);
+                          var peptide = protein.Peptides.First(node => "SSDLVALSGGHTFGK" == node.Peptide.Sequence);
+                          SkylineWindow.SelectedPath = new IdentityPath(protein.Id, peptide.Id);
+                      });
+            WaitForGraphs();
+            PauseForScreenShot();
+            RunUI(()=>{
+                          SkylineWindow.ShowPeakAreaReplicateComparison();
+                          SkylineWindow.GroupByReplicateAnnotation("Concentration");
+                      });
+            PauseForScreenShot();
             // Further Exploration, p. 33.
             RunUI(() =>
             {
@@ -374,6 +420,14 @@ namespace pwiz.SkylineTestTutorial
                         .Contains(expectedPrecursorMz.ToString(CultureInfo.CurrentCulture))));
                 selNode.Pick(choices, false, false);
             });
+        }
+
+        private void SetCellValue(DataGridView dataGridView, int rowIndex, int columnIndex, object value)
+        {
+            dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[columnIndex];
+            dataGridView.BeginEdit(true);
+            dataGridView.CurrentCell.Value = value;
+            dataGridView.EndEdit();
         }
     }
 }

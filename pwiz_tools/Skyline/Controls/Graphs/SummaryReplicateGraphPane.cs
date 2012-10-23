@@ -426,20 +426,15 @@ namespace pwiz.Skyline.Controls.Graphs
                             => new ReplicateGroup(chromatograms[replicateIndex].Name,
                                                   ReplicateIndexSet.Singleton(replicateIndex)));
                 }
-                var lookup = replicateIndexes.ToLookup(replicateIndex => chromatograms[replicateIndex].Annotations.GetAnnotation(ReplicateGroupOp.GroupByAnnotation) ?? "");
+                var lookup = replicateIndexes.ToLookup(replicateIndex => chromatograms[replicateIndex].Annotations.GetAnnotation(ReplicateGroupOp.GroupByAnnotation));
                 var keys = lookup.Select(grouping => grouping.Key).ToList();
                 if (keys.Count > 2)
                 {
                     // If there are more than 2 groups then exclude replicates with blank annotation values.
-                    keys.Remove("");
+                    keys.Remove(null);
                 }
-                keys.Sort(CompareAnnotationValues);
-                return keys.Select(key => new ReplicateGroup(key.ToString(), ReplicateIndexSet.OfValues(lookup[key])));
-            }
-
-            private int CompareAnnotationValues(object value1, object value2)
-            {
-                return String.Compare(value1.ToString(), value2.ToString(), CultureInfo.CurrentCulture, CompareOptions.IgnoreCase);
+                keys.Sort();
+                return keys.Select(key => new ReplicateGroup((key ?? "").ToString(), ReplicateIndexSet.OfValues(lookup[key])));
             }
 
             private IEnumerable<int> GetReplicateIndices(PeptideDocNode nodePep)

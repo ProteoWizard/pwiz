@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -60,7 +61,76 @@ namespace pwiz.Skyline.Model.DocSettings
         
         public AnnotationTargetSet AnnotationTargets { get; private set; }
         public AnnotationType Type { get; private set; }
+        public Type ValueType
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case AnnotationType.true_false:
+                        return typeof (bool);
+                    case AnnotationType.number:
+                        return typeof (double);
+                    default:
+                        return typeof (string);
+                }
+            }
+        }
         public IList<String> Items { get; private set; }
+
+        /// <summary>
+        /// Returns the error message to be shown when the value cannot be parsed.
+        /// </summary>
+        [Localizable(true)]
+        public string ValidationErrorMessage
+        {
+            get
+            {
+                switch (Type)
+                {
+                    default:
+                        return Resources.AnnotationDef_ValidationErrorMessage_Invalid_value;
+                    case AnnotationType.number:
+                        return Resources.AnnotationDef_ValidationErrorMessage_Value_must_be_a_number;
+                }
+            }
+        }
+
+        public string ToPersistedString(object value)
+        {
+            if (value is bool)
+            {
+                return ((bool) value) == false ? null : Name;
+            }
+            return Convert.ToString(value, CultureInfo.InvariantCulture);
+        }
+
+        public object ParsePersistedString(string str)
+        {
+            if (AnnotationType.true_false == Type)
+            {
+                return !string.IsNullOrEmpty(str);
+            }
+            if (AnnotationType.number == Type)
+            {
+                return ParseNumber(str);
+            }
+            return str;
+        }
+
+        public static double? ParseNumber(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return null;
+            }
+            double value;
+            if (double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            {
+                return value;
+            }
+            return double.NaN;
+        }
 
         private enum Attr
         {
@@ -192,6 +262,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public enum AnnotationType
         {
             text,
+            number,
             true_false,
             value_list,
         }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -353,6 +354,7 @@ namespace pwiz.Skyline.Controls
             KeyDown += ResultsGrid_KeyDown;
             CellEndEdit += ResultsGrid_CellEndEdit;
             CurrentCellChanged += ResultsGrid_CurrentCellChanged;
+            DataError += ResultsGrid_DataError;
         }
 
         public void Init(IDocumentUIContainer documentUiContainer, SequenceTree sequenceTree)
@@ -389,6 +391,18 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private void ResultsGrid_DataError(object sender, DataGridViewDataErrorEventArgs dataGridViewDataErrorEventArgs)
+        {
+            var column = Columns[dataGridViewDataErrorEventArgs.ColumnIndex];
+            var annotationDef = column.Tag as AnnotationDef;
+            if (annotationDef != null)
+            {
+                MessageDlg.Show(this, annotationDef.ValidationErrorMessage);
+                return;
+            }
+            dataGridViewDataErrorEventArgs.ThrowException = true;
+        }
+
         public static SrmDocument UpdateDocument(SrmDocument doc, IList<IdentityPath> selectedPaths, DataGridViewRow row, 
             DataGridViewColumnCollection columns, int columnIndex, int precursorNoteColumnIndex, int transitionNoteColumnIndex)
         {
@@ -419,7 +433,6 @@ namespace pwiz.Skyline.Controls
                 return doc;
             }
             var value = row.Cells[columnIndex].Value;
-            string strValueNew = Convert.ToString(row.Cells[columnIndex].Value);
             foreach (IdentityPath selPath in selectedPaths)
             {
                 var selTarget = noteTarget ?? GetAnnotationTargetForNode(annotationDef, doc, selPath);
@@ -451,7 +464,7 @@ namespace pwiz.Skyline.Controls
                         TransitionChromInfo chromInfoNew;
                         if (isNote)
                         {
-                            chromInfoNew = chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(strValueNew));
+                            chromInfoNew = chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(Convert.ToString(value)));
                         }
                         else
                         {
@@ -476,7 +489,7 @@ namespace pwiz.Skyline.Controls
                         TransitionGroupChromInfo chromInfoNew;
                         if (isNote)
                         {
-                            chromInfoNew = chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(strValueNew));
+                            chromInfoNew = chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(Convert.ToString(value)));
                         }
                         else
                         {
@@ -974,11 +987,11 @@ namespace pwiz.Skyline.Controls
                     bool canReuseColumn = false;
                     switch (annotationDef.Type)
                     {
-                        case AnnotationDef.AnnotationType.true_false:
-                            canReuseColumn = column is DataGridViewCheckBoxColumn;
-                            break;
-                        case AnnotationDef.AnnotationType.text:
+                        default:
                             canReuseColumn = column is DataGridViewTextBoxColumn;
+                            break;
+                        case AnnotationDef.AnnotationType.true_false:
+                            canReuseColumn = column is DataGridViewCheckBoxColumn && column.ValueType == annotationDef.ValueType;
                             break;
                         case AnnotationDef.AnnotationType.value_list:
                             var comboBoxColumn = column as DataGridViewComboBoxColumn;
@@ -1029,6 +1042,7 @@ namespace pwiz.Skyline.Controls
                     }
                     column.Name = name;
                     column.HeaderText = annotationDef.Name;
+                    column.ValueType = annotationDef.ValueType;
                     Columns.Add(column);
                 }
                 column.Tag = annotationDef;

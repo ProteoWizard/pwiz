@@ -74,6 +74,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 {
                     {typeof(AnnotationPropertyAccessor), STRING_TYPE_NAME},
                     {typeof(BoolAnnotationPropertyAccessor), BOOL_TYPE_NAME},
+                    {typeof(NumberAnnotationPropertyAccessor), NDOUBLE_TYPE_NAME},
                     {typeof(RatioPropertyAccessor), NDOUBLE_TYPE_NAME}
                 };
 
@@ -123,9 +124,21 @@ namespace pwiz.Skyline.Model.Hibernate
                     continue;
                 }
                 string columnName = AnnotationDef.GetColumnName(annotationDef.Name);
-                var isBoolAttribute = annotationDef.Type == AnnotationDef.AnnotationType.true_false;
-                AddColumn(mapping, columnName, isBoolAttribute ?
-                    typeof(BoolAnnotationPropertyAccessor) : typeof(AnnotationPropertyAccessor));
+                Type accessorType;
+                switch (annotationDef.Type)
+                {
+                    case AnnotationDef.AnnotationType.number:
+                        accessorType = typeof (NumberAnnotationPropertyAccessor);
+                        break;
+                    case AnnotationDef.AnnotationType.true_false:
+                        accessorType = typeof (BoolAnnotationPropertyAccessor);
+                        break;
+                    default:
+                        accessorType = typeof (AnnotationPropertyAccessor);
+                        break;
+                }
+                
+                AddColumn(mapping, columnName, accessorType);
             }
         }
 

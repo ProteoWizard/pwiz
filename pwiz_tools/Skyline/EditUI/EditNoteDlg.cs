@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -72,11 +73,12 @@ namespace pwiz.Skyline.EditUI
         public void AddAnnotationToGridView(AnnotationDef annotationDef, Annotations annotations)
         {
             var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
+            row.Tag = annotationDef;
             row.Cells[colName.Index].Value = annotationDef.Name;
-            var value = annotations.GetAnnotation(annotationDef.Name);
+            var value = annotations.GetAnnotation(annotationDef);
             if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
             {
-                row.Cells[colValue.Index] = new DataGridViewCheckBoxCell { Value = value != null };
+                row.Cells[colValue.Index] = new DataGridViewCheckBoxCell {Value = value};
             }
             else if (annotationDef.Type == AnnotationDef.AnnotationType.value_list)
             {
@@ -91,7 +93,12 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                row.Cells[colValue.Index].Value = value;
+                var cell = row.Cells[colValue.Index];
+                if (annotationDef.Type == AnnotationDef.AnnotationType.number)
+                {
+                    cell.ValueType = typeof (double);
+                }
+                cell.Value = value;
             }
         }
 
@@ -250,5 +257,17 @@ namespace pwiz.Skyline.EditUI
         }
 
         public bool ClearAll { get; set; }
+
+        private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            if (e.ColumnIndex == colValue.Index)
+            {
+                var row = DataGridView.Rows[e.RowIndex];
+                var annotationDef = (AnnotationDef) row.Tag;
+                MessageDlg.Show(this, annotationDef.ValidationErrorMessage);
+                return;
+            }
+            e.ThrowException = true;
+        }
     }
 }

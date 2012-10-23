@@ -58,7 +58,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboType.Items.AddRange(new object[] {
             resources.GetString("comboType.Items"),
             resources.GetString("comboType.Items1"),
-            resources.GetString("comboType.Items2")});
+            resources.GetString("comboType.Items2"),
+            resources.GetString("comboType.Items3")});
             resources.ApplyResources(this.comboType, "comboType");
             this.comboType.Name = "comboType";
             this.comboType.SelectedIndexChanged += new System.EventHandler(this.comboType_SelectedIndexChanged);

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections;
+using System.Globalization;
 using System.Reflection;
 using NHibernate.Engine;
 using NHibernate.Properties;
@@ -203,5 +204,93 @@ namespace pwiz.Skyline.Model.Hibernate
                 get { return null; }
             }
         }
+    }
+    public class NumberAnnotationPropertyAccessor : IPropertyAccessor
+    {
+        public IGetter GetGetter(Type theClass, string propertyName)
+        {
+            return new Getter(AnnotationDef.GetColumnKey(propertyName));
+        }
+
+        public ISetter GetSetter(Type theClass, string propertyName)
+        {
+            return new Setter(AnnotationDef.GetColumnKey(propertyName));
+        }
+
+        public bool CanAccessThroughReflectionOptimizer
+        {
+            get { return false; }
+        }
+
+        private class Getter : IGetter
+        {
+            private readonly string _name;
+
+            public Getter(String name)
+            {
+                _name = name;
+            }
+
+            public object Get(object target)
+            {
+                string value;
+                ((DbEntity)target).Annotations.TryGetValue(_name, out value);
+                return AnnotationDef.ParseNumber(value);
+            }
+
+            public object GetForInsert(object owner, IDictionary mergeMap, ISessionImplementor session)
+            {
+                return Get(owner);
+            }
+
+            public Type ReturnType
+            {
+                get { return typeof(double); }
+            }
+
+            public string PropertyName
+            {
+                get { return null; }
+            }
+
+            public MethodInfo Method
+            {
+                get { return null; }
+            }
+        }
+
+        private class Setter : ISetter
+        {
+            private readonly string _name;
+
+            public Setter(String name)
+            {
+                _name = name;
+            }
+
+            public void Set(object target, object value)
+            {
+                var entity = (DbEntity)target;
+                if (value == null)
+                {
+                    entity.Annotations.Remove(_name);
+                }
+                else
+                {
+                    entity.Annotations[_name] = Convert.ToString(value, CultureInfo.InvariantCulture);
+                }
+            }
+
+            public string PropertyName
+            {
+                get { return null; }
+            }
+
+            public MethodInfo Method
+            {
+                get { return null; }
+            }
+        }
+        
     }
 }

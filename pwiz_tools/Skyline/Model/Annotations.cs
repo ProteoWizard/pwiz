@@ -99,11 +99,7 @@ namespace pwiz.Skyline.Model
         }
         public object GetAnnotation(AnnotationDef annotationDef)
         {
-            if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
-            {
-                return GetAnnotation(annotationDef.Name) != null;
-            }
-            return GetAnnotation(annotationDef.Name);
+            return annotationDef.ParsePersistedString(GetAnnotation(annotationDef.Name));
         }
         public Annotations ChangeNote(String note)
         {
@@ -128,23 +124,7 @@ namespace pwiz.Skyline.Model
 
         public Annotations ChangeAnnotation(AnnotationDef annotationDef, object value)
         {
-            string strValue;
-            if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
-            {
-                if (value == null || false.Equals(value))
-                {
-                    strValue = null;
-                }
-                else
-                {
-                    strValue = annotationDef.Name;
-                }
-            }
-            else
-            {
-                strValue = Convert.ToString(value);
-            }
-            return ChangeAnnotation(annotationDef.Name, strValue);
+            return ChangeAnnotation(annotationDef.Name, annotationDef.ToPersistedString(value));
         }
 
         public Annotations MergeNewAnnotations(string newText, int newColorIndex, IList<KeyValuePair<string, string>> newAnnotations)
