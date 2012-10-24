@@ -1,0 +1,87 @@
+<html>
+<!--
+FILE: decoy.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 7/22/05
+PROJECT: BiblioSpec
+REVISION:
+
+NOTE: Not supported for the first release
+
+-->
+<head>
+<title>BlibDecoy</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibDecoy</h1></center>
+
+<blockquote>
+
+<p><b>Description:</b>&nbsp;&nbsp;Create a library containing decoy
+spectrum (randomized versions of real spectra).
+
+<p><b>Usage:</b><code>  BlibDecoy [options] 
+&nbsp;&lt;initial&nbsp;library&gt;
+&nbsp;&lt;output&nbsp;library&gt;</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li> &lt;initial library&gt; - An exising library of experimentally
+derived spectra.
+
+<li> &lt;output library&gt; - A new library containg decoy versions of
+the spectra in the existing library
+</ul>
+
+<p><b>Output:</b>&nbsp;&nbsp;A spectral library containing decoy spectra
+
+<p><b>Options:</b>&nbsp;&nbsp;
+<ul>
+
+<li> -decoyOnly - Do not inclue the real spectra from the initial
+library output library.
+<li> -merge - Use the merge and split method of creating decoys
+<li> -shift n - Use the peak-shift method of creating decoys.  The m/z
+value of every peak is changed to m/z + n. 
+<li> -shiftUpDown n - Use the peak-shift method of creating decoys.
+The m/z value of every peak is changed to m/z + n with probability 0.5
+or changed to m/z - n with equal probabiltiy.
+<li> -decoyPerReal n - Create n decoy spectra for each real spectrum.
+Note that with option -shift this creates n identical decoy spectra.
+<li> -verbose 0|1|2 - Set the verbosity level of the output to
+stderr.  Default is ?
+
+</ul>
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+
+<li> <p> <i>Warning: message</i><p>
+<p>description</p>
+
+</ul>
+
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+-->
+<p><b>To Do:</b>
+<ul>
+<li>implement options.  Only merge, decoyOnly, and shift n options
+currently work</li> 
+<li>use long options</li>
+</ul>
+
+
+</blockquote>
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

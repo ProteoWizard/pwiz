@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="ChromatogramDataSet" targetNamespace="http://tempuri.org/ChromatogramDataSet.xsd" xmlns:mstns="http://tempuri.org/ChromatogramDataSet.xsd" xmlns="http://tempuri.org/ChromatogramDataSet.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections />
+        <Tables />
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="ChromatogramDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_DataSetName="ChromatogramDataSet" msprop:Generator_UserDSName="ChromatogramDataSet" msprop:EnableTableAdapterManager="true">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="ChromatogramTable" msdata:CaseSensitive="True" msdata:Locale="" msprop:Generator_UserTableName="ChromatogramTable" msprop:Generator_RowDeletedName="ChromatogramTableRowDeleted" msprop:Generator_TableClassName="ChromatogramTableDataTable" msprop:Generator_RowChangedName="ChromatogramTableRowChanged" msprop:Generator_RowClassName="ChromatogramTableRow" msprop:Generator_RowChangingName="ChromatogramTableRowChanging" msprop:Generator_RowEvArgName="ChromatogramTableRowChangeEvent" msprop:Generator_RowEvHandlerName="ChromatogramTableRowChangeEventHandler" msprop:Generator_TablePropName="ChromatogramTable" msprop:Generator_TableVarName="tableChromatogramTable" msprop:Generator_RowDeletingName="ChromatogramTableRowDeleting">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Id" msprop:Generator_UserColumnName="Id" msprop:Generator_ColumnPropNameInRow="Id" msprop:Generator_ColumnVarNameInTable="columnId" msprop:Generator_ColumnPropNameInTable="IdColumn" type="xs:string" />
+              <xs:element name="Index" msprop:Generator_UserColumnName="Index" msprop:Generator_ColumnPropNameInRow="Index" msprop:Generator_ColumnVarNameInTable="columnIndex" msprop:Generator_ColumnPropNameInTable="IndexColumn" type="xs:int" />
+              <xs:element name="Type" msprop:Generator_UserColumnName="Type" msprop:Generator_ColumnPropNameInRow="Type" msprop:Generator_ColumnVarNameInTable="columnType" msprop:Generator_ColumnPropNameInTable="TypeColumn" type="xs:string" minOccurs="0" />
+              <xs:element name="DataPoints" msdata:Caption="Data Points" msprop:Generator_UserColumnName="DataPoints" msprop:Generator_ColumnPropNameInRow="DataPoints" msprop:Generator_ColumnVarNameInTable="columnDataPoints" msprop:Generator_ColumnPropNameInTable="DataPointsColumn" type="xs:unsignedLong" minOccurs="0" />
+              <xs:element name="DpId" msprop:Generator_UserColumnName="DpId" msprop:Generator_ColumnPropNameInRow="DpId" msprop:Generator_ColumnVarNameInTable="columnDpId" msprop:Generator_ColumnPropNameInTable="DpIdColumn" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1">
+      <xs:selector xpath=".//mstns:ChromatogramTable" />
+      <xs:field xpath="mstns:Index" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>

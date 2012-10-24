@@ -1,0 +1,104 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+import modules ;
+import path ;
+
+
+path-constant API_PATH : . ;
+
+
+if [ modules.peek : NT ]
+{
+
+import path ;
+
+rule vendor-api-requirements ( properties * )
+{
+    local result = [ masslynxraw-dll-location $(API_PATH) : $(properties) ] ;
+    if $(result)
+    {
+        result = <search>$(result) ;
+    }
+    else
+    {
+        result = <build>no ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result = [ masslynxraw-dll-location $(API_PATH) : $(properties) ] ;
+    if $(result)
+    {
+        result = <assembly-dependency>$(result)\\MassLynxRaw.dll ;
+    }
+    return $(result) ;
+}
+
+searched-lib pwiz_vendor_api_waters
+    : # sources
+    : # requirements
+        <link>shared:<define>PWIZ_DYN_LINK
+        <name>MassLynxRaw
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
+        <runtime-debugging>on:<build>no
+        <toolset-msvc:version>9.0,<address-model>64:<build>no
+        <toolset-msvc:version>9.0express,<address-model>64:<build>no
+        <toolset-msvc:version>10.0,<secure-scl>on:<build>no
+        <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-usage-requirements
+    ;
+
+explicit pwiz_vendor_api_waters ;
+
+
+# a test utility, not a unit test
+exe RawDataTest
+    : RawDataTest.cpp
+      pwiz_vendor_api_waters
+    ;
+
+explicit RawDataTest ;
+
+
+rule install-requirements ( properties * )
+{
+    local result = [ masslynxraw-dll-location $(API_PATH) : $(properties) ] ;
+    if $(result)
+    {
+        return <source>$(result)\\MassLynxRaw.dll ;
+    }
+}
+
+install install_pwiz_vendor_api_waters
+    : : <conditional>@install-requirements
+    ;
+
+explicit install_pwiz_vendor_api_waters ;
+
+}

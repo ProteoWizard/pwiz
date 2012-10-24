@@ -1,0 +1,509 @@
+#
+# $Id$
+#
+#
+# Original author: Barbara Frewen <frewen .@. u.washington.edu>
+#
+# Copyright 2012 University of Washington - Seattle, WA 98195
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+import common ;
+import notfile ;
+import path ;
+
+# extract the input files for the tests
+path-constant TEST_DATA_PATH : ./inputs ;
+
+rule test-data
+{
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
+    local result ;
+    if ! $(.warn-once-test)
+    {
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
+        {
+            echo "[pwiz_tools/BiblioSpec] Missing test data." ;
+            result = <build>no ;
+        }
+    }
+    return $(result) ;
+}
+
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+
+local compare-reqs = <include>../libraries/sqlite <include>../src/ ; 
+alias compare-src : ../libraries/sqlite//sqlite ;
+
+rule mascot-installed ( properties * )
+{
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+#    if ! $(msparser_path)
+#   Allow TeamCity to pass
+    if ! $(msparser_path) || <toolset>msvc in $(properties)
+    {
+        result = <build>no ;
+    }
+
+    return $(result) ;
+}
+
+rule mascot-not-installed ( properties * )
+{
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+#    if $(msparser_path)
+#   Allow TeamCity to pass
+    if $(msparser_path) && ! <toolset>msvc in $(properties)
+    {
+        result = <build>no ;
+    }
+
+    return $(result) ;
+}
+
+
+# Put the test output here
+make output : : @common.mkdir : <location>. <conditional>@test-data ;
+
+# every test that creates an output file will have these requirements
+local test_output_req = <location>. <dependency>output ;
+
+# The tests
+
+# Test building with sqt files
+
+make output/demo.blib : inputs/empty : @common.copy : $(test_output_req) <conditional>@test-data ;
+run-if-exists ExecuteBlib.cpp 
+  : -o 
+  : ../src//BlibBuild inputs/demo.sqt output/demo.blib 
+  :
+  : build-sqt-ms2 ;
+run-if-exists CompareLibraryContents.cpp compare-src 
+  : 
+  : output/demo.blib reference/sqt-ms2.check 
+  : $(compare-reqs)
+    <dependency>build-sqt-ms2
+  : check-sqt-ms2 ;
+
+make output/demo-copy.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp 
+  : -o 
+  : ../src//BlibBuild inputs/demo-copy.sqt output/demo-copy.blib
+  : 
+  : build-sqt-cms2 ;
+run-if-exists CompareLibraryContents.cpp compare-src 
+  : 
+  : output/demo-copy.blib reference/sqt-cms2.check 
+  : $(compare-reqs)
+    <dependency>build-sqt-cms2
+  : check-sqt-cms2 ;
+
+make output/sqt-ez.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/wormy4raw-1.select.sqt output/sqt-ez.blib
+  : 
+  : build-sqt-ez ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/sqt-ez.blib reference/sqt-ez.check
+  : $(compare-reqs)
+    <dependency>build-sqt-ez
+  : check-sqt-ez ;
+
+# Test with the tab-delimited input format
+
+make output/ssl.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/demo.ssl output/ssl.blib
+  : 
+  : build-ssl ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/ssl.blib reference/ssl.check
+  : $(compare-reqs)
+    <dependency>build-ssl
+  : check-ssl ;
+
+make output/ssl-ex.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/extra-cols.ssl output/ssl-ex.blib
+  : 
+  : build-ssl-ex ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/ssl-ex.blib reference/ssl-ex.check
+  : $(compare-reqs)
+    <dependency>build-ssl-ex
+  : check-ssl-ex ;
+
+make output/duplicates.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/three-duplicates.ssl output/duplicates.blib
+  : 
+  : build-duplicates ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/duplicates.blib reference/duplicates.check
+  : $(compare-reqs)
+    <dependency>build-duplicates
+  : check-duplicates ;
+
+# Test building with percolator XML files
+
+make output/perc.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/smaller.perc.xml output/perc.blib
+  : 
+  : build-perc-xml ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/perc.blib reference/perc-xml.check
+  : $(compare-reqs)
+    <dependency>build-perc-xml
+  : check-perc-xml ;
+
+# Test building with .pep.xml from various pipelines
+
+make output/omssa.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/OMSSA.pep.xml output/omssa.blib
+  : 
+  : build-omssa ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/omssa.blib reference/omssa.check
+  : $(compare-reqs)
+    <dependency>build-omssa
+  : check-omssa ;
+
+make output/pep-proph.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/CAexample.pep.xml output/pep-proph.blib
+  : 
+  : build-pep-proph ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/pep-proph.blib reference/pep-proph.check
+  : $(compare-reqs)
+    <dependency>build-pep-proph
+  : check-pep-proph ;
+
+make output/prospector.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/V20120113-01_ITMSms2cid.pep.xml output/prospector.blib
+  : 
+  : build-prospector ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/prospector.blib reference/prospector.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-prospector
+  : check-prospector ;
+
+make output/smill.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML output/smill.blib
+  : 
+  : build-smill ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/smill.blib reference/smill.check
+  : $(compare-reqs)
+    <dependency>build-smill
+  : check-smill ;
+
+make output/bad-index.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/interact-prob-three-spec.pep.xml output/bad-index.blib
+  : 
+  : build-bad-index ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/bad-index.blib reference/bad-index.check
+  : $(compare-reqs)
+    <dependency>build-bad-index
+  : check-bad-index ;
+
+# Test other xml formats (idpicker, xtandem)
+
+make output/idpicker.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/orbi-small-eg.idpXML output/idpicker.blib
+  : 
+  : build-idpicker ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/idpicker.blib reference/idpicker.check
+  : $(compare-reqs)
+    <dependency>build-idpicker
+  : check-idpicker ;
+
+make output/tandem.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml output/tandem.blib
+  : 
+  : build-tandem ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/tandem.blib reference/tandem.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-tandem
+  : check-tandem ;
+
+make output/pilot.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/MB1_98_03.group.xml output/pilot.blib
+  : 
+  : build-pilot ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/pilot.blib reference/pilot.check
+  : $(compare-reqs)
+    <dependency>build-pilot
+  : check-pilot ;
+
+# Test mzid format from scaffold
+
+make output/scaffold.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/scaffold.mzid output/scaffold.blib
+  : 
+  : build-scaffold ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/scaffold.blib reference/scaffold.check
+  : $(compare-reqs)
+    <dependency>build-scaffold
+  : check-scaffold ;
+
+# Test waters csv format
+
+make output/mse.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/tiny_final_fragment.csv output/mse.blib
+  : 
+  : build-mse ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/mse.blib reference/mse.check
+  : $(compare-reqs)
+    <dependency>build-mse
+  : check-mse ;
+
+# Test building with Mascot .dat files, contingent on Mascot support
+
+# Test if msparser installed
+make output/mascot.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp 
+  : -o 
+  : ../src//BlibBuild inputs/F027319.dat output/mascot.blib
+  : <conditional>@mascot-installed
+  : build-mascot ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/mascot.blib reference/mascot.check
+  : $(compare-reqs)
+    <dependency>build-mascot
+    <conditional>@mascot-installed
+  : check-mascot ;
+
+make output/mascot-15N.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/F027752.dat output/mascot-15N.blib
+  : <conditional>@mascot-installed
+  : build-mascot-15N ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/mascot-15N.blib reference/mascot-15N.check
+  : $(compare-reqs)
+    <dependency>build-mascot-15N
+    <conditional>@mascot-installed
+  : check-mascot-15N ;
+
+# TODO: Need something to test for failure that works with TeamCity.
+# Check that the tests fails if not installed
+# run-fail-if-exists ExecuteBlib.cpp 
+#   : -o
+#   : ../src//BlibBuild inputs/F027319.dat output/mascot.blib
+#   : <conditional>@mascot-not-installed
+#   : build-mascot-fail ;
+
+# run-fail-if-exists ExecuteBlib.cpp
+#   : -o
+#   : ../src//BlibBuild inputs/F027752.dat output/mascot-15N.blib
+#   : <conditional>@mascot-not-installed
+#   : build-mascot-15N-fail ;
+
+
+# Test merging existing libraries
+
+make output/xmerged.redundant.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o 
+  : ../src//BlibBuild output/demo-copy.blib output/demo.blib output/pep-proph.blib output/xmerged.redundant.blib
+  : <dependency>build-sqt-ms2
+    <dependency>build-sqt-cms2
+    <dependency>build-pep-proph 
+  : build-merge ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  : 
+  : output/xmerged.redundant.blib reference/xmerged.redundant.check
+  : $(compare-reqs)
+    <dependency>build-merge
+  : check-merge ;
+
+# Test BlibFilter
+
+make output/zmerged.filtered.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  :
+  : ../src//BlibFilter output/xmerged.redundant.blib output/zmerged.filtered.blib
+  : <dependency>build-merge 
+  : build-filter ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  : 
+  : output/zmerged.filtered.blib reference/zmerged.filtered.check
+  : $(compare-reqs)
+    <dependency>build-filter
+  : check-filter ;
+
+#make output/filtered.existing.blib : inputs/empty : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp
+#  :
+#  : ../src//BlibFilter inputs/existing.blib output/filtered.existing.blib
+#  : 
+#  : build-filter-old ;
+#run-if-exists CompareLibraryContents.cpp compare-src
+#  : 
+#  : output/filtered.existing.blib reference/filtered.existing.check
+#  : $(compare-reqs)
+#  : check-filter-old ;
+
+# Test adding spectra to existing libraries, new and old formats
+
+# TODO: these tests are broken
+# requires a clean copy of inputs/existing.blib to output/z.old.blib before running
+#make output/z.old.blib : inputs/existing.blib : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp :  
+#  : ../src//BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.old.blib : 
+#  : build-into-old ;
+#run-if-exists CompareLibraryContents.cpp compare-src : : output/z.old.blib reference/old.check : $(compare-reqs)
+#  : check-old ;
+
+#make output/z.new.blib : output/scaffold.blib : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp : 
+#  : ../src//BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.new.blib : 
+#  : build-into-new ;
+#run-if-exists CompareLibraryContents.cpp compare-src : : output/z.new.blib reference/new.check : $(compare-reqs)
+#  : check-new ;
+
+#make output/z.mixed.blib : inputs/empty : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp : -o : ../src//BlibBuild inputs/existing.blib output/scaffold.blib output/z.mixed.blib : 
+#  : build-mixed ;
+#run-if-exists CompareLibraryContents.cpp compare-src : : output/z.mixed.blib reference/mixed.check : $(compare-reqs)
+#  : check-mixed ;
+
+# Test conversion to text
+
+make output/demo.lms2 : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -f
+  : ../src//BlibToMs2 output/demo.blib output/demo.lms2
+  : <dependency>build-sqt-ms2 
+  : convert-lms2 ;
+run-if-exists CompareTextFiles.cpp
+  :
+  : output/demo.lms2 reference/demo.lms2 reference/lms2-skip-lines
+  : <dependency>convert-lms2
+  : check-lms2 ;
+
+# Test BlibSearch
+
+make inputs/demo.report : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : --preserve-order
+  : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
+  : <dependency>build-sqt-ms2
+  : search-demo ;
+# Failing on TeamCity
+#run-if-exists CompareTextFiles.cpp
+#  :
+#  : inputs/demo.report reference/demo.report reference/demo.skip-lines
+#  : <dependency>search-demo
+#  : check-search-demo ;
+
+make inputs/demo.decoy.report : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : --preserve-order --decoys-per-target_1
+  : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
+  : <dependency>build-sqt-ms2
+  : search-decoy ;
+run-if-exists CompareTextFiles.cpp
+  :
+  : inputs/demo.decoy.report reference/demo.decoy.report reference/demo.skip-lines
+  : <dependency>search-decoy
+  : check-search-decoy ;
+
+make inputs/mzsorted.report : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  :
+  : ../src//BlibSearch inputs/mzsorted.ms2 output/demo.blib
+  : <dependency>build-sqt-ms2
+  : search-mzsorted ;
+run-if-exists CompareTextFiles.cpp
+  :
+  : inputs/mzsorted.report reference/mzsorted.report reference/mzsorted.skip-lines
+  : <dependency>search-mzsorted
+  : check-search-mzsorted ;
+
+make inputs/binning.report : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : --bin-size_1.1 --bin-offset_0.2
+  : ../src//BlibSearch inputs/binning.ms2 output/demo.blib
+  : <dependency>build-sqt-ms2
+ : search-binning ;
+run-if-exists CompareTextFiles.cpp
+  :
+  : inputs/binning.report reference/binning.report reference/demo.skip-lines
+  : <dependency>search-binning
+  : check-search-binning ;
+
+
+

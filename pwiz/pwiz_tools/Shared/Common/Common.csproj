@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>pwiz.Common</RootNamespace>
+    <AssemblyName>pwiz.Common</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Iridium, Version=2008.8.16.470, Culture=neutral, PublicKeyToken=c061a3ec32cc0c6f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\MathNet.Iridium.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="ZedGraph">
+      <HintPath>..\Lib\ZedGraph.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Controls\DoubleBufferedListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\FindBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\FindBox.Designer.cs">
+      <DependentUpon>FindBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\RecordNavBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\RecordNavBar.Designer.cs">
+      <DependentUpon>RecordNavBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
+    <Compile Include="DataAnalysis\LoessInterpolator.cs" />
+    <Compile Include="DataBinding\AbstractViewContext.cs" />
+    <Compile Include="DataBinding\AggregateFunction.cs" />
+    <Compile Include="DataBinding\AggregateFunctions.cs" />
+    <Compile Include="DataBinding\BindingListEventHandler.cs" />
+    <Compile Include="DataBinding\BindingListView.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataBinding\BoundDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\CollectionInfo.cs" />
+    <Compile Include="DataBinding\ColumnDescriptor.cs" />
+    <Compile Include="DataBinding\ColumnPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\ColumnSpec.cs" />
+    <Compile Include="DataBinding\Controls\AvailableFieldsTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\CustomizeViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\CustomizeViewForm.Designer.cs">
+      <DependentUpon>CustomizeViewForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ListViewHelper.cs" />
+    <Compile Include="DataBinding\Controls\ManageViewsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ManageViewsForm.Designer.cs">
+      <DependentUpon>ManageViewsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\NavBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
+      <DependentUpon>NavBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ViewCell.cs" />
+    <Compile Include="DataBinding\Controls\ViewColumn.cs" />
+    <Compile Include="DataBinding\DataColumnAttribute.cs" />
+    <Compile Include="DataBinding\DataFormat.cs" />
+    <Compile Include="DataBinding\DataSchema.cs" />
+    <Compile Include="DataBinding\DisplayColumn.cs" />
+    <Compile Include="DataBinding\FilterInfo.cs" />
+    <Compile Include="DataBinding\FilterOperation.cs" />
+    <Compile Include="DataBinding\PivotKey.cs" />
+    <Compile Include="DataBinding\IdentifierPath.cs" />
+    <Compile Include="DataBinding\IEntity.cs" />
+    <Compile Include="DataBinding\IViewContext.cs" />
+    <Compile Include="DataBinding\LongDecimal.cs" />
+    <Compile Include="DataBinding\OneToManyAttribute.cs" />
+    <Compile Include="DataBinding\Pivoter.cs" />
+    <Compile Include="DataBinding\QueryWorker.cs" />
+    <Compile Include="DataBinding\QueryResults.cs" />
+    <Compile Include="DataBinding\RowFilter.cs" />
+    <Compile Include="DataBinding\RowItem.cs" />
+    <Compile Include="DataBinding\RowItemTree.cs" />
+    <Compile Include="DataBinding\RowNode.cs" />
+    <Compile Include="DataBinding\LinkValue.cs" />
+    <Compile Include="DataBinding\SortableBindingList.cs" />
+    <Compile Include="DataBinding\TreeList.cs" />
+    <Compile Include="DataBinding\ViewInfo.cs" />
+    <Compile Include="DataBinding\ViewProperties.cs" />
+    <Compile Include="Graph\CurveDataHandler.cs" />
+    <Compile Include="Graph\DataColumn.cs" />
+    <Compile Include="Graph\DataFrame.cs" />
+    <Compile Include="Graph\CurveDataHandlers.cs" />
+    <Compile Include="Graph\DataFrameBuilder.cs" />
+    <Compile Include="Graph\GraphData.cs" />
+    <Compile Include="Graph\GraphPaneData.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Controls\FindBox.resx">
+      <DependentUpon>FindBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\RecordNavBar.resx">
+      <DependentUpon>RecordNavBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\CustomizeViewForm.resx">
+      <DependentUpon>CustomizeViewForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ManageViewsForm.resx">
+      <DependentUpon>ManageViewsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\NavBar.resx">
+      <DependentUpon>NavBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Delete.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\down-pro32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\up-pro32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\agg_mean.bmp" />
+    <Content Include="Resources\agg_median.bmp" />
+    <Content Include="Resources\agg_sum.bmp" />
+    <Content Include="Resources\agg_count.bmp" />
+    <Content Include="Resources\agg_blank.bmp" />
+    <Content Include="Resources\agg_groupby.bmp" />
+    <Content Include="Resources\agg_min.bmp" />
+    <Content Include="Resources\agg_max.bmp" />
+    <Content Include="Resources\agg_stddev.bmp" />
+    <Content Include="Resources\close.bmp" />
+    <Content Include="Resources\restore.bmp" />
+    <Content Include="Resources\maximize.bmp" />
+    <Content Include="Resources\MatchCase.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MSGraph\MSGraph.csproj">
+      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
