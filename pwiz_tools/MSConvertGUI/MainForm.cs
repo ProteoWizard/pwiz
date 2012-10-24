@@ -69,7 +69,20 @@ namespace MSConvertGUI
         {
             if (""!=text)
                 lastFileboxText = text; // for use in setting browse directory
-            FileBox.Text = text;
+
+            if (text.Count(o => "?*".Contains(o)) > 0)
+            {
+                string directory = Path.GetDirectoryName(text);
+                if (String.IsNullOrEmpty(directory))
+                    directory = ".";
+                foreach (string filepath in Directory.GetFiles(directory, Path.GetFileName(text)))
+                {
+                    FileBox.Text = filepath;
+                    AddFileButton_Click(this, EventArgs.Empty);
+                }
+            }
+            else
+                FileBox.Text = text;
         }
 
         private void MainForm_Load (object sender, EventArgs e)
@@ -206,6 +219,7 @@ namespace MSConvertGUI
             var fileList = new List<string>
                                {
                                    "Any spectra format","mzML", "mzXML", "MZ5",
+                                   "MS1", "CMS1", "BMS1", "MS2", "CMS2", "BMS2",
                                    "Thermo RAW", "Waters RAW", "ABSciex WIFF",
                                    "Bruker Analysis", "Agilent MassHunter",
                                    "Mascot Generic", "Bruker Data Exchange"
@@ -423,6 +437,12 @@ namespace MSConvertGUI
                 case "text":
                     commandLine.Append("--text|");
                     break;
+                case "ms1":
+                    commandLine.Append("--ms1|");
+                    break;
+                case "cms1":
+                    commandLine.Append("--cms1|");
+                    break;
                 case "ms2":
                     commandLine.Append("--ms2|");
                     break;
@@ -506,6 +526,8 @@ namespace MSConvertGUI
                     case "--mz5":
                     case "--mgf":
                     case "--text":
+                    case "--ms1":
+                    case "--cms1":
                     case "--ms2":
                     case "--cms2":
                         OutputFormatBox.Text = words[i].Substring(2);

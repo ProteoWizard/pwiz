@@ -24,8 +24,8 @@
 #define PWIZ_SOURCE
 
 #include "Std.hpp"
-#include "DateTime.hpp"
 #include "IterationListener.hpp"
+#include <ctime>
 
 
 namespace pwiz {
@@ -61,20 +61,21 @@ class IterationListenerRegistry::Impl
     {
         IterationListener::Status result = IterationListener::Status_Ok;
 
-        bpt::ptime now = bpt::microsec_clock::local_time();
 
         for (Listeners::const_iterator itr = listeners_.begin(); itr != listeners_.end(); ++itr)
         {
+            time_t now;
+            time(&now);
+
             const IterationListenerPtr& listener = itr->first;
             const CallbackInfo& callbackInfo = itr->second;
             CallbackInfo::PeriodType periodType = callbackInfo.periodType;
-            bpt::time_duration timeElapsed = now - callbackInfo.timestamp;
 
             bool shouldUpdate =
                 updateMessage.iterationIndex == 0 ||
                 (updateMessage.iterationCount > 0 && updateMessage.iterationIndex+1 >= updateMessage.iterationCount) ||
                 (periodType == CallbackInfo::PeriodType_Iteration && (updateMessage.iterationIndex+1) % callbackInfo.iterationPeriod == 0) ||
-                (periodType == CallbackInfo::PeriodType_Time && timeElapsed.total_milliseconds()/1000.0 >= callbackInfo.timePeriod);
+                (periodType == CallbackInfo::PeriodType_Time && difftime(now, callbackInfo.timestamp) >= callbackInfo.timePeriod);
 
             if (shouldUpdate)
             {
@@ -99,7 +100,7 @@ class IterationListenerRegistry::Impl
         size_t iterationPeriod;
         double timePeriod; // seconds
 
-        mutable bpt::ptime timestamp;
+        mutable time_t timestamp;
 
         CallbackInfo(size_t _iterationPeriod = 1)
         :   periodType(PeriodType_Iteration),

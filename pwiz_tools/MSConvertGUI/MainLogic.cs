@@ -117,6 +117,8 @@ namespace MSConvertGUI
             var formatMzXml = false;
             var formatMz5 = false;
             var formatMgf = false;
+            var formatMs1 = false;
+            var formatCms1 = false;
             var formatMs2 = false;
             var formatCms2 = false;
             var precision32 = false;
@@ -160,6 +162,12 @@ namespace MSConvertGUI
                         break;
                     case "--text":
                         formatText = true;
+                        break;
+                    case "--ms1":
+                        formatMs1 = true;
+                        break;
+                    case "--cms1":
+                        formatCms1 = true;
                         break;
                     case "--ms2":
                         formatMs2 = true;
@@ -242,6 +250,12 @@ namespace MSConvertGUI
                         case "--text":
                             formatText = true;
                             break;
+                        case "--ms1":
+                            formatMs1 = true;
+                            break;
+                        case "--cms1":
+                            formatCms1 = true;
+                            break;
                         case "--ms2":
                             formatMs2 = true;
                             break;
@@ -306,6 +320,8 @@ namespace MSConvertGUI
                 + (formatMzXml ? 1 : 0)
                 + (formatMz5 ? 1 : 0)
                 + (formatMgf ? 1 : 0)
+                + (formatMs1 ? 1 : 0)
+                + (formatCms1 ? 1 : 0)
                 + (formatMs2 ? 1 : 0)
                 + (formatCms2 ? 1 : 0);
             if (count > 1) throw new Exception("[msconvert] Multiple format flags specified.");
@@ -314,6 +330,8 @@ namespace MSConvertGUI
             if (formatMzXml) config.WriteConfig.format = MSDataFile.Format.Format_mzXML;
             if (formatMz5) config.WriteConfig.format = MSDataFile.Format.Format_MZ5;
             if (formatMgf) config.WriteConfig.format = MSDataFile.Format.Format_MGF;
+            if (formatMs1) config.WriteConfig.format = MSDataFile.Format.Format_MS1;
+            if (formatCms1) config.WriteConfig.format = MSDataFile.Format.Format_CMS1;
             if (formatMs2) config.WriteConfig.format = MSDataFile.Format.Format_MS2;
             if (formatCms2) config.WriteConfig.format = MSDataFile.Format.Format_CMS2;
 
@@ -337,6 +355,12 @@ namespace MSConvertGUI
                         break;
                     case MSDataFile.Format.Format_MGF:
                         config.Extension = ".mgf";
+                        break;
+                    case MSDataFile.Format.Format_MS1:
+                        config.Extension = ".ms1";
+                        break;
+                    case MSDataFile.Format.Format_CMS1:
+                        config.Extension = ".cms1";
                         break;
                     case MSDataFile.Format.Format_MS2:
                         config.Extension = ".ms2";

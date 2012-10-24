@@ -54,7 +54,6 @@ namespace MSConvertGUI
             this.components = new System.ComponentModel.Container();
             this.ctlToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.FileBox = new System.Windows.Forms.TextBox();
-            this.lastFileboxText = "";
             this.FileLabel = new System.Windows.Forms.Label();
             this.AddFileButton = new System.Windows.Forms.Button();
             this.FilterDGV = new System.Windows.Forms.DataGridView();
@@ -66,13 +65,6 @@ namespace MSConvertGUI
             this.FilterGB = new System.Windows.Forms.GroupBox();
             this.FilterBox = new System.Windows.Forms.ComboBox();
             this.ChargeStatePredictorPanel = new System.Windows.Forms.Panel();
-            this.ThresholdFilterPanel = new System.Windows.Forms.Panel();
-            this.thresholdValueLabel = new System.Windows.Forms.Label();
-            this.thresholdOrientationLabel = new System.Windows.Forms.Label();
-            this.thresholdTypeLabel = new System.Windows.Forms.Label();
-            this.thresholdOrientationComboBox = new System.Windows.Forms.ComboBox();
-            this.thresholdValueTextBox = new System.Windows.Forms.TextBox();
-            this.thresholdTypeComboBox = new System.Windows.Forms.ComboBox();
             this.ChaMCMaxLabel = new System.Windows.Forms.Label();
             this.ChaMCMaxBox = new System.Windows.Forms.TextBox();
             this.ChaMCMinBox = new System.Windows.Forms.TextBox();
@@ -120,6 +112,13 @@ namespace MSConvertGUI
             this.ETDRemoveChargeReducedBox = new System.Windows.Forms.CheckBox();
             this.ETDRemoveNeutralLossBox = new System.Windows.Forms.CheckBox();
             this.ETDRemovePrecursorBox = new System.Windows.Forms.CheckBox();
+            this.ThresholdFilterPanel = new System.Windows.Forms.Panel();
+            this.thresholdValueLabel = new System.Windows.Forms.Label();
+            this.thresholdOrientationLabel = new System.Windows.Forms.Label();
+            this.thresholdTypeLabel = new System.Windows.Forms.Label();
+            this.thresholdOrientationComboBox = new System.Windows.Forms.ComboBox();
+            this.thresholdValueTextBox = new System.Windows.Forms.TextBox();
+            this.thresholdTypeComboBox = new System.Windows.Forms.ComboBox();
             this.RemoveFilterButton = new System.Windows.Forms.Button();
             this.AddFilterButton = new System.Windows.Forms.Button();
             this.TextFileRadio = new System.Windows.Forms.RadioButton();
@@ -147,7 +146,6 @@ namespace MSConvertGUI
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.ChargeStatePredictorPanel.SuspendLayout();
-            this.ThresholdFilterPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).BeginInit();
             this.ActivationPanel.SuspendLayout();
             this.SubsetPanel.SuspendLayout();
@@ -155,6 +153,7 @@ namespace MSConvertGUI
             this.PeakPickingPanel.SuspendLayout();
             this.ZeroSamplesPanel.SuspendLayout();
             this.ETDFilterPanel.SuspendLayout();
+            this.ThresholdFilterPanel.SuspendLayout();
             this.OptionsGB.SuspendLayout();
             this.SlidingPanel.SuspendLayout();
             this.SuspendLayout();
@@ -313,75 +312,6 @@ namespace MSConvertGUI
             this.ChargeStatePredictorPanel.Size = new System.Drawing.Size(283, 91);
             this.ChargeStatePredictorPanel.TabIndex = 4;
             this.ChargeStatePredictorPanel.Visible = false;
-            // 
-            // ThresholdFilterPanel
-            // 
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueLabel);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationLabel);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeLabel);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationComboBox);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueTextBox);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeComboBox);
-            this.ThresholdFilterPanel.Location = new System.Drawing.Point(22, 46);
-            this.ThresholdFilterPanel.Name = "ThresholdFilterPanel";
-            this.ThresholdFilterPanel.Size = new System.Drawing.Size(283, 91);
-            this.ThresholdFilterPanel.TabIndex = 20;
-            this.ThresholdFilterPanel.Visible = false;
-            // 
-            // thresholdValueLabel
-            // 
-            this.thresholdValueLabel.AutoSize = true;
-            this.thresholdValueLabel.Location = new System.Drawing.Point(69, 64);
-            this.thresholdValueLabel.Name = "thresholdValueLabel";
-            this.thresholdValueLabel.Size = new System.Drawing.Size(37, 13);
-            this.thresholdValueLabel.TabIndex = 16;
-            this.thresholdValueLabel.Text = "Value:";
-            // 
-            // thresholdOrientationLabel
-            // 
-            this.thresholdOrientationLabel.AutoSize = true;
-            this.thresholdOrientationLabel.Location = new System.Drawing.Point(45, 37);
-            this.thresholdOrientationLabel.Name = "thresholdOrientationLabel";
-            this.thresholdOrientationLabel.Size = new System.Drawing.Size(61, 13);
-            this.thresholdOrientationLabel.TabIndex = 15;
-            this.thresholdOrientationLabel.Text = "Orientation:";
-            // 
-            // thresholdTypeLabel
-            // 
-            this.thresholdTypeLabel.AutoSize = true;
-            this.thresholdTypeLabel.Location = new System.Drawing.Point(26, 10);
-            this.thresholdTypeLabel.Name = "thresholdTypeLabel";
-            this.thresholdTypeLabel.Size = new System.Drawing.Size(80, 13);
-            this.thresholdTypeLabel.TabIndex = 14;
-            this.thresholdTypeLabel.Text = "Threshold type:";
-            // 
-            // thresholdOrientationComboBox
-            // 
-            this.thresholdOrientationComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.thresholdOrientationComboBox.FormattingEnabled = true;
-            this.thresholdOrientationComboBox.Items.AddRange(new object[] {
-            "Most intense",
-            "Least intense"});
-            this.thresholdOrientationComboBox.Location = new System.Drawing.Point(113, 34);
-            this.thresholdOrientationComboBox.Name = "thresholdOrientationComboBox";
-            this.thresholdOrientationComboBox.Size = new System.Drawing.Size(121, 21);
-            this.thresholdOrientationComboBox.TabIndex = 2;
-            // 
-            // thresholdValueTextBox
-            // 
-            this.thresholdValueTextBox.Location = new System.Drawing.Point(114, 61);
-            this.thresholdValueTextBox.Name = "thresholdValueTextBox";
-            this.thresholdValueTextBox.Size = new System.Drawing.Size(120, 20);
-            this.thresholdValueTextBox.TabIndex = 1;
-            // 
-            // thresholdTypeComboBox
-            // 
-            this.thresholdTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.thresholdTypeComboBox.FormattingEnabled = true;
-            this.thresholdTypeComboBox.Location = new System.Drawing.Point(113, 7);
-            this.thresholdTypeComboBox.Name = "thresholdTypeComboBox";
-            this.thresholdTypeComboBox.Size = new System.Drawing.Size(121, 21);
-            this.thresholdTypeComboBox.TabIndex = 0;
             // 
             // ChaMCMaxLabel
             // 
@@ -881,6 +811,75 @@ namespace MSConvertGUI
             this.ETDRemovePrecursorBox.Text = "Remove Precursor:";
             this.ETDRemovePrecursorBox.UseVisualStyleBackColor = true;
             // 
+            // ThresholdFilterPanel
+            // 
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationComboBox);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueTextBox);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeComboBox);
+            this.ThresholdFilterPanel.Location = new System.Drawing.Point(22, 46);
+            this.ThresholdFilterPanel.Name = "ThresholdFilterPanel";
+            this.ThresholdFilterPanel.Size = new System.Drawing.Size(283, 91);
+            this.ThresholdFilterPanel.TabIndex = 20;
+            this.ThresholdFilterPanel.Visible = false;
+            // 
+            // thresholdValueLabel
+            // 
+            this.thresholdValueLabel.AutoSize = true;
+            this.thresholdValueLabel.Location = new System.Drawing.Point(69, 64);
+            this.thresholdValueLabel.Name = "thresholdValueLabel";
+            this.thresholdValueLabel.Size = new System.Drawing.Size(37, 13);
+            this.thresholdValueLabel.TabIndex = 16;
+            this.thresholdValueLabel.Text = "Value:";
+            // 
+            // thresholdOrientationLabel
+            // 
+            this.thresholdOrientationLabel.AutoSize = true;
+            this.thresholdOrientationLabel.Location = new System.Drawing.Point(45, 37);
+            this.thresholdOrientationLabel.Name = "thresholdOrientationLabel";
+            this.thresholdOrientationLabel.Size = new System.Drawing.Size(61, 13);
+            this.thresholdOrientationLabel.TabIndex = 15;
+            this.thresholdOrientationLabel.Text = "Orientation:";
+            // 
+            // thresholdTypeLabel
+            // 
+            this.thresholdTypeLabel.AutoSize = true;
+            this.thresholdTypeLabel.Location = new System.Drawing.Point(26, 10);
+            this.thresholdTypeLabel.Name = "thresholdTypeLabel";
+            this.thresholdTypeLabel.Size = new System.Drawing.Size(80, 13);
+            this.thresholdTypeLabel.TabIndex = 14;
+            this.thresholdTypeLabel.Text = "Threshold type:";
+            // 
+            // thresholdOrientationComboBox
+            // 
+            this.thresholdOrientationComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.thresholdOrientationComboBox.FormattingEnabled = true;
+            this.thresholdOrientationComboBox.Items.AddRange(new object[] {
+            "Most intense",
+            "Least intense"});
+            this.thresholdOrientationComboBox.Location = new System.Drawing.Point(113, 34);
+            this.thresholdOrientationComboBox.Name = "thresholdOrientationComboBox";
+            this.thresholdOrientationComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdOrientationComboBox.TabIndex = 2;
+            // 
+            // thresholdValueTextBox
+            // 
+            this.thresholdValueTextBox.Location = new System.Drawing.Point(114, 61);
+            this.thresholdValueTextBox.Name = "thresholdValueTextBox";
+            this.thresholdValueTextBox.Size = new System.Drawing.Size(120, 20);
+            this.thresholdValueTextBox.TabIndex = 1;
+            // 
+            // thresholdTypeComboBox
+            // 
+            this.thresholdTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.thresholdTypeComboBox.FormattingEnabled = true;
+            this.thresholdTypeComboBox.Location = new System.Drawing.Point(113, 7);
+            this.thresholdTypeComboBox.Name = "thresholdTypeComboBox";
+            this.thresholdTypeComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdTypeComboBox.TabIndex = 0;
+            // 
             // RemoveFilterButton
             // 
             this.RemoveFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
@@ -936,6 +935,8 @@ namespace MSConvertGUI
             "mz5",
             "mgf",
             "text",
+            "ms1",
+            "cms1",
             "ms2",
             "cms2"});
             this.OutputFormatBox.Location = new System.Drawing.Point(89, 16);
@@ -1171,8 +1172,6 @@ namespace MSConvertGUI
             this.FilterGB.ResumeLayout(false);
             this.ChargeStatePredictorPanel.ResumeLayout(false);
             this.ChargeStatePredictorPanel.PerformLayout();
-            this.ThresholdFilterPanel.ResumeLayout(false);
-            this.ThresholdFilterPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).EndInit();
             this.ActivationPanel.ResumeLayout(false);
             this.ActivationPanel.PerformLayout();
@@ -1186,6 +1185,8 @@ namespace MSConvertGUI
             this.ZeroSamplesPanel.PerformLayout();
             this.ETDFilterPanel.ResumeLayout(false);
             this.ETDFilterPanel.PerformLayout();
+            this.ThresholdFilterPanel.ResumeLayout(false);
+            this.ThresholdFilterPanel.PerformLayout();
             this.OptionsGB.ResumeLayout(false);
             this.OptionsGB.PerformLayout();
             this.SlidingPanel.ResumeLayout(false);
