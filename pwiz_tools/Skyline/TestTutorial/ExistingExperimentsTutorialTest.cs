@@ -243,11 +243,27 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunDlg<ImportResultsSamplesDlg>(openDataSourceDialog1.Open, importResultsSamplesDlg =>
                 {
-                    importResultsSamplesDlg.CheckAll(false);
-                    importResultsSamplesDlg.IncludeSample(1);
-                    importResultsSamplesDlg.IncludeSample(2);
-                    importResultsSamplesDlg.IncludeSample(11);
-                    importResultsSamplesDlg.IncludeSample(12);
+                    if (IsPauseForScreenShots)
+                    {
+                        importResultsSamplesDlg.CheckAll(true);
+                        importResultsSamplesDlg.ExcludeSample(0);   // Blank
+                        importResultsSamplesDlg.ExcludeSample(25);  // QC
+                        importResultsSamplesDlg.ExcludeSample(26);
+                        importResultsSamplesDlg.ExcludeSample(27);
+                        importResultsSamplesDlg.ExcludeSample(28);
+                        importResultsSamplesDlg.ExcludeSample(49);  // gradientwash
+                        importResultsSamplesDlg.ExcludeSample(50);
+                        importResultsSamplesDlg.ExcludeSample(51);
+                        importResultsSamplesDlg.ExcludeSample(52);
+                    }
+                    else
+                    {
+                        importResultsSamplesDlg.CheckAll(false);
+                        importResultsSamplesDlg.IncludeSample(1);
+                        importResultsSamplesDlg.IncludeSample(2);
+                        importResultsSamplesDlg.IncludeSample(11);
+                        importResultsSamplesDlg.IncludeSample(12);
+                    }
                     importResultsSamplesDlg.OkDialog();
                 });
             }
@@ -335,10 +351,23 @@ namespace pwiz.SkylineTestTutorial
                           var resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
                           var colConcentration =
                               resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText);
-                          SetCellValue(resultsGrid, 0, colConcentration.Index, 0f);
-                          SetCellValue(resultsGrid, 1, colConcentration.Index, 0f);
-                          SetCellValue(resultsGrid, 2, colConcentration.Index, 175f);
-                          SetCellValue(resultsGrid, 3, colConcentration.Index, 175f);
+                          if (IsPauseForScreenShots)
+                          {
+                              float[] concentrations =
+                                  new[] { 0f, 60, 175, 513, 1500, 2760, 4980, 9060, 16500, 30000, 0, 0 };
+                              for (int i = 0; i < concentrations.Length; i++)
+                              {
+                                  for (int j = i * 4; j < (i + 1) * 4; j++)
+                                      SetCellValue(resultsGrid, j, colConcentration.Index, concentrations[i]);
+                              }
+                          }
+                          else
+                          {
+                              SetCellValue(resultsGrid, 0, colConcentration.Index, 0f);
+                              SetCellValue(resultsGrid, 1, colConcentration.Index, 0f);
+                              SetCellValue(resultsGrid, 2, colConcentration.Index, 175f);
+                              SetCellValue(resultsGrid, 3, colConcentration.Index, 175f);
+                          }
                           var protein =
                               SkylineWindow.DocumentUI.PeptideGroups.First(peptideGroup => "HRP" == peptideGroup.Name);
                           var peptide = protein.Peptides.First(node => "SSDLVALSGGHTFGK" == node.Peptide.Sequence);
@@ -349,6 +378,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(()=>{
                           SkylineWindow.ShowPeakAreaReplicateComparison();
                           SkylineWindow.GroupByReplicateAnnotation("Concentration");
+                          SkylineWindow.SetNormalizeIndex(0);
                       });
             PauseForScreenShot();
             // Further Exploration, p. 33.

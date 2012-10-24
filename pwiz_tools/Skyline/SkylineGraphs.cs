@@ -3140,6 +3140,11 @@ namespace pwiz.Skyline
             }
         }
 
+        public void SetNormalizeIndex(int index)
+        {
+            new SelectNormalizeHandler(this, index).Select();
+        }
+
         private void areaNormalizeTotalContextMenuItem_Click(object sender, EventArgs e)
         {
             NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);

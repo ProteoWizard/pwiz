@@ -51,6 +51,11 @@ namespace pwiz.Skyline.FileUI
             listSamples.SetItemChecked(index, true);
         }
 
+        public void ExcludeSample(int index)
+        {
+            listSamples.SetItemChecked(index, false);
+        }
+
         private void cbSelectAll_CheckedChanged(object sender, EventArgs e)
         {
             CheckAll(cbSelectAll.Checked);

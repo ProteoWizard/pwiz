@@ -2756,12 +2756,22 @@ namespace pwiz.Skyline
                 OnMenuItemClick();
             }
 
+            public void Select()
+            {
+                OnMenuItemClick();
+            }
+
             protected virtual void OnMenuItemClick()
             {
                 _skyline.SequenceTree.RatioIndex = _ratioIndex;
                 if (_skyline._graphPeakArea != null)
                     _skyline._graphPeakArea.RatioIndex = _ratioIndex;                
             }
+        }
+
+        public void SetRatioIndex(int index)
+        {
+            new SelectRatioHandler(this, index).Select();
         }
 
         private void sequenceTree_PickedChildrenEvent(object sender, PickedChildrenEventArgs e)
