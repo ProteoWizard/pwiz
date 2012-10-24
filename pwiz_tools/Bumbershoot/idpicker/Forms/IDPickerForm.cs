@@ -31,7 +31,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Resources;
-using System.Security.AccessControl;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -266,7 +265,7 @@ namespace IDPicker
             }
         }
 
-        void clearProgress (string messageToClear)
+        void clearProgress(string messageToClear)
         {
             if (InvokeRequired)
             {
@@ -276,6 +275,17 @@ namespace IDPicker
 
             if (toolStripStatusLabel.Text != messageToClear)
                 return;
+
+            clearProgress();
+        }
+
+        void clearProgress()
+        {
+            if (InvokeRequired)
+            {
+                Invoke((MethodInvoker)(() => clearProgress()));
+                return;
+            }
 
             toolStripStatusLabel.Text = "Ready";
             toolStripProgressBar.Visible = false;
@@ -1122,31 +1132,14 @@ namespace IDPicker
                 if (!IsHandleCreated)
                     return;
 
-                try
-                {
-                    // if the database is on a hard drive and can fit in the available RAM, populate the disk cache
-                    long ramBytesAvailable = (long)new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
-                    if (ramBytesAvailable > new FileInfo(mergeTargetFilepath).Length &&
-                        DriveType.Fixed == new DriveInfo(Path.GetPathRoot(mergeTargetFilepath)).DriveType)
-                    {
-                        toolStripStatusLabel.Text = "Precaching idpDB...";
-                        using (var fs = new FileStream(mergeTargetFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
-                        {
-                            var buffer = new byte[UInt16.MaxValue];
-                            while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // ignore precaching errors; could be due to user privileges and it's an optional step
-                }
+                Util.PrecacheFile(mergeTargetFilepath, progressMonitor.UpdateProgress);
 
                 if (!IsHandleCreated)
                     return;
 
                 BeginInvoke(new MethodInvoker(() =>
                 {
+                    clearProgress();
                     toolStripStatusLabel.Text = "Upgrading schema and creating session factory...";
                     statusStrip.Refresh();
                 }));

@@ -25,9 +25,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Security.AccessControl;
 
 namespace IDPicker
 {
@@ -125,6 +127,58 @@ namespace IDPicker
             if (String.IsNullOrEmpty(root))
                 return Path.GetPathRoot(Environment.CurrentDirectory);
             return root;
+        }
+
+        public class PrecacheProgressUpdateEventArgs : CancelEventArgs
+        {
+            public float PercentComplete { get; set; }
+        }
+
+        public static bool PrecacheFile(string filepath, EventHandler<PrecacheProgressUpdateEventArgs> progressUpdateHandler = null)
+        {
+            try
+            {
+                // if the file is on a hard drive and can fit in the available RAM, populate the disk cache
+                long ramBytesAvailable = (long)new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
+                if (ramBytesAvailable > new FileInfo(filepath).Length &&
+                    DriveType.Fixed == new DriveInfo(Path.GetPathRoot(filepath)).DriveType)
+                {
+                    using (var fs = new FileStream(filepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
+                    {
+                        var buffer = new byte[UInt16.MaxValue];
+                        float totalBytes = (float) fs.Length;
+
+                        if (progressUpdateHandler != null)
+                        {
+                            var e = new PrecacheProgressUpdateEventArgs { PercentComplete = 0 };
+                            progressUpdateHandler(filepath, e);
+
+                            long bytesRead = 0;
+                            do
+                            {
+                                if (bytesRead / totalBytes > e.PercentComplete + 0.01)
+                                {
+                                    e.PercentComplete = bytesRead/totalBytes;
+                                    progressUpdateHandler(filepath, e);
+                                    if (e.Cancel)
+                                        break;
+                                }
+                                bytesRead += fs.Read(buffer, 0, UInt16.MaxValue);
+                            } while (bytesRead < totalBytes);
+                            e.PercentComplete = 1;
+                            progressUpdateHandler(filepath, e);
+                        }
+                        else
+                            while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
+                    }
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                // ignore precaching errors; could be due to user privileges and it's an optional step
+            }
+            return false;
         }
     }
 }

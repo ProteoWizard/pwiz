@@ -152,5 +152,28 @@ namespace IDPicker
             ProgressUpdate(this, progressUpdate);
             e.Cancel = progressUpdate.Cancel;
         }
+
+        public void UpdateProgress(object sender, Util.PrecacheProgressUpdateEventArgs e)
+        {
+            if (ProgressUpdate == null)
+                return;
+
+            if (e.PercentComplete == 0)
+                stopwatch = Stopwatch.StartNew();
+
+            var progressUpdate = new ProgressUpdateEventArgs { Total = 1000 };
+
+            progressUpdate.Current = (int) Math.Round(e.PercentComplete * 1000);
+            double progressRate = stopwatch.Elapsed.TotalSeconds > 0 ? progressUpdate.Current / stopwatch.Elapsed.TotalSeconds : 0;
+            long bytesRemaining = progressUpdate.Total - progressUpdate.Current;
+            TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
+                                                       : TimeSpan.FromSeconds(bytesRemaining / progressRate);
+            progressUpdate.Message = String.Format("Precaching idpDB... {0}m{1}s remaining",
+                                                   timeRemaining.Minutes,
+                                                   timeRemaining.Seconds);
+
+            ProgressUpdate(this, progressUpdate);
+            e.Cancel = progressUpdate.Cancel;
+        }
     }
 }

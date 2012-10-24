@@ -869,7 +869,6 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
     int processorCount = min(maxThreads, (int) boost::thread::hardware_concurrency());
     vector<ProteinDatabaseTaskGroup> taskGroups;
 
-    int processorsUsed = 0;
     BOOST_FOREACH_FIELD((const string& proteinDatabaseFilepath)(vector<string>& inputFilepaths),
                         inputFilepathsByProteinDatabase)
     {
@@ -879,6 +878,7 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
         // shuffled so that large and small input files get mixed
         random_shuffle(inputFilepaths.begin(), inputFilepaths.end());
 
+        int processorsUsed = 0;
         BOOST_FOREACH(const string& inputFilepath, inputFilepaths)
         {
             bfs::path outputFilepath = Parser::outputFilepath(inputFilepath);

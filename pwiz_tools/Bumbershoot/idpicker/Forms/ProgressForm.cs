@@ -42,6 +42,8 @@ namespace IDPicker
         private Dictionary<string, DataGridViewRow> _rowByTaskName;
         private bool _isClosing;
         private int _tasksDone;
+        private IterationListenerRegistry _ilr;
+        private IterationListenerProxy _ilProxy;
 
         public bool Cancelled { get { return _isClosing; } }
  
@@ -147,7 +149,9 @@ namespace IDPicker
             _rowByTaskName = new Dictionary<string, DataGridViewRow>();
             _tasksDone = 0;
 
-            ilr.addListener(new IterationListenerProxy() { form = this }, 1000);
+            _ilr = ilr;
+            _ilProxy = new IterationListenerProxy() { form = this };
+            _ilr.addListener(_ilProxy, 1000);
 
             var boxShown = false;
 
@@ -185,6 +189,7 @@ namespace IDPicker
         private void ProgressForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             _isClosing = true;
+            _ilr.removeListener(_ilProxy);
         }
 
         private void JobDataView_SelectionChanged (object sender, EventArgs e)
