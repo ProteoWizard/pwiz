@@ -68,12 +68,6 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Condition="'$(Platform)' == 'x86'" Include="BaseTof">
-      <HintPath>obj\x86\BaseTof.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x64'" Include="BaseTof">
-      <HintPath>obj\x64\BaseTof.dll</HintPath>
-    </Reference>
     <Reference Include="Clearcore2.Data.WiffReader, Version=2.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\$(Platform)\Clearcore2.Data.WiffReader.dll</HintPath>
