@@ -450,7 +450,6 @@ rule init ( version : location : options * )
                     #<toolset>gcc-4.3.4:<linkflags>--enable-auto-import
                     #<toolset>gcc-mingw-4.4.0:<linkflags>--enable-auto-import
                     #<toolset>gcc-mingw-4.5.0:<linkflags>--enable-auto-import
-                    <warnings>all
                     <toolset>gcc:<cxxflags>-Wextra
                     <toolset>gcc:<cxxflags>-pedantic
                     <toolset>gcc:<cxxflags>-Wno-long-long
