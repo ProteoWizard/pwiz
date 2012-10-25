@@ -127,7 +127,7 @@ namespace IDPicker.Forms
                 if (!string.IsNullOrEmpty(tbMessage.Text))
                     sb.Append("User comments:").AppendLine().AppendLine(tbMessage.Text).AppendLine();
 
-                sb.Append("IDPicker version: ").AppendLine(Util.Version);
+                sb.AppendFormat("IDPicker version: {0} ({1})", Util.Version, Environment.Is64BitProcess ? "64-bit" : "32-bit");
                 sb.Append("Exception type: ").AppendLine(ExceptionType);
                 sb.Append("Error message: ").AppendLine(replaceNewlines(_exception.Message)).AppendLine();
 
