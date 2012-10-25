@@ -308,6 +308,10 @@ namespace pwiz.SkylineTestA
             SrmSettings settings = docLoaded.Settings.ChangeTransitionLibraries(l =>
                 l.ChangeIonMatchTolerance(TransitionLibraries.MIN_MATCH_TOLERANCE));
             SrmDocument docLowTol = docLoaded.ChangeSettings(settings);
+            // Use the original low tolerance for transition testing, since
+            // the new low tolerance is for high accuracy data.
+            docLowTol = docLowTol.ChangeSettings(settings.ChangeTransitionLibraries(l =>
+                l.ChangeIonMatchTolerance(0.1)));
             settings = docLowTol.Settings.ChangeTransitionLibraries(l =>
                 l.ChangeIonMatchTolerance(TransitionLibraries.MAX_MATCH_TOLERANCE));
             SrmDocument docHighTol = docLoaded.ChangeSettings(settings);

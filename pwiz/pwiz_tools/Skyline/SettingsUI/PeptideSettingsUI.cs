@@ -724,6 +724,12 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional testing support
 
+        public TABS SelectedTab
+        {
+            get { return (TABS)tabControl1.SelectedIndex; }
+            set { tabControl1.SelectedIndex = (int)value; }
+        }
+
         public void ChooseRegression(string name)
         {
             comboRetentionTime.SelectedItem = name;

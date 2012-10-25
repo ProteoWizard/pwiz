@@ -663,30 +663,30 @@ namespace pwiz.SkylineTestUtil
             return ShowDialog<EditStaticModDlg>(editModsDlg.AddItem);
         }
 
-        public static void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
+        public void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
-            AddMod(mod, editStaticModsDlg);
+            AddMod(mod, editStaticModsDlg, pauseForScreenShot);
         }
 
-        public static void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
+        public void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
-            AddMod(mod, editStaticModsDlg);
+            AddMod(mod, editStaticModsDlg, pauseForScreenShot);
         }
 
-        private static void AddMod(StaticMod mod, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        private void AddMod(StaticMod mod,
+                            EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg,
+                            bool pauseForScreenShot)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() =>
-            {
-                addStaticModDlg.Modification = mod;
-                addStaticModDlg.OkDialog();
-            });
-            WaitForClosedForm(addStaticModDlg);
+            RunUI(() => addStaticModDlg.Modification = mod);
+            
+            if (pauseForScreenShot)
+                PauseForScreenShot();
 
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);
+            OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
+            OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
         public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)

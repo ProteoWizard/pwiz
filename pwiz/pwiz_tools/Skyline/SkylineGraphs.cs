@@ -2570,27 +2570,29 @@ namespace pwiz.Skyline
 
         private void allRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.All.ToString();
             // No CVs with all retention time values showing
             Settings.Default.ShowPeptideCV = false;
-            UpdateRetentionTimeGraph();
+            ShowRTPeptideValue(RTPeptideValue.All);
         }
 
         private void timeRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
-            UpdateRetentionTimeGraph();
+            ShowRTPeptideValue(RTPeptideValue.Retention);
         }
 
         private void fwhmRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.FWHM.ToString();
-            UpdateRetentionTimeGraph();
+            ShowRTPeptideValue(RTPeptideValue.FWHM);
         }
 
         private void fwbRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.FWB.ToString();
+            ShowRTPeptideValue(RTPeptideValue.FWB);
+        }
+
+        public void ShowRTPeptideValue(RTPeptideValue value)
+        {
+            Settings.Default.RTPeptideValue = value.ToString();
             UpdateRetentionTimeGraph();
         }
 
@@ -2952,6 +2954,11 @@ namespace pwiz.Skyline
 
         private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
         {
+            ShowPeakAreaPeptideGraph();
+        }
+
+        public void ShowPeakAreaPeptideGraph()
+        {
             Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
             ShowGraphPeakArea(true);
             UpdatePeakAreaGraph();
@@ -3068,17 +3075,18 @@ namespace pwiz.Skyline
 
         private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowCVValues();
+            ShowCVValues(peptideCvsContextMenuItem.Checked);
         }
 
-        public void ShowCVValues()
+        public void ShowCVValues(bool isChecked)
         {
-            Settings.Default.ShowPeptideCV = peptideCvsContextMenuItem.Checked;
+            Settings.Default.ShowPeptideCV = isChecked;
             // Showing CVs only makes sense for Replicates = All
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.all.ToString();
             // Showing CVs does not make sense for All retention time values at once
-            if (RTPeptideGraphPane.RTValue == RTPeptideValue.All)
-                Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
+            // But this is confusing now, with replicate annotation grouping
+//            if (RTPeptideGraphPane.RTValue == RTPeptideValue.All)
+//                Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
             UpdateSummaryGraphs();
         }
 

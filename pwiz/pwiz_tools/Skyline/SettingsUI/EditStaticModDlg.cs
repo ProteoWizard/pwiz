@@ -163,6 +163,7 @@ namespace pwiz.Skyline.SettingsUI
                             listNeutralLosses.Items.Add(loss);
                     }
                     ShowLoss = listNeutralLosses.Items.Count > 0;
+                    UpdateMasses();
                 }                
             }
         }
