@@ -1372,71 +1372,71 @@ namespace Test
             Assert.AreEqual(1, session.UniqueResult<Protein>(o => o.Accession == "PRO1").Cluster);
 
             // 1 protein to 1 peptide to 2 spectra
-            Assert.AreEqual(2, session.UniqueResult<Protein>(o => o.Accession == "PRO2").Cluster);
+            Assert.AreEqual(6, session.UniqueResult<Protein>(o => o.Accession == "PRO2").Cluster);
 
             // 1 protein to 2 peptides to 1 spectrum (each)
-            Assert.AreEqual(3, session.UniqueResult<Protein>(o => o.Accession == "PRO3").Cluster);
+            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO3").Cluster);
 
             // 1 protein to 2 peptides to 2 spectra (each)
-            Assert.AreEqual(4, session.UniqueResult<Protein>(o => o.Accession == "PRO4").Cluster);
+            Assert.AreEqual(12, session.UniqueResult<Protein>(o => o.Accession == "PRO4").Cluster);
 
             // 2 proteins to 1 peptide to 1 spectrum (ambiguous protein group)
-            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO5").Cluster);
-            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO6").Cluster);
+            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO5").Cluster);
+            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO6").Cluster);
 
             // 2 proteins to 1 peptide to 2 spectra (ambiguous protein group)
-            Assert.AreEqual(6, session.UniqueResult<Protein>(o => o.Accession == "PRO7").Cluster);
-            Assert.AreEqual(6, session.UniqueResult<Protein>(o => o.Accession == "PRO8").Cluster);
+            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO7").Cluster);
+            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO8").Cluster);
 
             // 2 proteins to 2 peptides to 1 spectrum (each) (ambiguous protein group)
-            Assert.AreEqual(7, session.UniqueResult<Protein>(o => o.Accession == "PRO9").Cluster);
-            Assert.AreEqual(7, session.UniqueResult<Protein>(o => o.Accession == "PRO10").Cluster);
+            Assert.AreEqual(2, session.UniqueResult<Protein>(o => o.Accession == "PRO9").Cluster);
+            Assert.AreEqual(2, session.UniqueResult<Protein>(o => o.Accession == "PRO10").Cluster);
 
             // 2 proteins to 2 peptides to 2 spectra (each) (ambiguous protein group)
-            Assert.AreEqual(8, session.UniqueResult<Protein>(o => o.Accession == "PRO11").Cluster);
-            Assert.AreEqual(8, session.UniqueResult<Protein>(o => o.Accession == "PRO12").Cluster);
+            Assert.AreEqual(3, session.UniqueResult<Protein>(o => o.Accession == "PRO11").Cluster);
+            Assert.AreEqual(3, session.UniqueResult<Protein>(o => o.Accession == "PRO12").Cluster);
 
             // 1 protein to 2 peptides to 1 spectrum (each)
             // 1 protein to 1 of the above peptides (subsumed protein)
             // 1 protein to the other above peptide (subsumed protein)
-            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO13").Cluster);
-            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO14").Cluster);
-            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO15").Cluster);
+            Assert.AreEqual(4, session.UniqueResult<Protein>(o => o.Accession == "PRO13").Cluster);
+            Assert.AreEqual(4, session.UniqueResult<Protein>(o => o.Accession == "PRO14").Cluster);
+            Assert.AreEqual(4, session.UniqueResult<Protein>(o => o.Accession == "PRO15").Cluster);
 
             // 1 protein to 5 peptides
             // 1 protein to 4 of the above peptides
             // 1 protein to 3 of the above peptides and 1 extra peptides
             // 1 protein to 2 of the above peptides and 2 extra peptides
             // 1 protein to 1 of the above peptides and 3 extra peptides
-            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO16").Cluster);
-            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO17").Cluster);
-            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO18").Cluster);
-            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO19").Cluster);
-            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO20").Cluster);
+            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO16").Cluster);
+            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO17").Cluster);
+            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO18").Cluster);
+            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO19").Cluster);
+            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO20").Cluster);
 
             // 1 protein to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
             // 1 protein to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
-            Assert.AreEqual(11, session.UniqueResult<Protein>(o => o.Accession == "PRO21").Cluster);
-            Assert.AreEqual(11, session.UniqueResult<Protein>(o => o.Accession == "PRO22").Cluster);
+            Assert.AreEqual(7, session.UniqueResult<Protein>(o => o.Accession == "PRO21").Cluster);
+            Assert.AreEqual(7, session.UniqueResult<Protein>(o => o.Accession == "PRO22").Cluster);
 
             // 2 proteins to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
             // 1 protein to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
-            Assert.AreEqual(12, session.UniqueResult<Protein>(o => o.Accession == "PRO23").Cluster);
-            Assert.AreEqual(12, session.UniqueResult<Protein>(o => o.Accession == "PRO24").Cluster);
-            Assert.AreEqual(12, session.UniqueResult<Protein>(o => o.Accession == "PRO25").Cluster);
+            Assert.AreEqual(8, session.UniqueResult<Protein>(o => o.Accession == "PRO23").Cluster);
+            Assert.AreEqual(8, session.UniqueResult<Protein>(o => o.Accession == "PRO24").Cluster);
+            Assert.AreEqual(8, session.UniqueResult<Protein>(o => o.Accession == "PRO25").Cluster);
 
             // 1 protein to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
             // 2 proteins to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
-            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO26").Cluster);
-            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO27").Cluster);
-            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO28").Cluster);
+            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO26").Cluster);
+            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO27").Cluster);
+            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO28").Cluster);
 
             // 1 protein to 3 peptides, 2 of which are evidenced by ambiguous spectra
             // 1 protein to 1 peptide evidenced by an ambiguous spectrum above and 1 extra peptide
             // 1 protein to 1 peptide evidenced by the other ambiguous spectrum above and 1 extra peptide
-            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO29").Cluster);
-            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO30").Cluster);
-            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO31").Cluster);
+            Assert.AreEqual(11, session.UniqueResult<Protein>(o => o.Accession == "PRO29").Cluster);
+            Assert.AreEqual(11, session.UniqueResult<Protein>(o => o.Accession == "PRO30").Cluster);
+            Assert.AreEqual(11, session.UniqueResult<Protein>(o => o.Accession == "PRO31").Cluster);
 
             session.Close();
         }

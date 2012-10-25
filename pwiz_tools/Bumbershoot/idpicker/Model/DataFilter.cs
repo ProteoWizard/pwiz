@@ -90,6 +90,7 @@ namespace IDPicker.DataModel
             MinimumAdditionalPeptidesPerProtein = other.MinimumAdditionalPeptidesPerProtein;
             MinimumSpectraPerDistinctMatch = other.MinimumSpectraPerDistinctMatch;
             MinimumSpectraPerDistinctPeptide = other.MinimumSpectraPerDistinctPeptide;
+            MaximumProteinGroupsPerPeptide = other.MaximumProteinGroupsPerPeptide;
             DistinctMatchFormat = other.DistinctMatchFormat;
             Cluster = other.Cluster == null ? null : new List<int>(other.Cluster);
             ProteinGroup = other.ProteinGroup == null ? null : new List<int>(other.ProteinGroup);
@@ -754,13 +755,13 @@ namespace IDPicker.DataModel
             if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein clusters...", ++stepsCompleted, null)))
                 return true;
 
-            Map<long, long> clusterByProteinId = calculateProteinClusters(session);
+            Map<int, long> clusterByProteinGroup = calculateProteinClusters(session);
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Assigning proteins to clusters...", ++stepsCompleted, null)))
                 return true;
 
             var cmd = session.Connection.CreateCommand();
-            cmd.CommandText = "UPDATE Protein SET Cluster = ? WHERE Id = ?";
+            cmd.CommandText = "UPDATE Protein SET Cluster = ? WHERE ProteinGroup = ?";
             var parameters = new List<System.Data.IDbDataParameter>();
             for (int i = 0; i < 2; ++i)
             {
@@ -768,7 +769,7 @@ namespace IDPicker.DataModel
                 cmd.Parameters.Add(parameters[i]);
             }
             cmd.Prepare();
-            foreach (Map<long, long>.MapPair itr in clusterByProteinId)
+            foreach (Map<int, long>.MapPair itr in clusterByProteinGroup)
             {
                 parameters[0].Value = itr.Value;
                 parameters[1].Value = itr.Key;
@@ -1450,55 +1451,55 @@ namespace IDPicker.DataModel
             return additionalPeptidesByProteinId;
         }
 
-        Map<long, long> calculateProteinClusters (NHibernate.ISession session)
+        Map<int, long> calculateProteinClusters (NHibernate.ISession session)
         {
-            var spectrumSetByProteinId = new Map<long, Set<long>>();
-            var proteinSetBySpectrumId = new Map<long, Set<long>>();
+            var spectrumSetByProteinGroup = new Map<int, Set<long>>();
+            var proteinGroupSetBySpectrumId = new Map<long, Set<int>>();
 
-            var query = session.CreateQuery("SELECT pi.Protein.id, psm.Spectrum.id " +
+            var query = session.CreateQuery("SELECT pro.ProteinGroup, psm.Spectrum.id " +
                                             GetFilteredQueryString(FromProtein, ProteinToPeptideSpectrumMatch));
 
             foreach (var queryRow in query.List<object[]>())
             {
-                long proteinId = (long) queryRow[0];
+                int proteinGroup = Convert.ToInt32(queryRow[0]);
                 long spectrumId = (long) queryRow[1];
 
-                spectrumSetByProteinId[proteinId].Add(spectrumId);
-                proteinSetBySpectrumId[spectrumId].Add(proteinId);
+                spectrumSetByProteinGroup[proteinGroup].Add(spectrumId);
+                proteinGroupSetBySpectrumId[spectrumId].Add(proteinGroup);
             }
 
-            var clusterByProteinId = new Map<long, long>();
+            var clusterByProteinGroup = new Map<int, long>();
             int clusterId = 0;
-            var clusterStack = new Stack<KeyValuePair<long, Set<long>>>();
+            var clusterStack = new Stack<KeyValuePair<int, Set<long>>>();
 
-            foreach (var pair in spectrumSetByProteinId)
+            foreach (var pair in spectrumSetByProteinGroup)
             {
-                long proteinId = pair.Key;
+                int proteinGroup = pair.Key;
 
-                if (clusterByProteinId.Contains(proteinId))
+                if (clusterByProteinGroup.Contains(proteinGroup))
                     continue;
 
                 // for each protein without a cluster assignment, make a new cluster
                 ++clusterId;
-                clusterStack.Push(new KeyValuePair<long, Set<long>>(proteinId, spectrumSetByProteinId[proteinId]));
+                clusterStack.Push(new KeyValuePair<int, Set<long>>(proteinGroup, spectrumSetByProteinGroup[proteinGroup]));
                 while (clusterStack.Count > 0)
                 {
                     var kvp = clusterStack.Pop();
 
-                    // try to assign the protein to the current cluster
-                    var insertResult = clusterByProteinId.Insert(kvp.Key, clusterId);
-                    if (!insertResult.WasInserted)
-                        continue;
-
                     // add all "cousin" proteins to the current cluster
                     foreach (long spectrumId in kvp.Value)
-                        foreach (var cousinProteinId in proteinSetBySpectrumId[spectrumId])
-                            if (!clusterByProteinId.Contains(cousinProteinId))
-                                clusterStack.Push(new KeyValuePair<long, Set<long>>(cousinProteinId, spectrumSetByProteinId[cousinProteinId]));
+                        foreach (var cousinProteinGroup in proteinGroupSetBySpectrumId[spectrumId])
+                        {
+                            var insertResult = clusterByProteinGroup.Insert(cousinProteinGroup, clusterId);
+                            if (!insertResult.WasInserted)
+                                continue;
+
+                            clusterStack.Push(new KeyValuePair<int, Set<long>>(cousinProteinGroup, spectrumSetByProteinGroup[cousinProteinGroup]));
+                        }
                 }
             }
 
-            return clusterByProteinId;
+            return clusterByProteinGroup;
         }
     }
 
