@@ -58,8 +58,7 @@ namespace pwiz.SkylineTestTutorial
         {
             get
             {
-                // TODO: Figure out why using Agilent files causes frequent failures in this test
-                return false; // ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAgilentRaw;
+                return ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAgilentRaw;
             }
         }
 

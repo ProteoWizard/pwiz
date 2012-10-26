@@ -488,7 +488,8 @@ namespace pwiz.Skyline.Model.Results
 
         public static double ScorePeak(double totalArea, double peakCount, bool isIdentified)
         {
-            return LegacyScoringModel.Score(Math.Log(totalArea), peakCount, 0, isIdentified ? 1 : 0);
+            double logUnforcedArea = LegacyLogUnforcedAreaCalc.Score(totalArea, 0);
+            return LegacyScoringModel.Score(logUnforcedArea, peakCount, 0, isIdentified ? 1 : 0);
         }
 
         protected override void ClearItems()

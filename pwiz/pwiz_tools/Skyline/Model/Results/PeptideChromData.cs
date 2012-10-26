@@ -580,7 +580,8 @@ namespace pwiz.Skyline.Model.Results
                                         double peakCountStandard,
                                         int identifiedCount)
         {
-            return LegacyScoringModel.Score(Math.Log(totalArea + totalAreaStandard), peakCount, peakCountStandard, identifiedCount);
+            double logUnforcedArea = LegacyLogUnforcedAreaCalc.Score(totalArea, totalAreaStandard);
+            return LegacyScoringModel.Score(logUnforcedArea, peakCount, peakCountStandard, identifiedCount);
         }
 
         private void SubtractPeak(PeptideChromDataPeak dataPeak)

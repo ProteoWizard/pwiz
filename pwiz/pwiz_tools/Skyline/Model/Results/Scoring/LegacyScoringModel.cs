@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                    double unforcedCountScoreStandard,
                                    double identifiedCount)
         {
-            return logUnforcedArea + LOG10*(unforcedCountScore + unforcedCountScoreStandard) + 1000*identifiedCount;
+            return logUnforcedArea + LOG10*unforcedCountScore + LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER*LOG10*unforcedCountScoreStandard + 1000*identifiedCount;
         }
 
         private ReadOnlyCollection<Type> _calculators;

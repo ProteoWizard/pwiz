@@ -58,10 +58,22 @@ namespace pwiz.SkylineTestTutorial
         private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
 
-        protected override void DoTest()
+        private string GetTestPath(string relativePath)
         {
             var folderExistQuant = ExtensionTestContext.CanImportAbWiff ? "ExistingQuant" : "ExistingQuantMzml"; // Not L10N
+            return TestFilesDir.GetTestPath(folderExistQuant + "\\" + relativePath);
+        }
 
+        private bool IsFullData { get { return IsPauseForScreenShots; } }
+
+        protected override void DoTest()
+        {
+            DoMrmerTest();
+            DoStudy7Test();
+        }
+
+        private void DoMrmerTest()
+        {
             // Preparing a Document to Accept a Transition List, p. 2
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =
@@ -69,8 +81,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
             {
                 editLibraryDlg.LibrarySpec =
-                    new BiblioSpecLibSpec("Yeast_mini", // Not L10N
-                        TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\Yeast_MRMer_min.blib")); // Not L10N
+                    new BiblioSpecLibSpec("Yeast_mini", GetTestPath(@"MRMer\Yeast_MRMer_min.blib")); // Not L10N
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI, editListUI.OkDialog);
@@ -87,8 +98,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     buildBackgroundProteomeDlg.BuildNew = false;
                     buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast_mini"; // Not L10N
-                    buildBackgroundProteomeDlg.BackgroundProteomePath =
-                        TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\Yeast_MRMer_mini.protdb"); // Not L10N
+                    buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"MRMer\Yeast_MRMer_mini.protdb"); // Not L10N
                     buildBackgroundProteomeDlg.OkDialog();
                 });
             PauseForScreenShot();
@@ -111,7 +121,7 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Transition List With Associated Proteins, p. 6
             RunUI(() =>
             {
-                var filePath = TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\silac_1_to_4.xls"); // Not L10N
+                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
                 SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
             });
             {
@@ -143,7 +153,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();
 
             // Importing Data, p. 10.
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\MRMer.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"MRMer\MRMer.sky"))); // Not L10N
             ImportResultsFile("silac_1_to_4.mzXML"); // Not L10N
             FindNode("ETFP"); // Not L10N
             RunUI(SkylineWindow.AutoZoomBestPeak);
@@ -203,13 +213,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Nodes[2].StateImageIndex
                     == (int)SequenceTree.StateImageId.peak_blank));
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
 
+        private void DoStudy7Test()
+        {
             // Preparing a Document to Accept the Study 7 Transition List, p. 15
-            RunUI(() =>
-            {
-                SkylineWindow.SaveDocument();
-                SkylineWindow.NewDocument();
-            });
+            RunUI(() => SkylineWindow.NewDocument());
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var mod13Cr = new StaticMod("Label:13C(6) (C-term R)", "R", ModTerminus.C, false, null, LabelAtoms.C13,
                                           RelativeRT.Matching, null, null, null);
@@ -226,7 +236,7 @@ namespace pwiz.SkylineTestTutorial
             string clipboardSaveText = string.Empty;
             RunUI(() =>
             {
-                var filePath = TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7\Study7 transition list.xls");
+                var filePath = GetTestPath(@"Study 7\Study7 transition list.xls");
                 SetExcelFileClipboardText(filePath, "Simple", 6, false);
                 clipboardSaveText = ClipboardEx.GetText();
             });
@@ -258,7 +268,7 @@ namespace pwiz.SkylineTestTutorial
 
             AdjustModifications("IVGGWECEK", true, 'V', 541.763);
             AdjustModifications("YEVQGEVFTKPQLWP", false, 'L', 913.974);
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7\Study7.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"Study 7\Study7.sky")));
 
             // Importing Data from a Multiple Sample WIFF file, p. 23.
             var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -266,7 +276,7 @@ namespace pwiz.SkylineTestTutorial
                                                                         importResultsDlg1.GetDataSourcePathsFile(null));
             RunUI(() =>
             {
-                openDataSourceDialog1.CurrentDirectory = TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7");
+                openDataSourceDialog1.CurrentDirectory = GetTestPath("Study 7");
                 openDataSourceDialog1.SelectAllFileType(ExtensionTestContext.ExtAbWiff);
             });
             if (ExtensionTestContext.CanImportAbWiff)
@@ -276,7 +286,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                           {
-                              if (IsPauseForScreenShots)
+                              if (IsFullData)
                               {
                                   importResultsSamplesDlg.CheckAll(true);
                                   importResultsSamplesDlg.ExcludeSample(0); // Blank
@@ -415,7 +425,7 @@ namespace pwiz.SkylineTestTutorial
                 var resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
                 var colConcentration =
                     resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText);
-                if (IsPauseForScreenShots)
+                if (IsFullData)
                 {
                     float[] concentrations =
                         new[] { 0f, 60, 175, 513, 1500, 2760, 4980, 9060, 16500, 30000 };
@@ -435,20 +445,23 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot();
+            
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(() =>
             {
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.GroupByReplicateAnnotation("Concentration");
                 NormalizeGraphToHeavy();
-                SkylineWindow.ShowCVValues(false);
             });
             PauseForScreenShot();
+            
+            RunUI(() => SkylineWindow.ShowCVValues(false));
+            PauseForScreenShot();
+
             // Further Exploration, p. 33.
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(
-                  TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7\Study II\Study 7ii (site 52).sky")); // Not L10N
+                SkylineWindow.OpenFile(GetTestPath(@"Study 7\Study II\Study 7ii (site 52).sky")); // Not L10N
                 SkylineWindow.ShowPeakAreaPeptideGraph();
                 SkylineWindow.ShowCVValues(true);
             });
@@ -461,7 +474,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode("INDISHTQSVSAK");
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             PauseForScreenShot();
-            
+
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
             WaitForGraphs();
             PauseForScreenShot();
@@ -477,7 +490,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
             WaitForGraphs();
-            PauseForScreenShot();
+            PauseForScreenShot();            
         }
 
         private static void NormalizeGraphToHeavy()
