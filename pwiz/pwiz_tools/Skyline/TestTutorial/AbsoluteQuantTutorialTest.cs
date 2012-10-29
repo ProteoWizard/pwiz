@@ -54,61 +54,80 @@ namespace pwiz.SkylineTestTutorial
         {
             var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";
             // Generating a Transition List, p. 4
-            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI,
-                                         transitionSettingsUI =>
-                                         {
-                                             // Predicition Settings
-                                             transitionSettingsUI.PrecursorMassType = MassType.Monoisotopic;
-                                             transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
-                                             transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
-                                             transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
+            {
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() =>
+                          {
+                              // Predicition Settings
+                              transitionSettingsUI.PrecursorMassType = MassType.Monoisotopic;
+                              transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
+                              transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
+                              transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
 
-                                             // Filter Settings
-                                             transitionSettingsUI.PrecursorCharges = "2";
-                                             transitionSettingsUI.ProductCharges = "1";
-                                             transitionSettingsUI.FragmentTypes = "y";
-                                             transitionSettingsUI.RangeFrom = Resources.TransitionFilter_FragmentStartFinders_ion_3;
-                                             transitionSettingsUI.RangeTo = Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1;
-                                             transitionSettingsUI.OkDialog();
-                                         });
+                              // Filter Settings
+                              transitionSettingsUI.PrecursorCharges = "2";
+                              transitionSettingsUI.ProductCharges = "1";
+                              transitionSettingsUI.FragmentTypes = "y";
+                              transitionSettingsUI.RangeFrom = Resources.TransitionFilter_FragmentStartFinders_ion_3;
+                              transitionSettingsUI.RangeTo = Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1;
+                              transitionSettingsUI.SpecialIons = new string[0];
+                          });
+                PauseForScreenShot();
+
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            }
 
             // Configuring Peptide settings p. 4
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications);
+            PauseForScreenShot();
+
             var modHeavyK = new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyK, peptideSettingsUI);
+            AddHeavyMod(modHeavyK, peptideSettingsUI, true);
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { modHeavyK.Name });
+            PauseForScreenShot();
+
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Inserting a peptide sequence p. 5
-            RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
-            RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg,
-                             pasteDlg =>
-                             {
-                                 pasteDlg.PastePeptides();
-                                 pasteDlg.OkDialog();
-                             });
+            {
+                RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
+                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
+                RunUI(pasteDlg.PastePeptides);
+                PauseForScreenShot();
+
+                OkDialog(pasteDlg, pasteDlg.OkDialog);
+            }
 
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 10);
 
+            RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
             WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
+            PauseForScreenShot();
 
             // Exporting a transition list p. 6
             // TODO: Export name never specified in tutorial.
-            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List),
-                exportMethodDlg =>
-                {
-                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
-                    exportMethodDlg.ExportStrategy = ExportStrategy.Single;
-                    exportMethodDlg.OptimizeType = ExportOptimize.NONE;
-                    exportMethodDlg.MethodType = ExportMethodType.Standard;
-                    exportMethodDlg.OkDialog(
-                        TestFilesDir.GetTestPath("Quant_Abs_Thermo_TSQ_Vantage.csv"));
-                });
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                          {
+                              exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
+                              exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                              exportMethodDlg.OptimizeType = ExportOptimize.NONE;
+                              exportMethodDlg.MethodType = ExportMethodType.Standard;
+                          });
+                PauseForScreenShot();
+
+                OkDialog(exportMethodDlg, () =>
+                    exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("Quant_Abs_Thermo_TSQ_Vantage.csv")));
+            }
 
             // Importing RAW files into Skyline p. 7
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            PauseForScreenShot();
+
             RunUI(() =>
             {
                 var rawFiles = DataSourceUtil.GetDataSources(TestFilesDirs[0].FullPath).First().Value.Skip(1);
@@ -122,12 +141,19 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForGraphs();
 
-            RunUI(() => SkylineWindow.ArrangeGraphsTiled());
+            RunUI(() =>
+                      {
+                          SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Peptides, 0);
+                          Settings.Default.ArrangeGraphsOrder = GroupGraphsOrder.Document.ToString();
+                          Settings.Default.ArrangeGraphsReversed = false;
+                          SkylineWindow.ArrangeGraphsTiled();
+                          SkylineWindow.AutoZoomBestPeak();
+                      });
             Assert.AreEqual(8, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden));
 
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-
+            PauseForScreenShot();
 
             // Analyzing SRM Data from FOXN1-GST Sample p. 9
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults,
@@ -161,12 +187,18 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0));
             WaitForGraphs();
+            RunUI(() =>
+                      {
+                          Assert.AreEqual(SkylineWindow.SelectedResultsIndex, SkylineWindow.GraphPeakArea.ResultsIndex);
+                          Assert.AreEqual(SkylineWindow.SelectedResultsIndex, SkylineWindow.GraphRetentionTime.ResultsIndex);
+                      });
 
             RunUI(() =>
             {
                 int transitionCount = SkylineWindow.DocumentUI.TransitionGroups.First().TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
+            PauseForScreenShot();
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1));
             WaitForGraphs();
@@ -176,6 +208,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionCount = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[1].TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
+            PauseForScreenShot();
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Peptides, 0));
             WaitForGraphs();
@@ -188,6 +221,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionGroupCount = SkylineWindow.DocumentUI.Peptides.First().TransitionGroupCount;
                 CheckGstGraphs(transitionGroupCount, transitionGroupCount - 1);
             });
+            PauseForScreenShot();
 
             // Generating a Calibration Curve p. 11
             var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
@@ -201,17 +235,22 @@ namespace pwiz.SkylineTestTutorial
                                        new Identifier("Results", "ReplicateName"),
                                        new Identifier("Peptides", "PeptideResults", "RatioToStandard")
                                    };
-            RunDlg<PivotReportDlg>(editReportListDlg.AddItem, pivotReportDlg =>
             {
-                pivotReportDlg.ReportName = reportName;
-                foreach (Identifier id in columnsToAdd)
-                {
-                    Assert.IsTrue(pivotReportDlg.TrySelect(id));
-                    pivotReportDlg.AddSelectedColumn();
-                }
-                Assert.AreEqual(columnsToAdd.Length, pivotReportDlg.ColumnCount);
-                pivotReportDlg.OkDialog();
-            });
+                var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
+                RunUI(() =>
+                          {
+                              pivotReportDlg.ReportName = reportName;
+                              foreach (Identifier id in columnsToAdd)
+                              {
+                                  Assert.IsTrue(pivotReportDlg.TrySelect(id));
+                                  pivotReportDlg.AddSelectedColumn();
+                              }
+                              Assert.AreEqual(columnsToAdd.Length, pivotReportDlg.ColumnCount);
+                          });
+                PauseForScreenShot();
+
+                OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
+            }
 
             RunUI(editReportListDlg.OkDialog);
             WaitForClosedForm(editReportListDlg);

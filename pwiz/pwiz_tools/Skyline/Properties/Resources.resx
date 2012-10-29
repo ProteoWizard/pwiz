@@ -4898,4 +4898,22 @@ Are you sure you want to continue?</value>
   <data name="SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__">
     <value xml:space="preserve">No formula found for the amino acid '{0}'</value>
   </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_">
+    <value xml:space="preserve">ProteinPilot software (trial or full version) must be installed to convert '.group' files to compatible '.group.xml' files.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_">
+    <value xml:space="preserve">Failure attempting to convert file {0} to .group.xml.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml">
+    <value xml:space="preserve">Converting {0} to xml</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_">
+    <value xml:space="preserve">CompassXport software must be installed to import Bruker raw data files.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_">
+    <value xml:space="preserve">Failure attempting to convert {0} to mzML using CompassXport.</value>
+  </data>
+  <data name="SkylineWindow_CreateGraphPeakArea_Peak_Areas">
+    <value xml:space="preserve">Peak Areas</value>
+  </data>
 </root>

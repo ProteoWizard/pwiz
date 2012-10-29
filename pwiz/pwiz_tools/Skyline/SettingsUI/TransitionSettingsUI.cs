@@ -911,7 +911,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 return MassTypeExtension.GetEnum(comboPrecursorMass.SelectedItem.ToString());
-        }
+            }
             set
             {
                 comboPrecursorMass.SelectedItem = value.GetLocalizedString();
@@ -923,7 +923,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 return MassTypeExtension.GetEnum(comboIonMass.SelectedItem.ToString());
-        }
+            }
             set
             {
                 comboIonMass.SelectedItem = value.GetLocalizedString();
@@ -958,6 +958,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboRangeTo.SelectedItem.ToString(); }
             set { comboRangeTo.SelectedItem = value; }
+        }
+
+        public string[] SpecialIons
+        {
+            get { return _driverIons.CheckedNames; }
+            set { _driverIons.CheckedNames = value; }
         }
 
         public int InstrumentMaxMz

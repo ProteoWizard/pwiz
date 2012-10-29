@@ -146,8 +146,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForLibraries();
 
             // Open the original .sky file
+            doc = SkylineWindow.Document;
             RunUI(() => SkylineWindow.OpenFile(documentPath));
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(doc);
 
             // Disable MS1 filtering
             // Share the complete document.
@@ -364,7 +365,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(doc.Settings.IsLoaded);
                 Assert.AreEqual(doc.RevisionIndex, SkylineWindow.Document.RevisionIndex);
                 AssertEx.DocumentCloned(doc, SkylineWindow.Document);
-                Assert.IsTrue(setSuccess);                
+                Assert.IsTrue(setSuccess, string.Format("SetDocument failed for loaded document at revison index {0}", doc.RevisionIndex));                
             }
             Assert.IsFalse(ReferenceEquals(SkylineWindow.Document, doc));
             Assert.IsTrue(ReferenceEquals(SkylineWindow.Document, docNew));

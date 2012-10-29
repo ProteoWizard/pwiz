@@ -1975,7 +1975,10 @@ namespace pwiz.Skyline
         private GraphSummary CreateGraphRetentionTime()
         {
             _graphRetentionTime = new GraphSummary(this, new RTGraphController())
-                                      {TabText = Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times};
+                                      {
+                                          TabText = Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times,
+                                          ResultsIndex = SelectedResultsIndex
+                                      };
             _graphRetentionTime.FormClosed += graphRetentinTime_FormClosed;
             _graphRetentionTime.VisibleChanged += graphRetentionTime_VisibleChanged;
             return _graphRetentionTime;
@@ -2709,7 +2712,11 @@ namespace pwiz.Skyline
 
         private GraphSummary CreateGraphPeakArea()
         {
-            _graphPeakArea = new GraphSummary(this, new AreaGraphController()) {TabText = "Peak Areas"};
+            _graphPeakArea = new GraphSummary(this, new AreaGraphController())
+                                 {
+                                     TabText = Resources.SkylineWindow_CreateGraphPeakArea_Peak_Areas,
+                                     ResultsIndex = SelectedResultsIndex
+                                 };
             _graphPeakArea.FormClosed += graphPeakArea_FormClosed;
             _graphPeakArea.VisibleChanged += graphPeakArea_VisibleChanged;
             return _graphPeakArea;
@@ -3323,7 +3330,7 @@ namespace pwiz.Skyline
 
         public void ArrangeGraphsGrouped()
         {
-            var order = GroupGraphsOrderExtension.GetEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
+            var order = Helpers.ParseEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
             bool reversed = Settings.Default.ArrangeGraphsReversed;
             var listGraphs = GetArrangeableGraphs(order, reversed);
 

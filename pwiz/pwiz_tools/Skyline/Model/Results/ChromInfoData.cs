@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -62,17 +63,22 @@ namespace pwiz.Skyline.Model.Results
             {
                 return list;
             }
+            Helpers.Assume(transitionResults.Count == measuredResults.Chromatograms.Count,
+                string.Format("Unexpected mismatch between transition results {0} and chromatogram sets {1}", transitionResults.Count, measuredResults.Chromatograms.Count));
             for (int replicateIndex = 0; replicateIndex < transitionResults.Count; replicateIndex++)
             {
-                var chromFileInfo = measuredResults.GetChromFileInfo(transitionResults, replicateIndex);
-                if (null == chromFileInfo)
-                {
-                    continue;
-                }
                 var datas = new List<TransitionChromInfoData>();
-                foreach (var transitionChromInfo in transitionResults[replicateIndex])
+                var chromatograms = measuredResults.Chromatograms[replicateIndex];
+                var transitionChromInfos = transitionResults[replicateIndex];
+                if (transitionChromInfos == null)
+                    datas.Add(new TransitionChromInfoData(measuredResults, replicateIndex, null, null));
+                else
                 {
-                    datas.Add(new TransitionChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionChromInfo));
+                    foreach (var transitionChromInfo in transitionChromInfos)
+                    {
+                        var chromFileInfo = chromatograms.GetFileInfo(transitionChromInfo.FileId);
+                        datas.Add(new TransitionChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionChromInfo));
+                    }
                 }
                 list.Add(datas);
             }
@@ -101,17 +107,22 @@ namespace pwiz.Skyline.Model.Results
             {
                 return list;
             }
+            Helpers.Assume(transitionGroupResults.Count == measuredResults.Chromatograms.Count,
+                string.Format("Unexpected mismatch between precursor results {0} and chromatogram sets {1}", transitionGroupResults.Count, measuredResults.Chromatograms.Count));
             for (int replicateIndex = 0; replicateIndex < transitionGroupResults.Count; replicateIndex++)
             {
-                var chromFileInfo = measuredResults.GetChromFileInfo(transitionGroupResults, replicateIndex);
-                if (null == chromFileInfo)
-                {
-                    continue;
-                }
                 var datas = new List<TransitionGroupChromInfoData>();
-                foreach (var transitionGroupChromInfo in transitionGroupResults[replicateIndex])
+                var chromatograms = measuredResults.Chromatograms[replicateIndex];
+                var transitionGroupChromInfos = transitionGroupResults[replicateIndex];
+                if (transitionGroupChromInfos == null)
+                    datas.Add(new TransitionGroupChromInfoData(measuredResults, replicateIndex, null, null));
+                else
                 {
-                    datas.Add(new TransitionGroupChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionGroupChromInfo));
+                    foreach (var transitionGroupChromInfo in transitionGroupChromInfos)
+                    {
+                        var chromFileInfo = chromatograms.GetFileInfo(transitionGroupChromInfo.FileId);
+                        datas.Add(new TransitionGroupChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionGroupChromInfo));
+                    }
                 }
                 list.Add(datas);
             }
