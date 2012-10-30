@@ -64,6 +64,12 @@ namespace pwiz.SkylineTestUtil
             }            
         }
 
+        public static void NoExceptionThrown<TEx>(Action throwEx)
+            where TEx : Exception
+        {
+            NoExceptionThrown<TEx>(() => { throwEx(); return null; });
+        }
+
         public static void NoExceptionThrown<TEx>(Func<object> throwEx)
             where TEx : Exception
         {

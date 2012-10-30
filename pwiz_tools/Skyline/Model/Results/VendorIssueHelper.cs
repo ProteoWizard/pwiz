@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception)
             {
-                FileEx.DeleteIfPossible(tempFileSubsitute);
+                FileEx.SafeDelete(tempFileSubsitute, true);
                 throw;
             }
         }
@@ -216,8 +216,8 @@ namespace pwiz.Skyline.Model.Results
             }
             finally
             {
-                FileEx.DeleteIfPossible(tempFileSource);
-                FileEx.DeleteIfPossible(GetWiffScanPath(tempFileSource));
+                FileEx.SafeDelete(tempFileSource, true);
+                FileEx.SafeDelete(GetWiffScanPath(tempFileSource), true);
             }
         }
 
