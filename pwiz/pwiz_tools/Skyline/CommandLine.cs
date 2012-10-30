@@ -1653,8 +1653,8 @@ namespace pwiz.Skyline
             if (!CheckInstrument(instrument, _doc))
             {
                 _out.WriteLine("Warning: The vendor {0} does not match the vendor", instrument);
-                _out.WriteLine("in the document settings. Continuing exporting a transition");
-                _out.WriteLine("list anyway...");
+                _out.WriteLine("in either the CE or DP prediction setting.");
+                _out.WriteLine("Continuing exporting a transition list anyway...");
             }
 
 
@@ -1745,13 +1745,38 @@ namespace pwiz.Skyline
 
             if(!Equals(args.ExportMethodType, ExportMethodType.Standard))
             {
-
                 if (Equals(args.ExportMethodType, ExportMethodType.Triggered))
                 {
-                    if (!ExportInstrumentType.CanTrigger(args.MethodInstrumentType, _doc))
+                    if (!ExportInstrumentType.CanTriggerInstrumentType(instrument))
                     {
-                        _out.WriteLine("Error: the specified instrument {0} is not compatible with triggered methods.",
-                                       args.TransListInstrumentType);
+                        if (Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO_TSQ))
+                        {
+                            _out.WriteLine("Error: the {0} instrument lacks support for direct method export for", instrument);
+                            _out.WriteLine("triggered acquisition.");
+                            _out.WriteLine("You must export a {0} transition list and manually import it into", ExportInstrumentType.THERMO);
+                            _out.WriteLine("a method file using vendor software.");
+                            _out.WriteLine("No method will be exported.");
+                            return;
+                        }
+                        else
+                        {
+                            _out.WriteLine("Error: the instrument type {0} does not support triggered acquisition.", instrument);
+                            _out.WriteLine("No method will be exported.");
+                            return;
+                        }
+                        
+                    }
+                    if (!_doc.Settings.HasResults && !_doc.Settings.HasLibraries)
+                    {
+                        _out.WriteLine("Error: triggered acquistion requires a spectral library or imported results");
+                        _out.WriteLine("in order to rank transitions.");
+                        _out.WriteLine("No method will be exported.");
+                        return;
+                    }
+                    if (!ExportInstrumentType.CanTrigger(instrument, _doc))
+                    {
+                        _out.WriteLine("Error: The current document contains peptides without enough information");
+                        _out.WriteLine("to rank transitions for triggered acquisition.");
                         _out.WriteLine("No method will be exported.");
                         return;
                     }
@@ -1803,13 +1828,16 @@ namespace pwiz.Skyline
             }
             catch (IOException x)
             {
-                _out.WriteLine("Error: The file could not be saved. Check that the specified file directory");
-                _out.WriteLine("exists and is writeable.");
+                _out.WriteLine("Error: The file {0} could not be saved.", args.ExportPath);
+                _out.WriteLine("Check that the specified file directory exists and is writeable.");
                 _out.WriteLine(x.Message);
                 return;
             }
 
-            _out.WriteLine("The file was exported successfully.");
+            _out.WriteLine(Equals(type, ExportFileType.List)
+                               ? "Transition list {0} exported successfully."
+                               : "Method {0} exported successfully.",
+                           Path.GetFileName(args.ExportPath));
         }
 
         public static void SaveDocument(SrmDocument doc, string outFile)

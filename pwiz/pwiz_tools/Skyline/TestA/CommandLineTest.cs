@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -128,7 +129,7 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, "Single", rawPath, out status);
+            doc = CommandLine.ImportResults(doc, docPath, replicate, rawPath, out status);
             Assert.IsNull(status);
 
             using(Database database = new Database(doc.Settings))
@@ -162,7 +163,6 @@ namespace pwiz.SkylineTestA
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-
             var doc = ResultsUtil.DeserializeDocument(docPath);
 
             // Import the first RAW file (or mzML for international)
@@ -234,13 +234,14 @@ namespace pwiz.SkylineTestA
         public void ConsoleMethodTest()
         {
             //Here I'll only test Agilent for now
+            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
 
             /////////////////////////
             // Thermo test
 //            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 //            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-//            string thermoTemplate = methodFilesDir.GetTestPath("20100329_Protea_Peptide_targeted.meth");
-//            string thermoOut = methodFilesDir.GetTestPath("Thermo_test.meth");
+//            string thermoTemplate = commandFilesDir.GetTestPath("20100329_Protea_Peptide_targeted.meth");
+//            string thermoOut = commandFilesDir.GetTestPath("Thermo_test.meth");
 //            output = RunCommand("--in=" + docPath,
 //                               "--import-file=" + rawPath,
 //                               "--exp-method-instrument=Thermo LTQ",
@@ -257,7 +258,6 @@ namespace pwiz.SkylineTestA
             
             /////////////////////////
             // Agilent test
-            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             string docPath2 = commandFilesDir.GetTestPath("WormUnrefined.sky");
             string agilentTemplate = commandFilesDir.GetTestPath("43mm-40nL-30min-opt.m");
             string agilentOut = commandFilesDir.GetTestPath("Agilent_test.m");
@@ -285,6 +285,88 @@ namespace pwiz.SkylineTestA
                 Console.WriteLine("Failed to write Agilent method: {0}", output);
                 Assert.IsTrue(success);
             }
+        }
+
+        [TestMethod]
+        public void ConsoleExportTrigger()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string failurePath = testFilesDir.GetTestPath("Failure_test.csv");
+
+            string output = RunCommand("--in=" + docPath,
+                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                                "--exp-file=" + failurePath,
+                                "--exp-strategy=single",
+                                "--exp-method-type=triggered",
+                                "--exp-primary-count=x");
+
+            //check for warning and error
+            Assert.AreEqual(2, CountInstances("Warning", output));  // exp-primary-count and CE not Waters
+            Assert.IsTrue(output.Contains("Error"));    // Waters
+            Assert.AreEqual(2, CountInstances(ExportInstrumentType.WATERS, output));
+
+            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            string thermoTemplate = commandFilesDir.GetTestPath("20100329_Protea_Peptide_targeted.meth");
+            output = RunCommand("--in=" + docPath,
+                                "--exp-method-instrument=" + ExportInstrumentType.THERMO_TSQ,
+                                "--exp-template=" + thermoTemplate,                        
+                                "--exp-file=" + failurePath,
+                                "--exp-strategy=single",
+                                "--exp-method-type=triggered");
+            Assert.IsTrue(output.Contains("Error"));    // Thermo TSQ method
+            Assert.IsFalse(output.Contains("Warning"));
+            Assert.AreEqual(2, CountInstances(ExportInstrumentType.THERMO, output));    // Thermo and Thermo TSQ
+            Assert.AreEqual(1, CountInstances(ExportInstrumentType.THERMO_TSQ, output));
+
+            output = RunCommand("--in=" + docPath,
+                                "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
+                                "--exp-file=" + failurePath,
+                                "--exp-strategy=single",
+                                "--exp-method-type=triggered");
+            Assert.AreEqual(1, CountInstances("Warning", output));  // exp-primary-count and CE not Agilent
+            Assert.AreEqual(1, CountInstances(ExportInstrumentType.AGILENT, output));   // CE not Agilent
+            Assert.IsTrue(output.Contains("Error"));    // No library and no data
+            Assert.IsTrue(output.Contains("library"));
+
+            // Successful export to Agilent transtion list
+            string triggerPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_triggered.sky");
+            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                ExtensionTestContext.ExtThermoRaw);
+            const string replicate = "Single";
+            string agilentTriggeredPath = testFilesDir.GetTestPath("AgilentTriggered.csv");
+
+            output = RunCommand("--in=" + docPath,
+                                "--import-file=" + rawPath,
+                                "--import-replicate-name=" + replicate,
+                                "--out=" + triggerPath,
+                                "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
+                                "--exp-file=" + agilentTriggeredPath,
+                                "--exp-strategy=single",
+                                "--exp-method-type=triggered");
+            Assert.AreEqual(1, CountInstances("Warning", output));  // exp-primary-count and CE not Agilent
+            Assert.AreEqual(1, CountInstances(ExportInstrumentType.AGILENT, output));   // CE not Agilent
+            Assert.IsTrue(output.Contains("Error"));    // peptides without enough information
+            Assert.IsTrue(output.Contains("peptides"));
+
+            //check for success
+            var doc = ResultsUtil.DeserializeDocument(triggerPath);
+            var ceRegression = new CollisionEnergyRegression("Agilent", new[] {new ChargeRegressionLine(2, 2, 10)});
+            doc = doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(
+                p => p.ChangeCollisionEnergy(ceRegression)));
+            doc = (SrmDocument) doc.RemoveChild(doc.Children[1]);
+            CommandLine.SaveDocument(doc, triggerPath);
+
+            output = RunCommand("--in=" + triggerPath,
+                                "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
+                                "--exp-file=" + agilentTriggeredPath,
+                                "--exp-strategy=single",
+                                "--exp-method-type=triggered");
+            Assert.IsTrue(output.Contains("successfully."));
+            Assert.IsFalse(output.Contains("Error"));
+            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsTrue(File.Exists(agilentTriggeredPath));
+            Assert.AreEqual(doc.TransitionCount + 1, File.ReadAllLines(agilentTriggeredPath).Length);
         }
 
         [TestMethod]
