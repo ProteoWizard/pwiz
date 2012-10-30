@@ -62,13 +62,13 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
             ": output directory")
         ("config,c", 
             po::value<string>(&configFilename),
-            ": configuration file (optionName=value)")
+            ": configuration file (containing settings as optionName=value)")
         ("exec,x", 
             po::value< vector<string> >(&commands),
-            ": execute command")
+            ": execute command, e.g --exec \"tic 409 410\"")
         ("filter",
             po::value< vector<string> >(&filters),
-			(": add a spectrum list filter\n" + SpectrumListFactory::usage()).c_str())
+			(": add a spectrum list filter, e.g. --filter=\"msLevel [2,3]\"\n" + SpectrumListFactory::usage()).c_str())
         ("verbose,v",
             po::value<bool>(&verbose)->zero_tokens(),
             ": print progress messages")
@@ -120,10 +120,10 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
         vector<bfs::path> globbedFilenames;
         BOOST_FOREACH(const string& filename, filenames)
         {
-            expand_pathmask(bfs::path(filename), globbedFilenames);
-            if (!globbedFilenames.size())
+            if (0==expand_pathmask(bfs::path(filename), globbedFilenames))
             {
                 cout <<  "[MSDataAnalyzerApplication] no files found matching \"" << filename << "\"" << endl;
+                globbedFilenames.push_back(filename); // this ought to provoke an error downstream
             }
         }
 
@@ -158,6 +158,7 @@ PWIZ_API_DECL void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostr
         bfs::create_directories(outputDirectory);
 
     FullReaderList readers;
+    ostream* errorlog = log;
 
     if (!verbose)
         log = NULL;
@@ -181,11 +182,11 @@ PWIZ_API_DECL void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostr
         }
         catch (exception& e)
         {
-            if (log) *log << e.what() << "\n[MSDataAnalyzerApplication] Caught exception.\n";
+            if (errorlog) *errorlog << e.what() << "\n[MSDataAnalyzerApplication] Caught exception for file " << filename << ".\n";
         }
         catch (...)
         {
-            if (log) *log << "[MSDataAnalyzerApplication] Caught unknown exception.\n";
+            if (errorlog) *errorlog << "[MSDataAnalyzerApplication] Caught unknown exception for file " << filename << ".\n";
         }
         
         if (log) *log << endl;

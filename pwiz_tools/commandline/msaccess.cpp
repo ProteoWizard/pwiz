@@ -155,6 +155,16 @@ string usage(const MSDataAnalyzerApplication& app)
     printCommandUsage<RegionSIC>(oss);
     printCommandUsage<Pseudo2DGel>(oss);
 
+    oss << "\nExamples:\n\n"
+        << "msaccess data.mzML -x \"tic 409 410\" --filter=\"msLevel 2\"\n"
+        << "(creates data.mzML.tic.409.00-410.00.txt with total ion current info for mass range 409-410 in ms2 scans)\n\n"
+        << "msaccess data.mzML -x spectrum_table\n"
+        << "(creates data.mzML.spectrum_table.txt with summary information for all spectra as read from the scan headers)\n\n"
+        << "msaccess data.mzML -x \"binary 0-3\"\n"
+        << "(creates files data.mzML.binary.*.txt with binary data for spectra 0 through 3)\n\n"
+        << "msaccess data.mzML -x image\n"
+        << "(creates data.mzML.image* with pseudo-2D-gel image of the data file)\n\n";
+
     oss << endl
         << "Questions, comments, and bug reports:\n"
         << "http://proteowizard.sourceforge.net\n"
@@ -174,7 +184,10 @@ int main(int argc, const char* argv[])
         MSDataAnalyzerApplication app(argc, argv);
         MSDataAnalyzerContainer analyzers;
         initializeAnalyzers(analyzers, app.commands);
-
+        if (app.filenames.empty() && !app.commands.empty())
+            cerr << "no files to process.\n";
+        if (!app.filenames.empty() && app.commands.empty())
+            cerr << "no -x/--exec command given.\n";
         if (app.filenames.empty() || app.commands.empty())
             throw runtime_error(usage(app).c_str());
 
