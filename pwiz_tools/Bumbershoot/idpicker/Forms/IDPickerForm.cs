@@ -746,7 +746,7 @@ namespace IDPicker
             fragmentationStatisticsForm.ClearSession();
             peakStatisticsForm.ClearSession();
             distributionStatisticsForm.ClearSession();
-            dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearSession());
+            dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => { o.ClearSession(); o.Close(); });
 
             if (session != null)
             {
@@ -763,6 +763,7 @@ namespace IDPicker
         {
             string usage = "IDPicker.exe <idpDB/mzIdentML/pepXML import filemask>\r\n" +
                            "             [more import filemasks] ...\r\n" +
+                           "             --headless (quits after merging/filtering)\r\n" +
                            "             -MaxQValue <real>\r\n" +
                            "             -MinDistinctPeptidesPerProtein <integer>\r\n" +
                            "             -MinSpectraPerProtein <integer>\r\n" +
@@ -1073,7 +1074,8 @@ namespace IDPicker
                         catch (Exception ex)
                         {
                             if (ex.Message.Contains("no peptides found mapping to a decoy protein") ||
-                                ex.Message.Contains("peptides did not map to the database"))
+                                ex.Message.Contains("peptides did not map to the database") ||
+                                ex.Message.Contains("duplicate protein id"))
                                 Program.HandleUserError(ex);
                             else
                                 throw;

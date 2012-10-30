@@ -1728,9 +1728,9 @@ namespace IDPicker.Forms
         {
             if (rows.First() is PeptideSpectrumMatchRow)
                 rows = rows.OfType<PeptideSpectrumMatchRow>()
-                           .Where(o => o.Key.Contains(text) ||
-                                       (sequenceColumn.Visible && o.ModifiedSequence.Contains(text)) ||
-                                       o.Spectrum.NativeID.Contains(text))
+                           .Where(o => o.Key.ContainsOrIsContainedBy(text) ||
+                                       (sequenceColumn.Visible && o.ModifiedSequence.ContainsOrIsContainedBy(text)) ||
+                                       o.Spectrum.NativeID.ContainsOrIsContainedBy(text))
                            .Select(o => o as Row).ToList();
             // filtering the hierarchy is problematic due to caching, not to mention
             // filtering on groups vs. sources vs. both
@@ -1738,12 +1738,12 @@ namespace IDPicker.Forms
             //    rows = getSpectrumSourceRows(dataFilter);
             else if (rows.First() is SpectrumRow)
                 rows = rows.OfType<SpectrumRow>()
-                           .Where(o => o.Key.Contains(text) ||
-                                       o.Spectrum.NativeID.Contains(text))
+                           .Where(o => o.Key.ContainsOrIsContainedBy(text) ||
+                                       o.Spectrum.NativeID.ContainsOrIsContainedBy(text))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is PeptideRow)
                 rows = rows.OfType<PeptideRow>()
-                           .Where(o => o.Peptide.Sequence.Contains(text))
+                           .Where(o => o.Peptide.Sequence.ContainsOrIsContainedBy(text))
                            .Select(o => o as Row).ToList();
             else
                 return false;

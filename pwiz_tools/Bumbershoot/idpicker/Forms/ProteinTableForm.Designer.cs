@@ -55,7 +55,7 @@ namespace IDPicker.Forms
             this.keyColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.clusterColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.countColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.coverageColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.coverageColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.proteinGroupColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.distinctPeptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctMatchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -92,11 +92,9 @@ namespace IDPicker.Forms
             // coverageColumn
             // 
             this.coverageColumn.HeaderText = "Coverage";
-            this.coverageColumn.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             this.coverageColumn.Name = "coverageColumn";
             this.coverageColumn.ReadOnly = true;
             this.coverageColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            this.coverageColumn.TrackVisitedState = false;
             this.coverageColumn.Width = 78;
             // 
             // proteinGroupColumn
@@ -186,7 +184,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn keyColumn;
         private System.Windows.Forms.DataGridViewLinkColumn clusterColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn countColumn;
-        private System.Windows.Forms.DataGridViewLinkColumn coverageColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn coverageColumn;
         private System.Windows.Forms.DataGridViewLinkColumn proteinGroupColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctPeptidesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctMatchesColumn;

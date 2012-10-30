@@ -33,6 +33,26 @@ using System.Windows.Forms;
 
 namespace IDPicker
 {
+    public static class SystemExtensionMethods
+    {
+        public static bool ContainsOrIsContainedBy(this string str, string otherString)
+        {
+            if (str.Length == 0 || otherString.Length == 0)
+                return false;
+
+            if (otherString.First() == '"' && otherString.Last() == '"')
+                return str == otherString.Substring(1, otherString.Length - 2);
+
+            int compare = str.Length.CompareTo(otherString.Length);
+            if (compare == 0)
+                return str == otherString;
+            else if (compare < 0)
+                return otherString.Contains(str);
+            else
+                return str.Contains(otherString);
+        }
+    }
+
     public static class SystemDataExtensionMethods
     {
         public static int ExecuteNonQuery (this IDbConnection conn, string sql)

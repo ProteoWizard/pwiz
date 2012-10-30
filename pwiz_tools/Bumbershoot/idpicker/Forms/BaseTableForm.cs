@@ -54,6 +54,23 @@ namespace IDPicker.Forms
             treeDataGridView.DataError +=treeDataGridView_DataError;
 
             findTextBox.Tag = findTextBox.Text = "Find...";
+            findTextBox.KeyUp += new KeyEventHandler(findTextBox_KeyUp);
+        }
+
+        void findTextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode.HasFlag(Keys.V))
+            {
+                string text = Clipboard.GetText(TextDataFormat.Text);
+                if (text.IsNullOrEmpty())
+                    return;
+
+                // the paste operation will only take the first line, so override it by delimiting by ';'
+                var allLines = text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                if (allLines.Count() > 1)
+                    findTextBox.Text = String.Join(";", allLines);
+                findTextBox.SelectAll();
+            }
         }
 
         public TreeDataGridView TreeDataGridView

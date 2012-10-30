@@ -418,6 +418,18 @@ namespace IDPicker.Forms
             treeDataGridView.PreviewKeyDown += treeDataGridView_PreviewKeyDown;
             treeDataGridView.CellIconNeeded += treeDataGridView_CellIconNeeded;
             treeDataGridView.CellPainting += treeDataGridView_CellPainting;
+            treeDataGridView.CellMouseMove += treeDataGridView_CellMouseMove;
+        }
+
+        void treeDataGridView_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.RowIndex >= 0 &&
+                (e.ColumnIndex == coverageColumn.Index ||
+                 (treeDataGridView.Columns[e.ColumnIndex] is DataGridViewLinkColumn) &&
+                  treeDataGridView[e.ColumnIndex, e.RowIndex].ContentBounds.Contains(e.X, e.Y)))
+                treeDataGridView.Cursor = Cursors.Hand;
+            else
+                treeDataGridView.Cursor = Cursors.Default;
         }
 
         void treeDataGridView_CellPainting (object sender, TreeDataGridViewCellPaintingEventArgs e)
@@ -734,6 +746,21 @@ namespace IDPicker.Forms
             // was column header clicked?
             if (e.RowIndexHierarchy.First() < 0)
                 Sort(e.ColumnIndex);
+            else if (e.ColumnIndex == coverageColumn.Index && ProteinViewVisualize != null)
+            {
+                Row row = rows[e.RowIndexHierarchy.First()];
+                for (int i = 1; i < e.RowIndexHierarchy.Count; ++i)
+                    row = row.ChildRows[e.RowIndexHierarchy[i]];
+
+                if (row is ProteinRow)
+                    ProteinViewVisualize(this, new ProteinViewVisualizeEventArgs() { Protein = (row as ProteinRow).Protein });
+                else if (row is ProteinGroupRow)
+                {
+                    List<Protein> proteins; lock (session) proteins = session.Query<Protein>().Where(o => o.ProteinGroup == (row as ProteinGroupRow).ProteinGroup).ToList();
+                    foreach (var protein in proteins)
+                        ProteinViewVisualize(this, new ProteinViewVisualizeEventArgs() { Protein = protein });
+                }
+            }
         }
 
         void treeDataGridView_CellContentClick (object sender, TreeDataGridViewCellEventArgs e)
@@ -762,21 +789,6 @@ namespace IDPicker.Forms
                 newDataFilter.ProteinGroup = new List<int> { (int) value };
 
                 ProteinViewFilter(this, newDataFilter);
-            }
-            else if (e.ColumnIndex == coverageColumn.Index && ProteinViewVisualize != null)
-            {
-                Row row = rows[e.RowIndexHierarchy.First()];
-                for (int i = 1; i < e.RowIndexHierarchy.Count; ++i)
-                    row = row.ChildRows[e.RowIndexHierarchy[i]];
-
-                if (row is ProteinRow)
-                    ProteinViewVisualize(this, new ProteinViewVisualizeEventArgs() { Protein = (row as ProteinRow).Protein });
-                else if (row is ProteinGroupRow)
-                {
-                    List<Protein> proteins; lock (session) proteins = session.Query<Protein>().Where(o => o.ProteinGroup == (row as ProteinGroupRow).ProteinGroup).ToList();
-                    foreach (var protein in proteins)
-                        ProteinViewVisualize(this, new ProteinViewVisualizeEventArgs() {Protein = protein});
-                }
             }
         }
 
@@ -1264,15 +1276,15 @@ namespace IDPicker.Forms
         {
             if (rows.First() is ProteinRow)
                 rows = rows.OfType<ProteinRow>()
-                           .Where(o => o.Protein.Accession.Contains(text) ||
-                                       (descriptionColumn.Visible && (o.Protein.Description ?? String.Empty).Contains(text)) ||
-                                       (peptideSequencesColumn.Visible && o.PeptideSequences.Contains(text)))
+                           .Where(o => o.Protein.Accession.ContainsOrIsContainedBy(text) ||
+                                       (descriptionColumn.Visible && (o.Protein.Description ?? String.Empty).ContainsOrIsContainedBy(text)) ||
+                                       (peptideSequencesColumn.Visible && o.PeptideSequences.ContainsOrIsContainedBy(text)))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is ProteinGroupRow)
                 rows = rows.OfType<ProteinGroupRow>()
-                           .Where(o => o.FirstProtein.Accession.Contains(text) ||
-                                       (descriptionColumn.Visible && (o.FirstProtein.Description ?? String.Empty).Contains(text)) ||
-                                       (peptideSequencesColumn.Visible && o.PeptideSequences.Contains(text)))
+                           .Where(o => o.FirstProtein.Accession.ContainsOrIsContainedBy(text) ||
+                                       (descriptionColumn.Visible && (o.FirstProtein.Description ?? String.Empty).ContainsOrIsContainedBy(text)) ||
+                                       (peptideSequencesColumn.Visible && o.PeptideSequences.ContainsOrIsContainedBy(text)))
                            .Select(o => o as Row).ToList();
             else
                 return false;

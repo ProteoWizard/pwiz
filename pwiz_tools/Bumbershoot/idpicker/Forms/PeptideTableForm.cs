@@ -1044,19 +1044,19 @@ namespace IDPicker.Forms
         {
             if (rows.First() is DistinctMatchRow)
                 rows = rows.OfType<DistinctMatchRow>()
-                           .Where(o => o.DistinctMatch.ToString().Contains(text) ||
-                                       o.Peptide.Sequence.Contains(text) ||
-                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.Contains(text)))
+                           .Where(o => o.DistinctMatch.ToString().ContainsOrIsContainedBy(text) ||
+                                       o.Peptide.Sequence.ContainsOrIsContainedBy(text) ||
+                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(text)))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is DistinctPeptideRow)
                 rows = rows.OfType<DistinctPeptideRow>()
-                           .Where(o => o.Peptide.Sequence.Contains(text) ||
-                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.Contains(text)))
+                           .Where(o => o.Peptide.Sequence.ContainsOrIsContainedBy(text) ||
+                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(text)))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is PeptideGroupRow)
                 rows = rows.OfType<PeptideGroupRow>()
                            .Where(o => o.PeptideGroup.ToString() == text ||
-                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.Contains(text)))
+                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(text)))
                            .Select(o => o as Row).ToList();
             else
                 return false;

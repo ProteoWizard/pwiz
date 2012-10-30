@@ -89,6 +89,12 @@ namespace IDPicker
             control.ClearSession();
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            ClearSession();
+            base.OnClosed(e);
+        }
+
         private void InitializeComponent()
         {
             this.SuspendLayout();
@@ -239,8 +245,6 @@ namespace IDPicker
 
             SetData(session, protein, viewFilter);
 
-            surface.SequenceCoverageFilter += (s, e) => OnSequenceCoverageFilter(e);
-
             ContextMenuStrip = new ContextMenuStrip();
             ContextMenuStrip.Items.Add("Save image", null, (s, e) => bitmapSave());
             ContextMenuStrip.Items.Add("Copy image", null, (s, e) => bitmapCopyToClipboard());
@@ -249,15 +253,57 @@ namespace IDPicker
 
         public void SetData(NHibernate.ISession session, DataModel.Protein protein, DataFilter viewFilter)
         {
-            this.session = session;
+            if (session == null)
+                return;
+
+            this.session = session.SessionFactory.OpenSession();
             this.viewFilter = viewFilter;
 
-            if (protein == Protein)
+            var workerThread = new BackgroundWorker()
             {
-                surface.viewFilter = viewFilter;
-                Refresh();
-                return;
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            workerThread.DoWork += setData;
+            if (protein == Protein)
+                workerThread.RunWorkerCompleted += refreshFilter;
+            else
+                workerThread.RunWorkerCompleted += renderData;
+            workerThread.RunWorkerAsync(protein);
+        }
+
+        public void ClearData ()
+        {
+            Controls.Clear();
+        }
+
+        public void ClearSession ()
+        {
+            ClearData();
+            if (session != null && session.IsOpen)
+            {
+                session.Dispose();
+                session = null;
             }
+        }
+
+        void setData(object sender, DoWorkEventArgs e)
+        {
+            Protein protein = e.Argument as Protein;
+
+            if (viewFilter.HasSpectrumFilter || viewFilter.HasModificationFilter || !viewFilter.Analysis.IsNullOrEmpty())
+            {
+                viewFilter = new DataFilter(viewFilter);
+                lock (session)
+                    this.viewFilter.Peptide = session.CreateQuery("SELECT psm.Peptide " +
+                                                                  viewFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                                    DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink))
+                                                     .List<Peptide>();
+            }
+
+            if (protein == Protein)
+                return;
 
             var query = session.CreateQuery("SELECT pi.Offset+pm.Offset, pm " +
                                             "FROM PeptideInstance pi " +
@@ -276,7 +322,16 @@ namespace IDPicker
 
             Protein = protein;
             Modifications = new ImmutableMap<int, PeptideModification>(modifications);
+        }
 
+        void refreshFilter(object sender, RunWorkerCompletedEventArgs e)
+        {
+            surface.viewFilter = this.viewFilter;
+            Refresh();
+        }
+
+        void renderData(object sender, RunWorkerCompletedEventArgs e)
+        {
             Controls.Clear();
 
             var rect = ClientRectangle;
@@ -284,37 +339,24 @@ namespace IDPicker
             rect.Height -= 2;
             rect.Width -= 2;
             surface = new SequenceCoverageSurface(this)
-                          {
-                              viewFilter = viewFilter,
+            {
+                viewFilter = this.viewFilter,
 
-                              Bounds = rect,
+                Bounds = rect,
 
-                              // the SequenceCoverageSurface is anchored everywhere but the bottom: when its height becomes
-                              // larger than the form's height, the form automatically adds a scroll bar to allow the user
-                              // to pan the surface
-                              Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
+                // the SequenceCoverageSurface is anchored everywhere but the bottom: when its height becomes
+                // larger than the form's height, the form automatically adds a scroll bar to allow the user
+                // to pan the surface
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
 
-                              // the surface's height must be at least the form's height
-                              MinimumSize = new Size(0, ClientSize.Height)
-                          };
+                // the surface's height must be at least the form's height
+                MinimumSize = new Size(0, ClientSize.Height)
+            };
+
+            surface.SequenceCoverageFilter += (s, filter) => OnSequenceCoverageFilter(filter);
 
             Controls.Add(surface);
             Refresh();
-        }
-
-        public void ClearData ()
-        {
-            Controls.Clear();
-        }
-
-        public void ClearSession ()
-        {
-            ClearData();
-            if (session != null && session.IsOpen)
-            {
-                session.Dispose();
-                session = null;
-            }
         }
 
         protected override void OnMouseWheel (MouseEventArgs e)
@@ -326,6 +368,9 @@ namespace IDPicker
 
         protected override void OnResize (EventArgs e)
         {
+            if (surface == null)
+                return;
+
             surface.MinimumSize = ClientSize;
             base.OnResize(e);
             Refresh();
@@ -342,6 +387,9 @@ namespace IDPicker
 
         protected override void OnPaint (PaintEventArgs e)
         {
+            if (surface == null)
+                return;
+
             this.SetRedraw(false);
             AutoScrollPosition = new Point(0, scrollY);
             this.SetRedraw(true);
@@ -438,9 +486,18 @@ namespace IDPicker
                     return;
 
                 foreach (var peptide in peptides)
-                    foreach (var instance in peptide.Instances.Where(o => o.Protein.Id == owner.Protein.Id))
-                        for (int offset = instance.Offset; offset < instance.Offset + instance.Length; ++offset)
+                {
+                    int offset = 0;
+                    while (true)
+                    {
+                        offset = owner.Protein.Sequence.IndexOf(peptide.Sequence, offset);
+                        if (offset < 0)
+                            break;
+
+                        for (int end = offset + peptide.Sequence.Length; offset < end; ++offset)
                             filteredInOffsets[offset] = true;
+                    }
+                }
             }
         }
 
