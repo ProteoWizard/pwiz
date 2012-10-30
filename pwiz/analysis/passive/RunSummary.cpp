@@ -218,8 +218,12 @@ PWIZ_API_DECL void RunSummary::close(const DataInfo& dataInfo)
             knownChargeCount[*itr] = 0;
 
     // accumulate statistics over all spectra
-    BOOST_FOREACH(const SpectrumInfo& si, cache_)
+    // note: BOOST_FOREACH(const SpectrumInfo& si, cache_) would be tidier here, but it 
+    // won't compile under gcc 4.7 with Boost 1.49 - it wants access to a private copy ctor 
+    // for some reason, perhaps the multiple inheritance confuses things.
+    for (std::vector<SpectrumInfo>::const_iterator it=cache_.begin();it!=cache_.end();it++)
     {
+        const SpectrumInfo& si = *it;
         if (config_.msLevels.contains(si.msLevel))
             ++msLevelCount[si.msLevel];
         else
