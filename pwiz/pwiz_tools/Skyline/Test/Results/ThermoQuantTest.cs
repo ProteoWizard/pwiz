@@ -133,7 +133,7 @@ namespace pwiz.SkylineTest.Results
             foreach (var path in Directory.GetFiles(dirPath))
             {
                 if (IsCacheOrTempFile(path))
-                    File.Delete(path);
+                    FileEx.SafeDelete(path);
             }
             string name = Path.GetFileNameWithoutExtension(resultsPath);
             var listChromatograms = new List<ChromatogramSet> {new ChromatogramSet(name, new[] {resultsPath})};

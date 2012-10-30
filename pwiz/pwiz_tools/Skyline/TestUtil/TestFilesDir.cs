@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestUtil
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(FullPath, true));
+                DirectoryEx.SafeDelete(FullPath);
             }
 
             // Move the file back to where it was, and fail if this throws
@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestUtil
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                DirectoryEx.SafeDelete(guidName);
             }
         }
     }

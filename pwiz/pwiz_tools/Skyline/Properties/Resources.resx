@@ -4916,4 +4916,31 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_CreateGraphPeakArea_Peak_Areas">
     <value xml:space="preserve">Peak Areas</value>
   </data>
+  <data name="FileEx_SafeDelete_Path_is_empty">
+    <value xml:space="preserve">Path is empty</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_">
+    <value xml:space="preserve">Path contains invalid characters: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_">
+    <value xml:space="preserve">Directory could not be found: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_invalid___0_">
+    <value xml:space="preserve">File path is invalid: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_too_long___0_">
+    <value xml:space="preserve">File path is too long: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_">
+    <value xml:space="preserve">Unable to delete file which is in use: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_">
+    <value xml:space="preserve">Unable to delete read-only file: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_">
+    <value xml:space="preserve">Unable to delete directory: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_">
+    <value xml:space="preserve">Insufficient permission to delete file: {0}</value>
+  </data>
 </root>

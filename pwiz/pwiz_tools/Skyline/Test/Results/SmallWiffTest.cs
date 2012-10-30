@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Results
@@ -96,7 +97,7 @@ namespace pwiz.SkylineTest.Results
             SrmDocument doc = InitWiffDocument(testFilesDir);
             var docContainer = new ResultsTestDocumentContainer(doc,
                 testFilesDir.GetTestPath("SimpleWiffTest.sky"));
-            File.Delete(ChromatogramCache.FinalPathForName(docContainer.DocumentFilePath, null));
+            FileEx.SafeDelete(ChromatogramCache.FinalPathForName(docContainer.DocumentFilePath, null));
 
             var listChromatograms = new List<ChromatogramSet>();
 

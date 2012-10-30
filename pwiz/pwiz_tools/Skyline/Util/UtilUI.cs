@@ -341,7 +341,7 @@ window.onload = submitForm;
         public void DeletePath()
         {
             Thread.Sleep(30*1000); //30 seconds.
-            Helpers.TryTwice(() => File.Delete(_path));
+            FileEx.SafeDelete(_path, true);
         }
 
     }

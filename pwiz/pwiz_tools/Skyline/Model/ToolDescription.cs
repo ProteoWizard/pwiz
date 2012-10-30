@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model
                 //           in a long running application like Excel.
 //                if (ReportTempPath_toDelete != null)
 //                {
-//                    Helpers.TryTwice(() => File.Delete(ReportTempPath_toDelete));
+//                    FileEx.SafeDelete(ReportTempPath_toDelete, true);
 //                    ReportTempPath_toDelete = null;
 //                }  
             }      

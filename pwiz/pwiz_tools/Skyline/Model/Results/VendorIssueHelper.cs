@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results
                         {
                             // Handle the case where bruker refuses to export to the name it is given
                             // and insists on appending .mzML
-                            FileEx.DeleteIfPossible(tempFileSubsitute);
+                            FileEx.SafeDelete(tempFileSubsitute, true);
                             tempFileSubsitute = tempFileMzml;
                         }
                         break;
@@ -89,9 +89,9 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (Exception)
             {
-                FileEx.DeleteIfPossible(tempFileSubsitute);
+                FileEx.SafeDelete(tempFileSubsitute, true);
                 if (slowlyException.WorkAround == LoadingTooSlowlyException.Solution.bruker_conversion)
-                    FileEx.DeleteIfPossible(tempFileMzml);
+                    FileEx.SafeDelete(tempFileMzml, true);
                 throw;
             }
         }
@@ -227,8 +227,8 @@ namespace pwiz.Skyline.Model.Results
             }
             finally
             {
-                FileEx.DeleteIfPossible(tempFileSource);
-                FileEx.DeleteIfPossible(GetWiffScanPath(tempFileSource));
+                FileEx.SafeDelete(tempFileSource, true);
+                FileEx.SafeDelete(GetWiffScanPath(tempFileSource), true);
             }
         }
 

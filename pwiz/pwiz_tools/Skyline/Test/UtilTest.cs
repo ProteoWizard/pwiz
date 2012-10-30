@@ -16,11 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.IO;
 using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
@@ -93,6 +96,51 @@ namespace pwiz.SkylineTest
             }
             var fieldsOut = sb.ToString().ParseDsvFields(separator);
             Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut));
+        }
+
+        [TestMethod]
+        public void SafeDeleteTest()
+        {
+            // Test ArgumentException.
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(null));
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete("")); // Not L10N
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete("   ")); // Not L10N
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete("<path with illegal chars>")); // Not L10N
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(null, true));
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete("", true)); // Not L10N
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete("   ", true)); // Not L10N
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete("<path with illegal chars>", true)); // Not L10N
+
+            // Test DirectoryNotFoundException.
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(@"c:\blah-blah-blah\blah.txt")); // Not L10N
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(@"c:\blah-blah-blah\blah.txt", true)); // Not L10N
+
+            // Test PathTooLongException.
+            var pathTooLong = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".Replace("x", "xxxxxxxxxx"); // Not L10N
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(pathTooLong));
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(pathTooLong, true));
+
+            // Test IOException.
+            const string busyFile = "TestBusyDelete.txt"; // Not L10N
+            using (File.CreateText(busyFile))
+            {
+                AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(busyFile));
+                AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(busyFile, true));
+            }
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(busyFile));
+
+            // Test UnauthorizedAccessException.
+            const string readOnlyFile = "TestReadOnlyFile.txt"; // Not L10N
+            File.WriteAllText(readOnlyFile, "Testing read only file delete.\n"); // Not L10N
+            var fileInfo = new FileInfo(readOnlyFile) {IsReadOnly = true};
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(readOnlyFile));
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(readOnlyFile, true));
+            fileInfo.IsReadOnly = false;
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(readOnlyFile));
+
+            var directory = Environment.CurrentDirectory;
+            AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(directory));
+            AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(directory, true));
         }
     }
 }

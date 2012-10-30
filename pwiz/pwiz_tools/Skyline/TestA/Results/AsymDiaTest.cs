@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA.Results
@@ -75,7 +76,7 @@ namespace pwiz.SkylineTestA.Results
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("Asym_DIA.sky");
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
-            File.Delete(cachePath);
+            FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;
@@ -101,7 +102,7 @@ namespace pwiz.SkylineTestA.Results
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                File.Delete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
 
             {
@@ -119,7 +120,7 @@ namespace pwiz.SkylineTestA.Results
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                File.Delete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
 
             {
@@ -142,7 +143,7 @@ namespace pwiz.SkylineTestA.Results
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                File.Delete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
 
             {
@@ -165,7 +166,7 @@ namespace pwiz.SkylineTestA.Results
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                File.Delete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
 
             {
@@ -192,7 +193,7 @@ namespace pwiz.SkylineTestA.Results
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document, false));
-                File.Delete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
 
             {
@@ -219,7 +220,7 @@ namespace pwiz.SkylineTestA.Results
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document, false));
-                File.Delete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
 
             {
@@ -239,7 +240,7 @@ namespace pwiz.SkylineTestA.Results
 
                 // Revert to original document, and get rid of results cache
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                File.Delete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
         }
     }

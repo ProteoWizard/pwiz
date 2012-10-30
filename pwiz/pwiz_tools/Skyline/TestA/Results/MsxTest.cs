@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestA.Results
             string docPath = testFilesDir.GetTestPath("MsxTest.sky");
             var dataPath = testFilesDir.GetTestPath("MsxTest.mzML");
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
-            File.Delete(cachePath);
+            FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitial.IsEnabledMsMs);

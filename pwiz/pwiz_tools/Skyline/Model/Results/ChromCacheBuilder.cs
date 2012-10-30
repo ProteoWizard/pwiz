@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_tempFileSubsitute != null)
             {
-                FileEx.DeleteIfPossible(_tempFileSubsitute);
+                FileEx.SafeDelete(_tempFileSubsitute, true);
                 _tempFileSubsitute = null;
                 _tempFileWriteStarted = false;
             }

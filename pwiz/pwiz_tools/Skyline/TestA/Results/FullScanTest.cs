@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestA.Results
             // Release data cache file
             Assert.IsTrue(docContainer.SetDocument(docMulti, docResults));
             // And remove it
-            File.Delete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
+            FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
 
             docContainer.ChangeMeasuredResults(measuredResults, 6, 6, 38);
 

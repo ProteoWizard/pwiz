@@ -21,6 +21,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA.Results
@@ -48,7 +49,7 @@ namespace pwiz.SkylineTestA.Results
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath(DOCUMENT_NAME);
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
-            File.Delete(cachePath);
+            FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
 
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);

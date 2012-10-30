@@ -467,7 +467,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         cache.ReadStream.CloseStream();
                         var cachePath = cache.CachePath;
-                        Helpers.TryTwice(() => File.Delete(cachePath));
+                        FileEx.SafeDelete(cachePath, true);
                         listPartialCaches.Remove(cache);
                     }
                 }
@@ -834,7 +834,7 @@ namespace pwiz.Skyline.Model.Results
                                 // Otherwise, get rid of this cache, since it will need to be
                                 // replaced.
                                 cache.ReadStream.CloseStream();
-                                File.Delete(cache.CachePath);
+                                FileEx.SafeDelete(cache.CachePath);
                             }
                         }
                         catch (Exception x)

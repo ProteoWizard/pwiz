@@ -1127,8 +1127,6 @@ namespace pwiz.Skyline.Model
             }
             else if (MethodType == ExportMethodType.Triggered)
             {
-                if (nodeTranGroupPrimary == null)
-                    Console.WriteLine("??");
                 writer.Write(FieldSeparator);
                 int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
                 writer.Write(rank.HasValue && rank.Value <= PrimaryTransitionCount  // Primary

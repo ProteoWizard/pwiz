@@ -25,6 +25,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Results
@@ -205,11 +206,11 @@ namespace pwiz.SkylineTest.Results
             foreach (string path in replicatePaths)
             {
                 if (File.Exists(path))
-                    File.Delete(path);
+                    FileEx.SafeDelete(path);
                 else
-                    Directory.Delete(path, true);
+                    DirectoryEx.SafeDelete(path);
             }
-            File.Delete(docPath);
+            FileEx.SafeDelete(docPath);
 
             // Save the document
             string xmlSaved = null;
@@ -286,7 +287,7 @@ namespace pwiz.SkylineTest.Results
             {
                 // Attempting to delete should throw
                 string path = cachePath;
-                AssertEx.ThrowsException<IOException>(() => File.Delete(path));
+                AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(path));
             }
 
             // Going back to the orignal document should allow the removal of the .skyd files
@@ -295,7 +296,7 @@ namespace pwiz.SkylineTest.Results
             foreach (var cachePath in listCachePaths)
             {
                 // Cache files should be closed now, and delete successfully.
-                File.Delete(cachePath);
+                FileEx.SafeDelete(cachePath);
             }
             testFilesDir.Dispose();
         }
@@ -422,7 +423,7 @@ namespace pwiz.SkylineTest.Results
             Assert.IsTrue(docContainer.SetDocument(doc, docReload));
             // Delete the cache
             string cachePath = Path.ChangeExtension(docPath, ".skyd");
-            File.Delete(cachePath);
+            FileEx.SafeDelete(cachePath);
 
             // Then try using cached replicate files
             // Move per-replicate cache files into place
@@ -533,7 +534,7 @@ namespace pwiz.SkylineTest.Results
             Assert.IsTrue(docContainer.SetDocument(doc, docReload));
             // Delete the cache
             cachePath = Path.ChangeExtension(docPath, ".skyd");
-            File.Delete(cachePath);
+            FileEx.SafeDelete(cachePath);
 
             // Then try using cached files
             // Move per-file cache files into place
@@ -595,7 +596,7 @@ namespace pwiz.SkylineTest.Results
         private static void DeleteFiles(TestFilesDir testFilesDir, IEnumerable<string> fileNames)
         {
             foreach (var fileName in fileNames)
-                File.Delete(testFilesDir.GetTestPath(fileName));
+                FileEx.SafeDelete(testFilesDir.GetTestPath(fileName));
         }
 
         private static SrmDocument InitWatersDocument(TestFilesDir testFilesDir, out string docPath)

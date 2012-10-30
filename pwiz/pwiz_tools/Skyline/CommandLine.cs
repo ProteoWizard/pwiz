@@ -1865,8 +1865,7 @@ namespace pwiz.Skyline
                 else
                 {
                     string cachePath = ChromatogramCache.FinalPathForName(outFile, null);
-                    if (File.Exists(cachePath))
-                        File.Delete(cachePath);
+                    FileEx.SafeDelete(cachePath, true);
                 }
             }
         }
