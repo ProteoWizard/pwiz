@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -437,8 +436,7 @@ namespace pwiz.Skyline
             {
                 // On open, make sure a document with no results does not have a
                 // data cache file, since one may have been left behind on a Save As.
-                try { File.Delete(pathCache); }
-                catch(IOException) { /* May not exist */ }
+                FileEx.SafeDelete(pathCache, true);
             }
             else if (!File.Exists(pathCache) &&
                 // For backward compatibility, check to see if any per-replicate
@@ -665,8 +663,7 @@ namespace pwiz.Skyline
             else
             {
                 string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
-                if (File.Exists(cachePath))
-                    File.Delete(cachePath);
+                FileEx.SafeDelete(cachePath, true);
             }
         }
 
@@ -712,7 +709,7 @@ namespace pwiz.Skyline
         {
             string fileNameView = GetViewFile(fileName);
             if (!HasPersistableLayout())
-                File.Delete(fileNameView);
+                FileEx.SafeDelete(fileNameView);    // caller will handle exception
             else
             {
                 using (var saverUser = new FileSaver(GetViewFile(fileName)))
@@ -1387,15 +1384,8 @@ namespace pwiz.Skyline
                 if (GetChromatogramByName(nameResult, results) != null)
                     continue;
 
-                try
-                {
-                    // Delete caches that will be overwritten
-                    File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
-                }
-                catch (Exception)
-                {
-                    Debug.Assert(true); // Ignore
-                }
+                // Delete caches that will be overwritten
+                FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
                 listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
             }
@@ -1414,14 +1404,8 @@ namespace pwiz.Skyline
             {
                 // If the chromatogram, is not in the current set, then delete the cache
                 // file to make sure it is not on disk before starting.
-                try
-                {
-                    File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
-                }
-                catch (IOException)
-                {
-                    // Ignore failure
-                }
+                FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
+
                 chrom = new ChromatogramSet(nameResult, dataSources, Annotations.EMPTY, optimizationFunction);
 
                 if (results == null)
@@ -1530,8 +1514,7 @@ namespace pwiz.Skyline
                         readStream.CloseStream();
 
                     string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
-                    if (File.Exists(cachePath))
-                        File.Delete(cachePath);                    
+                    FileEx.SafeDelete(cachePath, true);                    
                 }
                 // Restore the original set unchanged
                 resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);

@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model
 
             if (WaitBroker.IsCanceled)
             {
-                DirectoryEx.DeleteIfPossible(extractDir);
+                DirectoryEx.SafeDelete(extractDir);
             }
         }
 
@@ -228,8 +228,7 @@ namespace pwiz.Skyline.Model
                 if (Document.Settings.HasRTCalcPersisted)
                 {
                     // Minimize any persistable retention time calculator
-                    if (tempDir == null)
-                        tempDir = new TemporaryDirectory();
+                    tempDir = new TemporaryDirectory();
                     string tempDbPath = Document.Settings.PeptideSettings.Prediction.RetentionTime
                         .Calculator.PersistMinimized(tempDir.DirPath, Document);
                     if (tempDbPath != null)

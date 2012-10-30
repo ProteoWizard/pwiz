@@ -178,10 +178,19 @@ namespace pwiz.Skyline.SettingsUI.Irt
             //The file must have a schema or not exist for use with SQLite, so we'll delete
             //it and install a schema
 
+            try
+            {
+                FileEx.SafeDelete(path);
+            }
+            catch (IOException x)
+            {
+                MessageDlg.Show(this, x.Message);
+                return;
+            }
+
             //Create file, initialize db
             try
             {
-                File.Delete(path);
                 IrtDb.CreateIrtDb(path);
 
                 textDatabase.Text = path;

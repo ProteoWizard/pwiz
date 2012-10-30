@@ -346,9 +346,9 @@ namespace pwiz.SkylineTestFunctional
             params string[] messageParts)
         {
             string redundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT);
-            Helpers.TryTwice(() => File.Delete(redundantBuildPath));
+            FileEx.SafeDelete(redundantBuildPath);
             string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
-            Helpers.TryTwice(() => File.Delete(nonredundantBuildPath));
+            FileEx.SafeDelete(nonredundantBuildPath);
 
             BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] { inputFile },
                 libraryPath, libraryAuth, false, false);

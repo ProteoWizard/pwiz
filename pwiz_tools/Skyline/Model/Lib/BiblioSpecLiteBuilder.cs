@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Lib
             finally
             {
                 if (!KeepRedundant)
-                    File.Delete(redundantLibrary);
+                    FileEx.SafeDelete(redundantLibrary, true);
             }
 
             return true;

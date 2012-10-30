@@ -553,7 +553,7 @@ namespace pwiz.Skyline.Util
             try
             {
                 if (File.Exists(path))
-                    File.Delete(path);
+                    FileEx.SafeDelete(path);
                 else if (Directory.Exists(path))
                     DirectoryForceDelete(path);
 
@@ -595,17 +595,10 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     string backupFile = GetBackupFileName(pathDestination);
-                    Helpers.TryTwice(() => File.Delete(backupFile));
+                    FileEx.SafeDelete(backupFile, true);
                     // First try replacing the destination file, if it exists
                     File.Replace(pathTemp, pathDestination, backupFile, true);
-                    try
-                    {
-                        // Try delete once more if it fails initially, but still swallow any failure to delete
-                        Helpers.TryTwice(() => File.Delete(backupFile));
-                    }
-                    catch (IOException)
-                    {
-                    }
+                    FileEx.SafeDelete(backupFile, true);
                 }
                 catch (FileNotFoundException)
                 {
@@ -622,7 +615,7 @@ namespace pwiz.Skyline.Util
             if (!string.IsNullOrEmpty(dirName))
                 backupFile = Path.Combine(dirName, backupFile);
             // CONSIDER: Handle failure by trying a different name, or use a true temporary name?
-            File.Delete(backupFile);
+            FileEx.SafeDelete(backupFile);
             return backupFile;
         }
 
@@ -639,11 +632,11 @@ namespace pwiz.Skyline.Util
                 if ((attr & FileAttributes.ReadOnly) != 0)
                     File.SetAttributes(file,  attr & ~FileAttributes.ReadOnly);
                 string fileLocal = file;
-                Helpers.TryTwice(() => File.Delete(fileLocal));
+                FileEx.SafeDelete(fileLocal);
             }
             foreach (var directory in Directory.GetDirectories(path))
                 DirectoryForceDelete(directory);
-            Helpers.TryTwice(() => Directory.Delete(path));
+            DirectoryEx.SafeDelete(path);
         }
 
         public void SetCache(string path, string pathCache)
@@ -782,10 +775,15 @@ namespace pwiz.Skyline.Util
 
     public static class DirectoryEx
     {
-        public static void DeleteIfPossible(string path)
+        public static void SafeDelete(string path)
         {
-            try { Directory.Delete(path, true); }
-            catch (IOException) { }
+            try
+            {
+                Helpers.TryTwice(() => Directory.Delete(path, true));
+            }
+// ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+// ReSharper restore EmptyGeneralCatchClause
         }
     }
 
@@ -911,7 +909,7 @@ namespace pwiz.Skyline.Util
 
         public void Dispose()
         {
-            Helpers.TryTwice(() => Directory.Delete(DirPath, true));
+            DirectoryEx.SafeDelete(DirPath);
         }
     }
 }

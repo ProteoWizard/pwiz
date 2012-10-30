@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var fileName in Directory.GetFiles(TestFilesDir.FullPath, "*_REP*.*", SearchOption.AllDirectories))
             {
                 if (!fileName.ToLower().EndsWith(ExtensionTestContext.ExtThermoRaw.ToLower()))
-                    File.Delete(fileName);
+                    FileEx.SafeDelete(fileName);
             }
 
             // Open the .sky file
@@ -291,7 +291,7 @@ namespace pwiz.SkylineTestFunctional
         private const int COL_CE = 2;
         private static void ExportCEOptimizingTransitionList(string filePath)
         {
-            File.Delete(filePath);
+            FileEx.SafeDelete(filePath);
 
             var exportDialog = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.List));

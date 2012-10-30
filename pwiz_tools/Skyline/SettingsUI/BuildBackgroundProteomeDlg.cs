@@ -155,10 +155,12 @@ namespace pwiz.Skyline.SettingsUI
                 // so delete the existing file.
                 try
                 {
-                    File.Delete(fileName);
+                    FileEx.SafeDelete(fileName);
                 }
-                catch (IOException)
+                catch (IOException x)
                 {
+                    MessageDlg.Show(this, x.Message);
+                    return;
                 }
             }
             else
