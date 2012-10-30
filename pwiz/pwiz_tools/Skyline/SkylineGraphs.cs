@@ -2019,6 +2019,11 @@ namespace pwiz.Skyline
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
+        public SrmDocument SelectionDocument
+        {
+            get { return SequenceTree != null ? SequenceTree.Document : null; }
+        }
+
         public TreeNodeMS SelectedNode
         {
             get { return SequenceTree != null ? SequenceTree.SelectedNode as TreeNodeMS : null; }

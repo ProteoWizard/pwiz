@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public SrmDocument Document { get { return DocumentContainer.Document; } }
+        public SrmDocument Document { get; private set; }
 
         private int _updateLockCountDoc;
         private SrmDocument _updateDocPrevious;
@@ -227,14 +227,14 @@ namespace pwiz.Skyline.Controls
         public void BeginUpdateDoc()
         {
             _updateLockCountDoc++;
-            _updateDocPrevious = Document;
+            _updateDocPrevious = DocumentContainer.Document;
         }
 
         public void EndUpdateDoc()
         {
             if (_updateLockCountDoc == 0)
                 return;
-            if (--_updateLockCountDoc == 0 && !ReferenceEquals(_updateDocPrevious, Document))
+            if (--_updateLockCountDoc == 0 && !ReferenceEquals(_updateDocPrevious, DocumentContainer.Document))
             {
                 OnDocumentChanged(this, new DocumentChangedEventArgs(_updateDocPrevious));
                 _updateDocPrevious = null;
@@ -253,6 +253,8 @@ namespace pwiz.Skyline.Controls
             SrmDocument document = DocumentContainer.DocumentUI;
             if (document == null)
                 return;
+
+            Document = document;
 
             // If none of the children changed, then do nothing
             if (e.DocumentPrevious != null &&
