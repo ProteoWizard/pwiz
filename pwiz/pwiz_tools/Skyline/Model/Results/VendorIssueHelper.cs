@@ -46,6 +46,8 @@ namespace pwiz.Skyline.Model.Results
             LoadingTooSlowlyException slowlyException, ILoadMonitor loader, ref ProgressStatus status)
         {
             string tempFileSubsitute = Path.GetTempFileName();
+            // Bruker CompassXport may append .mzML to the name we give it
+            string tempFileMzml = tempFileSubsitute + ".mzML";
 
             try
             {
@@ -63,6 +65,13 @@ namespace pwiz.Skyline.Model.Results
                         loader.UpdateProgress(status = status.ChangeMessage(
                             string.Format(Resources.SkylineWindow_ImportResults_Import__0__,    // Bruker prefers the conversion go unnoted
                                           filePath)));
+                        if (File.Exists(tempFileMzml))
+                        {
+                            // Handle the case where bruker refuses to export to the name it is given
+                            // and insists on appending .mzML
+                            FileEx.DeleteIfPossible(tempFileSubsitute);
+                            tempFileSubsitute = tempFileMzml;
+                        }
                         break;
                     // This is a legacy solution that should no longer ever be invoked.  The mzWiff.exe has
                     // been removed from the installation.
@@ -81,6 +90,8 @@ namespace pwiz.Skyline.Model.Results
             catch (Exception)
             {
                 FileEx.DeleteIfPossible(tempFileSubsitute);
+                if (slowlyException.WorkAround == LoadingTooSlowlyException.Solution.bruker_conversion)
+                    FileEx.DeleteIfPossible(tempFileMzml);
                 throw;
             }
         }
