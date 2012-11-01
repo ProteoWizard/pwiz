@@ -924,6 +924,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Legacy BiblioSpec Library.
+        /// </summary>
+        public static string BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library {
+            get {
+                return ResourceManager.GetString("BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Building {0} library.
         /// </summary>
         public static string BiblioSpecLiteBuilder_BuildLibrary_Building__0__library {
@@ -1043,6 +1052,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_s" +
                         "pectra_in_the_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BiblioSpec Library.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library", resourceCulture);
             }
         }
         
@@ -7244,6 +7262,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to NIST Spectral Library.
+        /// </summary>
+        public static string NistLibrary_SpecFilter_NIST_Spectral_Library {
+            get {
+                return ResourceManager.GetString("NistLibrary_SpecFilter_NIST_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid format at peak {0} for {1}..
         /// </summary>
         public static string NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__ {
@@ -11608,6 +11635,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to SpectraST Library.
+        /// </summary>
+        public static string SpectrastLibrary_SpecFilter_SpectraST_Library {
+            get {
+                return ResourceManager.GetString("SpectrastLibrary_SpecFilter_SpectraST_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Isolation scheme does not contain any isolation windows.
         /// </summary>
         public static string SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows {
@@ -14637,6 +14673,15 @@ namespace pwiz.Skyline.Properties {
         public static string XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks {
             get {
                 return ResourceManager.GetString("XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GPM Spectral Library.
+        /// </summary>
+        public static string XHunterLibrary_SpecFilter_GPM_Spectral_Library {
+            get {
+                return ResourceManager.GetString("XHunterLibrary_SpecFilter_GPM_Spectral_Library", resourceCulture);
             }
         }
         

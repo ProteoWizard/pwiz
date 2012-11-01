@@ -4943,4 +4943,19 @@ Are you sure you want to continue?</value>
   <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_">
     <value xml:space="preserve">Insufficient permission to delete file: {0}</value>
   </data>
+  <data name="BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library">
+    <value xml:space="preserve">BiblioSpec Library</value>
+  </data>
+  <data name="XHunterLibrary_SpecFilter_GPM_Spectral_Library">
+    <value xml:space="preserve">GPM Spectral Library</value>
+  </data>
+  <data name="NistLibrary_SpecFilter_NIST_Spectral_Library">
+    <value xml:space="preserve">NIST Spectral Library</value>
+  </data>
+  <data name="SpectrastLibrary_SpecFilter_SpectraST_Library">
+    <value xml:space="preserve">SpectraST Library</value>
+  </data>
+  <data name="BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library">
+    <value xml:space="preserve">Legacy BiblioSpec Library</value>
+  </data>
 </root>

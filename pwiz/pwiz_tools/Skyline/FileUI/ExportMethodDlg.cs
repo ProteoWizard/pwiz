@@ -95,24 +95,22 @@ namespace pwiz.Skyline.FileUI
 
             IgnoreProteins = Settings.Default.ExportIgnoreProteins;
 
-            ExportMethodType mType = Helpers.ParseEnum(Settings.Default.ExportMethodType, ExportMethodType.Standard);
-            if ((mType != ExportMethodType.Standard && !CanSchedule) ||
-                (mType == ExportMethodType.Triggered && !CanTrigger))
-            {
-                mType = ExportMethodType.Standard;
-            }
+            // Start with method type as Standard until after instrument type is set
             comboTargetType.Items.Add(ExportMethodType.Standard.GetLocalizedString());
             comboTargetType.Items.Add(ExportMethodType.Scheduled.GetLocalizedString());
             comboTargetType.Items.Add(ExportMethodType.Triggered.GetLocalizedString());
-            MethodType = mType;
+            MethodType = ExportMethodType.Standard;
 
-            // Instrument type may force method type to standard, so it must
-            // be calculated after method type.
+            // Set instrument type based on CE regression name for the document.
             string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
             if (instrumentTypeName != null)
             {
                 // Look for the first instrument type with the same prefix as the CE name
                 string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
+                // We still have some CE regressions that begin with ABI, while all instruments
+                // have been changed to AB SCIEX
+                if (Equals("ABI", instrumentTypePrefix))
+                    instrumentTypePrefix = "AB";
                 int i = -1;
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
                 {
@@ -126,8 +124,21 @@ namespace pwiz.Skyline.FileUI
                 if (i != -1)
                     InstrumentType = listTypes[i];
             }
+            // If nothing found based on CE regression name, just use the first instrument in the list
             if (InstrumentType == null)
                 InstrumentType = listTypes[0];
+
+            // Reset method type based on what was used last and what the chosen instrument is capable of
+            ExportMethodType mType = Helpers.ParseEnum(Settings.Default.ExportMethodType, ExportMethodType.Standard);
+            if (mType == ExportMethodType.Triggered && !CanTrigger)
+            {
+                mType = ExportMethodType.Scheduled;
+            }
+            if (mType != ExportMethodType.Standard && !CanSchedule)
+            {
+                mType = ExportMethodType.Standard;
+            }
+            MethodType = mType;
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
@@ -1019,9 +1030,13 @@ namespace pwiz.Skyline.FileUI
                 : string.Empty;
 
             var targetType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
-            bool standard = (targetType == ExportMethodType.Standard);
-            bool triggered = (targetType == ExportMethodType.Triggered);
-            if ((!standard && !CanSchedule) || (triggered && !CanTrigger))
+            if (targetType == ExportMethodType.Triggered && !CanTrigger && CanSchedule)
+            {
+                comboTargetType.SelectedItem = ExportMethodType.Scheduled.GetLocalizedString();
+                // Change in target type will update the instrument controls and calc method count
+                return;
+            }
+            if (targetType != ExportMethodType.Standard && !CanSchedule)
             {
                 comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
                 // Change in target type will update the instrument controls and calc method count

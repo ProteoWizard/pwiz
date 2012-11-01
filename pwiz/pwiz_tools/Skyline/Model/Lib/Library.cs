@@ -314,6 +314,11 @@ namespace pwiz.Skyline.Model.Lib
         public abstract LibrarySpec CreateSpec(string path);
 
         /// <summary>
+        /// Returns the filter string to be used for finding a library of this type.
+        /// </summary>
+        public abstract string SpecFilter { get; }
+
+        /// <summary>
         /// Returns the <see cref="IPooledStream"/> for the stream on which this library
         /// relies for its data reading.
         /// </summary>

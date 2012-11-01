@@ -154,6 +154,11 @@ namespace pwiz.Skyline.Model.Lib
             return new BiblioSpecLiteSpec(Name, path);
         }
 
+        public override string SpecFilter
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library, BiblioSpecLiteSpec.EXT); }
+        }
+
         public override IList<RetentionTimeSource> ListRetentionTimeSources()
         {
             if (SchemaVersion < 1)

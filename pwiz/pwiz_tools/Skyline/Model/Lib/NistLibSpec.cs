@@ -302,6 +302,11 @@ namespace pwiz.Skyline.Model.Lib
             return new NistLibSpec(Name, path);
         }
 
+        public override string SpecFilter
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.NistLibrary_SpecFilter_NIST_Spectral_Library, NistLibSpec.EXT); }
+        }
+
         #region Implementation of IXmlSerializable
         
         /// <summary>

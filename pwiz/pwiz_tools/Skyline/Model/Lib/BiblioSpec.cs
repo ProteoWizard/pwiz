@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -191,6 +192,11 @@ namespace pwiz.Skyline.Model.Lib
         public override LibrarySpec CreateSpec(string path)
         {
             return new BiblioSpecLibSpec(Name, path);
+        }
+
+        public override string SpecFilter
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library, BiblioSpecLibSpec.EXT); }
         }
 
         /// <summary>
