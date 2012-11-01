@@ -1154,9 +1154,9 @@ namespace quameter
             if (outputFilepath.empty())
                 outputFilepath = bfs::change_extension(sourceFilename, ".qual.tsv").string();
 
+            guard.lock();
             bool needsHeader = !bfs::exists(outputFilepath);
 
-            guard.lock();
             ofstream qout(outputFilepath.c_str(), ios::out | ios::app);
 
             // Tab delimited output header
@@ -2125,16 +2125,27 @@ namespace quameter
             string emptyMetric = "NaN"; // NaN stands for Not a Number
 
             // File for quameter output, default is to save to same directory as input file
-            ofstream qout; 
-            qout.open (	boost::filesystem::change_extension(sourceFilename, ".qual.txt").string().c_str() );
+            string outputFilepath = g_rtConfig->OutputFilepath;
+            if (outputFilepath.empty())
+                outputFilepath = bfs::change_extension(sourceFilename, ".qual.tsv").string();
+            
+            guard.lock();
+
+            bool needsHeader = !bfs::exists(outputFilepath);
+
+            ofstream qout;
+            qout.open(outputFilepath.c_str(), ios::out | ios::app);
 
             // Tab delimited output header
-            qout << "Filename\tStartTimeStamp\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
-            qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
-            qout << "\tIS-1A\tIS-1B\tIS-2\tIS-3A\tIS-3B\tIS-3C";
-            qout << "\tMS1-1\tMS1-2A\tMS1-2B\tMS1-3A\tMS1-3B\tMS1-5A\tMS1-5B\tMS1-5C\tMS1-5D";
-            qout << "\tMS2-1\tMS2-2\tMS2-3\tMS2-4A\tMS2-4B\tMS2-4C\tMS2-4D";
-            qout << "\tP-1\tP-2A\tP-2B\tP-2C\tP-3" << endl;
+            if (needsHeader)
+            {
+                qout << "Filename\tStartTimeStamp\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
+                qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
+                qout << "\tIS-1A\tIS-1B\tIS-2\tIS-3A\tIS-3B\tIS-3C";
+                qout << "\tMS1-1\tMS1-2A\tMS1-2B\tMS1-3A\tMS1-3B\tMS1-5A\tMS1-5B\tMS1-5C\tMS1-5D";
+                qout << "\tMS2-1\tMS2-2\tMS2-3\tMS2-4A\tMS2-4B\tMS2-4C\tMS2-4D";
+                qout << "\tP-1\tP-2A\tP-2B\tP-2C\tP-3" << endl;
+            }
 
             // Tab delimited metrics
             qout << sourceFilename;
@@ -2159,8 +2170,6 @@ namespace quameter
             qout << "\t" << medianIDScore << "\t" << numTrypticMS2Spectra << "\t" << numTrypticPeptides;
             qout << "\t" << distinctPeptideCountBySpecificity[2] << "\t" << ratioSemiToFullyTryptic << endl;
 
-            qout.close();
-            guard.lock();
             cout << sourceFilename << " took " << processingTimer.elapsed() << " seconds to analyze.\n";
             guard.unlock();
         }
