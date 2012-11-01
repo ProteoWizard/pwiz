@@ -525,9 +525,14 @@ int main( int argc, char* argv[] )
 
 		int result = directag::ProcessHandler( argc, argv );
 
-		return result;
-
-	} catch( exception& e )
+        // HACK: avoid crashing at exit on Windows (probably a conflict between Boost and the .NET vendor DLLs)
+        #ifdef WIN32
+            TerminateProcess(GetCurrentProcess(), result);
+        #else
+            return result;
+        #endif
+	}
+    catch( exception& e )
 	{
 		cerr << e.what() << endl;
 	}
