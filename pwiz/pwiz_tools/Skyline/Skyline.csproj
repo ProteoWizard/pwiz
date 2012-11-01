@@ -20,7 +20,7 @@
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
     <SignAssembly>false</SignAssembly>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
