@@ -1300,5 +1300,10 @@ int main( int argc, char* argv[] )
 		cout << g_hostString << " is terminating." << endl;
 	#endif
 
-	return result;
+    // HACK: avoid crashing at exit on Windows (probably a conflict between Boost and the .NET vendor DLLs)
+    #ifdef WIN32
+        TerminateProcess(GetCurrentProcess(), result);
+    #else
+        return result;
+    #endif
 }
