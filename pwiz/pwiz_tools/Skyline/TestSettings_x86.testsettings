@@ -3,6 +3,7 @@
   <Description>These are default test settings for a local test run.</Description>
   <Deployment>
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0\MassLynxRaw.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86\BaseDataAccess.dll.config" />
     <DeploymentItem filename="Method\Thermo\BuildLTQMethod.exe" outputDirectory="Method\Thermo" />
     <DeploymentItem filename="Interop.EDAL.SxS.manifest" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.dll" />

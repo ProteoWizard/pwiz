@@ -621,7 +621,7 @@ namespace pwiz.Skyline
                     {
                         ExportMethodType = ExportMethodType.Scheduled;
                     }
-                    if (type.Equals("triggered", StringComparison.CurrentCultureIgnoreCase))
+                    else if (type.Equals("triggered", StringComparison.CurrentCultureIgnoreCase))
                     {
                         ExportMethodType = ExportMethodType.Triggered;
                     }
