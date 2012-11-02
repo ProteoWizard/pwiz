@@ -642,28 +642,34 @@ namespace pwiz.Skyline.SettingsUI
             // Only update, if anything changed
             if (!Equals(settings, _peptideSettings))
             {
-                var result = MessageBox.Show(this, Resources.PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes, Program.Name,
-                                MessageBoxButtons.YesNoCancel);
-                switch (result)
+                using (var msgDlg = new MultiButtonMsgDlg(
+                    Resources.PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes,
+                    MultiButtonMsgDlg.BUTTON_YES,
+                    MultiButtonMsgDlg.BUTTON_NO,
+                    true))
                 {
-                    case DialogResult.Yes:
-                        // If settings are null, then validation failed the first time
-                        if (settings == null)
-                        {
-                            // Show the error this time
-                            ValidateNewSettings(true);
+                    var result = msgDlg.ShowDialog(this);
+                    switch (result)
+                    {
+                        case DialogResult.Yes:
+                            // If settings are null, then validation failed the first time
+                            if (settings == null)
+                            {
+                                // Show the error this time
+                                ValidateNewSettings(true);
+                                return;
+                            }
+                            SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
+                            if (_parent.ChangeSettings(newSettings, true))
+                            {
+                                _peptideSettings = settings;
+                            }
+                            break;
+                        case DialogResult.No:
+                            break;
+                        case DialogResult.Cancel:
                             return;
-                        }
-                        SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
-                        if (_parent.ChangeSettings(newSettings, true))
-                        {
-                            _peptideSettings = settings;
-                        }
-                        break;
-                    case DialogResult.No:
-                        break;
-                    case DialogResult.Cancel:
-                        return;
+                    }
                 }
             }
             IsShowLibraryExplorer = true;

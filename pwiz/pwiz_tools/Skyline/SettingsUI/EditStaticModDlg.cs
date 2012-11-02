@@ -95,10 +95,10 @@ namespace pwiz.Skyline.SettingsUI
             get { return _modification;  }
             set
             {
-                _modification = value;
+                var modification = value;
 
                 // Update the dialog.
-                if (_modification == null)
+                if (modification == null)
                 {
                     if (_editing) 
                         textName.Text = string.Empty;
@@ -121,50 +121,51 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     if (_editing)
-                        textName.Text = _modification.Name;
+                        textName.Text = modification.Name;
                     else
-                        comboMod.Text = _modification.Name;
-                    comboAA.Text = _modification.AAs ?? string.Empty;
-                    if (_modification.Terminus == null)
+                        comboMod.Text = modification.Name;
+                    comboAA.Text = modification.AAs ?? string.Empty;
+                    if (modification.Terminus == null)
                         comboTerm.SelectedIndex = 0;
                     else
-                        comboTerm.SelectedItem = _modification.Terminus.Value.ToString();
-                    cbVariableMod.Checked = _modification.IsVariable;
-                    if (_modification.Formula != null)
+                        comboTerm.SelectedItem = modification.Terminus.Value.ToString();
+                    cbVariableMod.Checked = modification.IsVariable;
+                    if (modification.Formula != null)
                     {
-                        Formula = _modification.Formula;
+                        Formula = modification.Formula;
                         // Make sure the formula is showing
                         cbChemicalFormula.Checked = true;
                     }
                     else
                     {
                         Formula = string.Empty;
-                        textMonoMass.Text = (_modification.MonoisotopicMass.HasValue ?
-                            _modification.MonoisotopicMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
-                        textAverageMass.Text = (_modification.AverageMass.HasValue ?
-                            _modification.AverageMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
+                        textMonoMass.Text = (modification.MonoisotopicMass.HasValue ?
+                            modification.MonoisotopicMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
+                        textAverageMass.Text = (modification.AverageMass.HasValue ?
+                            modification.AverageMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
                         // Force the label atom check boxes to show, if any are checked
-                        if (_modification.LabelAtoms != LabelAtoms.None)
+                        if (modification.LabelAtoms != LabelAtoms.None)
                             cbChemicalFormula.Checked = false;
                     }
 
-                    cb13C.Checked = _modification.Label13C;
-                    cb15N.Checked = _modification.Label15N;
-                    cb18O.Checked = _modification.Label18O;
-                    cb2H.Checked = _modification.Label2H;
+                    cb13C.Checked = modification.Label13C;
+                    cb15N.Checked = modification.Label15N;
+                    cb18O.Checked = modification.Label18O;
+                    cb2H.Checked = modification.Label2H;
 
                     if (comboRelativeRT.Items.Count > 0)
-                        comboRelativeRT.SelectedItem = _modification.RelativeRT.ToString();
+                        comboRelativeRT.SelectedItem = modification.RelativeRT.ToString();
 
                     listNeutralLosses.Items.Clear();
-                    if (_modification.HasLoss)
+                    if (modification.HasLoss)
                     {
-                        foreach (var loss in _modification.Losses)
+                        foreach (var loss in modification.Losses)
                             listNeutralLosses.Items.Add(loss);
                     }
                     ShowLoss = listNeutralLosses.Items.Count > 0;
                     UpdateMasses();
-                }                
+                }
+                _modification = modification;
             }
         }
 

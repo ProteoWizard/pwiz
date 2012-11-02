@@ -14076,6 +14076,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}{1} library {2} will be ignored..
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} and {1} library {2} will be ignored..
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} existing.
         /// </summary>
         public static string ViewLibraryDlg_AddAllPeptides__0__existing {
@@ -14099,24 +14117,6 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_AddAllPeptides__0__unmatched {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__unmatched", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {1}{2} library {3} will be ignored..
-        /// </summary>
-        public static string ViewLibraryDlg_AddAllPeptides__1__2__library__3__will_be_ignored {
-            get {
-                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__1__2__library__3__will_be_ignored", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {1} and {2} library {3} will be ignored..
-        /// </summary>
-        public static string ViewLibraryDlg_AddAllPeptides__1__and__2__library__3__will_be_ignored {
-            get {
-                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__1__and__2__library__3__will_be_ignored", resourceCulture);
             }
         }
         

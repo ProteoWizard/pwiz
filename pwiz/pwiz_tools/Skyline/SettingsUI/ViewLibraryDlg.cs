@@ -1400,10 +1400,11 @@ namespace pwiz.Skyline.SettingsUI
                 string entrySuffix = (numSkipped + numUnmatchedPeptides > 1
                                           ? Resources.ViewLibraryDlg_AddAllPeptides_entries
                                           : Resources.ViewLibraryDlg_AddAllPeptides_entry);
-                var ignore1 = TextUtil.LineSeparate(Resources.ViewLibraryDlg_AddAllPeptides__1__and__2__library__3__will_be_ignored, string.Empty, string.Empty);
-                var ignore2 = TextUtil.LineSeparate(Resources.ViewLibraryDlg_AddAllPeptides__1__2__library__3__will_be_ignored, string.Empty, string.Empty);
-                string format = (hasSkipped && hasUnmatched) ? ignore1:ignore2;
-                msg = string.Format(format, msg, duplicatePeptides, unmatchedPeptides, entrySuffix);
+                msg = TextUtil.LineSeparate(msg, string.Empty, string.Empty,
+                    string.Format((hasSkipped && hasUnmatched)
+                                        ? Resources.ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored
+                                        : Resources.ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored,
+                                    duplicatePeptides, unmatchedPeptides, entrySuffix));
             }
             using (var addLibraryPepsDlg = new MultiButtonMsgDlg(msg, Resources.ViewLibraryDlg_AddAllPeptides_Add_All) { Tag = numUnmatchedPeptides })
             {

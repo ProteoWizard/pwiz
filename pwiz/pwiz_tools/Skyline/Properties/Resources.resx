@@ -3586,11 +3586,11 @@ Are you sure you want to continue?</value>
   <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
     <value>entry</value>
   </data>
-  <data name="ViewLibraryDlg_AddAllPeptides__1__and__2__library__3__will_be_ignored" xml:space="preserve">
-    <value>{1} and {2} library {3} will be ignored.</value>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0} and {1} library {2} will be ignored.</value>
   </data>
-  <data name="ViewLibraryDlg_AddAllPeptides__1__2__library__3__will_be_ignored" xml:space="preserve">
-    <value>{1}{2} library {3} will be ignored.</value>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0}{1} library {2} will be ignored.</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Add_All" xml:space="preserve">
     <value>Add All</value>

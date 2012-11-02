@@ -365,7 +365,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(doc.Settings.IsLoaded);
                 Assert.AreEqual(doc.RevisionIndex, SkylineWindow.Document.RevisionIndex);
                 AssertEx.DocumentCloned(doc, SkylineWindow.Document);
-                Assert.IsTrue(setSuccess, string.Format("SetDocument failed for loaded document at revison index {0}", doc.RevisionIndex));                
+                Assert.IsTrue(setSuccess, "SetDocument failed for loaded document at revison index {0}", doc.RevisionIndex);                
             }
             Assert.IsFalse(ReferenceEquals(SkylineWindow.Document, doc));
             Assert.IsTrue(ReferenceEquals(SkylineWindow.Document, docNew));
