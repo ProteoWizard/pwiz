@@ -65,6 +65,7 @@ rule vendor-api-usage-requirements ( properties * )
         result += <assembly>$(dll_location)/BaseError.dll ;
         result += <assembly>$(dll_location)/BaseTof.dll ;
         result += <assembly-dependency>$(dll_location)/agtsampleinforw.dll ;
+		result += <assembly-dependency>$(dll_location)/BaseDataAccess.dll.config ;
         result += <assembly-dependency>$(API_PATH)/EULA.MHDAC ;
     }
     return $(result) ;
