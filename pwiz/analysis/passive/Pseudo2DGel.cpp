@@ -51,14 +51,16 @@ using std::min;
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config()
 :   mzLow(200), mzHigh(2000), timeScale(1.0), binCount(640),
-    zRadius(2), bry(false), grey(false), binSum(false), ms2(false)
+    zRadius(2), bry(false), grey(false), binSum(false), ms2(false), 
+    output_width(-1), output_height(-1)
     
 {
 }
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
 :   mzLow(200), mzHigh(2000), timeScale(1.0), binCount(640),
-    zRadius(2), bry(false), grey(false), binSum(false), ms2(false)
+    zRadius(2), bry(false), grey(false), binSum(false), ms2(false),
+    output_width(-1), output_height(-1)
 {
     process(args);
 }
@@ -114,6 +116,10 @@ void Pseudo2DGel::Config::process(const std::string& args)
             peptide_id = shared_ptr<PeptideID>(
                 new PeptideID_flat(it->c_str()+5,
                                    shared_ptr<FlatRecordBuilder>(new FlatRecordBuilder())));
+        else if (it->find("width=") == 0)
+            output_width = atoi(it->c_str()+6);
+        else if (it->find("height=") == 0)
+            output_height = atoi(it->c_str()+7);
         else 
             cout << "[Pseudo2DGel::Config] Ignoring argument: " << *it << endl;
     }
@@ -1092,7 +1098,8 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
     const int y2 = (config_.binScan ? y1 + 4*textHeight_ + (int)scans.size() :
                     y1 + 4*textHeight_ + (int)(config_.timeScale * scanInfo.maxTime - scanInfo.minTime));
 
-    auto_ptr<Image> image = Image::create(x2, y2);
+    // User may optionaly specify actual extents for image, scaling is handled in Image class.
+    auto_ptr<Image> image = Image::create(x2, y2, config_.output_width, config_.output_height);
 
     drawLegend(*image, *intensityFunction, Image::Point(0, titleBarHeight), Image::Point(x1, y1));
     if (config_.binScan)

@@ -90,16 +90,50 @@ bool writeScopedData(const char* filename, const ScopedData& sd)
 
 class ImageImpl : public Image
 {
-    public:
-    ImageImpl(int width, int height)
-    :   width_(width), height_(height)
+    private:
+    inline int SCALEX(int x) 
     {
-        im_ = gdImageCreateTrueColor(width_, height_);
+        return scaled_?(int)(scalex_*x):x;
+    }
+
+    inline int SCALEY(int y) 
+    {
+        return scaled_?(int)(scaley_*y):y;
+    }
+
+    inline int SCALER(int r) 
+    {
+        return scaled_?(int)(scaler_*r):r;
+    }
+
+    public:
+    ImageImpl(int logical_width, int logical_height, int output_width, int output_height)
+    :   logical_width_(logical_width), logical_height_(logical_height),
+        output_width_((output_width>0)?output_width:logical_width),
+        output_height_((output_height>0)?output_height:logical_height)
+    {
+        scalex_ = (double)output_width_ / (double)logical_width_;
+        scaley_ = (double)output_height_ / (double)logical_height_;
+        scaler_ = min(scalex_,scaley_); // for scaling circles
+        scaled_ = (scalex_!=1.0)||(scaley_!=1.0);
+        im_ = gdImageCreateTrueColor(output_width_, output_height_);
     }
 
     void pixel(const Point& point, const Color& color)
     {
-        gdImageSetPixel(im_, point.x, point.y, color2gd(color));
+        if (scaled_) // might actually need more than one pixel
+        {
+            // gd rectangle is inclusive, so find scaled pixel just outside and back off
+            Point p1(SCALEX(point.x),SCALEY(point.y));
+            Point p2(SCALEX(point.x+1),SCALEY(point.y+1)); // far edge of rectangle of 1x1 logical pixels
+            if (p2.x > p1.x)
+                p2.x--;
+            if (p2.y > p1.y)
+                p2.y--;
+            gdImageFilledRectangle(im_,p1.x,p1.y,p2.x,p2.y,color2gd(color));
+        }
+        else
+            gdImageSetPixel(im_, point.x, point.y, color2gd(color));
     }
 
     void string(const std::string& text, const Point& point, const Color& color, Size size, int align)
@@ -125,7 +159,7 @@ class ImageImpl : public Image
 
         // calculate position
 
-        Point position = point;
+        Point position(SCALEX(point.x),SCALEY(point.y));
         int length = (int)text.size() * font->w;
         int height = font->h;
         
@@ -163,7 +197,7 @@ class ImageImpl : public Image
 
         // calculate position
 
-        Point position = point;
+        Point position(SCALEX(point.x),SCALEY(point.y));
         int length = (int)text.size() * font->w;
         int height = font->h;
         
@@ -181,27 +215,27 @@ class ImageImpl : public Image
     void rectangle(const Point& point1, const Point& point2, const Color& color, bool filled)
     {
         if (filled)
-            gdImageFilledRectangle(im_, point1.x, point1.y, point2.x, point2.y, color2gd(color));
+            gdImageFilledRectangle(im_, SCALEX(point1.x), SCALEY(point1.y), SCALEX(point2.x), SCALEY(point2.y), color2gd(color));
         else    
-            gdImageRectangle(im_, point1.x, point1.y, point2.x, point2.y, color2gd(color));
+            gdImageRectangle(im_, SCALEX(point1.x), SCALEY(point1.y), SCALEX(point2.x), SCALEY(point2.y), color2gd(color));
     }
 
     void circle(const Point& center, int radius, const Color& color, bool filled)
     {
         if (filled)
-            gdImageFilledEllipse(im_, center.x, center.y, radius*2, radius*2, color2gd(color)); 
+            gdImageFilledEllipse(im_, SCALEX(center.x), SCALEY(center.y), SCALER(radius*2), SCALER(radius*2), color2gd(color)); 
         else    
-            gdImageArc(im_, center.x, center.y, radius*2, radius*2, 0, 360, color2gd(color)); 
+            gdImageArc(im_, SCALEX(center.x), SCALEY(center.y), SCALER(radius*2), SCALER(radius*2), 0, 360, color2gd(color)); 
     }
 
     void line(const Point& point1, const Point& point2, const Color& color)
     {
-        gdImageLine(im_, point1.x, point1.y, point2.x, point2.y, color2gd(color));
+        gdImageLine(im_, SCALEX(point1.x), SCALEY(point1.y), SCALEX(point2.x), SCALEY(point2.y), color2gd(color));
     }
 
     void clip(const Point& point1, const Point& point2)
     {
-        gdImageSetClip(im_, point1.x, point1.y, point2.x, point2.y);
+        gdImageSetClip(im_, SCALEX(point1.x), SCALEY(point1.y), SCALEX(point2.x), SCALEY(point2.y));
     }
 
     virtual bool writePng(const char* filename) const
@@ -216,17 +250,23 @@ class ImageImpl : public Image
     }
 
     private:
-    int width_;
-    int height_;
+    int logical_width_;
+    int logical_height_;
+    int output_width_;  // output bitmap size can differ from logical size
+    int output_height_;
+    double scalex_; 
+    double scaley_; 
+    double scaler_; // for scaling circles, min(scalex, scaley)
+    bool scaled_;   // true iff scale_x!=1.0 or scale_y!=1.0
     gdImagePtr im_;
 
     int color2gd(const Color& color) {return gdTrueColor(color.red, color.green, color.blue);} 
 };
 
 
-PWIZ_API_DECL auto_ptr<Image> Image::create(int width, int height)
+PWIZ_API_DECL auto_ptr<Image> Image::create(int logical_width, int logical_height, int output_width, int output_height)
 {
-    return auto_ptr<Image>(new ImageImpl(width, height));
+    return auto_ptr<Image>(new ImageImpl(logical_width, logical_height, output_width, output_height));
 }
 
 

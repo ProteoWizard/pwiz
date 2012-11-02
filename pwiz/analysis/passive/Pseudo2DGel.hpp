@@ -109,6 +109,11 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
 
         /// The shape used for pseudo2d gel markups.
         MarkupShape markupShape;
+
+        /// Optional user-specified bitmap width and height.  
+        /// Normally width and height are automatically calculated.
+        int output_width;
+        int output_height;
         
         Config();
         Config(const std::string& args);
@@ -168,6 +173,8 @@ struct analyzer_strings<Pseudo2DGel>
         result.push_back("pepxml=xxx (set ms2 id's from pepxml file xxx)");
         result.push_back("msi=xxx (set ms2 id's from msinspect output file xxx)");
         result.push_back("flat=xxx (set ms2 id's from tab delim file xxx)");
+        result.push_back("width=xxx (set image width to xxx pixels [default is calculated])");
+        result.push_back("height=yyy (set image height to yyy pixels [default is calculated])");
         return result; 
     }
 };

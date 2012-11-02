@@ -65,7 +65,10 @@ class PWIZ_API_DECL Image
     enum PWIZ_API_DECL Size {Tiny, Small, MediumBold, Large, Giant};
 
     /// create an instance
-    static std::auto_ptr<Image> create(int width, int height);
+    /// optional output_width and output_height allows easy scaling to a desired output 
+    /// image size without complicating the drawing code (default is to use logical width and height)
+    static std::auto_ptr<Image> create(int logical_width, int logical_height, 
+                                       int output_width=-1, int output_height=-1); // -1 means use logical
 
     /// draw pixel
     virtual void pixel(const Point& point, const Color& color) = 0;
