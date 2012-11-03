@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Find
         }
         public Bookmark(IdentityPath identityPath, ChromFileInfoId chromFileInfoId, int optStep)
         {
-            IdentityPath = identityPath;
+            IdentityPath = identityPath ?? IdentityPath.ROOT;
             ChromFileInfoId = chromFileInfoId;
             OptStep = optStep;
         }
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Find
         public IdentityPath IdentityPath { get; private set; }
         public Bookmark ChangeIdentityPath(IdentityPath value)
         {
-            return new Bookmark(this){IdentityPath = value};
+            return new Bookmark(this){IdentityPath = value ?? IdentityPath.ROOT};
         }
         public ChromFileInfoId ChromFileInfoId { get; private set;}
         public Bookmark ChangeChromFileInfoId(ChromFileInfoId value)
