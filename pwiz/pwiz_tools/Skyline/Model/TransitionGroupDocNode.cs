@@ -1693,7 +1693,8 @@ namespace pwiz.Skyline.Model
 
                 if (!info.IsEmpty)
                 {
-                    PeakCount++;
+                    if (info.Area > 0)
+                        PeakCount++;
 
                     Area = (Area ?? 0) + info.Area;
                     BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;

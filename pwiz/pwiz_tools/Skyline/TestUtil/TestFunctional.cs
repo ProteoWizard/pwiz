@@ -666,12 +666,14 @@ namespace pwiz.SkylineTestUtil
         public void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
+            RunUI(editStaticModsDlg.SelectLastItem);
             AddMod(mod, editStaticModsDlg, pauseForScreenShot);
         }
 
         public void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
+            RunUI(editStaticModsDlg.SelectLastItem);
             AddMod(mod, editStaticModsDlg, pauseForScreenShot);
         }
 
@@ -692,12 +694,14 @@ namespace pwiz.SkylineTestUtil
         public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
+            RunUI(editStaticModsDlg.SelectLastItem);
             AddMod(uniModName, isVariable, editStaticModsDlg);
         }
 
         public static void AddHeavyMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
+            RunUI(editStaticModsDlg.SelectLastItem);
             AddMod(uniModName, false, editStaticModsDlg);
         }
 

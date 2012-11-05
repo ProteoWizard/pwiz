@@ -158,7 +158,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUI2 =>
                {
                    peptideSettingsUI2.LimitPeptides = true;
-                   peptideSettingsUI2.RankID = new PeptideRankId(Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect);
+                   peptideSettingsUI2.RankID = XHunterLibSpec.PEP_RANK_EXPECT;
                    peptideSettingsUI2.PeptidesPerProtein = 3;
                    peptideSettingsUI2.OkDialog();
                });

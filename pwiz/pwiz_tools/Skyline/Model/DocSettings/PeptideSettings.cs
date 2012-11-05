@@ -1944,9 +1944,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write attributes
             writer.WriteAttribute(ATTR.pick, Pick);
-            if (RankId != null)
-                writer.WriteAttribute(ATTR.rank_type, RankId.Value);
-            writer.WriteAttributeNullable(ATTR.peptide_count, PeptideCount);
+            if (RankId != null || _rankIdName != null)
+            {
+                // If libraries were never connected properly, then _rankIdName may still contain
+                // the rank ID.
+                writer.WriteAttribute(ATTR.rank_type, RankId != null ? RankId.Value : _rankIdName);
+                writer.WriteAttributeNullable(ATTR.peptide_count, PeptideCount);
+            }
             writer.WriteAttribute(ATTR.document_library, DocumentLibrary);
 
             // Write child elements

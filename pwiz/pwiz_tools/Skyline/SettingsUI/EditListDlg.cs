@@ -129,6 +129,11 @@ namespace pwiz.Skyline.SettingsUI
             listBox.SelectedItem = name;
         }
 
+        public void SelectLastItem()
+        {
+            listBox.SelectedIndex = listBox.Items.Count - 1;
+        }
+
         private void btnAdd_Click(object sender, EventArgs e)
         {
             AddItem();

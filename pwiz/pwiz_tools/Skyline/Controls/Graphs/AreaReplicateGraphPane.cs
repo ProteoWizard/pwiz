@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsExpectedVisible)
             {
                 // add an XAxis label of "Library" at the left most column
-                string[] labels = XAxis.Scale.TextLabels;
+                string[] labels = OriginalXAxisLabels;
                 string[] withLibLabel = new string[labels.Length + 1];
                 withLibLabel[0] = ExpectedVisible == AreaExpectedValue.library ? 
                     Resources.AreaReplicateGraphPane_InitFromData_Library : 

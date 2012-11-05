@@ -41,10 +41,10 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT = ".hlf"; // Not L10N
 
         public static readonly PeptideRankId PEP_RANK_EXPECT =
-            new PeptideRankId(Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect);
+            new PeptideRankId("Expect", Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect); // Not L10N
 
         public static readonly PeptideRankId PEP_RANK_PROCESSED_INTENSITY =
-            new PeptideRankId(Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity);
+            new PeptideRankId("Processed intensity", Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity); // Not L10N
 
         private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_EXPECT, PEP_RANK_PROCESSED_INTENSITY };
 

@@ -41,6 +41,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using Label = System.Windows.Forms.Label;
 
 
 namespace pwiz.Skyline.SettingsUI
@@ -1730,6 +1731,29 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboLibrary.SelectedIndex; }
             set { listPeptide.SelectedIndex = value; }
+        }
+
+        public string SourceFile
+        {
+            get { return GetLabelValue(labelFilename); }
+        }
+
+        public double RetentionTime
+        {
+            get
+            {
+                double rt;
+                if (double.TryParse(GetLabelValue(labelRT), out rt))
+                    return rt;
+                return 0;
+            }
+        }
+
+        private string GetLabelValue(Label label)
+        {
+            return string.IsNullOrEmpty(label.Text)
+                    ? string.Empty
+                    : label.Text.Split(new[] { ": " }, StringSplitOptions.None)[1];
         }
 
         public bool HasMatches

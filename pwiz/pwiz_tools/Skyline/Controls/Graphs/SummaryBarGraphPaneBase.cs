@@ -1,3 +1,21 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2012 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -128,64 +146,118 @@ namespace pwiz.Skyline.Controls.Graphs
         public string[] _originalTextLabels;
         public string[] _reducedTextLabels;
 
+        protected string[] OriginalXAxisLabels
+        {
+            get { return _originalTextLabels ?? XAxis.Scale.TextLabels; }
+        }
+
+        /// <summary>
+        /// Allow labels to consume 1/3 of the graph height when flipped vertical
+        /// </summary>
+        private const float MAX_HEIGHT_LABEL_PROPORTION = 0.33f;
+
         protected void ScaleAxisLabels()
         {
-            float dyAvailable = Rect.Height/5;
+            int countLabels = 0;
+            if (XAxis.Scale.TextLabels != null)
+            {
+                countLabels = XAxis.Scale.TextLabels.Length;
 
-            // Reset the text labels to their original values.
-            if (_reducedTextLabels != null && ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _reducedTextLabels))
-                Array.Copy(_originalTextLabels, XAxis.Scale.TextLabels, _originalTextLabels.Length);
-            //Keep the reduced text.
-            else if (XAxis.Scale.TextLabels != null)
-                _originalTextLabels = XAxis.Scale.TextLabels.ToArray();
+                // Reset the text labels to their original values.
+                if (_reducedTextLabels != null && ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _reducedTextLabels))
+                {
+                    Array.Copy(_originalTextLabels, XAxis.Scale.TextLabels, _originalTextLabels.Length);
+                }
+                // Keep the original text.
+                else
+                {
+                    _originalTextLabels = XAxis.Scale.TextLabels.ToArray();
+                }
+            }
+
             _reducedTextLabels = null;
 
-            int countLabels = (XAxis.Scale.TextLabels != null ? XAxis.Scale.TextLabels.Length : 0);
-            float dxAvailable = Chart.Rect.Width/Math.Max(1, countLabels);
+            float dyAvailable = Rect.Height * MAX_HEIGHT_LABEL_PROPORTION;
+            float dxAvailable = Chart.Rect.Width / Math.Max(1, countLabels);
 
-            float dpAvailable;
+            float dpAvailable = Math.Max(dxAvailable, dyAvailable);
 
             var fontSpec = XAxis.Scale.FontSpec;
 
-            var textWidth = MaxWidth(new Font(fontSpec.Family, fontSpec.Size), XAxis.Scale.TextLabels);
-
-            if (textWidth > dxAvailable)
-            {
-                dpAvailable = dyAvailable;
-                XAxis.Scale.FontSpec.Angle = 90;
-                XAxis.Scale.Align = AlignP.Inside;
-            }
-            else
-            {
-                dpAvailable = dxAvailable;
-                XAxis.Scale.FontSpec.Angle = 0;
-                XAxis.Scale.Align = AlignP.Center;
-            }
-            
             int pointSize;
             
             for (pointSize = 12; pointSize > 4; pointSize--)
             {
+                // Start over with the original labels and a smaller font
+                if (XAxis.Scale.TextLabels != null)
+                    XAxis.Scale.TextLabels = _originalTextLabels.ToArray();
+
                 using (var font = new Font(fontSpec.Family, pointSize))
                 {
-                    var maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
+                    // See if the original labels fit with this font
+                    int maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
                     if (maxWidth <= dpAvailable)
                     {
+                        ScaleToWidth(maxWidth, dxAvailable);
                         break;
                     }
-                    if (Helpers.RemoveRepeatedLabelText(XAxis.Scale.TextLabels, FirstDataIndex))
+
+                    // See if they can be shortened to fit horizontally or vertically
+                    if (RemoveRepeatedLabelText(font, dxAvailable, dxAvailable) ||
+                        RemoveRepeatedLabelText(font, dyAvailable, dxAvailable))
                     {
-                        maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
-                        if (maxWidth <= dpAvailable)
-                            break;
+                        break;
                     }
                 }
             }
 
             if (XAxis.Scale.TextLabels != null && !ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _originalTextLabels))
+            {
                 _reducedTextLabels = XAxis.Scale.TextLabels.ToArray();
+            }
 
             XAxis.Scale.FontSpec.Size = pointSize;
+        }
+
+        private bool RemoveRepeatedLabelText(Font font, float dpAvailable, float dxAvailable)
+        {
+            var startLabels = XAxis.Scale.TextLabels.ToArray();
+            int maxWidth = RemoveRepeatedLabelText(font, dpAvailable);
+            if (maxWidth <= dpAvailable)
+            {
+                ScaleToWidth(maxWidth, dxAvailable);
+                return true;
+            }
+            XAxis.Scale.TextLabels = startLabels;
+            return false;
+        }
+
+        private int RemoveRepeatedLabelText(Font font, float dpAvailable)
+        {
+            while (Helpers.RemoveRepeatedLabelText(XAxis.Scale.TextLabels, FirstDataIndex))
+            {
+                int maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
+                if (maxWidth <= dpAvailable)
+                {
+                    return maxWidth;
+                }
+            }
+
+            return int.MaxValue;
+        }
+
+        private void ScaleToWidth(float textWidth, float dxAvailable)
+        {
+            if (textWidth > dxAvailable)
+            {
+                XAxis.Scale.FontSpec.Angle = 90;
+                XAxis.Scale.Align = AlignP.Inside;
+            }
+            else
+            {
+                XAxis.Scale.FontSpec.Angle = 0;
+                XAxis.Scale.Align = AlignP.Center;
+            }                        
         }
 
         private static int MaxWidth(Font font, IEnumerable<String> labels)

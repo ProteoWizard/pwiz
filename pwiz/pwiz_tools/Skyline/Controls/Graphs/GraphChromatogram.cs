@@ -786,10 +786,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             int bestPeakTran = -1;
             TransitionChromInfo tranPeakInfo = null;
-            float maxPeakHeight = 0;
+            float maxPeakHeight = float.MinValue;
             int numPeaks = chromGroupInfo.NumPeaks;
             var maxPeakTrans = new int[numPeaks];
             var maxPeakHeights = new float[numPeaks];
+            for (int i = 0; i < numPeaks; i++)
+                maxPeakHeights[i] = float.MinValue;
             var transform = Transform;
             // Prepare arrays of values for library dot-product
             double[] expectedIntensities = null;
@@ -1025,9 +1027,11 @@ namespace pwiz.Skyline.Controls.Graphs
             // set has the most intense peak for each peak group.
             int bestPeakData = -1;
             TransitionChromInfo tranPeakInfo = null;
-            float maxPeakHeight = 0;
+            float maxPeakHeight = float.MinValue;
             var maxPeakData = new int[numPeaks];
             var maxPeakHeights = new float[numPeaks];
+            for (int i = 0; i < numPeaks; i++)
+                maxPeakHeights[i] = float.MinValue;
             var transform = Transform;
             for (int i = 0; i < listGraphData.Count; i++)
             {
@@ -1225,7 +1229,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // of this transition group.
                 ChromatogramInfo infoPrimary = null;
                 TransitionChromInfo tranPeakInfo = null;
-                float maxPeakHeight = 0;
+                float maxPeakHeight = float.MinValue;
                 var listChromInfo = new List<ChromatogramInfo>();
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {

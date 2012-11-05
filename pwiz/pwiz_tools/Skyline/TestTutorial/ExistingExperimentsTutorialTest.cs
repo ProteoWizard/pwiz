@@ -360,8 +360,16 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.IntegrateAll();
                 foreach (PeptideDocNode nodePep in SkylineWindow.Document.Peptides)
                 {
-                    Assert.AreEqual(PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree),
-                       (int)SequenceTree.StateImageId.peak);
+                    if (nodePep.Peptide.Sequence.StartsWith("YLA")) // Not L10N
+                    {
+                        Assert.AreEqual(PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree),
+                           (int)SequenceTree.StateImageId.keep);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree),
+                           (int)SequenceTree.StateImageId.peak);
+                    }
                 }
             });
             PauseForScreenShot();
