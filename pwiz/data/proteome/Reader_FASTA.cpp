@@ -48,8 +48,8 @@ PWIZ_API_DECL Reader_FASTA::Reader_FASTA(const Config& config)
 
 PWIZ_API_DECL string Reader_FASTA::identify(const string& uri, shared_ptr<istream> uriStreamPtr) const
 {
-    if (!bal::contains(uri, ".fasta"))
-        return "";
+    // formerly this checked to see if uri contained .fasta, which meant .fa, .tfa etc failed
+    boost::ignore_unused_variable_warning(uri);
 
     if (!uriStreamPtr.get())
         throw runtime_error("[Reader_FASTA::identify] Must have a valid stream to identify");
