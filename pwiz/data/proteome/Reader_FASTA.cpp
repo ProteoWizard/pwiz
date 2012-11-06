@@ -58,16 +58,24 @@ PWIZ_API_DECL string Reader_FASTA::identify(const string& uri, shared_ptr<istrea
     uriStreamPtr->seekg(0);
 
     // first non-blank line in the stream should begin with '>'
-    string buf;
-    while (getline(*uriStreamPtr, buf))
+#define TESTBUFSIZE 16
+    char buf[TESTBUFSIZE+1];
+    string result("");
+    while (uriStreamPtr->good())
     {
-        if (buf.empty() || buf[0] == '\r') // skip blank lines
-            continue;
-
-        if (buf[0] == '>')
-            return getType();
+        uriStreamPtr->getline(buf,TESTBUFSIZE);
+        if (buf[0] && buf[0] != '\r') // skip blank lines
+        {
+            if (buf[0] == '>')
+            {
+                result = getType();
+            }
+            break;
+        }
     }
-    return "";
+    uriStreamPtr->clear();
+    uriStreamPtr->seekg(0);
+    return result;
 }
 
 
