@@ -67,6 +67,9 @@ TestChargeStateCalculator testChargeStateCalculators[] =
     { "1 2 3 4 5", "10 20 30 40 50", "1 2 3", "CID", 5,
       true, 2, 3, 0.9, "1" },
 
+    { "1 2 3 4 5", "10 20 30 40 50", "2 3", "CID", 5,
+      true, 2, 3, 0.9, "1" },
+
     { "1 2 3 4 5", "10 20 30 40 50", "", "CID", 2.5,
       true, 2, 3, 0.9, "2 3" },
 
@@ -95,6 +98,9 @@ TestChargeStateCalculator testChargeStateCalculators[] =
 
     { "1 2 3 4 5", "10 20 30 40 50", "1", "CID", 2.5,
       false, 2, 3, 0.9, "1" },
+
+    { "1 2 3 4 5", "10 20 30 40 50", "2 3", "CID", 5,
+      false, 2, 3, 0.9, "1 2 3" },
 
     { "1 2 3 4 5", "10 20 30 40 50", "2 3", "CID", 2.5,
       false, 2, 4, 0.9, "2 3 4" },
@@ -227,11 +233,11 @@ int test()
             CVID outputChargeStateTerm = outputChargeStateArray.size() > 1 ? MS_possible_charge_state : MS_charge_state;
 
             SpectrumPtr calculatedSpectrum = calculator->spectrum(0, true);
-            BOOST_FOREACH(const CVParam& cvParam, s->precursors[0].selectedIons[0].cvParams)
+            BOOST_FOREACH(const CVParam& cvParam, calculatedSpectrum->precursors[0].selectedIons[0].cvParams)
             {
                 if (cvParam.cvid != MS_charge_state && cvParam.cvid != MS_possible_charge_state)
                     continue;
-                unit_assert(outputChargeStateTerm == cvParam.cvid);
+                unit_assert_operator_equal(outputChargeStateTerm, cvParam.cvid);
                 unit_assert(find(outputChargeStateArray.begin(), outputChargeStateArray.end(), cvParam.valueAs<int>()) != outputChargeStateArray.end());
             }
         }

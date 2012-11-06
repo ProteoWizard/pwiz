@@ -165,11 +165,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
 
     if (fractionTIC >= fraction_)
     {
-        // remove possible charge states
-        boost::range::remove_if(cvParams, CVParamIs(MS_possible_charge_state));
+        // remove possible charge states if overriding
+        if (override_ && !possibleChargeStates.empty())
+            cvParams.erase(boost::range::remove_if(cvParams, CVParamIs(MS_possible_charge_state)));
 
         // set charge state to 1
-        cvParams.push_back(CVParam(MS_charge_state, 1));
+        cvParams.push_back(CVParam(override_ || possibleChargeStates.empty() ? MS_charge_state : MS_possible_charge_state, 1));
     }
     else
     {    
