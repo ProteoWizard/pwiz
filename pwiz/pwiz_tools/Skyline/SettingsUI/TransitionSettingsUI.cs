@@ -999,8 +999,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public CollisionEnergyRegression RegressionCE
         {
-            get { return (CollisionEnergyRegression) comboCollisionEnergy.SelectedItem; }
-            set { comboCollisionEnergy.SelectedItem = value; }
+            get { return _driverCE.SelectedItem; }
+            set { comboCollisionEnergy.SelectedItem = value.Name; }
         }
 
         public string RegressionCEName
@@ -1011,8 +1011,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public DeclusteringPotentialRegression RegressionDP
         {
-            get { return (DeclusteringPotentialRegression) comboDeclusterPotential.SelectedItem; }
-            set { comboDeclusterPotential.SelectedItem = value; }
+            get { return _driverDP.SelectedItem; }
+            set { comboDeclusterPotential.SelectedItem = value.Name; }
         }
 
         public string RegressionDPName

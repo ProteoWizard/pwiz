@@ -339,12 +339,12 @@ namespace pwiz.Skyline.Controls
 
         private void tbbFilter_Click(object sender, EventArgs e)
         {
-            bool filter = _picker.Filtered = tbbFilter.Checked;
-            ApplyFilter(filter);
+            ApplyFilter(tbbFilter.Checked);
         }
 
         public void ApplyFilter(bool filter)
         {
+            _picker.Filtered = tbbFilter.Checked = filter;
             SetChoices(_picker.GetChoices(filter), _chosenAtStart);
         }
 

@@ -41,7 +41,6 @@ namespace pwiz.Skyline.Util
         public static void UseInternalClipboard(bool useInternal = true)
         {
             _useSystemClipboard = !useInternal;
-            _dataObject = new DataObject();
         }
 
         public static void SetDataObject(object data)
@@ -104,7 +103,7 @@ namespace pwiz.Skyline.Util
             {
                 Clipboard.Clear();
             }
-            else lock (_dataObject)
+            else
             {
                 _dataObject = new DataObject();
                 if (CHECK_VALUES)

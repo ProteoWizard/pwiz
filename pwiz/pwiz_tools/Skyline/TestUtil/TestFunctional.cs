@@ -182,6 +182,7 @@ namespace pwiz.SkylineTestUtil
             try
             {
                 ClipboardEx.UseInternalClipboard();
+                ClipboardEx.Clear();
                 ClipboardEx.SetText(text);
             }
             catch (ExternalException)
@@ -408,22 +409,22 @@ namespace pwiz.SkylineTestUtil
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
         /// to be taken.
         /// </summary>
-        public static bool IsPauseForScreenShots { get { return false; } }
+        public static bool IsPauseForScreenShots { get; set; }
 
-        public void PauseForScreenShot()
+        public void PauseForScreenShot(string description = null)
         {
             if (IsPauseForScreenShots)
-                PauseAndContinue();
+                PauseAndContinue(description);
         }
 
         private readonly object _pauseLock = new object();
 
-        public void PauseAndContinue()
+        public void PauseAndContinue(string description = null)
         {
             ClipboardEx.UseInternalClipboard(false);
             RunUI(() =>
                       {
-                          var dlg = new PauseAndContinueForm {Left = SkylineWindow.Left};
+                          var dlg = new PauseAndContinueForm(description) {Left = SkylineWindow.Left};
                           const int spacing = 15;
                           if (SkylineWindow.Top > dlg.Height + spacing)
                               dlg.Top = SkylineWindow.Top - dlg.Height - spacing;
@@ -542,6 +543,7 @@ namespace pwiz.SkylineTestUtil
             // Use internal clipboard for testing so that we don't collide with other processes
             // using the clipboard during a test run.
             ClipboardEx.UseInternalClipboard();
+            ClipboardEx.Clear();
 
             var doClipboardCheck = TestContext.Properties.Contains("ClipboardCheck"); // Not L10N
             string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : String.Empty; // Not L10N

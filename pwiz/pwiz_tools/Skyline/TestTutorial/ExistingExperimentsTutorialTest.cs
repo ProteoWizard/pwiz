@@ -74,6 +74,9 @@ namespace pwiz.SkylineTestTutorial
 
         private void DoMrmerTest()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             // Preparing a Document to Accept a Transition List, p. 2
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =
@@ -124,13 +127,13 @@ namespace pwiz.SkylineTestTutorial
                 var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
                 SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
             });
+            using (new CheckDocumentState(24, 44, 88, 296))
             {
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 RunUI(pasteDlg.PasteTransitions);
                 PauseForScreenShot();
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
             }
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 24, 44, 88, 296);
             PauseForScreenShot();
 
             FindNode("LWDVAT");
@@ -141,7 +144,7 @@ namespace pwiz.SkylineTestTutorial
             });
             FindNode(string.Format("{0:F03}", 854.4)); // I18N
             WaitForGraphs();
-            // Unfornunately, label hiding may mean that the selected ion is not labeled
+            // Unfortunately, label hiding may mean that the selected ion is not labeled
             Assert.IsTrue(SkylineWindow.GraphSpectrum.SelectedIonLabel != null
                               ? SkylineWindow.GraphSpectrum.SelectedIonLabel.Contains("y7") // Not L10N
                               : SkylineWindow.GraphSpectrum.IonLabels.Contains(ionLabel => ionLabel.Contains("y7"))); // Not L10N

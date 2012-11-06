@@ -52,6 +52,9 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";
             // Generating a Transition List, p. 4
             {
@@ -91,6 +94,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Inserting a peptide sequence p. 5
+            using (new CheckDocumentState(1, 1, 2, 10))
             {
                 RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
@@ -99,8 +103,6 @@ namespace pwiz.SkylineTestTutorial
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
             }
-
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 10);
 
             RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
