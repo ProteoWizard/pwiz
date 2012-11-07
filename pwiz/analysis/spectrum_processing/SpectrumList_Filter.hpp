@@ -45,6 +45,10 @@ class PWIZ_API_DECL SpectrumList_Filter : public msdata::SpectrumListWrapper
     /// SpectrumList_Filter to create the filtered list of spectra
     struct PWIZ_API_DECL Predicate
     {
+        /// can be overridden in subclasses that know they will need a certain detail level;
+        /// it must be overridden to return DetailLevel_FullData if binary data is needed
+        virtual msdata::DetailLevel suggestedDetailLevel() const {return msdata::DetailLevel_InstantMetadata;}
+
         /// return values:
         ///  true: accept the Spectrum
         ///  false: reject the Spectrum

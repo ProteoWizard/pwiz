@@ -56,7 +56,7 @@ struct SpectrumList_Filter::Impl
 
 
 SpectrumList_Filter::Impl::Impl(SpectrumListPtr _original, const Predicate& predicate)
-:   original(_original), detailLevel(DetailLevel_InstantMetadata)
+:   original(_original), detailLevel(predicate.suggestedDetailLevel())
 {
     if (!original.get()) throw runtime_error("[SpectrumList_Filter] Null pointer");
 
@@ -85,7 +85,7 @@ SpectrumList_Filter::Impl::Impl(SpectrumListPtr _original, const Predicate& pred
                 SpectrumPtr spectrum = original->spectrum(i, detailLevel);
                 accepted = predicate.accept(*spectrum);
 
-                if (boost::logic::indeterminate(accepted) && detailLevel != DetailLevel_FullMetadata)
+                if (boost::logic::indeterminate(accepted) && (int) detailLevel < (int) DetailLevel_FullMetadata)
                     detailLevel = DetailLevel(int(detailLevel) + 1);
                 else
                 {

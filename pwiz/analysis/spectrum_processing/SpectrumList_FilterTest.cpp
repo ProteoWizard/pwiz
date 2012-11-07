@@ -25,6 +25,8 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/data/msdata/examples.hpp"
+#include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include <cstring>
 
 
@@ -59,13 +61,12 @@ SpectrumListPtr createSpectrumList()
 {
     SpectrumListSimplePtr sl(new SpectrumListSimple);
 
-    for (size_t i=0; i<10; i++)
+    for (size_t i=0; i<10; ++i)
     {
         SpectrumPtr spectrum(new Spectrum);
         spectrum->index = i;
         spectrum->id = "scan=" + lexical_cast<string>(100+i);
-        vector<MZIntensityPair> pairs(i);
-        spectrum->setMZIntensityPairs(pairs, MS_number_of_counts);
+        spectrum->setMZIntensityPairs(vector<MZIntensityPair>(i), MS_number_of_counts);
 
         bool isMS1 = i%3==0;
         spectrum->set(MS_ms_level, isMS1 ? 1 : 2);
@@ -247,6 +248,62 @@ void testSelectedIndices(SpectrumListPtr sl)
     unit_assert(filter.spectrumIdentity(0).id == "scan=101");
     unit_assert(filter.spectrumIdentity(1).id == "scan=103");
     unit_assert(filter.spectrumIdentity(2).id == "scan=105");
+}
+
+
+struct HasBinaryDataPredicate : public SpectrumList_Filter::Predicate
+{
+    HasBinaryDataPredicate(DetailLevel suggestedDetailLevel) : detailLevel_(suggestedDetailLevel) {}
+
+    DetailLevel detailLevel_;
+    virtual DetailLevel suggestedDetailLevel() const {return detailLevel_;}
+
+    virtual tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const
+    {
+        return boost::logic::indeterminate;
+    }
+
+    virtual tribool accept(const Spectrum& spectrum) const
+    {
+        if (spectrum.binaryDataArrayPtrs.empty())
+            return boost::logic::indeterminate;
+        return !spectrum.binaryDataArrayPtrs[0]->data.empty();
+    }
+};
+
+
+void testHasBinaryData(SpectrumListPtr sl)
+{
+    if (os_) *os_ << "testHasBinaryData:\n";
+
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    shared_ptr<stringstream> ss(new stringstream);
+    Serializer_mzML serializer;
+    serializer.write(*ss, msd);
+
+    MSData msd2;
+    serializer.read(ss, msd2);
+
+    sl = msd2.run.spectrumListPtr;
+
+    {
+        SpectrumList_Filter filter(sl, HasBinaryDataPredicate(DetailLevel_FullMetadata));
+        unit_assert(filter.empty());
+    }
+
+    {
+        SpectrumList_Filter filter(sl, HasBinaryDataPredicate(DetailLevel_FullData));
+    
+        if (os_) 
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+
+        unit_assert_operator_equal(4, filter.size());
+    }
 }
 
 
@@ -519,6 +576,7 @@ void test()
     testEven(sl);
     testEvenMS2(sl);
     testSelectedIndices(sl);
+    testHasBinaryData(sl);
     testIndexSet(sl);
     testScanNumberSet(sl);
     testScanEventSet(sl);
