@@ -359,14 +359,9 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
             var docNew = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null)));
-            bool setSuccess = SkylineWindow.SetDocument(docNew, doc);
-            if (!setSuccess)
-            {
-                Assert.IsTrue(doc.Settings.IsLoaded);
-                Assert.AreEqual(doc.RevisionIndex, SkylineWindow.Document.RevisionIndex);
-                AssertEx.DocumentCloned(doc, SkylineWindow.Document);
-                Assert.IsTrue(setSuccess, "SetDocument failed for loaded document at revison index {0}", doc.RevisionIndex);                
-            }
+            Assert.IsTrue(SkylineWindow.SetDocument(docNew, doc));
+            // TODO: Understand better why RetentionTimeManager needs to reload RT alignments due to this change
+            docNew = WaitForDocumentChangeLoaded(doc);
             Assert.IsFalse(ReferenceEquals(SkylineWindow.Document, doc));
             Assert.IsTrue(ReferenceEquals(SkylineWindow.Document, docNew));
         }

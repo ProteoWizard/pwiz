@@ -57,12 +57,10 @@ namespace pwiz.Skyline.Alerts
                     string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_proteome_retention_time_calculator_or_libraries,
                         typeof(ShareTypeDlg).Name));
             }
- 			string lastMin = listMinimizations[lastIndex];
-            listMinimizations.RemoveAt(lastIndex);
             if (listMinimizations.Count > 0)
-                sbLabel.Append(TextUtil.LineSeparate(listMinimizations));
+                sbLabel.AppendLine().Append(TextUtil.LineSeparate(listMinimizations)).AppendLine();
 
-            sbLabel.AppendLine().AppendLine().Append(Resources.ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below);
+            sbLabel.AppendLine().Append(Resources.ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below);
             labelMessage.Text = sbLabel.ToString();
             Height += Math.Max(0, labelMessage.Height - lineHeight * 3);
         }
