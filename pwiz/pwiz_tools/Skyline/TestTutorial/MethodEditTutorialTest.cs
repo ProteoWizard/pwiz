@@ -20,7 +20,6 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
@@ -381,7 +380,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.SequenceTree.Nodes[0].Name == nodeName);
             });
 
-            FindNode("L [b5] - 484.3130+ (rank 3)"); // Not L10N
+            FindNode(string.Format("L [b5] - {0:F04}+ (rank 3)", 484.3130)); // Not L10N
             PauseForScreenShot("page 20: Hover over YBL087C, then 672.671+++"); // Not L10N
 
             // Preparing to Measure, p. 21
