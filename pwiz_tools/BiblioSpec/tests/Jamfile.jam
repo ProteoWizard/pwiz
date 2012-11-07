@@ -51,8 +51,8 @@ rule test-data
 
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 
-local compare-reqs = <include>../libraries/sqlite <include>../src/ ; 
-alias compare-src : ../libraries/sqlite//sqlite ;
+local compare-reqs = <include>$(PWIZ_ROOT_PATH)/libraries/SQLite <include>../src/ ; 
+alias compare-src : $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite ;
 
 rule mascot-installed ( properties * )
 {

@@ -77,7 +77,7 @@ rule mascot-api-usage-requirements ( properties * )
 project 
   : requirements
       [ define-os ]
-      <include>../libraries/sqlite
+      <include>$(PWIZ_ROOT_PATH)/libraries/SQLite
       <include>$(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib
 ;
 
@@ -99,11 +99,11 @@ lib blibbuild
   : # requirements
     <link>static
     <conditional>@mascot-api-requirements
-    <library>../libraries/sqlite//sqlite
+    <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
-    <library>../libraries/sqlite//sqlite
+    <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite
  ;
 
 lib blib
@@ -128,10 +128,10 @@ lib blib
     WeibullPvalue.cpp
   : # requirements
     <link>static
-    <library>../libraries/sqlite//sqlite
+    <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite
   : # default-build
   : # usage-requirements
-    <library>../libraries/sqlite//sqlite
+    <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite
  ;
 
 # all the pwiz and boost libraries required
@@ -211,7 +211,7 @@ lib blib_v_1
 exe LibToSqlite3
   : # sources
     LibToSqlite3.cpp
-    ../libraries/sqlite//sqlite
+    $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite
   : # requirements
     <link>static
     <threading>multi
