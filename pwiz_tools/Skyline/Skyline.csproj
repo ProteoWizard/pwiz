@@ -113,15 +113,9 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=AnyCPU">
+    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shared\Lib\$(PLATFORM)\System.Data.SQLite.DLL</HintPath>
-      <Private>True</Private>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="System.Data.SQLite.Linq, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=AnyCPU">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shared\Lib\$(PLATFORM)\System.Data.SQLite.Linq.dll</HintPath>
+      <HintPath>..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Design" />
@@ -1257,14 +1251,6 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x64_scl-0\MassLynxRaw.dll">
       <Link>MassLynxRaw.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\x86\SQLite.Interop.dll">
-      <Link>SQLite.Interop.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\x64\SQLite.Interop.dll">
-      <Link>SQLite.Interop.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\Shared\BiblioSpec\binaries\BlibBuild.exe">

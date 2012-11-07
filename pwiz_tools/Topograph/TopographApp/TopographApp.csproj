@@ -123,14 +123,9 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=AnyCPU">
+    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\$(PLATFORM)\System.Data.SQLite.DLL</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Data.SQLite.Linq, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=AnyCPU">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\$(PLATFORM)\System.Data.SQLite.Linq.dll</HintPath>
+      <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml.Linq">
@@ -919,14 +914,6 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\Shared\Lib\Microsoft.VC100.MFC\x86\Microsoft.VC100.MFC.manifest">
       <Link>Microsoft.VC100.MFC\Microsoft.VC100.MFC.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\Shared\Lib\x64\SQLite.Interop.dll">
-      <Link>SQLite.Interop.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\Shared\Lib\x86\SQLite.Interop.dll">
-      <Link>SQLite.Interop.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\Collapse.png" />

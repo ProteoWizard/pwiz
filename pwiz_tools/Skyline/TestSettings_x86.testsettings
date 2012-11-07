@@ -11,8 +11,7 @@
     <DeploymentItem filename="BlibBuild.exe" />
     <DeploymentItem filename="EULA.MHDAC" />
     <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
-    <DeploymentItem filename="..\Shared\Lib\x86\SQLite.Interop.DLL" />
-    <DeploymentItem filename="..\Shared\Lib\x86\System.Data.SQLite.DLL" />
+    <DeploymentItem filename="..\..\libraries\SQLite\x86\System.Data.SQLite.dll" />
     <DeploymentItem filename="EULA.MSFileReader" />
     <DeploymentItem filename="BlibFilter.exe" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.SxS.manifest" />
