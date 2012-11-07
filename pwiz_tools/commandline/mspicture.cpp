@@ -32,6 +32,7 @@
 #include "pwiz/analysis/peptideid/PeptideID_flat.hpp"
 #include "pwiz/Version.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
@@ -43,6 +44,9 @@ using namespace boost::filesystem;
 // String constants
 const char* WARNING_SINGLE_FILE_PROCESSED = "Warning: Only the first "
     "input file will be processed: ";
+
+const char* WARNING_SKIPPING_FILE = "Input file (or just a bad commandline "
+     "option?) will not be processed: ";
 
 struct Config
 {
@@ -150,6 +154,12 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("zRadius,z",
             po::value<float>(&config.pseudo2dConfig.zRadius),
             ": set intensity function z-score radius [=2]")
+        ("width,w",
+            po::value<int>(&config.pseudo2dConfig.output_width),
+            ": set output bitmap width (default is calculated)")
+        ("height,h",
+            po::value<int>(&config.pseudo2dConfig.output_height),
+            ": set output bitmap height (default is calculated)")
         ("bry",
             ": use blue-red-yellow gradient")
         ("grey",
@@ -287,7 +297,7 @@ Config parseCommandArgs(int argc, const char* argv[])
     
     if (vm.count("config"))
     {
-        ifstream is(config.configFilename.c_str());
+        std::ifstream is(config.configFilename.c_str());
         ostringstream oss;
         string line;
         while(getline(is, line).good())
@@ -336,10 +346,16 @@ int main(int argc, const char* argv[])
 
         if (config.filenames.empty())
             throw runtime_error(usage(config).c_str());
-        else if (config.verbose && config.filenames.size() > 1)
+        else if (config.filenames.size() > 1)
+        {
             cerr << WARNING_SINGLE_FILE_PROCESSED
                  << config.filenames.at(0)
                  << endl;
+            for (int n=1;n<(int)config.filenames.size();n++)
+                cerr << WARNING_SKIPPING_FILE
+                 << config.filenames.at(n)
+                 << endl;
+        }
 
         if (config.verbose)
             cout << "Processing " 
@@ -360,7 +376,7 @@ int main(int argc, const char* argv[])
         MSDataFile msd(config.filenames.at(0), &readers);
         MSDataAnalyzer::DataInfo dataInfo(msd);
         
-        dataInfo.sourceFilename = path(config.filenames.at(0)).leaf();
+        dataInfo.sourceFilename = BFS_STRING(path(config.filenames.at(0)).leaf());
         dataInfo.outputDirectory = config.outputDirectory;
         if (config.verbose)
             dataInfo.log = &cout;
