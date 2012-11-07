@@ -691,7 +691,7 @@ class Digestion::const_iterator::Impl
                 int testEnd = sites_[j];
 
                 int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
-                if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+                if (curMissedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
                     break;
@@ -744,7 +744,7 @@ class Digestion::const_iterator::Impl
 
                 // end offset is too far, start again with a new begin offset
                 int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
-                if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+                if (curMissedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
                     break;
@@ -766,7 +766,7 @@ class Digestion::const_iterator::Impl
             string suffix = "";
 
             int missedCleavages = int(end_ - begin_)-1;
-            if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+            if (missedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                 --missedCleavages;
 
             if (!peptide_.get())
@@ -831,7 +831,7 @@ class Digestion::const_iterator::Impl
             for (++end_; end_ != sites_.end(); ++end_)
             {
                 int curMissedCleavages = int(end_ - begin_)-1;
-                if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+                if (curMissedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
                     break;
@@ -893,7 +893,7 @@ class Digestion::const_iterator::Impl
                     ++end_;
 
                 int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
-                if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+                if (curMissedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
                     break;
@@ -928,7 +928,7 @@ class Digestion::const_iterator::Impl
                         ++end_;
 
                     int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
-                    if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+                    if (curMissedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                         --curMissedCleavages;
                     if (curMissedCleavages > config_.maximumMissedCleavages)
                         break;
