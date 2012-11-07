@@ -27,5 +27,3 @@ lib sqlite3pp : sqlite3pp.cpp sqlite3.c : <toolset>msvc <link>static <include>. 
 
 lib sqlite3 : sqlite3.c : : : <include>. <linkflags>-ldl ;
 lib sqlite3pp : sqlite3pp.cpp sqlite3.c : <include>. : : <include>. <linkflags>-ldl ;
-
-alias sqlite : sqlite3 ;
