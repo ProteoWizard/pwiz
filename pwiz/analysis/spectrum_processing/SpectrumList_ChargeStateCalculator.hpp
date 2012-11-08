@@ -41,7 +41,8 @@ class PWIZ_API_DECL SpectrumList_ChargeStateCalculator : public msdata::Spectrum
                                        bool overrideExistingChargeState = true,
                                        int maxMultipleCharge = 3,
                                        int minMultipleCharge = 2,
-                                       double intensityFractionBelowPrecursorForSinglyCharged = 0.9);
+                                       double intensityFractionBelowPrecursorForSinglyCharged = 0.9,
+                                       bool makeMS2 = false);
 
     /// accepts any tandem mass spectrum
     static bool accept(const msdata::SpectrumListPtr& inner) {return true;}
@@ -54,6 +55,7 @@ class PWIZ_API_DECL SpectrumList_ChargeStateCalculator : public msdata::Spectrum
     int maxCharge_;
     int minCharge_;
     double fraction_;
+    bool makeMS2_;
 };
 
 

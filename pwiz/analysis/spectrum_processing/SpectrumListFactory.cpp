@@ -387,15 +387,16 @@ SpectrumListPtr filterCreator_chargeStatePredictor(const MSData& msd, const stri
 {
     istringstream parser(arg);
 
-    string overrideExistingCharge, maxMultipleCharge, minMultipleCharge, singleChargeFractionTIC;
-    parser >> overrideExistingCharge >> maxMultipleCharge >> minMultipleCharge >> singleChargeFractionTIC;
+    string overrideExistingCharge, maxMultipleCharge, minMultipleCharge, singleChargeFractionTIC, makeMS2;
+    parser >> overrideExistingCharge >> maxMultipleCharge >> minMultipleCharge >> singleChargeFractionTIC >> makeMS2;
 
     return SpectrumListPtr(new
         SpectrumList_ChargeStateCalculator(msd.run.spectrumListPtr,
                                            overrideExistingCharge == "false" || overrideExistingCharge == "0" ? false : true,
                                            lexical_cast<int>(maxMultipleCharge),
                                            lexical_cast<int>(minMultipleCharge),
-                                           lexical_cast<double>(singleChargeFractionTIC)));
+                                           lexical_cast<double>(singleChargeFractionTIC),
+                                           makeMS2 == "true" || makeMS2 == "1" ? true : false));
 }
 
 

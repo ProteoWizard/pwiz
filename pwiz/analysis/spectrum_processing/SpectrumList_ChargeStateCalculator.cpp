@@ -78,12 +78,14 @@ PWIZ_API_DECL SpectrumList_ChargeStateCalculator::SpectrumList_ChargeStateCalcul
     bool overrideExistingChargeState,
     int maxMultipleCharge,
     int minMultipleCharge,
-    double intensityFractionBelowPrecursorForSinglyCharged)
+    double intensityFractionBelowPrecursorForSinglyCharged,
+    bool makeMS2)
 :   SpectrumListWrapper(inner),
     override_(overrideExistingChargeState),
     maxCharge_(maxMultipleCharge),
     minCharge_(minMultipleCharge),
-    fraction_(intensityFractionBelowPrecursorForSinglyCharged)
+    fraction_(intensityFractionBelowPrecursorForSinglyCharged),
+    makeMS2_(makeMS2)
 {
 }
 
@@ -97,8 +99,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
         return s;
 
     // return MS1 as-is
-    CVParam msLevel = s->cvParam(MS_ms_level);
-    if (msLevel.valueAs<int>() < 2)
+    if (!s->hasCVParam(MS_ms_level) ||
+        s->cvParam(MS_ms_level).valueAs<int>() < 2)
         return s;
 
     // return peakless spectrum as-is
@@ -151,19 +153,47 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
     s->getMZIntensityPairs(mzIntensityPairs);
     sort(mzIntensityPairs.begin(), mzIntensityPairs.end(), &mzIntensityPairLessThan);
 
-    double tic = accumulate(mzIntensityPairs.begin(), mzIntensityPairs.end(), 0.0, MZIntensityPairIntensitySum());
+    bool singleCharge = true;
+    if (!makeMS2_)
+    {
+        double tic = accumulate(mzIntensityPairs.begin(), mzIntensityPairs.end(), 0.0, MZIntensityPairIntensitySum());
 
-    // accumulate TIC from the right until the cutoff fraction or the precursor m/z is reached
-    vector<MZIntensityPair>::iterator mzItr = lower_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(precursorMZ, 0), &mzIntensityPairLessThan);
-    double fractionTIC = 0, inverseFractionCutoff = 1 - fraction_;
-    if (mzItr != mzIntensityPairs.end())
-        for (vector<MZIntensityPair>::reverse_iterator itr = mzIntensityPairs.rbegin();
-             itr != mzIntensityPairs.rend() && &*itr != &*mzItr && fractionTIC < inverseFractionCutoff;
-             ++itr)
-             fractionTIC += itr->intensity / tic;
-    fractionTIC = 1 - fractionTIC; // invert
+        // accumulate TIC from the right until the cutoff fraction or the precursor m/z is reached
+        vector<MZIntensityPair>::iterator mzItr = lower_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(precursorMZ, 0), &mzIntensityPairLessThan);
+        double fractionTIC = 0, inverseFractionCutoff = 1 - fraction_;
+        if (mzItr != mzIntensityPairs.end())
+            for (vector<MZIntensityPair>::reverse_iterator itr = mzIntensityPairs.rbegin();
+                 itr != mzIntensityPairs.rend() && &*itr != &*mzItr && fractionTIC < inverseFractionCutoff;
+                 ++itr)
+                 fractionTIC += itr->intensity / tic;
+        fractionTIC = 1 - fractionTIC; // invert
 
-    if (fractionTIC >= fraction_)
+        singleCharge = fractionTIC >= fraction_;
+    }
+    else
+    {
+        // Use MakeMS2 behavior
+        vector<MZIntensityPair>::iterator cutoff;
+
+        // sum all intensities where m/z < precursor m/z - 20
+        cutoff = upper_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(precursorMZ - 20, 0), &mzIntensityPairLessThan);
+        double leftSum = accumulate(mzIntensityPairs.begin(), cutoff, 0.00001, MZIntensityPairIntensitySum());
+
+        // sum all intensities where m/z >= precursor m/z + 20 (if none, assume charge state +1)
+        cutoff = lower_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(precursorMZ + 20, 0), &mzIntensityPairLessThan);
+        if (cutoff != mzIntensityPairs.end())
+        {
+            double rightSum = accumulate(cutoff, mzIntensityPairs.end(), 0.00001, MZIntensityPairIntensitySum());
+
+            // compare ratio to threshold
+            //double highMass = s->cvParam(MS_highest_observed_m_z).valueAs<double>();
+            double highMass = mzIntensityPairs.back().mz;
+            double correctionFactor = (precursorMZ * 2 < highMass || precursorMZ <= 0) ? 1 : highMass / precursorMZ - 1;
+            singleCharge = rightSum / leftSum < fraction_ * correctionFactor;
+        }
+    }
+
+    if (singleCharge)
     {
         // remove possible charge states if overriding
         if (override_ && !possibleChargeStates.empty())
@@ -173,9 +203,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
         cvParams.push_back(CVParam(override_ || possibleChargeStates.empty() ? MS_charge_state : MS_possible_charge_state, 1));
     }
     else
-    {    
-        // use SVM for multiply charged ETD activated spectra
-        if (activationTypes.count(MS_ETD) > 0)
+    {
+        // use SVM for multiply charged ETD activated spectra (except when using MakeMS2 behavior)
+        if (!makeMS2_ && activationTypes.count(MS_ETD) > 0)
         {
             vector<int> predictedChargeStates;
             etdPredictCharge(precursorMZ, activationTypes, mzIntensityPairs, predictedChargeStates, 0.98);
@@ -193,8 +223,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
 
         if (maxCharge_ - minCharge_ == 0)
         {
+            // remove possible charge states if overriding
+            if (override_ && !possibleChargeStates.empty())
+                cvParams.erase(boost::range::remove_if(cvParams, CVParamIs(MS_possible_charge_state)));
+
             // set charge state to the single multiply charged state
-            cvParams.push_back(CVParam(MS_charge_state, maxCharge_));
+            cvParams.push_back(CVParam(override_ || possibleChargeStates.empty() ? MS_charge_state : MS_possible_charge_state, maxCharge_));
         }
         else
         {
