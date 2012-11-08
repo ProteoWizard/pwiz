@@ -1722,10 +1722,11 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         encoder.decode(text.c_str(), text.length(), binaryDataArray->data); 
 
         if (binaryDataArray->data.size() != arrayLength_)
-            throw runtime_error("[IO::HandlerBinaryDataArray] Array lengths differ."); 
+            throw runtime_error((format("[IO::HandlerBinaryDataArray] At position %d: expected array of size %d, but decoded array is actually size %d.")
+                                 % position % arrayLength_ % binaryDataArray->data.size()).str()); 
 
         if (text.length() != encodedLength_)
-            throw runtime_error("[IO::HandlerBinaryDataArray] Encoded lengths differ."); 
+            throw runtime_error("[IO::HandlerBinaryDataArray] At position " + lexical_cast<string>(position) + ": encoded lengths differ."); 
 
         return Status::Ok;
     }
