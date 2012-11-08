@@ -526,11 +526,11 @@
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
     <Compile Include="Model\RefinementSettings.cs" />
-    <Compile Include="EditUI\ShowRTThresholdDlg.cs">
+    <Compile Include="EditUI\ChromatogramRTThresholdDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\ShowRTThresholdDlg.Designer.cs">
-      <DependentUpon>ShowRTThresholdDlg.cs</DependentUpon>
+    <Compile Include="EditUI\ChromatogramRTThresholdDlg.Designer.cs">
+      <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\EditPepModsDlg.cs">
       <SubType>Form</SubType>
@@ -617,11 +617,11 @@
     <Compile Include="EditUI\EditNoteDlg.Designer.cs">
       <DependentUpon>EditNoteDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="EditUI\SetRTThresholdDlg.cs">
+    <Compile Include="EditUI\RegressionRTThresholdDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\SetRTThresholdDlg.Designer.cs">
-      <DependentUpon>SetRTThresholdDlg.cs</DependentUpon>
+    <Compile Include="EditUI\RegressionRTThresholdDlg.Designer.cs">
+      <DependentUpon>RegressionRTThresholdDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\ImportResultsDlg.cs">
       <SubType>Form</SubType>
@@ -1504,8 +1504,8 @@
     <EmbeddedResource Include="EditUI\SchedulingGraphPropertyDlg.resx">
       <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\ShowRTThresholdDlg.resx">
-      <DependentUpon>ShowRTThresholdDlg.cs</DependentUpon>
+    <EmbeddedResource Include="EditUI\ChromatogramRTThresholdDlg.resx">
+      <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditPepModsDlg.resx">
@@ -1579,8 +1579,8 @@
       <DependentUpon>EditNoteDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\SetRTThresholdDlg.resx">
-      <DependentUpon>SetRTThresholdDlg.cs</DependentUpon>
+    <EmbeddedResource Include="EditUI\RegressionRTThresholdDlg.resx">
+      <DependentUpon>RegressionRTThresholdDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsDlg.resx">

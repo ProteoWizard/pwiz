@@ -505,7 +505,7 @@ namespace pwiz.SkylineTestTutorial
                           Assert.AreEqual(1, SkylineWindow.RTGraphController.Outliers.Length);
                       });
 
-            RunDlg<SetRTThresholdDlg>(SkylineWindow.ShowSetRTThresholdDlg, thresholdDlg =>
+            RunDlg<RegressionRTThresholdDlg>(SkylineWindow.ShowRegressionRTThresholdDlg, thresholdDlg =>
                     {
                         thresholdDlg.Threshold = 0.998;
                         thresholdDlg.OkDialog();

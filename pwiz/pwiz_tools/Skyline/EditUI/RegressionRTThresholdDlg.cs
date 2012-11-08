@@ -21,15 +21,16 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class ShowRTThresholdDlg : FormEx
+    public partial class RegressionRTThresholdDlg : FormEx
     {
         private double _threshold;
 
-        public ShowRTThresholdDlg()
+        public RegressionRTThresholdDlg()
         {
             InitializeComponent();
         }
@@ -48,8 +49,11 @@ namespace pwiz.Skyline.EditUI
         {
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
-            if (!helper.ValidateDecimalTextBox(e, textThreshold, 0, double.MaxValue, out _threshold))
+            if (!helper.ValidateDecimalTextBox(e, textThreshold, 0, 1.0, out _threshold))
                 return;
+
+            // Round to precision used in calculating optimal regressions
+            _threshold = Math.Round(_threshold, RetentionTimeRegression.ThresholdPrecision);
 
             DialogResult = DialogResult.OK;
             Close();

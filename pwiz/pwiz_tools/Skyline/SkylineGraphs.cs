@@ -1230,12 +1230,12 @@ namespace pwiz.Skyline
 
         private void thresholdRTContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowRTThresholdDlg();
+            ShowChromatogramRTThresholdDlg();
         }
 
-        public void ShowRTThresholdDlg()
+        public void ShowChromatogramRTThresholdDlg()
         {
-            using (var dlg = new ShowRTThresholdDlg())
+            using (var dlg = new ChromatogramRTThresholdDlg())
             {
                 double threshold = Settings.Default.ShowRetentionTimesThreshold;
                 if (threshold > 0)
@@ -2386,12 +2386,12 @@ namespace pwiz.Skyline
 
         private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowSetRTThresholdDlg();
+            ShowRegressionRTThresholdDlg();
         }
 
-        public void ShowSetRTThresholdDlg()
+        public void ShowRegressionRTThresholdDlg()
         {
-            using (var dlg = new SetRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold})
+            using (var dlg = new RegressionRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold})
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
