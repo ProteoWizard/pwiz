@@ -18,9 +18,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
@@ -32,12 +32,12 @@ namespace pwiz.Skyline.Alerts
     public partial class ReportErrorDlg : FormEx
     {
         private readonly Exception _exception;
-        private readonly List<string> _stackTraceList;
+        private readonly StackTrace _stackTraceExceptionCaughtAt;
 
-        public ReportErrorDlg(Exception e, List<string> stackTraceList)
+        public ReportErrorDlg(Exception e, StackTrace stackTraceExceptionCaughtAt)
         {
             _exception = e;
-            _stackTraceList = stackTraceList;
+            _stackTraceExceptionCaughtAt = stackTraceExceptionCaughtAt;
 
             InitializeComponent();
 
@@ -73,15 +73,9 @@ namespace pwiz.Skyline.Alerts
             if (!Equals(Settings.Default.StackTraceListVersion, Install.Version))
             {
                 Settings.Default.StackTraceListVersion = Install.Version;
-                _stackTraceList.Clear();
             }
 
-            string stackText = StackTraceText;
-            if (!_stackTraceList.Contains(stackText))
-            {
-                _stackTraceList.Add(stackText);
-                SendErrorReport(MessageBody, ExceptionType);
-            }
+            SendErrorReport(MessageBody, ExceptionType);
 
             DialogResult = DialogResult.OK;
         }
@@ -121,6 +115,11 @@ namespace pwiz.Skyline.Alerts
                     stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
                     stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
                     stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
+                }
+                if (null != _stackTraceExceptionCaughtAt)
+                {
+                    stackTrace.AppendLine("Exception caught at: ");
+                    stackTrace.AppendLine(_stackTraceExceptionCaughtAt.ToString());
                 }
                 return stackTrace.ToString();
             }

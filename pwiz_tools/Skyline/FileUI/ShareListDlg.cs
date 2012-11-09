@@ -213,10 +213,10 @@ namespace pwiz.Skyline.FileUI
             {
                 sucess = listDest.ImportFile(fileName, ResolveImportConflicts);
             }
-            catch (XmlException e)
+            catch (Exception x)
             {
                 new MessageBoxHelper(parent).ShowXmlParsingError(string.Format("Failure loading {0}.", fileName),
-                                                                 fileName, e.InnerException);
+                                                                 fileName, x.InnerException);
                 return false;
             }
             return sucess;

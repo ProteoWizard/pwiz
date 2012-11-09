@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -1133,9 +1134,15 @@ namespace pwiz.Skyline.Model
                     ? "TRUE"    // Not L10N
                     : "FALSE"); // Not L10N
                 writer.Write(FieldSeparator);
-                writer.Write(rank.HasValue && rank.Value == 1   // Trigger
-                    ? "TRUE"    // Not L10N
-                    : "FALSE"); // Not L10N
+                // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
+                bool trigger = false;
+                if (nodeTranGroup.TransitionGroup.LabelType.IsLight && rank.HasValue && rank.Value == 1)
+                {
+                    int minCharge = nodePep.TransitionGroups.Select(g => g.TransitionGroup.PrecursorCharge).Min();
+                    if (nodeTranGroup.TransitionGroup.PrecursorCharge == minCharge)
+                        trigger = true;
+                }
+                writer.Write(trigger ? "TRUE" : "FALSE"); // Not L10N
             }
 
             writer.Write(FieldSeparator);

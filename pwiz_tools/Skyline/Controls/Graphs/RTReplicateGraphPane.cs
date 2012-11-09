@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
@@ -282,7 +281,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 RetentionTimeTransform = retentionTimeTransform;
             }
 
-            public GraphValues.RetentionTimeTransform RetentionTimeTransform { get; private set; }
+            private GraphValues.RetentionTimeTransform RetentionTimeTransform { get; set; }
 
             public override PointPair PointPairMissing(int xValue)
             {
@@ -300,7 +299,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return IsMissingAlignment(chromInfoData) || null == GetRetentionTimeValues(chromInfoData);
             }
 
-            private PointPair CalculatePointPair<TChromInfoData>(int iResult, ICollection<TChromInfoData> chromInfoDatas, Func<TChromInfoData, RetentionTimeValues?> getRetentionTimeValues) 
+            private PointPair CalculatePointPair<TChromInfoData>(int iResult, IEnumerable<TChromInfoData> chromInfoDatas, Func<TChromInfoData, RetentionTimeValues?> getRetentionTimeValues) 
                 where TChromInfoData : ChromInfoData
             {
                 var startTimes = new List<double>();
@@ -400,10 +399,10 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         private struct RetentionTimeValues
         {
-            public double StartRetentionTime;
-            public double EndRetentionTime;
-            public double RetentionTime;
-            public double Fwhm;
+            public double StartRetentionTime { get; set; }
+            public double EndRetentionTime { get; set; }
+            public double RetentionTime { get; set; }
+            public double Fwhm { get; set; }
         }
     }
 }

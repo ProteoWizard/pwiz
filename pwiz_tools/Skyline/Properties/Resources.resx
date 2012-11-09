@@ -3586,11 +3586,11 @@ Are you sure you want to continue?</value>
   <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
     <value>entry</value>
   </data>
-  <data name="ViewLibraryDlg_AddAllPeptides__1__and__2__library__3__will_be_ignored" xml:space="preserve">
-    <value>{1} and {2} library {3} will be ignored.</value>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0} and {1} library {2} will be ignored.</value>
   </data>
-  <data name="ViewLibraryDlg_AddAllPeptides__1__2__library__3__will_be_ignored" xml:space="preserve">
-    <value>{1}{2} library {3} will be ignored.</value>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0}{1} library {2} will be ignored.</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Add_All" xml:space="preserve">
     <value>Add All</value>
@@ -4924,5 +4924,44 @@ Are you sure you want to continue?</value>
   </data>
   <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_">
     <value xml:space="preserve">Insufficient permission to delete file: {0}</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_">
+    <value xml:space="preserve">ProteinPilot software (trial or full version) must be installed to convert '.group' files to compatible '.group.xml' files.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_">
+    <value xml:space="preserve">Failure attempting to convert file {0} to .group.xml.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml">
+    <value xml:space="preserve">Converting {0} to xml</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_">
+    <value xml:space="preserve">CompassXport software must be installed to import Bruker raw data files.</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_">
+    <value xml:space="preserve">Failure attempting to convert {0} to mzML using CompassXport.</value>
+  </data>
+  <data name="SkylineWindow_CreateGraphPeakArea_Peak_Areas">
+    <value xml:space="preserve">Peak Areas</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library">
+    <value xml:space="preserve">BiblioSpec Library</value>
+  </data>
+  <data name="XHunterLibrary_SpecFilter_GPM_Spectral_Library">
+    <value xml:space="preserve">GPM Spectral Library</value>
+  </data>
+  <data name="NistLibrary_SpecFilter_NIST_Spectral_Library">
+    <value xml:space="preserve">NIST Spectral Library</value>
+  </data>
+  <data name="SpectrastLibrary_SpecFilter_SpectraST_Library">
+    <value xml:space="preserve">SpectraST Library</value>
+  </data>
+  <data name="BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library">
+    <value xml:space="preserve">Legacy BiblioSpec Library</value>
+  </data>
+  <data name="SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_">
+    <value xml:space="preserve">Failed reading Skyline document from the clipboard.</value>
+  </data>
+  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_">
+    <value xml:space="preserve">To extract chromatograms from {0} full-scan settings must be enabled.</value>
   </data>
 </root>

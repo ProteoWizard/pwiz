@@ -41,6 +41,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -238,11 +239,11 @@ namespace pwiz.Skyline
             return document;
         }
 
-        private SrmDocument ConnectLibrarySpecs(SrmDocument document, string path)
+        private SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath)
         {
-            if (!string.IsNullOrEmpty(path) && document.Settings.PeptideSettings.Libraries.DocumentLibrary)
+            if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.DocumentLibrary)
             {
-                string docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(path);
+                string docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
                 if (!File.Exists(docLibFile))
                 {
                     MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0__for_this_document__Without_the_document_specific_library__you_will_not_be_able_to_perform_peptide_searches_, docLibFile));
@@ -254,14 +255,14 @@ namespace pwiz.Skyline
                     LibrarySpec spec;
                     if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
                         return spec;
-                    if (path == null)
+                    if (documentPath == null)
                         return null;
 
                     string fileName = library.FileNameHint;
                     if (fileName != null)
                     {
                         // First look for the file name in the document directory
-                        string pathLibrary = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, fileName);
+                        string pathLibrary = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName);
                         if (File.Exists(pathLibrary))
                             return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
                         // In the user's default library directory
@@ -274,7 +275,9 @@ namespace pwiz.Skyline
                                   {
                                       ItemName = library.Name,
                                       ItemType = Resources.SkylineWindow_ConnectLibrarySpecs_Spectral_Library,
+                                      Filter = library.SpecFilter,
                                       FileHint = fileName,
+                                      FileDlgInitialPath = Path.GetDirectoryName(documentPath),
                                       Title = Resources.SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library
                                   })
                     {

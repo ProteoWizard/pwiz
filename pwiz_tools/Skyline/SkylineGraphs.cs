@@ -842,9 +842,9 @@ namespace pwiz.Skyline
         }
 
         // Testing
-        public bool GraphSpectrumVisible()
+        public bool IsGraphSpectrumVisible
         {
-            return _graphSpectrum != null && _graphSpectrum.Visible;
+            get { return _graphSpectrum != null && _graphSpectrum.Visible; }
         }
 
         private GraphSpectrum CreateGraphSpectrum()
@@ -1230,12 +1230,12 @@ namespace pwiz.Skyline
 
         private void thresholdRTContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowRTThresholdDlg();
+            ShowChromatogramRTThresholdDlg();
         }
 
-        public void ShowRTThresholdDlg()
+        public void ShowChromatogramRTThresholdDlg()
         {
-            using (var dlg = new ShowRTThresholdDlg())
+            using (var dlg = new ChromatogramRTThresholdDlg())
             {
                 double threshold = Settings.Default.ShowRetentionTimesThreshold;
                 if (threshold > 0)
@@ -1975,7 +1975,10 @@ namespace pwiz.Skyline
         private GraphSummary CreateGraphRetentionTime()
         {
             _graphRetentionTime = new GraphSummary(this, new RTGraphController())
-                                      {TabText = Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times};
+                                      {
+                                          TabText = Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times,
+                                          ResultsIndex = SelectedResultsIndex
+                                      };
             _graphRetentionTime.FormClosed += graphRetentinTime_FormClosed;
             _graphRetentionTime.VisibleChanged += graphRetentionTime_VisibleChanged;
             return _graphRetentionTime;
@@ -2014,6 +2017,11 @@ namespace pwiz.Skyline
             else if (controller is AreaGraphController)
                 BuildAreaGraphMenu(menuStrip);
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+        }
+
+        public SrmDocument SelectionDocument
+        {
+            get { return SequenceTree != null ? SequenceTree.Document : null; }
         }
 
         public TreeNodeMS SelectedNode
@@ -2378,12 +2386,12 @@ namespace pwiz.Skyline
 
         private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowSetRTThresholdDlg();
+            ShowRegressionRTThresholdDlg();
         }
 
-        public void ShowSetRTThresholdDlg()
+        public void ShowRegressionRTThresholdDlg()
         {
-            using (var dlg = new SetRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold})
+            using (var dlg = new RegressionRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold})
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -2570,27 +2578,29 @@ namespace pwiz.Skyline
 
         private void allRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.All.ToString();
             // No CVs with all retention time values showing
             Settings.Default.ShowPeptideCV = false;
-            UpdateRetentionTimeGraph();
+            ShowRTPeptideValue(RTPeptideValue.All);
         }
 
         private void timeRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
-            UpdateRetentionTimeGraph();
+            ShowRTPeptideValue(RTPeptideValue.Retention);
         }
 
         private void fwhmRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.FWHM.ToString();
-            UpdateRetentionTimeGraph();
+            ShowRTPeptideValue(RTPeptideValue.FWHM);
         }
 
         private void fwbRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTPeptideValue = RTPeptideValue.FWB.ToString();
+            ShowRTPeptideValue(RTPeptideValue.FWB);
+        }
+
+        public void ShowRTPeptideValue(RTPeptideValue value)
+        {
+            Settings.Default.RTPeptideValue = value.ToString();
             UpdateRetentionTimeGraph();
         }
 
@@ -2707,7 +2717,11 @@ namespace pwiz.Skyline
 
         private GraphSummary CreateGraphPeakArea()
         {
-            _graphPeakArea = new GraphSummary(this, new AreaGraphController()) {TabText = "Peak Areas"};
+            _graphPeakArea = new GraphSummary(this, new AreaGraphController())
+                                 {
+                                     TabText = Resources.SkylineWindow_CreateGraphPeakArea_Peak_Areas,
+                                     ResultsIndex = SelectedResultsIndex
+                                 };
             _graphPeakArea.FormClosed += graphPeakArea_FormClosed;
             _graphPeakArea.VisibleChanged += graphPeakArea_VisibleChanged;
             return _graphPeakArea;
@@ -2952,6 +2966,11 @@ namespace pwiz.Skyline
 
         private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
         {
+            ShowPeakAreaPeptideGraph();
+        }
+
+        public void ShowPeakAreaPeptideGraph()
+        {
             Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
             ShowGraphPeakArea(true);
             UpdatePeakAreaGraph();
@@ -3068,17 +3087,18 @@ namespace pwiz.Skyline
 
         private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowCVValues();
+            ShowCVValues(peptideCvsContextMenuItem.Checked);
         }
 
-        public void ShowCVValues()
+        public void ShowCVValues(bool isChecked)
         {
-            Settings.Default.ShowPeptideCV = peptideCvsContextMenuItem.Checked;
+            Settings.Default.ShowPeptideCV = isChecked;
             // Showing CVs only makes sense for Replicates = All
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.all.ToString();
             // Showing CVs does not make sense for All retention time values at once
-            if (RTPeptideGraphPane.RTValue == RTPeptideValue.All)
-                Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
+            // But this is confusing now, with replicate annotation grouping
+//            if (RTPeptideGraphPane.RTValue == RTPeptideValue.All)
+//                Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
             UpdateSummaryGraphs();
         }
 
@@ -3315,7 +3335,7 @@ namespace pwiz.Skyline
 
         public void ArrangeGraphsGrouped()
         {
-            var order = GroupGraphsOrderExtension.GetEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
+            var order = Helpers.ParseEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
             bool reversed = Settings.Default.ArrangeGraphsReversed;
             var listGraphs = GetArrangeableGraphs(order, reversed);
 

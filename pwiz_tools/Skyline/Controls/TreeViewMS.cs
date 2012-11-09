@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        protected IDocumentUIContainer DocumentContainer { get; set; }
+        public IDocumentUIContainer DocumentContainer { get; set; }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]

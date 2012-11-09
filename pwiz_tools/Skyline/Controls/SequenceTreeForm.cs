@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls
         public void BeginUpdateDoc()
         {
             _updateLockCountDoc++;
-            _updateDocPrevious = SequenceTree.Document;
+            _updateDocPrevious = SequenceTree.DocumentContainer.Document;
             SequenceTree.BeginUpdateDoc();
         }
 
@@ -82,10 +82,10 @@ namespace pwiz.Skyline.Controls
             if (_updateLockCountDoc == 0)
                 return;
             SequenceTree.EndUpdateDoc();
-            if (--_updateLockCountDoc == 0 && !ReferenceEquals(_updateDocPrevious, SequenceTree.Document))
+            if (--_updateLockCountDoc == 0 && !ReferenceEquals(_updateDocPrevious, SequenceTree.DocumentContainer.Document))
             {
                 var settingsPrevious = _updateDocPrevious != null ? _updateDocPrevious.Settings : null;
-                UpdateResultsUI(SequenceTree.Document.Settings, settingsPrevious);
+                UpdateResultsUI(SequenceTree.DocumentContainer.Document.Settings, settingsPrevious);
                 _updateDocPrevious = null;
             }
         }

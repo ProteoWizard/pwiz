@@ -476,11 +476,29 @@ namespace pwiz.Skyline.Model.DocSettings
                 !obj.Terminus.Equals(Terminus) ||
                 !obj.AverageMass.Equals(AverageMass) ||
                 !obj.MonoisotopicMass.Equals(MonoisotopicMass) ||
-                !Equals(obj.RelativeRT, RelativeRT) ||
-                // CONSIDER: Order change for multiple losses
-                !ArrayUtil.EqualsDeep(obj._losses, _losses))
+                !Equals(obj.RelativeRT, RelativeRT))
             {
                 return false;
+            }
+
+            if (!ArrayUtil.EqualsDeep(obj._losses, _losses))
+            {
+                if (obj._losses != null && _losses != null)
+                {
+                    if (obj._losses.Count != _losses.Count)
+                        return false;
+
+                    var losses1 = _losses.OrderBy(l => l.MonoisotopicMass).ToArray();
+                    var losses2 = obj._losses.OrderBy(l => l.MonoisotopicMass).ToArray();
+                    if (losses1.Where((t, i) => !EquivalentFormulas(t, losses2[i])).Any())
+                    {
+                        return false;
+                    }
+                }
+                else if (obj._losses == null || _losses == null)
+                {
+                    return false;
+                }
             }
 
             if (AAs != null)
@@ -508,6 +526,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return true;
         }
 
+        private bool EquivalentFormulas(FragmentLoss loss1, FragmentLoss loss2)
+        {
+            return ArrayUtil.EqualsDeep(GetFormulaCounts(loss1.Formula).ToArray(),
+                                        GetFormulaCounts(loss2.Formula).ToArray());
+        }
+
+        private IDictionary<string, int> GetFormulaCounts(string formula)
+        {
+            SortedDictionary<string, int> dictCounts = new SortedDictionary<string, int>();
+            BioMassCalc.MONOISOTOPIC.ParseCounts(ref formula, dictCounts, false);
+            return dictCounts;
+        }
+
         private bool EquivalentFormulas(char aa, StaticMod obj)
         {
             SequenceMassCalc modCalc = new SequenceMassCalc(MassType.Monoisotopic);
@@ -521,16 +552,17 @@ namespace pwiz.Skyline.Model.DocSettings
             if (formulaThis == null || formulaObj == null)
                 return formulaThis == null && formulaObj == null;
 
-            SortedDictionary<string, int> parseFormulaObj = new SortedDictionary<string, int>();
-            SortedDictionary<string, int> parseFormulaKnown = new SortedDictionary<string, int>();
-
-            modCalc.ParseModCounts(formulaObj, parseFormulaObj);
-            modCalc.ParseModCounts(formulaThis, parseFormulaKnown);
-
             return unexplainedMassThis == unexplainedMassObj &&
-                ArrayUtil.EqualsDeep(parseFormulaKnown.ToArray(), parseFormulaObj.ToArray());
+                   ArrayUtil.EqualsDeep(GetFormulaModCounts(formulaThis).ToArray(),
+                                        GetFormulaModCounts(formulaObj).ToArray());
         }
 
+        private IDictionary<string, int> GetFormulaModCounts(string formula)
+        {
+            SortedDictionary<string, int> dictCounts = new SortedDictionary<string, int>();
+            SequenceMassCalc.ParseModCounts(BioMassCalc.MONOISOTOPIC, formula, dictCounts);
+            return dictCounts;
+        }
 
         public bool Equals(StaticMod obj)
         {

@@ -924,6 +924,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Legacy BiblioSpec Library.
+        /// </summary>
+        public static string BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library {
+            get {
+                return ResourceManager.GetString("BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Building {0} library.
         /// </summary>
         public static string BiblioSpecLiteBuilder_BuildLibrary_Building__0__library {
@@ -1043,6 +1052,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_s" +
                         "pectra_in_the_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BiblioSpec Library.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library", resourceCulture);
             }
         }
         
@@ -7244,6 +7262,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to NIST Spectral Library.
+        /// </summary>
+        public static string NistLibrary_SpecFilter_NIST_Spectral_Library {
+            get {
+                return ResourceManager.GetString("NistLibrary_SpecFilter_NIST_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid format at peak {0} for {1}..
         /// </summary>
         public static string NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__ {
@@ -7367,6 +7394,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current" +
                         "_filter_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To extract chromatograms from {0} full-scan settings must be enabled..
+        /// </summary>
+        public static string NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_ {
+            get {
+                return ResourceManager.GetString("NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatogram" +
+                        "s_from__0__full_scan_settings_must_be_enabled_", resourceCulture);
             }
         }
         
@@ -10438,6 +10475,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak Areas.
+        /// </summary>
+        public static string SkylineWindow_CreateGraphPeakArea_Peak_Areas {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CreateGraphPeakArea_Peak_Areas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retention Times.
         /// </summary>
         public static string SkylineWindow_CreateGraphRetentionTime_Retention_Times {
@@ -10938,6 +10984,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_Paste_Failed_getting_data_from_the_clipboard {
             get {
                 return ResourceManager.GetString("SkylineWindow_Paste_Failed_getting_data_from_the_clipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed reading Skyline document from the clipboard..
+        /// </summary>
+        public static string SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_", resourceCulture);
             }
         }
         
@@ -11595,6 +11650,15 @@ namespace pwiz.Skyline.Properties {
         public static string SpectralLibraryList_Title_Edit_Libraries {
             get {
                 return ResourceManager.GetString("SpectralLibraryList_Title_Edit_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SpectraST Library.
+        /// </summary>
+        public static string SpectrastLibrary_SpecFilter_SpectraST_Library {
+            get {
+                return ResourceManager.GetString("SpectrastLibrary_SpecFilter_SpectraST_Library", resourceCulture);
             }
         }
         
@@ -13923,6 +13987,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CompassXport software must be installed to import Bruker raw data files..
+        /// </summary>
+        public static string VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_" +
+                        "import_Bruker_raw_data_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure attempting to convert {0} to mzML using CompassXport..
+        /// </summary>
+        public static string VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_u" +
+                        "sing_CompassXport_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library..
         /// </summary>
         public static string VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library {
@@ -13930,6 +14014,35 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0" +
                         "__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDat" +
                         "aReader_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Converting {0} to xml.
+        /// </summary>
+        public static string VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure attempting to convert file {0} to .group.xml..
+        /// </summary>
+        public static string VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__gr" +
+                        "oup_xml_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ProteinPilot software (trial or full version) must be installed to convert &apos;.group&apos; files to compatible &apos;.group.xml&apos; files..
+        /// </summary>
+        public static string VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_ {
+            get {
+                return ResourceManager.GetString("VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version_" +
+                        "_must_be_installed_to_convert___group__files_to_compatible___group_xml__files_", resourceCulture);
             }
         }
         
@@ -13982,6 +14095,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}{1} library {2} will be ignored..
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} and {1} library {2} will be ignored..
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} existing.
         /// </summary>
         public static string ViewLibraryDlg_AddAllPeptides__0__existing {
@@ -14005,24 +14136,6 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_AddAllPeptides__0__unmatched {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__unmatched", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {1}{2} library {3} will be ignored..
-        /// </summary>
-        public static string ViewLibraryDlg_AddAllPeptides__1__2__library__3__will_be_ignored {
-            get {
-                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__1__2__library__3__will_be_ignored", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {1} and {2} library {3} will be ignored..
-        /// </summary>
-        public static string ViewLibraryDlg_AddAllPeptides__1__and__2__library__3__will_be_ignored {
-            get {
-                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__1__and__2__library__3__will_be_ignored", resourceCulture);
             }
         }
         
@@ -14579,6 +14692,15 @@ namespace pwiz.Skyline.Properties {
         public static string XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks {
             get {
                 return ResourceManager.GetString("XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GPM Spectral Library.
+        /// </summary>
+        public static string XHunterLibrary_SpecFilter_GPM_Spectral_Library {
+            get {
+                return ResourceManager.GetString("XHunterLibrary_SpecFilter_GPM_Spectral_Library", resourceCulture);
             }
         }
         

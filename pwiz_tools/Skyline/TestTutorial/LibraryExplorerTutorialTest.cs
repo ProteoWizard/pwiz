@@ -59,10 +59,22 @@ namespace pwiz.SkylineTestTutorial
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI, editListUI.OkDialog);
-            RunUI(() => peptideSettingsUI.PickedLibraries = new[] { "Experiment 15N" }); // Not L10N
+            RunUI(() =>
+                      {
+                          peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+                          peptideSettingsUI.PickedLibraries = new[] {"Experiment 15N"};
+                      });
+            PauseForScreenShot();   // p. 3
 
-            // Modifications Tab in peptideSttingsUI to check "carbamidomethyl cysteine"
-            RunUI(() => peptideSettingsUI.PickedStaticMods = new[] { "Carbamidomethyl Cysteine" }); // Not L10N
+            // Modifications Tab in peptideSttingsUI to check "Carbamidomethyl Cysteine"
+            const string carbamidoName = "Carbamidomethyl Cysteine";
+            RunUI(() =>
+                      {
+                          peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications;
+                          peptideSettingsUI.PickedStaticMods = new[] {carbamidoName};
+                      });
+            PauseForScreenShot();   // p. 4
+
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             Assert.IsTrue(WaitForCondition(() =>
@@ -73,6 +85,7 @@ namespace pwiz.SkylineTestTutorial
             ViewLibraryDlg viewLibraryDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var matchedPepsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(matchedPepsDlg.BtnCancelClick);
+            PauseForScreenShot();   // p. 5
 
             // Types text in Peptide textbox in the Spectral Library Explorer Window
             RunUI(() =>
@@ -80,11 +93,12 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg.FilterString = "Q"; // Not L10N
                 Assert.AreEqual(7, viewLibraryDlg.PeptideDisplayCount);
             });
+            PauseForScreenShot();   // p. 6
 
             RunUI(() =>
             {
-                viewLibraryDlg.FilterString = "l"; // Not L10N
-                Assert.AreEqual(3, viewLibraryDlg.PeptideDisplayCount);
+                viewLibraryDlg.FilterString = "I"; // Not L10N
+                Assert.AreEqual(1, viewLibraryDlg.PeptideDisplayCount);
             });
             
             // Click B and 2 buttons on the right side of Spectral Library Explorer Window to show b-ions
@@ -93,8 +107,9 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(11, viewLibraryDlg.GraphItem.IonLabels.Count());
                 viewLibraryDlg.GraphSettings.ShowBIons = true;
                 viewLibraryDlg.GraphSettings.ShowCharge2 = true;
-                Assert.AreEqual(24, viewLibraryDlg.GraphItem.IonLabels.Count());
+                Assert.AreEqual(35, viewLibraryDlg.GraphItem.IonLabels.Count());
             });
+            PauseForScreenShot();   // p. 7
             
             // Right click on spectrum chart and select Observed m/z Values
             RunUI(() =>
@@ -126,18 +141,22 @@ namespace pwiz.SkylineTestTutorial
             const string glnPyroGluName = "Gln->pyro-Glu"; // Not L10N
             var glnPyroGlu = new StaticMod(glnPyroGluName, "Q", null, true, "-NH3", LabelAtoms.None, // Not L10N
                                           RelativeRT.Unknown, null, null, null);
-            AddStaticMod(glnPyroGlu, peptideSettingsUI1);
-            RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {glnPyroGluName});
+            AddStaticMod(glnPyroGlu, peptideSettingsUI1, true);
+
+            RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {carbamidoName, glnPyroGluName});
             const string label15NName = "Label:15N"; // Not L10N
             var mod15N = new StaticMod(label15NName, null, null, false, null, LabelAtoms.N15,
                               RelativeRT.Matching, null, null, null);
-            AddHeavyMod(mod15N, peptideSettingsUI1);
+            AddHeavyMod(mod15N, peptideSettingsUI1, true);
             RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { label15NName });
+            PauseForScreenShot();   // p. 10
+
             OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
             Assert.IsTrue(WaitForCondition(() =>
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Count > 0 &&
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.HeavyModifications.Count > 0));
+            PauseForScreenShot();
 
             // Adding Library Peptides to the Document p. 11
 
@@ -149,7 +168,12 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg.FilterString = peptideSequence1;
                 Assert.AreEqual(1, viewLibraryDlg.PeptideDisplayCount);
             });
-            RunDlg<FilterMatchedPeptidesDlg>(viewLibraryDlg.AddPeptide, msgDlg => msgDlg.OkDialog());
+            {
+                var msgDlg = ShowDialog<FilterMatchedPeptidesDlg>(viewLibraryDlg.AddPeptide);
+                PauseForScreenShot();
+
+                OkDialog(msgDlg, msgDlg.OkDialog);
+            }
             
             var docAdd1 = WaitForDocumentChange(docInitial);
             Assert.AreEqual(1, docAdd1.PeptideCount);
@@ -171,6 +195,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Edit > ExpandAll > Peptides
             RunUI(() => SkylineWindow.ExpandPeptides());
+            PauseForScreenShot();   // p. 12
 
             // Adding DNAGAATEEFIKR++ (has ok)
             const string peptideSequence3 = "DNAGAATEEFIKR"; // Not L10N
@@ -211,10 +236,13 @@ namespace pwiz.SkylineTestTutorial
             PeptideSettingsUI settingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
                       {
-                          settingsUI.PickedStaticMods = new[] { "Carbamidomethyl Cysteine" }; // Not L10N
+                          settingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications;
+                          settingsUI.PickedStaticMods = new[] { carbamidoName }; // Not L10N
                           settingsUI.PickedHeavyMods = new string[0];
                           settingsUI.PickedLibraries = new string[0];
                       });
+            PauseForScreenShot();   // p. 14
+
             var editListUI1 =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(settingsUI.EditLibraryList);
             const string humanPhosphoLibName = "Human Phospho"; // Not L10N
@@ -226,8 +254,19 @@ namespace pwiz.SkylineTestTutorial
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI1, editListUI1.OkDialog);
-            RunUI(() => settingsUI.PickedLibraries = new[] { humanPhosphoLibName });
-            OkDialog(settingsUI, settingsUI.OkDialog);
+            RunUI(() =>
+                      {
+                          settingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+                          settingsUI.PickedLibraries = new[] {humanPhosphoLibName};
+                      });
+            PauseForScreenShot();   // p. 15
+
+            {
+                var msgDlg = ShowDialog<MultiButtonMsgDlg>(() => settingsUI.ShowViewLibraryDlg());
+                PauseForScreenShot();   // p. 15
+
+                OkDialog(msgDlg, msgDlg.Btn0Click);
+            }
 
             Assert.IsTrue(WaitForCondition(() =>
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Count == 1 &&
@@ -235,10 +274,11 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
 
-            ViewLibraryDlg viewLibraryDlg1 = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            // Ignore modification matching form
             var matchedPepModsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(matchedPepModsDlg.BtnCancelClick);
-            
+
+            var viewLibraryDlg1 = WaitForOpenForm<ViewLibraryDlg>();
             const int countLabels1 = 15;
             const int countLabels2 = 18;
             RunUI(() =>
@@ -246,20 +286,25 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg1.FilterString = "AISS"; // Not L10N
                 Assert.AreEqual(2, viewLibraryDlg1.PeptideDisplayCount);
                 Assert.AreEqual(countLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
+            });
+            PauseForScreenShot();   // p. 16, figure 1a
+            RunUI(() =>
+            {
                 viewLibraryDlg1.SelectedIndex = 1;
                 Assert.AreEqual(countLabels2, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
+            PauseForScreenShot();   // p. 16, figure 1b
 
             docInitial = SkylineWindow.Document;
 
             var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            const string phosphoModName = "Phospho ST"; // Not L10N 
+            const string phosphoModName = "Phospho (ST)"; // Not L10N 
             var phosphoSt = new StaticMod(phosphoModName, "S, T", null, true, "HPO3", LabelAtoms.None, // Not L10N
                                           RelativeRT.Unknown, null, null, new[] { new FragmentLoss("H3PO4"), }); // Not L10N
-            AddStaticMod(phosphoSt, peptideSettingsUI2);
+            AddStaticMod(phosphoSt, peptideSettingsUI2, true);
 
             // Check Phospho (ST) and Carbamidomethyl Cysteine
-            RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { phosphoModName, "Carbamidomethyl Cysteine" }); // Not L10N
+            RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { phosphoModName, carbamidoName }); // Not L10N
             OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
 
             var docPhospho = WaitForDocumentChange(docInitial);
@@ -268,23 +313,34 @@ namespace pwiz.SkylineTestTutorial
             string lossText = Math.Round(-phosphoSt.Losses[0].MonoisotopicMass, 1).ToString(CultureInfo.CurrentCulture);
             const int countLossLabels1 = 12;
             const int countLossLabels2 = 15;
+            const int countPrecursors1 = 1;
+            const int countPrecursors2 = 2;
             
             RunUI(() =>
             {
                 // New ions should be labeled, because of the added modification with loss
-                var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels;
-                Assert.AreEqual(countLabels2 + countLossLabels2, labelsPhospho.Count());
-                Assert.AreEqual(countLossLabels2, labelsPhospho.Count(label => label.Contains(lossText)));
                 viewLibraryDlg1.SelectedIndex = 0;
                 Assert.AreEqual(countLabels1 + countLossLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
 
                 viewLibraryDlg1.GraphSettings.ShowPrecursorIon = true;
 
                 // Make sure the precursor -98 ion was added
-                var labelsFinal = viewLibraryDlg1.GraphItem.IonLabels;
-                Assert.IsTrue(labelsFinal.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText)))); 
-                Assert.AreEqual(countLabels1 + countLossLabels1 + 1, labelsFinal.Count());
+                var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels;
+                Assert.AreEqual(countLossLabels1 + 1, labelsPhospho.Count(label => label.Contains(lossText)));
+                Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText)))); 
+                Assert.AreEqual(countLabels1 + countLossLabels1 + countPrecursors1, labelsPhospho.Count());
             });
+            PauseForScreenShot();   // p. 18, figure 1a.
+
+            RunUI(() =>
+            {
+                viewLibraryDlg1.SelectedIndex = 1;
+                var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels;
+                Assert.AreEqual(countLossLabels2 + 1, labelsPhospho.Count(label => label.Contains(lossText)));
+                Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText))));
+                Assert.AreEqual(countLabels2 + countLossLabels2 + countPrecursors2, labelsPhospho.Count());
+            });
+            PauseForScreenShot();   // p. 18, figure 1b.
 
             // Matching Library Peptides to Proteins p. 18
             var peptideSettingsUI3 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -297,6 +353,8 @@ namespace pwiz.SkylineTestTutorial
                     TestFilesDir.GetTestPath(@"LibraryExplorer\human.protdb"); // Not L10N
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Human (mini)"; // Not L10N
             });
+            PauseForScreenShot();   // p. 19
+
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
             
             // Select Max Missed Cleavages to be 2 
@@ -337,22 +395,26 @@ namespace pwiz.SkylineTestTutorial
                               BackgroundProteome.DuplicateProteinsFilter.FirstOccurence;
                           filterMatchedPeptidesDlg.AddUnmatched = true;
                           filterMatchedPeptidesDlg.AddFiltered = true;
+
+                          // Checks that Peptides were added with the correct buttons selected...
+                          Assert.AreEqual(163, filterMatchedPeptidesDlg.DuplicateMatchesCount);
+                          Assert.AreEqual(2, filterMatchedPeptidesDlg.UnmatchedCount);
                       });
+            PauseForScreenShot();   // p. 20, figure 1
 
-            // Checks that Peptides were added with the correct buttons selected...
-            Assert.AreEqual(163, filterMatchedPeptidesDlg.DuplicateMatchesCount);
-            Assert.AreEqual(2, filterMatchedPeptidesDlg.UnmatchedCount);
-            Assert.IsTrue(filterMatchedPeptidesDlg.AddUnmatched);
-            Assert.IsTrue(filterMatchedPeptidesDlg.AddFiltered);
-            Assert.AreEqual("FirstOccurence", filterMatchedPeptidesDlg.DuplicateProteinsFilter.ToString()); // Not L10N
+            {
+                var msgDlg = ShowDialog<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog);
+                PauseForScreenShot();   // p. 20, figure 2
 
-            RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, 
-                msgDlg => msgDlg.Btn1Click());
+                OkDialog(msgDlg, msgDlg.Btn1Click);
+            }
             OkDialog(viewLibraryDlg1, viewLibraryDlg1.CancelDialog);
 
             var docProteins = WaitForDocumentChange(docInitial);
 
             AssertEx.IsDocumentState(docProteins, null, 250, 346, 347, 1034);
+
+            PauseForScreenShot();
         }
     }
 }

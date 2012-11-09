@@ -18,15 +18,24 @@
  */
 
 using System;
-using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    public partial class PauseAndContinueForm : Form
+    public partial class PauseAndContinueForm : FormEx
     {
-        public PauseAndContinueForm()
+        public PauseAndContinueForm(string description = null)
         {
             InitializeComponent();
+            if (description == null)
+                Height -= 15;
+            else
+            {
+                // Adjust dialog width to accommodate description.
+                lblDescription.Text = description;
+                if (lblDescription.Width > btnContinue.Width)
+                    Width = lblDescription.Width + 30;
+            }
         }
 
         private void btnContinue_Click(object sender, EventArgs e)

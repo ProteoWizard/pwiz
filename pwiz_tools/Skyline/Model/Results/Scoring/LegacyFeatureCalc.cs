@@ -22,14 +22,32 @@ using System.Linq;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    class LegacyLogUnforcedAreaCalc : SummaryPeakFeatureCalculator
+    public class LegacyLogUnforcedAreaCalc : SummaryPeakFeatureCalculator
     {
+        /// <summary>
+        /// Standard peaks are assigned ^1.2 the value of analyte peaks, since standards
+        /// are intended to be spiked in at a constant concentration, while analyte peaks
+        /// are expected to vary, and may even be missing altogether.
+        /// </summary>
+        public const double STANDARD_MULTIPLIER = 1.2;
+
+        public static double Score(double area, double areaStandard)
+        {
+            return Math.Log(area + Math.Pow(areaStandard, STANDARD_MULTIPLIER));
+        }
+
         protected override double Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            return Math.Log(summaryPeakData.TransitionGroupPeakData
-                                            .SelectMany(pd => pd.TranstionPeakData)
-                                            .Where(p => !p.Peak.IsForcedIntegration)
-                                            .Sum(p => p.Peak.Area));
+            return Score(SummedArea(summaryPeakData, false), SummedArea(summaryPeakData, true));
+        }
+
+        private double SummedArea(IPeptidePeakData<ISummaryPeakData> summaryPeakData, bool isStandard)
+        {
+            return summaryPeakData.TransitionGroupPeakData
+                .Where(pd => pd.IsStandard == isStandard)
+                .SelectMany(pd => pd.TranstionPeakData)
+                .Where(p => !p.Peak.IsForcedIntegration)
+                .Sum(p => p.Peak.Area);
         }
     }
 

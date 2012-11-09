@@ -186,12 +186,13 @@ namespace pwiz.Skyline
         public static void ReportException(Exception exception)
         {
             Trace.TraceError("Unhandled exception: {0}", exception);
+            var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try
             {
                 if (mainWindow != null && !mainWindow.IsDisposed)
                 {
-                    mainWindow.BeginInvoke(new Action<Exception>(ReportExceptionUI), exception);
+                    mainWindow.BeginInvoke(new Action<Exception, StackTrace>(ReportExceptionUI), exception, stackTrace);
                 }
             }
             catch (Exception exception2)
@@ -203,14 +204,13 @@ namespace pwiz.Skyline
         private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
             Trace.TraceError("Unhandled exception on UI thread: {0}", e.Exception);
-            ReportExceptionUI(e.Exception);
+            var stackTrace = new StackTrace(1, true);
+            ReportExceptionUI(e.Exception, stackTrace);
         }
 
-        private static void ReportExceptionUI(Exception exception)
+        private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)
         {
-            List<string> stackTraceList = Settings.Default.StackTraceList;
-
-            using (var reportForm = new ReportErrorDlg(exception, stackTraceList))
+            using (var reportForm = new ReportErrorDlg(exception, stackTrace))
             {
                 reportForm.ShowDialog(MainWindow);
             }         

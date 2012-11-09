@@ -73,12 +73,12 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
-				 return GroupGraphsOrderExtension.GetEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
+                return Helpers.ParseEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
             }
             set
             {
-                comboSortOrder.SelectedItem =
-                    Settings.Default.ArrangeGraphsOrder = value.GetLocalizedString();
+                comboSortOrder.SelectedItem = value.GetLocalizedString();
+                Settings.Default.ArrangeGraphsOrder = value.ToString();
             }
         }
 

@@ -46,6 +46,8 @@ namespace pwiz.Skyline.Model.Results
             LoadingTooSlowlyException slowlyException, ILoadMonitor loader, ref ProgressStatus status)
         {
             string tempFileSubsitute = Path.GetTempFileName();
+            // Bruker CompassXport may append .mzML to the name we give it
+            string tempFileMzml = tempFileSubsitute + ".mzML";
 
             try
             {
@@ -63,6 +65,13 @@ namespace pwiz.Skyline.Model.Results
                         loader.UpdateProgress(status = status.ChangeMessage(
                             string.Format(Resources.SkylineWindow_ImportResults_Import__0__,    // Bruker prefers the conversion go unnoted
                                           filePath)));
+                        if (File.Exists(tempFileMzml))
+                        {
+                            // Handle the case where bruker refuses to export to the name it is given
+                            // and insists on appending .mzML
+                            FileEx.SafeDelete(tempFileSubsitute, true);
+                            tempFileSubsitute = tempFileMzml;
+                        }
                         break;
                     // This is a legacy solution that should no longer ever be invoked.  The mzWiff.exe has
                     // been removed from the installation.
@@ -81,6 +90,8 @@ namespace pwiz.Skyline.Model.Results
             catch (Exception)
             {
                 FileEx.SafeDelete(tempFileSubsitute, true);
+                if (slowlyException.WorkAround == LoadingTooSlowlyException.Solution.bruker_conversion)
+                    FileEx.SafeDelete(tempFileMzml, true);
                 throw;
             }
         }
@@ -109,7 +120,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                string message = string.Format("Converting {0} to xml", Path.GetFileName(inputFile));
+                string message = string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml, Path.GetFileName(inputFile));
                 int percent = index * 100 / inputFiles.Count;
                 progress.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(percent));
 
@@ -129,7 +140,7 @@ namespace pwiz.Skyline.Model.Results
 
                     if (group2XmlPath == null)
                     {
-                        throw new IOException("ProteinPilot software (trial or full version) must be installed to convert '.group' files to compatible '.group.xml' files.");
+                        throw new IOException(Resources.VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_);
                     }                    
                 }
 
@@ -179,8 +190,8 @@ namespace pwiz.Skyline.Model.Results
 
                 if (proc.ExitCode != 0)
                 {
-                    throw new IOException(string.Format("Failure attempting to convert file {0} to .group.xml.\n\n{1}",
-                                                        inputFile, sbOut));
+                    throw new IOException(TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_,
+                                                        inputFile), string.Empty, sbOut.ToString()));
                 }
 
                 inputFilesPilotConverted.Add(outputFile);
@@ -305,7 +316,7 @@ namespace pwiz.Skyline.Model.Results
             var key = Registry.LocalMachine.OpenSubKey(KEY_COMPASSXPORT, false);
             string compassXportExe = (key != null) ? (string)key.GetValue(string.Empty) : null;
             if (compassXportExe == null)
-                throw new IOException("CompassXport software must be installed to import Bruker raw data files.");
+                throw new IOException(Resources.VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_);
 
             // CompassXport arguments
             var argv = new[]
@@ -389,8 +400,8 @@ namespace pwiz.Skyline.Model.Results
 
             if (proc.ExitCode != 0)
             {
-                throw new IOException(string.Format("Failure attempting to convert {0} to mzML to work around a performance issue in the Bruker reader library.\n\n{1}",
-                    filePathBruker, sbOut));
+                throw new IOException(TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_,
+                    filePathBruker), string.Empty, sbOut.ToString()));
             }
         }
     }

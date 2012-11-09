@@ -51,7 +51,6 @@ namespace pwiz.SkylineTestFunctional
         private const string UNKNOWN_STATE_SERVER = "unknown.server-state.com";
 
         private ToolOptionsUI ToolOptionsDlg { get; set; }
-        private PublishDocumentDlg PublishDocument { get; set; }
         private static string Server { get; set; }
         private string Username { get; set; }
         private string Password { get; set; }
@@ -108,8 +107,7 @@ namespace pwiz.SkylineTestFunctional
             Server = " ";
             CheckServerInfoFailure(1);
 
-            RunUI(ToolOptionsDlg.OkDialog);
-            WaitForClosedForm(ToolOptionsDlg);
+            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
 
             RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky")));
 
@@ -127,15 +125,15 @@ namespace pwiz.SkylineTestFunctional
                         publishDocumentDlg.SelectItem(nodeSelection);
                         publishDocumentDlg.OkDialog();
                     });
-            WaitForClosedForm(PublishDocument);
         }
+
         public void CheckPublishFailure(string nodeSelection)
         {
-            PublishDocument = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
-            WaitForCondition(60 * 1000, () => PublishDocument.IsLoaded);
-            RunUI(() => PublishDocument.SelectItem(nodeSelection));
-            RunDlg<MessageDlg>(PublishDocument.OkDialog, messageDlg => messageDlg.OkDialog());
-            RunUI(() => PublishDocument.CancelButton.PerformClick());
+            var publishDocument = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+            WaitForCondition(60 * 1000, () => publishDocument.IsLoaded);
+            RunUI(() => publishDocument.SelectItem(nodeSelection));
+            RunDlg<MessageDlg>(publishDocument.OkDialog, messageDlg => messageDlg.OkDialog());
+            OkDialog(publishDocument, publishDocument.CancelButton.PerformClick);
         }
 
         public void CheckServerInfoFailure(int serverCount)

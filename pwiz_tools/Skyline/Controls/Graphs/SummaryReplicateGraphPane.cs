@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
@@ -338,7 +337,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
                     }
                     var optimizationSteps = chromInfoLists
-                        .SelectMany(chromInfoList => chromInfoList.Select(chromInfoData=>chromInfoData.OptimizationStep))
+                        .SelectMany(chromInfoList => from chromInfoData in chromInfoList
+                                                     where chromInfoData.ChromInfo != null
+                                                     select chromInfoData.OptimizationStep)
                         .Distinct()
                         .ToArray();
                     foreach (int step in optimizationSteps)
@@ -349,7 +350,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         var chromInfoDatasForStep = new List<TChromInfoData>();
                         foreach (var chromInfoDatas in chromInfoLists)
                         {
-                            var chromInfoForStep = chromInfoDatas.FirstOrDefault(chromInfoData => step == chromInfoData.OptimizationStep);
+                            var chromInfoForStep = chromInfoDatas.FirstOrDefault(chromInfoData =>
+                                chromInfoData != null && step == chromInfoData.OptimizationStep);
+
                             if (null == chromInfoForStep || isMissingValue(chromInfoForStep))
                             {
                                 continue;
@@ -386,7 +389,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 int? fileIndex = null;
                 int maxStep = 0;
-                foreach (var chromInfoData in result)
+                foreach (var chromInfoData in result.Where(chromInfoData => chromInfoData.ChromInfo != null))
                 {
                     if (fileIndex.HasValue)
                     {

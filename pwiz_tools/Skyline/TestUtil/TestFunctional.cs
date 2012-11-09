@@ -182,6 +182,7 @@ namespace pwiz.SkylineTestUtil
             try
             {
                 ClipboardEx.UseInternalClipboard();
+                ClipboardEx.Clear();
                 ClipboardEx.SetText(text);
             }
             catch (ExternalException)
@@ -408,22 +409,22 @@ namespace pwiz.SkylineTestUtil
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
         /// to be taken.
         /// </summary>
-        public static bool IsPauseForScreenShots { get { return false; } }
+        public static bool IsPauseForScreenShots { get; set; }
 
-        public void PauseForScreenShot()
+        public void PauseForScreenShot(string description = null)
         {
             if (IsPauseForScreenShots)
-                PauseAndContinue();
+                PauseAndContinue(description);
         }
 
         private readonly object _pauseLock = new object();
 
-        public void PauseAndContinue()
+        public void PauseAndContinue(string description = null)
         {
             ClipboardEx.UseInternalClipboard(false);
             RunUI(() =>
                       {
-                          var dlg = new PauseAndContinueForm {Left = SkylineWindow.Left};
+                          var dlg = new PauseAndContinueForm(description) {Left = SkylineWindow.Left};
                           const int spacing = 15;
                           if (SkylineWindow.Top > dlg.Height + spacing)
                               dlg.Top = SkylineWindow.Top - dlg.Height - spacing;
@@ -542,6 +543,7 @@ namespace pwiz.SkylineTestUtil
             // Use internal clipboard for testing so that we don't collide with other processes
             // using the clipboard during a test run.
             ClipboardEx.UseInternalClipboard();
+            ClipboardEx.Clear();
 
             var doClipboardCheck = TestContext.Properties.Contains("ClipboardCheck"); // Not L10N
             string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : String.Empty; // Not L10N
@@ -663,41 +665,45 @@ namespace pwiz.SkylineTestUtil
             return ShowDialog<EditStaticModDlg>(editModsDlg.AddItem);
         }
 
-        public static void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
+        public void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
-            AddMod(mod, editStaticModsDlg);
+            RunUI(editStaticModsDlg.SelectLastItem);
+            AddMod(mod, editStaticModsDlg, pauseForScreenShot);
         }
 
-        public static void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
+        public void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
-            AddMod(mod, editStaticModsDlg);
+            RunUI(editStaticModsDlg.SelectLastItem);
+            AddMod(mod, editStaticModsDlg, pauseForScreenShot);
         }
 
-        private static void AddMod(StaticMod mod, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        private void AddMod(StaticMod mod,
+                            EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg,
+                            bool pauseForScreenShot)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() =>
-            {
-                addStaticModDlg.Modification = mod;
-                addStaticModDlg.OkDialog();
-            });
-            WaitForClosedForm(addStaticModDlg);
+            RunUI(() => addStaticModDlg.Modification = mod);
+            
+            if (pauseForScreenShot)
+                PauseForScreenShot();
 
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);
+            OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
+            OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
         public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
+            RunUI(editStaticModsDlg.SelectLastItem);
             AddMod(uniModName, isVariable, editStaticModsDlg);
         }
 
         public static void AddHeavyMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
+            RunUI(editStaticModsDlg.SelectLastItem);
             AddMod(uniModName, false, editStaticModsDlg);
         }
 

@@ -58,6 +58,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public interface IStateProvider
         {
+            SrmDocument SelectionDocument { get; }
+
             TreeNodeMS SelectedNode { get; }
 
             IdentityPath SelectedPath { get; set; }
@@ -73,6 +75,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class DefaultStateProvider : IStateProvider
         {
+            public SrmDocument SelectionDocument { get { return null;}}
             public TreeNodeMS SelectedNode { get { return null; } }
             public IdentityPath SelectedPath { get { return IdentityPath.ROOT; } set { } }
             public void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
@@ -223,6 +226,10 @@ namespace pwiz.Skyline.Controls.Graphs
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
             if (!Visible || IsDisposed)
+                return;
+
+            // Avoid updating when document container and state provider are out of sync
+            if (!ReferenceEquals(DocumentUIContainer.Document, StateProvider.SelectionDocument))
                 return;
 
             // CONSIDER: Need a better guarantee that this ratio index matches the

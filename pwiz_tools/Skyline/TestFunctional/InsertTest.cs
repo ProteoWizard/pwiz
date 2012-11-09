@@ -64,14 +64,17 @@ namespace pwiz.SkylineTestFunctional
 
             SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT);
             var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
-            // Keep all peptides.
-            PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
-            Assert.AreEqual(10, insertPeptidesDlg.PeptideRowCount);
-            Assert.IsTrue(insertPeptidesDlg.PeptideRowsContainProtein(string.IsNullOrEmpty));
-            Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainPeptide(string.IsNullOrEmpty));
-            OkDialog(insertPeptidesDlg, insertPeptidesDlg.OkDialog);
-            // Test adding to document.
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 6, 9, 9, 28);
+
+            using (new CheckDocumentState(6, 9, 9, 28))
+            {
+                // Keep all peptides.
+                PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
+                Assert.AreEqual(10, insertPeptidesDlg.PeptideRowCount);
+                Assert.IsTrue(insertPeptidesDlg.PeptideRowsContainProtein(string.IsNullOrEmpty));
+                Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainPeptide(string.IsNullOrEmpty));
+                OkDialog(insertPeptidesDlg, insertPeptidesDlg.OkDialog);
+            }
+
             // Keep only first protein.
             var insertPeptidesDlg1 = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
             PastePeptides(insertPeptidesDlg1, BackgroundProteome.DuplicateProteinsFilter.FirstOccurence, true, true);

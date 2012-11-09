@@ -914,9 +914,8 @@ namespace pwiz.Skyline
             }
             catch (ExternalException)
             {
-                MessageDlg.Show(this,
-                                ClipboardHelper.GetOpenClipboardMessage(
-                                    Resources.SkylineWindow_Paste_Failed_getting_data_from_the_clipboard));
+                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage(
+                    Resources.SkylineWindow_Paste_Failed_getting_data_from_the_clipboard));
                 return;
             }
         
@@ -932,20 +931,29 @@ namespace pwiz.Skyline
                         pasteToPeptideList = !(nodePaste.Path.GetIdentity((int) SrmDocument.Level.PeptideGroups) is FastaSequence);
                 }
 
-                IdentityPath selectPath = null, nextAdd;
+                IdentityPath selectPath = null;
 
-                ModifyDocument(string.Format(Resources.SkylineWindow_Paste_Paste__0__, (pasteToPeptideList ? Resources.SkylineWindow_Paste_peptides : Resources.SkylineWindow_Paste_proteins)), doc => // Not L10N
-                    doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))), // Not L10N
-                        null,
-                        MeasuredResults.MergeAction.remove,
-                        false,
-                        FindSpectralLibrary,
-                        Settings.Default.StaticModList,
-                        Settings.Default.HeavyModList,
-                        nodePaste != null ? nodePaste.Path : null,
-                        out selectPath,
-                        out nextAdd,
-                        pasteToPeptideList));
+                try
+                {
+                    IdentityPath nextAdd;
+                    ModifyDocument(string.Format(Resources.SkylineWindow_Paste_Paste__0__, (pasteToPeptideList ? Resources.SkylineWindow_Paste_peptides : Resources.SkylineWindow_Paste_proteins)), doc => // Not L10N
+                        doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))), // Not L10N
+                            null,
+                            MeasuredResults.MergeAction.remove,
+                            false,
+                            FindSpectralLibrary,
+                            Settings.Default.StaticModList,
+                            Settings.Default.HeavyModList,
+                            nodePaste != null ? nodePaste.Path : null,
+                            out selectPath,
+                            out nextAdd,
+                            pasteToPeptideList));
+                }
+                catch (Exception)
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_);
+                    return;
+                }
 
                 if (selectPath != null)
                     SequenceTree.SelectedPath = selectPath;

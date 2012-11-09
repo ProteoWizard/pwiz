@@ -1174,7 +1174,7 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public const int MIN_ION_COUNT = 1;
         public const int MAX_ION_COUNT = 10;
-        public const double MIN_MATCH_TOLERANCE = 0.1;
+        public const double MIN_MATCH_TOLERANCE = 0.001;    // Reduced from 0.1 to 0.001 (1 ppm at 1000 m/z) for high accuracy MS/MS
         public const double MAX_MATCH_TOLERANCE = 1.0;
 
         public TransitionLibraries(double ionMatchTolerance, int ionCount, TransitionLibraryPick pick)

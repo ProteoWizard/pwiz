@@ -966,7 +966,7 @@
     <value>Properties...</value>
   </data>
   <data name="groupByReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>122, 22</value>
   </data>
   <data name="groupByReplicateContextMenuItem.Text" xml:space="preserve">
     <value>Replicate</value>

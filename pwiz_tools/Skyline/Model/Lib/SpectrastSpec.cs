@@ -18,7 +18,9 @@
  */
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -149,6 +151,11 @@ namespace pwiz.Skyline.Model.Lib
         public override LibrarySpec CreateSpec(string path)
         {
             return new SpectrastSpec(Name, path);
+        }
+
+        public override string SpecFilter
+        {
+            get { return TextUtil.FileDialogFilterAll(Resources.SpectrastLibrary_SpecFilter_SpectraST_Library, SpectrastSpec.EXT); }
         }
 
         #region Implementation of IXmlSerializable

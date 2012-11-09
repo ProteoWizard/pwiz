@@ -249,6 +249,11 @@ namespace pwiz.Skyline.Model.Results
                 const int loadPercent = 10;
                 SetPercentComplete(loadPercent);
 
+                // If no SRM spectra, then full-scan filtering must be enabled
+                bool isSrm = dataFile.HasSrmSpectra;
+                if (!isSrm && !document.Settings.TransitionSettings.FullScan.IsEnabled)
+                    throw new NoFullScanFilteringException(dataFile.FilePath);
+
                 // Only mzXML from mzWiff requires the introduction of zero values
                 // during interpolation.
                 _isProcessedScans = dataFile.IsMzWiffXml;
@@ -258,7 +263,6 @@ namespace pwiz.Skyline.Model.Results
                 var filter = new SpectrumFilter(document, dataFile);
 
                 // First read all of the spectra, building chromatogram time, intensity lists
-                bool isSrm = dataFile.HasSrmSpectra;
                 var chromMap = new ChromDataCollectorSet(isSrm ? TimeSharing.single : TimeSharing.grouped);
                 var chromMapMs1 = new ChromDataCollectorSet(filter.IsSharedTime ? TimeSharing.shared : TimeSharing.grouped);
                 int lenSpectra = dataFile.SpectrumCount;

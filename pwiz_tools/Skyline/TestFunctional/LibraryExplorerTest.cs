@@ -271,8 +271,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Test adding peptides offers to add library if not already in settings.
             // Test add single peptide.
-            RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddPeptide, msgDlg => msgDlg.Btn0Click());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 3);
+            using (new CheckDocumentState(1, 1, 1, 3))
+            {
+                RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddPeptide, msgDlg => msgDlg.Btn0Click());
+            }
             RunUI(SkylineWindow.EditDelete);
 
             // Test unmatched peptides are correct.
@@ -471,8 +473,10 @@ namespace pwiz.SkylineTestFunctional
             // Add the library to the document.
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(addLibraryDlg.Btn0Click);
             RunUI(() => filterMatchedPeptidesDlg.AddUnmatched = false);
-            RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, messageDlg => messageDlg.Btn1Click());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 4, 10, 13, 39);
+            using (new CheckDocumentState(4, 10, 13, 39))
+            {
+                RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, messageDlg => messageDlg.Btn1Click());
+            }
             Assert.IsFalse(SkylineWindow.Document.Peptides.Contains(nodePep => !nodePep.HasLibInfo));
 
             // Test adding a single peptide that matches two different proteins using keep all.
@@ -481,15 +485,19 @@ namespace pwiz.SkylineTestFunctional
                           SkylineWindow.Undo();
                           _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR+");
                       });
-            RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
-                                             filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 2, 6);
+            using (new CheckDocumentState(2, 2, 2, 6))
+            {
+                RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
+                    filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
+            }
 
             // Test adding a second charge state for that peptide.
             RunUI(() => _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR++"));
-            RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
-                                  filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 4, 12);
+            using (new CheckDocumentState(2, 2, 4, 12))
+            {
+                RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
+                    filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
+            }
             RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                       filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
 
@@ -505,13 +513,15 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(docPrev, SkylineWindow.Document);
 
             // Test adding a second charge state - First Only.
-            RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
-                      filterMatchedPeptideDlg =>
+            using (new CheckDocumentState(2, 2, 3, 9))
             {
-                filterMatchedPeptideDlg.DuplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.FirstOccurence;
-                filterMatchedPeptideDlg.OkDialog();
-            });
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3, 9);
+                RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide, filterMatchedPeptideDlg =>
+                {
+                    filterMatchedPeptideDlg.DuplicateProteinsFilter =
+                        BackgroundProteome.DuplicateProteinsFilter.FirstOccurence;
+                    filterMatchedPeptideDlg.OkDialog();
+                });
+            }
 
             RunUI(() =>
             {
@@ -530,12 +540,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR+"));
             // Test adding peptide associated with the background proteome does not affect any matching peptides that are 
             // in peptide lists.
-            RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
-                      filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog()); // First only
+            using (new CheckDocumentState(2, 2, 3, 9))
+            {
+                RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
+                    filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog()); // First only
+            }
             var peptideGroups = SkylineWindow.Document.PeptideGroups.ToArray();
             int index = peptideGroups.IndexOf(nodeGroup => nodeGroup.IsPeptideList);
             Assert.IsTrue(peptideGroups[index].Children.Count == 1);
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3, 9);
 
             // Test selecting no duplicates prevents any peptide from appearing twice in the document.
             RunUI(() => SkylineWindow.Undo());
@@ -553,15 +565,17 @@ namespace pwiz.SkylineTestFunctional
             TestForDuplicatePeptides();
 
             // Test peptides are added to "Library Peptides" peptide list if this peptide group already exists.
-            RunUI(() =>
-                      {
-                          SkylineWindow.Undo();
-                          _viewLibUI.AssociateMatchingProteins = false;
-                          _viewLibUI.AddPeptide();
-                          _viewLibUI.ChangeSelectedPeptide("AAAP");
-                          _viewLibUI.AddPeptide();
-                      });
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 3, 9);
+            using (new CheckDocumentState(1, 2, 3, 9))
+            {
+                RunUI(() =>
+                    {
+                        SkylineWindow.Undo();
+                        _viewLibUI.AssociateMatchingProteins = false;
+                        _viewLibUI.AddPeptide();
+                        _viewLibUI.ChangeSelectedPeptide("AAAP");
+                        _viewLibUI.AddPeptide();
+                    });
+            }
 
             RunUI(() =>
             {
@@ -593,8 +607,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Test doesn't find variable match if implicit match exists in doc
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
-            RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 4, 4, 12);
+            using (new CheckDocumentState(1, 4, 4, 12))
+            {
+                RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
+            }
             Assert.IsTrue(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
                 .Contains(mod => mod.Equivalent(phosphoLossMod)));
             Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
@@ -610,8 +626,10 @@ namespace pwiz.SkylineTestFunctional
 
             RelaunchLibExplorer(false, PHOSPHO_LIB);
 
-            RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 4, 4, 12);
+            using (new CheckDocumentState(1, 4, 4, 12))
+            {
+                RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
+            }
             Assert.IsTrue(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
                 .Contains(mod => mod.Equivalent(phosphoLossMod) && mod.IsVariable));
             Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
@@ -627,8 +645,10 @@ namespace pwiz.SkylineTestFunctional
        
             var fmpDlg0 = ShowDialog<FilterMatchedPeptidesDlg>(() => _viewLibUI.AddAllPeptides());
             RunUI(() => fmpDlg0.AddFiltered = true);
-            RunDlg<MultiButtonMsgDlg>(fmpDlg0.OkDialog, msgDlg => msgDlg.Btn1Click());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 82, 96, 282);
+            using (new CheckDocumentState(1, 82, 96, 282))
+            {
+                RunDlg<MultiButtonMsgDlg>(fmpDlg0.OkDialog, msgDlg => msgDlg.Btn1Click());
+            }
             // Implicit mod is created because there are no conflicting peptides in the current document.
             Assert.IsTrue(
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Contains(mod =>
