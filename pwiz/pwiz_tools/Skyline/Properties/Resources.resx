@@ -4958,4 +4958,10 @@ Are you sure you want to continue?</value>
   <data name="BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library">
     <value xml:space="preserve">Legacy BiblioSpec Library</value>
   </data>
+  <data name="SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_">
+    <value xml:space="preserve">Failed reading Skyline document from the clipboard.</value>
+  </data>
+  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_">
+    <value xml:space="preserve">To extract chromatograms from {0} full-scan settings must be enabled.</value>
+  </data>
 </root>

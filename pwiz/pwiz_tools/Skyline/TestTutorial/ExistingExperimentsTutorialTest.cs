@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0
                 && SkylineWindow.Document.Settings.HasBackgroundProteome
                 && SkylineWindow.Document.Settings.IsLoaded
-                && SkylineWindow.GraphSpectrumVisible());
+                && SkylineWindow.IsGraphSpectrumVisible);
 
             // Inserting a Transition List With Associated Proteins, p. 6
             RunUI(() =>

@@ -842,9 +842,9 @@ namespace pwiz.Skyline
         }
 
         // Testing
-        public bool GraphSpectrumVisible()
+        public bool IsGraphSpectrumVisible
         {
-            return _graphSpectrum != null && _graphSpectrum.Visible;
+            get { return _graphSpectrum != null && _graphSpectrum.Visible; }
         }
 
         private GraphSpectrum CreateGraphSpectrum()

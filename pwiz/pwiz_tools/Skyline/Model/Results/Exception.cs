@@ -40,6 +40,14 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    internal class NoFullScanFilteringException : MissingDataException
+    {
+        public NoFullScanFilteringException(string fileName)
+            : base(Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_, fileName)
+        {
+        }
+    }
+
     internal class MissingDataException : IOException
     {
         public MissingDataException(string messageFormat, string fileName)

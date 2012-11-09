@@ -162,7 +162,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ChromatogramLineWidth" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">1</Value>
+      <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="ChromatogramFontSize" Type="System.Single" Scope="User">
       <Value Profile="(Default)">10</Value>

@@ -7398,6 +7398,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to To extract chromatograms from {0} full-scan settings must be enabled..
+        /// </summary>
+        public static string NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_ {
+            get {
+                return ResourceManager.GetString("NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatogram" +
+                        "s_from__0__full_scan_settings_must_be_enabled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to NonNegLsSolver DecompSolve: LQ decomposition not supported.
         /// </summary>
         public static string NonNegLsSolver_GetSolver_NonNegLsSolver_DecompSolve_LQ_decomposition_not_supported {
@@ -10974,6 +10984,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_Paste_Failed_getting_data_from_the_clipboard {
             get {
                 return ResourceManager.GetString("SkylineWindow_Paste_Failed_getting_data_from_the_clipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed reading Skyline document from the clipboard..
+        /// </summary>
+        public static string SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_", resourceCulture);
             }
         }
         
