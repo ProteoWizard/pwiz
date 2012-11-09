@@ -257,7 +257,8 @@ if (not dryrun) :
 	for ipath in includes :
 		addShipDir(ipath)
 	addShipDir(ac.get_pwizroot())
-
+	# include the doxygen stuff
+	addShipDir(ac.get_pwizroot()+"/doc/dox")
 	# include the whole boost_aux tree
 	for shipdir in shipdirs :
 		if "boost_aux" in shipdir : # recurse into this one
