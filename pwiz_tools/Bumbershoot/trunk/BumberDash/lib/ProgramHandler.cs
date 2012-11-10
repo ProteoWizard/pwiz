@@ -251,13 +251,16 @@ namespace BumberDash.lib
             {
                 if ((_destinationProgram == "TagRecon" && _filesToProcess*2 > _completedFiles.Count) ||
                 (_destinationProgram != "TagRecon" && _filesToProcess > _completedFiles.Count))
+                {
+                    _destinationProgram = string.Empty;
                     JobFinished(false, true);
+                }
                 else if (_destinationProgram == "DirecTag")
-                    JobFinished(true, false);
+                    JobFinished(true, _runningProgram.ExitCode != 0);
                 else
                 {
                     _destinationProgram = string.Empty;
-                    JobFinished(false, false);
+                    JobFinished(false, _runningProgram.ExitCode != 0);
                 }
             }
             else

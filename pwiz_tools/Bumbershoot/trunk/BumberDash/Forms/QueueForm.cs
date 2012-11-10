@@ -1,4 +1,25 @@
-﻿using System;
+﻿//
+// $Id: QueueForm.cs 98 2011-21-11 16:18:05Z holmanjd $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumberdash project.
+//
+// The Initial Developer of the Original Code is Jay Holman.
+//
+// Copyright 2010 Vanderbilt University
+//
+// Contributor(s): Surendra Dasari, Matt Chambers
+//
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -7,7 +28,9 @@ using System.Text;
 using System.Windows.Forms;
 using BumberDash.lib;
 using BumberDash.Model;
+using CustomDataSourceDialog;
 using CustomProgressCell;
+using pwiz.CLI.msdata;
 
 namespace BumberDash.Forms
 {
@@ -982,7 +1005,8 @@ namespace BumberDash.Forms
         private void DeleteRunning(int row)
         {
             var hi = (HistoryItem) JobQueueDGV[0, row].Tag;
-            var firstConfig = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").SingleOrDefault();
+        	var firstConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+            var firstConfig = firstConfigList.Any() ? firstConfigList[0] : null;
 
             //Remove associated pepXMLs? (yes/no)-> Save job for later? (no)-> [[Remove associated files as well?]]
 
@@ -1006,8 +1030,8 @@ namespace BumberDash.Forms
                     }
                     else
                     {
-                        var secondConfig =
-                            hi.TagConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").SingleOrDefault();
+						var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+						var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
                         foreach (var file in hi.FileList)
                         {
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
@@ -1135,7 +1159,8 @@ namespace BumberDash.Forms
         private void DeleteFinished(int row)
         {
             var hi = (HistoryItem) JobQueueDGV[0, row].Tag;
-            var firstConfig = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").SingleOrDefault();
+			var firstConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+			var firstConfig = firstConfigList.Any() ? firstConfigList[0] : null;
 
             //Remove associated pepXMLs? (yes/no)->  [[Remove associated files as well?]]
 
@@ -1159,8 +1184,8 @@ namespace BumberDash.Forms
                     }
                     else
                     {
-                        var secondConfig =
-                            hi.TagConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").SingleOrDefault();
+						var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+						var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
                         foreach (var file in hi.FileList)
                         {
                             if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
@@ -1261,9 +1286,10 @@ namespace BumberDash.Forms
                     for (var oldProperty = 0; oldProperty < item.PropertyList.Count; oldProperty++)
                     {
                         var property = item.PropertyList[oldProperty];
-                        var otherProperty = hi.InitialConfigFile.PropertyList.Where(
+                    	var otherPropertyList = hi.InitialConfigFile.PropertyList.Where(
                             x => (x.Name == property.Name &&
-                                  x.Value == property.Value)).SingleOrDefault();
+                    		      x.Value == property.Value)).ToList();
+                        var otherProperty = otherPropertyList.Any() ? otherPropertyList[0] : null;
 
                         if (otherProperty == null)
                         {
@@ -1303,10 +1329,10 @@ namespace BumberDash.Forms
                         for (var oldProperty = 0; oldProperty < item.PropertyList.Count; oldProperty++)
                         {
                             var property = item.PropertyList[oldProperty];
-                            var otherProperties = hi.TagConfigFile.PropertyList.Where(
-                                x => (x.Name == property.Name &&
-                                      x.Value == property.Value));
-                            var otherProperty = otherProperties.Count() == 1 ? otherProperties.SingleOrDefault() : null;
+							var otherPropertyList = hi.InitialConfigFile.PropertyList.Where(
+							x => (x.Name == property.Name &&
+								  x.Value == property.Value)).ToList();
+							var otherProperty = otherPropertyList.Any() ? otherPropertyList[0] : null;
                             if (otherProperty == null)
                             {
                                 foundDuplicate = false;

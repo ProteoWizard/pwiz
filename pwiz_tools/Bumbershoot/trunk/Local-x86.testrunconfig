@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TestSettings name="Local Test Run" id="1ff74241-afc5-4e9c-a2bf-bcb6c7eb42c6" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Description>This is a default test run configuration for a local test run.</Description>
+  <Deployment enabled="false">
+    <DeploymentItem filename="BumberDash\lib\" />
+  </Deployment>
+  <NamingScheme baseName="Run" appendTimeStamp="false" useDefault="false" />
+  <Execution>
+    <TestTypeSpecific>
+      <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
+        <AssemblyResolution>
+          <TestDirectory useLoadContext="false" />
+        </AssemblyResolution>
+      </UnitTestRunConfig>
+    </TestTypeSpecific>
+    <AgentRule name="LocalMachineDefaultRole">
+    </AgentRule>
+  </Execution>
+</TestSettings>

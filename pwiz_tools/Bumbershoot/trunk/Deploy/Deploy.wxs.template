@@ -1,0 +1,153 @@
+﻿<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+   <Product Id="{ProductGuid}"
+            Name="BumberDash {version} $(var.AddressModel)-bit"
+            Language="1033"
+            Version="{version}"
+            Manufacturer="Bumbershoot"
+            UpgradeCode="5E0E2BAA-8F65-4B7F-A50B-C81A7EA0A00A">
+
+      <Package Description="BumberDash {version} $(var.AddressModel)-bit Installer" Manufacturer="Bumbershoot" InstallerVersion="300" Compressed="yes" />
+      <Media Id="1" Cabinet="BumberDash.cab" EmbedCab="yes" />
+      <Icon Id="BumberDash_Icon.exe" SourceFile="msvc-release\BumberDash.exe" />
+      <Property Id="ARPPRODUCTICON" Value="BumberDash_Icon.exe" />
+      <Property Id="ALLUSERS" Value="1" />
+      <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONROOTDIRECTORY" />
+      <WixVariable Id="WixUIBannerBmp" Value="..\Deploy\Resources\BumberDashSetupBanner.bmp" />
+      <WixVariable Id="WixUIDialogBmp" Value="..\Deploy\Resources\BumberDashSetupBackground.bmp" />
+
+      <?if $(var.AddressModel)=64 ?>
+      <?define ProgramFilesFolder="ProgramFiles64Folder"?>
+      <?else?>
+      <?define ProgramFilesFolder="ProgramFilesFolder"?>
+      <?endif?>
+
+      <PropertyRef Id='NETFRAMEWORK35'/>
+      <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
+      <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">
+        <![CDATA[Installed OR (NETFRAMEWORK35_SP_LEVEL and NOT NETFRAMEWORK35_SP_LEVEL = "#0")]]>
+      </Condition>
+
+      <PropertyRef Id='NETFRAMEWORK40FULL'/>
+      <Condition Message="Requires Microsoft .NET 4.0 Framework">
+        <![CDATA[Installed OR (NETFRAMEWORK40FULL = "#1")]]>
+      </Condition>
+
+      <UI>
+         <UIRef Id="WixUI_InstallDir" />
+         <!-- skip license dialog -->
+         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">1</Publish>
+         <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">1</Publish>
+      </UI>
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+
+        <?if $(var.AddressModel)=64 ?>
+          <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
+          <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
+          <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
+          <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
+
+          <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x64.msm" DiskId="1" />
+          <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x64.msm" DiskId="1" />
+        <?else?>
+          <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+          <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+          <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+          <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+
+          <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" />
+          <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
+        <?endif?>
+        
+        <Directory Id="ProgramMenuFolder" />
+        <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
+          <Directory Id="BumbershootFolder" Name="Bumbershoot">
+            <Directory Id="APPLICATIONROOTDIRECTORY" Name="BumberDash {version} $(var.AddressModel)-bit">
+              <Component Feature="MainFeature" Id="MainComponent">
+                <File Id="BumberDash.exe" Name="BumberDash.exe" Source="msvc-release\BumberDash.exe" KeyPath="yes" Checksum="yes" />
+                <Shortcut Id="MainShortcut" Directory="ProgramMenuFolder" Name="BumberDash {version} $(var.AddressModel)-bit" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="BumberDash_Icon.exe" IconIndex="-101" Advertise="yes" />
+              </Component>
+
+<!-- Components unique to BumberDash -->
+<Component Feature="MainFeature"><File Id="_BumberDash.exe.config" Name="BumberDash.exe.config" Source="msvc-release\BumberDash.exe.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BumberDash.exe.manifest" Name="BumberDash.exe.manifest" Source="msvc-release\BumberDash.exe.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Antlr3.Runtime.dll" Name="Antlr3.Runtime.dll" Source="msvc-release\Antlr3.Runtime.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Castle.Core.dll" Name="Castle.Core.dll" Source="msvc-release\Castle.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Iesi.Collections.dll" Name="Iesi.Collections.dll" Source="msvc-release\Iesi.Collections.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_NHibernate.ByteCode.Castle.dll" Name="NHibernate.ByteCode.Castle.dll" Source="msvc-release\NHibernate.ByteCode.Castle.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_NHibernate.dll" Name="NHibernate.dll" Source="msvc-release\NHibernate.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Remotion.Data.Linq.dll" Name="Remotion.Data.Linq.dll" Source="msvc-release\Remotion.Data.Linq.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
+
+<!-- Bruker and T2D support not available in 64-bit -->
+<?if $(var.AddressModel)=32 ?>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.dll" Name="BDal.CXt.Lc.dll" Source="msvc-release\BDal.CXt.Lc.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Factory.dll" Name="BDal.CXt.Lc.Factory.dll" Source="msvc-release\BDal.CXt.Lc.Factory.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Interfaces.dll" Name="BDal.CXt.Lc.Interfaces.dll" Source="msvc-release\BDal.CXt.Lc.Interfaces.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.UntU2.dll" Name="BDal.CXt.Lc.UntU2.dll" Source="msvc-release\BDal.CXt.Lc.UntU2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_NTB_vc80_mt_1_5_97.dll" Name="NTB-vc80-mt-1_5_97.dll" Source="msvc-release\NTB-vc80-mt-1_5_97.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.EDAL.dll" Name="Interop.EDAL.dll" Source="msvc-release\Interop.EDAL.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.EDAL.SxS.manifest" Name="Interop.EDAL.SxS.manifest" Source="msvc-release\Interop.EDAL.SxS.manifest" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.dll" Name="Interop.HSREADWRITELib.dll" Source="msvc-release\Interop.HSREADWRITELib.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.SxS.manifest" Name="Interop.HSREADWRITELib.SxS.manifest" Source="msvc-release\Interop.HSREADWRITELib.SxS.manifest" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_libfftw3_3.dll" Name="libfftw3-3.dll" Source="msvc-release\libfftw3-3.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_libfftw3f_3.dll" Name="libfftw3f-3.dll" Source="msvc-release\libfftw3f-3.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_FlexVariableTable.xml" Name="FlexVariableTable.xml" Source="msvc-release\FlexVariableTable.xml" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_HSReadWrite.dll" Name="HSReadWrite.dll" Source="msvc-release\HSReadWrite.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_ICRVariableTable.xml" Name="ICRVariableTable.xml" Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_CompassXtractMS.dll" Name="CompassXtractMS.dll" Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_boost_date_time_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_boost_regex_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_boost_thread_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.DataExplorer.dll" Name="Interop.DataExplorer.dll" Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
+<?endif?>
+
+<!-- Components shared by BumberDash and ProteoWizard -->
+<Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll" Name="CustomDataSourceDialog.dll" Source="msvc-release\CustomDataSourceDialog.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll.config" Name="CustomDataSourceDialog.dll.config" Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.MSFileReaderLib.dll" Name="Interop.MSFileReaderLib.dll" Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pwiz_bindings_cli.dll" Name="pwiz_bindings_cli.dll" Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_agtsampleinforw.dll" Name="agtsampleinforw.dll" Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseCommon.dll" Name="BaseCommon.dll" Source="msvc-release\BaseCommon.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseDataAccess.dll" Name="BaseDataAccess.dll" Source="msvc-release\BaseDataAccess.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseError.dll" Name="BaseError.dll" Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseTof.dll" Name="BaseTof.dll" Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.AnalystDataProvider.dll" Name="Clearcore2.Data.AnalystDataProvider.dll" Source="msvc-release\Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.CommonInterfaces.dll" Name="Clearcore2.Data.CommonInterfaces.dll" Source="msvc-release\Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.dll" Name="Clearcore2.Data.dll" Source="msvc-release\Clearcore2.Data.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.WiffReader.dll" Name="Clearcore2.Data.WiffReader.dll" Source="msvc-release\Clearcore2.Data.WiffReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.InternalRawXYProcessing.dll" Name="Clearcore2.InternalRawXYProcessing.dll" Source="msvc-release\Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.ProjectUtilities.dll" Name="Clearcore2.ProjectUtilities.dll" Source="msvc-release\Clearcore2.ProjectUtilities.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.StructuredStorage.dll" Name="Clearcore2.StructuredStorage.dll" Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Utility.dll" Name="Clearcore2.Utility.dll" Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Muni.dll" Name="Clearcore2.Muni.dll" Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.RawXYProcessing.dll" Name="Clearcore2.RawXYProcessing.dll" Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_EULA.MHDAC" Name="EULA.MHDAC" Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_EULA.MSFileReader" Name="EULA.MSFileReader" Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
+<?if $(var.AddressModel)=64 ?>
+    <Component Feature="MainFeature"><File Id="_fileio_x64.dll" Name="fileio_x64.dll" Source="msvc-release\fileio_x64.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_fregistry_x64.dll" Name="fregistry_x64.dll" Source="msvc-release\fregistry_x64.dll" KeyPath="yes"/></Component>
+<?else?>
+    <Component Feature="MainFeature"><File Id="_fileio.dll" Name="fileio.dll" Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_fregistry.dll" Name="fregistry.dll" Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
+<?endif?>
+<Component Feature="MainFeature"><File Id="_MassLynxRaw.dll" Name="MassLynxRaw.dll" Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MassSpecDataReader.dll" Name="MassSpecDataReader.dll" Source="msvc-release\MassSpecDataReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSFileReader.XRawfile2.dll" Name="MSFileReader.XRawfile2.dll" Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSFileReader.XRawfile2.SxS.manifest" Name="MSFileReader.XRawfile2.SxS.manifest" Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
+              </Directory>
+          </Directory>
+        </Directory>
+        </Directory>
+
+        <Feature Id="MainFeature" Title="BumberDash {version} $(var.AddressModel)-bit" Level="1">
+          <MergeRef Id="CRT9" />
+          <MergeRef Id="MFC9" />
+          <MergeRef Id="CRT9_policy" />
+          <MergeRef Id="MFC9_policy" />
+          <MergeRef Id="CRT10" />
+          <MergeRef Id="MFC10" />
+        </Feature>   
+    </Product>
+</Wix>

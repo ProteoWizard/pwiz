@@ -1,5 +1,5 @@
 ﻿//
-// $Id: LayoutNameBox.cs 239 2010-11-15 17:20:21Z holmanjd $
+// $Id: LayoutNameBox.cs 48 2010-11-15 17:20:21Z holmanjd $
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in

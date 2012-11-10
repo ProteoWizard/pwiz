@@ -118,13 +118,46 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="SearchFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\SearchFolder.gif;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="folder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\folder.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="BumberIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\BumberIcon.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Left_Arrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Left Arrow.gif;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="search4doc" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\search4doc.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Right_Arrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Right Arrow.gif;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Arrow_Active" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Arrow Active.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Arrow_Faded" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Arrow Faded.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Back_Active" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Back Active.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Back_Faded" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Back Faded.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Forward_Active" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Forward Active.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Forward_Faded" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Forward Faded.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SearchButton" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SearchButton.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SearchButtonLit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SearchButtonLit.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Arrow_Lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Arrow Lit.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Back_Lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Back Lit.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Forward_Lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Forward Lit.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

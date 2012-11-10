@@ -1,5 +1,5 @@
 ﻿//
-// $Id: DataGridViewProgressBar.cs 2666 2011-04-28 15:57:33Z chambm $
+// $Id: DataGridViewProgressBar.cs 48 2011-04-28 15:57:33Z chambm $
 //
 //
 // Original author: Jay Holman <jay.holman .@. vanderbilt.edu>
@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.ComponentModel;
 
-
 namespace CustomProgressCell
 {
     public sealed class DataGridViewProgressColumn : DataGridViewColumn
@@ -35,10 +34,7 @@ namespace CustomProgressCell
             CellTemplate = new DataGridViewProgressCell();
         }
     }
-}
 
-namespace CustomProgressCell
-{
     sealed class DataGridViewProgressCell : DataGridViewTextBoxCell
     {
         #region Public data accessors

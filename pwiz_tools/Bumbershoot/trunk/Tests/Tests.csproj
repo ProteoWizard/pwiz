@@ -55,7 +55,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
+    <OutputPath>..\build-nt-x86\msvc-debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -63,13 +63,44 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>..\BumberDash\bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>..\build-nt-x86\msvc-release\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>..\build-nt-x86\msvc-debug\Tests.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>..\build-nt-x86\msvc-release\Tests.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime, Version=3.1.3.42154, Culture=neutral, PublicKeyToken=3a9cab8f8d22bfb7, processorArchitecture=MSIL">
@@ -97,6 +128,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\BumberDash\lib\Nhibernate\NHibernate.ByteCode.Castle.dll</HintPath>
     </Reference>
+    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\pwiz_bindings_cli.dll</HintPath>
+    </Reference>
     <Reference Include="Remotion.Data.Linq, Version=1.13.41.2, Culture=neutral, PublicKeyToken=cab60358ab4081ea, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\BumberDash\lib\Nhibernate\Remotion.Data.Linq.dll</HintPath>
@@ -109,13 +144,10 @@
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.66.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\BumberDash\lib\System.Data.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data.SQLite.Linq, Version=2.0.38.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\BumberDash\lib\System.Data.SQLite.Linq.dll</HintPath>
+      <HintPath>..\freicore\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -186,6 +218,10 @@
     <ProjectReference Include="..\BumberDash\BumberDash.csproj">
       <Project>{0C577381-C63D-418D-AB7B-5BF97CE76B1A}</Project>
       <Name>BumberDash</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CustomDataSourceDialog\CustomDataSourceDialog.csproj">
+      <Project>{6B7B0771-4D09-469F-AEFA-00E4FA06D017}</Project>
+      <Name>CustomDataSourceDialog</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -267,7 +303,7 @@
     <None Include="Data\tinyDB.fasta">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Data\tinyDB.fasta.index">
+    <None Include="Data\tinyLib.sptxt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Data\WatersTest.raw\_FUNC001.DAT">
@@ -360,6 +396,20 @@
     <None Include="Data\WatersTest.raw\_FUNC010.STS">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.EDAL.SxS.manifest</Name>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\Interop.EDAL.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.HSREADWRITELib.SxS.manifest</Name>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\Interop.HSREADWRITELib.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=win32">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

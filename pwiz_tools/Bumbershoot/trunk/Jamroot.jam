@@ -1,0 +1,696 @@
+#
+# $Id: Jamroot.jam 48 2011-10-28 16:03:46Z chambm $
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+# The Original Code is the BumberDash build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2009 Vanderbilt University
+#
+# Contributor(s): Surendra Dasaris, Jay Holman
+#
+
+# Usage:
+#
+#   bjam [options]
+#
+#   Builds and installs BumberDash.
+#
+# Targets and Related Options:
+#
+#   build                   Build Bumbershoot libraries and applications
+#   =====
+
+
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+.platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
+
+# set up explicit 32-bit or 64-bit builds
+if "address-model=64" in [ modules.peek : ARGV ] || $(.platform:L) = "x86_64"
+{
+    constant PROCESSOR_ARCHITECTURE : "AMD64" ;
+    constant PLATFORM : "x64" ;
+}
+else if "address-model=32" in [ modules.peek : ARGV ] || $(.platform:L) = "x86"
+{
+    constant PROCESSOR_ARCHITECTURE : "x86" ;
+    constant PLATFORM : "x86" ;
+}
+else
+{
+    echo "Unable to determine address-model for platform $(.platform:L). The only supported platforms are x86 and x86_64." ;
+    exit ;
+}
+
+constant BOOST_VERSION : 1 43 0 ;
+
+local default_libraries_path = "./freicore/libraries" ;
+local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
+libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
+
+local default_boost_src = "$(libraries_path)/boost_$(BOOST_VERSION:J=_)" ;
+local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
+boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
+
+local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
+local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
+zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
+
+local default_png_src = "$(libraries_path)/libpng-1.5.6" ;
+local png_src = [ MATCH --png-src=(.*) : [ modules.peek : ARGV ] ] ;
+png_src ?= $(default_png_src) ; # set default path in absence of command-line path
+
+
+path-constant ROOT_PATH : . ;
+path-constant BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
+path-constant LIBRARIES_PATH : $(libraries_path) ;
+path-constant PWIZ_SOURCE : ./freicore/pwiz_src ;
+path-constant BUMBERSHOOT_BASE : ./BumberDash/lib/Bumbershoot ;
+
+
+# this makes pwiz use freicore's libraries directory
+local argv = [ modules.peek : ARGV ] ;
+modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
+
+
+import os ;
+import modules ;
+import common ;
+import package ;
+import errors : error ;
+import feature ;
+import path ;
+
+
+project bumbershoot
+	: requirements
+	  <include>$(PWIZ_SOURCE)
+	  <include>$(LIBRARIES_PATH)/boost_aux
+	  <include>$(LIBRARIES_PATH)/boost_$(BOOST_VERSION:J=_)
+	  <include>$(LIBRARIES_PATH)/libsvm-3.0
+
+      # any module which links with .NET (either dynamically or statically) must use the shared runtime
+      <toolset>msvc:<runtime-link>shared
+
+      # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+      # also, catch(...) will catch SEH exceptions with this on
+      <toolset>msvc:<asynch-exceptions>on
+        
+      # special msvc hacks
+      <toolset>msvc:<define>WIN32                     # windows
+      <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+      <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+      <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
+      <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
+      <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
+      <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
+      <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
+      <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
+      <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
+      <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
+      <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+      <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
+      <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+      <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
+
+      # warning: _SECURE_SCL_THROWS is deprecated
+      <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+
+      <threading>multi
+
+  : build-dir $(BUILD_PATH)
+  : default-build
+      <variant>release
+      <link>static
+      <runtime-link>static
+	;
+
+alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
+
+tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
+tmp += freicore/ext freicore/libraries ;
+modules.poke : BOOST_BUILD_PATH : $(tmp) ;
+
+
+local application-name = "BumberDash" ;
+
+
+# set version info (used for tarball filenames)
+import svnrev sequence numbers string ;
+
+constant MAJOR : 1 ;
+constant MINOR : 4 ;
+
+# rule for generating a C++/CLI or C# AssemblyInfo file
+rule generate-AssemblyInfo ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? : cpp-cli ? :
+                             AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
+{
+    local extension = "cs" ;
+    local using-namespace = "using" ;
+    local namespace-delimiter = "." ;
+    local attribute-suffix = "" ;
+    local attribute-line-terminator = "" ;
+    if $(cpp-cli)
+    {
+        extension = "cpp" ;
+        using-namespace = "using namespace" ;
+        namespace-delimiter = "::" ;
+        attribute-suffix = "Attribute" ;
+        attribute-line-terminator = ";" ;
+    }
+
+    # default filepath is "BumberDash/Properties/AssemblyInfo" in the current directory
+    filepath ?= BumberDash\\Properties\\AssemblyInfo.$(extension) ;
+
+    if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
+
+    local existing-revision-info ;
+    if [ path.exists $(filepath) ]
+    {
+        existing-revision-info = [ svnrev.get-revision-info $(filepath) ] ;
+        if $(print-revision-info) { echo Existing maximum revision: $(existing-revision-info) ; }
+    }
+
+    sources-with-rcs-keywords = [ sequence.transform path.native : $(sources-with-rcs-keywords) ] ;
+    local revision-info = [ svnrev.get-revision-info $(sources-with-rcs-keywords)
+                                : $(warn-on-missing) : $(print-revision-info) ] ;
+
+    if $(print-revision-info) { echo Current maximum revision: $(revision-info) ; }
+
+    if ! $(existing-revision-info) ||
+       $(existing-revision-info[1]) != $(revision-info[1])
+    {
+        if [ path.exists $(filepath) ]
+        {
+            local rm = [ common.rm-command ] ;
+            rm = $(rm:J=" ") ;
+            SHELL "$(rm) $(filepath)" ;
+        }
+
+        local AssemblyCopyright = "Copyright © $(AssemblyCompany) $(revision-info[2])" ;
+
+        local header-text =
+"// This file was generated by the \"svnrev\" utility
+// You should not modify it manually, as it may be re-generated.
+//
+// $Revision: $(revision-info[1]) $
+// $Date: $(revision-info[2])-$(revision-info[3])-$(revision-info[4]) $
+//
+
+$(using-namespace) System$(namespace-delimiter)Reflection;
+$(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)CompilerServices;
+$(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)InteropServices;
+
+[assembly: AssemblyTitle$(attribute-suffix)(\"$(AssemblyTitle)\")]$(attribute-line-terminator)
+[assembly: AssemblyDescription$(attribute-suffix)(\"$(AssemblyDescription)\")]$(attribute-line-terminator)
+[assembly: AssemblyConfiguration$(attribute-suffix)(\"\")]$(attribute-line-terminator)
+[assembly: AssemblyCompany$(attribute-suffix)(\"$(AssemblyCompany)\")]$(attribute-line-terminator)
+[assembly: AssemblyProduct$(attribute-suffix)(\"$(AssemblyProduct)\")]$(attribute-line-terminator)
+[assembly: AssemblyCopyright$(attribute-suffix)(\"$(AssemblyCopyright)\")]$(attribute-line-terminator)
+[assembly: AssemblyTrademark$(attribute-suffix)(\"\")]$(attribute-line-terminator)
+[assembly: AssemblyCulture$(attribute-suffix)(\"\")]$(attribute-line-terminator)
+[assembly: AssemblyVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]$(attribute-line-terminator)
+[assembly: AssemblyFileVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]$(attribute-line-terminator)
+[assembly: ComVisible$(attribute-suffix)(false)]$(attribute-line-terminator)
+[assembly: Guid$(attribute-suffix)(\"dab6e9af-8922-4787-8026-05c2e1275ca2\")]$(attribute-line-terminator)
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo$(attribute-suffix)(\"Tests\")]$(attribute-line-terminator)
+" ;
+
+        header-text = @($(filepath):E=$(header-text)) ;
+    }
+
+    return $(revision-info) ;
+}
+
+# rule for generating a C# AssemblyInfo file
+rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
+                                AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
+{
+    generate-AssemblyInfo $(filepath) : $(sources-with-rcs-keywords) : $(warn-on-missing) : $(print-revision-info) : :
+                          "$(AssemblyTitle)" "$(AssemblyDescription)" "$(AssemblyCompany)" "$(AssemblyProduct)" ;
+}
+
+# rule for generating a C++/CLI AssemblyInfo file
+rule generate-AssemblyInfo.cpp ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
+                                 AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
+{
+    generate-AssemblyInfo $(filepath) : $(sources-with-rcs-keywords) : $(warn-on-missing) : $(print-revision-info) : cpp-cli :
+                          "$(AssemblyTitle)" "$(AssemblyDescription)" "$(AssemblyCompany)" "$(AssemblyProduct)" ;
+}
+
+# rule for generating a native rc file with version info and optional icons
+rule generate-rc ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? : 
+                   Title Description Company Product : Icons * )
+{
+    # default filepath is "Properties/Resources.rc" in the current directory
+    filepath ?= Properties\\Resources.rc ;
+
+    if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
+
+    local existing-revision-info ;
+    if [ path.exists $(filepath) ]
+    {
+        existing-revision-info = [ svnrev.get-revision-info $(filepath) ] ;
+        if $(print-revision-info) { echo Existing maximum revision: $(existing-revision-info) ; }
+    }
+
+    sources-with-rcs-keywords = [ sequence.transform path.native : $(sources-with-rcs-keywords) ] ;
+    local revision-info = [ svnrev.get-revision-info $(sources-with-rcs-keywords)
+                                : $(warn-on-missing) : $(print-revision-info) ] ;
+
+    if $(print-revision-info) { echo Current maximum revision: $(revision-info) ; }
+
+    if ! $(existing-revision-info) ||
+       $(existing-revision-info[1]) != $(revision-info[1])
+    {
+        if [ path.exists $(filepath) ]
+        {
+            local rm = [ common.rm-command ] ;
+            rm = $(rm:J=" ") ;
+            SHELL "$(rm) $(filepath)" ;
+        }
+
+        local copyright = "Copyright © $(Company) $(revision-info[2])" ;
+
+        local icons-text = "" ;
+        local resourceId = 101 ;
+        for icon in $(Icons)
+        {
+            icons-text += "$(resourceId) ICON \"$(icon)\"\n" ;
+            resourceId = [ numbers.increment $(resourceId) ] ;
+        }
+        icons-text = [ string.join $(icons-text) ] ;
+
+        local header-text =
+"// This file was generated by the \"svnrev\" utility
+// You should not modify it manually, as it may be re-generated.
+//
+// $Revision: $(revision-info[1]) $
+// $Date: $(revision-info[2])-$(revision-info[3])-$(revision-info[4]) $
+//
+
+#include <windows.h>
+
+//1 RT_MANIFEST \"App.manifest\"
+
+$(icons-text)
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     $(MAJOR),$(MINOR),$(revision-info[1]),0
+PRODUCTVERSION  $(MAJOR),$(MINOR),$(revision-info[1]),0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK \"StringFileInfo\"
+    BEGIN
+        BLOCK \"040904E4\" // en-US/cp-1252
+        BEGIN
+            VALUE \"CompanyName\",      \"$(Company)\"
+            VALUE \"ProductName\",      \"$(Product)\"
+            VALUE \"ProductVersion\",   \"$(MAJOR).$(MINOR).$(revision-info[1])\"
+            VALUE \"FileVersion\",      \"$(MAJOR).$(MINOR).$(revision-info[1])\"
+            VALUE \"FileDescription\",  \"$(Description)\"
+            VALUE \"LegalCopyright\",   \"$(copyright)\"
+        END
+    END
+        BLOCK \"VarFileInfo\"
+        BEGIN
+            VALUE \"Translation\", 0x409, 1252 // en-US in ANSI (cp-1252)
+        END
+    END
+END
+" ;
+
+        header-text = @($(filepath):E=$(header-text)) ;
+    }
+
+    return $(revision-info) ;
+}
+
+constant COMPANY_AND_PRODUCT : "Vanderbilt University" "BumberDash" ;
+    
+generate-rc BumberDash\\Resources\\Resources.rc :
+    [ path.glob-tree . : *.jam
+                         *.?pp *.h
+                         *.cs
+                         #*.html
+                         #*.vdproj
+      : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
+    : warn-on-missing : : "BumberDash" "BumberDash" $(COMPANY_AND_PRODUCT)
+    : [ sequence.transform path.basename : [ path.glob BumberDash/Resources : *.ico ] ] ;
+
+
+constant COMPANY_AND_PRODUCT : "Vanderbilt University" "BumberDash" ;
+
+# generate BumberDash version header
+local revision-info = [ generate-AssemblyInfo.cs BumberDash\\Properties\\AssemblyInfo.cs :
+    [ path.glob-tree . : *.jam
+                         *.?pp *.h
+                         *.cs
+                         #*.html
+                         #*.vdproj
+      : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs ]
+    : : : "BumberDash" "Graphical user interface for configuring, queueing, and running analysis tools in the Bumbershoot suite." $(COMPANY_AND_PRODUCT) ] ;
+
+# revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
+
+local year = $(revision-info[2]) ;
+local month = $(revision-info[3]) ;
+local day = $(revision-info[4]) ;
+
+constant SVNREV : $(revision-info[1]) ;
+constant SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
+constant version-tag : $(MAJOR) $(MINOR) $(SVNREV) ;
+
+if $(revision-info[5]) > 0
+{
+    version-tag += "modified" ;
+    echo NOTICE: WORKING COPY HAS $(revision-info[5]) MODIFIED FILES. ;
+}
+
+echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
+
+
+# create a VERSION file which can be used by TC to parse the canonical pwiz version
+make VERSION : : @make_VERSION : <location>$(BUILD_PATH) ;
+actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
+
+
+path-constant BOOST_SOURCE : $(boost_src) ;
+path-constant ZLIB_SOURCE : $(zlib_src) ;
+path-constant PNG_SOURCE : $(png_src) ;
+
+local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
+if ! $(.has-boost)
+{
+    modules.poke : BOOST_VERSION : $(BOOST_VERSION) ;
+    using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+}
+
+using png : 1.5.6 : $(PNG_SOURCE) : $(options) ;
+
+
+rule install-location ( properties * )
+{
+    local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties) { location = $(location)-shared ; }
+    if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
+
+    return <location>$(location) ;
+}
+
+rule install-vendor-api-dependencies ( properties * )
+{
+    local location = [ install-location $(properties) ] ;
+    local dependencies ;
+    if <toolset>msvc in $(properties)
+    {
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
+
+        if ! <address-model>64 in $(properties)
+        {
+            if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
+            if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+        }
+    }
+    return $(dependencies) ;
+}
+
+
+rule pwiz-dependency ( properties * )
+{
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    local location = <location>$(BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
+    return <assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
+           <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
+           <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
+}
+
+
+rule msbuild_BumberDash ( targets + : sources * : properties * )
+{
+    if <variant>debug in $(properties)
+    {
+        CONFIGURATION on $(<[1]) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(<[1]) = "Release" ;
+    }
+
+    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/$(PLATFORM)/" ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+}
+
+actions msbuild_BumberDash
+{
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    echo Building BumberDash in $(CONFIGURATION:L) configuration...
+    msbuild $(ROOT_PATH)/BumberDash/BumberDash.csproj /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutputPath=$(OUTPUT_PATH) /nologo /verbosity:minimal
+}
+
+rule build-location ( properties * )
+{
+    local result ;
+    # don't override the location when it's already set
+    if ! <location> in $(properties:G)
+    {
+        if <variant>debug in $(properties)
+        {
+            result = <location>$(BUILD_PATH)/bin/$(PLATFORM)/Debug ;
+        }
+        else
+        {
+            result = <location>$(BUILD_PATH)/bin/$(PLATFORM)/Release ;
+        }
+        return $(result) ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
+
+
+import tar ;
+using tar ;
+
+local pwiz_src_tarball = [ SORT [ glob $(ROOT_PATH)/freicore/pwiz-src*.tar.bz2 ] ] ;
+pwiz_src_tarball = $(pwiz_src_tarball[-1]) ; # take the last (latest) tarball
+
+# extract pwiz tarball
+tar.extract
+      # tar filepath
+        $(pwiz_src_tarball)
+    : # include patterns
+        quickbuild.* clean.*
+        Jamroot.jam
+        LICENSE NOTICE
+        pwiz
+        pwiz_aux/msrc
+        pwiz_aux/Jamfile.jam
+        pwiz_tools/common
+        pwiz_tools/Shared/MSGraph
+        pwiz_tools/Shared/Lib
+        pwiz_tools/Shared/Common
+
+    : # requirements
+        <location>$(PWIZ_SOURCE)
+    : # usage-requirements
+    : check-last-file-only
+    ;
+	
+make BumberDash.exe
+    : # sources
+        BumberDash/Program.cs
+    : # actions
+        @msbuild_BumberDash
+    : # requirements
+        <dependency>BumberDash/lib//Bumbershoot
+        <conditional>@install-location
+        <conditional>@pwiz-dependency
+        <conditional>@install-vendor-api-dependencies
+    ;
+
+rule dotNET-dependencies ( properties * )
+{
+    if <toolset>msvc in $(properties)
+    {
+        local location = [ install-location $(properties) ] ;
+        return <dependency>BumberDash.exe/$(location) ;
+    }
+}
+
+build-project Deploy ;
+
+# any source tree can build binary tarballs
+
+import modules os sequence property-set ;
+
+bin-tarball-basename = "$(application-name:L)-bin" ;
+
+rule binary-tarball-requirements ( properties * )
+{
+    local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    local location = [ feature.get-values <location> : [ install-location $(properties) ] ] ;
+
+    local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
+
+    if $(variants[1]) = "release"
+    {
+        non-redistributables += *.pdb ; # MSVC debug symbols
+    }
+
+    non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
+    local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
+    if ! <architecture> in $(properties:G)
+    {
+        if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
+        else if $(.platform:L) = "x86" && <address-model>64 in $(properties) { properties += <architecture>x86_64 ; } 
+        else { properties += <architecture>$(.platform:L) ; }
+    }
+    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> -$(version-tag:J=_)
+                                      : $(bin-tarball-basename) : TBZ2 : [ property-set.create $(properties) ] ] ;
+    result += <name>$(name) <dependency>BumberDash.exe <location>$(BUILD_PATH) <dependency>VERSION ;
+    return $(result) ;
+}
+
+
+tar.create $(bin-tarball-basename).tar.bz2
+  : # sources are handled by the conditional
+
+  : # requirements
+      <conditional>@binary-tarball-requirements
+  ;
+
+
+# full source trees automatically build source tarballs
+
+if ! [ path.exists $(ROOT_PATH)/SUBSET ]
+{
+
+import bcp ;
+using bcp : $(BOOST_SOURCE) : $(BUILD_PATH)/bcp : release ;
+
+path-constant BOOST_SUBSET_PATH : $(BUILD_PATH)/boost-subset ;
+
+bcp.copy-boost-dependencies copy_boost_subset
+  : # sources
+
+    # scan all source files for boost dependencies
+    [ glob freicore/*.cpp freicore/*.h ]
+    [ path.glob-tree $(PWIZ_SOURCE)/pwiz : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_SOURCE)/pwiz_aux : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_SOURCE)/pwiz_tools/common : *.cpp *.hpp ]
+    [ path.glob-tree $(LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
+
+    $(LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp
+
+  : # requirements
+    <location>$(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
+  ;
+
+
+tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
+  : # sources
+
+      path-anchor:$(BOOST_SUBSET_PATH)
+      $(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
+
+  : # requirements
+    <location>$(BOOST_SUBSET_PATH)/freicore/libraries
+    <dependency>copy_boost_subset
+  ;
+
+.exclusion-list =
+  exclude:.svn
+  exclude:*.bak
+  exclude:svnrev.hpp
+  exclude:*Version.cpp
+  exclude:Reader_*_Test.data*
+  exclude:site-config.jam exclude:user-config.jam # user should provide these
+  exclude:bootstrap exclude:bin.* # boost-build intermediate directories
+  exclude:bin exclude:obj # C#.NET intermediate directories
+  exclude:Deploy/*.dll exclude:Deploy/*.pdb exclude:Deploy/*.exe exclude:Deploy/*.xml
+  exclude:BumberDash/lib/Bumbershoot/*
+  exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
+;
+
+# the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
+make SUBSET : : @make_SUBSET : <location>$(BUILD_PATH) ;
+actions make_SUBSET
+{
+@($(STDOUT):E=
+This $(application-name) source tree uses a subset of the full Boost tarball.
+) > "$(<)"
+}
+
+.common-sources =
+;
+
+tar.create $(application-name:L)-src.tar.bz2
+  : # sources
+
+    path-anchor:$(ROOT_PATH)
+
+    $(.exclusion-list)
+
+    $(ROOT_PATH)/BumberDash
+	$(ROOT_PATH)/Deploy
+    $(ROOT_PATH)/Tests
+
+    [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]
+    [ glob $(ROOT_PATH)/freicore/percolator/*.h ]
+    [ glob $(ROOT_PATH)/freicore/percolator/*.cpp ]
+    $(ROOT_PATH)/freicore/Jamfile.jam
+    $(ROOT_PATH)/freicore/ext
+
+    $(ROOT_PATH)/Jamroot.jam
+    $(ROOT_PATH)/quickbuild.bat
+    $(ROOT_PATH)/quickbuild.sh
+    $(ROOT_PATH)/clean.bat
+    $(ROOT_PATH)/clean.sh
+    #$(ROOT_PATH)/LICENSE
+
+    $(LIBRARIES_PATH)/boost-build
+    $(LIBRARIES_PATH)/boost_aux
+    $(LIBRARIES_PATH)/libsvm-3.0
+    [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
+
+    path-anchor:$(BUILD_PATH)
+    $(BUILD_PATH)/SUBSET
+
+    # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
+    path-anchor:$(BOOST_SUBSET_PATH)
+    $(BOOST_SUBSET_PATH)/freicore/libraries
+
+  : # requirements
+    <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
+    <location>$(BUILD_PATH)
+    <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2
+  ;
+
+} # if SUBSET

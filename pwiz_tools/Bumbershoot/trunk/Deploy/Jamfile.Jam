@@ -1,0 +1,92 @@
+#
+# $Id: Jamfile.jam 1 2012-01-10 22:23:48Z chambm $
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+# The Original Code is the BumberDash build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2012 Vanderbilt University
+#
+# Contributor(s):
+#
+
+
+import modules path feature ;
+
+path-constant THIS_PATH : . ;
+
+rule msbuild_deploy ( targets + : sources * : properties * )
+{
+    local address-model = [ feature.get-values <address-model> : $(properties) ] ;
+    ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
+    LOCATION on $(targets) = [ feature.get-values <location> : $(properties) ] ;
+    TOOLSET on $(targets) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
+    OUTPUT_PATH on $(targets) = [ path.native $(BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    ARTIFACT_NAME on $(targets) = BumberDash-$(version-tag:J=.) ;
+    
+    if $(address-model) = 64
+    {
+        ARCH on $(targets) = x64 ;
+        ARCH_SUFFIX on $(targets) = "-x86_64" ;
+    }
+    else
+    {
+        ARCH on $(targets) = x86 ;
+        ARCH_SUFFIX on $(targets) = "-x86" ;
+    }
+}
+
+actions msbuild_deploy
+{
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    echo Building SetupDeployProject...
+    msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    if %ERRORLEVEL% NEQ 0 exit %ERRORLEVEL%
+    $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(ADDRESS_MODEL)
+    if %ERRORLEVEL% NEQ 0 exit %ERRORLEVEL%
+    pushd $(BUILD_PATH)
+    "%WIX%\bin\candle.exe" $(ARTIFACT_NAME)$(ARCH_SUFFIX).wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
+    if %ERRORLEVEL% NEQ 0 exit %ERRORLEVEL%
+    "%WIX%\bin\light.exe" $(ARTIFACT_NAME)$(ARCH_SUFFIX).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
+    if %ERRORLEVEL% NEQ 0 exit %ERRORLEVEL%
+    popd
+}
+
+
+rule build-location ( properties * )
+{
+    local result ;
+    # don't override the location when it's already set
+    if ! <location> in $(properties:G)
+    {
+        return [ install-location $(properties) ] ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
+
+make setup.exe
+    : # sources
+    : # actions
+        @msbuild_deploy
+    : # requirements
+        <variant>debug:<build>no # don't make debug installs
+        <dependency>..//BumberDash.exe
+        <conditional>@build-location
+        <conditional>@pwiz-dependency
+    ;

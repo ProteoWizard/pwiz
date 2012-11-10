@@ -1,0 +1,102 @@
+#
+# $Id: Jamroot.jam 48 2011-10-28 16:03:46Z chambm $
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+# The Original Code is the BumberDash build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2012 Vanderbilt University
+#
+# Contributor(s): Jay Holman
+#
+
+# Usage:
+#
+#   bjam [options]
+#
+#   Builds and installs BumberDash.
+#
+# Targets and Related Options:
+#
+#   build                   Build Bumbershoot libraries and applications
+#   =====
+
+import path ;
+import svnrev ;
+import generate-version ;
+
+import os ;
+import modules ;
+import common ;
+import errors : error ;
+import sequence ;
+import feature ;
+
+import modules os tar ;
+using tar ;
+
+rule extract_binary_tarball ( filemask : destination )
+{
+    local tarballs = [ SORT [ glob $(filemask) ] ] ;
+    if ! $(tarballs)
+    {
+        errors.user-error "Unable to find tarball for $(destination) with filemask \"$(filemask)\"; download a matching tarball to the BumberDash/lib directory." ;
+    }
+    local latestTarball = $(tarballs[-1]) ; # take the last (latest) tarball
+
+    tar.extract
+          # tar filepath
+            $(latestTarball)
+        : # include patterns
+        : # requirements
+            <location>$(destination)
+        : # usage-requirements
+        : check-last-file-only ignore-incremental
+        ;
+}
+
+platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
+
+# set up explicit 32-bit or 64-bit builds
+if "address-model=64" in [ modules.peek : ARGV ] || $(platform:L) = "x86_64"
+{
+    platform = x86_64 ;
+}
+else if "address-model=32" in [ modules.peek : ARGV ] || $(platform:L) = "x86"
+{
+    platform = x86 ;
+}
+else
+{
+    echo "Unable to determine address-model for platform $(platform). The only supported platforms are x86 and x86_64." ;
+    exit ;
+}
+
+rule install_Bumbershoot ( properties * )
+{
+    local result = [ install-location $(properties) ] ;
+    local location = [ path.make [ feature.get-values location : $(result) ] ] ;
+
+    if ! $(.extract-once)
+    {
+        .extract-once = true ;
+        extract_binary_tarball myrimatch-bin-windows-$(platform)-*.tar.bz2 : $(location)/lib/Bumbershoot/MyriMatch ;
+        extract_binary_tarball pepitome-bin-windows-$(platform)-*.tar.bz2 : $(location)/lib/Bumbershoot/Pepitome ;
+        extract_binary_tarball directag-bin-windows-$(platform)-*.tar.bz2 : $(location)/lib/Bumbershoot/DirecTag ;
+        extract_binary_tarball tagrecon-bin-windows-$(platform)-*.tar.bz2 : $(location)/lib/Bumbershoot/TagRecon ;
+    }
+}
+
+install Bumbershoot : : <conditional>@install_Bumbershoot ;

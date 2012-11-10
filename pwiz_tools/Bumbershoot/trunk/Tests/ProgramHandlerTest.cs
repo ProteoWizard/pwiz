@@ -1,4 +1,25 @@
-﻿using System;
+﻿//
+// $Id: ProgramHandlerTest.cs 48 2011-21-11 16:18:05Z holmanjd $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumberdash project.
+//
+// The Initial Developer of the Original Code is Jay Holman.
+//
+// Copyright 2010 Vanderbilt University
+//
+// Contributor(s): Surendra Dasari, Matt Chambers
+//
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -18,7 +39,7 @@ namespace Tests
     [TestClass()]
     public class ProgramHandlerTest
     {
-        private readonly static string _workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        private readonly static string _workingDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\Tests");
         private readonly static string _outputDirectory = Path.Combine(_workingDirectory, "Data\\Output");
 
         private TestContext testContextInstance;
@@ -102,6 +123,11 @@ namespace Tests
 
         private void RunFile(string neededFile, string neededDB, string destinationProgram)
         {
+            RunFile(neededFile,neededDB,string.Empty,destinationProgram);
+        }
+
+        private void RunFile(string neededFile, string neededDB, string neededLibrary, string destinationProgram)
+        {
             var errorFound = false;
             var waitHandle = new AutoResetEvent(false);
             var target = new ProgramHandler();
@@ -112,6 +138,9 @@ namespace Tests
                              JobType = destinationProgram,
                              OutputDirectory = _outputDirectory,
                              ProteinDatabase = neededDB,
+                             SpectralLibrary = destinationProgram == JobType.Library
+                                                   ? neededLibrary
+                                                   : null,
                              Cpus = 0,
                              CurrentStatus = string.Empty,
                              StartTime = null,
@@ -122,13 +151,13 @@ namespace Tests
                                                          FilePath = "--Custom--",
                                                          PropertyList = new List<ConfigProperty>()
                                                      },
-                             TagConfigFile = destinationProgram == JobType.Database
-                                                 ? null
-                                                 : new ConfigFile()
+                             TagConfigFile = destinationProgram == JobType.Tag
+                                                 ? new ConfigFile()
                                                        {
                                                            FilePath = "--Custom--",
                                                            PropertyList = new List<ConfigProperty>()
                                                        }
+                                                 : null
                          };
             //File List
             hi.FileList = new List<InputFile>
@@ -141,13 +170,7 @@ namespace Tests
                               };
 
             //set end event
-            if (destinationProgram == JobType.Database)
-                target.JobFinished = (x, y) =>
-                {
-                    errorFound = y;
-                    waitHandle.Set(); // signal that the finished event was raised
-                };
-            else
+            if (destinationProgram == JobType.Tag)
                 target.JobFinished = (x, y) =>
                 {
                     errorFound = y;
@@ -155,6 +178,12 @@ namespace Tests
                         target.StartNewJob(0, hi);
                     else
                         waitHandle.Set(); // signal that the finished event was raised
+                };
+            else
+                target.JobFinished = (x, y) =>
+                {
+                    errorFound = y;
+                    waitHandle.Set(); // signal that the finished event was raised
                 };
 
             // call the async method
@@ -167,6 +196,8 @@ namespace Tests
             }
             Assert.IsFalse(errorFound, "Not as many output files as input");
         }
+
+        #region Myri Tests
 
         [TestMethod()]
         public void Myri_mzXMLTest()
@@ -279,6 +310,10 @@ namespace Tests
             else
                 Assert.Fail("WatersTest.pepXML not found");
         }
+
+        #endregion
+
+        #region Tag Tests
 
         [TestMethod()]
         public void Tag_mzXMLTest()
@@ -426,5 +461,137 @@ namespace Tests
             else
                 Assert.Fail("WatersTest.pepXML not found");
         }
+
+        #endregion
+
+        #region Pepitome Tests
+
+        [TestMethod()]
+        public void Pep_mzXMLTest()
+        {
+            var neededFile = Path.Combine(_workingDirectory, "Data\\mzXMLTest.mzXML");
+            var neededDB = Path.Combine(_workingDirectory, "Data\\tinyDB.fasta");
+            var neededLib = Path.Combine(_workingDirectory, "Data\\tinyLib.sptxt");
+            Assert.IsTrue(File.Exists(neededFile), "Test file not found");
+            Assert.IsTrue(File.Exists(neededDB), "Test database not found");
+            Assert.IsTrue(File.Exists(neededLib), "Test library not found");
+
+            RunFile(neededFile, neededDB, neededLib, JobType.Library);
+
+            if (File.Exists(Path.Combine(_outputDirectory, "mzXMLTest.pepXML")))
+                File.Delete(Path.Combine(_outputDirectory, "mzXMLTest.pepXML"));
+            else
+                Assert.Fail("mzMLTest.pepXML not found");
+        }
+
+        [TestMethod()]
+        public void Pep_mzMLTest()
+        {
+            var neededFile = Path.Combine(_workingDirectory, "Data\\mzMLTest.mzML");
+            var neededDB = Path.Combine(_workingDirectory, "Data\\tinyDB.fasta");
+            var neededLib = Path.Combine(_workingDirectory, "Data\\tinyLib.sptxt");
+            Assert.IsTrue(File.Exists(neededFile), "Test file not found");
+            Assert.IsTrue(File.Exists(neededDB), "Test database not found");
+            Assert.IsTrue(File.Exists(neededLib), "Test library not found");
+
+            RunFile(neededFile, neededDB, neededLib, JobType.Library);
+
+            if (File.Exists(Path.Combine(_outputDirectory, "mzMLTest.pepXML")))
+                File.Delete(Path.Combine(_outputDirectory, "mzMLTest.pepXML"));
+            else
+                Assert.Fail("mzMLTest.pepXML not found");
+        }
+
+        [TestMethod()]
+        public void Pep_mz5Test()
+        {
+            var neededFile = Path.Combine(_workingDirectory, "Data\\mz5Test.mz5");
+            var neededDB = Path.Combine(_workingDirectory, "Data\\tinyDB.fasta");
+            var neededLib = Path.Combine(_workingDirectory, "Data\\tinyLib.sptxt");
+            Assert.IsTrue(File.Exists(neededFile), "Test file not found");
+            Assert.IsTrue(File.Exists(neededDB), "Test database not found");
+            Assert.IsTrue(File.Exists(neededLib), "Test library not found");
+
+            RunFile(neededFile, neededDB, neededLib, JobType.Library);
+
+            if (File.Exists(Path.Combine(_outputDirectory, "mz5Test.pepXML")))
+                File.Delete(Path.Combine(_outputDirectory, "mz5Test.pepXML"));
+            else
+                Assert.Fail("mz5Test.pepXML not found");
+        }
+
+        [TestMethod()]
+        public void Pep_ThermoTest()
+        {
+            var neededFile = Path.Combine(_workingDirectory, "Data\\ThermoTest.raw");
+            var neededDB = Path.Combine(_workingDirectory, "Data\\tinyDB.fasta");
+            var neededLib = Path.Combine(_workingDirectory, "Data\\tinyLib.sptxt");
+            Assert.IsTrue(File.Exists(neededFile), "Test file not found");
+            Assert.IsTrue(File.Exists(neededDB), "Test database not found");
+            Assert.IsTrue(File.Exists(neededLib), "Test library not found");
+
+            RunFile(neededFile, neededDB, neededLib, JobType.Library);
+
+            if (File.Exists(Path.Combine(_outputDirectory, "ThermoTest.pepXML")))
+                File.Delete(Path.Combine(_outputDirectory, "ThermoTest.pepXML"));
+            else
+                Assert.Fail("ThermoTest.pepXML not found");
+        }
+
+        [TestMethod()]
+        public void Pep_AgilentTest()
+        {
+            var neededFile = Path.Combine(_workingDirectory, "Data\\AgilentTest.d");
+            var neededDB = Path.Combine(_workingDirectory, "Data\\tinyDB.fasta");
+            var neededLib = Path.Combine(_workingDirectory, "Data\\tinyLib.sptxt");
+            Assert.IsTrue(Directory.Exists(neededFile), "Test file not found");
+            Assert.IsTrue(File.Exists(neededDB), "Test database not found");
+            Assert.IsTrue(File.Exists(neededLib), "Test library not found");
+
+            RunFile(neededFile, neededDB, neededLib, JobType.Library);
+
+            if (File.Exists(Path.Combine(_outputDirectory, "AgilentTest.pepXML")))
+                File.Delete(Path.Combine(_outputDirectory, "AgilentTest.pepXML"));
+            else
+                Assert.Fail("AgilentTest.pepXML not found");
+        }
+
+        [TestMethod()]
+        public void Pep_BrukerTest()
+        {
+            var neededFile = Path.Combine(_workingDirectory, "Data\\BrukerTest.d");
+            var neededDB = Path.Combine(_workingDirectory, "Data\\tinyDB.fasta");
+            var neededLib = Path.Combine(_workingDirectory, "Data\\tinyLib.sptxt");
+            Assert.IsTrue(Directory.Exists(neededFile), "Test file not found");
+            Assert.IsTrue(File.Exists(neededDB), "Test database not found");
+            Assert.IsTrue(File.Exists(neededLib), "Test library not found");
+
+            RunFile(neededFile, neededDB, neededLib, JobType.Library);
+
+            if (File.Exists(Path.Combine(_outputDirectory, "BrukerTest.pepXML")))
+                File.Delete(Path.Combine(_outputDirectory, "BrukerTest.pepXML"));
+            else
+                Assert.Fail("BrukerTest.pepXML not found");
+        }
+
+        [TestMethod()]
+        public void Pep_WatersTest()
+        {
+            var neededFile = Path.Combine(_workingDirectory, "Data\\WatersTest.raw");
+            var neededDB = Path.Combine(_workingDirectory, "Data\\tinyDB.fasta");
+            var neededLib = Path.Combine(_workingDirectory, "Data\\tinyLib.sptxt");
+            Assert.IsTrue(Directory.Exists(neededFile), "Test file not found");
+            Assert.IsTrue(File.Exists(neededDB), "Test database not found");
+            Assert.IsTrue(File.Exists(neededLib), "Test library not found");
+
+            RunFile(neededFile, neededDB, neededLib, JobType.Library);
+
+            if (File.Exists(Path.Combine(_outputDirectory, "WatersTest.pepXML")))
+                File.Delete(Path.Combine(_outputDirectory, "WatersTest.pepXML"));
+            else
+                Assert.Fail("WatersTest.pepXML not found");
+        }
+
+        #endregion
     }
 }

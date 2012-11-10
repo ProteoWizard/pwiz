@@ -26,6 +26,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using BumberDash.Model;
+using CustomDataSourceDialog;
+using pwiz.CLI.msdata;
 
 namespace BumberDash.Forms
 {
@@ -152,27 +154,43 @@ namespace BumberDash.Forms
         /// <param name="e"></param>
         private void AddDataFilesButton_Click(object sender, EventArgs e)
         {
-            var fileLoc = new OpenFileDialog
-                              {
-                                  RestoreDirectory = true,
-                                  Filter = "Any supported format|*.mzML;*.mz5;*.mzXML;*.wiff;*.raw;*.yep;*.mgf|" +
-                                           "mzML files|*.mzML|" +
-                                           "mz5 files|*.mz5|" +
-                                           "mzXML files|*.mzXML|" +
-                                           "Thermo RAW files|*.raw|" +
-                                           "WIFF files|*.wiff|" +
-                                           "Bruker/Agilent YEP files|*.yep|" +
-                                           "MGF files|*.mgf|" +
-                                           "All files|*.*",
-                                  CheckFileExists = true,
-                                  CheckPathExists = true,
-                                  SupportMultiDottedExtensions = true,
-                                  Multiselect = true,
-                                  Title = "Data files"
-                              };
-            if (fileLoc.ShowDialog() == DialogResult.OK)
+            var browseToFileDialog = new OpenDataSourceDialog(new List<string>
+                                                  {
+                                                      "Any spectra format",
+                                                      "mzML",
+                                                      "mzXML",
+                                                      "MZ5",
+                                                      "Thermo RAW",
+                                                      "ABSciex WIFF",
+                                                      "Bruker Analysis",
+                                                      "Agilent MassHunter",
+                                                      "Mascot Generic",
+                                                      "Bruker Data Exchange"
+                                                  });
+            browseToFileDialog.FolderType = x =>
             {
-                var selectedFiles = fileLoc.FileNames;
+                try
+                {
+                    string type = ReaderList.FullReaderList.identify(x);
+                    if (type == String.Empty)
+                        return "File Folder";
+                    return type;
+                }
+                catch { return String.Empty; }
+            };
+            browseToFileDialog.FileType = x =>
+            {
+                try
+                {
+                    return ReaderList.FullReaderList.identify(x);
+                }
+                catch { return String.Empty; }
+            };
+
+            if (browseToFileDialog.ShowDialog() == DialogResult.OK
+                && browseToFileDialog.DataSources.Count >= 1)
+            {
+                var selectedFiles = browseToFileDialog.DataSources;
                 OutputDirectoryBox.Text = Directory.GetParent(selectedFiles[0]).ToString();
                 var usedFiles = GetInputFileNames();
                 foreach (var file in selectedFiles)
@@ -180,8 +198,8 @@ namespace BumberDash.Forms
                     if (usedFiles.Contains(file))
                         continue;
                     var currentRow = InputFilesList.Rows.Count;
-                    var newItem = new object[] { Path.GetFileName(file) };
-                    InputFilesList.Rows.Insert(currentRow, newItem);
+                    var newItem = new[] { Path.GetFileName(file) };
+                    InputFilesList.Rows.Insert(currentRow,newItem);
                     InputFilesList.Rows[currentRow].Cells[0].ToolTipText = "\"" + file + "\"";
                 }
 
