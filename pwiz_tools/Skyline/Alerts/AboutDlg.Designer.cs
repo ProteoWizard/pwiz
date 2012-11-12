@@ -51,10 +51,10 @@ namespace pwiz.Skyline.Alerts
             this.linkProteome.AutoSize = true;
             this.linkProteome.Location = new System.Drawing.Point(14, 201);
             this.linkProteome.Name = "linkProteome";
-            this.linkProteome.Size = new System.Drawing.Size(143, 13);
+            this.linkProteome.Size = new System.Drawing.Size(131, 13);
             this.linkProteome.TabIndex = 0;
             this.linkProteome.TabStop = true;
-            this.linkProteome.Text = "proteome.gs.washington.edu";
+            this.linkProteome.Text = "skyline.gs.washington.edu";
             this.linkProteome.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkProteome_LinkClicked);
             // 
             // btnOk
@@ -89,8 +89,8 @@ namespace pwiz.Skyline.Alerts
             // 
             // textBox1
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox1.Location = new System.Drawing.Point(163, 168);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Alerts
             this.linkProteoWizard.TabIndex = 8;
             this.linkProteoWizard.TabStop = true;
             this.linkProteoWizard.Text = "proteowizard.sourceforge.net";
-            this.linkProteoWizard.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(linkProteoWizard_LinkClicked);
+            this.linkProteoWizard.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkProteoWizard_LinkClicked);
             // 
             // label3
             // 

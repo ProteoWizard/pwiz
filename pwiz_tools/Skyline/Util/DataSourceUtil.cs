@@ -189,15 +189,15 @@ namespace pwiz.Skyline.Util
             if (addSourcesInSubDirs)
             {
                 var dirRootInfo = new DirectoryInfo(dirRoot);
-                foreach (var subDirInfo in dirRootInfo.GetDirectories())
+                foreach (var subDirInfo in GetDirectories(dirRootInfo))
                 {
                     var listDataPaths = new List<string>();
-                    foreach (var dataDirInfo in subDirInfo.GetDirectories())
+                    foreach (var dataDirInfo in GetDirectories(subDirInfo))
                     {
                         if (IsDataSource(dataDirInfo))
                             listDataPaths.Add(dataDirInfo.FullName);
                     }
-                    foreach (var dataFileInfo in subDirInfo.GetFiles())
+                    foreach (var dataFileInfo in GetFiles(subDirInfo))
                     {
                         if (IsDataSource(dataFileInfo))
                             listDataPaths.Add(dataFileInfo.FullName);
@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Util
                 var dirInfo = new DirectoryInfo(dirRoot);
 
                 // This if for WATERS(.raw) and AGILENT(.d) data directories
-                foreach (var dataDirInfo in dirInfo.GetDirectories())
+                foreach (var dataDirInfo in GetDirectories(dirInfo))
                 {
                     if (IsDataSource(dataDirInfo))
                     {
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
 
-                foreach (var dataFileInfo in dirInfo.GetFiles())
+                foreach (var dataFileInfo in GetFiles(dirInfo))
                 {
                     if (IsDataSource(dataFileInfo))
                     {
@@ -262,6 +262,32 @@ namespace pwiz.Skyline.Util
 
             listNamedPaths.Sort((p1, p2) => Comparer<string>.Default.Compare(p1.Key, p2.Key));
             return listNamedPaths;
+        }
+
+        private static IEnumerable<DirectoryInfo> GetDirectories(DirectoryInfo dirInfo)
+        {
+            try
+            {
+                return dirInfo.GetDirectories();
+            }
+            catch (Exception)
+            {
+                // Just ignore directories that throw exceptions
+                return new DirectoryInfo[0];
+            }
+        }
+
+        private static IEnumerable<FileInfo> GetFiles(DirectoryInfo dirInfo)
+        {
+            try
+            {
+                return dirInfo.GetFiles();
+            }
+            catch (Exception)
+            {
+                // Just ignore directories that throw exceptions
+                return new FileInfo[0];
+            }
         }
 
         private static string[] GetWiffSubPaths(string filePath)
