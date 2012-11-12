@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (e.Button == sender.PanButtons && ModifierKeys == sender.PanModifierKeys)
+            if (sender != null && e.Button == sender.PanButtons && ModifierKeys == sender.PanModifierKeys)
                 GraphPane.EnsureYMin();
             return GraphPane.HandleMouseMoveEvent(sender, e);
         }

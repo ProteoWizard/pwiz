@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Alerts
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu"); // Not L10N
+            WebHelpers.OpenLink(this, "http://skyline.gs.washington.edu"); // Not L10N
         }
 
         private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

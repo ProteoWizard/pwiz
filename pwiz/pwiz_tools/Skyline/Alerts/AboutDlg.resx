@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="textBox1.Text" xml:space="preserve">
     <value>AB Sciex
@@ -131,6 +131,10 @@ http://www.agilent.com
 BiblioSpec
 Spectral Library Building
 http://proteome.gs.washington.edu/software/bibliospec
+
+Bruker
+CompassXport Data Conversion Program
+http://www.bruker.com/
 
 Crawdad
 Peak Detection
@@ -149,7 +153,7 @@ Json.NET
 http://james.newtonking.com
 
 JetBrains Software
-Development tools: ReSharper and dotTrace
+Development tools: ReSharper, dotTrace and dotCover
 http://www.jetbrains.com/index.html
 
 Matrix Science
