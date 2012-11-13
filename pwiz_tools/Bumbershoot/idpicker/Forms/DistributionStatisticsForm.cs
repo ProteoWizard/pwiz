@@ -296,20 +296,30 @@ namespace IDPicker.Forms
                 IDictionary<int, int> spectralCountByChargeState;
                 lock (session)
                 {
-                    var query = session.CreateQuery("SELECT psm.ObservedNeutralMass, psm.MonoisotopicMassError, psm.MolecularWeightError, s.ScanTimeInSeconds, psm.Charge " + dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToSpectrum));
+                    var randomIds = session.CreateQuery("SELECT psm.Id " + viewFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch))
+                                           .List<long>()
+                                           .Shuffle()
+                                           .Take(50000)
+                                           .OrderBy(o => o);
+                    string randomIdSet = String.Join(",", randomIds.Select(o => o.ToString()).ToArray());
+                    var query = session.CreateSQLQuery("SELECT psm.ObservedNeutralMass, psm.MonoisotopicMassError, psm.MolecularWeightError, s.ScanTimeInSeconds, psm.Charge " +
+                                                       "FROM PeptideSpectrumMatch psm " +
+                                                       "JOIN Spectrum s ON psm.Spectrum=s.Id " +
+                                                       "WHERE psm.Id IN (" + randomIdSet + ") " +
+                                                       "GROUP BY psm.Id");
                     query.List<object[]>().ForEach(o =>
-                        precursorMassErrorsByCharge[(int)o[4]].Add(new PSMRow
+                        precursorMassErrorsByCharge[Convert.ToInt32(o[4])].Add(new PSMRow
                         {
-                            ObservedNeutralMass = (double)o[0],
-                            MassError = PeptideSpectrumMatch.GetSmallerMassError((double)o[1], (double)o[2]),
-                            ScanTime = (double)o[3] / 60, // convert to minutes
-                            Charge = (int)o[4]
+                            ObservedNeutralMass = Convert.ToDouble(o[0]),
+                            MassError = PeptideSpectrumMatch.GetSmallerMassError(Convert.ToDouble(o[1]), Convert.ToDouble(o[2])),
+                            ScanTime = Convert.ToDouble(o[3]) / 60, // convert to minutes
+                            Charge = Convert.ToInt32(o[4])
                         }));
 
-                    query = session.CreateQuery("SELECT psm.Charge, COUNT(DISTINCT psm.Spectrum.id) " +
-                                                dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                "GROUP BY psm.Charge");
-                    spectralCountByChargeState = query.List<object[]>().ToDictionary(o => Convert.ToInt32(o[0]), o => Convert.ToInt32(o[1]));
+                    var query2 = session.CreateQuery("SELECT psm.Charge, COUNT(DISTINCT psm.Spectrum.id) " +
+                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                     "GROUP BY psm.Charge");
+                    spectralCountByChargeState = query2.List<object[]>().ToDictionary(o => Convert.ToInt32(o[0]), o => Convert.ToInt32(o[1]));
                 }
 
                 Map<int, List<List<PSMRow>>> clusteredPrecursorMassErrorsByCharge = clusterMassErrors(precursorMassErrorsByCharge);

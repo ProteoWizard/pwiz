@@ -267,6 +267,10 @@ namespace IDPicker.Forms
                 dirtyGroupings = false;
                 checkedGroupings = groupingSetupControl.CheckedGroupings;
 
+                // don't try to save selection, since a different grouping would invalidate it
+                treeDataGridView.ClearSelection();
+                oldSelectionPath = null;
+
                 OnGroupingChanged(this, EventArgs.Empty);
             }
         }
@@ -286,9 +290,6 @@ namespace IDPicker.Forms
 
         protected virtual void OnGroupingChanged(object sender, EventArgs e)
         {
-            // don't try to save selection, since a different grouping would invalidate it
-            treeDataGridView.ClearSelection();
-
             ClearData(true);
             resetData();
         }

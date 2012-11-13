@@ -35,7 +35,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enum.hpp>
-#include "../Lib/SQLite/sqlite3pp.h"
+#include "sqlite3pp.h"
 
 
 #ifndef IDPICKER_NAMESPACE

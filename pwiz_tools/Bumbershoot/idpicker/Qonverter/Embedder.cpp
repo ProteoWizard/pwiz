@@ -24,7 +24,7 @@
 
 
 #include "Embedder.hpp"
-#include "../Lib/SQLite/sqlite3pp.h"
+#include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
@@ -410,7 +410,7 @@ struct SpectrumList_Quantifier
             { 0.0014, 0.0566, 0.0087, 0.0000 }, // 119 (icf[6])
             { 0.0027, 0.0744, 0.0018, 0.0000 }  // 121 (icf[7])
         };
-
+        //return;
         // normalize reporter ion intensities to the total for each channel
         if (quantitationMethod != QuantitationMethod::None)
         {

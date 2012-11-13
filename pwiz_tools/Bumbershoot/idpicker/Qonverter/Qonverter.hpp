@@ -35,7 +35,7 @@
 #include <boost/ref.hpp>
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include "../Lib/SQLite/sqlite3.h"
+#include "sqlite3.h"
 
 
 #ifndef IDPICKER_NAMESPACE

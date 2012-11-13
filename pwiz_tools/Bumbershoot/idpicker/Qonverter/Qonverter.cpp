@@ -23,7 +23,7 @@
 //
 
 
-#include "../Lib/SQLite/sqlite3pp.h"
+#include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "SchemaUpdater.hpp"
 #include "Qonverter.hpp"

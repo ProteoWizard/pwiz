@@ -34,7 +34,7 @@
 #include "Parser.hpp"
 #include "Embedder.hpp"
 #include "idpQonvert.hpp"
-#include "../Lib/SQLite/sqlite3pp.h"
+#include "sqlite3pp.h"
 #include <iomanip>
 //#include "svnrev.hpp"
 

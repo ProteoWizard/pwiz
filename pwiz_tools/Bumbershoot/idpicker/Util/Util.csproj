@@ -106,7 +106,7 @@
     </Reference>
     <Reference Include="System.Data.SQLite, Version=1.0.81.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Lib\SQLite\$(Platform)\System.Data.SQLite.DLL</HintPath>
+      <HintPath>..\freicore\libraries\SQLite\$(Platform)\System.Data.SQLite.DLL</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
