@@ -87,4 +87,5 @@ make setup.exe
         <variant>debug:<build>no # don't make debug installs
         <dependency>..//install
         <conditional>@build-location
+        <conditional>@msvc-requirement
     ;

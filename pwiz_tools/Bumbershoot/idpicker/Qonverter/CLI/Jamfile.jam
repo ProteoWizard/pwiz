@@ -64,14 +64,14 @@ lib NativeParser
    <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
    <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
    <toolset>msvc:<using-clr>false
-   <conditional>@pwiz-dependency
+   <conditional>@pwiz-bindings-dependency
  :
  : <library>NativeQonverter
    <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
    <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
    <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
    <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
-   <conditional>@pwiz-dependency
+   <conditional>@pwiz-bindings-dependency
  ;
 
 

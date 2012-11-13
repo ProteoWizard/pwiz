@@ -456,13 +456,16 @@ rule install-vendor-api-dependencies ( properties * )
 }
 
 
-rule pwiz-dependency ( properties * )
+rule pwiz-bindings-dependency ( properties * )
 {
-    local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = <location>$(BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
-    return <assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
-           <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
-           <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
+    if <toolset>msvc in $(properties)
+    {
+        local variants = [ feature.get-values <variant> : $(properties) ] ;
+        local location = <location>$(BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
+        return <assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
+               <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
+               <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
+    }
 }
 
 
@@ -572,7 +575,6 @@ rule qonverter-dependency ( properties * )
         local location = <location>$(BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
         return <assembly>Qonverter/CLI//InteropQonverter
                <dependency>Qonverter/CLI//InteropQonverter/$(location) ;
-               #<dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
     }
 }
 
@@ -608,8 +610,9 @@ make IDPicker.exe
     : # requirements
         <conditional>@build-location
         <conditional>@seems-dependency
-        <conditional>@pwiz-dependency
+        <conditional>@pwiz-bindings-dependency
         <conditional>@qonverter-dependency
+        <conditional>@msvc-requirement
     ;
 
 

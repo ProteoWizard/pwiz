@@ -24,7 +24,7 @@
 
 
 #include "SchemaUpdater.hpp"
-#include "../Lib/SQLite/sqlite3pp.h"
+#include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
