@@ -79,9 +79,9 @@ namespace pwiz.Skyline.ToolsUI
 
         public void RefreshListBox()
         {
-            listTools.DataSource = null;     
-            listTools.DataSource = ToolList;
-            listTools.DisplayMember = "Title"; // Not L10N     
+            listTools.Items.Clear();
+            foreach (var toolDescription in ToolList)
+                listTools.Items.Add(toolDescription.Title);
         }
 
         public List<ToolDescription> ToolList { get; private set; }
