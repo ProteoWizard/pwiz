@@ -37,27 +37,16 @@ namespace bfs = boost::filesystem;
 
 
 PWIZ_API_DECL SpectrumTable::Config::Config(const std::string& args)
-:   delimiter(Config::Delimiter_FixedWidth)
 {
     istringstream iss(args);
     vector<string> tokens;
     copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
 
-    const string delimiterArgKey = "delimiter=";
-
     for (vector<string>::const_iterator it=tokens.begin(); it!=tokens.end(); ++it)
     {
-        if (it->find(delimiterArgKey) == 0)
+        if (checkDelimiter(*it))
         {
-            string delimiterStr = it->substr(delimiterArgKey.length());
-            if (delimiterStr == "space")
-                delimiter = Config::Delimiter_Space;
-            else if (delimiterStr == "tab")
-                delimiter = Config::Delimiter_Tab;
-            else if (delimiterStr == "comma")
-                delimiter = Config::Delimiter_Comma;
-            else if (delimiterStr != "fixed")
-                cerr << "[SpectrumTable] Invalid delimiter. Must be one of {fixed, space, tab, comma}." << endl;
+           // valid output delimter arg
         }
         else
             cerr << "[SpectrumTable] Unknown option: " << *it << endl;
@@ -84,29 +73,8 @@ SpectrumTable::updateRequested(const DataInfo& dataInfo,
 
 PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
 {
-    char delimiter;
-    string fileExtension;
-
-    switch (config_.delimiter)
-    {
-        default:
-        case Config::Delimiter_FixedWidth:
-            delimiter = 0;
-            fileExtension = ".txt";
-            break;
-        case Config::Delimiter_Space:
-            delimiter = ' ';
-            fileExtension = ".txt";
-            break;
-        case Config::Delimiter_Comma:
-            delimiter = ',';
-            fileExtension = ".csv";
-            break;
-        case Config::Delimiter_Tab:
-            delimiter = '\t';
-            fileExtension = ".tsv";
-            break;
-    }
+    char delimiter = ((TabularConfig&) config_).getDelimiterChar();
+    std::string fileExtension = ((TabularConfig&) config_).getFileExtension();
 
     bfs::path filename = dataInfo.outputDirectory;
     filename /= dataInfo.sourceFilename + ".spectrum_table" + fileExtension;

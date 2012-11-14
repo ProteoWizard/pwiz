@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
+#include <boost/algorithm/string/split.hpp>
 
 
 using namespace pwiz;
@@ -172,23 +173,81 @@ void testConfig(const RegionAnalyzer::Config& config)
 
 void test()
 {
+    // test for each output delimiter type
+    std::vector<std::string> options;
+    std::vector<std::string> outputs;
+    std::string delimiter_help(DELIMITER_OPTIONS_STR);
+    boost::algorithm::split(options, delimiter_help, boost::algorithm::is_any_of("=|") );
+    
+    for (int n=1; n<(int)options.size(); n++)
+    {
+    std::ostringstream txtstream;
+    std::string delim = options[0] + "=" + options[n];
+    if (os_) *os_ << "test with delimiter style " << delim <<":\n"; 
+
     if (os_) *os_ << "test index:\n"; 
     RegionAnalyzer::Config config;
+    unit_assert(config.checkDelimiter(delim)); // set output delimiter type
+    config.dumpRegionData = true;
+    config.osDump = &txtstream; // dump to this stream
     config.mzRange = make_pair(.5, 5.5);
     config.indexRange = make_pair(1,3);
     testConfig(config);
 
     if (os_) *os_ << "test scanNumber:\n"; 
     config = RegionAnalyzer::Config();
+    unit_assert(config.checkDelimiter(delim)); // set output delimiter type
+    config.dumpRegionData = true;
+    config.osDump = &txtstream; // dump to this stream
     config.mzRange = make_pair(.5, 5.5);
     config.scanNumberRange = make_pair(19,21);
     testConfig(config);
 
     if (os_) *os_ << "test retentionTime:\n"; 
     config = RegionAnalyzer::Config();
+    unit_assert(config.checkDelimiter(delim)); // set output delimiter type
+    config.dumpRegionData = true;
+    config.osDump = &txtstream; // dump to this stream
     config.mzRange = make_pair(.5, 5.5);
     config.rtRange = make_pair(420.5, 423.5);
     testConfig(config);
+
+    // save each output style
+    outputs.push_back(txtstream.str());
+    }
+
+    // all the outputs should be different
+    for (int m=(int)outputs.size();m-->1;)
+    {
+        unit_assert(outputs[m]!=outputs[m-1]);
+    }
+    // now convert all delimiters back to a single space
+    for (int mm=(int)outputs.size();mm--;)
+    {
+        // reduce double spaces to single 
+        // no, replace_all(outputs[mm],std::string("  "),std::string(" ")); doesn't do it
+        for (int n=outputs[mm].size();n-->1;)
+        {
+            if ((outputs[mm][n]==' ') && (outputs[mm][n-1]==' '))
+            {
+                outputs[mm] = outputs[mm].substr(0,n-1)+outputs[mm].substr(n);
+            }
+            if ((outputs[mm][n]==' ') && (outputs[mm][n-1]=='\n'))
+            {
+                // watch for lines with leading spaces
+                outputs[mm] = outputs[mm].substr(0,n-1)+outputs[mm].substr(n);
+                outputs[mm][n-1]='\n';
+            }
+        }
+        // and replace single character delimiters
+        boost::algorithm::replace_all(outputs[mm],std::string("\t"),std::string(" ")); 
+        boost::algorithm::replace_all(outputs[mm],std::string(","),std::string(" "));
+    }
+    // all the outputs should now be identical
+    for (int delimtype=(int)outputs.size();delimtype-->1;)
+    {
+        unit_assert(outputs[delimtype]==outputs[delimtype-1]);
+    }
 }
 
 

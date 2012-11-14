@@ -49,7 +49,8 @@ PWIZ_API_DECL RegionAnalyzer::Config::Config()
     indexRange(make_pair(0, numeric_limits<size_t>::max())),
     scanNumberRange(make_pair(0, numeric_limits<int>::max())),
     rtRange(make_pair(0, numeric_limits<double>::max())),
-    dumpRegionData(false)
+    dumpRegionData(false),
+    osDump(NULL)
 {}
 
 
@@ -82,7 +83,7 @@ struct RegionAnalyzer::Impl
     vector<SpectrumStats> spectrumStats;
     Stats stats;
     bool done;
-    bfs::ofstream osDump;
+    bool osDumpNeedsClosing; // true iff osDump was not passed to us
 
     Impl(const Config& _config, const MSDataCache& _cache)
     :   config(_config), cache(_cache), done(false)
@@ -141,18 +142,22 @@ PWIZ_API_DECL void RegionAnalyzer::open(const DataInfo& dataInfo)
         if (dataInfo.log) 
             *dataInfo.log << "[RegionAnalyzer] Writing file " << outputFilename.string() << endl;
 
-        impl_->osDump.open(outputFilename);
-        
-        impl_->osDump << "# " << dataInfo.sourceFilename << endl
-            << setw(width_index_) << "# index"
-            << setw(width_id_) << "id"
-            << setw(width_scanEvent_) << "event"
-            << setw(width_massAnalyzerType_) << "analyzer"
-            << setw(width_msLevel_) << "msLevel"
-            << setw(width_retentionTime_) << "rt"
-            << setw(width_mz_) << "m/z"
-            << setw(width_intensity_) << "intensity"
-            << endl;
+#define DELIMWRITE(w,txt) if (delimiter) {*(impl_->config.osDump) << txt << delimiter ;} else { *(impl_->config.osDump) << setw(w) << txt;}
+#define DELIMWRITE_EOL(w,txt) if (delimiter) {*(impl_->config.osDump) << txt << endl ;} else { *(impl_->config.osDump) << setw(w) << txt << endl;}
+        char delimiter = impl_->config.getDelimiterChar();
+
+        if (impl_->osDumpNeedsClosing = (impl_->config.osDump==NULL))
+            impl_->config.osDump = new bfs::ofstream(outputFilename);
+
+        *(impl_->config.osDump) << "# " << dataInfo.sourceFilename << endl;
+        DELIMWRITE(width_index_,"# index");
+        DELIMWRITE(width_id_,"id");
+        DELIMWRITE(width_scanEvent_,"event");
+        DELIMWRITE(width_massAnalyzerType_,"analyzer");
+        DELIMWRITE(width_msLevel_,"msLevel");
+        DELIMWRITE(width_retentionTime_,"rt");
+        DELIMWRITE(width_mz_,"m/z");
+        DELIMWRITE_EOL(width_intensity_,"intensity");
     }
 }
 
@@ -223,21 +228,24 @@ void RegionAnalyzer::update(const DataInfo& dataInfo,
 
     double sumIntensity = 0;
     vector<MZIntensityPair>::const_iterator max = begin;
+    char delimiter =impl_->config.getDelimiterChar();
     for (vector<MZIntensityPair>::const_iterator it=begin; it!=end; ++it)
     {
         sumIntensity += it->intensity;
         if (max->intensity < it->intensity) max = it;
 
-        if (impl_->osDump) impl_->osDump
-            << setw(width_index_) << info.index
-            << setw(width_id_) << info.id
-            << setw(width_scanEvent_) << info.scanEvent
-            << setw(width_massAnalyzerType_) << info.massAnalyzerTypeAbbreviation()
-            << setw(width_msLevel_) << "ms" + lexical_cast<string>(info.msLevel)
-            << setw(width_retentionTime_) << fixed << setprecision(2) << info.retentionTime
-            << setw(width_mz_) << fixed << setprecision(4) << it->mz
-            << setw(width_intensity_) << fixed << setprecision(4) << it->intensity
-            << endl;
+        if (impl_->config.osDump)
+        {
+            DELIMWRITE(width_index_,info.index);
+            DELIMWRITE(width_id_,info.id);
+            DELIMWRITE(width_scanEvent_,info.scanEvent);
+            DELIMWRITE(width_massAnalyzerType_,info.massAnalyzerTypeAbbreviation());
+            DELIMWRITE(width_msLevel_,"ms" + lexical_cast<string>(info.msLevel));
+            DELIMWRITE(width_retentionTime_,fixed << setprecision(2) << info.retentionTime);
+            DELIMWRITE(width_mz_,fixed << setprecision(4) << it->mz);
+            DELIMWRITE_EOL(width_intensity_,fixed << setprecision(4) << it->intensity);
+        }
+    
     }
 
     // fill in SpectrumStats
@@ -290,8 +298,11 @@ PWIZ_API_DECL void RegionAnalyzer::close(const DataInfo& dataInfo)
     impl_->stats.sd_peak_mz = sd_peak_mz;
     impl_->stats.indexApex = indexApex;
 
-    if (impl_->osDump)
-        impl_->osDump.close();
+    if (impl_->osDumpNeedsClosing)
+    {
+        delete impl_->config.osDump;
+        impl_->config.osDump = NULL;
+    }
 }
 
 

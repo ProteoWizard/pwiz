@@ -42,11 +42,16 @@ PWIZ_API_DECL RegionTIC::Config::Config(const string& args)
     vector<string> tokens;
     istringstream iss(args);
     copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
-    if (tokens.size() > 2)
+    size_t rangeFirst = 0;
+    if(tokens.size() && checkDelimiter(tokens[0])) 
+    {
+        rangeFirst++; // that was a valid delimter arg
+    }
+    if (tokens.size() > 2+rangeFirst)
         throw runtime_error(("[RegionTIC::Config] Invalid args: " + args).c_str());
 
-    if (tokens.size()>0) mzRange.first = lexical_cast<double>(tokens[0]);
-    if (tokens.size()>1) mzRange.second = lexical_cast<double>(tokens[1]);
+    if (tokens.size()>rangeFirst) mzRange.first = lexical_cast<double>(tokens[rangeFirst]);
+    if (tokens.size()>rangeFirst+1) mzRange.second = lexical_cast<double>(tokens[rangeFirst+1]);
 }
 
 
@@ -90,7 +95,7 @@ PWIZ_API_DECL void RegionTIC::close(const DataInfo& dataInfo)
     ostringstream oss;
     oss << dataInfo.sourceFilename << ".tic." 
         << fixed << setprecision(2) << config_.mzRange.first << "-"
-        << fixed << setprecision(2) << config_.mzRange.second << ".txt";
+        << fixed << setprecision(2) << config_.mzRange.second << config_.getFileExtension();
 
     bfs::path outputFilename = dataInfo.outputDirectory;
     outputFilename /= oss.str();
@@ -108,15 +113,17 @@ PWIZ_API_DECL void RegionTIC::close(const DataInfo& dataInfo)
     const size_t width_retentionTime = 12;
     const size_t width_sumIntensity = 16;
 
-    os << "# " << dataInfo.sourceFilename << endl
-        << setw(width_index) << "# index"
-        << setw(width_id) << "id"
-        << setw(width_scanEvent) << "event"
-        << setw(width_massAnalyzerType) << "analyzer"
-        << setw(width_msLevel) << "msLevel"
-        << setw(width_retentionTime) << "rt"
-        << setw(width_sumIntensity) << "sumIntensity"
-        << endl;
+    char delimiter = config_.getDelimiterChar();
+#define DELIMWRITE(w,txt) if (delimiter) {os << txt << delimiter ;} else { os << setw(w) << txt;}
+#define DELIMWRITE_EOL(w,txt) if (delimiter) {os << txt << endl ;} else { os << setw(w) << txt << endl;}
+    os << "# " << dataInfo.sourceFilename << endl;
+    DELIMWRITE(width_index,"# index");
+    DELIMWRITE(width_id,"id");
+    DELIMWRITE(width_scanEvent,"event");
+    DELIMWRITE(width_massAnalyzerType,"analyzer");
+    DELIMWRITE(width_msLevel,"msLevel");
+    DELIMWRITE(width_retentionTime,"rt");
+    DELIMWRITE_EOL(width_sumIntensity,"sumIntensity");
 
     if (cache_.size() != regionAnalyzer_->spectrumStats().size())
         throw runtime_error("[RegionTIC::close()] Cache sizes do not match.");
@@ -126,14 +133,13 @@ PWIZ_API_DECL void RegionTIC::close(const DataInfo& dataInfo)
         const SpectrumInfo& info = cache_[i];
         const RegionAnalyzer::SpectrumStats& spectrumStats = regionAnalyzer_->spectrumStats()[i];
 
-        os  << setw(width_index) << info.index
-            << setw(width_id) << info.id
-            << setw(width_scanEvent) << info.scanEvent
-            << setw(width_massAnalyzerType) << info.massAnalyzerTypeAbbreviation()
-            << setw(width_msLevel) << "ms" + lexical_cast<string>(info.msLevel)
-            << setw(width_retentionTime) << fixed << setprecision(2) << info.retentionTime
-            << setw(width_sumIntensity) << fixed << setprecision(4) << spectrumStats.sumIntensity
-            << endl;
+        DELIMWRITE(width_index,info.index);
+        DELIMWRITE(width_id,info.id);
+        DELIMWRITE(width_scanEvent,info.scanEvent);
+        DELIMWRITE(width_massAnalyzerType,info.massAnalyzerTypeAbbreviation());
+        DELIMWRITE(width_msLevel,"ms" + lexical_cast<string>(info.msLevel));
+        DELIMWRITE(width_retentionTime,fixed << setprecision(2) << info.retentionTime);
+        DELIMWRITE_EOL(width_sumIntensity,fixed << setprecision(4) << spectrumStats.sumIntensity);
     }
 }
 

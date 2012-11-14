@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
+#include "TabularConfig.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 
 
@@ -39,19 +40,8 @@ class PWIZ_API_DECL RunSummary : public MSDataAnalyzer
 {
     public:
 
-    struct PWIZ_API_DECL Config
+    struct PWIZ_API_DECL Config : TabularConfig
     {
-        enum Delimiter
-        {
-            Delimiter_FixedWidth,
-            Delimiter_Space,
-            Delimiter_Comma,
-            Delimiter_Tab
-        };
-
-        /// delimiter between columns (unless set to Delimiter_FixedWidth)
-        Delimiter delimiter;
-
         pwiz::util::IntegerSet msLevels;
         pwiz::util::IntegerSet charges;
 
@@ -80,11 +70,11 @@ struct analyzer_strings<RunSummary>
 {
     static const char* id() {return "run_summary";}
     static const char* description() {return "print summary statistics about a run";}
-    static const char* argsFormat() {return "[delimiter=fixed|space|comma|tab] [msLevels=int_set] [charges=int_set]";}
+    static const char* argsFormat() {return "["DELIMITER_OPTIONS_STR"] [msLevels=int_set] [charges=int_set]";}
     static std::vector<std::string> argsUsage()
     {
         std::vector<std::string> result;
-        result.push_back("delimiter: sets column separation; default is fixed width");
+        result.push_back(DELIMTER_USAGE_STR);
         result.push_back("msLevels: if specified, summary only operates on these MS levels; default is all MS levels");
         result.push_back("charges: if specified, summary only operates on these charge states; default is all charges");
         return result;

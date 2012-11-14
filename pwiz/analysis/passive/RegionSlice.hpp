@@ -71,10 +71,11 @@ struct analyzer_strings<RegionSlice>
 {
     static const char* id() {return "slice";}
     static const char* description() {return "write data from a rectangular region";}
-    static const char* argsFormat() {return "[mz=[a,b]] [rt=[a,b]] [index=[a,b]] [sn=[a,b]]";}
+    static const char* argsFormat() {return "["DELIMITER_OPTIONS_STR"] [mz=[a,b]] [rt=[a,b]] [index=[a,b]] [sn=[a,b]]";}
     static std::vector<std::string> argsUsage()
     {
         std::vector<std::string> result;
+        result.push_back(DELIMITER_OPTIONS_STR" (column separation; default is fixed width)");
         result.push_back("mz=[a,b] (set m/z range)");
         result.push_back("rt=[a,b] (set retention time range)");
         result.push_back("index=[a,b] (set spectrum index range)");

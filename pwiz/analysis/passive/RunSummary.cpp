@@ -37,7 +37,6 @@ namespace bfs = boost::filesystem;
 
 
 PWIZ_API_DECL RunSummary::Config::Config(const std::string& args)
-:   delimiter(Config::Delimiter_FixedWidth)
 {
     istringstream iss(args);
     vector<string> tokens;
@@ -46,23 +45,14 @@ PWIZ_API_DECL RunSummary::Config::Config(const std::string& args)
     msLevels.parse("1-");
     charges.parse("1-");
 
-    const string delimiterArgKey = "delimiter=";
     const string msLevelsArgKey = "msLevels=";
     const string chargesArgKey = "charges=";
 
     BOOST_FOREACH(const string& arg, tokens)
     {
-        if (bal::starts_with(arg, delimiterArgKey))
+        if(checkDelimiter(arg)) 
         {
-            string delimiterStr = arg.substr(delimiterArgKey.length());
-            if (delimiterStr == "space")
-                delimiter = Config::Delimiter_Space;
-            else if (delimiterStr == "tab")
-                delimiter = Config::Delimiter_Tab;
-            else if (delimiterStr == "comma")
-                delimiter = Config::Delimiter_Comma;
-            else if (delimiterStr != "fixed")
-                cerr << "[RunSummary] Invalid delimiter. Must be one of {fixed, space, tab, comma}." << endl;
+            // that was a valid delimter arg
         }
         else if (bal::starts_with(arg, msLevelsArgKey))
         {
@@ -169,24 +159,7 @@ string lastColumnHeaderRow = "";
 
 PWIZ_API_DECL void RunSummary::close(const DataInfo& dataInfo)
 {
-    char delimiter;
-
-    switch (config_.delimiter)
-    {
-        default:
-        case Config::Delimiter_FixedWidth:
-            delimiter = 0;
-            break;
-        case Config::Delimiter_Space:
-            delimiter = ' ';
-            break;
-        case Config::Delimiter_Comma:
-            delimiter = ',';
-            break;
-        case Config::Delimiter_Tab:
-            delimiter = '\t';
-            break;
-    }
+    char delimiter = ((TabularConfig& )config_).getDelimiterChar();
 
     typedef map<int, int> IntIntMap;
     typedef map<int, vector<size_t> > IntVectorSizeMap;

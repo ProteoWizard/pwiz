@@ -52,6 +52,7 @@ lib pwiz_analysis_passive
         RegionSIC.cpp
         Pseudo2DGel.cpp
         PepXMLCat.cpp
+        TabularConfig.cpp
     : # requirements
         <library>pwiz_analysis_passive_core
         <library>../peptideid//pwiz_analysis_peptideid

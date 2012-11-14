@@ -28,7 +28,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
-
+#include "TabularConfig.hpp"
 
 namespace pwiz {
 namespace analysis {
@@ -39,13 +39,14 @@ class PWIZ_API_DECL RegionAnalyzer : public MSDataAnalyzer
 {
     public:
 
-    struct PWIZ_API_DECL Config
+    struct PWIZ_API_DECL Config : TabularConfig
     {
         std::pair<double,double> mzRange;
         std::pair<size_t,size_t> indexRange;
         std::pair<int,int> scanNumberRange;
         std::pair<double,double> rtRange;
-        bool dumpRegionData;
+        bool dumpRegionData; // if true, dump info to a stream or file
+        ostream *osDump; // if non-null, dump to this stream, else open a file
         std::string filenameSuffix;
 
         Config();

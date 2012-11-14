@@ -29,6 +29,7 @@
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 #include "RegionAnalyzer.hpp"
+#include "TabularConfig.hpp"
 
 
 namespace pwiz {
@@ -40,7 +41,7 @@ class PWIZ_API_DECL RegionTIC : public MSDataAnalyzer
 {
     public:
 
-    struct PWIZ_API_DECL Config
+    struct PWIZ_API_DECL Config : TabularConfig
     {
         std::pair<double,double> mzRange;
         Config(const std::string& args); 
@@ -73,8 +74,8 @@ struct analyzer_strings<RegionTIC>
 {
     static const char* id() {return "tic";}
     static const char* description() {return "write total ion counts for an m/z range";}
-    static const char* argsFormat() {return "[mzLow [mzHigh]]";}
-    static std::vector<std::string> argsUsage() {return std::vector<std::string>();}
+    static const char* argsFormat() {return "["DELIMITER_OPTIONS_STR"] [mzLow [mzHigh]]";}
+    static std::vector<std::string> argsUsage() {return std::vector<std::string>(1, DELIMTER_USAGE_STR);}
 };
 
 

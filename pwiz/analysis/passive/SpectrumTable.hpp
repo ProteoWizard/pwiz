@@ -28,7 +28,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
-
+#include "TabularConfig.hpp"
 
 namespace pwiz {
 namespace analysis {
@@ -39,19 +39,8 @@ class PWIZ_API_DECL SpectrumTable : public MSDataAnalyzer
 {
     public:
 
-    struct PWIZ_API_DECL Config
+    struct PWIZ_API_DECL Config : TabularConfig
     {
-        enum Delimiter
-        {
-            Delimiter_FixedWidth,
-            Delimiter_Space,
-            Delimiter_Comma,
-            Delimiter_Tab
-        };
-
-        /// delimiter between columns (unless set to Delimiter_FixedWidth)
-        Delimiter delimiter;
-
         Config(const std::string& args = "");
     };
 
@@ -77,10 +66,10 @@ struct analyzer_strings<SpectrumTable>
 {
     static const char* id() {return "spectrum_table";}
     static const char* description() {return "write spectrum metadata as read from scan headers, in a table format";}
-    static const char* argsFormat() {return "[delimiter=fixed|space|comma|tab]";}
+    static const char* argsFormat() {return "["DELIMITER_OPTIONS_STR"]";}
     static std::vector<std::string> argsUsage()
     {
-        return std::vector<std::string>(1, "delimiter: sets column separation; default is fixed width");
+        return std::vector<std::string>(1, DELIMTER_USAGE_STR);
     }
 };
 

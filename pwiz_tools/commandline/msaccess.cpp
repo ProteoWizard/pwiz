@@ -162,6 +162,8 @@ string usage(const MSDataAnalyzerApplication& app)
         << "(creates data.mzML.spectrum_table.txt with summary information for all spectra as read from the scan headers)\n\n"
         << "msaccess data.mzML -x \"binary 0-3\"\n"
         << "(creates files data.mzML.binary.*.txt with binary data for spectra 0 through 3)\n\n"
+        << "msaccess data.mzML -x \"slice delimiter=tab index=[2,6] mz=[100,600]\"\n"
+        << "(creates data.mzML.slice.index_2-6.mz_100.0000-600.0000.tsv with a table of data in the selected range)\n\n"
         << "msaccess data.mzML -x image\n"
         << "(creates data.mzML.image* with pseudo-2D-gel image of the data file)\n\n";
 

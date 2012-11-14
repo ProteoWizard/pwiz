@@ -85,7 +85,11 @@ PWIZ_API_DECL RegionSlice::Config::Config(const string& args)
 
     for (vector<string>::const_iterator it=tokens.begin(); it!=tokens.end(); ++it)
     {
-        if (it->find("mz=[")==0)
+        if(checkDelimiter(*it))
+        {
+           // that was a valid delimiter arg
+        }
+        else if (it->find("mz=[")==0)
         {
             if (parseRange(it->substr(3), mzRange))
                 suffix << ".mz_" << fixed << setprecision(4) << mzRange.first 
@@ -113,7 +117,7 @@ PWIZ_API_DECL RegionSlice::Config::Config(const string& args)
         }
     }
 
-    suffix << ".txt";
+    suffix << getFileExtension(); // based on delimiter type
     filenameSuffix = suffix.str();
 }
 

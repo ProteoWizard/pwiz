@@ -42,13 +42,18 @@ PWIZ_API_DECL RegionSIC::Config::Config(const string& args)
     vector<string> tokens;
     istringstream iss(args);
     copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
-    if (tokens.size() != 3)
+    size_t rangeFirst = 0;
+    if(tokens.size() && checkDelimiter(tokens[0])) 
+    {
+        rangeFirst++; // that was a valid delimter arg
+    }
+    if (tokens.size() != rangeFirst+3)
         throw runtime_error(("[RegionSIC::Config] Invalid args: " + args).c_str());
 
-    mzCenter = lexical_cast<double>(tokens[0]);
-    radius = lexical_cast<double>(tokens[1]);
-    if (tokens[2]=="amu") radiusUnits = RadiusUnits_amu;
-    if (tokens[2]=="ppm") radiusUnits = RadiusUnits_ppm;
+    mzCenter = lexical_cast<double>(tokens[rangeFirst]);
+    radius = lexical_cast<double>(tokens[rangeFirst+1]);
+    if (tokens[rangeFirst+2]=="amu") radiusUnits = RadiusUnits_amu;
+    if (tokens[rangeFirst+2]=="ppm") radiusUnits = RadiusUnits_ppm;
 
     if (radiusUnits == RadiusUnits_Unknown)
         throw runtime_error(("[RegionSIC::Config] Invalid args: " + args).c_str());
@@ -106,7 +111,7 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
 
     // write peaks info
 
-    bfs::path outputPeaks = (bfs::path)dataInfo.outputDirectory / (base.str() + ".peaks.txt");
+    bfs::path outputPeaks = (bfs::path)dataInfo.outputDirectory / (base.str() + ".peaks"+ config_.getFileExtension());
     if (dataInfo.log) *dataInfo.log << "[RegionSIC] Writing file " << outputPeaks.string() << endl;
     bfs::ofstream osPeaks(outputPeaks);
 
@@ -120,17 +125,20 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
     const size_t width_peakMZ = 16;
     const size_t width_peakIntensity = 16;
 
-    osPeaks << "# " << dataInfo.sourceFilename << endl
-        << setw(width_index) << "# index"
-        << setw(width_id) << "id"
-        << setw(width_scanEvent) << "event"
-        << setw(width_massAnalyzerType) << "analyzer"
-        << setw(width_msLevel) << "msLevel"
-        << setw(width_retentionTime) << "rt"
-        << setw(width_sumIntensity) << "sumIntensity"
-        << setw(width_peakMZ) << "peakMZ"
-        << setw(width_peakIntensity) << "peakIntensity"
-        << endl;
+    char delimiter = config_.getDelimiterChar();
+#define DELIMWRITE(w,txt) if (delimiter) {osPeaks << txt << delimiter ;} else { osPeaks << setw(w) << txt;}
+#define DELIMWRITE_EOL(w,txt) if (delimiter) {osPeaks << txt << endl ;} else { osPeaks << setw(w) << txt << endl;}
+
+    osPeaks << "# " << dataInfo.sourceFilename << endl;
+    DELIMWRITE(width_index,"# index");
+    DELIMWRITE(width_id,"id");
+    DELIMWRITE(width_scanEvent,"event");
+    DELIMWRITE(width_massAnalyzerType,"analyzer");
+    DELIMWRITE(width_msLevel,"msLevel");
+    DELIMWRITE(width_retentionTime,"rt");
+    DELIMWRITE(width_sumIntensity,"sumIntensity");
+    DELIMWRITE(width_peakMZ,"peakMZ");
+    DELIMWRITE_EOL(width_peakIntensity,"peakIntensity");
 
     if (cache_.size() != regionAnalyzer_->spectrumStats().size())
         throw runtime_error("[RegionSIC::close()] Cache sizes do not match.");
@@ -141,16 +149,17 @@ PWIZ_API_DECL void RegionSIC::close(const DataInfo& dataInfo)
         const RegionAnalyzer::SpectrumStats& spectrumStats = regionAnalyzer_->spectrumStats()[i];
 
         if (spectrumStats.sumIntensity)
-        osPeaks << setw(width_index) << info.index
-            << setw(width_id) << info.id
-            << setw(width_scanEvent) << info.scanEvent
-            << setw(width_massAnalyzerType) << info.massAnalyzerTypeAbbreviation()
-            << setw(width_msLevel) << "ms" + lexical_cast<string>(info.msLevel)
-            << setw(width_retentionTime) << fixed << setprecision(2) << info.retentionTime
-            << setw(width_sumIntensity) << fixed << setprecision(4) << spectrumStats.sumIntensity
-            << setw(width_peakMZ) << fixed << setprecision(4) << spectrumStats.peak.mz
-            << setw(width_peakIntensity) << fixed << setprecision(4) << spectrumStats.peak.intensity
-            << endl;
+        {
+            DELIMWRITE(width_index,info.index);
+            DELIMWRITE(width_id,info.id);
+            DELIMWRITE(width_scanEvent,info.scanEvent);
+            DELIMWRITE(width_massAnalyzerType,info.massAnalyzerTypeAbbreviation());
+            DELIMWRITE(width_msLevel,"ms" + lexical_cast<string>(info.msLevel));
+            DELIMWRITE(width_retentionTime,fixed << setprecision(2) << info.retentionTime);
+            DELIMWRITE(width_sumIntensity,fixed << setprecision(4) << spectrumStats.sumIntensity);
+            DELIMWRITE(width_peakMZ,fixed << setprecision(4) << spectrumStats.peak.mz);
+            DELIMWRITE_EOL(width_peakIntensity,fixed << setprecision(4) << spectrumStats.peak.intensity);
+        }
     }
 
     // write summary

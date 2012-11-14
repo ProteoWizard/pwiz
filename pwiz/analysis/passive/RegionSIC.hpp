@@ -29,6 +29,7 @@
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 #include "RegionAnalyzer.hpp"
+#include "TabularConfig.hpp"
 
 
 namespace pwiz {
@@ -40,7 +41,7 @@ class PWIZ_API_DECL RegionSIC : public MSDataAnalyzer
 {
     public:
 
-    struct PWIZ_API_DECL Config
+    struct PWIZ_API_DECL Config : TabularConfig
     {
         double mzCenter;
         double radius; 
@@ -77,8 +78,8 @@ struct analyzer_strings<RegionSIC>
 {
     static const char* id() {return "sic";}
     static const char* description() {return "write selected ion chromatogram for an m/z and radius";}
-    static const char* argsFormat() {return "mzCenter radius (\"amu\"|\"ppm\")";}
-    static std::vector<std::string> argsUsage() {return std::vector<std::string>();}
+    static const char* argsFormat() {return "["DELIMITER_OPTIONS_STR"] mzCenter radius (\"amu\"|\"ppm\")";}
+    static std::vector<std::string> argsUsage() {return std::vector<std::string>(1, DELIMTER_USAGE_STR);}
 };
 
 
