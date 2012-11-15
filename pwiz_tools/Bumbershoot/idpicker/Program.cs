@@ -226,10 +226,9 @@ namespace IDPicker
             Properties.GUI.Settings.Default.Save();
 
             string teamcityURL = "http://teamcity.fenchurch.mc.vanderbilt.edu";
-            string buildsURL = teamcityURL + "/httpAuth/app/rest/buildTypes/id:bt31/builds?status=SUCCESS&count=1&guest=1";
+            string buildType = Environment.Is64BitProcess ? "bt123" : "bt31";
+            string buildsURL = String.Format("{0}/httpAuth/app/rest/buildTypes/id:{1}/builds?status=SUCCESS&count=1&guest=1", teamcityURL, buildType);
             string latestArtifactURL;
-            string versionArtifactFormatURL = teamcityURL + "/repository/download/bt31/{0}:id/VERSION?guest=1";
-
             Version latestVersion;
 
             lock (webClient)
@@ -241,7 +240,6 @@ namespace IDPicker
                 if (endIndex < 0) throw new InvalidDataException("not well formed xml:\r\n" + xml);
                 startIndex += 4; // skip the attribute name, equals, and opening quote
                 string buildId = xml.Substring(startIndex, endIndex - startIndex);
-                string buildType = Environment.Is64BitProcess ? "bt123" : "bt31";
 
                 latestArtifactURL = String.Format("{0}/repository/download/{1}/{2}:id", teamcityURL, buildType, buildId);
                 latestVersion = new Version(webClient.DownloadString(latestArtifactURL + "/VERSION?guest=1"));
@@ -302,7 +300,8 @@ namespace IDPicker
                     if (form.ShowDialog() == DialogResult.Yes)
                     {
                         string archSuffix = Environment.Is64BitProcess ? "x86_64" : "x86";
-                        string installerURL = String.Format("{0}/IDPicker-{1}-{2}.msi?guest=1", latestArtifactURL, latestVersion, archSuffix);
+                        string guestAccess = Application.ExecutablePath.Contains("build-nt-x86") ? "" : "?guest=1"; // don't log me out of TC session
+                        string installerURL = String.Format("{0}/IDPicker-{1}-{2}.msi{3}", latestArtifactURL, latestVersion, archSuffix, guestAccess);
                         System.Diagnostics.Process.Start(installerURL);
                     }
                 }));
