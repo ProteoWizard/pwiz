@@ -46,6 +46,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestMs1Tutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             TestFilesZip = ExtensionTestContext.CanImportAbWiff
                 ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering.zip" // Not L10N
                 : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml.zip"; // Not L10N

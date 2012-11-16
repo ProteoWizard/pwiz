@@ -72,11 +72,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             else
             {
                 PropertyInfo propertyInfo = table.GetProperty(column);
+                columnInfo.ColumnType = propertyInfo.PropertyType;
                 foreach (QueryColumn attr in propertyInfo.GetCustomAttributes(typeof(QueryColumn), true))
                 {
                     columnInfo.Caption = attr.FullName ?? columnInfo.Caption;
                     columnInfo.Format = attr.Format ?? columnInfo.Format;
-                    columnInfo.ColumnType = propertyInfo.PropertyType;
                     columnInfo.IsHidden = attr.IsHidden;
                 }
             }

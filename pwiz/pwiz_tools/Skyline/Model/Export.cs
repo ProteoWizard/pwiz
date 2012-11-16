@@ -1342,7 +1342,7 @@ namespace pwiz.Skyline.Model
                 // Start Time and End Time
                 if (predictedRT.HasValue)
                 {
-                    start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+                    start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value - windowRT/2) ?? 0).ToString(CultureInfo);
                     end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT/2) ?? 0).ToString(CultureInfo);
                 }
             }

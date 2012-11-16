@@ -139,7 +139,10 @@ namespace pwiz.Skyline.Alerts
                 
                 if (ApplicationDeployment.IsNetworkDeployed)
                 {
-                    sb.Append("Skyline version: ").AppendLine(Install.Version); // Not L10N
+                    sb.Append("Skyline version: ").Append(Install.Version); // Not L10N
+                    if (Install.Is64Bit)
+                        sb.Append(" (64-bit)");
+                    sb.AppendLine();
                 }
 
                 string guid = Settings.Default.InstallationId;

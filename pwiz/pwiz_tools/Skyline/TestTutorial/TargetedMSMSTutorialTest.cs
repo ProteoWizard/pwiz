@@ -49,6 +49,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestTargetedMSMSTutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             TestFilesZip = UseRawFiles
                 ? @"http://skyline.gs.washington.edu/tutorials/TargetedMSMS.zip"
                 : @"http://skyline.gs.washington.edu/tutorials/TargetedMSMSMzml.zip";
@@ -81,9 +84,6 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Set true to look at tutorial screenshots.
-//            IsPauseForScreenShots = true;
-
             LowResTest();
             TofTest();
         }

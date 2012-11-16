@@ -36,7 +36,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     /// <summary>
-    /// Testing the tutorial for Skyline Collision Energy Optimization
+    /// Testing the tutorial for iRT Retention Time Prediction
     /// </summary>
     [TestClass]
     public class IrtTutorialTest : AbstractFunctionalTest
@@ -45,7 +45,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestIrtTutorial()
         {
-            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ?  @"https://skyline.gs.washington.edu/tutorials/iRT.zip"
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
+            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ? @"https://skyline.gs.washington.edu/tutorials/iRT.zip"
                                : @"https://skyline.gs.washington.edu/tutorials/iRTMzml.zip"; // Not L10N
             RunFunctionalTest();
         }
@@ -58,7 +61,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Skyline Collision Energy Optimization
+            // iRT Retention Time Prediction
             string standardDocumentFile = GetTestPath("iRT-C18 Standard.sky"); // Not L10N
             RunUI(() => SkylineWindow.OpenFile(standardDocumentFile));
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath("iRT-C18 Calibrate.sky"))); // Not L10N
@@ -427,6 +430,7 @@ namespace pwiz.SkylineTestTutorial
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 RunUI(() =>
                 {
+                    peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction;
                     peptideSettingsUI.ChooseRegression(irtPredictorName);
                     peptideSettingsUI.UseMeasuredRT(true);
                     peptideSettingsUI.TimeWindow = 5;

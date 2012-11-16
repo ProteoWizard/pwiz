@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
             
-            // Set to use MzML for speed.
+            // Set to use MzML for speed, especially during debugging.
             //Skyline.Program.NoVendorReaders = true;
 
             string supplementZip = (ExtensionTestContext.CanImportThermoRaw ?
