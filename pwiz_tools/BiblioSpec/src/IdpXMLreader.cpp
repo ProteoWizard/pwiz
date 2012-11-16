@@ -300,6 +300,14 @@ void IdpXMLreader::parseSpectrum(const XML_Char** attributes) {
     curSpectrumEntry->charge = getIntRequiredAttrValue("z", attributes);
 
     const char* tmp_id = getAttrValue("id", attributes);
+    // if there is no 'id' attribute, try 'scan' attribute
+    if (strlen(tmp_id) == 0)
+    {
+        tmp_id = getAttrValue("scan", attributes);
+        if (strlen(tmp_id) == 0)
+            throwParseError("Spectrum tag contains neither id nor scan attribute.");
+    }
+
     curSpectrumEntry->id_str = new char[strlen(tmp_id)+1];
     strcpy(curSpectrumEntry->id_str, tmp_id);
 
@@ -308,7 +316,7 @@ void IdpXMLreader::parseSpectrum(const XML_Char** attributes) {
     if( id_str != NULL ) { 
         // confirm that scan preceeds it
         if( strncmp(id_str-4, "scan=", strlen("scan=")) != 0 ) {
-            throwParseError("Can't find scan in spectrum id '%s'", tmp_id);
+            throwParseError("Cannot find scan in spectrum id '%s'", tmp_id);
         }
         id_str++;  // point to the int after =
 
