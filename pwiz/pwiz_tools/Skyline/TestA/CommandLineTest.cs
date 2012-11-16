@@ -424,14 +424,64 @@ namespace pwiz.SkylineTestA
                                 "--report-name=" + "Bogus Report");
             Assert.IsTrue(output.Contains("Error"));
 
+            //Error: no template
+            output = RunCommand("--in=" + docPath,
+                                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ,
+                                "--exp-method-type=scheduled",
+                                "--exp-strategy=single",
+                                "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"));
+            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsFalse(output.Contains("No method"));
 
+            //Error: template does not exist
+            output = RunCommand("--in=" + docPath,
+                                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ,
+                                "--exp-method-type=scheduled",
+                                "--exp-strategy=single",
+                                "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
+                                "--exp-template=" + testFilesDir.GetTestPath("Bogus_template.meth"));
+            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains("exist"));
+            Assert.IsFalse(output.Contains("No method"));
+
+            //Error: can't schedule instrument type
+            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            string thermoTemplate = commandFilesDir.GetTestPath("20100329_Protea_Peptide_targeted.meth");
+            output = RunCommand("--in=" + docPath,
+                                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ,
+                                "--exp-method-type=scheduled",
+                                "--exp-strategy=single",
+                                "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
+                                "--exp-template=" + thermoTemplate);
+            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains("No method"));
+
+            //Error: not all peptides have RT info
+            string watersPath = testFilesDir.GetTestPath("Waters_test.csv");
+            output = RunCommand("--in=" + docPath,
+                                "--import-file=" + rawPath,
+                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                                "--exp-file=" + watersPath,
+                                "--exp-method-type=scheduled",
+                                "--exp-run-length=100",
+                                "--exp-optimizing=ce",
+                                "--exp-strategy=protein",
+                                "--exp-max-trans=100",
+                                "--exp-scheduling-replicate=LAST");
+            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains("peptides"));
+            Assert.IsTrue(output.Contains("No list"));
 
             //check for success. This is merely to cover more paths
-            string watersPath = testFilesDir.GetTestPath("Waters_test.csv");
+            string schedulePath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_scheduled.sky");
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            doc = (SrmDocument)doc.RemoveChild(doc.Children[1]);
+            CommandLine.SaveDocument(doc, schedulePath);
+            docPath = schedulePath;
 
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + rawPath,
-                                "--exp-translist-instrument=Waters",
+                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
                                 "--exp-file=" + watersPath,
                                 "--exp-method-type=scheduled",
                                 "--exp-run-length=100",
@@ -446,7 +496,7 @@ namespace pwiz.SkylineTestA
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + rawPath,
                                 "--import-replicate-name=Single",
-                                "--exp-translist-instrument=Waters",
+                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
                                 "--exp-file=" + watersPath,
                                 "--exp-method-type=scheduled",
                                 "--exp-run-length=100",
@@ -472,8 +522,8 @@ namespace pwiz.SkylineTestA
                                 "--exp-dwell-time=BOGUS",
                                 "--exp-run-length=1000000000",
                                 "--exp-run-length=BOGUS",
-                                "--exp-translist-instrument=Waters",
-                                "--exp-method-instrument=Thermo LTQ");
+                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
+                                "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ);
                                 //1 Error for using the above 2 parameters simultaneously
 
             Assert.IsFalse(output.Contains("successfully."));
@@ -483,7 +533,6 @@ namespace pwiz.SkylineTestA
 
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
-            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
 
             output = RunCommand("--in=" + brokenFile);
