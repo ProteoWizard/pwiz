@@ -419,7 +419,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(32.6, chromGraphs[0].GraphItems.First(g => g.BestPeakTime > 0).BestPeakTime, 0.05);
                 Assert.AreEqual(32.6, chromGraphs[1].GraphItems.First(g => g.BestPeakTime > 0).BestPeakTime, 0.05);
             });
-            PauseForScreenShot("p. 21 - Chromagram and area replicate graphs");
+            PauseForScreenShot("p. 21 - Chromatogram and area replicate graphs");
+
+            FindNode("R.DRVYIHPF.- [34, 41] (missed 1)");
+            PauseForScreenShot("p. 22 - Chromatogram selectivity");
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             WaitForCondition(() => SkylineWindow.GraphPeakArea.IsHidden);
@@ -557,7 +560,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(13.6, graphChrom2.BestPeakTime ?? 0, 0.05);
                 Assert.AreEqual(13.6, graphChrom1.BestPeakTime ?? 0, 0.05);
             });
-            PauseForScreenShot("p. 27, figure 1 & 2 - Peptides and chromatogram graphs");
+            PauseForScreenShot("p. 27, figure 1 and 2 - Peptides and chromatogram graphs");
 
             RunUI(() =>
             {
@@ -600,7 +603,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(3, SkylineWindow.GraphPeakArea.CurveCount);
             });
             VerifyDotProducts(0.99, 0.52, 0.98, 1.00, 1.00, 1.00);
-            PauseForScreenShot("p. 30 & 31 - Chromatograms and area replicate graph");
+            PauseForScreenShot("p. 30 and 31 - Chromatograms and area replicate graph");
         }
 
         private void WaitForDotProducts()
