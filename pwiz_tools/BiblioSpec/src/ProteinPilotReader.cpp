@@ -89,9 +89,14 @@ bool ProteinPilotReader::parseFile()
 
     // add all the psms to the library, one search at a time
     map<string, vector<PSM*> >::iterator searchItr = searchIdPsmMap_.begin();
+    // every call to buildTables clears the curSpecFileName_ parameter,
+    // but for ProteinPilot all spectra are read from the same file.
+    // So save the file name in order to restore it.
+    string specFileName = getSpecFileName();
     for(; searchItr != searchIdPsmMap_.end(); ++searchItr){
         psms_ = searchItr->second;
         string filename = searchIdFileMap_[searchItr->first];
+        setSpecFileName(specFileName.c_str(), false);
         buildTables(PROTEIN_PILOT_CONFIDENCE, filename);
     }
     return true;
@@ -239,9 +244,12 @@ void ProteinPilotReader::parseMatchElement(const XML_Char** attr)
 
     // if this not the first match, create a new psm
     if( curPSM_->score != 0 ){
+        string specName = curPSM_->specName;
         curSearchPSMs_->push_back(curPSM_);
         curPSM_ = new PSM();
-        curPSM_->specName = (mapAccess->second.back())->specName;
+        curPSM_->specName = mapAccess == searchIdPsmMap_.end()
+            ? specName
+            : (mapAccess->second.back())->specName;
     }
     curPSM_->score = score;
 
