@@ -2202,8 +2202,8 @@ namespace pwiz.Skyline
                     if (rtReplicateGraphPane != null)
                     {
                         iInsert = InsertAlignToSelectionMenuItem(menuStrip.Items, iInsert);
-                        }
                     }
+                }
                 else if (graphType == GraphTypeRT.peptide)
                 {
                     menuStrip.Items.Insert(iInsert++, peptideOrderContextMenuItem);
@@ -2906,7 +2906,15 @@ namespace pwiz.Skyline
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            if (null == SummaryReplicateGraphPane.GroupByReplicateAnnotation)
+            string groupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+            var replicateAnnotations = DocumentUI.Settings.DataSettings.AnnotationDefs
+                .Where(annotationDef => annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
+                .ToArray();
+            if (replicateAnnotations.Length == 0)
+                groupBy = null;
+
+            // If not grouped by an annotation, show the order-by menuitem
+            if (string.IsNullOrEmpty(groupBy))
             {
                 menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
                 if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
@@ -2918,30 +2926,27 @@ namespace pwiz.Skyline
                         });
                 }
             }
-            var replicateAnnotations = DocumentUI.Settings.DataSettings.AnnotationDefs
-                .Where(annotationDef => annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
-                .ToArray();
-            if (replicateAnnotations.Length > 0 || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
+            
+            if (replicateAnnotations.Length > 0)
             {
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
                 groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked =
-                    null == SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(groupBy);
                 foreach (var annotationDef in replicateAnnotations)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(annotationDef));
+                        .Add(GroupByReplicateAnnotationMenuItem(annotationDef, groupBy));
                 }
             }
             return iInsert;
         }
 
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(AnnotationDef annotationDef)
+        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(AnnotationDef annotationDef, string groupBy)
         {
             return new ToolStripMenuItem(annotationDef.Name, null, (sender, eventArgs)=>GroupByReplicateAnnotation(annotationDef.Name))
                        {
-                           Checked = annotationDef.Name == SummaryReplicateGraphPane.GroupByReplicateAnnotation,
+                           Checked = (annotationDef.Name == groupBy),
                        };
         }
 

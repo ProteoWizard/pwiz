@@ -88,8 +88,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoScheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, "Positive", 46.79, 47.79, 20.4, 2, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, "Positive", 39.9, 40.90, 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, "Positive", 45.79, 47.79, 20.4, 2, "LVNELTEFAK (light)"),
+                FieldSeparate(444.55002, "Positive", 38.9, 40.90, 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
 
             // Export Agilent unscheduled Targeted list.
             ExportIsolationList(
@@ -120,8 +120,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoScheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, "Positive", 46.79, 47.79, 20.4, 2, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, "Positive", 39.9, 40.90, 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, "Positive", 45.79, 47.79, 20.4, 2, "LVNELTEFAK (light)"),
+                FieldSeparate(444.55002, "Positive", 38.9, 40.90, 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
 
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);

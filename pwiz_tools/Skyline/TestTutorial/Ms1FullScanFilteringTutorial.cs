@@ -46,6 +46,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestMs1Tutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             TestFilesZip = ExtensionTestContext.CanImportAbWiff
                 ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering.zip" // Not L10N
                 : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml.zip"; // Not L10N
@@ -212,10 +215,10 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
                 Settings.Default.ShowDotProductPeakArea = true;
                 Settings.Default.ShowLibraryPeakArea = true;
-                SkylineWindow.AutoZoomNone();
+                SkylineWindow.AutoZoomBestPeak();
             });
             WaitForDocumentChange(doc);
-            PauseForScreenShot();   // p. 14 & 15
+            PauseForScreenShot("p. 14 and 15");   // p. 14 & 15
 
             RunUI(SkylineWindow.AutoZoomNone);
             PauseForScreenShot();   // p. 16

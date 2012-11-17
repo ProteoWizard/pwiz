@@ -494,13 +494,13 @@
     <value>Scheduled methods are not yet supported for DIA acquisition.</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction_or_import_results_for_all_peptides_in_the_document" xml:space="preserve">
-    <value>To export a scheduled list, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document.</value>
+    <value>To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document.</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction" xml:space="preserve">
-    <value>To export a scheduled list, you must first choose a retention time predictor in Peptide Settings / Prediction.</value>
+    <value>To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction.</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_import_results_for_all_peptides_in_the_document" xml:space="preserve">
-    <value>To export a scheduled list, you must first import results for all peptides in the document.</value>
+    <value>To export a scheduled method, you must first import results for all peptides in the document.</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_Method_Template" xml:space="preserve">
     <value>Method Template</value>

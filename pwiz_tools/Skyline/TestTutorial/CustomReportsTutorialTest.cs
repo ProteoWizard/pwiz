@@ -44,14 +44,15 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCustomReportsTutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/CustomReports.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            // Skyline Custom Reports and Results Grid
-
             // Data Overview, p. 2
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky"))); // Not L10N
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>

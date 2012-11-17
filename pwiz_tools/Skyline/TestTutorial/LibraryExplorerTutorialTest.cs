@@ -42,6 +42,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestLibraryExplorerTutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/LibraryExplorer.zip"; // Not L10N
             RunFunctionalTest();
         }
@@ -98,6 +101,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 viewLibraryDlg.FilterString = "I"; // Not L10N
+                viewLibraryDlg.SetObservedMzValues(true);
                 Assert.AreEqual(1, viewLibraryDlg.PeptideDisplayCount);
             });
             

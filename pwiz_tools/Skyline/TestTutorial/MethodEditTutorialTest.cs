@@ -49,15 +49,15 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestMethodEditTutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/MethodEdit.zip"; // Not L10N
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
-
             // Creating a MS/MS Spectral Library, p. 1
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunDlg<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg, buildLibraryDlg =>

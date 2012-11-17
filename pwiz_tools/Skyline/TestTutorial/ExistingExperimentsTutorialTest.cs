@@ -48,6 +48,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestExistingExperimentsTutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
             TestFilesZip = ExtensionTestContext.CanImportAbWiff
                                ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
                                : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip";
@@ -74,9 +77,6 @@ namespace pwiz.SkylineTestTutorial
 
         private void DoMrmerTest()
         {
-            // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
-
             // Preparing a Document to Accept a Transition List, p. 2
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =

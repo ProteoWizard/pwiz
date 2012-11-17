@@ -1747,46 +1747,85 @@ namespace pwiz.Skyline
             {
                 if (Equals(args.ExportMethodType, ExportMethodType.Triggered))
                 {
+                    bool canTrigger = true;
                     if (!ExportInstrumentType.CanTriggerInstrumentType(instrument))
                     {
+                        canTrigger = false;
                         if (Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO_TSQ))
                         {
                             _out.WriteLine("Error: the {0} instrument lacks support for direct method export for", instrument);
-                            _out.WriteLine("triggered acquisition.");
-                            _out.WriteLine("You must export a {0} transition list and manually import it into", ExportInstrumentType.THERMO);
-                            _out.WriteLine("a method file using vendor software.");
-                            _out.WriteLine("No method will be exported.");
-                            return;
+                            _out.WriteLine("       triggered acquisition.");
+                            _out.WriteLine("       You must export a {0} transition list and manually import it into", ExportInstrumentType.THERMO);
+                            _out.WriteLine("       a method file using vendor software.");
                         }
                         else
                         {
                             _out.WriteLine("Error: the instrument type {0} does not support triggered acquisition.", instrument);
-                            _out.WriteLine("No method will be exported.");
-                            return;
                         }
-                        
                     }
-                    if (!_doc.Settings.HasResults && !_doc.Settings.HasLibraries)
+                    else if (!_doc.Settings.HasResults && !_doc.Settings.HasLibraries)
                     {
+                        canTrigger = false;
                         _out.WriteLine("Error: triggered acquistion requires a spectral library or imported results");
-                        _out.WriteLine("in order to rank transitions.");
-                        _out.WriteLine("No method will be exported.");
-                        return;
+                        _out.WriteLine("       in order to rank transitions.");
                     }
-                    if (!ExportInstrumentType.CanTrigger(instrument, _doc))
+                    else if (!ExportInstrumentType.CanTrigger(instrument, _doc))
                     {
+                        canTrigger = false;
                         _out.WriteLine("Error: The current document contains peptides without enough information");
-                        _out.WriteLine("to rank transitions for triggered acquisition.");
-                        _out.WriteLine("No method will be exported.");
+                        _out.WriteLine("       to rank transitions for triggered acquisition.");
+                    }
+                    if (!canTrigger)
+                    {
+                        _out.WriteLine(Equals(type, ExportFileType.List)
+                                               ? "No list will be exported."
+                                               : "No method will be exported.");
                         return;
                     }
                     _exportProperties.PrimaryTransitionCount = args.PrimaryTransitionCount;
                 }
-                if (Equals(type, ExportFileType.Method) && !ExportInstrumentType.CanSchedule(args.MethodInstrumentType, _doc))
+
+                if (!ExportInstrumentType.CanSchedule(instrument, _doc))
                 {
-                    _out.WriteLine("Error: the specified instrument {0} is not compatible with scheduled methods.",
-                                   args.TransListInstrumentType);
-                    _out.WriteLine("No method will be exported.");
+                    var predictionPep = _doc.Settings.PeptideSettings.Prediction;
+                    if (!ExportInstrumentType.CanScheduleInstrumentType(instrument, _doc))
+                    {
+                        _out.WriteLine("Error: the specified instrument {0} is not compatible with scheduled methods.",
+                                       instrument);
+                    }
+                    else if (predictionPep.RetentionTime == null)
+                    {
+                        if (predictionPep.UseMeasuredRTs)
+                        {
+                            _out.WriteLine("Error: to export a scheduled method, you must first choose a retention time");
+                            _out.WriteLine("       predictor in Peptide Settings / Prediction, or import results for all");
+                            _out.WriteLine("       peptides in the document.");
+                        }
+                        else
+                        {
+                            _out.WriteLine("Error: to export a scheduled method, you must first choose a retention time");
+                            _out.WriteLine("       predictor in Peptide Settings / Prediction.");
+                        }
+                    }
+                    else if (!predictionPep.RetentionTime.Calculator.IsUsable)
+                    {
+                        _out.WriteLine("Error: the retention time prediction calculator is unable to score.");
+                        _out.WriteLine("       Check the calculator settings.");
+                    }
+                    else if (!predictionPep.RetentionTime.IsUsable)
+                    {
+                        _out.WriteLine("Error: the retention time predictor is unable to auto-calculate a regression.");
+                        _out.WriteLine("       Check to make sure the document contains times for all of the required");
+                        _out.WriteLine("       standard peptides.");
+                    }
+                    else
+                    {
+                        _out.WriteLine("Error: To export a scheduled method, you must first import results for all");
+                        _out.WriteLine("       peptides in the document.");
+                    }
+                    _out.WriteLine(Equals(type, ExportFileType.List)
+                                           ? "No list will be exported."
+                                           : "No method will be exported.");
                     return;
                 }
 
@@ -1807,7 +1846,9 @@ namespace pwiz.Skyline
                         {
                             _out.WriteLine("Error: the specified replicate {0} does not exist in the document.",
                                            args.SchedulingReplicate);
-                            _out.WriteLine("No {0} will be exported.", Equals(type, ExportFileType.Method) ? "method" : "transition list");
+                            _out.WriteLine(Equals(type, ExportFileType.List)
+                                                   ? "No list will be exported."
+                                                   : "No method will be exported.");
                             return;
                         }
 
@@ -1818,24 +1859,20 @@ namespace pwiz.Skyline
                 }
             }
 
-            var instrumentType = Equals(type, ExportFileType.List)
-                                     ? args.TransListInstrumentType
-                                     : args.MethodInstrumentType;
-
             try
             {
-                _exportProperties.ExportFile(instrumentType, type, args.ExportPath, _doc, args.TemplateFile);
+                _exportProperties.ExportFile(instrument, type, args.ExportPath, _doc, args.TemplateFile);
             }
             catch (IOException x)
             {
                 _out.WriteLine("Error: The file {0} could not be saved.", args.ExportPath);
-                _out.WriteLine("Check that the specified file directory exists and is writeable.");
+                _out.WriteLine("       Check that the specified file directory exists and is writeable.");
                 _out.WriteLine(x.Message);
                 return;
             }
 
             _out.WriteLine(Equals(type, ExportFileType.List)
-                               ? "Transition list {0} exported successfully."
+                               ? "List {0} exported successfully."
                                : "Method {0} exported successfully.",
                            Path.GetFileName(args.ExportPath));
         }

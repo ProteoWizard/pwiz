@@ -43,6 +43,8 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestAbsoluteQuantificationTutorial()
         {
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
 
             TestFilesZip = ExtensionTestContext.CanImportThermoRaw
                                ? @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip"
@@ -52,9 +54,6 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
-
             var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";
             // Generating a Transition List, p. 4
             {
@@ -62,12 +61,18 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                           {
                               // Predicition Settings
+                              transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction;
                               transitionSettingsUI.PrecursorMassType = MassType.Monoisotopic;
                               transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                               transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
                               transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
+                          });
+                PauseForScreenShot();
 
+                RunUI(() =>
+                          {
                               // Filter Settings
+                              transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
                               transitionSettingsUI.PrecursorCharges = "2";
                               transitionSettingsUI.ProductCharges = "1";
                               transitionSettingsUI.FragmentTypes = "y";
@@ -110,7 +115,6 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();
 
             // Exporting a transition list p. 6
-            // TODO: Export name never specified in tutorial.
             {
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                 RunUI(() =>

@@ -46,16 +46,16 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCEOptimizationTutorial()
         {
-            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ?  @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
+            // Set true to look at tutorial screenshots.
+            //IsPauseForScreenShots = true;
+
+            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ? @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
                 : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
-
             // Skyline Collision Energy Optimization
             var folderOptimizeCE = ExtensionTestContext.CanImportThermoRaw ? "OptimizeCE" : "OptimizeCEMzml"; // Not L10N
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.sky"))); // Not L10N
@@ -171,6 +171,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => 
             {
                 SkylineWindow.ShowSingleTransition();
+                SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
             FindNode("IHGFDLAAINLQR");
