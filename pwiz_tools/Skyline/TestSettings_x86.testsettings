@@ -19,9 +19,6 @@
     <DeploymentItem filename="Method\Thermo\BuildLTQMethod.exe" outputDirectory="Method\Thermo" />
     <!-- BiblioSpec library building -->
     <DeploymentItem filename="BlibBuild.exe" />
-    <DeploymentItem filename="EULA.MHDAC" />
-    <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
-    <DeploymentItem filename="EULA.MSFileReader" />
     <DeploymentItem filename="BlibFilter.exe" />
     <DeploymentItem filename="msparser.dll" />
     <DeploymentItem filename="unimod_2.xsd" />
