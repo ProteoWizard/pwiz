@@ -1066,6 +1066,16 @@
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="..\Shared\BiblioSpec\binaries\quantitation_1.xsd">
+      <Link>quantitation_1.xsd</Link>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Shared\BiblioSpec\binaries\quantitation_2.xsd">
+      <Link>quantitation_2.xsd</Link>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
