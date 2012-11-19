@@ -67,6 +67,8 @@ rule mascot-api-usage-requirements ( properties * )
     if $(msparser_path)
     {
         result += <library>$(PWIZ_ROOT_PATH)//msparser <dependency>unimod_2.xsd ;
+        result += <library>$(PWIZ_ROOT_PATH)//msparser <dependency>quantitation_1.xsd ;
+        result += <library>$(PWIZ_ROOT_PATH)//msparser <dependency>quantitation_2.xsd ;
     }
 
     return $(result) ;
@@ -220,5 +222,7 @@ exe LibToSqlite3
     <library>blib_v_1
  ;
 
-# required file for running BlibBuild with mascot support
+# required files for running BlibBuild with mascot support
 make unimod_2.xsd : ./unimod_2.xsd : @common.copy : ;
+make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy : ;
+make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy : ;

@@ -384,8 +384,22 @@ void MascotResultsReader::getIsotopeMasses(){
         return;
     }
 
+    string exeDir = getExeDirectory();
+
+    // URL encode any spaces in the EXE path
+    size_t pos = 0;
+    while((pos = exeDir.find(" ", pos)) != string::npos) {
+        exeDir.replace(pos, 1, "%20");
+        pos += 3;
+    }
+
     // get the quantification parameters
     ms_quant_configfile quantConfig;
+    string quantSchemas("http://www.matrixscience.com/xmlns/schema/quantitation_1 ");
+    quantSchemas += exeDir + "quantitation_1.xsd";
+    quantSchemas += " http://www.matrixscience.com/xmlns/schema/quantitation_2 ";
+    quantSchemas += exeDir + "quantitation_2.xsd";
+    quantConfig.setSchemaFileName(quantSchemas.c_str());
     if( !ms_file_->getQuantitation(&quantConfig) ) {
         throw BlibException(true, "Cannot get quantitation information "
                             "from file '%s'.", getFileName().c_str());
@@ -401,7 +415,7 @@ void MascotResultsReader::getIsotopeMasses(){
     }
 
     // get the parameters that include isotope masses
-    string unimod = getExeDirectory();
+    string unimod(exeDir);
     unimod += "unimod_2.xsd"; 
     ms_umod_configfile massConfig;
     massConfig.setSchemaFileName(unimod.c_str()); 
