@@ -679,6 +679,8 @@ void testThreadSafety(const int& testThreadCount)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
     if (os_) *os_ << "DigestionTest\n";
 
@@ -689,16 +691,15 @@ int main(int argc, char* argv[])
         testThreadSafety(4);
         //testThreadSafety(8);
         //testThreadSafety(16); // high thread count fails non-deterministically on MSVC; I haven't been able to find the cause.
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
+        TEST_FAILED("Caught unknown exception.")
     }
 
-    return 1;
+    TEST_EPILOG
 }

@@ -68,6 +68,8 @@ feature.feature testing.precommand  : : free optional ;
 # The arguments to this command are the test name and the exit status (0=pass !0=fail)
 feature.feature testing.postcommand : : free optional ;
 
+feature.feature testing.semaphore   : : free optional ;
+
 feature.feature test-info           : : free incidental ;
 feature.feature testing.arg         : : free incidental ;
 feature.feature testing.input-file  : : free dependency ;
@@ -409,6 +411,7 @@ toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
 toolset.flags testing.capture-output TEST_PRECOMMAND <testing.precommand> ;
 toolset.flags testing.capture-output TEST_POSTCOMMAND <testing.postcommand> ;
+toolset.flags testing.capture-output TEST_SEMAPHORE <testing.semaphore> ;
 toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 
 
@@ -458,6 +461,12 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
     TEST_NAME on $(target) = $(name:B) ;
 
     run-path-setup $(target) : $(source) : $(properties) ;
+
+    test-semaphore = [ on $(target) return $(TEST_SEMAPHORE) ] ;
+    if $(test-semaphore)
+    {
+        JAM_SEMAPHORE on $(target) = $(test-semaphore) ;
+    }
 
     if [ feature.get-values preserve-test-targets : $(properties) ] = off
     {
@@ -554,6 +563,7 @@ toolset.flags testing.unit-test LAUNCHER <testing.launcher> ;
 toolset.flags testing.unit-test ARGS <testing.arg> ;
 toolset.flags testing.unit-test TEST_PRECOMMAND <testing.precommand> ;
 toolset.flags testing.unit-test TEST_POSTCOMMAND <testing.postcommand> ;
+toolset.flags testing.unit-test TEST_SEMAPHORE <testing.semaphore> ;
 
 
 rule unit-test ( target : source : properties * )
@@ -566,6 +576,13 @@ rule unit-test ( target : source : properties * )
     {
        TEST_POSTCOMMAND_OUTPUT on $(target) = "> $(.NULL)" ;
     }
+
+    test-semaphore = [ on $(target) return $(TEST_SEMAPHORE) ] ;
+    if $(test-semaphore)
+    {
+        JAM_SEMAPHORE on $(target) = $(test-semaphore) ;
+    }
+
     local name = $(target:G=) ;
     TEST_NAME on $(target) = $(name:B) ;
     run-path-setup $(target) : $(source) : $(properties) ;

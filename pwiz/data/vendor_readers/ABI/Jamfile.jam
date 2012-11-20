@@ -103,7 +103,6 @@ lib pwiz_reader_abi
     ;
 
 
-import tar ;
 rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
@@ -113,7 +112,7 @@ rule test-requirements ( properties * )
         import tar ;
         tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
     }
-
+    
     local result ;
     
     if ! $(.warn-once-test)

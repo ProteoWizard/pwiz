@@ -849,6 +849,8 @@ void test_v3(SpectrumListPtr sl, int msLevel)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -956,17 +958,17 @@ int main(int argc, char* argv[])
         SpectrumListPtr slCMS2_v3 = SpectrumList_MSn::create(isCMS2_v3, dummy, MSn_Type_CMS2);
         test_v3(slCMS2_v3, 2);
 
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
+        TEST_FAILED("Caught unknown exception.")
     }
+
+    TEST_EPILOG
 }
 
 

@@ -282,6 +282,8 @@ void testBadFile(const string& filename)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         vector<string> filenames;  
@@ -289,6 +291,7 @@ int main(int argc, char* argv[])
         for (int i=1; i<argc; i++)
         {
             if (!strcmp(argv[i],"-v")) os_ = &cout;
+            else if (bal::starts_with(argv[i], "--")) continue;
             else filenames.push_back(argv[i]);
         }
 
@@ -296,13 +299,17 @@ int main(int argc, char* argv[])
         test();
         for_each(filenames.begin(), filenames.end(), testBadFile);
 
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }
 
 

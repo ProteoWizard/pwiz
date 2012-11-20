@@ -104,17 +104,23 @@ void test()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "FrequencyEstimatorPhysicalModelTest\n";
         test();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }
 

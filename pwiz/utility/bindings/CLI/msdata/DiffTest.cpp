@@ -22,15 +22,15 @@
 
 //#include "Diff.hpp"
 //#include "examples.hpp"
-#include "pwiz/utility/misc/unit.hpp"
+#include "../common/unit.hpp"
 
 
-using namespace pwiz::util;
+using namespace pwiz::CLI::util;
 using namespace pwiz::CLI::cv;
 using namespace pwiz::CLI::data;
 using namespace pwiz::CLI::msdata;
+using System::String;
 using System::Console;
-typedef System::String string;
 
 
 public ref class Log
@@ -63,7 +63,7 @@ void testMSData()
     b.scanSettingsList->Add(gcnew ScanSettings("scanSettings"));
    
     diff.apply(a, b);
-    if (Log::writer != nullptr) Log::writer->WriteLine((string^)diff);
+    if (Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
     unit_assert((bool)diff);
 
     unit_assert(diff.a_b->accession == "different");
@@ -216,25 +216,26 @@ void test()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG_EX(argc, argv, "_MSData_CLI")
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) Log::writer = Console::Out;
         test();
-        return 0;
     }
-    catch (std::exception& e)
+    catch (exception& e)
     {
-        Console::Error->WriteLine("std::exception: " + gcnew string(e.what()));
+        TEST_FAILED("std::exception: " + string(e.what()))
     }
     catch (System::Exception^ e)
     {
-        Console::Error->WriteLine("System.Exception: " + e->Message);
+        TEST_FAILED("System.Exception: " + ToStdString(e->Message))
     }
     catch (...)
     {
-        Console::Error->WriteLine("Caught unknown exception.\n");
+        TEST_FAILED("Caught unknown exception.")
     }
     
-    return 1;
+    TEST_EPILOG
 }
 

@@ -62,6 +62,8 @@ void test()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -72,18 +74,17 @@ int main(int argc, char* argv[])
         test< double,complex<double> >();
         test< complex<double>,complex<double> >();
 
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Unknown exception.\n";
+        TEST_FAILED("Caught unknown exception.")
     }
 
-    return 1; 
+    TEST_EPILOG
 }
 
 

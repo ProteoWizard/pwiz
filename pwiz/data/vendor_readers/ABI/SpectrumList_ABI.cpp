@@ -134,6 +134,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     double scanTime = spectrum->getStartTime();
     if (scanTime > 0)
         scan.set(MS_scan_start_time, scanTime, UO_minute);
+    scan.set(MS_preset_scan_configuration, msExperiment->getExperimentNumber());
 
     ExperimentType experimentType = msExperiment->getExperimentType();
     int msLevel = spectrum->getMSLevel();

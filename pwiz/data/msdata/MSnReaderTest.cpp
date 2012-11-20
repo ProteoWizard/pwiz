@@ -20,11 +20,11 @@
 // limitations under the License.
 //
 
+#include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
@@ -32,7 +32,6 @@
 using namespace pwiz::data;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-using namespace boost;
 namespace bfs = boost::filesystem;
 
 ostream* os_ = 0;
@@ -211,6 +210,8 @@ void test(const bfs::path& datadir, int msLevel)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -228,17 +229,17 @@ int main(int argc, char* argv[])
         test(example_data_dir, 1);
         test(example_data_dir, 2);
 
-        return 0;
     }
-    catch (std::exception& e)
+    catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
+        TEST_FAILED("Caught unknown exception.")
     }
+
+    TEST_EPILOG
 }
 
 

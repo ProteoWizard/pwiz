@@ -19,8 +19,9 @@
 // limitations under the License.
 //
 
+
+#include "Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 
 
@@ -221,6 +222,8 @@ void test_xml_datetime()
 
 int main(int argc, const char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -237,16 +240,15 @@ int main(int argc, const char* argv[])
         test_format_date_time();
         test_parse_date_time();
         test_xml_datetime();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << "Caught exception: " << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception" << endl;
+        TEST_FAILED("Caught unknown exception.")
     }
 
-    return 1;
+    TEST_EPILOG
 }

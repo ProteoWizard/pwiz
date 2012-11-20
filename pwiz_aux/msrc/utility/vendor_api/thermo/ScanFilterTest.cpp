@@ -320,8 +320,12 @@ vector<double> parseDoubleArray(const string& doubleArray)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
+        int failedTests = 0;
+
         if (argc > 2)
             throw runtime_error("Usage: ScanFilterTest [Thermo RAW filename]");
         else if (argc == 1)
@@ -375,21 +379,23 @@ int main(int argc, char* argv[])
                 {
                     cout << "Unit test on filter \"" << f.filter << "\" failed:\n" << e.what() << endl;
                     scanFilter.print();
+                    ++failedTests;
                 }
             }
         }
-        return 0;
+
+        unit_assert_operator_equal(0, failedTests);
     }
     catch (exception& e)
     {
-        cout << "Caught exception: " << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cout << "Caught unknown exception.\n";
+        TEST_FAILED("Caught unknown exception.")
     }
 
-    return 1;
+    TEST_EPILOG
 }
 
 

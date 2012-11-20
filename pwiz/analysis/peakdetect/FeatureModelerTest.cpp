@@ -111,6 +111,8 @@ void test(const bfs::path& datadir)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         bfs::path datadir = ".";
@@ -127,17 +129,16 @@ int main(int argc, char* argv[])
         }   
         
         test(datadir);
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
+        TEST_FAILED("Caught unknown exception.")
     }
 
-    return 1;
+    TEST_EPILOG
 }
 

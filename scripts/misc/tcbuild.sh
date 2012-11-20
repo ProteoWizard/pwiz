@@ -17,7 +17,7 @@ if ! /bin/bash clean.sh; then
 fi
 
 echo_info "Running quickbuild..."
-if ! /bin/bash quickbuild.sh --teamcity-test-decoration "$@"; then
+if ! /bin/bash quickbuild.sh --teamcity-test-decoration --verbose-test "$@"; then
 	  echo_error "Error running quickbuild! See full build log for details."
 	  exit 1
 fi

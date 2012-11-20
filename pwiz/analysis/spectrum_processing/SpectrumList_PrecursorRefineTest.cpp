@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PrecursorRecalculatorTest.cpp 2051 2010-06-15 18:39:13Z chambm $
+// $Id$
 //
 //
 // Original author: Chris Paulse <cpaulse@systemsbiology.org>
@@ -94,6 +94,8 @@ void test(const bfs::path& datadir)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         bfs::path datadir = ".";
@@ -111,13 +113,17 @@ int main(int argc, char* argv[])
 
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         test(datadir);
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }
 
 

@@ -19,11 +19,12 @@
 // limitations under the License.
 //
 
+
+#include "pwiz/utility/misc/unit.hpp"
 #include "Reader_ABI_T2D.hpp"
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 struct Is_T2D_Directory : public pwiz::util::TestPathPredicate
 {
@@ -37,6 +38,8 @@ struct Is_T2D_Directory : public pwiz::util::TestPathPredicate
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     #ifdef PWIZ_READER_ABI_T2D
     const bool testAcceptOnly = false;
     #else
@@ -45,14 +48,16 @@ int main(int argc, char* argv[])
 
     try
     {
-        return pwiz::util::testReader(pwiz::msdata::Reader_ABI_T2D(),
-                                      vector<string>(argv, argv+argc),
-                                      testAcceptOnly,
-                                      Is_T2D_Directory());
+        pwiz::util::testReader(pwiz::msdata::Reader_ABI_T2D(), testArgs, testAcceptOnly, Is_T2D_Directory());
     }
-    catch (std::runtime_error& e)
+    catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }

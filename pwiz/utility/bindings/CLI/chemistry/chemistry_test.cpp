@@ -21,12 +21,12 @@
 //
 
 
-#include "pwiz/utility/misc/unit.hpp"
+#include "../common/unit.hpp"
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace pwiz::util;
+using namespace pwiz::CLI::util;
 using namespace pwiz::CLI::chemistry;
 using namespace System::Collections::Generic;
 using System::String;
@@ -241,6 +241,8 @@ void testIO()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG_EX(argc, argv, "_CLI")
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -251,19 +253,20 @@ int main(int argc, char* argv[])
         testMZ();
         testPPM();
         testIO();
-        return 0;
     }
-    catch (std::exception& e)
+    catch (exception& e)
     {
-        Console::Error->WriteLine("std::exception: " + gcnew String(e.what()));
+        TEST_FAILED("std::exception: " + string(e.what()))
     }
     catch (System::Exception^ e)
     {
-        Console::Error->WriteLine("System.Exception: " + e->Message);
+        TEST_FAILED("System.Exception: " + ToStdString(e->Message))
     }
     catch (...)
     {
-        Console::Error->WriteLine("Caught unknown exception.\n");
+        TEST_FAILED("Caught unknown exception.")
     }
+
+    TEST_EPILOG
 }
 

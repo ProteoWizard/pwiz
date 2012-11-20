@@ -711,51 +711,46 @@ void testInvarianceUnderProteinProphet()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
 
     try
-        {
-            if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-            if (os_) *os_ << "MinimumPepXMLTest ... \n";
+    {
+        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+        if (os_) *os_ << "MinimumPepXMLTest ... \n";
 
-            testSpecificity();
-            testSampleEnzyme();
-            testSearchDatabase();
-	    testQ3RatioResult();
-            testPeptideProphetResult();
-            testAnalysisResult();
-            testAlternativeProtein();
-            testModAminoAcidMass();
-            testModificationInfo();
-            testSearchHit();
-            testSearchResult();
-            testEnzymaticSearchConstraint();
-            testAminoAcidModification();
-            testSearchSummary();
-            testSpectrumQuery();
-            testMSMSRunSummary();
-            testMSMSPipelineAnalysis();
-            testMatch();
-            testMatchData();
-            //    testInvarianceUnderProteinProphet();
+        testSpecificity();
+        testSampleEnzyme();
+        testSearchDatabase();
+        testQ3RatioResult();
+        testPeptideProphetResult();
+        testAnalysisResult();
+        testAlternativeProtein();
+        testModAminoAcidMass();
+        testModificationInfo();
+        testSearchHit();
+        testSearchResult();
+        testEnzymaticSearchConstraint();
+        testAminoAcidModification();
+        testSearchSummary();
+        testSpectrumQuery();
+        testMSMSRunSummary();
+        testMSMSPipelineAnalysis();
+        testMatch();
+        testMatchData();
+        //testInvarianceUnderProteinProphet();
 
-            return 0;
-
-        }
-
+    }
     catch (exception& e)
-        {
-            cerr << e.what() << endl;
-
-        }
-
+    {
+        TEST_FAILED(e.what())
+    }
     catch (...)
-        {
-            cerr << "Caught unknown exception.\n";
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
 
-        }
-
-    return 1;
-
+    TEST_EPILOG
 }
 
 

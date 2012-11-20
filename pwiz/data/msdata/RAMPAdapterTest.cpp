@@ -283,6 +283,8 @@ static void test_mzML_1_0(const char *test_app_name) {
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -300,18 +302,17 @@ int main(int argc, char* argv[])
 		// and make sure we're still good with older files
 		test_mzML_1_0(argv[0]); // passing in app name as it contains our path
         
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
-        return 1;
+        TEST_FAILED("Caught unknown exception.")
     }
+
+    TEST_EPILOG
 }
 
 

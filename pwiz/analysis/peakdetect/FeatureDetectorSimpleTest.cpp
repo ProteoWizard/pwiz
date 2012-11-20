@@ -116,28 +116,33 @@ void testFeatureDetectorSimple(const bfs::path& datadir)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
-        {
-            bfs::path datadir = ".";
+    {
+        bfs::path datadir = ".";
 
-            for (int i=1; i<argc; i++)
-                {
-                    if (!strcmp(argv[i],"-v")) 
-                        os_ = &cout;
-                    else
-                        // hack to allow running unit test from a different directory:
-                        // Jamfile passes full path to specified input file.
-                        // we want the path, so we can ignore filename
-                        datadir = bfs::path(argv[i]).branch_path(); 
-                }   
-            
-            testFeatureDetectorSimple(datadir);
-            return 0;
+        for (int i=1; i<argc; i++)
+        {
+            if (!strcmp(argv[i],"-v")) 
+                os_ = &cout;
+            else
+                // hack to allow running unit test from a different directory:
+                // Jamfile passes full path to specified input file.
+                // we want the path, so we can ignore filename
+                datadir = bfs::path(argv[i]).branch_path(); 
         }
 
+        testFeatureDetectorSimple(datadir);
+    }
     catch (exception& e)
-        {
-            cerr << e.what() << endl;
-            return 1;
-        }
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }

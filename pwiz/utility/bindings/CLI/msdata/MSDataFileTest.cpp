@@ -24,7 +24,7 @@
 //#include "MSDataFile.hpp"
 //#include "../../../data/msdata/Diff.hpp"
 //#include "examples.hpp"
-#include "pwiz/utility/misc/unit.hpp"
+#include "../common/unit.hpp"
 
 
 using namespace pwiz::util;
@@ -33,8 +33,8 @@ using namespace pwiz::CLI::data;
 using namespace pwiz::CLI::msdata;
 using namespace pwiz::CLI::util;
 using namespace System::Collections::Generic;
+using System::String;
 using System::Console;
-typedef System::String^ string;
 
 
 public ref class Log
@@ -79,12 +79,12 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
     MSDataFile::WriteConfig writeConfig;
     DiffConfig diffConfig;
 
-    string filenameBase_ = "temp.MSDataFileTest";
+    String^ filenameBase_ = "temp.MSDataFileTest";
 
     //if (os_) *os_ << "validateWriteRead()\n  " << writeConfig << endl; 
 
-    string filename1 = filenameBase_ + ".1";
-    string filename2 = filenameBase_ + ".2";
+    String^ filename1 = filenameBase_ + ".1";
+    String^ filename2 = filenameBase_ + ".2";
 
     {
         // create MSData object in memory
@@ -100,7 +100,7 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
 
         // compare
         Diff diff(%tiny, msd1, %diffConfig);
-        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((string)diff);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
         unit_assert(!(bool)diff);
 
         // write to file #2 (member)
@@ -112,7 +112,7 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
 
         // compare
         diff.apply(%tiny, msd2);
-        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((string)diff);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
         unit_assert(!(bool)diff);
 
         delete msd1; // calls Dispose()
@@ -147,7 +147,7 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
 
         // compare
         Diff diff(%tiny, msd1, %diffConfig);
-        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((string)diff);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
         unit_assert(!(bool)diff);
     }
     
@@ -216,6 +216,8 @@ void demo()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG_EX(argc, argv, "_CLI")
+
     try
     {
         IterationListenerRegistry^ ilr = gcnew IterationListenerRegistry();
@@ -227,21 +229,20 @@ int main(int argc, char* argv[])
         //test();
         //demo();
         //testReader();
-        return 0;
     }
-    catch (std::exception& e)
+    catch (exception& e)
     {
-        Console::Error->WriteLine("std::exception: " + gcnew System::String(e.what()));
+        TEST_FAILED("std::exception: " + string(e.what()))
     }
     catch (System::Exception^ e)
     {
-        Console::Error->WriteLine("System.Exception: " + e->Message);
+        TEST_FAILED("System.Exception: " + ToStdString(e->Message))
     }
     catch (...)
     {
-        Console::Error->WriteLine("Caught unknown exception.\n");
+        TEST_FAILED("Caught unknown exception.")
     }
-    
-    return 1;
+
+    TEST_EPILOG
 }
 

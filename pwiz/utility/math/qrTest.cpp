@@ -18,7 +18,8 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-#include "pwiz/utility/misc/Std.hpp"//#include <execinfo.h>
+#include "pwiz/utility/misc/Std.hpp"
+//#include <execinfo.h>
 
 #include "pwiz/utility/misc/unit.hpp"
 #include "Types.hpp"
@@ -161,4 +162,6 @@ int main(int argc, char** argv)
     testReflector();
     testQR();
     testRectangularQR();
+
+    return 0;
 }

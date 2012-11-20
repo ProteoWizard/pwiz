@@ -408,11 +408,12 @@ struct PrecursorInfo
     string charge;
     string collisionEnergy;
     string activation;
+    double windowWideness;
 
     bool empty() const 
     {
         return scanNum.empty() && mz.empty() && intensity.empty() && 
-               charge.empty() && collisionEnergy.empty() && activation.empty();
+               charge.empty() && collisionEnergy.empty() && activation.empty() && windowWideness == 0;
     }
 };
 
@@ -465,6 +466,16 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             if (it->activation.hasCVParam(MS_CID) || it->activation.hasCVParam(MS_HCD))
                 info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
         }
+
+        info.windowWideness = 0;
+        if (!it->isolationWindow.empty())
+        {
+            CVParam isolationWindowLowerOffset = it->isolationWindow.cvParam(MS_isolation_window_lower_offset);
+            CVParam isolationWindowUpperOffset = it->isolationWindow.cvParam(MS_isolation_window_upper_offset);
+            if (!isolationWindowLowerOffset.empty() && !isolationWindowUpperOffset.empty())
+                info.windowWideness = fabs(isolationWindowLowerOffset.valueAs<double>()) + isolationWindowUpperOffset.valueAs<double>();
+        }
+
         if (!info.empty()) result.push_back(info);
     }
 
@@ -488,8 +499,11 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
             attributes.add("precursorIntensity", it->intensity);
         if (!it->charge.empty())
             attributes.add("precursorCharge", it->charge);
-        if(!it->activation.empty())
+        if (!it->activation.empty())
             attributes.add("activationMethod", it->activation);
+        if (it->windowWideness != 0)
+            attributes.add("windowWideness", it->windowWideness);
+
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz, false);
         xmlWriter.endElement();

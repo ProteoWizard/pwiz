@@ -21,9 +21,9 @@
 //
 
 
+#include "Std.hpp"
 #include "IntegerSet.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 #include <limits>
 
@@ -240,6 +240,8 @@ void testParse2()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -252,13 +254,13 @@ int main(int argc, char* argv[])
         testIntExtraction();
         testParse();
         testParse2();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+
+    TEST_EPILOG
 }
 
 

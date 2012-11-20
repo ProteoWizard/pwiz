@@ -180,10 +180,8 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
     # put raw commands in global module
     modules.poke : TEST_PRECOMMAND : $(TEST_PRECOMMAND) ;
     modules.poke : TEST_POSTCOMMAND : $(TEST_POSTCOMMAND) ;
-    
-    # prepend commands with grist expected by testing.jam
-    TEST_PRECOMMAND = <testing.precommand>$(TEST_PRECOMMAND) ;
-    TEST_POSTCOMMAND = <testing.postcommand>$(TEST_POSTCOMMAND) ;
+
+    TEAMCITY_TEST_DECORATION = <testing.arg>--teamcity-test-decoration ;
 }
 
 
@@ -279,8 +277,7 @@ project pwiz
         <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
         <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
 
-        $(TEST_PRECOMMAND)
-        $(TEST_POSTCOMMAND)
+        $(TEAMCITY_TEST_DECORATION)
 
     : build-dir $(PWIZ_BUILD_PATH)
     : usage-requirements

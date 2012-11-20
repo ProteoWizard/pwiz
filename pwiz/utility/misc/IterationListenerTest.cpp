@@ -21,9 +21,9 @@
 //
 
 
+#include "Std.hpp"
 #include "IterationListener.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 #include <ctime>
 
@@ -247,6 +247,8 @@ void testTime()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -254,13 +256,17 @@ int main(int argc, char* argv[])
         testCancel();
         testRemove();
         testTime();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }
 
 

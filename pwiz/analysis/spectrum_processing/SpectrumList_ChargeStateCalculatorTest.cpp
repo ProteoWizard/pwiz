@@ -291,7 +291,7 @@ vector<CVID> parseCVTermArray(const string& cvTermArray)
 
 int test()
 {
-    int result = 0;
+    int failedTests = 0;
     for (size_t i=0; i < testChargeStateCalculatorsSize; ++i)
     {
         SpectrumListSimple* sl = new SpectrumListSimple;
@@ -341,24 +341,31 @@ int test()
         catch (exception& e)
         {
             cerr << "Test case " << (i+1) << " failed:\n" << e.what() << endl;
-            result = 1;
+            ++failedTests;
         }
     }
-    return result;
+    return failedTests;
 }
 
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        return test();
+        int failedTests = test();
+        unit_assert_operator_equal(0, failedTests);
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        TEST_FAILED(e.what())
     }
-    
-    return 1;
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }

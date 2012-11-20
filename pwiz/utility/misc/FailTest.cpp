@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-int main()
+int main(int argc, const char* argv[])
 {
     cerr << "This is a test of the emergency test failure system." << endl;
     cout << "DON'T PANIC!" << endl;

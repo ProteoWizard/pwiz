@@ -20,11 +20,11 @@
 //
 
 
+#include "pwiz/utility/misc/unit.hpp"
 #include "Reader_Waters.hpp"
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 struct IsRawData : public pwiz::util::TestPathPredicate
 {
@@ -37,6 +37,8 @@ struct IsRawData : public pwiz::util::TestPathPredicate
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     #ifdef PWIZ_READER_WATERS
     const bool testAcceptOnly = false;
     #else
@@ -45,14 +47,16 @@ int main(int argc, char* argv[])
 
     try
     {
-        return pwiz::util::testReader(pwiz::msdata::Reader_Waters(),
-                                      vector<string>(argv, argv+argc),
-                                      testAcceptOnly,
-                                      IsRawData());
+        pwiz::util::testReader(pwiz::msdata::Reader_Waters(), testArgs, testAcceptOnly, IsRawData());
     }
-    catch (std::runtime_error& e)
+    catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }

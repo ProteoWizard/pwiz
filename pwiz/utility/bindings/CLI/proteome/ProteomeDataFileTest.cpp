@@ -24,14 +24,13 @@
 //#include "ProteomeDataFile.hpp"
 //#include "../../../data/proteome/Diff.hpp"
 //#include "examples.hpp"
-#include "pwiz/utility/misc/unit.hpp"
+#include "../common/unit.hpp"
 
 
 using namespace pwiz::util;
 using namespace pwiz::CLI::cv;
 using namespace pwiz::CLI::proteome;
 using System::Console;
-typedef System::String^ string;
 
 
 public ref class Log
@@ -142,6 +141,8 @@ void demo()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG_EX(argc, argv, "_CLI")
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) Log::writer = Console::Out;
@@ -149,21 +150,20 @@ int main(int argc, char* argv[])
         //test();
         //demo();
         //testReader();
-        return 0;
     }
-    catch (std::exception& e)
+    catch (exception& e)
     {
-        Console::Error->WriteLine("std::exception: " + gcnew System::String(e.what()));
+        TEST_FAILED("std::exception: " + string(e.what()))
     }
     catch (System::Exception^ e)
     {
-        Console::Error->WriteLine("System.Exception: " + e->Message);
+        TEST_FAILED("System.Exception: " + ToStdString(e->Message))
     }
     catch (...)
     {
-        Console::Error->WriteLine("Caught unknown exception.\n");
+        TEST_FAILED("Caught unknown exception.")
     }
-    
-    return 1;
+
+    TEST_EPILOG
 }
 

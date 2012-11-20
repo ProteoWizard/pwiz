@@ -863,6 +863,8 @@ void testThreadSafety(const int& testThreadCount)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -875,16 +877,16 @@ int main(int argc, char* argv[])
         testThreadSafety(4);
         testThreadSafety(8);
         testThreadSafety(16);
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Unhandled exception in main thread." << endl;
+        TEST_FAILED("Caught unknown exception.")
     }
-    return 1;
+
+    TEST_EPILOG
 }
 

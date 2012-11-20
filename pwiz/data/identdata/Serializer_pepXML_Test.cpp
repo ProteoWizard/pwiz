@@ -373,22 +373,23 @@ void testStripChargeFromConventionalSpectrumId()
 
 int main(int argc, char** argv)
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         testPepXMLSpecificity();
         testStripChargeFromConventionalSpectrumId();
         testSerialize();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
+        TEST_FAILED("Caught unknown exception.")
     }
-    
-    return 1;
+
+    TEST_EPILOG
 }

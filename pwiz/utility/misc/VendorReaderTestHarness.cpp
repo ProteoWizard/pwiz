@@ -369,6 +369,7 @@ void parseArgs(const vector<string>& args, bool& generateMzML, vector<string>& r
     {
         if (args[i] == "-v") os_ = &cout;
         else if (args[i] == "--generate-mzML") generateMzML = true;
+        else if (bal::starts_with(args[i], "--")) continue;
         else rawpaths.push_back(args[i]);
     }
 }
@@ -409,60 +410,48 @@ void testThreadSafety(const int& testThreadCount, const Reader& reader, bool tes
 PWIZ_API_DECL
 int testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, const TestPathPredicate& isPathTestable)
 {
-    try
-    {
-        bool generateMzML;
-        vector<string> rawpaths;
-        parseArgs(args, generateMzML, rawpaths);
+    bool generateMzML;
+    vector<string> rawpaths;
+    parseArgs(args, generateMzML, rawpaths);
 
-        if (rawpaths.empty())
-            throw runtime_error(string("Invalid arguments: ") + bal::join(args, " ") +
-                                "\nUsage: " + args[0] + " [-v] [--generate-mzML] <source path 1> [source path 2] ..."); 
+    if (rawpaths.empty())
+        throw runtime_error(string("Invalid arguments: ") + bal::join(args, " ") +
+                            "\nUsage: " + args[0] + " [-v] [--generate-mzML] <source path 1> [source path 2] ..."); 
 
-        for (size_t i=0; i < rawpaths.size(); ++i)
-            for (bfs::directory_iterator itr(rawpaths[i]); itr != bfs::directory_iterator(); ++itr)
+    for (size_t i=0; i < rawpaths.size(); ++i)
+        for (bfs::directory_iterator itr(rawpaths[i]); itr != bfs::directory_iterator(); ++itr)
+        {
+            string rawpath = itr->path().string();
+            if (!isPathTestable(rawpath))
+                continue;
+            else if (generateMzML && !testAcceptOnly)
+                generate(reader, rawpath);
+            else
             {
-                string rawpath = itr->path().string();
-                if (!isPathTestable(rawpath))
-                    continue;
-                else if (generateMzML && !testAcceptOnly)
-                    generate(reader, rawpath);
-                else
+                test(reader, testAcceptOnly, rawpath);
+
+                /* TODO: there are issues to be resolved here but not just simple crashes
+                testThreadSafety(1, reader, testAcceptOnly, rawpath);
+                testThreadSafety(2, reader, testAcceptOnly, rawpath);
+                testThreadSafety(4, reader, testAcceptOnly, rawpath);*/
+
+                // test that the reader releases any locks on the data so it can be moved/deleted
+                try
                 {
-                    test(reader, testAcceptOnly, rawpath);
-
-                    /* TODO: there are issues to be resolved here but not just simple crashes
-                    testThreadSafety(1, reader, testAcceptOnly, rawpath);
-                    testThreadSafety(2, reader, testAcceptOnly, rawpath);
-                    testThreadSafety(4, reader, testAcceptOnly, rawpath);*/
-
-                    // test that the reader releases any locks on the data so it can be moved/deleted
-                    try
-                    {
-                        bfs::rename(rawpath, rawpath + ".renamed");
-                        bfs::rename(rawpath + ".renamed", rawpath);
-                    }
-                    catch (...)
-                    {
-                        //string foo;
-                        //cin >> foo;
-                        //throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
-                        cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
-                    }
+                    bfs::rename(rawpath, rawpath + ".renamed");
+                    bfs::rename(rawpath + ".renamed", rawpath);
+                }
+                catch (...)
+                {
+                    //string foo;
+                    //cin >> foo;
+                    //throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
+                    cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                 }
             }
-        return 0;
-    }
-    catch (exception& e)
-    {
-        throw runtime_error(string("std::exception: ") + e.what());
-    }
-    catch (...)
-    {
-        throw runtime_error("Caught unknown exception.\n");
-    }
-    
-    return 1;
+        }
+
+    return 0;
 }
 
 

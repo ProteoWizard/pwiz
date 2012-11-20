@@ -21,11 +21,11 @@
 //
 
 
+#include "pwiz/utility/misc/unit.hpp"
 #include "Reader_Thermo.hpp"
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "pwiz/utility/misc/unit.hpp"
 
 #ifdef PWIZ_READER_THERMO
 #include "Reader_Thermo_Detail.hpp"
@@ -41,6 +41,8 @@ struct IsRawFile : public pwiz::util::TestPathPredicate
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     #if defined(PWIZ_READER_THERMO) && !defined(PWIZ_READER_THERMO_TEST_ACCEPT_ONLY)
     const bool testAcceptOnly = false;
     #else
@@ -182,14 +184,16 @@ int main(int argc, char* argv[])
         unit_assert(allInstrumentTestsPassed);
         #endif
 
-        return pwiz::util::testReader(pwiz::msdata::Reader_Thermo(),
-                                      vector<string>(argv, argv+argc),
-                                      testAcceptOnly,
-                                      IsRawFile());
+        pwiz::util::testReader(pwiz::msdata::Reader_Thermo(), testArgs, testAcceptOnly, IsRawFile());
     }
-    catch (std::runtime_error& e)
+    catch (exception& e)
     {
-        cerr << "Unit test " << __FILE__ << " failed because:\n" << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }

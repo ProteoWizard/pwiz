@@ -19,9 +19,10 @@
 // limitations under the License.
 //
 
+
+#include "Std.hpp"
 #include "mru_list.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::util;
 
@@ -62,21 +63,22 @@ void test()
 }
 
 
-int main()
+int main(int argc, const char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         test();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << "Caught exception: " << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception" << endl;
-        return 1;
+        TEST_FAILED("Caught unknown exception.")
     }
+
+    TEST_EPILOG
 }

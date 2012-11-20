@@ -172,6 +172,8 @@ void testNormalization(const IsotopeCalculator& calc)
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -182,16 +184,15 @@ int main(int argc, char* argv[])
         testUsage(calc);
         testProbabilites(calc);
         testNormalization(calc);
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
-	catch (...)
-	{
-		cerr << "Caught unknown exception.\n";
-	}
-}
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
 
+    TEST_EPILOG
+}

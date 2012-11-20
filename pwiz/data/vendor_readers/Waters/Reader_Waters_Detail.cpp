@@ -99,16 +99,25 @@ void translateFunctionType(PwizFunctionType functionType,
             spectrumType = MS_MS1_spectrum;
             break;
 
+        // these functions are not mass spectra
+        case FunctionType_Diode_Array:
+            msLevel = 0;
+            spectrumType = MS_EMR_spectrum;
+            break;
+
+        case FunctionType_Off:
+        case FunctionType_Voltage_Scan:
+        case FunctionType_Magnetic_Scan:
+        case FunctionType_Voltage_SIR:
+        case FunctionType_Magnetic_SIR:
+            msLevel = 0;
+            spectrumType = CVID_Unknown;
+            break;
+
         /* TODO: figure out what these function types translate to
             FunctionType_Delay
             FunctionType_Concatenated
-            FunctionType_Off
-            FunctionType_Diode_Array
             FunctionType_TOF_PSD
-            FunctionType_Voltage_Scan
-            FunctionType_Magnetic_Scan
-            FunctionType_Voltage_SIR
-            FunctionType_Magnetic_SIR
             FunctionType_AutoSpec_B_E_Scan
             FunctionType_AutoSpec_B2_E_Scan
             FunctionType_AutoSpec_CNL_Scan

@@ -17,7 +17,7 @@
 #include "HouseholderQR.hpp"
 using namespace pwiz::math;
 
-int main()
+int main(int argc, const char* argv[])
 {
   using namespace boost::numeric::ublas;
   using namespace std;

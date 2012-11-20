@@ -24,9 +24,21 @@
 #define _UNIT_HPP_CLI_
 
 
+#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+using std::exception;
+
+
 namespace pwiz {
 namespace CLI {
 namespace util {
+
+
+using pwiz::util::ToStdString;
+using pwiz::util::ToSystemString;
 
 
 //
@@ -124,6 +136,35 @@ inline System::String^ unit_assert_exception_message(const char* filename, int l
 
 //#define unit_assert_vectors_equal(A, B, epsilon) \
 //    unit_assert(boost::numeric::ublas::norm_2((A)-(B)) < (epsilon))
+
+
+// the following macros are used by the ProteoWizard tests to report test status and duration to TeamCity
+
+#define TEST_PROLOG_EX(argc, argv, suffix) \
+    bfs::path testName = bfs::change_extension(bfs::basename(__FILE__), (suffix)); \
+    bpt::ptime testStartTime; \
+    vector<string> testArgs(argv, argv+argc); \
+    bool teamcityTestDecoration = find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration") != testArgs.end(); \
+    if (teamcityTestDecoration) \
+    { \
+        testStartTime = bpt::microsec_clock::local_time(); \
+        cout << "##teamcity[testStarted name='" << testName << "']\n"; \
+    } \
+    int testExitStatus = 0;
+
+#define TEST_PROLOG(argc, argv) TEST_PROLOG_EX(argc, argv, "")
+
+#define TEST_FAILED(x) \
+    if (teamcityTestDecoration) \
+        cout << "##teamcity[testFailed name='" << testName << "' message='" << (x) << "']\n"; \
+    cerr << (x) << endl; \
+    testExitStatus = 1;
+
+#define TEST_EPILOG \
+    if (teamcityTestDecoration) \
+        cout << "##teamcity[testFinished name='" << testName << \
+                "' duration='" << (bpt::microsec_clock::local_time() - testStartTime).total_microseconds() / 1000.0 << "']" << endl; \
+    return testExitStatus;
 
 
 } // namespace util

@@ -20,8 +20,8 @@
 //
 
 
-#include "Exception.hpp"
 #include "Std.hpp"
+#include "Exception.hpp"
 #include "unit.hpp"
 #include <cassert>
 
@@ -47,24 +47,22 @@ void test()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "ExceptionTest\n";
         test();
-        return 0;
-    }
-    catch (runtime_error& e)
-    {
-        cerr << e.what() << endl;
     }
     catch (exception& e)
     {
-        cerr << "Unhandled exception: " << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Unhandled unknown exception." << endl;
+        TEST_FAILED("Caught unknown exception.")
     }
-    return 1;
+
+    TEST_EPILOG
 }

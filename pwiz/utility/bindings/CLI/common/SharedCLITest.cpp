@@ -128,26 +128,26 @@ void test()
 }
 
 
-int main()
+int main(int argc, const char* argv[])
 {
+    TEST_PROLOG_EX(argc, argv, "_CLI")
+
     try
     {
         test();
-        return 0;
     }
-    catch (std::exception& e)
+    catch (exception& e)
     {
-        System::Console::Error->WriteLine("Caught std::exception not converted to System::Exception: " + gcnew System::String(e.what()));
-        return 1;
+        TEST_FAILED("std::exception: " + string(e.what()))
     }
     catch (System::Exception^ e)
     {
-        System::Console::Error->WriteLine(e->Message);
-        return 1;
+        TEST_FAILED("System.Exception: " + ToStdString(e->Message))
     }
     catch (...)
     {
-        System::Console::Error->WriteLine("Caught unknown exception.");
-        return 1;
+        TEST_FAILED("Caught unknown exception.")
     }
+
+    TEST_EPILOG
 }

@@ -127,15 +127,16 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges;
+            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
             getAttribute(attributes, "possibleCharges", possibleCharges);
+            getAttribute(attributes, "activationMethod", activationMethod);
+            getAttribute(attributes, "windowWideness", windowWideness);
 
-            if (!precursorScanNum.empty()) { // precursorScanNum is an optional element
+            if (!precursorScanNum.empty()) // precursorScanNum is an optional element
                 precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
-            }
 
             precursor->selectedIons.push_back(SelectedIon());
 
@@ -150,10 +151,36 @@ struct HandlerPrecursor : public SAXParser::Handler
                 vector<string> strCharges;
                 boost::algorithm::split(strCharges, possibleCharges, boost::is_any_of(","));
 
-                BOOST_FOREACH(string& charge, strCharges)
+                BOOST_FOREACH(const string& charge, strCharges)
                 {
                     precursor->selectedIons.back().set(MS_possible_charge_state, lexical_cast<int>(charge));
                 }
+            }
+
+            if (activationMethod.empty() || activationMethod == "CID")
+            {
+                // TODO: is it reasonable to assume CID if activation method is unspecified (i.e. older mzXMLs)?
+                precursor->activation.set(MS_CID);
+            }
+            else if (activationMethod == "ETD")
+                precursor->activation.set(MS_ETD);
+            else if (activationMethod == "ETD+SA")
+            {
+                precursor->activation.set(MS_ETD);
+                precursor->activation.set(MS_CID);
+            }
+            else if (activationMethod == "ECD")
+                precursor->activation.set(MS_ECD);
+            else if (activationMethod == "HCD")
+                precursor->activation.set(MS_HCD);
+            //else
+                // TODO: log about invalid attribute value
+
+            if (!windowWideness.empty())
+            {
+                double isolationWindowWidth = lexical_cast<double>(windowWideness) / 2.0;
+                precursor->isolationWindow.set(MS_isolation_window_lower_offset, isolationWindowWidth);
+                precursor->isolationWindow.set(MS_isolation_window_upper_offset, isolationWindowWidth);
             }
 
             return Status::Ok;
@@ -442,32 +469,11 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "precursorMz")
         {
-            getAttribute(attributes, "activationMethod", activationMethod_);
-
             spectrum_.precursors.push_back(Precursor());
             Precursor& precursor = spectrum_.precursors.back();
-
+            
             if (!collisionEnergy_.empty())
                 precursor.activation.set(MS_collision_energy, collisionEnergy_, UO_electronvolt);
-
-            if (activationMethod_.empty() || activationMethod_ == "CID")
-            {
-                // TODO: is it reasonable to assume CID if activation method is unspecified (i.e. older mzXMLs)?
-                precursor.activation.set(MS_CID);
-            }
-            else if (activationMethod_ == "ETD")
-                precursor.activation.set(MS_ETD);
-            else if (activationMethod_ == "ETD+SA")
-            {
-                precursor.activation.set(MS_ETD);
-                precursor.activation.set(MS_CID);
-            }
-            else if (activationMethod_ == "ECD")
-                precursor.activation.set(MS_ECD);
-            else if (activationMethod_ == "HCD")
-                precursor.activation.set(MS_high_energy_collision_induced_dissociation);
-            //else
-                // TODO: log about invalid attribute value
 
             handlerPrecursor_.precursor = &precursor; 
             return Status(Status::Delegate, &handlerPrecursor_);

@@ -21,8 +21,8 @@
 // limitations under the License.
 //
 
-#include "Filesystem.hpp"
 #include "Std.hpp"
+#include "Filesystem.hpp"
 #include "unit.hpp"
 
 
@@ -231,23 +231,24 @@ void testAbbreviateByteSize()
 }
 
 
-int main()
+int main(int argc, const char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         testExpandPathmask();
         testAbbreviateByteSize();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << "Caught exception: " << e.what() << endl;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception" << endl;
+        TEST_FAILED("Caught unknown exception.")
     }
 
     deleteTestPath();
-    return 1;
+    TEST_EPILOG
 }

@@ -46,8 +46,8 @@ lib pwiz_data_misc
         <library>/ext/boost//serialization
     ;
 
-unit-test-if-exists CalibrationParametersTest : CalibrationParametersTest.cpp ; 
-unit-test-if-exists FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data_misc /ext/boost//filesystem ;
-unit-test-if-exists PeakDataTest : PeakDataTest.cpp pwiz_data_misc /ext/boost//filesystem ;
-unit-test-if-exists SampleDatumTest : SampleDatumTest.cpp ;
+unit-test-if-exists CalibrationParametersTest : CalibrationParametersTest.cpp pwiz_data_misc ; 
+unit-test-if-exists FrequencyDataTest : FrequencyDataTest.cpp FrequencyDataTestData.cpp pwiz_data_misc ;
+unit-test-if-exists PeakDataTest : PeakDataTest.cpp pwiz_data_misc ;
+unit-test-if-exists SampleDatumTest : SampleDatumTest.cpp pwiz_data_misc ;
 unit-test-if-exists MinimumPepXMLTest : MinimumPepXMLTest.cpp pwiz_data_misc ;

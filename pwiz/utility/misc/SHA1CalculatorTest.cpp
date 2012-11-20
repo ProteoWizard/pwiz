@@ -21,10 +21,10 @@
 //
 
 
+#include "Std.hpp"
 #include "SHA1Calculator.hpp"
 #include "unit.hpp"
 #include <boost/filesystem/operations.hpp>
-#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
@@ -151,6 +151,8 @@ void testProjected()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) // verbose
@@ -164,12 +166,16 @@ int main(int argc, char* argv[])
         testStatic();
         testMillion();
         testProjected();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }
 

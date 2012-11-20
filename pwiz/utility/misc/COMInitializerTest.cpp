@@ -20,9 +20,9 @@
 //
 
 
+#include "Std.hpp"
 #include "COMInitializer.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 
@@ -56,16 +56,22 @@ void testThreadSafety()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "COMInitializerTest\n";
         testThreadSafety();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }

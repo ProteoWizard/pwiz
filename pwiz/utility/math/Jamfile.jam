@@ -39,13 +39,13 @@ lib pwiz_utility_math
     : Parabola.cpp Stats.cpp erf.cpp
     ;
     
-unit-test-if-exists LinearLeastSquaresTest : LinearLeastSquaresTest.cpp ;
-unit-test-if-exists LinearSolverTest : LinearSolverTest.cpp ;
-unit-test-if-exists MatchedFilterTest : MatchedFilterTest.cpp ;
-unit-test-if-exists ParabolaTest : ParabolaTest.cpp Parabola.cpp ;
-unit-test-if-exists StatsTest : StatsTest.cpp Stats.cpp ;
-unit-test-if-exists erfTest : erfTest.cpp erf.cpp ;
-unit-test-if-exists qrTest : qrTest.cpp ;
-unit-test-if-exists OrderedPairTest : OrderedPairTest.cpp ;
+unit-test-if-exists LinearLeastSquaresTest : LinearLeastSquaresTest.cpp ../misc//pwiz_utility_misc ;
+unit-test-if-exists LinearSolverTest : LinearSolverTest.cpp ../misc//pwiz_utility_misc ;
+unit-test-if-exists MatchedFilterTest : MatchedFilterTest.cpp ../misc//pwiz_utility_misc ;
+unit-test-if-exists ParabolaTest : ParabolaTest.cpp pwiz_utility_math ../misc//pwiz_utility_misc ;
+unit-test-if-exists StatsTest : StatsTest.cpp pwiz_utility_math ../misc//pwiz_utility_misc ;
+unit-test-if-exists erfTest : erfTest.cpp pwiz_utility_math ../misc//pwiz_utility_misc ;
+unit-test-if-exists qrTest : qrTest.cpp ../misc//pwiz_utility_misc ;
+unit-test-if-exists OrderedPairTest : OrderedPairTest.cpp ../misc//pwiz_utility_misc ;
 
 

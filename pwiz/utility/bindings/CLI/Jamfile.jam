@@ -109,6 +109,7 @@ build-project-if-exists chemistry ;
 build-project-if-exists msdata ;
 build-project-if-exists analysis ;
 build-project-if-exists proteome ;
+build-project-if-exists tradata ;
 
 
 # build XDC documentation from source files

@@ -31,7 +31,11 @@ project
 
 lib ole32 : : <name>ole32 ; # for CoInitialize/CoUninitialize
 lib oleaut32 : : <name>oleaut32 ; # for Variant/SafeArray functions
+lib SHA1 : SHA1.cpp : <link>static ;
 
+# testing with precompiled header support
+#cpp-pch Std : Std.hpp : <include>. ;
+alias Std ;
 
 lib pwiz_utility_misc
     : # sources
@@ -41,9 +45,10 @@ lib pwiz_utility_misc
         Filesystem.cpp
         random_access_compressed_ifstream.cpp
         SHA1Calculator.cpp
-        SHA1.cpp
         TabReader.cpp
         MSIHandler.cpp
+        SHA1
+        Std
     : # requirements
         <warnings>all
         <toolset>msvc:<source>automation_vector.cpp
@@ -53,12 +58,14 @@ lib pwiz_utility_misc
         <library>/ext/boost//thread
         <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem
+        <library>/ext/boost//date_time
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
         <library>/ext/boost//thread
         <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem
+        <library>/ext/boost//date_time
         <library>/ext/zlib//z
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
@@ -85,27 +92,27 @@ lib pwiz_utility_vendor_reader_test_harness
     : # requirements
         <library>pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        #<testing.semaphore>io_semaphore
-        #<testing.semaphore>mt_semaphore
     : # default-build
     : # usage-requirements
         <library>pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <testing.semaphore>io_semaphore
+        #<testing.semaphore>mt_semaphore
     ;
 explicit pwiz_utility_vendor_reader_test_harness ;
 
 
-unit-test-if-exists ExceptionTest : ExceptionTest.cpp pwiz_utility_misc ;
-unit-test-if-exists almost_equal_test : almost_equal_test.cpp ;
-unit-test-if-exists endian_test : endian_test.cpp ;
-unit-test-if-exists Base64Test : Base64Test.cpp pwiz_utility_misc ;
-unit-test-if-exists IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc ;
-unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc ;
-unit-test-if-exists DateTimeTest : DateTimeTest.cpp pwiz_utility_misc ;
-unit-test-if-exists FilesystemTest : FilesystemTest.cpp pwiz_utility_misc ;
-unit-test-if-exists SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ;
-unit-test-if-exists SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ;
-unit-test-if-exists mru_list_test : mru_list_test.cpp ;
+unit-test-if-exists ExceptionTest : ExceptionTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists almost_equal_test : almost_equal_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists endian_test : endian_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists Base64Test : Base64Test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists DateTimeTest : DateTimeTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists FilesystemTest : FilesystemTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists mru_list_test : mru_list_test.cpp pwiz_utility_misc Std ;
 
 
 # explicit tests to demonstrate how CI handles stdout and stderr
@@ -114,7 +121,7 @@ run-if-exists FailTest.cpp : : : : FailRunTest ;
 explicit FailUnitTest FailRunTest ;
 
 
-run-if-exists TabReaderTest.cpp pwiz_utility_misc
+run-if-exists TabReaderTest.cpp pwiz_utility_misc Std
     : # args
     : TabReaderTest.data/TabTest.tab # input-files
     : # requirements
@@ -125,8 +132,8 @@ run-if-exists TabReaderTest.cpp pwiz_utility_misc
 import modules ;
 if [ modules.peek : NT ]
 {
-    unit-test-if-exists automation_vector_test : automation_vector_test.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
-    unit-test-if-exists COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
+    unit-test-if-exists automation_vector_test : automation_vector_test.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
+    unit-test-if-exists COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
 }
 
 exe sha1calc : sha1calc.cpp pwiz_utility_misc ;

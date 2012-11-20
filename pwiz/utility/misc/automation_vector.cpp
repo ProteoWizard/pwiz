@@ -12,6 +12,7 @@
 // No license was specified in the article or in the download... permission pending?
 //
 
+#include "Std.hpp"
 #define PWIZ_SOURCE
 
 #include "automation_vector.h"

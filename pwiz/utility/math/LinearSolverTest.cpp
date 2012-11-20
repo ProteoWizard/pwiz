@@ -245,6 +245,8 @@ void testBandedComplex()
 
 int main(int argc, char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
@@ -258,12 +260,16 @@ int main(int argc, char* argv[])
         //testSparseComplex(); // lu_factorize doesn't like mapped_matrix<complex> 
         testBanded();
         //testBandedComplex(); // FIXME: GCC 4.2 doesn't like this test with link=shared
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }
 

@@ -81,21 +81,22 @@ void testParamContainer()
 }
 
 
-int main()
+int main(int argc, const char* argv[])
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         testParamContainer();
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
     catch (...)
     {
-        cerr << "Caught unknown exception.\n";
-        return 1;
+        TEST_FAILED("Caught unknown exception.")
     }
+
+    TEST_EPILOG
 }

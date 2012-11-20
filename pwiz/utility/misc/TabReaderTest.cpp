@@ -19,17 +19,16 @@
 // limitations under the License.
 //
 
+
+#include "Std.hpp"
 #include "TabReader.hpp"
 #include "MSIHandler.hpp"
 #include "unit.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/fstream.hpp"
-#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <cstring>
 
 using namespace pwiz::util;
 using namespace pwiz::utility;
-namespace bfs = boost::filesystem;
 
 ostream *os_ = NULL;
 
@@ -80,6 +79,8 @@ void runTests(const bfs::path& datapath)
 
 int main(int argc, char** argv)
 {
+    TEST_PROLOG(argc, argv)
+
     try
     {
         bfs::path datapath = ".";
@@ -96,11 +97,15 @@ int main(int argc, char** argv)
         }   
         if (os_) *os_ << "TabReaderTest\n";
         runTests(datapath);
-        return 0;
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
-        return 1;
+        TEST_FAILED(e.what())
     }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
 }
