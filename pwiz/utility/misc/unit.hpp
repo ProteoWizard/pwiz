@@ -28,6 +28,7 @@
 #include "Exception.hpp"
 #include "DateTime.hpp"
 #include "Filesystem.hpp"
+#include "pwiz/utility/math/round.hpp"
 #include <string>
 #include <sstream>
 #include <cmath>
