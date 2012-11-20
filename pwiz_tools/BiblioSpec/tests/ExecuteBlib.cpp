@@ -51,6 +51,9 @@ int main(int argc, char** argv){
 
     for(int i = 1; i < argc; i++){
         string token = argv[i];
+        if (token == "--teamcity-test-decoration")
+            continue;
+
         if( token[0] == '-' ){
             // replace any _ with ' ' so options can have args
             size_t position = token.find('_');

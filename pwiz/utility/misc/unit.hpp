@@ -130,14 +130,14 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
 // the following macros are used by the ProteoWizard tests to report test status and duration to TeamCity
 
 #define TEST_PROLOG_EX(argc, argv, suffix) \
-    bfs::path testName = bfs::change_extension(bfs::basename(__FILE__), (suffix)); \
+    bfs::path testName = bfs::change_extension(bfs::basename(argv[0]), (suffix)); \
     bpt::ptime testStartTime; \
     vector<string> testArgs(argv, argv+argc); \
     bool teamcityTestDecoration = find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration") != testArgs.end(); \
     if (teamcityTestDecoration) \
     { \
         testStartTime = bpt::microsec_clock::local_time(); \
-        cout << "##teamcity[testStarted name='" << testName << "']\n"; \
+        cout << "##teamcity[testStarted name='" << testName << "']" << endl; \
     } \
     int testExitStatus = 0;
 
@@ -152,7 +152,7 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
 #define TEST_EPILOG \
     if (teamcityTestDecoration) \
         cout << "##teamcity[testFinished name='" << testName << \
-                "' duration='" << (bpt::microsec_clock::local_time() - testStartTime).total_microseconds() / 1000.0 << "']" << endl; \
+                "' duration='" << round((bpt::microsec_clock::local_time() - testStartTime).total_microseconds() / 1000.0) << "']" << endl; \
     return testExitStatus;
 
 

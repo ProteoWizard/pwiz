@@ -19,13 +19,8 @@
 // limitations under the License.
 //
 
-#include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <fstream>
-#include <string>
+#include "pwiz/utility/misc/unit.hpp"
 #include <stdlib.h>
-#include <vector>
 #include "Compare.h"
 
 using namespace std;
@@ -33,22 +28,20 @@ using namespace std;
 // Take as input two text files and report if the differ.  Optionally
 // take a list of lines to be skipped and/or fields that don't require
 // an exact text match
-int main (int argc, char** argv){
-
+int test (const vector<string>& args)
+{
     string usage = "CompareTextFiles <expected> <observed> [<skip lines>]";
 
-    if( argc < 3 ){
-        cerr << usage << endl;
-        exit(1);
-    }
+    if( args.size() < 3 )
+        throw runtime_error(usage);
 
     // since we can't rely on the order, sort inputs alphabetically
     vector<string> tokens;
-    tokens.push_back(argv[1]);
-    tokens.push_back(argv[2]);
-    if( argc > 3 ){
-        tokens.push_back(argv[3]);
-    }
+    tokens.push_back(args[1]);
+    tokens.push_back(args[2]);
+    if( args.size() > 3 )
+        tokens.push_back(args[3]);
+
     sort(tokens.begin(), tokens.end());
 
     string observedName = tokens[0];
@@ -60,23 +53,16 @@ int main (int argc, char** argv){
     // get the text from any lines that should not be compared
     vector<string> skipLines;
     CompareDetails compareDetails;
-    if( argc > 3 ){
+    if( args.size() > 3 )
         getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
-    }
 
     ifstream expectedFile(expectedName.c_str());
-    if( !expectedFile.good() ){
-        cerr << "Could not open file of expected results, '" 
-             << expectedName << "'" << endl;
-        exit(1);
-    }
+    if( !expectedFile.good() )
+        throw runtime_error("Could not open file of expected results, '" + expectedName + "'");
 
     ifstream observedFile(observedName.c_str());
-    if( !observedFile.good() ){
-        cerr << "Could not open file of observed results, '" 
-             << observedName << "'" << endl;
-        exit(1);
-    }
+    if( !observedFile.good() )
+        throw runtime_error("Could not open file of observed results, '" + observedName + "'");
 
     int lineNum = 1;
     vector<string>::iterator skipLinesIter = skipLines.begin();
@@ -85,28 +71,28 @@ int main (int argc, char** argv){
     string observed;
     getline(expectedFile, expected);
 
-    while( !expectedFile.eof() ){
-        if( observedFile.eof() ){
-            cerr << "The expected file has more lines than observed ("
-                 << lineNum << ")" << endl;
-            exit(1);
-        }
+    while( !expectedFile.eof() )
+    {
+        if( observedFile.eof() )
+            throw runtime_error("The expected file has more lines than observed (" + lexical_cast<string>(lineNum) + ")");
         getline(observedFile, observed);
 
         // should we compare this line or skip it?
         if( skipLinesIter < lastLine 
-            && expected.find(*skipLinesIter) != string::npos ){
+            && expected.find(*skipLinesIter) != string::npos )
+        {
             lineNum++;
             getline(expectedFile, expected);
             skipLinesIter++;
             continue;
         }
 
-        if( ! linesMatch(expected, observed, compareDetails) ){
+        if( ! linesMatch(expected, observed, compareDetails) )
+        {
             cerr << "Line " << lineNum << " differs." << endl;
             cerr << "expected: " << expected << endl;
             cerr << "observed: " << observed << endl;
-            exit(1);
+            throw runtime_error("Line " + lexical_cast<string>(lineNum) + " differs.");
         }
         lineNum++;
 
@@ -115,19 +101,36 @@ int main (int argc, char** argv){
 
     // check the observed file for extra lines
     getline(observedFile, observed);
-    if( !observedFile.eof() ){
-        cerr << "The observed file has more lines than the expected ("
-             << lineNum << ")" << endl;
-        exit(1);
-    }
+    if( !observedFile.eof() )
+        throw runtime_error("The observed file has more lines than the expected (" + lexical_cast<string>(lineNum) + ")");
 
     cerr << "All " << lineNum << " lines match" << endl;
 
-    expectedFile.close();
-    observedFile.close();
-
+    return 0;
 }
 
+
+int main(int argc, const char* argv[])
+{  
+    TEST_PROLOG(argc, argv)
+    if (teamcityTestDecoration)
+        testArgs.erase(find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration"));
+
+    try
+    {
+        test(testArgs);
+    }
+    catch (exception& e)
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
+}
 
 
 

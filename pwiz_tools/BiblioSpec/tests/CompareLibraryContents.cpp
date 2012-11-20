@@ -19,12 +19,9 @@
 // limitations under the License.
 //
 
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "pwiz/utility/misc/unit.hpp"
 #include <cstring>
 #include <stdlib.h>
-#include <vector>
 #include "sqlite3.h"
 #include "smart_stmt.h"
 #include "Compare.h"
@@ -245,22 +242,20 @@ void printObserved(vector<string>& outputLines, string& libName){
 // Extract a pre-defined set of queries from the given library and
 // compare it to the given text file.  Optionally, give a list of
 // lines to skip and/or fields that do not require an exact text match
-int main(int argc, char** argv){
-
+int test (const vector<string>& args)
+{
     string usage ="CompareLibraryContents <library> <expected output> [<skip>]";
-
-    if( argc < 2 ){
-        cerr << usage << endl;
-        exit(1);
-    }
+    
+    if( args.size() < 3 )
+        throw runtime_error(usage);
     
     // since we can't rely on the order , sort them alphabetically
     vector<string> tokens;
-    tokens.push_back(argv[1]);
-    tokens.push_back(argv[2]);
-    if( argc > 3 ){
-        tokens.push_back(argv[3]);
-    }
+    tokens.push_back(args[1]);
+    tokens.push_back(args[2]);
+    if( args.size() > 3 )
+        tokens.push_back(args[3]);
+
     sort(tokens.begin(), tokens.end());
 
     string libName = tokens[0];
@@ -268,9 +263,8 @@ int main(int argc, char** argv){
 
     vector<string> skipLines;
     CompareDetails compareDetails;
-    if( argc > 3 ){
+    if( args.size() > 3 )
         getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
-    }
 
     // clean up from previous tests
     removeObservedFiles(libName);
@@ -290,37 +284,60 @@ int main(int argc, char** argv){
     string expected;
     getline(compareFile, expected);
 
-    while( !compareFile.eof() ){
-
-        if( lineNum >= outputLines.size() ){
-            cerr << "The expected input has more lines than what was observed ("
-                 << outputLines.size() << ")" << endl;
-            exit(1);
-        }
+    while( !compareFile.eof() )
+    {
+        if( lineNum >= outputLines.size() )
+            throw runtime_error("The expected input has more lines than what was observed (" +
+                                lexical_cast<string>(outputLines.size()) + ")");
 
         string& observed = outputLines[lineNum];
 
-        if( ! linesMatch(expected, observed, compareDetails) ){
+        if( ! linesMatch(expected, observed, compareDetails) )
+        {
             cerr << "Line " << lineNum + 1 << " differs." << endl;
             cerr << "expected: " << expected << endl;
             cerr << "observed: " << observed << endl;
             printObserved(outputLines, libName);
-            exit(1);
+            throw runtime_error("Line " + lexical_cast<string>(lineNum + 1) + " differs.");
         }
 
         getline(compareFile, expected);
         lineNum++;
     }
 
-    if( lineNum < outputLines.size() ){
-        cerr << "Observed output has more lines (" << outputLines.size()
-             << ") than expected (" << lineNum << endl;
-        exit(1);
-    }
+    if( lineNum < outputLines.size() )
+        throw runtime_error("Observed output has more lines (" + lexical_cast<string>(outputLines.size()) +
+                            ") than expected (" + lexical_cast<string>(lineNum) + ")");
+
     cerr << "All output matches" << endl;
 
-    compareFile.close();
+    return 0;
 }
+
+
+int main(int argc, const char* argv[])
+{  
+    TEST_PROLOG(argc, argv)
+    if (teamcityTestDecoration)
+        testArgs.erase(find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration"));
+
+    try
+    {
+        test(testArgs);
+    }
+    catch (exception& e)
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
+}
+
+
 
 
 /*
