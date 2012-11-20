@@ -2488,7 +2488,7 @@ namespace IDPicker
                 return;
             }
 
-            string quasitelFilepath = Path.Combine(Application.StartupPath, "QuasiTel V2.R");
+            string quasitelFilepath = Path.Combine(Application.StartupPath, "QuasiTel.R");
             if (!File.Exists(quasitelFilepath))
             {
                 Program.HandleUserError(new FileNotFoundException("unable to find QuasiTel R script"));

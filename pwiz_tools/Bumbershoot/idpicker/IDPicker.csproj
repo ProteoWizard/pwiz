@@ -584,7 +584,7 @@
     <None Include="Resources\Resources.res" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="QuasiTel V2.R">
+    <Content Include="QuasiTel.R">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\file.png" />
