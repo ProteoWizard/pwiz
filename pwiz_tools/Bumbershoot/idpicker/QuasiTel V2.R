@@ -99,6 +99,7 @@ quasitel <- function(data, group1, group2, weight=NULL, rm.SID=TRUE, rm.zero=FAL
                             "poisson.p", "poisson.fdr",
                             "quasi.p",  "quasi.fdr",
                             "cv1",      "cv2")
+
     options(contrasts=option.contrasts)
     result
 }
@@ -214,7 +215,9 @@ quasitelgui <- function(inputfile = NULL) {
         groupFilteredSpectra <- datafile.readFilteredSpectraByGroup(filepath)
         dataset <<- datafile.readSpectraPerProteinGroupBySourceGroup(filepath)
         tclObj(namelist) <- groupFilteredSpectra[,1]
-        offset <- groupFilteredSpectra[,2]
+        tmp <- groupFilteredSpectra$COUNT
+        names(tmp) <- groupFilteredSpectra$Name
+        offset <<- tmp
     }
 
     # command to run when open dataset file button is clicked
