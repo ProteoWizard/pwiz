@@ -368,6 +368,7 @@ generate-rc Resources\\Resources.rc :
         [ path.glob-tree . : *.jam
                              *.?pp *.h
                              *.cs
+                             *.R
                              #*.html
                              #*.vdproj
             : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
@@ -381,6 +382,7 @@ local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
         [ path.glob-tree . : *.jam
                              *.?pp *.h
                              *.cs
+                             *.R
                              #*.html
                              #*.vdproj
             : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]

@@ -1,3 +1,33 @@
+#
+# $Id$
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+# The Original Code is QuasiTel.
+#
+# The Initial Developer of the Original Code is Ming Li.
+#
+# Copyright 2012 Vanderbilt University
+#
+# Contributor(s): Matt Chambers
+#
+
+howToCiteQuasitel <- paste(
+"Li M., Gray W., Zhang H., Chung C. H., Billheimer D., Yarbrough W. G., Liebler D. C., Shyr Y., Slebos R. J.",
+"(2010) Comparative shotgun proteomics using spectral count data and quasi-likelihood modeling.",
+"J. Proteome Res. 9, 4295-–4305"
+)
+
 if (!require(tcltk)) {install.packages('tcltk', repos="http://cran.us.r-project.org"); require(tcltk) || stop("tcltk support is missing")}
 if (!require(reshape)) {install.packages('reshape', repos="http://cran.us.r-project.org"); require(reshape) || stop("reshape package is missing")}
 if (!require(RSQLite)) {install.packages('RSQLite', repos="http://cran.us.r-project.org"); require(RSQLite)|| stop("RSQLite package is missing")}
@@ -278,6 +308,22 @@ quasitelgui <- function(inputfile = NULL) {
         }
     }
 
+    about.cmd <- function()
+    {
+        about.frm <- tktoplevel(width=800, height=200)
+        tkwm.title(about.frm, "About QuasiTel")
+        tkgrid.columnconfigure(about.frm, 0, weight=1)
+        tkgrid.rowconfigure(about.frm, 0, weight=1)
+        about.lbl <- tklabel(about.frm, text="Copyright 2012 Vanderbilt University\n\nIf you use QuasiTel results in a publication, please cite:")
+        tkgrid(about.lbl)
+        tkgrid.configure(about.lbl, sticky="nw", padx=15, pady=5)
+        about.text <- tktext(about.frm, font="TkDefaultFont", height=3)
+        tkgrid(about.text, sticky="nw")
+        tkgrid.configure(about.text, sticky="new", padx=15, pady=10)
+        tkinsert(about.text, "end", howToCiteQuasitel)
+        tkconfigure(about.text, state="disabled")
+    }
+
     base <- tktoplevel()
     tkwm.title(base, "QuasiTel")
 
@@ -357,11 +403,12 @@ quasitelgui <- function(inputfile = NULL) {
             tkconfigure(datafile.btn, state="normal")
         })
     q.btn <- tkbutton(bott.frm, text="Quit", command=function() tclvalue(done) <- 1)
+    about.btn <- tkbutton(bott.frm, text="About", command=about.cmd)
     tkbind(base,"<Destroy>", function() tclvalue(done) <- 2)
-    tkgrid(filter.lbl, columnspan=2)
-    tkgrid(filter.entry)
-    tkgrid(ok.btn, q.btn)
-    tkgrid.configure(ok.btn, q.btn, padx=1)
+    tkgrid(filter.lbl, columnspan=3)
+    tkgrid(filter.entry, columnspan=3)
+    tkgrid(ok.btn, q.btn, about.btn)
+    tkgrid.configure(ok.btn, q.btn, about.btn, pady=5, padx=1)
     tkgrid(bott.frm)
     tkgrid.columnconfigure(base, 0, weight=1)
 
