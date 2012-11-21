@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+#include "pwiz/utility/math/round.hpp"
 using std::exception;
 
 
@@ -163,8 +164,8 @@ inline System::String^ unit_assert_exception_message(const char* filename, int l
 #define TEST_EPILOG \
     if (teamcityTestDecoration) \
         cout << "##teamcity[testFinished name='" << testName << \
-                "' duration='" << (bpt::microsec_clock::local_time() - testStartTime).total_microseconds() / 1000.0 << "']" << endl; \
-    return testExitStatus;
+                "' duration='" << round((bpt::microsec_clock::local_time() - testStartTime).total_microseconds() / 1000.0) << "']" << endl; \
+    TerminateProcess(GetCurrentProcess(), testExitStatus); // HACK: avoid "Invalid string binding" crash at exit (probably a conflict between Boost and the .NET vendor DLLs)
 
 
 } // namespace util
