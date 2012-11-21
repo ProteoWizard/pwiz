@@ -130,15 +130,28 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
 
 // the following macros are used by the ProteoWizard tests to report test status and duration to TeamCity
 
+inline std::string escape_teamcity_string(const std::string& str)
+{
+    string result = str;
+    bal::replace_all(result, "'", "|'");
+    bal::replace_all(result, "\n", "|n");
+    bal::replace_all(result, "\r", "|r");
+    bal::replace_all(result, "|", "||");
+    bal::replace_all(result, "[", "|[");
+    bal::replace_all(result, "]", "|]");
+    return result;
+}
+
 #define TEST_PROLOG_EX(argc, argv, suffix) \
     bfs::path testName = bfs::change_extension(bfs::basename(argv[0]), (suffix)); \
+    string teamcityTestName = escape_teamcity_string(testName.string()); \
     bpt::ptime testStartTime; \
     vector<string> testArgs(argv, argv+argc); \
     bool teamcityTestDecoration = find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration") != testArgs.end(); \
     if (teamcityTestDecoration) \
     { \
         testStartTime = bpt::microsec_clock::local_time(); \
-        cout << "##teamcity[testStarted name='" << testName << "']" << endl; \
+        cout << "##teamcity[testStarted name='" << teamcityTestName << "']" << endl; \
     } \
     int testExitStatus = 0;
 
@@ -146,13 +159,13 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
 
 #define TEST_FAILED(x) \
     if (teamcityTestDecoration) \
-        cout << "##teamcity[testFailed name='" << testName << "' message='" << (x) << "']\n"; \
+        cout << "##teamcity[testFailed name='" << teamcityTestName << "' message='" << escape_teamcity_string((x)) << "']\n"; \
     cerr << (x) << endl; \
     testExitStatus = 1;
 
 #define TEST_EPILOG \
     if (teamcityTestDecoration) \
-        cout << "##teamcity[testFinished name='" << testName << \
+        cout << "##teamcity[testFinished name='" << teamcityTestName << \
                 "' duration='" << round((bpt::microsec_clock::local_time() - testStartTime).total_microseconds() / 1000.0) << "']" << endl; \
     return testExitStatus;
 
