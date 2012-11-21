@@ -70,11 +70,11 @@ struct analyzer_strings<RunSummary>
 {
     static const char* id() {return "run_summary";}
     static const char* description() {return "print summary statistics about a run";}
-    static const char* argsFormat() {return "["DELIMITER_OPTIONS_STR"] [msLevels=int_set] [charges=int_set]";}
+    static const char* argsFormat() {return "["TABULARCONFIG_DELIMITER_OPTIONS_STR"] [msLevels=int_set] [charges=int_set]";}
     static std::vector<std::string> argsUsage()
     {
         std::vector<std::string> result;
-        result.push_back(DELIMTER_USAGE_STR);
+        result.push_back(TABULARCONFIG_DELIMITER_USAGE_STR);
         result.push_back("msLevels: if specified, summary only operates on these MS levels; default is all MS levels");
         result.push_back("charges: if specified, summary only operates on these charge states; default is all charges");
         return result;

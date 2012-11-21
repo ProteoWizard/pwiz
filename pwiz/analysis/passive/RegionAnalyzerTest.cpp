@@ -176,7 +176,7 @@ void test()
     // test for each output delimiter type
     std::vector<std::string> options;
     std::vector<std::string> outputs;
-    std::string delimiter_help(DELIMITER_OPTIONS_STR);
+    std::string delimiter_help(TABULARCONFIG_DELIMITER_OPTIONS_STR);
     boost::algorithm::split(options, delimiter_help, boost::algorithm::is_any_of("=|") );
     
     for (int n=1; n<(int)options.size(); n++)

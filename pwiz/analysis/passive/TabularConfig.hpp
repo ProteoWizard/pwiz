@@ -1,8 +1,10 @@
 //
+// $Id$
 //
 //
+// Original author: John Chilton <jmchilton .@. gmail.com>
 //
-// Copyright 2010 Vanderbilt University - Nashville, TN 37232
+// Copyright 2012 University of Minnesota - Minneapolis, MN 55455
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -18,11 +20,16 @@
 //
 
 
-#ifndef _TABULAR_HPP_ 
-#define _TABULAR_HPP_ 
+#ifndef _TABULARCONFIG_HPP_ 
+#define _TABULARCONFIG_HPP_ 
 
-#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Export.hpp"
+#include <string>
+
+// for ease of extending this list and getting the usage statements right everywhere
+#define TABULARCONFIG_DELIMITER_OPTIONS_STR "delimiter=fixed|space|comma|tab"
+#define TABULARCONFIG_DELIMITER_USAGE_STR "delimiter: sets column separation; default is fixed width"
+
 
 namespace pwiz {
 namespace analysis {
@@ -37,14 +44,12 @@ struct PWIZ_API_DECL TabularConfig
         Delimiter_Comma,
         Delimiter_Tab
     };
-    // for ease of extending this list and getting the usage statements right everywhere
-#define DELIMITER_OPTIONS_STR "delimiter=fixed|space|comma|tab"
-#define DELIMTER_USAGE_STR "delimiter: sets column separation; default is fixed width"
     /// delimiter between columns (unless set to Delimiter_FixedWidth) 
 
     char getDelimiterChar() const;
-    string getFileExtension() const;
-    bool checkDelimiter(const string& arg); // set delimiter_ and return true iff arg is a valid delimiter setting 
+    std::string getFileExtension() const;
+    bool checkDelimiter(const std::string& arg); // set delimiter_ and return true iff arg is a valid delimiter setting 
+
  protected:
     TabularConfig();
     Delimiter delimiter_; // gets set by checkDelimiter()
@@ -54,5 +59,4 @@ struct PWIZ_API_DECL TabularConfig
 } // namespace pwiz
 
 
-#endif // _TABULAR_HPP_ 
-
+#endif // _TABULARCONFIG_HPP_ 

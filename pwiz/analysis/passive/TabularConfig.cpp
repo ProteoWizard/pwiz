@@ -1,8 +1,10 @@
 //
+// $Id$
 //
 //
+// Original author: John Chilton <jmchilton .@. gmail.com>
 //
-// Copyright 2010 Vanderbilt University - Nashville, TN 37232
+// Copyright 2012 University of Minnesota - Minneapolis, MN 55455
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -67,9 +69,9 @@ string TabularConfig::getFileExtension() const
         case TabularConfig::Delimiter_Comma:
             fileExtension = ".csv";
             break;
-	case TabularConfig::Delimiter_Tab:
+        case TabularConfig::Delimiter_Tab:
             fileExtension = ".tsv";
-	    break;
+            break;
     }
 
     return fileExtension;

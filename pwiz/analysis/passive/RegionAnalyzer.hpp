@@ -29,6 +29,8 @@
 #include "MSDataAnalyzer.hpp"
 #include "MSDataCache.hpp"
 #include "TabularConfig.hpp"
+#include <iostream>
+
 
 namespace pwiz {
 namespace analysis {
@@ -46,7 +48,7 @@ class PWIZ_API_DECL RegionAnalyzer : public MSDataAnalyzer
         std::pair<int,int> scanNumberRange;
         std::pair<double,double> rtRange;
         bool dumpRegionData; // if true, dump info to a stream or file
-        ostream *osDump; // if non-null, dump to this stream, else open a file
+        std::ostream* osDump; // if non-null, dump to this stream, else open a file
         std::string filenameSuffix;
 
         Config();

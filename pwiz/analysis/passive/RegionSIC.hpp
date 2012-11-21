@@ -78,8 +78,8 @@ struct analyzer_strings<RegionSIC>
 {
     static const char* id() {return "sic";}
     static const char* description() {return "write selected ion chromatogram for an m/z and radius";}
-    static const char* argsFormat() {return "["DELIMITER_OPTIONS_STR"] mzCenter radius (\"amu\"|\"ppm\")";}
-    static std::vector<std::string> argsUsage() {return std::vector<std::string>(1, DELIMTER_USAGE_STR);}
+    static const char* argsFormat() {return "["TABULARCONFIG_DELIMITER_OPTIONS_STR"] mzCenter radius (\"amu\"|\"ppm\")";}
+    static std::vector<std::string> argsUsage() {return std::vector<std::string>(1, TABULARCONFIG_DELIMITER_USAGE_STR);}
 };
 
 
