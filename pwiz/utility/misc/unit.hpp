@@ -144,7 +144,7 @@ inline std::string escape_teamcity_string(const std::string& str)
 
 #define TEST_PROLOG_EX(argc, argv, suffix) \
     bfs::path testName = bfs::change_extension(bfs::basename(argv[0]), (suffix)); \
-    string teamcityTestName = escape_teamcity_string(testName.string()); \
+    string teamcityTestName = pwiz::util::escape_teamcity_string(testName.string()); \
     bpt::ptime testStartTime; \
     vector<string> testArgs(argv, argv+argc); \
     bool teamcityTestDecoration = find(testArgs.begin(), testArgs.end(), "--teamcity-test-decoration") != testArgs.end(); \
@@ -159,7 +159,7 @@ inline std::string escape_teamcity_string(const std::string& str)
 
 #define TEST_FAILED(x) \
     if (teamcityTestDecoration) \
-        cout << "##teamcity[testFailed name='" << teamcityTestName << "' message='" << escape_teamcity_string((x)) << "']\n"; \
+        cout << "##teamcity[testFailed name='" << teamcityTestName << "' message='" << pwiz::util::escape_teamcity_string((x)) << "']\n"; \
     cerr << (x) << endl; \
     testExitStatus = 1;
 
