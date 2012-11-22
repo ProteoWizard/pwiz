@@ -1,6 +1,12 @@
 #ifndef BOOST_DETAIL_ATOMIC_GCC_SPARC_HPP
 #define BOOST_DETAIL_ATOMIC_GCC_SPARC_HPP
 
+//  Copyright (c) 2009 Helge Bahmann
+//
+//  Distributed under the Boost Software License, Version 1.0.
+//  See accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+
 #define BOOST_ATOMIC_CHAR_LOCK_FREE 2
 #define BOOST_ATOMIC_CHAR16_T_LOCK_FREE 2
 #define BOOST_ATOMIC_CHAR32_T_LOCK_FREE 2
