@@ -361,7 +361,7 @@ namespace pwiz.Skyline
                     // Update displayed graphs, which are no longer valid
                     var listGraphUpdate = from graph in _listGraphChrom
                                           where graph.Visible
-                                          where !graph.IsCurrent
+                                          where !graph.IsCurrent(settingsOld, settingsNew)
                                           select graph;
                     listUpdateGraphs.AddRange(listGraphUpdate.ToArray());
 

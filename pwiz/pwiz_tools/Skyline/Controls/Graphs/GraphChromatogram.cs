@@ -345,62 +345,69 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Changes to the settings are handled elsewhere
             if (e.DocumentPrevious != null &&
-                ReferenceEquals(_documentContainer.DocumentUI.Settings.MeasuredResults,
+                ReferenceEquals(DocumentUI.Settings.MeasuredResults,
                                 e.DocumentPrevious.Settings.MeasuredResults))
             {
                 // Update the graph if it is no longer current, due to changes
                 // within the document node tree.
-                if (Visible && !IsDisposed && !IsCurrent)
+                if (Visible && !IsDisposed && !IsCurrent(e.DocumentPrevious != null
+                                                             ? e.DocumentPrevious.Settings
+                                                             : null,
+                                                         DocumentUI.Settings))
+                {
                     UpdateUI();
+                }
             }
         }
 
         public bool IsCacheInvalidated { get; set; }
 
-        public bool IsCurrent
+        public bool IsCurrent(SrmSettings settingsOld, SrmSettings settingsNew)
         {
-            get
+            if (IsCacheInvalidated)
+                return false;
+
+            // Changing integration all setting invalidates the graph
+            if (settingsOld != null && settingsOld.TransitionSettings.Integration.IsIntegrateAll !=
+                                       settingsNew.TransitionSettings.Integration.IsIntegrateAll)
+                return false;
+
+            // Check if any of the charted transition groups have changed
+            if (_nodeGroups == null)
+                return true;
+
+            for (int i = 0; i < _nodeGroups.Length; i++)
             {
-                if (IsCacheInvalidated)
-                    return false;
-
-                // Check if any of the charted transition groups have changed
-                if (_nodeGroups == null)
-                    return true;
-
-                for (int i = 0; i < _nodeGroups.Length; i++)
+                var nodeGroup = _nodeGroups[i];
+                var nodeGroupCurrent = (TransitionGroupDocNode)
+                                        _documentContainer.DocumentUI.FindNode(_groupPaths[i]);
+                if (!ReferenceEquals(nodeGroup, nodeGroupCurrent))
                 {
-                    var nodeGroup = _nodeGroups[i];
-                    var nodeGroupCurrent = (TransitionGroupDocNode)
-                                           _documentContainer.DocumentUI.FindNode(_groupPaths[i]);
-                    if (!ReferenceEquals(nodeGroup, nodeGroupCurrent))
+                    // Make sure the actual results for this graph have changed
+                    if (nodeGroup == null || nodeGroupCurrent == null ||
+                        nodeGroup.Results == null || nodeGroupCurrent.Results == null ||
+                        nodeGroup.Children.Count != nodeGroupCurrent.Children.Count)
+                        return false;
+
+                    // Protect against _chromIndex == -1, reported as an unexpected error
+                    if (_chromIndex < 0)
+                        continue;
+
+                    // Need to compare the transition results, because it is possible
+                    // for a transition result to change in a way that effects the charts
+                    // without changing the group.
+                    for (int j = 0, len = nodeGroup.Children.Count; j < len; j++)
                     {
-                        // Make sure the actual results for this graph have changed
-                        if (nodeGroup == null || nodeGroupCurrent == null ||
-                            nodeGroup.Results == null || nodeGroupCurrent.Results == null ||
-                            nodeGroup.Children.Count != nodeGroupCurrent.Children.Count)
+                        var nodeTran = (TransitionDocNode) nodeGroup.Children[j];
+                        var nodeTranCurrent = (TransitionDocNode) nodeGroupCurrent.Children[j];
+                        if (nodeTran.Results.Count <= _chromIndex ||
+                            nodeTranCurrent.Results.Count <= _chromIndex ||
+                            !ReferenceEquals(nodeTran.Results[_chromIndex], nodeTranCurrent.Results[_chromIndex]))
                             return false;
-
-                        // Protect against _chromIndex == -1, reported as an unexpected error
-                        if (_chromIndex < 0)
-                            continue;
-
-                        // Need to compare the transition results, because it is possible
-                        // for a transition result to change in a way that effects the charts
-                        // without changing the group.
-                        for (int j = 0, len = nodeGroup.Children.Count; j < len; j++)
-                        {
-                            var nodeTran = (TransitionDocNode) nodeGroup.Children[j];
-                            var nodeTranCurrent = (TransitionDocNode) nodeGroupCurrent.Children[j];
-                            if (nodeTran.Results.Count <= _chromIndex ||
-                                nodeTranCurrent.Results.Count <= _chromIndex ||
-                                !ReferenceEquals(nodeTran.Results[_chromIndex], nodeTranCurrent.Results[_chromIndex]))
-                                return false;
-                        }
                     }
                 }
-                return true;
             }
+            return true;
         }
 
         private void ZoomXAxis(GraphPane graphPane, IEnumerable<ChromGraphItem> chromGraphItems, double min, double max)
@@ -521,7 +528,7 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI(false);
         }
 
-        public void UpdateUI(bool forceZoom)
+        private void UpdateUI(bool forceZoom)
         {
             IsCacheInvalidated = false;
 
@@ -834,8 +841,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int j = 0; j < numPeaks; j++)
                 {
                     var peak = info.GetPeak(j);
-                    if (peak.IsForcedIntegration)
-                        continue;
+                    // If the user clicks on a peak, all of the forced-integration peaks will be activated
+//                    if (peak.IsForcedIntegration && !DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll)
+//                        continue;
 
                     // Exclude any peaks between the boundaries of the chosen peak.
                     if (IntersectPeaks(peak, transitionChromInfo))
@@ -867,7 +875,10 @@ namespace pwiz.Skyline.Controls.Graphs
             // Calculate library dot-products, if possible
             double[] dotProducts = null;
             double bestProduct = 0;
-            if (peakAreas != null)
+            int minProductTrans = isFullScanMs
+                                      ? TransitionGroupDocNode.MIN_DOT_PRODUCT_MS1_TRANSITIONS
+                                      : TransitionGroupDocNode.MIN_DOT_PRODUCT_TRANSITIONS;
+            if (peakAreas != null && numTrans >= minProductTrans)
             {
                 var tranGroupChromInfo = GetTransitionGroupChromInfo(nodeGroup, fileId, _chromIndex);
                 double? dotProduct = null;
@@ -892,7 +903,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // hear calculated as a double can be larger, but really represent
                         // the same number.
                         if (dotProductCurrent > bestProduct &&
-                            dotProductCurrent > 0.7 &&
+                            dotProductCurrent > 0.5 &&
                             dotProductCurrent - bestProduct > 0.05)
                         {
                             if (dotProducts == null)
