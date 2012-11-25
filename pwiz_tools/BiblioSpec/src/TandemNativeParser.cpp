@@ -79,6 +79,8 @@ void TandemNativeParser::startElement(const XML_Char* name,
 {
     if(isElement("group", name)){
         parseGroup(attr);
+    } else if(isElement("file", name)){
+        parseSpectraFile(attr);
     } else if(isElement("note", name)){
         parseNote(attr);
     } else if(isElement("domain", name)){
@@ -155,8 +157,17 @@ void TandemNativeParser::parseGroup(const XML_Char** attr){
             newState(NESTED_GROUP_STATE);
         }
     } // type == something else, (e.g. parameter)
+}
 
-
+/**
+ * Get the filename of the original spectrum source from the <file>
+ * element.
+ */
+void TandemNativeParser::parseSpectraFile(const XML_Char** attr){
+    const char* typeAttr = getAttrValue("type", attr);
+    if( curState_ == PEAKS_STATE && (strcmp(typeAttr, "spectra") == 0)){
+        curFilename_ = getAttrValue("URL", attr);
+    }
 }
 
 /**
@@ -164,10 +175,11 @@ void TandemNativeParser::parseGroup(const XML_Char** attr){
  * element.
  */
 void TandemNativeParser::parseNote(const XML_Char** attr){
-    const char* label = getAttrValue("label", attr);
-
-    if( curState_ == PEAKS_STATE && (strcmp(label, "Description") == 0)){
-        newState(DESCRIPTION_STATE);
+    if (curFilename_.empty()) {
+        const char* label = getAttrValue("label", attr);
+        if( curState_ == PEAKS_STATE && (strcmp(label, "Description") == 0)){
+            newState(DESCRIPTION_STATE);
+        }
     }
 }
 
@@ -244,8 +256,10 @@ void TandemNativeParser::parsePSM(const XML_Char** attr){
         mass_ = getDoubleRequiredAttrValue("mh", attr);      
         const char* timeStr = getAttrValue("rt", attr);
         if(strcmp(timeStr, "") != 0) {
-            sscanf(timeStr, "PT%lfS", &retentionTime_); // in seconds
-            retentionTime_ /= 60; // to minutes
+            if (sscanf(timeStr, "PT%lfS", &retentionTime_) > 0) // in seconds
+                retentionTime_ /= 60; // to minutes
+            else
+                sscanf(timeStr, "%lf", &retentionTime_); // bare time in minutes
         }
 }
 
@@ -265,7 +279,6 @@ void TandemNativeParser::parseValues(const XML_Char** attr){
         intensities_ = new float[numIntensities_ ]; 
 
     } // else values for some other kind of data we don't care about
-
 }
 
 /**
@@ -374,6 +387,7 @@ void TandemNativeParser::endGroup(){
         curPSM_ = NULL;
         clearCurPeaks();
         
+        curFilename_.clear();
     }
 }
 

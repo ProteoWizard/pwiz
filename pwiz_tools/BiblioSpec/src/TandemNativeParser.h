@@ -74,6 +74,7 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
   void parseGroup(const XML_Char** attr);
   void endGroup();
   void parseDomain(const XML_Char** attr);
+  void parseSpectraFile(const XML_Char** attr);
   void parseNote(const XML_Char** attr);
   void endNote();
   void endDomain();
