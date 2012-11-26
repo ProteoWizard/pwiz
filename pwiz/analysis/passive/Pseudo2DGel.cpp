@@ -362,12 +362,33 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
     // special handling based on msLevel and instrument type
     
     static size_t lastParent = 0;
+    static bool warnedAnalyzer = false;
 
     if (info.msLevel == 1)
     {
         lastParent = info.index; // remember this scan in case there are children
+        cv::CVID massAnalyzerType = CVID_Unknown;
+        if (cvIsA(info.massAnalyzerType, MS_ion_trap))
+        {
+            massAnalyzerType = MS_ion_trap;
+        }
+        else if (info.massAnalyzerType == MS_FT_ICR ||
+                 cvIsA(info.massAnalyzerType, MS_orbitrap))
+        {
+            massAnalyzerType = MS_FT_ICR;
+        }
+        else
+        {
+            if (!warnedAnalyzer)
+            {
+                cout << "[Pseudo2DGel::Impl::update] unknown mass analyzer type, assuming ion trap" << endl;
+                warnedAnalyzer = true;
+            }
+            massAnalyzerType = MS_ion_trap;
+        }
 
-        if (cvIsA(info.massAnalyzerType, MS_ion_trap)){
+        if (MS_ion_trap==massAnalyzerType)
+        {
             itScans_.scans.push_back(info.index);
             itScans_.rts.push_back(info.retentionTime);
             itScans_.bin.push_back(bin(info.basePeakMZ));
@@ -377,8 +398,7 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
             if (itScans_.maxTime < info.retentionTime)
                 itScans_.maxTime = info.retentionTime;
         }
-        else if (info.massAnalyzerType == MS_FT_ICR ||
-                 cvIsA(info.massAnalyzerType, MS_orbitrap)){
+        else if (MS_FT_ICR == massAnalyzerType){
             ftScans_.scans.push_back(info.index);
             ftScans_.rts.push_back(info.retentionTime);
             ftScans_.bin.push_back(bin(info.basePeakMZ));
@@ -973,7 +993,10 @@ Image::Color Pseudo2DGel::Impl::chooseMarkupColor(size_t cachedIndex)
 void Pseudo2DGel::Impl::writeImages(const DataInfo& dataInfo)
 {
     string label = ".image." + config_.label;
-
+    if (itScans_.empty() && ftScans_.empty())
+    {   
+        throw runtime_error("[Pseudo2DGel::Impl::writeImages] nothing to do");
+    }
     writeImage(dataInfo, label + ".itms", itScans_);
     writeImage(dataInfo, label + ".ftms", ftScans_);
 }
