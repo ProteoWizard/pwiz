@@ -1,6 +1,14 @@
 //
 // $Id$
 //
+//
+// NB: Variations of this file appear in many open source projects,
+// with no copyright claims or license statements made in any of them.  
+// Assumed to be public domain, or at least as open as the boost license,
+// since the farthest back we can seem to trace it is the Boost Wiki at
+// http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Effective_UBLAS/Matrix_Inversion
+//
+
 #ifndef _MATRIXINVERSE_HPP_
 #define _MATRIXINVERSE_HPP_
 
