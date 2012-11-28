@@ -238,7 +238,7 @@ complex<double> erf_series(complex<double> z)
 }
 */
 
-complex<double> erf_series2(const complex<double>& z)
+PWIZ_API_DECL complex<double> erf_series2(const complex<double>& z)
 {
     // From "Handbook of Mathematical Functions" p297, 7.1.6
     // (seems to converge better than the first series)

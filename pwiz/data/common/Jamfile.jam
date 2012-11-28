@@ -107,7 +107,7 @@ explicit cv.hpp ;
 
 unit-test-if-exists BinaryIndexStreamTest : BinaryIndexStreamTest.cpp pwiz_data_common ;
 unit-test-if-exists MemoryIndexTest : MemoryIndexTest.cpp pwiz_data_common ;
-unit-test-if-exists obotest : obotest.cpp pwiz_data_obo /ext/boost//filesystem ;
+unit-test-if-exists obotest : obotest.cpp pwiz_data_obo $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
 unit-test-if-exists cvtest : cvtest.cpp pwiz_data_common ;
 unit-test-if-exists diff_std_test : diff_std_test.cpp pwiz_data_common ;
 unit-test-if-exists ParamTypesTest : ParamTypesTest.cpp pwiz_data_common ;
