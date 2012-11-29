@@ -2515,6 +2515,21 @@ namespace IDPicker
                                                           process.StandardError.ReadToEnd())));
             };
         }
+
+        private void glossaryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialGlossary.html");
+        }
+
+        private void dataImportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialDataImport.html");
+        }
+
+        private void proteinViewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialProteinView.html");
+        }
     }
 
     internal class ClusterInfo

@@ -24,6 +24,13 @@
 
 #project Qonverter : requirements <define>QONVERTER_HAS_NATIVEID ;
 
+
+if --teamcity-test-decoration in [ modules.peek : ARGV ]
+{
+    TEAMCITY_TEST_DECORATION = <testing.arg>--teamcity-test-decoration ;
+}
+
+
 lib Qonverter
     : # sources
         [ glob *Qonverter.cpp ] SchemaUpdater.cpp
@@ -63,6 +70,6 @@ lib Parser
 exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
 
 import testing ;
-unit-test QonverterTest : QonverterTest.cpp Qonverter ;
-unit-test EmbedderTest : EmbedderTest.cpp Parser $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata ;
+unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
+unit-test EmbedderTest : EmbedderTest.cpp Parser $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) ;
 
