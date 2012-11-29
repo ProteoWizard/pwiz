@@ -56,9 +56,17 @@ namespace myrimatch
                   "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
 					MYRIMATCH_LICENSE << endl;
 		}
+        
+        string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <input spectra filemask 1> [input spectra filemask 2] ...\n"
+                       "Optional arguments:\n"
+                       "-cfg <config filepath>        : specify a configuration file other than the default\n"
+                       "-workdir <working directory>  : change working directory (where output files are written)\n"
+                       "-cpus <value>                 : force use of <value> worker threads\n"
+                       "-ignoreConfigErrors           : ignore errors in configuration file or the command-line\n"
+                       "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
+                       "-dump                         : show runtime configuration settings before starting the run\n";
 
-		g_rtConfig = new RunTimeConfig;
-		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+		bool ignoreConfigErrors = false;
 		g_endianType = GetHostEndianType();
 		g_numWorkers = GetNumProcessors();
 
@@ -73,12 +81,18 @@ namespace myrimatch
 			{
 				g_numWorkers = atoi( args[i+1].c_str() );
 				args.erase( args.begin() + i );
+			} else if( args[i] == "-ignoreConfigErrors" )
+			{
+				ignoreConfigErrors = true;
 			} else
 				continue;
 
 			args.erase( args.begin() + i );
 			--i;
 		}
+
+		g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
 
 		if( g_pid == 0 )
 		{
@@ -102,7 +116,7 @@ namespace myrimatch
 
 			if( args.size() < 2 )
 			{
-				cerr << "Not enough arguments.\nUsage: " << args[0] << " [-ProteinDatabase <FASTA protein database filepath>] <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
+				cerr << "Not enough arguments.\n\n" << usage << endl;
 				return 1;
 			}
 
@@ -146,20 +160,7 @@ namespace myrimatch
 			}
 		}
 
-		try
-		{
-			g_rtConfig->setVariables( vars );
-        } catch( std::exception& e )
-		{
-			if( g_pid == 0 ) cerr << g_hostString << " had an error while overriding runtime variables: " << e.what() << endl;
-			return 1;
-		}
-
-        if( g_rtConfig->ProteinDatabase.empty() )
-		{
-			cerr << "No FASTA protein database specified.\nUsage: " << args[0] << " [-ProteinDatabase <FASTA protein database filepath>] <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
-			return 1;
-		}
+		g_rtConfig->setVariables( vars );
 
 		if( g_pid == 0 )
 		{
@@ -177,12 +178,30 @@ namespace myrimatch
 			{
 				if( args[i][0] == '-' )
 				{
+                    if (!ignoreConfigErrors)
+                    {
+                        cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
+                        return 1;
+                    }
+
 					cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
 					args.erase( args.begin() + i );
 					--i;
 				}
 			}
 		}
+
+        if( g_rtConfig->ProteinDatabase.empty() )
+		{
+			if( g_pid == 0 ) cerr << "No FASTA protein database specified on command-line or in configuration file.\n\n" << usage << endl;
+			return 1;
+		}
+        
+        if (args.size() == 1)
+        {
+            if( g_pid == 0 ) cerr << "No data sources specified.\n\n" << usage << endl;
+            return 1;
+        }
 
 		return 0;
 	}
@@ -802,7 +821,7 @@ namespace myrimatch
 
 			if( g_inputFilenames.empty() )
 			{
-				cout << "No data sources found with the given filemasks." << endl;
+				cerr << "No data sources found with the given filemasks." << endl;
 				return 1;
 			}
 

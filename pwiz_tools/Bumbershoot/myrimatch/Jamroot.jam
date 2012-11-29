@@ -300,16 +300,8 @@ rule static-with-fpic ( properties * )
 # any source tree can build binary tarballs
 
 import modules os ;
-
-if [ os.on-windows ]
-{
-    using tar : bsdtar.exe ;
-}
-else
-{
-    using tar ;
-}
 import tar sequence property-set ;
+using tar ;
 
 bin-tarball-basename = "$(application-name:L)-bin" ;
 
