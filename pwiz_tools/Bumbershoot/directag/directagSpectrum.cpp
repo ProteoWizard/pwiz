@@ -94,7 +94,7 @@ namespace directag
         scoreWeights[ "intensity" ] = intensityScoreWeight = tagConfig->IntensityScoreWeight;
 		scoreWeights[ "mzFidelity" ] = mzFidelityScoreWeight = tagConfig->MzFidelityScoreWeight;
 		scoreWeights[ "complement" ] = complementScoreWeight = tagConfig->ComplementScoreWeight;
-		scoreWeights[ "random" ] = tagConfig->RandomScoreWeight;
+		//scoreWeights[ "random" ] = tagConfig->RandomScoreWeight;
         tagList.max_size( tagConfig->MaxTagCount );
     }
 
@@ -700,8 +700,8 @@ namespace directag
 
 			//newNode.peakList = peakList;
 
-			if( tagConfig->RandomScoreWeight != 0 )
-				newTag.scores[ "random" ] = (double) tagConfig->GetRandomScore();
+			//if( tagConfig->RandomScoreWeight != 0 )
+			//	newTag.scores[ "random" ] = (double) tagConfig->GetRandomScore();
 
 			newTag.lowPeakMz = peakList.front()->first;
 			newTag.highPeakMz = peakList.back()->first;

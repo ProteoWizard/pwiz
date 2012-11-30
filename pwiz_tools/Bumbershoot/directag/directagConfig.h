@@ -56,32 +56,7 @@ namespace directag
 	struct RunTimeConfig : public DirecTagAPIConfig
 	{
 	public:
-		BOOST_PP_SEQ_FOR_EACH( RTCONFIG_DECLARE_VAR, ~, DIRECTAG_RUNTIME_CONFIG )
-
-		RunTimeConfig(bool treatWarningsAsErrors = true) : DirecTagAPIConfig(treatWarningsAsErrors)
-		{
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_INIT_DEFAULT_VAR, ~, DIRECTAG_RUNTIME_CONFIG )
-            if (m_warnings.tellp() > 0) throw runtime_error(m_warnings.str()); /* initialization errors are bugs */
-		}
-
-		RunTimeVariableMap getVariables( bool hideDefaultValues = false )
-		{
-			DirecTagAPIConfig::getVariables();
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_FILL_MAP, m_variables, DIRECTAG_RUNTIME_CONFIG )
-			return m_variables;
-		}
-
-		void setVariables( RunTimeVariableMap& vars )
-		{
-			DirecTagAPIConfig::setVariables( vars );
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_READ_MAP, vars, DIRECTAG_RUNTIME_CONFIG )
-			finalize();
-		}
-
-		int initializeFromFile( const string& rtConfigFilename = "directag.cfg" )
-		{
-			return DirecTagAPIConfig::initializeFromFile( rtConfigFilename );
-		}
+        RTCONFIG_DEFINE_MEMBERS_EX( RunTimeConfig, DirecTagAPIConfig, DIRECTAG_RUNTIME_CONFIG, "directag.cfg" )
 
 		int		SpectraBatchSize;
 		int		ProteinBatchSize;

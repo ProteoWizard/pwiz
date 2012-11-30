@@ -69,8 +69,8 @@ namespace accs = boost::accumulators;
 	RTCONFIG_VARIABLE( string,			StaticMods,					""					) \
 	RTCONFIG_VARIABLE( double,			IntensityScoreWeight,		1.0			        ) \
 	RTCONFIG_VARIABLE( double,			MzFidelityScoreWeight,		1.0			        ) \
-	RTCONFIG_VARIABLE( double,			ComplementScoreWeight,		1.0			        ) \
-	RTCONFIG_VARIABLE( double,			RandomScoreWeight,			0.0			        ) 
+	RTCONFIG_VARIABLE( double,			ComplementScoreWeight,		1.0			        ) 
+	//RTCONFIG_VARIABLE( double,			RandomScoreWeight,			0.0			        ) 
 
 namespace freicore
 {
@@ -170,40 +170,15 @@ namespace directag
 	struct DirecTagAPIConfig : public BaseRunTimeConfig
 	{
 	public:
-		BOOST_PP_SEQ_FOR_EACH( RTCONFIG_DECLARE_VAR, ~, DIRECTAG_API_CONFIG )
-
-		DirecTagAPIConfig(bool treatWarningsAsErrors = true) : BaseRunTimeConfig(treatWarningsAsErrors), rng(0), RandomScoreRange( 0.0, 0.99999999999 ), GetRandomScore( rng, RandomScoreRange )
-		{
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_INIT_DEFAULT_VAR, ~, DIRECTAG_API_CONFIG )
-            if (m_warnings.tellp() > 0) throw runtime_error(m_warnings.str()); /* initialization errors are bugs */
-		}
-
-		RunTimeVariableMap getVariables( bool hideDefaultValues = false )
-		{
-			BaseRunTimeConfig::getVariables();
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_FILL_MAP, m_variables, DIRECTAG_API_CONFIG )
-			return m_variables;
-		}
-
-		void setVariables( RunTimeVariableMap& vars )
-		{
-			BaseRunTimeConfig::setVariables( vars );
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_READ_MAP, vars, DIRECTAG_API_CONFIG )
-			finalize();
-		}
-
-		int initializeFromFile( const string& rtConfigFilename = "directag.cfg" )
-		{
-			return BaseRunTimeConfig::initializeFromFile( rtConfigFilename );
-		}
+        RTCONFIG_DEFINE_MEMBERS( DirecTagAPIConfig, DIRECTAG_API_CONFIG, "directag.cfg" )
 
 		vector< float >			scoreThresholds;
 		tagMetaIndex_t			tagMetaIndex;
 		map< string, float >	compositionScoreMap;
         
-        boost::mt19937 rng;
-		boost::uniform_real<> RandomScoreRange;
-		boost::variate_generator< boost::mt19937&, boost::uniform_real<> > GetRandomScore;
+        //boost::mt19937 rng;
+		//boost::uniform_real<> RandomScoreRange;
+		//boost::variate_generator< boost::mt19937&, boost::uniform_real<> > GetRandomScore;
 
 		int		minIntensityClassCount;
 		int		minMzFidelityClassCount;

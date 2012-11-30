@@ -29,8 +29,6 @@
 #include "freicore.h"
 #include "directagSpectrum.h"
 #include "tagsFile.h"
-#include <boost/atomic.hpp>
-#include <boost/cstdint.hpp>
 
 #define DIRECTAG_LICENSE				COMMON_LICENSE
 
