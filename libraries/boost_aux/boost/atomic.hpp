@@ -61,7 +61,7 @@ namespace boost {
 
 #ifndef BOOST_ATOMIC_THREAD_FENCE
 #define BOOST_ATOMIC_THREAD_FENCE 0
-void
+static inline void
 atomic_thread_fence(memory_order)
 {
 }
@@ -69,7 +69,7 @@ atomic_thread_fence(memory_order)
 
 #ifndef BOOST_ATOMIC_SIGNAL_FENCE
 #define BOOST_ATOMIC_SIGNAL_FENCE 0
-void
+static inline void
 atomic_signal_fence(memory_order order)
 {
 	atomic_thread_fence(order);
