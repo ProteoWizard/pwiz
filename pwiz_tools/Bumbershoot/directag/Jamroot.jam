@@ -33,13 +33,6 @@
 #   build                   Build Bumbershoot libraries and applications
 #   =====
 #
-#   --with-mpi              For MPI-enabled applications, compile with
-#                           support for running the application in parallel
-#                           across multiple nodes. This support depends on
-#                           a working MPI implementation being available
-#                           at compile-time (and if using shared linkage,
-#                           at run-time as well).
-#
 #
 #   install                 Install executable files to certain locations
 #   =======
@@ -172,7 +165,7 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 local application-name = "DirecTag" ;
 
 constant MAJOR : 1 ;
-constant MINOR : 3 ;
+constant MINOR : 4 ;
 
 # set version info (used for tarball filenames)
 import generate-version ;

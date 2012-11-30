@@ -172,17 +172,10 @@ namespace directag
 	public:
 		BOOST_PP_SEQ_FOR_EACH( RTCONFIG_DECLARE_VAR, ~, DIRECTAG_API_CONFIG )
 
-		DirecTagAPIConfig() : BaseRunTimeConfig(), rng(0), RandomScoreRange( 0.0, 0.99999999999 ), GetRandomScore( rng, RandomScoreRange )
+		DirecTagAPIConfig(bool treatWarningsAsErrors = true) : BaseRunTimeConfig(treatWarningsAsErrors), rng(0), RandomScoreRange( 0.0, 0.99999999999 ), GetRandomScore( rng, RandomScoreRange )
 		{
 			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_INIT_DEFAULT_VAR, ~, DIRECTAG_API_CONFIG )
-		}
-
-		void initializeFromBuffer( string& cfgStr, const string& delim = "\r\n\t " )
-		{
-			BaseRunTimeConfig::initializeFromBuffer( cfgStr, delim );
-			string strVal;
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_PARSE_BUFFER, ~, DIRECTAG_API_CONFIG )
-			finalize();
+            if (m_warnings.tellp() > 0) throw runtime_error(m_warnings.str()); /* initialization errors are bugs */
 		}
 
 		RunTimeVariableMap getVariables( bool hideDefaultValues = false )
@@ -389,8 +382,6 @@ namespace directag
 	protected:
 		void finalize()
 		{
-			BaseRunTimeConfig::finalize();
-
 			if( TicCutoffPercentage > 1.0f )
 			{
 				TicCutoffPercentage /= 100.0f;
@@ -421,6 +412,8 @@ namespace directag
 				minIntensityClassCount = NumIntensityClasses;
 				minMzFidelityClassCount = NumMzFidelityClasses;
 			}
+
+			BaseRunTimeConfig::finalize();
 		}
 	};
 }

@@ -250,8 +250,17 @@ namespace directag
                "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
                DIRECTAG_LICENSE << endl;
 
+        string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <input spectra filemask 1> [input spectra filemask 2] ...\n"
+                       "Optional arguments:\n"
+                       "-cfg <config filepath>        : specify a configuration file other than the default\n"
+                       "-workdir <working directory>  : change working directory (where output files are written)\n"
+                       "-cpus <value>                 : force use of <value> worker threads\n"
+                       "-ignoreConfigErrors           : ignore errors in configuration file or the command-line\n"
+                       "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
+                       "-dump                         : show runtime configuration settings before starting the run\n";
+        
+		bool ignoreConfigErrors = false;
 		g_residueMap = new ResidueMap;
-		rtConfig = shared_ptr<RunTimeConfig>(new RunTimeConfig);
 		g_endianType = GetHostEndianType();
 		g_numWorkers = GetNumProcessors();
 
@@ -266,11 +275,16 @@ namespace directag
 			{
 				g_numWorkers = atoi( args[i+1].c_str() );
 				args.erase( args.begin()+i );
+			} else if( args[i] == "-ignoreConfigErrors" )
+			{
+				ignoreConfigErrors = true;
 			} else
 				continue;
 			args.erase( args.begin()+i );
 			--i;
 		}
+        
+        rtConfig.reset(new RunTimeConfig(!ignoreConfigErrors));
 
         for( size_t i=1; i < args.size(); ++i )
         {
@@ -289,12 +303,12 @@ namespace directag
             args.erase( args.begin() + i );
             --i;
         }
-
-        if( args.size() < 2 )
-        {
-            cout << "Not enough arguments.\nUsage: " << args[0] << " <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
-            return 1;
-        }
+        
+		if( args.size() < 2 )
+		{
+			cerr << "Not enough arguments.\n\n" << usage << endl;
+			return 1;
+		}
 
         if( !rtConfig->initialized() )
         {
@@ -327,27 +341,41 @@ namespace directag
 				}
 			}
 		}
+
 		rtConfig->setVariables( vars );
 
-        for( size_t i=1; i < args.size(); ++i )
-        {
-            if( args[i] == "-dump" )
-            {
-                rtConfig->dump();
-                g_residueMap->dump();
-                args.erase( args.begin() + i );
-                --i;
-            }
-        }
+		// Dump the parameters if the user opts for it
+		for( size_t i=1; i < args.size(); ++i )
+		{
+			if( args[i] == "-dump" )
+			{
+				rtConfig->dump();
+				args.erase( args.begin() + i );
+				--i;
+			}
+		}
 
-        for( size_t i=1; i < args.size(); ++i )
+        // Either warn or error out on unrecognized parameters
+		for( size_t i=1; i < args.size(); ++i )
+		{
+			if( args[i][0] == '-' )
+			{
+                if (!ignoreConfigErrors)
+                {
+                    cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
+                    return 1;
+                }
+
+				cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+				args.erase( args.begin() + i );
+				--i;
+			}
+		}
+
+        if (args.size() == 1)
         {
-            if( args[i][0] == '-' )
-            {
-                cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-                args.erase( args.begin() + i );
-                --i;
-            }
+            cerr << "No spectrum sources specified.\n\n" << usage << endl;
+            return 1;
         }
 
 		return 0;

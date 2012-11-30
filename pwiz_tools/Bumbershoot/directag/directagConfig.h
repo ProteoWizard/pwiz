@@ -33,7 +33,6 @@
 using namespace freicore;
 
 #define DIRECTAG_RUNTIME_CONFIG \
-    DIRECTAG_API_CONFIG \
 	MULTITHREAD_RTCONFIG \
 	RTCONFIG_VARIABLE( string,			OutputSuffix,				""			        ) \
     RTCONFIG_VARIABLE( int,				NumBatches,					50				    ) \
@@ -59,29 +58,22 @@ namespace directag
 	public:
 		BOOST_PP_SEQ_FOR_EACH( RTCONFIG_DECLARE_VAR, ~, DIRECTAG_RUNTIME_CONFIG )
 
-		RunTimeConfig() : DirecTagAPIConfig()
+		RunTimeConfig(bool treatWarningsAsErrors = true) : DirecTagAPIConfig(treatWarningsAsErrors)
 		{
 			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_INIT_DEFAULT_VAR, ~, DIRECTAG_RUNTIME_CONFIG )
-		}
-
-		void initializeFromBuffer( string& cfgStr, const string& delim = "\r\n\t " )
-		{
-			DirecTagAPIConfig::initializeFromBuffer( cfgStr, delim );
-			string strVal;
-			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_PARSE_BUFFER, ~, DIRECTAG_RUNTIME_CONFIG )
-			finalize();
+            if (m_warnings.tellp() > 0) throw runtime_error(m_warnings.str()); /* initialization errors are bugs */
 		}
 
 		RunTimeVariableMap getVariables( bool hideDefaultValues = false )
 		{
-			BaseRunTimeConfig::getVariables();
+			DirecTagAPIConfig::getVariables();
 			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_FILL_MAP, m_variables, DIRECTAG_RUNTIME_CONFIG )
 			return m_variables;
 		}
 
 		void setVariables( RunTimeVariableMap& vars )
 		{
-			BaseRunTimeConfig::setVariables( vars );
+			DirecTagAPIConfig::setVariables( vars );
 			BOOST_PP_SEQ_FOR_EACH( RTCONFIG_READ_MAP, vars, DIRECTAG_RUNTIME_CONFIG )
 			finalize();
 		}
@@ -97,12 +89,12 @@ namespace directag
 	protected:
 		void finalize()
 		{
-			DirecTagAPIConfig::finalize();
-
 			string cwd;
 			cwd.resize( MAX_PATH );
 			getcwd( &cwd[0], MAX_PATH );
 			WorkingDirectory = cwd.c_str();
+            
+			DirecTagAPIConfig::finalize();
 		}
 	};
 
