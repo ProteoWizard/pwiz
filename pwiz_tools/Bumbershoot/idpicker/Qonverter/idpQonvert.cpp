@@ -67,8 +67,17 @@ int InitProcess( argList_t& args )
             "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
             "" << endl;
 
-	g_rtConfig = new RunTimeConfig;
-	g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+    string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <analyzed data filemask> [<another filemask> ...]\n"
+                    "Optional arguments:\n"
+                    "-b <batch filepath>           : specify a file which lists the filepaths to process line-by-line\n"
+                    "-cfg <config filepath>        : specify a configuration file other than the default\n"
+                    "-workdir <working directory>  : change working directory\n"
+                    "-cpus <value>                 : force use of <value> worker threads\n"
+                    "-ignoreConfigErrors           : ignore errors in configuration file or the command-line\n"
+                    "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
+                    "-dump                         : show runtime configuration settings before starting the run\n";
+
+	bool ignoreConfigErrors = false;
 	g_numWorkers = GetNumProcessors();
 
 	// First set the working directory, if provided
@@ -84,12 +93,19 @@ int InitProcess( argList_t& args )
 			g_numWorkers = atoi( args[i+1].c_str() );
 			args.erase( args.begin() + i );
 		}
+        else if( args[i] == "-ignoreConfigErrors" )
+		{
+			ignoreConfigErrors = true;
+		}
         else
 			continue;
 
 		args.erase( args.begin() + i );
 		--i;
 	}
+
+	g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+	g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
 
     vector<string> extraFilepaths;
 
@@ -130,7 +146,7 @@ int InitProcess( argList_t& args )
 
 	if( g_rtConfig->inputFilepaths.empty() && args.size() < 2 )
 	{
-		cerr << "Not enough arguments.\nUsage: idpQonvert <analyzed data filemask> [<another filemask> ...]" << endl;
+		cerr << "Not enough arguments.\n\n" << usage << endl;
 		return QONVERT_ERROR_NOT_ENOUGH_ARGUMENTS;
 	}
 
@@ -162,31 +178,39 @@ int InitProcess( argList_t& args )
 		}
 	}
 
-	try
-	{
-		g_rtConfig->setVariables( vars );
-	} catch( std::exception& e )
-	{
-		cerr << "Error overriding runtime variables: " << e.what() << endl;
-		return QONVERT_ERROR_RUNTIME_CONFIG_OVERRIDE_FAILURE;
-	}
+	g_rtConfig->setVariables( vars );
 
 	for( size_t i=1; i < args.size(); ++i )
 	{
 		if( args[i] == "-dump" )
 		{
 			g_rtConfig->dump();
-			g_residueMap->dump();
 			args.erase( args.begin() + i );
 			--i;
 		}
-        else if( args[i][0] == '-' )
+	}
+
+	for( size_t i=1; i < args.size(); ++i )
+	{
+		if( args[i][0] == '-' )
 		{
+            if (!ignoreConfigErrors)
+            {
+                cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
+                return 1;
+            }
+
 			cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
 			args.erase( args.begin() + i );
 			--i;
 		}
 	}
+
+    if (args.size() == 1)
+    {
+        if( g_pid == 0 ) cerr << "No data sources specified.\n\n" << usage << endl;
+        return 1;
+    }
 
     args.insert(args.end(), extraFilepaths.begin(), extraFilepaths.end());
 

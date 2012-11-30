@@ -92,7 +92,7 @@ static float EPSILON = 0.0001f;
 struct RunTimeConfig : public freicore::BaseRunTimeConfig
 {
 public:
-    RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, IDPQONVERT_RUNTIME_CONFIG, "\r\n\t ", "idpQonvert.cfg", "\r\n#" )
+    RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, IDPQONVERT_RUNTIME_CONFIG, "idpQonvert.cfg" )
 
     fileList_t inputFilepaths;
     map<string, Qonverter::Settings::ScoreInfo> scoreInfoByName;
@@ -126,8 +126,12 @@ private:
     {
         vector<string> tokens;
         split(tokens, ScoreInfo, boost::is_any_of(";"));
+        
+        if (tokens.empty())
+            m_warnings << "Blank value for ScoreInfo is invalid.\n";
+        else
+            scoreInfoByName.clear();
 
-        scoreInfoByName.clear();
         for (size_t i=0; i < tokens.size(); ++i)
         {
             to_lower(tokens[i]);
@@ -136,7 +140,10 @@ private:
             split(tokens2, tokens[i], boost::is_space());
 
             if (tokens2.size() < 3)
-                throw runtime_error("invalid score info (must be a space-separated triplet of <weight> <off|quantile|linear> <name>)");
+            {
+                m_warnings << "Invalid score info (must be a space-separated triplet of <weight> <off|quantile|linear> <name>)\n";
+                break;
+            }
 
             const string& weight = tokens2[0];
             const string& normalization = tokens2[1];
@@ -154,8 +161,13 @@ private:
             else if (normalization == "linear")
                 scoreInfo.normalizationMethod = Qonverter::Settings::NormalizationMethod::Linear;
             else if (normalization != "off")
-                throw runtime_error("invalid NormalizationMethod (must be 'off', 'quantile', or 'linear')");
+            {
+                m_warnings << "Invalid normalization method (must be 'off', 'quantile', or 'linear')\n";
+                break;
+            }
         }
+
+        BaseRunTimeConfig::finalize();
     }
 };
 
