@@ -145,6 +145,7 @@ namespace tagrecon
                       Version::str(),
                       "http://forge.fenchurch.mc.vanderbilt.edu/projects/tagrecon/",
                       g_dbPath + g_dbFilename,
+                      g_rtConfig->cleavageAgent,
                       g_rtConfig->cleavageAgentRegex,
                       g_rtConfig->decoyPrefix,
                       fileParams);
@@ -169,11 +170,18 @@ namespace tagrecon
 					TAGRECON_LICENSE << endl;
 		}
 
-		g_rtConfig = new RunTimeConfig;
-        g_rtConfig->executableFilepath = args[0];
-        
-		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+        string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <input tags/spectra filemask 1> [input tags/spectra filemask 2] ...\n"
+                       "Optional arguments:\n"
+                       "-cfg <config filepath>        : specify a configuration file other than the default\n"
+                       "-workdir <working directory>  : change working directory (where output files are written)\n"
+                       "-cpus <value>                 : force use of <value> worker threads\n"
+                       "-ignoreConfigErrors           : ignore errors in configuration file or the command-line\n"
+                       "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
+                       "-dump                         : show runtime configuration settings before starting the run\n";
+
+		bool ignoreConfigErrors = false;
 		g_numWorkers = GetNumProcessors();
+
 		// First set the working directory, if provided
 		for( size_t i=1; i < args.size(); ++i )
 		{
@@ -186,6 +194,9 @@ namespace tagrecon
 				//Get the number of cpus
 				g_numWorkers = atoi( args[i+1].c_str() );
 				args.erase( args.begin() + i );
+			} else if( args[i] == "-ignoreConfigErrors" )
+			{
+				ignoreConfigErrors = true;
 			} else
 				continue;
 
@@ -193,7 +204,11 @@ namespace tagrecon
 			--i;
 		}
 
-		//Read the parameters and residue masses if this process is a master process.
+		g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+        g_rtConfig->executableFilepath = args[0];
+		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+
+		//Read the parameters if this process is a master process.
 		if( g_pid == 0 )
 		{
 			for( size_t i=1; i < args.size(); ++i )
@@ -218,7 +233,7 @@ namespace tagrecon
 			// Make sure the user gave at least one input file (tags or spectra)
 			if( args.size() < 2 )
 			{
-				cerr << "Not enough arguments.\nUsage: " << args[0] << " [-ProteinDatabase <FASTA protein database filepath>] <input filemask 1> [input filemask 2] ..." << endl;
+				cerr << "Not enough arguments.\n\n" << usage << endl;
 				return 1;
 			}
 		
@@ -266,18 +281,13 @@ namespace tagrecon
 				}
 			}
 		}
+
 		// Set the variables
 		g_rtConfig->setVariables( vars );
 
-		#ifdef DEBUG
-			for( size_t i = 0; i < args.size(); i++) {
-				cout << "args[" << i << "]:" << args[i] << "\n";
-			}	
-		#endif	
-		
-		// Dump the paramters if the user opts for it
 		if( g_pid == 0 )
 		{
+		    // Dump the parameters if the user opts for it
 			for( size_t i=1; i < args.size(); ++i )
 			{
 				if( args[i] == "-dump" )
@@ -288,11 +298,17 @@ namespace tagrecon
 				}
 			}
 
-			// Skip unintelligible arguments on the command line
+            // Either warn or error out on unrecognized parameters
 			for( size_t i=1; i < args.size(); ++i )
 			{
 				if( args[i][0] == '-' )
 				{
+                    if (!ignoreConfigErrors)
+                    {
+                        cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
+                        return 1;
+                    }
+
 					cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
 					args.erase( args.begin() + i );
 					--i;
@@ -304,11 +320,18 @@ namespace tagrecon
 		// Parse out the unimod xml document for modifications
 		unimodXMLParser = new UniModXMLParser(g_rtConfig->UnimodXML);
 		unimodXMLParser->parseDocument();
+
 		deltaMasses = new DeltaMasses(unimodXMLParser->getModifications());
 		deltaMasses->buildDeltaMassLookupTables();
 		//deltaMasses->printMassToAminoAcidMap();
 		//deltaMasses->printInterpretationMap();
-		//exit(1);
+
+        if (args.size() == 1)
+        {
+            if( g_pid == 0 ) cerr << "No tag or spectrum sources specified.\n\n" << usage << endl;
+            return 1;
+        }
+
 		return 0;
 	}
 
@@ -1020,8 +1043,14 @@ namespace tagrecon
     void QueryProteinMassReconMode(const proteinData& protein)
     {
         bool isDecoy = protein.isDecoy();
+        
+        scoped_ptr<Digestion> digestionPtr;
+        if (g_rtConfig->cleavageAgent != CVID_Unknown)
+            digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgent, g_rtConfig->digestionConfig));
+        else
+            digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig));
 
-        Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
+        const Digestion& digestion = *digestionPtr;
         for(Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); ++itr)
         {
             const DigestedPeptide& peptide = (*itr);
@@ -1349,8 +1378,15 @@ namespace tagrecon
         TagMatches tagMatches;
         BOOST_FOREACH(const SpectraTagTrie::SearchResult& tagMatch, spectraTagTrie.find_all(protein.getSequence()))
             tagMatches[tagMatch.offset()] = static_cast<const shared_ptr<AATagToSpectraMap>&>(tagMatch.keyword());
+
         // Digest the protein
-        Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
+        scoped_ptr<Digestion> digestionPtr;
+        if (g_rtConfig->cleavageAgent != CVID_Unknown)
+            digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgent, g_rtConfig->digestionConfig));
+        else
+            digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig));
+
+        const Digestion& digestion = *digestionPtr;
         for( Digestion::const_iterator dItr = digestion.begin(); dItr != digestion.end(); ++dItr)
         {
             if (dItr->sequence().find_first_of("BXZ") != string::npos)
@@ -1505,7 +1541,14 @@ namespace tagrecon
         for(size_t index=start; index <= end; ++index)
         {
             Peptide protein(proteins[index].getSequence());
-            Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
+
+            scoped_ptr<Digestion> digestionPtr;
+            if (g_rtConfig->cleavageAgent != CVID_Unknown)
+                digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgent, g_rtConfig->digestionConfig));
+            else
+                digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig));
+
+            const Digestion& digestion = *digestionPtr;
             for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); ++itr ) 
                 ++NETStats[itr->specificTermini()];
         }

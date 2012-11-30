@@ -111,13 +111,14 @@ namespace tagrecon
     struct RunTimeConfig : public BaseRunTimeConfig
     {
     public:
-        RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, TAGRECON_RUNTIME_CONFIG, "\r\n\t ", "tagrecon.cfg", "\r\n#" )
+        RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, TAGRECON_RUNTIME_CONFIG, "tagrecon.cfg" )
 
         path executableFilepath; // path to tagrecon executable (to look for unimod and blosum)
 
         string decoyPrefix;
         bool automaticDecoys;
 
+        CVID cleavageAgent;
         boost::regex cleavageAgentRegex;
         Digestion::Config digestionConfig;
 
@@ -163,7 +164,7 @@ namespace tagrecon
             else if (bal::iequals(OutputFormat, "mzIdentML"))
                 outputFormat = pwiz::identdata::IdentDataFile::Format_MzIdentML;
             else
-                throw runtime_error("invalid output format");
+                m_warnings << "Invalid value \"" << OutputFormat << "\" for OutputFormat\n";
 
 
             path pathToUnimodXML(UnimodXML);
@@ -181,42 +182,66 @@ namespace tagrecon
             decoyPrefix = DecoyPrefix.empty() ? "rev_" : DecoyPrefix;
             automaticDecoys = DecoyPrefix.empty() ? false : true;
 
+            // TODO: move CleavageRules parsing to its own class
             trim(CleavageRules); // trim flanking whitespace
-            if( CleavageRules.find(' ') == string::npos )
-            {
-                // a single token must be either a cleavage agent name or regex
-                // first try to parse the token as the name of an agent
-                CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
-                if( cleavageAgent == CVID_Unknown )
-                {
-                    // next try to parse the token as a Perl regex
-                    try
-                    {
-                        // regex must be zero width, so it must use at least one parenthesis;
-                        // this will catch most bad cleavage agent names (e.g. "tripsen")
-                        if( CleavageRules.find('(') == string::npos )
-                            throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
-                        cleavageAgentRegex = boost::regex(CleavageRules);
-                    }
-                    catch (boost::bad_expression&)
-                    {
-                        // a bad regex or agent name is fatal
-                        throw runtime_error("invalid cleavage agent name or regex: " + CleavageRules);
-                    }
-                }
-                else
-                {
-                    // use regex for predefined cleavage agent
-                    cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
-                }
-            }
+
+            if (bal::iequals(CleavageRules, "NoEnzyme"))
+                m_warnings << "NoEnzyme is not supported. If you want non-specific digestion, set CleavageRules to the enzyme that digested your sample and set MinTerminiCleavages to 0.\n";
+            else if (CleavageRules.empty())
+                m_warnings << "Blank value for CleavageRules is invalid.\n";
             else
             {
-                // multiple tokens must be a CleavageRuleSet
-                CleavageRuleSet tmpRuleSet;
-                stringstream CleavageRulesStream( CleavageRules );
-                CleavageRulesStream >> tmpRuleSet;
-                cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
+                // first try to parse the token as the name of an agent
+                cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
+                cleavageAgentRegex = boost::regex();
+
+                if (cleavageAgent != CVID_Unknown || CleavageRules.find(' ') == string::npos)
+                {
+                    // a single token must be either a cleavage agent name or regex
+                    // multiple tokens could be a cleavage agent or an old-style cleavage rule set
+
+                    if (bal::iequals(CleavageRules, "unspecific cleavage"))
+                    {
+                        m_warnings << "Unspecific cleavage is not recommended. For a non-specific search, you should almost always set CleavageRules to the enzyme that digested your sample and set MinTerminiCleavages to 0.\n";
+                        MinTerminiCleavages = 0;
+
+                        // there is no regex
+                    }
+                    else if (bal::iequals(CleavageRules, "no cleavage"))
+                    {
+                        // there is no regex
+                    }
+                    else if (cleavageAgent == CVID_Unknown)
+                    {
+                        // next try to parse the token as a Perl regex
+                        try
+                        {
+                            // regex must be zero width, so it must use at least one parenthesis;
+                            // this will catch most bad cleavage agent names (e.g. "tripsen")
+                            if( CleavageRules.find('(') == string::npos )
+                                throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
+                            cleavageAgentRegex = boost::regex(CleavageRules);
+                        }
+                        catch (boost::bad_expression&)
+                        {
+                            // a bad regex or agent name is fatal
+                            m_warnings << "Invalid cleavage agent name or regex \"" << CleavageRules << "\"\n";
+                        }
+                    }
+                    else
+                    {
+                        // use regex for predefined cleavage agent
+                        cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
+                    }
+                }
+                else if (cleavageAgent == CVID_Unknown)
+                {
+                    // multiple tokens must be a CleavageRuleSet
+                    CleavageRuleSet tmpRuleSet;
+                    stringstream CleavageRulesStream( CleavageRules );
+                    CleavageRulesStream >> tmpRuleSet;
+                    cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
+                }
             }
 
             MaxMissedCleavages = MaxMissedCleavages < 0 ? 100000 : MaxMissedCleavages;
@@ -263,49 +288,53 @@ namespace tagrecon
             vector<string> fragmentationRuleTokens;
             split( fragmentationRuleTokens, FragmentationRule, is_any_of(":") );
             if( fragmentationRuleTokens.empty() )
-                throw runtime_error("invalid blank fragmentation rule");
-
-            const string& mode = fragmentationRuleTokens[0];
-            defaultFragmentTypes.reset();
-            if( mode.empty() || mode == "cid" )
+                m_warnings << "Blank value for FragmentationRule is invalid.\n";
+            else
             {
-                defaultFragmentTypes[FragmentType_B] = true;
-                defaultFragmentTypes[FragmentType_Y] = true;
-            } else if( mode == "etd" )
-            {
-                defaultFragmentTypes[FragmentType_C] = true;
-                defaultFragmentTypes[FragmentType_Z_Radical] = true;
-            } else if( mode == "manual" )
-            {
-                if( fragmentationRuleTokens.size() != 2 )
-                    throw runtime_error("manual fragmentation mode requires comma-separated list, e.g. 'manual:b,y'");
-
-                vector<string> fragmentTypeTokens;
-                split( fragmentTypeTokens, fragmentationRuleTokens[1], is_any_of(",") );
-                
-                if( fragmentTypeTokens.empty() )
-                    throw runtime_error("no fragment types specified for manual fragmentation mode");
-
-                for( size_t i=0; i < fragmentTypeTokens.size(); ++i )
+                const string& mode = fragmentationRuleTokens[0];
+                defaultFragmentTypes.reset();
+                if( mode.empty() || mode == "cid" )
                 {
-                    string fragmentType = to_lower_copy(fragmentTypeTokens[i]);
-                    if( fragmentType == "a" )
-                        defaultFragmentTypes[FragmentType_A] = true;
-                    else if( fragmentType == "b" )
-                        defaultFragmentTypes[FragmentType_B] = true;
-                    else if( fragmentType == "c" )
-                        defaultFragmentTypes[FragmentType_C] = true;
-                    else if( fragmentType == "x" )
-                        defaultFragmentTypes[FragmentType_X] = true;
-                    else if( fragmentType == "y" )
-                        defaultFragmentTypes[FragmentType_Y] = true;
-                    else if( fragmentType == "z" )
-                        defaultFragmentTypes[FragmentType_Z] = true;
-                    else if( fragmentType == "z*" )
-                        defaultFragmentTypes[FragmentType_Z_Radical] = true;
-                }
-            } else
-                throw runtime_error("invalid fragmentation mode \"" + mode + "\"");
+                    defaultFragmentTypes[FragmentType_B] = true;
+                    defaultFragmentTypes[FragmentType_Y] = true;
+                } else if( mode == "etd" )
+                {
+                    defaultFragmentTypes[FragmentType_C] = true;
+                    defaultFragmentTypes[FragmentType_Z_Radical] = true;
+                } else if( mode == "manual" )
+                {
+                    if( fragmentationRuleTokens.size() != 2 )
+                        m_warnings << "Manual FragmentationRule setting requires comma-separated list of ion series, e.g. 'manual:b,y'\n";
+                    else
+                    {
+                        vector<string> fragmentTypeTokens;
+                        split( fragmentTypeTokens, fragmentationRuleTokens[1], is_any_of(",") );
+                
+                        if( fragmentTypeTokens.empty() )
+                            m_warnings << "Manual FragmentationRule setting requires comma-separated list of ion series, e.g. 'manual:b,y'\n";
+
+                        for( size_t i=0; i < fragmentTypeTokens.size(); ++i )
+                        {
+                            string fragmentType = to_lower_copy(fragmentTypeTokens[i]);
+                            if( fragmentType == "a" )
+                                defaultFragmentTypes[FragmentType_A] = true;
+                            else if( fragmentType == "b" )
+                                defaultFragmentTypes[FragmentType_B] = true;
+                            else if( fragmentType == "c" )
+                                defaultFragmentTypes[FragmentType_C] = true;
+                            else if( fragmentType == "x" )
+                                defaultFragmentTypes[FragmentType_X] = true;
+                            else if( fragmentType == "y" )
+                                defaultFragmentTypes[FragmentType_Y] = true;
+                            else if( fragmentType == "z" )
+                                defaultFragmentTypes[FragmentType_Z] = true;
+                            else if( fragmentType == "z*" )
+                                defaultFragmentTypes[FragmentType_Z_Radical] = true;
+                        }
+                    }
+                } else
+                    m_warnings << "Invalid mode \"" << mode << "\" for FragmentationRule.\n";
+            }
 
             ProteinIndexOffset = 0;
 
@@ -317,20 +346,19 @@ namespace tagrecon
             if( TicCutoffPercentage > 1.0f )
             {
                 TicCutoffPercentage /= 100.0f;
-                if( g_pid == 0 )
-                    cerr << g_hostString << ": TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
+                m_warnings << "TicCutoffPercentage must be between 0 and 1 (100%)\n";
             }
-
+            
             if( !DynamicMods.empty() )
             {
-                DynamicMods = TrimWhitespace( DynamicMods );
-                dynamicMods = DynamicModSet( DynamicMods );
+                try {dynamicMods = DynamicModSet( DynamicMods );}
+                catch (exception& e) {m_warnings << "Unable to parse DynamicMods \"" << DynamicMods << "\": " << e.what() << "\n";}
             }
 
             if( !StaticMods.empty() )
             {
-                StaticMods = TrimWhitespace( StaticMods );
-                staticMods = StaticModSet( StaticMods );
+                try {staticMods = StaticModSet( StaticMods );}
+                catch (exception& e) {m_warnings << "Unable to parse StaticMods \"" << StaticMods << "\": " << e.what() << "\n";}
             }
             
             BOOST_FOREACH(const DynamicMod& mod, dynamicMods)
@@ -343,22 +371,25 @@ namespace tagrecon
             restrictBlindPTMLocality = false;
             if(BlindPTMResidues.size()>0)
             {
-                restrictBlindPTMLocality = true;
-                // Reset the ascii indexed array for residues.
-                blindPTMLocalities.resize(29);
-                fill(blindPTMLocalities.begin(),blindPTMLocalities.end(),false);
                 // Split the residue locality rule, get the index of the residues to be used for
                 // blind PTM localization, and set the flag.
                 vector<string> residues;
                 split( residues, BlindPTMResidues, is_any_of(",") );
                 if( residues.empty() )
-                    throw runtime_error("invalid blind ptm residue restriction rule");
-                BOOST_FOREACH(const string& res, residues)
+                    m_warnings << "Invalid blind ptm residue restriction rule.\n";
+                else
                 {
-                    size_t index = static_cast<size_t>(std::toupper(res.at(0)));
-                    index -= 65;
-                    if(index >= 0 && index <= 29)
-                        blindPTMLocalities[index] = true;
+                    restrictBlindPTMLocality = true;
+                    // Reset the ascii indexed array for residues.
+                    blindPTMLocalities.resize(29, false);
+
+                    BOOST_FOREACH(const string& res, residues)
+                    {
+                        size_t index = static_cast<size_t>(std::toupper(res.at(0)));
+                        index -= 65;
+                        if(index >= 0 && index <= 29)
+                            blindPTMLocalities[index] = true;
+                    }
                 }
             }
 
