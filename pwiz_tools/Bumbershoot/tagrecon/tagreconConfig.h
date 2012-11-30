@@ -407,6 +407,8 @@ namespace tagrecon
                 minIntensityClassCount = NumIntensityClasses;
                 minMzFidelityClassCount = NumMzFidelityClasses;
             }
+
+            BaseRunTimeConfig::finalize();
         }
     };
 

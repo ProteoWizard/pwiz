@@ -76,7 +76,7 @@ namespace tagrecon
 		MPI_Recv( &len,										1,		MPI_INT,			0,		0x00, MPI_COMM_WORLD, &st );
 		g_rtConfig->cfgStr.resize( len );
 		MPI_Recv( &g_rtConfig->cfgStr[0],					len,	MPI_CHAR,			0,		0x01, MPI_COMM_WORLD, &st );
-		g_rtConfig->initializeFromBuffer( g_rtConfig->cfgStr, "\r\n#" );
+		g_rtConfig->initializeFromBuffer( g_rtConfig->cfgStr );
 	}
 
     void TransmitNETRewardsToChildProcess()
