@@ -254,10 +254,14 @@ rule install-vendor-api-dependencies ( properties * )
 
 rule with-mpi ( properties * )
 {
+    local result ;
     if --with-mpi in [ modules.peek : ARGV ]
     {
-        return <location-prefix>with-mpi <library>/mpi//mpi <define>USE_MPI ;
+        # gcc 4.6 (at least) pukes with its default 128 template depth 
+        if <toolset>gcc in $(properties) { result += <cxxflags>-ftemplate-depth-256 ; }
+        result += <location-prefix>with-mpi <library>/mpi//mpi <define>USE_MPI ;
     }
+    return $(result) ;
 }
 
 rule gcc-install-dll-path ( properties * )
