@@ -277,10 +277,14 @@ install data-files
 
 rule with-mpi ( properties * )
 {
+    local result ;
     if --with-mpi in [ modules.peek : ARGV ]
     {
-        return <location-prefix>with-mpi <library>/mpi//mpi <define>USE_MPI ;
+        # gcc 4.6 (at least) pukes with its default 128 template depth 
+        if <toolset>gcc in $(properties) { result += <cxxflags>-ftemplate-depth-256 ; }
+        result += <location-prefix>with-mpi <library>/mpi//mpi <define>USE_MPI ;
     }
+    return $(result) ;
 }
 
 rule gcc-install-dll-path ( properties * )
@@ -325,17 +329,8 @@ rule static-with-fpic ( properties * )
 
 # any source tree can build binary tarballs
 
-import modules os ;
-
-if [ os.on-windows ]
-{
-    using tar : bsdtar.exe ;
-}
-else
-{
-    using tar ;
-}
-import tar sequence property-set ;
+import modules os tar sequence property-set ;
+using tar ;
 
 bin-tarball-basename = "$(application-name:L)-bin" ;
 
