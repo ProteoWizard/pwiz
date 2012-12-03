@@ -413,6 +413,7 @@ This $(application-name) source tree uses a subset of the full Boost tarball.
   $(LIBRARIES_PATH)/boost-build
   $(LIBRARIES_PATH)/boost_aux
   $(LIBRARIES_PATH)/libsvm-3.0
+  $(LIBRARIES_PATH)/SQLite
   [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
 
   path-anchor:$(BUILD_PATH)
