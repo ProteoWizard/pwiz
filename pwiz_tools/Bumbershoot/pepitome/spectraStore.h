@@ -43,7 +43,7 @@
 #include "portable_iarchive.hpp"
 #include "portable_oarchive.hpp"
 
-#include "sqlite/sqlite3pp.h"
+#include "sqlite3pp.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/assign.hpp>

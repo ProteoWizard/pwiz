@@ -160,7 +160,7 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 local application-name = "Pepitome" ;
 
 constant MAJOR : 1 ;
-constant MINOR : 0 ;
+constant MINOR : 1 ;
 
 # set version info (used for tarball filenames)
 import generate-version ;
@@ -257,7 +257,7 @@ exe $(application-name:L)
        LibraryBabelFish.cpp
   : # requirements
       <library>freicore
-      <library>sqlite//sqlite3pp
+      <library>$(LIBRARIES_PATH)/SQLite//sqlite3pp
   ;
 
 exe librarybabelfish
@@ -265,7 +265,7 @@ exe librarybabelfish
        LibraryBabelFish.cpp
    : # requirements
        <library>freicore
-       <library>sqlite//sqlite3pp
+       <library>$(LIBRARIES_PATH)/SQLite//sqlite3pp
        <define>LIBRARYBABELFISH_EXE
    ;
 
