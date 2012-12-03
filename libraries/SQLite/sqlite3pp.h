@@ -1,4 +1,4 @@
-// $Id: sqlite3pp.h 478 2012-09-21 21:03:12Z chambm $
+// $Id: sqlite3pp.h 288 2011-08-09 22:41:43Z chambm $
 //
 // The MIT License
 //
@@ -160,6 +160,28 @@ namespace sqlite3pp
         int step();
         int reset();
 
+      struct bindstream
+      {
+        bindstream(statement& stmt, int idx);
+
+        template <class T>
+        bindstream& operator << (T value)
+        {
+            int rc = stmt_.bind(idx_, value);
+            if (rc != SQLITE_OK)
+              throw database_error(stmt_.db_);
+
+            ++idx_;
+            return *this;
+        }
+
+        private:
+        statement& stmt_;
+        int idx_;
+      };
+
+      bindstream binder(int idx = 1);
+
     protected:
         explicit statement(database& db, const std::string& stmt = std::string());
         ~statement();
@@ -176,29 +198,9 @@ namespace sqlite3pp
     class command : public statement
     {
     public:
-        class bindstream
-        {
-        public:
-            bindstream(command& cmd, int idx);
 
-            template <class T>
-            bindstream& operator << (T value) {
-                int rc = cmd_.bind(idx_, value);
-                if (rc != SQLITE_OK) {
-                    throw database_error(cmd_.db_);
-                }
-                ++idx_;
-                return *this;
-            }
+      explicit command(database& db, char const* stmt = 0);
 
-        private:
-            command& cmd_;
-            int idx_;
-        };
-
-        explicit command(database& db, char const* stmt = 0);
-
-        bindstream binder(int idx = 1);
 
         int execute();
         int execute_all();

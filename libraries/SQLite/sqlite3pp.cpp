@@ -1,4 +1,4 @@
-// $Id: sqlite3pp.cpp 478 2012-09-21 21:03:12Z chambm $
+// $Id: sqlite3pp.cpp 352 2011-12-28 16:59:20Z chambm $
 //
 // The MIT License
 //
@@ -429,17 +429,17 @@ namespace sqlite3pp
     }
 
 
-    command::bindstream::bindstream(command& cmd, int idx) : cmd_(cmd), idx_(idx)
+    statement::bindstream::bindstream(statement& stmt, int idx) : stmt_(stmt), idx_(idx)
     {
+    }
+
+    statement::bindstream statement::binder(int idx)
+    {
+        return bindstream(*this, idx);
     }
 
     command::command(database& db, char const* stmt) : statement(db, stmt)
     {
-    }
-
-    command::bindstream command::binder(int idx)
-    {
-        return bindstream(*this, idx);
     }
 
     int command::execute()
