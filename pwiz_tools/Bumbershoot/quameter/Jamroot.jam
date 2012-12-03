@@ -172,7 +172,7 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 local application-name = "QuaMeter" ;
 
 constant MAJOR : 1 ;
-constant MINOR : 0 ;
+constant MINOR : 1 ;
 
 
 # set version info (used for tarball filenames)
@@ -269,7 +269,7 @@ exe $(application-name:L)
       [ glob quameter*.cpp ] spline.cpp
   : # requirements
       <library>freicore
-      <library>sqlite//sqlite3pp
+      <library>$(LIBRARIES_PATH)/SQLite//sqlite3pp
       <library>crawdad//crawdad
   ;
 
@@ -433,7 +433,6 @@ tar.create $(application-name:L)-src.tar.bz2
     [ path.glob $(ROOT_PATH) : *.cpp *.hpp *.h ]
     [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]
     [ path.glob-tree $(ROOT_PATH)/crawdad : *.cpp *.h *.jam ]
-    [ path.glob $(ROOT_PATH)/sqlite : *.cpp *.c *.h *.jam ]
     $(ROOT_PATH)/freicore/Jamfile.jam
     $(ROOT_PATH)/freicore/ext
 

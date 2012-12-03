@@ -37,7 +37,6 @@ using boost::icl::continuous_interval;
 
 #define QUAMETER_RUNTIME_CONFIG \
 	COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
-	RTCONFIG_VARIABLE( string,          OutputFormat,                "tsv"        ) \
     RTCONFIG_VARIABLE( string,          OutputFilepath,              ""           ) \
     RTCONFIG_VARIABLE( string,          MetricsType,                 "nistms"     ) \
     RTCONFIG_VARIABLE( string,          Instrument,                  "ltq"        ) \
@@ -60,7 +59,7 @@ namespace quameter
 	struct RunTimeConfig : public BaseRunTimeConfig
 	{
 	public:
-		RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, QUAMETER_RUNTIME_CONFIG, "\r\n\t ", "quameter.cfg", "\r\n#" )
+		RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, QUAMETER_RUNTIME_CONFIG, "quameter.cfg" )
 
         interval_set<double> chromatogramScanTimeWindow(double centerTime) const
         {
@@ -79,17 +78,13 @@ namespace quameter
 	private:
 		void finalize()
 		{
-            bal::to_lower(OutputFormat);
             bal::to_lower(MetricsType);
             bal::to_lower(Instrument);
 
             useAvgMass = Instrument == "ltq";
 
-            if (OutputFormat != "tsv" && OutputFormat != "csv" && OutputFormat != "xml")
-                throw runtime_error("invalid output format");
-
             if (!bal::starts_with(MetricsType, "nistms") && MetricsType != "pepitome" && MetricsType != "scanranker" && MetricsType != "idfree")
-                throw runtime_error("invalid metrics type");
+                m_warnings << "Invalid type \"" << MetricsType << "\" for MetricsType.\n";
 
             bal::trim_right_if(RawDataPath, is_any_of("/\\"));
 

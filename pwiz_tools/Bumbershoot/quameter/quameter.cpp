@@ -352,32 +352,58 @@ namespace quameter
 
     int InitProcess( argList_t& args )
     {
-
-        static const string usageString = " <results-file-mask1> <results-file-mask2>..." ;
-
-        //cout << g_hostString << " is initializing." << endl;
-        if (g_pid == 0 )
-        {
-            cout << "Quameter " << Version::str() << " (" << Version::LastModified() << ")\n" <<
+        cout << "Quameter " << Version::str() << " (" << Version::LastModified() << ")\n" <<
                 "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
                 "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
                 "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
                 QUAMETER_LICENSE << endl;
-        }
 
-        g_rtConfig = new RunTimeConfig;
+        string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <results filemask 1> [results filemask 2] ...\n"
+                       "Optional arguments:\n"
+                       "-cfg <config filepath>        : specify a configuration file other than the default\n"
+                       "-workdir <working directory>  : change working directory (where output files are written)\n"
+                       "-cpus <value>                 : force use of <value> worker threads\n"
+                       "-ignoreConfigErrors           : ignore errors in configuration file or the command-line\n"
+                       "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
+                       "-dump                         : show runtime configuration settings before starting the run\n";
+
+	    bool ignoreConfigErrors = false;
+        g_endianType = GetHostEndianType();
         g_numWorkers = GetNumProcessors();
 
         // First set the working directory, if provided
         for( size_t i=1; i < args.size(); ++i )
+		{
+			if( args[i] == "-workdir" && i+1 <= args.size() )
+			{
+				chdir( args[i+1].c_str() );
+				args.erase( args.begin() + i );
+			} else if( args[i] == "-cpus" && i+1 <= args.size() )
+			{
+				g_numWorkers = atoi( args[i+1].c_str() );
+				args.erase( args.begin() + i );
+			} else if( args[i] == "-ignoreConfigErrors" )
+			{
+				ignoreConfigErrors = true;
+			} else
+				continue;
+
+			args.erase( args.begin() + i );
+			--i;
+		}
+
+		g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+
+        for( size_t i=1; i < args.size(); ++i )
         {
-            if (args[i] == "-workdir" && i+1 <= args.size() )
+            if( args[i] == "-cfg" && i+1 <= args.size() )
             {
-                chdir( args[i+1].c_str() );
-                args.erase( args.begin() + i );
-            } else if (args[i] == "-cpus" && i+1 <= args.size() )
-            {
-                g_numWorkers = atoi( args[i+1].c_str() );
+                if( g_rtConfig->initializeFromFile( args[i+1] ) )
+                {
+                    cerr << g_hostString << " could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+                    return 1;
+                }
                 args.erase( args.begin() + i );
             } else
                 continue;
@@ -386,40 +412,18 @@ namespace quameter
             --i;
         }
 
-        if (g_pid == 0 )
+        if( args.size() < 2 )
+		{
+			cerr << "Not enough arguments.\n\n" << usage << endl;
+			return 1;
+		}
+
+        if( !g_rtConfig->initialized() )
         {
-            for( size_t i=1; i < args.size(); ++i )
-            {
-                if (args[i] == "-cfg" && i+1 <= args.size() )
-                {
-                    if (g_rtConfig->initializeFromFile( args[i+1] ) )
-                    {
-                        cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
-                        return 1;
-                    }
-                    args.erase( args.begin() + i );
+            if( g_rtConfig->initializeFromFile() )
+                cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
+        }
 
-                } else
-                    continue;
-
-                args.erase( args.begin() + i );
-                --i;
-            }
-
-            if (args.size() < 2 )
-            {
-                cerr << "Not enough arguments.\nUsage: " << args[0] << usageString << endl;
-                return 1;
-            }
-
-            if (!g_rtConfig->initialized() )
-            {
-                if (g_rtConfig->initializeFromFile() )
-                {
-                    cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
-                }
-            }
-        } 
         // Command line overrides happen after config file has been distributed but before PTM parsing
         RunTimeVariableMap vars = g_rtConfig->getVariables();
         for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
@@ -429,7 +433,7 @@ namespace quameter
 
             for( size_t i=1; i < args.size(); ++i )
             {
-                if (args[i].find( varName ) == 0 && i+1 <= args.size() )
+                if( args[i].find( varName ) == 0 && i+1 <= args.size() )
                 {
                     //cout << varName << " " << itr->second << " " << args[i+1] << endl;
                     itr->second = args[i+1];
@@ -440,36 +444,38 @@ namespace quameter
             }
         }
 
-        try
+        g_rtConfig->setVariables( vars );
+
+        for( size_t i=1; i < args.size(); ++i )
+		{
+			if( args[i] == "-dump" )
+			{
+				g_rtConfig->dump();
+				args.erase( args.begin() + i );
+				--i;
+			}
+		}
+
+		for( size_t i=1; i < args.size(); ++i )
+		{
+			if( args[i][0] == '-' )
+			{
+                if (!ignoreConfigErrors)
+                {
+                    cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
+                    return 1;
+                }
+
+				cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+				args.erase( args.begin() + i );
+				--i;
+			}
+		}
+
+        if (args.size() == 1)
         {
-            g_rtConfig->setVariables( vars );
-        } catch( std::exception& e )
-        {
-            if (g_pid == 0 ) cerr << "Error while overriding runtime variables: " << e.what() << endl;
+            cerr << "No data sources specified.\n\n" << usage << endl;
             return 1;
-        }
-
-        if (g_pid == 0 )
-        {
-            for( size_t i=1; i < args.size(); ++i )
-            {
-                if (args[i] == "-dump" )
-                {
-                    g_rtConfig->dump();
-                    args.erase( args.begin() + i );
-                    --i;
-                }
-            }
-
-            for( size_t i=1; i < args.size(); ++i )
-            {
-                if (args[i][0] == '-' )
-                {
-                    cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-                    args.erase( args.begin() + i );
-                    --i;
-                }
-            }
         }
 
         return 0;
@@ -485,71 +491,68 @@ namespace quameter
         if (InitProcess( args ) )
             return 1;
 
-        if (g_pid == 0 )
+        allSources.clear();
+
+        for( size_t i=1; i < args.size(); ++i )
+            FindFilesByMask( args[i], g_inputFilenames );
+
+        if (g_inputFilenames.empty() )
         {
-            allSources.clear();
-
-            for( size_t i=1; i < args.size(); ++i )
-                FindFilesByMask( args[i], g_inputFilenames );
-
-            if (g_inputFilenames.empty() )
-            {
-                cout << "No data sources found with the given filemasks." << endl;
-                return 1;
-            }
-
-            fileList_t::iterator fItr;
-            for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
-            {
-                string inputFile = *fItr;
-                bfs::path rawFile = bfs::change_extension(inputFile, "." + g_rtConfig->RawDataFormat);
-                bfs::path sourceFilepath;
-                if(!g_rtConfig->RawDataPath.empty())
-                    sourceFilepath = bfs::path(g_rtConfig->RawDataPath) / rawFile.filename();
-                else
-                    sourceFilepath = rawFile;
-
-                if(g_rtConfig->MetricsType != "idfree" && !bfs::exists(sourceFilepath))
-                {
-                    cerr << "Unable to find raw file at: " << sourceFilepath << endl;
-                    continue;
-                }
-
-                if(bal::starts_with(g_rtConfig->MetricsType, "nistms") && bal::ends_with(inputFile,"idpDB") )
-                {
-                   vector<QuameterInput> idpSrcs = GetIDPickerSpectraSources(inputFile);
-                   allSources.insert(allSources.end(),idpSrcs.begin(),idpSrcs.end());
-                }
-                else if(g_rtConfig->MetricsType == "idfree")
-                {
-                   QuameterInput qip("",inputFile,"","","",IDFREE);
-                   allSources.push_back(qip);
-                }
-                else if(g_rtConfig->MetricsType == "scanranker" && bal::ends_with(inputFile,".txt") )
-                {
-                   QuameterInput qip("",sourceFilepath.string(),"","",inputFile,SCANRANKER);
-                   allSources.push_back(qip);
-                }
-                else if(g_rtConfig->MetricsType == "pepitome" && bal::ends_with(inputFile,"pepXML") )
-                {
-                   QuameterInput qip("",sourceFilepath.string(),"",inputFile,"",PEPITOME);
-                   allSources.push_back(qip); 
-                }
-                else
-                    cerr << "Warning: mismatched metrics type and input file type." << endl;
-            }
-
-            for(size_t taskID=0; taskID < allSources.size(); ++taskID)
-                metricsTasks.enqueue(taskID);
-
-            g_numWorkers = min((int) allSources.size(), g_numWorkers);
-            boost::thread_group workerThreadGroup;
-            vector<boost::thread*> workerThreads;
-            for (int i = 0; i < g_numWorkers; ++i)
-                workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteMetricsThread));
-
-            workerThreadGroup.join_all();
+            cout << "No data sources found with the given filemasks." << endl;
+            return 1;
         }
+
+        fileList_t::iterator fItr;
+        for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
+        {
+            string inputFile = *fItr;
+            bfs::path rawFile = bfs::change_extension(inputFile, "." + g_rtConfig->RawDataFormat);
+            bfs::path sourceFilepath;
+            if(!g_rtConfig->RawDataPath.empty())
+                sourceFilepath = bfs::path(g_rtConfig->RawDataPath) / rawFile.filename();
+            else
+                sourceFilepath = rawFile;
+
+            if(g_rtConfig->MetricsType != "idfree" && !bfs::exists(sourceFilepath))
+            {
+                cerr << "Unable to find raw file at: " << sourceFilepath << endl;
+                continue;
+            }
+
+            if(bal::starts_with(g_rtConfig->MetricsType, "nistms") && bal::ends_with(inputFile,"idpDB") )
+            {
+                vector<QuameterInput> idpSrcs = GetIDPickerSpectraSources(inputFile);
+                allSources.insert(allSources.end(),idpSrcs.begin(),idpSrcs.end());
+            }
+            else if(g_rtConfig->MetricsType == "idfree")
+            {
+                QuameterInput qip("",inputFile,"","","",IDFREE);
+                allSources.push_back(qip);
+            }
+            else if(g_rtConfig->MetricsType == "scanranker" && bal::ends_with(inputFile,".txt") )
+            {
+                QuameterInput qip("",sourceFilepath.string(),"","",inputFile,SCANRANKER);
+                allSources.push_back(qip);
+            }
+            else if(g_rtConfig->MetricsType == "pepitome" && bal::ends_with(inputFile,"pepXML") )
+            {
+                QuameterInput qip("",sourceFilepath.string(),"",inputFile,"",PEPITOME);
+                allSources.push_back(qip); 
+            }
+            else
+                cerr << "Warning: mismatched metrics type and input file type." << endl;
+        }
+
+        for(size_t taskID=0; taskID < allSources.size(); ++taskID)
+            metricsTasks.enqueue(taskID);
+
+        g_numWorkers = min((int) allSources.size(), g_numWorkers);
+        boost::thread_group workerThreadGroup;
+        vector<boost::thread*> workerThreads;
+        for (int i = 0; i < g_numWorkers; ++i)
+            workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteMetricsThread));
+
+        workerThreadGroup.join_all();
 
         return 0;
     }

@@ -26,7 +26,7 @@
 #define _QUAMETERFILEREADERS_H
 
 #include "pwiz/utility/misc/Std.hpp"
-#include "sqlite/sqlite3pp.h"
+#include "sqlite3pp.h"
 #include "quameterSharedTypes.h"
 #include "quameterSharedFuncs.h"
 #include "quameterConfig.h"
