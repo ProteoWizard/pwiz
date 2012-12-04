@@ -26,8 +26,6 @@
 #include <cmath>
 #include <ctime>
 
-#include "sqlite/sqlite3pp.h"
-
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/proteome/Version.hpp"
