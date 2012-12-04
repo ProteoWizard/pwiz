@@ -882,7 +882,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
                 {
-                    get { return _dictSequenceToPeptide.Select(p => new MeasuredRetentionTime(p.Key, p.Value.Irt)); }
+                    get { return _dictSequenceToPeptide.Select(p => new MeasuredRetentionTime(p.Key, p.Value.Irt, true)); }
                 }
             }
 

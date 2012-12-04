@@ -1076,7 +1076,11 @@ namespace pwiz.Skyline
                     (selectedTreeNode is TransitionGroupTreeNode) ||
                     (selectedTreeNode is PeptideTreeNode && ((PeptideTreeNode)selectedTreeNode).DocNode.Children.Count == 1))
             {
-                var nodeGroup = SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.First();
+                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+                var nodeGroup = nodeGroupTree != null
+                    ? nodeGroupTree.DocNode
+                    : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.First();
+
                 if (HasPeak(SelectedResultsIndex, nodeGroup))
                 {
                     menuStrip.Items.Insert(iInsert++, removePeaksGraphMenuItem);
