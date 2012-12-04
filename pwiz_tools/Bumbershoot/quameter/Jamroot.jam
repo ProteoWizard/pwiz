@@ -355,6 +355,7 @@ bcp.copy-boost-dependencies copy_boost_subset
     # scan all source files for boost dependencies
     [ glob *.cpp *.h ]
     [ glob freicore/*.cpp freicore/*.h ]
+    [ path.glob-tree $(ROOT_PATH)/crawdad : *.cpp *.h ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_tools/common : *.cpp *.hpp ]
