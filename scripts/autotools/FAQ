@@ -21,12 +21,12 @@ A: ProteoWizard needs Boost version 1.43.0 or greater (as of this writing - that
 Windows: Visit boostpro.com for newer prebuilt Boost libraries.  Try version 1.46 or later.
 Linux: If the standard boost package is out of date, then rather than messing around with nonstandard packages you will probably find it easiest to build Boost from source - it goes something like this (running as root):
 cd /usr/local/src/
-wget http://sourceforge.net/projects/boost/files/boost/1.43.0/boost_1_43_0.tar.gz/download
-tar xvzf boost_1_43_0.tar.gz
-cd boost_1_43_0
+wget http://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.tar.gz/download
+tar xvzf boost_1_49_0.tar.gz
+cd boost_1_49_0
 ./bootstrap.sh
-./bjam install
-export BOOST_ROOT=/usr/local/src/boost_1_43_0
+./bjam --with-regex --with-filesystem --with-iostreams --with-thread --with-program_options --with-serialization --with-system --with-date_time install
+export BOOST_ROOT=/usr/local/src/boost_1_49_0
 
 Q: OK, I have Boost installed but MSVC8 is crashing in some of the template expansions.
 A: You're probably using a newer version of Boost, VC8 gets confused by some of the hairier uses of C++ templates in Boost 1.47.  Try installing Boost 1.46 if you're using MSVC8.
