@@ -156,15 +156,15 @@ string usage(const MSDataAnalyzerApplication& app)
     printCommandUsage<Pseudo2DGel>(oss);
 
     oss << "\nExamples:\n\n"
-        << "msaccess data.mzML -x \"tic 409 410\" --filter=\"msLevel 2\"\n"
+        << "msaccess data.mzML -x \"tic "TIC_MZRANGE_ARG"=409-410\" --filter=\"msLevel 2\"\n"
         << "(creates data.mzML.tic.409.00-410.00.txt with total ion current info for mass range 409-410 in ms2 scans)\n\n"
         << "msaccess data.mzML -x spectrum_table\n"
         << "(creates data.mzML.spectrum_table.txt with summary information for all spectra as read from the scan headers)\n\n"
-        << "msaccess data.mzML -x \"binary 0-3\"\n"
+        << "msaccess data.mzML -x \"binary "BINARY_INDEX_ARG"=0-3\"\n"
         << "(creates files data.mzML.binary.*.txt with binary data for spectra 0 through 3)\n\n"
-        << "msaccess data.mzML -x \"slice delimiter=tab index=[2,6] mz=[100,600]\"\n"
+        << "msaccess data.mzML -x \"slice "SLICE_INDEX_ARG"=2,6 "SLICE_MZRANGE_ARG"=100,600 delimiter=tab\"\n"
         << "(creates data.mzML.slice.index_2-6.mz_100.0000-600.0000.tsv with a table of data in the selected range)\n\n"
-        << "msaccess data.mzML -x image\n"
+        << "msaccess data.mzML -x \"image width=800 height=600\"\n"
         << "(creates data.mzML.image* with pseudo-2D-gel image of the data file)\n\n";
 
     oss << endl

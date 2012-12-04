@@ -70,16 +70,20 @@ template<>
 struct analyzer_strings<RegionSlice>
 {
     static const char* id() {return "slice";}
+#define SLICE_INDEX_ARG "index"
+#define SLICE_SCAN_ARG "sn"
+#define SLICE_RETENTIONTIME_ARG "rt"
+#define SLICE_MZRANGE_ARG "mz"
     static const char* description() {return "write data from a rectangular region";}
-    static const char* argsFormat() {return "["TABULARCONFIG_DELIMITER_OPTIONS_STR"] [mz=[a,b]] [rt=[a,b]] [index=[a,b]] [sn=[a,b]]";}
+    static const char* argsFormat() {return "["SLICE_MZRANGE_ARG"=<mzLow>[,<mzHigh>]] ["SLICE_RETENTIONTIME_ARG"=<rtLow>[,<rtHigh>]]] ["SLICE_INDEX_ARG"=<indexLow>[,<indexHigh>] | "SLICE_SCAN_ARG"=<scanLow>[,<scanHigh>]] ["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
     static std::vector<std::string> argsUsage()
     {
         std::vector<std::string> result;
-        result.push_back(TABULARCONFIG_DELIMITER_OPTIONS_STR" (column separation; default is fixed width)");
-        result.push_back("mz=[a,b] (set m/z range)");
-        result.push_back("rt=[a,b] (set retention time range)");
-        result.push_back("index=[a,b] (set spectrum index range)");
-        result.push_back("sn=[a,b] (set scan number range)");
+        result.push_back(SLICE_MZRANGE_ARG": set m/z range");
+        result.push_back(SLICE_RETENTIONTIME_ARG": set retention time range");
+        result.push_back(SLICE_INDEX_ARG": set spectrum index range");
+        result.push_back(SLICE_SCAN_ARG": set scan number range");
+        result.push_back(TABULARCONFIG_DELIMITER_USAGE_STR);
         return result;
     }
 };

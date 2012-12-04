@@ -45,6 +45,12 @@ class PWIZ_API_DECL RegionTIC : public MSDataAnalyzer
     {
         std::pair<double,double> mzRange;
         Config(const std::string& args); 
+
+        bool operator==(const Config &rhs) 
+        {
+            return mzRange == rhs.mzRange &&
+                delim_equal(rhs);
+        }
     };
 
     RegionTIC(const MSDataCache& cache, const Config& config);
@@ -74,8 +80,15 @@ struct analyzer_strings<RegionTIC>
 {
     static const char* id() {return "tic";}
     static const char* description() {return "write total ion counts for an m/z range";}
-    static const char* argsFormat() {return "["TABULARCONFIG_DELIMITER_OPTIONS_STR"] [mzLow [mzHigh]]";}
-    static std::vector<std::string> argsUsage() {return std::vector<std::string>(1, TABULARCONFIG_DELIMITER_USAGE_STR);}
+#define TIC_MZRANGE_ARG "mz"
+    static const char* argsFormat() {return "["TIC_MZRANGE_ARG"=<mzLow>[,<mzHigh>]] ["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
+    static std::vector<std::string> argsUsage() 
+    {
+        std::vector<std::string> usage;
+        usage.push_back(TIC_MZRANGE_ARG": set mz range");
+        usage.push_back(TABULARCONFIG_DELIMITER_USAGE_STR);
+        return usage;
+    }
 };
 
 

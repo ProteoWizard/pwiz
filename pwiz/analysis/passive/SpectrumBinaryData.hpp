@@ -47,6 +47,14 @@ class PWIZ_API_DECL SpectrumBinaryData : public MSDataAnalyzer
         size_t precision; 
 
         Config(const std::string& args = "");
+
+        bool operator == (const Config &rhs) const
+        {
+            return begin==rhs.begin &&
+                end == rhs.end &&
+                interpretAsScanNumbers == rhs.interpretAsScanNumbers &&
+                precision == rhs.precision;
+        }
     };
 
     SpectrumBinaryData(const MSDataCache& cache, const Config& config);
@@ -70,14 +78,19 @@ template<>
 struct analyzer_strings<SpectrumBinaryData>
 {
     static const char* id() {return "binary";}
-    static const char* description() {return "write binary data for spectra i through j";}
-    static const char* argsFormat() {return "i[-][j] [sn] [precision=d]";}
+#define BINARY_INDEX_ARG "index"
+#define BINARY_SCAN_ARG "sn"
+#define BINARY_PRECISION_ARG "precision"
+    static const char* argsFormat() {return BINARY_INDEX_ARG"=<spectrumIndexLow>[,<spectrumIndexHigh>] | "BINARY_SCAN_ARG"=<scanNumberLow>[,<scanNumberHigh>] ["BINARY_PRECISION_ARG"=<precision>]";}
+
+    static const char* description() {return "write binary data for selected spectra";}
 
     static std::vector<std::string> argsUsage() 
     {
         std::vector<std::string> result;
-        result.push_back("sn: interpret as scan number, not index");
-        result.push_back("precision=d: write d decimal places");
+        result.push_back(BINARY_INDEX_ARG": write data for spectra in this index range");
+        result.push_back(BINARY_SCAN_ARG": write data for spectra in this scan number range");
+        result.push_back(BINARY_PRECISION_ARG": write d decimal places");
         return result;
     }
 };

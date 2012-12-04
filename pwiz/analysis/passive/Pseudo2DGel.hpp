@@ -105,6 +105,7 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
         /// PeptideID object to retrieve peptide id's from. If the
         /// object exists, it will be queried for peptide
         /// locations. 
+        string peptide_id_filename;
         boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id;
 
         /// The shape used for pseudo2d gel markups.
@@ -119,9 +120,31 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
         Config(const std::string& args);
         Config(const std::string& args,
                boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id);
+        void init();
 
         /// parses a keyword/value string to set instance variables.
         void process(const std::string& args);
+
+        bool operator==(const Config &rhs) const
+        {
+         return
+         // label == rhs.label; meant to be unique, actually
+         (mzLow == rhs.mzLow ) &&
+         (mzHigh == rhs.mzHigh ) &&
+         (timeScale == rhs.timeScale ) &&
+         (binCount == rhs.binCount ) &&
+         (zRadius == rhs.zRadius ) &&
+         (bry == rhs.bry ) &&
+         (grey == rhs.grey ) &&
+         (binSum == rhs.binSum ) &&
+         (ms2 == rhs.ms2 ) &&
+         (positiveMs2Only == rhs.positiveMs2Only ) &&
+         (binScan == rhs.binScan ) &&
+         (peptide_id_filename == rhs.peptide_id_filename ) && 
+         (markupShape == rhs.markupShape ) &&
+         (output_width == rhs.output_width ) &&
+         (output_height == rhs.output_height);
+        }
     };
 
     Pseudo2DGel(const MSDataCache& cache, const Config& config);
@@ -144,7 +167,6 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
     boost::shared_ptr<Impl> impl_;
     Pseudo2DGel(Pseudo2DGel&);
     Pseudo2DGel& operator=(Pseudo2DGel&);
-
     friend struct prob_comp;
 };
 
@@ -154,27 +176,27 @@ struct analyzer_strings<Pseudo2DGel>
 {
     static const char* id() {return "image";}
     static const char* description() {return "create pseudo-2D-gel image";}
-    static const char* argsFormat() {return "[args]";}
+    static const char* argsFormat() {return "[args - see list]";}
     static std::vector<std::string> argsUsage()
     {
         std::vector<std::string> result;
-        result.push_back("label=xxxx (set filename label to xxxx)");
-        result.push_back("mzLow=N (set low m/z cutoff)");
-        result.push_back("mzHigh=N (set high m/z cutoff)");
-        result.push_back("timeScale=N (set scaling factor for time axis)");
-        result.push_back("binCount=N (set histogram bin count)");
-        result.push_back("zRadius=N (set intensity function z-score radius [=2])");
+        result.push_back("args:");
+        result.push_back("label=<xxxx> (set filename label to xxxx)");
+        result.push_back("mz=<mzLow>[,<mzHigh>] (set m/z cutoff range)");
+        result.push_back("timeScale=<N> (set scaling factor for time axis)");
+        result.push_back("binCount=<N> (set histogram bin count)");
+        result.push_back("zRadius=<N> (set intensity function z-score radius, default=2)");
         result.push_back("scan (render y-axis linear with scans)");
         result.push_back("time (render y-axis linear with time)");
         result.push_back("bry (use blue-red-yellow gradient)");
         result.push_back("grey (use grey-scale gradient)");
-        result.push_back("binSum (sum intensity in bins [default = max intensity])");
+        result.push_back("binSum (sum intensity in bins, else show max intensity)");
         result.push_back("ms2locs (indicate masses selected for ms2)");
-        result.push_back("pepxml=xxx (set ms2 id's from pepxml file xxx)");
-        result.push_back("msi=xxx (set ms2 id's from msinspect output file xxx)");
-        result.push_back("flat=xxx (set ms2 id's from tab delim file xxx)");
-        result.push_back("width=xxx (set image width to xxx pixels [default is calculated])");
-        result.push_back("height=yyy (set image height to yyy pixels [default is calculated])");
+        result.push_back("pepxml=<xxx> (set ms2 id's from pepxml file xxx)");
+        result.push_back("msi=<xxx> (set ms2 id's from msinspect output file xxx)");
+        result.push_back("flat=<xxx> (set ms2 id's from tab delim file xxx)");
+        result.push_back("width=<xxx> (set image width to xxx pixels, default is calculated)");
+        result.push_back("height=<yyy> (set image height to yyy pixels, default is calculated)");
         return result; 
     }
 };

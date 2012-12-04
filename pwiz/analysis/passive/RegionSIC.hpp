@@ -49,6 +49,14 @@ class PWIZ_API_DECL RegionSIC : public MSDataAnalyzer
         RadiusUnits radiusUnits;
 
         Config(const std::string& args); 
+
+        bool operator==(const Config &rhs) 
+        {
+            return mzCenter==rhs.mzCenter &&
+                radius == rhs.radius &&
+                radiusUnits == rhs.radiusUnits &&
+                delim_equal(rhs);
+        }
     };
 
     RegionSIC(const MSDataCache& cache, const Config& config);
@@ -78,8 +86,19 @@ struct analyzer_strings<RegionSIC>
 {
     static const char* id() {return "sic";}
     static const char* description() {return "write selected ion chromatogram for an m/z and radius";}
-    static const char* argsFormat() {return "["TABULARCONFIG_DELIMITER_OPTIONS_STR"] mzCenter radius (\"amu\"|\"ppm\")";}
-    static std::vector<std::string> argsUsage() {return std::vector<std::string>(1, TABULARCONFIG_DELIMITER_USAGE_STR);}
+#define SIC_MZCENTER_ARG "mzCenter"
+#define SIC_RADIUS_ARG "radius"
+#define SIC_RADIUSUNITS_ARG "radiusUnits"
+    static const char* argsFormat() {return SIC_MZCENTER_ARG"=<mz> "SIC_RADIUS_ARG"=<radius> "SIC_RADIUSUNITS_ARG"=<amu|ppm> ["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
+    static std::vector<std::string> argsUsage() 
+    {
+        std::vector<std::string> usage;
+        usage.push_back(SIC_MZCENTER_ARG": set mz value");
+        usage.push_back(SIC_RADIUS_ARG": set radius value");
+        usage.push_back(SIC_RADIUSUNITS_ARG": set units for radius value (must be amu or ppm)");
+        usage.push_back(TABULARCONFIG_DELIMITER_USAGE_STR);
+        return usage;
+    }
 };
 
 

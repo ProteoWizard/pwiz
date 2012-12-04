@@ -42,6 +42,20 @@ PWIZ_API_DECL RegionTIC::Config::Config(const string& args)
     vector<string> tokens;
     istringstream iss(args);
     copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+
+    // look for newer style args
+    bool newstyle = false;
+    BOOST_FOREACH(const string& token, tokens)
+    {
+        if (checkDelimiter(token))
+            ; // valid delimiter=...
+        else
+            newstyle = parseRange(TIC_MZRANGE_ARG,token,mzRange,"RegionTIC::Config");
+    }
+    if (newstyle)
+        return; // we're done.
+
+    // look for traditional, less cohesive style args
     size_t rangeFirst = 0;
     if(tokens.size() && checkDelimiter(tokens[0])) 
     {

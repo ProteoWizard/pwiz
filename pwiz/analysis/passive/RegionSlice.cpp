@@ -31,43 +31,7 @@
 
 namespace pwiz {
 namespace analysis {
-
-
-using boost::bad_lexical_cast;
-
-
-namespace {
-template <typename value_type>
-bool parseRange(const string& text, pair<value_type,value_type>& result)
-{
-    string::size_type indexComma = text.find(',');
-
-    if (text.empty() ||
-        text[0] != '[' || 
-        text[text.size()-1] != ']' ||
-        indexComma == string::npos)
-    {
-        cerr << "[RegionSlice::parseRange()] Unable to parse range: " << text << endl;
-        return false;
-    }
     
-    try
-    {
-        string first = text.substr(1, indexComma-1);
-        string second = text.substr(indexComma+1, text.size()-indexComma-2);
-        result.first = lexical_cast<value_type>(first);
-        result.second = lexical_cast<value_type>(second);
-        return true;
-    }
-    catch (bad_lexical_cast&)
-    {
-        cerr << "[RegionSlice::parseRange()] Unable to parse range: " << text << endl;
-        return false;
-    }
-}
-} // namespace
-
-
 PWIZ_API_DECL RegionSlice::Config::Config(const string& args)
 {
     mzRange = make_pair(0, numeric_limits<double>::max());
@@ -89,26 +53,22 @@ PWIZ_API_DECL RegionSlice::Config::Config(const string& args)
         {
            // that was a valid delimiter arg
         }
-        else if (it->find("mz=[")==0)
+        else if (parseRange("mz", *it, mzRange, "RegionSlice::Config"))
         {
-            if (parseRange(it->substr(3), mzRange))
                 suffix << ".mz_" << fixed << setprecision(4) << mzRange.first 
                        << "-" << mzRange.second;
         }
-        else if (it->find("rt=[")==0)
+        else if (parseRange("rt", *it, rtRange, "RegionSlice::Config"))
         {
-            if (parseRange(it->substr(3), rtRange))
                 suffix << ".rt_" << fixed << setprecision(2) << rtRange.first 
                        << "-" << rtRange.second;
         }
-        else if (it->find("index=[")==0)
+        else if (parseRange("index", *it, indexRange, "RegionSlice::Config"))
         {
-            if (parseRange(it->substr(6), indexRange))
                 suffix << ".index_" << indexRange.first << "-" << indexRange.second;
         }
-        else if (it->find("sn=[")==0)
+        else if (parseRange("sn", *it, scanNumberRange, "RegionSlice::Config"))
         {
-            if (parseRange(it->substr(3), scanNumberRange))
                 suffix << ".sn_" << scanNumberRange.first << "-" << scanNumberRange.second;
         }
         else

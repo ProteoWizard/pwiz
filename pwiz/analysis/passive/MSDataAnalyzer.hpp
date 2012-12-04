@@ -27,6 +27,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <iosfwd>
 
 
@@ -184,6 +185,85 @@ class PWIZ_API_DECL MSDataAnalyzerDriver
     MSDataAnalyzer& analyzer_;
 };
 
+// helper function for argument parsing
+// return true iff text contains desiredArg followed by '=' and
+// a range of form [a,b] or [a] or a,b or a or [a-b] or a-b
+// iff true then populates result 
+template <typename value_type>
+bool parseRange(const std::string &desiredArg, const std::string& text, std::pair<value_type,value_type>& result, const std::string& callerName)
+{
+    if (!text.compare(0,desiredArg.size()+1,desiredArg+"="))
+    {
+        std::string val = text.substr(desiredArg.size()+1);
+        std::string::size_type indexPairSeperator = val.find(',');
+        if (std::string::npos == indexPairSeperator)
+        {   // no comma, perhaps a dash instead?
+            indexPairSeperator = val.find('-');
+            if (0==indexPairSeperator) // assume that's just a negative value
+            {
+                indexPairSeperator = string::npos;
+            }
+        }
+        int bracket =  (val[0] == '[')?1:0;
+        if (val.empty() ||
+           ((bracket!=0) && val[val.size()-1] != ']'))
+        {
+            std::cerr << "[" << callerName << "] Unable to parse range: " << text << endl;
+            return false;
+        }
+    
+        try
+        {
+            if (std::string::npos == indexPairSeperator) 
+            {   // form "<start>", read as "<start>-<start>"
+                std::string first = val.substr(bracket,val.size()-(2*bracket));
+                result.first = result.second = lexical_cast<value_type>(first);
+            }
+            else
+            {   // form "<start>-<end>" or "<start>-" 
+                std::string first = val.substr(bracket, indexPairSeperator);
+                std::string second = val.substr(indexPairSeperator+1, val.size()-indexPairSeperator-(1+bracket));
+                result.first = lexical_cast<value_type>(first);
+                if (second.size()) // form "<start>-<end>"
+                    result.second = lexical_cast<value_type>(second);
+                else  // form "<start>-", assume that's "<start>-maxval"
+                    result.second = numeric_limits<value_type>::max();
+            }
+            return true;
+        }
+        catch (boost::bad_lexical_cast&)
+        {
+            std::cerr << "[" << callerName << "] Unable to parse range: " << text << endl;
+        }
+    }
+
+    return false;
+}
+template <typename value_type>
+bool parseValue(const std::string &desiredArg, const std::string& text, value_type& result, const std::string& callerName)
+{
+    if (!text.compare(0,desiredArg.size()+1,desiredArg+"="))
+    {
+        std::string val = text.substr(desiredArg.size()+1);
+        if (val.empty())
+        {
+            std::cerr << "[" << callerName << "] Unable to parse value: " << text << endl;
+            return false;
+        }
+    
+        try
+        {
+            result = lexical_cast<value_type>(val);
+            return true;
+        }
+        catch (boost::bad_lexical_cast&)
+        {
+            std::cerr << "[" << callerName << "] Unable to parse value: " << text << endl;
+        }
+    }
+
+    return false;
+}
 
 } // namespace analysis 
 } // namespace pwiz

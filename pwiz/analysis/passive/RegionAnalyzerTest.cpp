@@ -171,18 +171,59 @@ void testConfig(const RegionAnalyzer::Config& config)
 }
 
 
+// verify that changes to unify args for various configs retain backward compatiblity
+#include "RegionSIC.hpp"
+#include "RegionTIC.hpp"
+#include "RegionSlice.hpp"
+#include "RunSummary.hpp"
+#include "SpectrumBinaryData.hpp"
+#include "Pseudo2DGel.hpp"
+void testAnalyzerFamilyArgumentBackwardCompatibility()
+{
+    if (os_) *os_ << "test for backward compatible commandline args:\n"; 
+    RegionSIC::Config sicOld("100 5 amu"); //  mzCenter radius ("amu"|"ppm")
+    RegionSIC::Config sicNew(SIC_MZCENTER_ARG"=100 "SIC_RADIUS_ARG"=5 "SIC_RADIUSUNITS_ARG"=amu");
+    unit_assert(sicOld == sicNew);
+
+    RegionTIC::Config ticOld("delimiter=space 100 200"); //  mzlow mzhigh
+    RegionTIC::Config ticNew1(TIC_MZRANGE_ARG"=100-200 delimiter=space");
+    RegionTIC::Config ticNew2(TIC_MZRANGE_ARG"=100,200 delimiter=space");
+    RegionTIC::Config ticNew3(TIC_MZRANGE_ARG"=[100,200] delimiter=space");
+    RegionTIC::Config ticNew4(TIC_MZRANGE_ARG"=[100,200]");
+    unit_assert(ticOld == ticNew1);
+    unit_assert(ticNew1 == ticNew2);
+    unit_assert(ticNew2 == ticNew3);
+    unit_assert(!(ticNew3 == ticNew4));
+
+    RegionSlice::Config sliceOld("mz=[20,30] rt=[23,67] index=[45,66]");
+    RegionSlice::Config sliceNew("mz=20,30 rt=23,67 index=45,66");
+    unit_assert(sliceOld==sliceNew);
+
+    SpectrumBinaryData::Config binaryOld("6- sn precision=4");    
+    SpectrumBinaryData::Config binaryNew("sn=[6,] precision=4");    
+    unit_assert(binaryOld==binaryNew);
+    SpectrumBinaryData::Config binaryOld1("4-9 precision=5");    
+    SpectrumBinaryData::Config binaryNew1("precision=5 index=4,9");    
+    unit_assert(binaryOld1==binaryNew1);
+
+    Pseudo2DGel::Config gelOld("mzLow=50 mzHigh=500");
+    Pseudo2DGel::Config gelNew("mz=50,500");
+    unit_assert(gelOld==gelNew);
+}
+
 void test()
 {
     // test for each output delimiter type
-    std::vector<std::string> options;
+    std::vector<std::string> delimiter_options;
     std::vector<std::string> outputs;
     std::string delimiter_help(TABULARCONFIG_DELIMITER_OPTIONS_STR);
-    boost::algorithm::split(options, delimiter_help, boost::algorithm::is_any_of("=|") );
+    boost::algorithm::split(delimiter_options, delimiter_help, boost::algorithm::is_any_of("<|>") );
     
-    for (int n=1; n<(int)options.size(); n++)
+    // "delimiter=","fixed","space","comma","tab",""
+    for (int n=1; n<(int)delimiter_options.size() &&  delimiter_options[n].size(); n++)
     {
     std::ostringstream txtstream;
-    std::string delim = options[0] + "=" + options[n];
+    std::string delim = delimiter_options[0] + delimiter_options[n];
     if (os_) *os_ << "test with delimiter style " << delim <<":\n"; 
 
     if (os_) *os_ << "test index:\n"; 
@@ -248,6 +289,9 @@ void test()
     {
         unit_assert(outputs[delimtype]==outputs[delimtype-1]);
     }
+
+    // verify that changes to text based configs retains backward compatiblity
+    testAnalyzerFamilyArgumentBackwardCompatibility();
 }
 
 
@@ -268,7 +312,7 @@ int main(int argc, char* argv[])
     {
         TEST_FAILED("Caught unknown exception.")
     }
-
+    
     TEST_EPILOG
 }
 

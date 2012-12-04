@@ -27,7 +27,7 @@
 #include <string>
 
 // for ease of extending this list and getting the usage statements right everywhere
-#define TABULARCONFIG_DELIMITER_OPTIONS_STR "delimiter=fixed|space|comma|tab"
+#define TABULARCONFIG_DELIMITER_OPTIONS_STR "delimiter=<fixed|space|comma|tab>"
 #define TABULARCONFIG_DELIMITER_USAGE_STR "delimiter: sets column separation; default is fixed width"
 
 
@@ -49,7 +49,9 @@ struct PWIZ_API_DECL TabularConfig
     char getDelimiterChar() const;
     std::string getFileExtension() const;
     bool checkDelimiter(const std::string& arg); // set delimiter_ and return true iff arg is a valid delimiter setting 
-
+    void copyDelimiterConfig(const TabularConfig &rhs) {delimiter_ = rhs.delimiter_;};
+    bool delim_equal(const TabularConfig &rhs) const { return delimiter_==rhs.delimiter_;};
+    bool operator==(const TabularConfig &rhs) const {return delim_equal(rhs);};
  protected:
     TabularConfig();
     Delimiter delimiter_; // gets set by checkDelimiter()

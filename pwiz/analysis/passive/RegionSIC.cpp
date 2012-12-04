@@ -42,18 +42,44 @@ PWIZ_API_DECL RegionSIC::Config::Config(const string& args)
     vector<string> tokens;
     istringstream iss(args);
     copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
-    size_t rangeFirst = 0;
-    if(tokens.size() && checkDelimiter(tokens[0])) 
-    {
-        rangeFirst++; // that was a valid delimter arg
-    }
-    if (tokens.size() != rangeFirst+3)
-        throw runtime_error(("[RegionSIC::Config] Invalid args: " + args).c_str());
 
-    mzCenter = lexical_cast<double>(tokens[rangeFirst]);
-    radius = lexical_cast<double>(tokens[rangeFirst+1]);
-    if (tokens[rangeFirst+2]=="amu") radiusUnits = RadiusUnits_amu;
-    if (tokens[rangeFirst+2]=="ppm") radiusUnits = RadiusUnits_ppm;
+    // look for newer style args
+    int nParsed = 0;
+    string radiusUnitsVal;
+    BOOST_FOREACH(const string& token, tokens)
+    {
+        if (checkDelimiter(token))
+            ; // that was delimiter=...
+        else if (parseValue(SIC_MZCENTER_ARG,token,mzCenter,"RegionSIC::Config"))
+           nParsed++;
+        else if (parseValue(SIC_RADIUS_ARG,token,radius,"RegionSIC::Config"))
+           nParsed++;
+        else if (parseValue(SIC_RADIUSUNITS_ARG,token,radiusUnitsVal,"RegionSIC::Config"))
+        {
+           nParsed++;
+           if (radiusUnitsVal=="amu") radiusUnits = RadiusUnits_amu;
+           else if (radiusUnitsVal=="ppm") radiusUnits = RadiusUnits_ppm;
+           else std::cerr << "unknown " << SIC_RADIUSUNITS_ARG << " value " << radiusUnitsVal;
+        }
+        else
+            nParsed = 999; // fall through to old style
+    }
+    if (nParsed!=3)
+    {
+        // look for traditional, less cohesive style args    
+        size_t rangeFirst = 0;
+        if(tokens.size() && checkDelimiter(tokens[0])) 
+        {
+            rangeFirst++; // that was a valid delimter arg
+        }
+        if (tokens.size() != rangeFirst+3)
+            throw runtime_error(("[RegionSIC::Config] Invalid args: " + args).c_str());
+
+        mzCenter = lexical_cast<double>(tokens[rangeFirst]);
+        radius = lexical_cast<double>(tokens[rangeFirst+1]);
+        if (tokens[rangeFirst+2]=="amu") radiusUnits = RadiusUnits_amu;
+        if (tokens[rangeFirst+2]=="ppm") radiusUnits = RadiusUnits_ppm;
+    }
 
     if (radiusUnits == RadiusUnits_Unknown)
         throw runtime_error(("[RegionSIC::Config] Invalid args: " + args).c_str());
@@ -64,6 +90,7 @@ PWIZ_API_DECL RegionSIC::RegionSIC(const MSDataCache& cache, const Config& confi
 :   cache_(cache), config_(config)
 {
     RegionAnalyzer::Config regionAnalyzerConfig;
+    regionAnalyzerConfig.copyDelimiterConfig(config);
     double delta = config.radius;
     if (config.radiusUnits == Config::RadiusUnits_ppm)
         delta *= config.mzCenter * 1e-6; 
@@ -72,7 +99,7 @@ PWIZ_API_DECL RegionSIC::RegionSIC(const MSDataCache& cache, const Config& confi
     regionAnalyzerConfig.dumpRegionData = true;
 
     ostringstream suffix;
-    suffix << ".sic." << fixed << setprecision(4) << config.mzCenter << ".data.txt";
+    suffix << ".sic." << fixed << setprecision(4) << config.mzCenter << ".data"+config_.getFileExtension();
     regionAnalyzerConfig.filenameSuffix = suffix.str(); 
     
     regionAnalyzer_ = shared_ptr<RegionAnalyzer>(new RegionAnalyzer(regionAnalyzerConfig, cache));

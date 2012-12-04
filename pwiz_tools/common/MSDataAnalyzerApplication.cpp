@@ -65,7 +65,7 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
             ": configuration file (containing settings as optionName=value)")
         ("exec,x", 
             po::value< vector<string> >(&commands),
-            ": execute command, e.g --exec \"tic 409 410\"")
+            ": execute command, e.g --exec \"tic mz=409-412\"")
         ("filter",
             po::value< vector<string> >(&filters),
 			(": add a spectrum list filter, e.g. --filter=\"msLevel [2,3]\"\n" + SpectrumListFactory::usage()).c_str())

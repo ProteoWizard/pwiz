@@ -50,19 +50,35 @@ using std::min;
 
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config()
-:   mzLow(200), mzHigh(2000), timeScale(1.0), binCount(640),
-    zRadius(2), bry(false), grey(false), binSum(false), ms2(false), 
-    output_width(-1), output_height(-1)
-    
+   
 {
+    init();
 }
 
 PWIZ_API_DECL Pseudo2DGel::Config::Config(const string& args)
-:   mzLow(200), mzHigh(2000), timeScale(1.0), binCount(640),
-    zRadius(2), bry(false), grey(false), binSum(false), ms2(false),
-    output_width(-1), output_height(-1)
 {
+    init();
     process(args);
+}
+
+void Pseudo2DGel::Config::init()
+{
+    mzLow=200;
+    mzHigh=2000;
+    timeScale=1.0;
+    binCount=640;
+    zRadius=2;
+    bry=false;
+    grey=false;
+    binSum=false;
+    ms2=false;
+    output_width=-1;
+    output_height=-1;
+    positiveMs2Only = false;
+    binScan = false;
+    markupShape = circle;
+    label = "";
+    peptide_id_filename = "";
 }
 
 void Pseudo2DGel::Config::process(const std::string& args)
@@ -73,11 +89,17 @@ void Pseudo2DGel::Config::process(const std::string& args)
 
     static int count = 0;
     label = lexical_cast<string>(count++);
+    std::pair<float,float> mzrange;
 
     for (vector<string>::iterator it=tokens.begin(); it!=tokens.end(); ++it)
     {
         if (it->find("label=") == 0)
             label = it->substr(6);
+        else if (parseRange("mz",*it,mzrange,"Pseudo2DGel::Config"))
+        {
+            mzLow = mzrange.first;
+            mzHigh = mzrange.second;
+        }
         else if (it->find("mzLow=") == 0)
             mzLow = (float)atof(it->c_str()+6);
         else if (it->find("mzHigh=") == 0)
@@ -107,14 +129,14 @@ void Pseudo2DGel::Config::process(const std::string& args)
         else if (*it == "shape")
             markupShape = (it->substr(6) == "square" ? square : circle);
         else if (it->find("pepxml=") == 0)
-            peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(it->c_str()+7));
+            peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(peptide_id_filename=(it->c_str()+7)));
         else if (it->find("msi=") == 0)
             peptide_id = shared_ptr<PeptideID>(
-                new PeptideID_flat(it->c_str()+4,
+                new PeptideID_flat(peptide_id_filename=(it->c_str()+4),
                                    shared_ptr<FlatRecordBuilder>(new MSInspectRecordBuilder())));
         else if (it->find("flat=") == 0)
             peptide_id = shared_ptr<PeptideID>(
-                new PeptideID_flat(it->c_str()+5,
+                new PeptideID_flat(peptide_id_filename=(it->c_str()+5),
                                    shared_ptr<FlatRecordBuilder>(new FlatRecordBuilder())));
         else if (it->find("width=") == 0)
             output_width = atoi(it->c_str()+6);
@@ -381,7 +403,7 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
         {
             if (!warnedAnalyzer)
             {
-                cout << "[Pseudo2DGel::Impl::update] unknown mass analyzer type, assuming ion trap" << endl;
+            cout << "[Pseudo2DGel::Impl::update] unknown mass analyzer type, assuming ion trap" << endl;
                 warnedAnalyzer = true;
             }
             massAnalyzerType = MS_ion_trap;

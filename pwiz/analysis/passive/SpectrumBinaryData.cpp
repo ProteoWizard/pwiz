@@ -45,6 +45,30 @@ PWIZ_API_DECL SpectrumBinaryData::Config::Config(const std::string& args)
     vector<string> tokens;
     copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
 
+    // look for newer style args
+    bool newstyle = true;
+    std::pair<size_t,size_t> begin_end;
+    BOOST_FOREACH(const string& token, tokens)
+    {
+        if (parseRange(BINARY_INDEX_ARG,token,begin_end,"SpectrumBinaryData"))
+            interpretAsScanNumbers = false;
+        else if (parseRange(BINARY_SCAN_ARG,token,begin_end,"SpectrumBinaryData"))
+            interpretAsScanNumbers = true;
+        else if (parseValue(BINARY_PRECISION_ARG,token,precision,"SpectrumBinaryData"))
+            ;
+        else
+            newstyle = false;
+    }
+    if (newstyle) 
+    {
+        begin = begin_end.first;
+        end = begin_end.second;
+        if (numeric_limits<size_t>::max() != end)
+            end++;  // internally the end range is exclusive
+        return; // we're done
+    }
+
+    // assume old style less consistent arg style
     for (vector<string>::const_iterator it=tokens.begin(); it!=tokens.end(); ++it)
     {
         if (*it == "sn")
