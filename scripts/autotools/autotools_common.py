@@ -15,7 +15,7 @@ def get_pwizroot() :
     return pwizroot
 
 # we want to deal in straight up code that could be found on any platform
-forbidden=set(["bindings","mz5","Image.cpp","COM","automation_vector","Pseudo2DGel","pwiz_tools\\commandline","\\utility\\misc\\sha1calc.cpp"])
+forbidden=set(["bindings","mz5","Image.cpp","COM","automation_vector","Pseudo2DGel","pwiz_tools\\commandline","\\utility\\misc\\sha1calc.cpp","RegionAnalyzerTest"])
 excepted=set(["pwiz_tools\\commandline\\msconvert","pwiz_tools\\commandline\\idconvert","pwiz_tools\\commandline\\pepcat","\\Version."])
 welcomeIncludes=set(["pwiz\\pwiz","pwiz\\data","libraries\\zlib","libraries\\libsvm","libraries\\boost_aux"])
 welcomeSrcDirs=set(["pwiz\\data","pwiz\\analysis","pwiz\\utility","pwiz_tools\\examples\\"])
