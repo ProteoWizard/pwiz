@@ -229,14 +229,21 @@ namespace BumberDash.lib
                                   {
                                       StartInfo = psi
                                   };
+
+            _runningProgram.Start();
+            _runningProgram.PriorityClass = ProcessPriorityClass.BelowNormal;
+            _runningProgram.BeginOutputReadLine();
             _runningProgram.OutputDataReceived += DataReceived;
+            _runningProgram.BeginErrorReadLine();
             _runningProgram.ErrorDataReceived += ErrorCaught;
             _runningProgram.Exited += (x, y) =>
             {
                 var bgWait = new BackgroundWorker();
                 bgWait.DoWork += (zzz, e) =>
                 {
-                    Thread.Sleep(500);
+                    SendToLog(" ---Program exit detected---");
+                    Thread.Sleep(100);
+                    SendToLog(" ---Calculating results---");
                     var a = ((object[])e.Argument)[0];
                     var b = (EventArgs)((object[])e.Argument)[1];
                     ProgramExited(a, b);
@@ -244,11 +251,6 @@ namespace BumberDash.lib
                 bgWait.RunWorkerAsync(new object[] { x, y });
                 //ProgramExited(x,y);
             };
-
-            _runningProgram.Start();
-            _runningProgram.PriorityClass = ProcessPriorityClass.BelowNormal;
-            _runningProgram.BeginOutputReadLine();
-            _runningProgram.BeginErrorReadLine();
             
         }
 
