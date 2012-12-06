@@ -221,7 +221,7 @@ bool parseRange(const std::string &desiredArg, const std::string& text, std::pai
             }
             else
             {   // form "<start>-<end>" or "<start>-" 
-                std::string first = val.substr(bracket, indexPairSeperator);
+                std::string first = val.substr(bracket, indexPairSeperator-bracket);
                 std::string second = val.substr(indexPairSeperator+1, val.size()-indexPairSeperator-(1+bracket));
                 result.first = lexical_cast<value_type>(first);
                 if (second.size()) // form "<start>-<end>"
