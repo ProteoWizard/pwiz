@@ -1754,10 +1754,7 @@ namespace tagrecon
 				//int peakCountCap = (float) memoryUsageCap / ( sizeof( peakPreInfo ) + sizeof( peakInfo ) );
 				//cout << g_hostString << " sets memory usage ceiling at " << memoryUsageCap << ", or about " << peakCountCap << " total peaks." << endl;
 
-				// Read runtime variables and source data filepath from tags file (but not the tags)
-				RunTimeVariableMap varsFromFile(	"NumChargeStates DynamicMods StaticMods UseAvgMassOfSequences "
-													"DuplicateSpectra UseChargeStateFromMS PrecursorMzTolerance "
-											 		"FragmentMzTolerance TicCutoffPercentage" );
+				// Read source data filepath from tags file (but not the tags)
 				string sourceFilepath;
                 if( g_rtConfig->MassReconMode )
                     // Treat input files as peak files
@@ -1781,9 +1778,6 @@ namespace tagrecon
                         continue;
                     }
                 }
-
-				// Set the parameters for the search
-				g_rtConfig->setVariables( varsFromFile );
 
 				// Read peaks from the source data of the tags file
 				spectra.readPeaks( sourceFilepath, 0, -1, 2, g_rtConfig->SpectrumListFilters );
