@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
@@ -1123,12 +1124,10 @@ namespace pwiz.Skyline.Model
                 if (info.Area == 0)
                     return;
 
-                float area;
                 var key = new TransitionKey(nodeTran.Transition);
-                if (!TranAreas.TryGetValue(key, out area))
-                    TranAreas.Add(key, info.Area);
-                else
-                    TranAreas[key] = area + info.Area;
+                if (TranAreas.ContainsKey(key))
+                    throw new ArgumentException(String.Format("Duplicate transition '{0}' found for peak areas ", nodeTran.Transition));
+                TranAreas.Add(key, info.Area);
             }
 
             public PeptideChromInfo CalcChromInfo(int transitionGroupCount)
@@ -1251,6 +1250,7 @@ namespace pwiz.Skyline.Model
         {
             private readonly IonType _ionType;
             private readonly int _ionOrdinal;
+            private readonly int _massIndex;
             private readonly int _charge;
             private readonly int _precursorCharge;
             private readonly IsotopeLabelType _labelType;
@@ -1264,6 +1264,7 @@ namespace pwiz.Skyline.Model
             {
                 _ionType = transition.IonType;
                 _ionOrdinal = transition.Ordinal;
+                _massIndex = transition.MassIndex;
                 _charge = transition.Charge;
                 _precursorCharge = transition.Group.PrecursorCharge;
                 _labelType = labelType;
@@ -1273,6 +1274,7 @@ namespace pwiz.Skyline.Model
             {
                 _ionType = key._ionType;
                 _ionOrdinal = key._ionOrdinal;
+                _massIndex = key._massIndex;
                 _charge = key._charge;
                 _precursorCharge = key._precursorCharge;
                 _labelType = labelType;
@@ -1287,6 +1289,7 @@ namespace pwiz.Skyline.Model
             {
                 return Equals(other._ionType, _ionType) &&
                        other._ionOrdinal == _ionOrdinal &&
+                       other._massIndex == _massIndex &&
                        other._charge == _charge &&
                        other._precursorCharge == _precursorCharge &&
                        Equals(other._labelType, _labelType);
@@ -1305,6 +1308,7 @@ namespace pwiz.Skyline.Model
                 {
                     int result = _ionType.GetHashCode();
                     result = (result*397) ^ _ionOrdinal;
+                    result = (result*397) ^ _massIndex;
                     result = (result*397) ^ _charge;
                     result = (result*397) ^ _precursorCharge;
                     result = (result*397) ^ _labelType.GetHashCode();
