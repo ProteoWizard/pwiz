@@ -122,6 +122,10 @@ int main(int argc, char* argv[])
                                                progress_cptr);
                 success = pilotReader.parseFile();
                 
+            } else if (has_extension(result_file, ".pride.xml")) {
+                PrideXmlReader prideXmlReader(builder, result_file, progress_cptr);
+
+                success = prideXmlReader.parseFile();
             } else if (has_extension(result_file, ".mzid")) {
                 MzIdentMLReader mzidReader(builder, result_file, progress_cptr);
                 success = mzidReader.parseFile();

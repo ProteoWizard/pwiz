@@ -93,6 +93,7 @@ lib blibbuild
     MzIdentMLReader.cpp
     PepXMLreader.cpp
     PercolatorXmlReader.cpp
+    PrideXmlReader.cpp
     ProteinPilotReader.cpp
     saxhandler.cpp
     SQTreader.cpp
