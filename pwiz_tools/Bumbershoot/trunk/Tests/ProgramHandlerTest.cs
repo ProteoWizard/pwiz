@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 using BumberDash.lib;
 using BumberDash.Model;
@@ -126,8 +127,10 @@ namespace Tests
             RunFile(neededFile,neededDB,string.Empty,destinationProgram);
         }
 
+        private StringBuilder log;
         private void RunFile(string neededFile, string neededDB, string neededLibrary, string destinationProgram)
         {
+            log= new StringBuilder();
             var errorFound = false;
             var waitHandle = new AutoResetEvent(false);
             var target = new ProgramHandler();
@@ -170,8 +173,7 @@ namespace Tests
                               };
 
             //set end event
-            if (destinationProgram == JobType.Tag)
-                target.JobFinished = (x, y) =>
+            target.JobFinished = (x, y) =>
                 {
                     errorFound = y;
                     if (!errorFound && x)
@@ -179,12 +181,8 @@ namespace Tests
                     else
                         waitHandle.Set(); // signal that the finished event was raised
                 };
-            else
-                target.JobFinished = (x, y) =>
-                {
-                    errorFound = y;
-                    waitHandle.Set(); // signal that the finished event was raised
-                };
+            target.LogUpdate = x => log.AppendLine(x);
+            target.ErrorForward = x => log.AppendLine(x);
 
             // call the async method
             target.StartNewJob(0, hi);
@@ -192,9 +190,12 @@ namespace Tests
             // Wait until the event handler is invoked);
             if (!waitHandle.WaitOne(60000, false))
             {
-                Assert.Fail("Test timed out.");
+                var logstring1 = log.ToString();
+                if (logstring1 != "Test Case")
+                    Assert.Fail("Test timed out." + Environment.NewLine + logstring1);
             }
-            Assert.IsFalse(errorFound, "Not as many output files as input");
+            var logstring = log.ToString();
+            Assert.IsFalse(errorFound, "Not as many output files as input" + Environment.NewLine + logstring);
         }
 
         #region Myri Tests

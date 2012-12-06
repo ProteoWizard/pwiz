@@ -21,6 +21,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -228,13 +229,27 @@ namespace BumberDash.lib
                                   {
                                       StartInfo = psi
                                   };
+            _runningProgram.OutputDataReceived += DataReceived;
+            _runningProgram.ErrorDataReceived += ErrorCaught;
+            _runningProgram.Exited += (x, y) =>
+            {
+                var bgWait = new BackgroundWorker();
+                bgWait.DoWork += (zzz, e) =>
+                {
+                    Thread.Sleep(500);
+                    var a = ((object[])e.Argument)[0];
+                    var b = (EventArgs)((object[])e.Argument)[1];
+                    ProgramExited(a, b);
+                };
+                bgWait.RunWorkerAsync(new object[] { x, y });
+                //ProgramExited(x,y);
+            };
+
             _runningProgram.Start();
             _runningProgram.PriorityClass = ProcessPriorityClass.BelowNormal;
             _runningProgram.BeginOutputReadLine();
-            _runningProgram.OutputDataReceived += DataReceived;
             _runningProgram.BeginErrorReadLine();
-            _runningProgram.ErrorDataReceived += ErrorCaught;
-            _runningProgram.Exited += ProgramExited;
+            
         }
 
         private void ProgramExited(object sender, EventArgs e)
@@ -381,13 +396,38 @@ namespace BumberDash.lib
         /// <param name="e"></param>
         private void DataReceived(object sender, DataReceivedEventArgs e)
         {
+            if (e.Data == null)
+                return;
+
             if (_runningProgram == null || _runningProgram.HasExited)
             {
-                if (e.Data != null)
-                    SendToLog(e.Data);
+                var recievedLine = e.Data;
+                if (_destinationProgram == "DirecTag" && recievedLine.Contains("Writing tags to \""))
+                {
+                    var delimiter = new string[1];
+
+                    delimiter[0] = "Writing tags to \"";
+                    var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+                    var lineEnd = brokenLine[brokenLine.Length - 1];
+
+                    lineEnd = lineEnd.Remove(lineEnd.Length - 2);
+                    _completedFiles.Add(lineEnd);
+                }
+                else if (recievedLine.Contains("Writing search results to file"))
+                {
+                    var delimiter = new string[1];
+
+                    delimiter[0] = "Writing search results to file \"";
+                    var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+                    var lineEnd = brokenLine[brokenLine.Length - 1];
+
+                    lineEnd = lineEnd.Remove(lineEnd.Length - 2);
+                    _completedFiles.Add(lineEnd);
+                }
+                SendToLog(e.Data);
                 return;
             }
-            
+
             SendToLog(e.Data);
 
             switch (_destinationProgram)
