@@ -252,22 +252,33 @@ namespace IDPicker.Forms
             #region Constructor
             public TotalCounts (NHibernate.ISession session, DataFilter dataFilter)
             {
-                lock (session)
+                if (dataFilter.IsBasicFilter)
                 {
-                    var total = session.CreateQuery("SELECT " +
-                                                    "COUNT(DISTINCT pro.Cluster), " +
-                                                    "COUNT(DISTINCT pro.ProteinGroup), " +
-                                                    "COUNT(DISTINCT pro.id), " +
-                                                    "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) " +
-                                                    dataFilter.GetFilteredQueryString(DataFilter.FromProtein))
-                        .UniqueResult<object[]>();
+                    var totalCounts = dataFilter.PersistentDataFilter.TotalCounts;
+                    Clusters = totalCounts.Clusters;
+                    ProteinGroups = totalCounts.ProteinGroups;
+                    Proteins = totalCounts.Proteins;
+                    ProteinFDR = totalCounts.ProteinFDR;
+                }
+                else
+                {
+                    lock (session)
+                    {
+                        var total = session.CreateQuery("SELECT " +
+                                                        "COUNT(DISTINCT pro.Cluster), " +
+                                                        "COUNT(DISTINCT pro.ProteinGroup), " +
+                                                        "COUNT(DISTINCT pro.id), " +
+                                                        "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) " +
+                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein))
+                                           .UniqueResult<object[]>();
 
-                    Clusters = Convert.ToInt32(total[0]);
-                    ProteinGroups = Convert.ToInt32(total[1]);
-                    Proteins = Convert.ToInt32(total[2]);
-                    float decoyProteins = Convert.ToSingle(total[3]);
-                    // TODO: use correct target/decoy ratio
-                    ProteinFDR = 2 * decoyProteins / Proteins;
+                        Clusters = Convert.ToInt32(total[0]);
+                        ProteinGroups = Convert.ToInt32(total[1]);
+                        Proteins = Convert.ToInt32(total[2]);
+                        float decoyProteins = Convert.ToSingle(total[3]);
+                        // TODO: use correct target/decoy ratio
+                        ProteinFDR = 2 * decoyProteins / Proteins;
+                    }
                 }
             }
             #endregion
@@ -357,7 +368,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        public event ProteinViewFilterEventHandler ProteinViewFilter;
+        public event EventHandler<ViewFilterEventArgs> ProteinViewFilter;
         public event EventHandler<ProteinViewVisualizeEventArgs> ProteinViewVisualize;
 
         private TotalCounts totalCounts, basicTotalCounts;
@@ -777,7 +788,7 @@ namespace IDPicker.Forms
                 var newDataFilter = new DataFilter(dataFilter) { FilterSource = this };
                 newDataFilter.Cluster = new List<int> { (int) value };
 
-                ProteinViewFilter(this, newDataFilter);
+                ProteinViewFilter(this, new ViewFilterEventArgs(newDataFilter));
             }
             else if (e.ColumnIndex == proteinGroupColumn.Index && ProteinViewFilter != null)
             {
@@ -788,7 +799,7 @@ namespace IDPicker.Forms
                 var newDataFilter = new DataFilter(dataFilter) { FilterSource = this };
                 newDataFilter.ProteinGroup = new List<int> { (int) value };
 
-                ProteinViewFilter(this, newDataFilter);
+                ProteinViewFilter(this, new ViewFilterEventArgs(newDataFilter));
             }
         }
 
@@ -811,7 +822,7 @@ namespace IDPicker.Forms
                 newDataFilter.Protein = new List<Protein>() { (row as ProteinRow).Protein };
 
             if (ProteinViewFilter != null)
-                ProteinViewFilter(this, newDataFilter);
+                ProteinViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         void treeDataGridView_PreviewKeyDown (object sender, PreviewKeyDownEventArgs e)
@@ -852,7 +863,7 @@ namespace IDPicker.Forms
             if (selectedProteins.Count > 0) newDataFilter.Protein = selectedProteins.ToList();
 
             if (ProteinViewFilter != null)
-                ProteinViewFilter(this, newDataFilter);
+                ProteinViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         public override void SetData(NHibernate.ISession session, DataFilter dataFilter)
@@ -1156,7 +1167,7 @@ namespace IDPicker.Forms
                 { keyColumn, new ColumnProperty {Type = typeof(string)}},
                 { clusterColumn, new ColumnProperty {Type = typeof(int)}},
                 { countColumn, new ColumnProperty {Type = typeof(int)}},
-                { coverageColumn, new ColumnProperty {Type = typeof(float)}},
+                { coverageColumn, new ColumnProperty {Type = typeof(float), Precision = 2 }},
                 { proteinGroupColumn, new ColumnProperty {Type = typeof(int)}},
                 { distinctPeptidesColumn, new ColumnProperty {Type = typeof(int)}},
                 { distinctMatchesColumn, new ColumnProperty {Type = typeof(int)}},
@@ -1291,8 +1302,6 @@ namespace IDPicker.Forms
             return true;
         }
     }
-
-    public delegate void ProteinViewFilterEventHandler (ProteinTableForm sender, DataFilter proteinViewFilter);
 
     public class ProteinViewVisualizeEventArgs : EventArgs
     {

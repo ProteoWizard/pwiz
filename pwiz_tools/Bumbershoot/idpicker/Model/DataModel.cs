@@ -817,7 +817,7 @@ namespace IDPicker.DataModel
         /// Gets a single result from a query on the session matching the given expression.
         /// If the query returns more than one result, returns null.
         /// </summary>
-        public static T UniqueResult<T> (this ISession session, System.Linq.Expressions.Expression<Func<T, bool>> expression) where T : class
+        public static T UniqueResult<T> (this ISession session, System.Linq.Expressions.Expression<Func<T, bool>> expression)
         {
             return session.Query<T>().Where(expression).SingleOrDefault();
         }
@@ -826,7 +826,7 @@ namespace IDPicker.DataModel
         /// Gets a single result from a query on the session matching the given expression.
         /// If the query returns more than one result, returns null.
         /// </summary>
-        public static T UniqueResult<T> (this ISession session, string hql) where T : class
+        public static T UniqueResult<T> (this ISession session, string hql)
         {
             return session.CreateQuery(hql).UniqueResult<T>();
         }

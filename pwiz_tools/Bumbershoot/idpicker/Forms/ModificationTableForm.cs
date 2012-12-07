@@ -134,6 +134,9 @@ namespace IDPicker.Forms
             if (Math.Abs(clientPoint.X - dataGridView.RowHeadersWidth) < 5)
                 return;
 
+            if (e.RowIndex >= dataGridView.RowCount || e.ColumnIndex >= dataGridView.ColumnCount)
+                return;
+
             // clicking on top-left cell sorts by delta mass;
             // clicking on other column header sorts by count for the site
             if (e.RowIndex < 0)
@@ -278,7 +281,7 @@ namespace IDPicker.Forms
             //    throw new InvalidDataException("no modifications found at the rounded mass");
 
             // send filter event
-            ModificationViewFilter(this, newDataFilter);
+            ModificationViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         void dataGridView_KeyDown (object sender, KeyEventArgs e)
@@ -341,10 +344,10 @@ namespace IDPicker.Forms
                     .List<DataModel.Modification>();
 
             // send filter event
-            ModificationViewFilter(this, newDataFilter);
+            ModificationViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
-        public event ModificationViewFilterEventHandler ModificationViewFilter;
+        public event EventHandler<ViewFilterEventArgs> ModificationViewFilter;
         public event EventHandler FinishedSetData;
         public event EventHandler StartingSetData;
 
@@ -1237,6 +1240,4 @@ namespace IDPicker.Forms
         }
 
     }
-
-    public delegate void ModificationViewFilterEventHandler (ModificationTableForm sender, DataFilter modificationViewFilter);
 }

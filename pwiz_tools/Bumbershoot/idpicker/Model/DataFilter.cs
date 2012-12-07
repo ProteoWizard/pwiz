@@ -31,6 +31,52 @@ using NHibernate.Linq;
 
 namespace IDPicker.DataModel
 {
+    public class PersistentDataFilter : Entity<PersistentDataFilter>
+    {
+        public virtual double MaximumQValue { get; set; }
+        public virtual int MinimumDistinctPeptidesPerProtein { get; set; }
+        public virtual int MinimumSpectraPerProtein { get; set; }
+        public virtual int MinimumAdditionalPeptidesPerProtein { get; set; }
+        public virtual int MinimumSpectraPerDistinctMatch { get; set; }
+        public virtual int MinimumSpectraPerDistinctPeptide { get; set; }
+        public virtual int MaximumProteinGroupsPerPeptide { get; set; }
+
+        public virtual TotalCounts TotalCounts { get; set; }
+
+
+        public PersistentDataFilter() { }
+
+        public PersistentDataFilter(PersistentDataFilter other)
+        {
+            MaximumQValue = other.MaximumQValue;
+            MinimumDistinctPeptidesPerProtein = other.MinimumDistinctPeptidesPerProtein;
+            MinimumSpectraPerProtein = other.MinimumSpectraPerProtein;
+            MinimumAdditionalPeptidesPerProtein = other.MinimumAdditionalPeptidesPerProtein;
+            MinimumSpectraPerDistinctMatch = other.MinimumSpectraPerDistinctMatch;
+            MinimumSpectraPerDistinctPeptide = other.MinimumSpectraPerDistinctPeptide;
+            MaximumProteinGroupsPerPeptide = other.MaximumProteinGroupsPerPeptide;
+
+            TotalCounts = other.TotalCounts;
+        }
+
+        /// <summary>
+        /// If either the LHS or RHS of the equality has a null Id, the test is done on the business key instead of the Id.
+        /// </summary>
+        public override bool Equals(PersistentDataFilter other)
+        {
+            if (Id == null || other.Id == null)
+                return MaximumQValue == other.MaximumQValue &&
+                       MinimumDistinctPeptidesPerProtein == other.MinimumDistinctPeptidesPerProtein &&
+                       MinimumSpectraPerProtein == other.MinimumSpectraPerProtein &&
+                       MinimumAdditionalPeptidesPerProtein == other.MinimumAdditionalPeptidesPerProtein &&
+                       MinimumSpectraPerDistinctMatch == other.MinimumSpectraPerDistinctMatch &&
+                       MinimumSpectraPerDistinctPeptide == other.MinimumSpectraPerDistinctPeptide &&
+                       MaximumProteinGroupsPerPeptide == other.MaximumProteinGroupsPerPeptide;
+
+            return base.Equals(other);
+        }
+    }
+
     public class DataFilter : EventArgs
     {
         #region Events
@@ -43,7 +89,7 @@ namespace IDPicker.DataModel
             public FilteringProgressEventArgs(string stage, int completed, Exception ex)
             {
                 CompletedFilters = completed;
-                TotalFilters = 18;
+                TotalFilters = 19;
                 FilteringStage = stage;
                 FilteringException = ex;
             }
@@ -65,6 +111,7 @@ namespace IDPicker.DataModel
 
         public DataFilter ()
         {
+            PersistentDataFilter = new PersistentDataFilter();
             MaximumQValue = Properties.Settings.Default.DefaultMaxFDR;
             MinimumDistinctPeptidesPerProtein = Properties.Settings.Default.DefaultMinDistinctPeptidesPerProtein;
             MinimumSpectraPerProtein = Properties.Settings.Default.DefaultMinSpectraPerProtein;
@@ -80,18 +127,17 @@ namespace IDPicker.DataModel
                 IsChargeDistinct = true,
                 ModificationMassRoundToNearest = 1m
             };
+
+            OriginalPersistentDataFilter = new PersistentDataFilter(PersistentDataFilter);
         }
 
         public DataFilter (DataFilter other)
         {
-            MaximumQValue = other.MaximumQValue;
-            MinimumDistinctPeptidesPerProtein = other.MinimumDistinctPeptidesPerProtein;
-            MinimumSpectraPerProtein = other.MinimumSpectraPerProtein;
-            MinimumAdditionalPeptidesPerProtein = other.MinimumAdditionalPeptidesPerProtein;
-            MinimumSpectraPerDistinctMatch = other.MinimumSpectraPerDistinctMatch;
-            MinimumSpectraPerDistinctPeptide = other.MinimumSpectraPerDistinctPeptide;
-            MaximumProteinGroupsPerPeptide = other.MaximumProteinGroupsPerPeptide;
+            PersistentDataFilter = new PersistentDataFilter(other.PersistentDataFilter);
+            OriginalPersistentDataFilter = new PersistentDataFilter(other.OriginalPersistentDataFilter);
+
             DistinctMatchFormat = other.DistinctMatchFormat;
+
             Cluster = other.Cluster == null ? null : new List<int>(other.Cluster);
             ProteinGroup = other.ProteinGroup == null ? null : new List<int>(other.ProteinGroup);
             Protein = other.Protein == null ? null : new List<Protein>(other.Protein);
@@ -108,13 +154,37 @@ namespace IDPicker.DataModel
             AminoAcidOffset = other.AminoAcidOffset == null ? null : new List<int>(other.AminoAcidOffset);
         }
 
-        public double MaximumQValue { get; set; }
-        public int MinimumDistinctPeptidesPerProtein { get; set; }
-        public int MinimumSpectraPerProtein { get; set; }
-        public int MinimumAdditionalPeptidesPerProtein { get; set; }
-        public int MinimumSpectraPerDistinctMatch { get; set; }
-        public int MinimumSpectraPerDistinctPeptide { get; set; }
-        public int MaximumProteinGroupsPerPeptide { get; set; }
+        // persistent filter properties are in a separate POCO class for NHibernate compatibility
+        public PersistentDataFilter PersistentDataFilter { get; set; }
+        public PersistentDataFilter OriginalPersistentDataFilter { get; private set; }
+
+        public DataFilter(PersistentDataFilter persistentDataFilter)
+        {
+            PersistentDataFilter = persistentDataFilter;
+            OriginalPersistentDataFilter = new PersistentDataFilter(persistentDataFilter);
+
+            DistinctMatchFormat = new DistinctMatchFormat()
+            {
+                AreModificationsDistinct = true,
+                IsAnalysisDistinct = false,
+                IsChargeDistinct = true,
+                ModificationMassRoundToNearest = 1m
+            };
+        }
+
+
+        public object FilterSource { get; set; }
+
+
+        #region Filter properties
+
+        public double MaximumQValue { get { return PersistentDataFilter.MaximumQValue; } set { PersistentDataFilter.MaximumQValue = value; } }
+        public int MinimumDistinctPeptidesPerProtein { get { return PersistentDataFilter.MinimumDistinctPeptidesPerProtein; } set { PersistentDataFilter.MinimumDistinctPeptidesPerProtein = value; } }
+        public int MinimumSpectraPerProtein { get { return PersistentDataFilter.MinimumSpectraPerProtein; } set { PersistentDataFilter.MinimumSpectraPerProtein = value; } }
+        public int MinimumAdditionalPeptidesPerProtein { get { return PersistentDataFilter.MinimumAdditionalPeptidesPerProtein; } set { PersistentDataFilter.MinimumAdditionalPeptidesPerProtein = value; } }
+        public int MinimumSpectraPerDistinctMatch { get { return PersistentDataFilter.MinimumSpectraPerDistinctMatch; } set { PersistentDataFilter.MinimumSpectraPerDistinctMatch = value; } }
+        public int MinimumSpectraPerDistinctPeptide { get { return PersistentDataFilter.MinimumSpectraPerDistinctPeptide; } set { PersistentDataFilter.MinimumSpectraPerDistinctPeptide = value; } }
+        public int MaximumProteinGroupsPerPeptide { get { return PersistentDataFilter.MaximumProteinGroupsPerPeptide; } set { PersistentDataFilter.MaximumProteinGroupsPerPeptide = value; } }
 
         public DistinctMatchFormat DistinctMatchFormat { get; set; }
 
@@ -147,8 +217,17 @@ namespace IDPicker.DataModel
         /// <example>To match peptides starting with glutamine: "Q*"</example>
         /// <example>To match peptides with a  histidines: "*H*H*</example>
         public string Composition { get; set; }
+        #endregion
 
-        public object FilterSource { get; set; }
+
+        public TotalCounts TotalCounts
+        {
+            get { return PersistentDataFilter.TotalCounts; }
+            private set { PersistentDataFilter.TotalCounts = value; }
+        }
+
+
+        #region Logic and filter manipulation methods
 
         public bool HasProteinFilter
         {
@@ -213,13 +292,8 @@ namespace IDPicker.DataModel
             else if (object.ReferenceEquals(this, obj))
                 return true;
 
-            return MaximumQValue == other.MaximumQValue &&
-                   MinimumDistinctPeptidesPerProtein == other.MinimumDistinctPeptidesPerProtein &&
-                   MinimumSpectraPerProtein == other.MinimumSpectraPerProtein &&
-                   MinimumAdditionalPeptidesPerProtein == other.MinimumAdditionalPeptidesPerProtein &&
-                   MinimumSpectraPerDistinctMatch == other.MinimumSpectraPerDistinctMatch &&
-                   MinimumSpectraPerDistinctPeptide == other.MinimumSpectraPerDistinctPeptide &&
-                   MaximumProteinGroupsPerPeptide == other.MaximumProteinGroupsPerPeptide &&
+            return PersistentDataFilter.Equals(other.PersistentDataFilter) &&
+                   OriginalPersistentDataFilter.Equals(other.OriginalPersistentDataFilter) &&
                    NullSafeSequenceEqual(Cluster, other.Cluster) &&
                    NullSafeSequenceEqual(ProteinGroup, other.ProteinGroup) &&
                    NullSafeSequenceEqual(PeptideGroup, other.PeptideGroup) &&
@@ -325,72 +399,31 @@ namespace IDPicker.DataModel
                                  MinimumSpectraPerDistinctPeptide,
                                  MaximumProteinGroupsPerPeptide);
         }
+        #endregion
 
         public static DataFilter LoadFilter (NHibernate.ISession session)
         {
-            try
-            {
-                var filteringCriteria = session.CreateSQLQuery(@"SELECT MaximumQValue,
-                                                                        MinimumDistinctPeptidesPerProtein,
-                                                                        MinimumSpectraPerProtein,
-                                                                        MinimumAdditionalPeptidesPerProtein,
-                                                                        MinimumSpectraPerDistinctMatch,
-                                                                        MinimumSpectraPerDistinctPeptide,
-                                                                        MaximumProteinGroupsPerPeptide
-                                                                 FROM FilteringCriteria
-                                                                ").List<object[]>()[0];
-                var dataFilter = new DataFilter();
-                dataFilter.MaximumQValue = Convert.ToDouble(filteringCriteria[0]);
-                dataFilter.MinimumDistinctPeptidesPerProtein = Convert.ToInt32(filteringCriteria[1]);
-                dataFilter.MinimumSpectraPerProtein = Convert.ToInt32(filteringCriteria[2]);
-                dataFilter.MinimumAdditionalPeptidesPerProtein = Convert.ToInt32(filteringCriteria[3]);
-                dataFilter.MinimumSpectraPerDistinctMatch = Convert.ToInt32(filteringCriteria[4]);
-                dataFilter.MinimumSpectraPerDistinctPeptide = Convert.ToInt32(filteringCriteria[5]);
-                dataFilter.MaximumProteinGroupsPerPeptide = Convert.ToInt32(filteringCriteria[6]);
-                return dataFilter;
-            }
-            catch
-            {
+            // load the most recent data filter (with the maximum Id)
+            var mostRecentFilter = session.Query<PersistentDataFilter>().OrderByDescending(o => o.Id).FirstOrDefault();
+            if (mostRecentFilter == null)
                 return null;
-            }
+
+            return new DataFilter(mostRecentFilter);
         }
 
-        static string saveFilterSql = @"DROP TABLE IF EXISTS FilteringCriteria;
-                                        CREATE TABLE IF NOT EXISTS FilteringCriteria
-                                        (
-                                         MaximumQValue NUMERIC,
-                                         MinimumDistinctPeptidesPerProtein INT,
-                                         MinimumSpectraPerProtein INT,
-                                         MinimumAdditionalPeptidesPerProtein INT,
-                                         MinimumSpectraPerDistinctMatch INT,
-                                         MinimumSpectraPerDistinctPeptide INT,
-                                         MaximumProteinGroupsPerPeptide INT
-                                        );
-                                        INSERT INTO FilteringCriteria SELECT {0}, {1}, {2}, {3}, {4}, {5}, {6}
-                                       ";
         private void SaveFilter(NHibernate.ISession session)
         {
-            session.CreateSQLQuery(String.Format(saveFilterSql,
-                                                 MaximumQValue,
-                                                 MinimumDistinctPeptidesPerProtein,
-                                                 MinimumSpectraPerProtein,
-                                                 MinimumAdditionalPeptidesPerProtein,
-                                                 MinimumSpectraPerDistinctMatch,
-                                                 MinimumSpectraPerDistinctPeptide,
-                                                 MaximumProteinGroupsPerPeptide)).ExecuteUpdate();
-        }
+            // if this filter is already in the history, delete it
+            var existingFilter = session.Query<PersistentDataFilter>().ToList().SingleOrDefault(o => o.Equals(PersistentDataFilter));
+            if (existingFilter != null)
+            {
+                session.Delete(existingFilter);
+                session.Flush();
+            }
 
-        public string GetBasicQueryStringSQL ()
-        {
-            return String.Format("FROM PeptideSpectrumMatch psm " +
-                                 "JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide " +
-                                 "WHERE psm.QValue <= {0} " +
-                                 "GROUP BY pi.Protein " +
-                                 "HAVING {1} <= COUNT(DISTINCT (psm.Peptide || ' ' || psm.MonoisotopicMass || ' ' || psm.Charge)) AND " +
-                                 "       {2} <= COUNT(DISTINCT psm.Spectrum)",
-                                 MaximumQValue,
-                                 MinimumDistinctPeptidesPerProtein,
-                                 MinimumSpectraPerProtein);
+            // increment Id and save the filter as the most recent one
+            PersistentDataFilter.Id = Convert.ToInt64(session.CreateSQLQuery("SELECT IFNULL(MAX(Id), 0)+1 FROM FilterHistory").UniqueResult());
+            session.Save(PersistentDataFilter);
         }
 
         public static void DropFilters (System.Data.IDbConnection conn)
@@ -609,6 +642,11 @@ namespace IDPicker.DataModel
             if (AssembleProteinGroups(session, ref stepsCompleted)) return;
             if (AssemblePeptideGroups(session, ref stepsCompleted)) return;
 
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating summary statistics...", ++stepsCompleted, null)))
+                return;
+
+            TotalCounts = new TotalCounts(session);
+
             SaveFilter(session);
 
             if (useScopedTransaction)
@@ -617,7 +655,9 @@ namespace IDPicker.DataModel
             if (AggregateQuantitationData(session, ref stepsCompleted)) return;
         }
 
+
         #region Implementation of basic filters
+
         /// <summary>
         /// Set ProteinGroup column (the groups change depending on the basic filters applied)
         /// </summary>
@@ -933,6 +973,217 @@ namespace IDPicker.DataModel
             return false;
         }
 
+
+        /// <summary>
+        /// Calculates (by a greedy algorithm) how many additional results each protein group explains.
+        /// </summary>
+        static Map<long, long> CalculateAdditionalPeptides(NHibernate.ISession session)
+        {
+            var resultSetByProteinIdByCluster = new Map<int, Map<long, Set<Set<long>>>>();
+            var proteinGroupByProteinId = new Dictionary<long, int>();
+            var proteinSetByProteinGroup = new Map<int, Set<long>>();
+            var sharedResultsByProteinId = new Map<long, long>();
+
+            session.CreateSQLQuery(@"DROP TABLE IF EXISTS SpectrumResults;
+                                     CREATE TEMP TABLE SpectrumResults AS
+                                     SELECT psm.Spectrum AS Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides, COUNT(DISTINCT pi.Protein) AS SharedResultCount
+                                     FROM PeptideSpectrumMatch psm
+                                     JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
+                                     GROUP BY psm.Spectrum
+                                    ").ExecuteUpdate();
+
+            var queryByProtein = session.CreateSQLQuery(@"SELECT pro.Id, pro.ProteinGroup, pro.Cluster, SUM(sr.SharedResultCount)
+                                                          FROM Protein pro
+                                                          JOIN PeptideInstance pi ON pro.Id = pi.Protein
+                                                          JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide
+                                                          JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum
+                                                          WHERE pi.Id = (SELECT Id FROM PeptideInstance WHERE Peptide = pi.Peptide AND Protein = pi.Protein LIMIT 1)
+                                                            AND psm.Id = (SELECT Id FROM PeptideSpectrumMatch WHERE Peptide = pi.Peptide LIMIT 1)
+                                                          GROUP BY pro.Id
+                                                          ORDER BY pro.Cluster");
+
+            // For each protein, get the list of peptides evidencing it;
+            // an ambiguous spectrum will show up as a nested list of peptides
+            var queryByResult = session.CreateSQLQuery(@"SELECT pro.Id, pro.Cluster, GROUP_CONCAT(sr.Peptides)
+                                                         FROM Protein pro
+                                                         JOIN PeptideInstance pi ON pro.Id = pi.Protein
+                                                         JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide
+                                                         JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum
+                                                         WHERE pi.Id = (SELECT Id FROM PeptideInstance WHERE Peptide = pi.Peptide AND Protein = pi.Protein LIMIT 1)
+                                                           AND psm.Id = (SELECT Id FROM PeptideSpectrumMatch WHERE Peptide = pi.Peptide LIMIT 1)
+                                                         GROUP BY pro.Id, sr.Peptides");
+
+            // construct the result set for each protein
+            foreach (var queryRow in queryByResult.List<object[]>())
+            {
+                long proteinId = (long)queryRow[0];
+                int cluster = (int)queryRow[1];
+                string resultIds = (string)queryRow[2];
+                string[] resultIdTokens = resultIds.Split(',');
+                Set<long> resultIdSet = new Set<long>(resultIdTokens.Select(o => Convert.ToInt64(o)));
+                resultSetByProteinIdByCluster[cluster][proteinId].Add(resultIdSet);
+            }
+
+            var additionalPeptidesByProteinId = new Map<long, long>();
+
+            Action<int> loopBody = (cluster) =>
+            {
+                // keep track of the proteins that explain the most results
+                Set<long> maxProteinIds = new Set<long>();
+                int maxExplainedCount = 0;
+                long minSharedResults = 0;
+                var resultSetByProteinId = resultSetByProteinIdByCluster[cluster];
+
+                // find the proteins that explain the most results for this cluster
+                Action findMaxProteins = () =>
+                {
+                    foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
+                    {
+                        long proteinId = itr.Key;
+                        Set<Set<long>> explainedResults = itr.Value;
+                        long sharedResults = sharedResultsByProteinId[proteinId];
+
+                        if (explainedResults.Count > maxExplainedCount)
+                        {
+                            maxProteinIds.Clear();
+                            maxProteinIds.Add(proteinId);
+                            maxExplainedCount = explainedResults.Count;
+                            minSharedResults = sharedResults;
+                        }
+                        else if (explainedResults.Count == maxExplainedCount)
+                        {
+                            if (sharedResults < minSharedResults)
+                            {
+                                maxProteinIds.Clear();
+                                maxProteinIds.Add(proteinId);
+                                minSharedResults = sharedResults;
+                            }
+                            else if (sharedResults == minSharedResults)
+                                maxProteinIds.Add(proteinId);
+                        }
+                    }
+                };
+
+                // find the proteins that explain the most results for this cluster
+                findMaxProteins();
+
+                // loop until the resultSetByProteinId map is empty
+                while (resultSetByProteinId.Count > 0)
+                {
+                    // the set of results explained by the max. proteins
+                    Set<Set<long>> maxExplainedResults = null;
+
+                    // remove max. proteins from the resultSetByProteinId map
+                    foreach (long maxProteinId in maxProteinIds)
+                    {
+                        if (maxExplainedResults == null)
+                            maxExplainedResults = resultSetByProteinId[maxProteinId];
+                        else
+                            maxExplainedResults.Union(resultSetByProteinId[maxProteinId]);
+
+                        resultSetByProteinId.Remove(maxProteinId);
+                        additionalPeptidesByProteinId[maxProteinId] = maxExplainedCount;
+                    }
+
+                    // subtract the max. proteins' results from the remaining proteins
+                    foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
+                        itr.Value.Subtract(maxExplainedResults);
+
+                    maxProteinIds.Clear();
+                    maxExplainedCount = 0;
+                    minSharedResults = 0;
+
+                    // find the proteins that explain the most results for this cluster
+                    findMaxProteins();
+
+                    // all remaining proteins present no additional evidence, so break the loop
+                    if (maxExplainedCount == 0)
+                    {
+                        foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
+                            additionalPeptidesByProteinId[itr.Key] = 0;
+                        break;
+                    }
+                }
+            };
+
+            int lastCluster = 0;
+            foreach (var queryRow in queryByProtein.List<object[]>())
+            {
+                long proteinId = (long)queryRow[0];
+                int proteinGroup = (int)queryRow[1];
+                int cluster = (int)queryRow[2];
+
+                if (lastCluster > 0 && cluster != lastCluster)
+                {
+                    loopBody(lastCluster);
+
+                    sharedResultsByProteinId.Clear();
+                    proteinGroupByProteinId.Clear();
+                    proteinSetByProteinGroup.Clear();
+                }
+
+                lastCluster = cluster;
+                sharedResultsByProteinId[proteinId] = (long)queryRow[3];
+                proteinGroupByProteinId[proteinId] = proteinGroup;
+                proteinSetByProteinGroup[proteinGroup].Add(proteinId);
+            }
+
+            if (lastCluster > 0)
+                loopBody(lastCluster);
+
+            return additionalPeptidesByProteinId;
+        }
+
+        Map<int, long> calculateProteinClusters(NHibernate.ISession session)
+        {
+            var spectrumSetByProteinGroup = new Map<int, Set<long>>();
+            var proteinGroupSetBySpectrumId = new Map<long, Set<int>>();
+
+            var query = session.CreateQuery("SELECT pro.ProteinGroup, psm.Spectrum.id " +
+                                            GetFilteredQueryString(FromProtein, ProteinToPeptideSpectrumMatch));
+
+            foreach (var queryRow in query.List<object[]>())
+            {
+                int proteinGroup = Convert.ToInt32(queryRow[0]);
+                long spectrumId = (long)queryRow[1];
+
+                spectrumSetByProteinGroup[proteinGroup].Add(spectrumId);
+                proteinGroupSetBySpectrumId[spectrumId].Add(proteinGroup);
+            }
+
+            var clusterByProteinGroup = new Map<int, long>();
+            int clusterId = 0;
+            var clusterStack = new Stack<KeyValuePair<int, Set<long>>>();
+
+            foreach (var pair in spectrumSetByProteinGroup)
+            {
+                int proteinGroup = pair.Key;
+
+                if (clusterByProteinGroup.Contains(proteinGroup))
+                    continue;
+
+                // for each protein without a cluster assignment, make a new cluster
+                ++clusterId;
+                clusterStack.Push(new KeyValuePair<int, Set<long>>(proteinGroup, spectrumSetByProteinGroup[proteinGroup]));
+                while (clusterStack.Count > 0)
+                {
+                    var kvp = clusterStack.Pop();
+
+                    // add all "cousin" proteins to the current cluster
+                    foreach (long spectrumId in kvp.Value)
+                        foreach (var cousinProteinGroup in proteinGroupSetBySpectrumId[spectrumId])
+                        {
+                            var insertResult = clusterByProteinGroup.Insert(cousinProteinGroup, clusterId);
+                            if (!insertResult.WasInserted)
+                                continue;
+
+                            clusterStack.Push(new KeyValuePair<int, Set<long>>(cousinProteinGroup, spectrumSetByProteinGroup[cousinProteinGroup]));
+                        }
+                }
+            }
+
+            return clusterByProteinGroup;
+        }
         #endregion
 
         #region Definitions for common HQL strings
@@ -980,7 +1231,13 @@ namespace IDPicker.DataModel
         public static readonly string PeptideSpectrumMatchToSpectrumSource = PeptideSpectrumMatchToSpectrum + ";JOIN s.Source ss";
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroupLink = PeptideSpectrumMatchToSpectrumSource + ";JOIN ss.Groups ssgl";
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";JOIN ssgl.Group ssg";
+
+        public static readonly string SpectrumToSpectrumSource = "JOIN s.Source ss";
+        public static readonly string SpectrumToSpectrumSourceGroupLink = SpectrumToSpectrumSource + ";JOIN ss.Groups ssgl";
+        public static readonly string SpectrumToSpectrumSourceGroup = SpectrumToSpectrumSourceGroupLink + ";JOIN ssgl.Group ssg";
         #endregion
+
+        #region Query methods
 
         // pick the optimal source table and join order for the current view filters
         public void optimizeQueryOrder(ref string fromTable, ref string[] joinTables)
@@ -1013,6 +1270,19 @@ namespace IDPicker.DataModel
                 if (joinTables.Contains(ProteinToSpectrumSourceGroup)) newJoinTables.Add(PeptideSpectrumMatchToSpectrumSourceGroup);
                 joinTables = newJoinTables.ToArray();
             }
+        }
+
+        public string GetBasicQueryStringSQL()
+        {
+            return String.Format("FROM PeptideSpectrumMatch psm " +
+                                 "JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide " +
+                                 "WHERE psm.QValue <= {0} " +
+                                 "GROUP BY pi.Protein " +
+                                 "HAVING {1} <= COUNT(DISTINCT (psm.Peptide || ' ' || psm.MonoisotopicMass || ' ' || psm.Charge)) AND " +
+                                 "       {2} <= COUNT(DISTINCT psm.Spectrum)",
+                                 MaximumQValue,
+                                 MinimumDistinctPeptidesPerProtein,
+                                 MinimumSpectraPerProtein);
         }
 
         public string GetBasicQueryString (string fromTable, params string[] joinTables)
@@ -1290,217 +1560,7 @@ namespace IDPicker.DataModel
 
             return query.ToString();
         }
-
-        /// <summary>
-        /// Calculates (by a greedy algorithm) how many additional results each protein group explains.
-        /// </summary>
-        static Map<long, long> CalculateAdditionalPeptides (NHibernate.ISession session)
-        {
-            var resultSetByProteinIdByCluster = new Map<int, Map<long, Set<Set<long>>>>();
-            var proteinGroupByProteinId = new Dictionary<long, int>();
-            var proteinSetByProteinGroup = new Map<int, Set<long>>();
-            var sharedResultsByProteinId = new Map<long, long>();
-
-            session.CreateSQLQuery(@"DROP TABLE IF EXISTS SpectrumResults;
-                                     CREATE TEMP TABLE SpectrumResults AS
-                                     SELECT psm.Spectrum AS Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides, COUNT(DISTINCT pi.Protein) AS SharedResultCount
-                                     FROM PeptideSpectrumMatch psm
-                                     JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
-                                     GROUP BY psm.Spectrum
-                                    ").ExecuteUpdate();
-
-            var queryByProtein = session.CreateSQLQuery(@"SELECT pro.Id, pro.ProteinGroup, pro.Cluster, SUM(sr.SharedResultCount)
-                                                          FROM Protein pro
-                                                          JOIN PeptideInstance pi ON pro.Id = pi.Protein
-                                                          JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide
-                                                          JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum
-                                                          WHERE pi.Id = (SELECT Id FROM PeptideInstance WHERE Peptide = pi.Peptide AND Protein = pi.Protein LIMIT 1)
-                                                            AND psm.Id = (SELECT Id FROM PeptideSpectrumMatch WHERE Peptide = pi.Peptide LIMIT 1)
-                                                          GROUP BY pro.Id
-                                                          ORDER BY pro.Cluster");
-
-            // For each protein, get the list of peptides evidencing it;
-            // an ambiguous spectrum will show up as a nested list of peptides
-            var queryByResult = session.CreateSQLQuery(@"SELECT pro.Id, pro.Cluster, GROUP_CONCAT(sr.Peptides)
-                                                         FROM Protein pro
-                                                         JOIN PeptideInstance pi ON pro.Id = pi.Protein
-                                                         JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide
-                                                         JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum
-                                                         WHERE pi.Id = (SELECT Id FROM PeptideInstance WHERE Peptide = pi.Peptide AND Protein = pi.Protein LIMIT 1)
-                                                           AND psm.Id = (SELECT Id FROM PeptideSpectrumMatch WHERE Peptide = pi.Peptide LIMIT 1)
-                                                         GROUP BY pro.Id, sr.Peptides");
-
-            // construct the result set for each protein
-            foreach (var queryRow in queryByResult.List<object[]>())
-            {
-                long proteinId = (long) queryRow[0];
-                int cluster = (int) queryRow[1];
-                string resultIds = (string) queryRow[2];
-                string[] resultIdTokens = resultIds.Split(',');
-                Set<long> resultIdSet = new Set<long>(resultIdTokens.Select(o => Convert.ToInt64(o)));
-                resultSetByProteinIdByCluster[cluster][proteinId].Add(resultIdSet);
-            }
-
-            var additionalPeptidesByProteinId = new Map<long, long>();
-
-            Action<int> loopBody = (cluster) =>
-            {
-                // keep track of the proteins that explain the most results
-                Set<long> maxProteinIds = new Set<long>();
-                int maxExplainedCount = 0;
-                long minSharedResults = 0;
-                var resultSetByProteinId = resultSetByProteinIdByCluster[cluster];
-
-                // find the proteins that explain the most results for this cluster
-                Action findMaxProteins = () =>
-                {
-                    foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
-                    {
-                        long proteinId = itr.Key;
-                        Set<Set<long>> explainedResults = itr.Value;
-                        long sharedResults = sharedResultsByProteinId[proteinId];
-
-                        if (explainedResults.Count > maxExplainedCount)
-                        {
-                            maxProteinIds.Clear();
-                            maxProteinIds.Add(proteinId);
-                            maxExplainedCount = explainedResults.Count;
-                            minSharedResults = sharedResults;
-                        }
-                        else if (explainedResults.Count == maxExplainedCount)
-                        {
-                            if (sharedResults < minSharedResults)
-                            {
-                                maxProteinIds.Clear();
-                                maxProteinIds.Add(proteinId);
-                                minSharedResults = sharedResults;
-                            }
-                            else if (sharedResults == minSharedResults)
-                                maxProteinIds.Add(proteinId);
-                        }
-                    }
-                };
-
-                // find the proteins that explain the most results for this cluster
-                findMaxProteins();
-
-                // loop until the resultSetByProteinId map is empty
-                while (resultSetByProteinId.Count > 0)
-                {
-                    // the set of results explained by the max. proteins
-                    Set<Set<long>> maxExplainedResults = null;
-
-                    // remove max. proteins from the resultSetByProteinId map
-                    foreach (long maxProteinId in maxProteinIds)
-                    {
-                        if (maxExplainedResults == null)
-                            maxExplainedResults = resultSetByProteinId[maxProteinId];
-                        else
-                            maxExplainedResults.Union(resultSetByProteinId[maxProteinId]);
-
-                        resultSetByProteinId.Remove(maxProteinId);
-                        additionalPeptidesByProteinId[maxProteinId] = maxExplainedCount;
-                    }
-
-                    // subtract the max. proteins' results from the remaining proteins
-                    foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
-                        itr.Value.Subtract(maxExplainedResults);
-
-                    maxProteinIds.Clear();
-                    maxExplainedCount = 0;
-                    minSharedResults = 0;
-
-                    // find the proteins that explain the most results for this cluster
-                    findMaxProteins();
-
-                    // all remaining proteins present no additional evidence, so break the loop
-                    if (maxExplainedCount == 0)
-                    {
-                        foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
-                            additionalPeptidesByProteinId[itr.Key] = 0;
-                        break;
-                    }
-                }
-            };
-
-            int lastCluster = 0;
-            foreach (var queryRow in queryByProtein.List<object[]>())
-            {
-                long proteinId = (long) queryRow[0];
-                int proteinGroup = (int) queryRow[1];
-                int cluster = (int) queryRow[2];
-
-                if (lastCluster > 0 && cluster != lastCluster)
-                {
-                    loopBody(lastCluster);
-
-                    sharedResultsByProteinId.Clear();
-                    proteinGroupByProteinId.Clear();
-                    proteinSetByProteinGroup.Clear();
-                }
-
-                lastCluster = cluster;
-                sharedResultsByProteinId[proteinId] = (long) queryRow[3];
-                proteinGroupByProteinId[proteinId] = proteinGroup;
-                proteinSetByProteinGroup[proteinGroup].Add(proteinId);
-            }
-
-            if (lastCluster > 0)
-                loopBody(lastCluster);
-
-            return additionalPeptidesByProteinId;
-        }
-
-        Map<int, long> calculateProteinClusters (NHibernate.ISession session)
-        {
-            var spectrumSetByProteinGroup = new Map<int, Set<long>>();
-            var proteinGroupSetBySpectrumId = new Map<long, Set<int>>();
-
-            var query = session.CreateQuery("SELECT pro.ProteinGroup, psm.Spectrum.id " +
-                                            GetFilteredQueryString(FromProtein, ProteinToPeptideSpectrumMatch));
-
-            foreach (var queryRow in query.List<object[]>())
-            {
-                int proteinGroup = Convert.ToInt32(queryRow[0]);
-                long spectrumId = (long) queryRow[1];
-
-                spectrumSetByProteinGroup[proteinGroup].Add(spectrumId);
-                proteinGroupSetBySpectrumId[spectrumId].Add(proteinGroup);
-            }
-
-            var clusterByProteinGroup = new Map<int, long>();
-            int clusterId = 0;
-            var clusterStack = new Stack<KeyValuePair<int, Set<long>>>();
-
-            foreach (var pair in spectrumSetByProteinGroup)
-            {
-                int proteinGroup = pair.Key;
-
-                if (clusterByProteinGroup.Contains(proteinGroup))
-                    continue;
-
-                // for each protein without a cluster assignment, make a new cluster
-                ++clusterId;
-                clusterStack.Push(new KeyValuePair<int, Set<long>>(proteinGroup, spectrumSetByProteinGroup[proteinGroup]));
-                while (clusterStack.Count > 0)
-                {
-                    var kvp = clusterStack.Pop();
-
-                    // add all "cousin" proteins to the current cluster
-                    foreach (long spectrumId in kvp.Value)
-                        foreach (var cousinProteinGroup in proteinGroupSetBySpectrumId[spectrumId])
-                        {
-                            var insertResult = clusterByProteinGroup.Insert(cousinProteinGroup, clusterId);
-                            if (!insertResult.WasInserted)
-                                continue;
-
-                            clusterStack.Push(new KeyValuePair<int, Set<long>>(cousinProteinGroup, spectrumSetByProteinGroup[cousinProteinGroup]));
-                        }
-                }
-            }
-
-            return clusterByProteinGroup;
-        }
+        #endregion
     }
 
     /// <summary>
@@ -1556,5 +1616,81 @@ namespace IDPicker.DataModel
                 hash ^= item.GetHashCode();
             return hash;
         }
+    }
+
+    public class TotalCounts
+    {
+        public TotalCounts()
+        {
+        }
+
+        public TotalCounts(NHibernate.ISession session)
+        {
+            var proteinLevelSummary = session.CreateSQLQuery(@"SELECT IFNULL(COUNT(DISTINCT pro.Cluster), 0),
+                                                                      IFNULL(COUNT(DISTINCT pro.ProteinGroup), 0),
+                                                                      IFNULL(COUNT(DISTINCT pro.Id), 0),
+                                                                      IFNULL(SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END), 0)
+                                                               FROM Protein pro
+                                                              ").UniqueResult<object[]>();
+            Clusters = Convert.ToInt32(proteinLevelSummary[0]);
+            ProteinGroups = Convert.ToInt32(proteinLevelSummary[1]);
+            Proteins = Convert.ToInt32(proteinLevelSummary[2]);
+            double decoyProteins = Convert.ToDouble(proteinLevelSummary[3]);
+            ProteinFDR = 2 * decoyProteins / Proteins;
+
+            DistinctPeptides = Convert.ToInt32(session.CreateSQLQuery("SELECT COUNT(*) FROM Peptide").UniqueResult());
+            DistinctMatches = Convert.ToInt32(session.CreateSQLQuery("SELECT COUNT(DISTINCT DistinctMatchId) FROM DistinctMatch").UniqueResult());
+            FilteredSpectra = Convert.ToInt32(session.CreateSQLQuery("SELECT COUNT(*) FROM Spectrum").UniqueResult());
+
+            // get the count of peptides that are unambiguously targets or decoys (# of Proteins = # of Decoys OR # of Decoys = 0)
+            var peptideLevelDecoys = session.CreateSQLQuery(@"SELECT COUNT(Peptide)
+                                                              FROM (SELECT pep.Id AS Peptide,
+                                                                           COUNT(DISTINCT pro.Id) AS Proteins,
+                                                                           SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) AS Decoys,
+                                                                           CASE WHEN SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IsDecoy
+                                                                    FROM Peptide pep
+                                                                    JOIN PeptideInstance pi ON pep.Id=pi.Peptide
+                                                                    JOIN Protein pro ON pi.Protein=pro.Id
+                                                                    GROUP BY pep.Id
+                                                                    HAVING Proteins=Decoys OR Decoys=0
+                                                                   )
+                                                              GROUP BY IsDecoy
+                                                              ORDER BY IsDecoy
+                                                             ").List<long>();
+            PeptideFDR = 2.0 * peptideLevelDecoys[1] / peptideLevelDecoys.Sum();
+
+            // get the count of spectra that are unambiguously targets or decoys (# of Proteins = # of Decoys OR # of Decoys = 0)
+            var spectrumLevelDecoys = session.CreateSQLQuery(@"SELECT COUNT(Spectrum)
+                                                               FROM (SELECT psm.Spectrum,
+                                                                            COUNT(DISTINCT pro.Id) AS Proteins,
+                                                                            SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) AS Decoys,
+                                                                            CASE WHEN SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IsDecoy
+                                                                     FROM PeptideSpectrumMatch psm
+                                                                     JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide
+                                                                     JOIN Protein pro ON pi.Protein=pro.Id
+                                                                     GROUP BY psm.Spectrum
+                                                                     HAVING Proteins=Decoys OR Decoys=0
+                                                                    )
+                                                               GROUP BY IsDecoy
+                                                               ORDER BY IsDecoy
+                                                              ").List<long>();
+            SpectrumFDR = 2.0 * spectrumLevelDecoys[1] / spectrumLevelDecoys.Sum();
+        }
+
+        public int Clusters { get; private set; }
+        public int ProteinGroups { get; private set; }
+        public int Proteins { get; private set; }
+        public int DistinctPeptides { get; private set; }
+        public int DistinctMatches { get; private set; }
+        public int FilteredSpectra { get; private set; }
+        public double ProteinFDR { get; private set; }
+        public double PeptideFDR { get; private set; }
+        public double SpectrumFDR { get; private set; }
+    }
+
+    public class ViewFilterEventArgs : EventArgs
+    {
+        public ViewFilterEventArgs(DataFilter viewFilter) { ViewFilter = viewFilter; }
+        public DataFilter ViewFilter { get; private set; }
     }
 }

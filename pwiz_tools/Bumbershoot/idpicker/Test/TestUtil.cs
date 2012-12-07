@@ -23,6 +23,7 @@
 //
 
 using System;
+using System.Data.SQLite;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
@@ -94,61 +95,69 @@ namespace Test
             StringAssert.StartsWith(Util.GetCommonFilename(input), "D:/idpicker-analysis-");
         }
 
-        void downgrade_4_to_3(NHibernate.ISession session)
+        void downgrade_7_to_4(SQLiteConnection connection)
+        {
+            // just rename table; the extra columns will be ignored
+            connection.ExecuteNonQuery("ALTER TABLE FilterHistory RENAME TO FilteringCriteria");
+        }
+
+        void downgrade_4_to_3(SQLiteConnection connection)
         {
             // move MsDataBytes to SpectrumSource table and return to bugged INT key for DistinctMatchQuantitation
-            session.CreateSQLQuery(@"CREATE TABLE TempSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);
-                                     INSERT INTO TempSpectrumSource SELECT ss.Id, Name, URL, Group_, MsDataBytes, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod FROM SpectrumSource ss JOIN SpectrumSourceMetadata ssmd ON ss.Id=ssmd.Id;
-                                     DROP TABLE SpectrumSource;
-                                     ALTER TABLE TempSpectrumSource RENAME TO SpectrumSource;
-                                     DROP TABLE SpectrumSourceMetadata;
-                                     DROP TABLE DistinctMatchQuantitation;
-                                     CREATE TABLE DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);
-                                     UPDATE About SET SchemaRevision = 3;
-                                    ").ExecuteUpdate();
+            connection.ExecuteNonQuery(@"CREATE TABLE TempSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);
+                                         INSERT INTO TempSpectrumSource SELECT ss.Id, Name, URL, Group_, MsDataBytes, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod FROM SpectrumSource ss JOIN SpectrumSourceMetadata ssmd ON ss.Id=ssmd.Id;
+                                         DROP TABLE SpectrumSource;
+                                         ALTER TABLE TempSpectrumSource RENAME TO SpectrumSource;
+                                         DROP TABLE SpectrumSourceMetadata;
+                                         DROP TABLE DistinctMatchQuantitation;
+                                         CREATE TABLE DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);
+                                         UPDATE About SET SchemaRevision = 3;
+                                        ");
         }
 
-        void downgrade_3_to_2(NHibernate.ISession session)
+        void downgrade_3_to_2(SQLiteConnection connection)
         {
             // delete quantitation tables and quantitative columns from SpectrumSource
-            session.CreateSQLQuery(@"DROP TABLE SpectrumQuantitation;
-                                     DROP TABLE DistinctMatchQuantitation;
-                                     DROP TABLE PeptideQuantitation;
-                                     DROP TABLE ProteinQuantitation;
-                                     CREATE TABLE TempSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB);
-                                     INSERT INTO TempSpectrumSource SELECT Id, Name, URL, Group_, MsDataBytes FROM SpectrumSource;
-                                     DROP TABLE SpectrumSource;
-                                     ALTER TABLE TempSpectrumSource RENAME TO SpectrumSource;
-                                     UPDATE About SET SchemaRevision = 2;
-                                    ").ExecuteUpdate();
+            connection.ExecuteNonQuery(@"DROP TABLE SpectrumQuantitation;
+                                         DROP TABLE DistinctMatchQuantitation;
+                                         DROP TABLE PeptideQuantitation;
+                                         DROP TABLE ProteinQuantitation;
+                                         CREATE TABLE TempSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB);
+                                         INSERT INTO TempSpectrumSource SELECT Id, Name, URL, Group_, MsDataBytes FROM SpectrumSource;
+                                         DROP TABLE SpectrumSource;
+                                         ALTER TABLE TempSpectrumSource RENAME TO SpectrumSource;
+                                         UPDATE About SET SchemaRevision = 2;
+                                        ");
         }
 
-        void downgrade_2_to_1(NHibernate.ISession session)
+        void downgrade_2_to_1(SQLiteConnection connection)
         {
             // add an empty ScanTimeInSeconds column
-            session.CreateSQLQuery(@"CREATE TABLE NewSpectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);
-                                     INSERT INTO NewSpectrum SELECT Id, Source, Index_, NativeID, PrecursorMZ, 0 FROM Spectrum;
-                                     DROP TABLE Spectrum;
-                                     ALTER TABLE NewSpectrum RENAME TO Spectrum;
-                                     UPDATE About SET SchemaRevision = 1;
-                                    ").ExecuteUpdate();
+            connection.ExecuteNonQuery(@"CREATE TABLE NewSpectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);
+                                         INSERT INTO NewSpectrum SELECT Id, Source, Index_, NativeID, PrecursorMZ, 0 FROM Spectrum;
+                                         DROP TABLE Spectrum;
+                                         ALTER TABLE NewSpectrum RENAME TO Spectrum;
+                                         UPDATE About SET SchemaRevision = 1;
+                                        ");
         }
 
-        void downgrade_1_to_0(NHibernate.ISession session)
+        void downgrade_1_to_0(SQLiteConnection connection)
         {
-            session.CreateSQLQuery(@"CREATE TABLE NewPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);
-                                     INSERT INTO NewPeptideSpectrumMatch SELECT Id, Spectrum, Analysis, Peptide, QValue, ObservedNeutralMass, ObservedNeutralMass-MolecularWeightError, MonoisotopicMassError, MolecularWeightError, Rank, Charge FROM PeptideSpectrumMatch;
-                                     DROP TABLE PeptideSpectrumMatch;
-                                     ALTER TABLE NewPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch;
-                                     DROP TABLE About;
-                                    ").ExecuteUpdate();
+            connection.ExecuteNonQuery(@"CREATE TABLE NewPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);
+                                         INSERT INTO NewPeptideSpectrumMatch SELECT Id, Spectrum, Analysis, Peptide, QValue, ObservedNeutralMass, ObservedNeutralMass-MolecularWeightError, MonoisotopicMassError, MolecularWeightError, Rank, Charge FROM PeptideSpectrumMatch;
+                                         DROP TABLE PeptideSpectrumMatch;
+                                         ALTER TABLE NewPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch;
+                                         DROP TABLE About;
+                                        ");
         }
 
-        void testModelFile(TestModel testModel, string filepath)
+        void testModelFile(TestModel testModel, string filename)
         {
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(filepath))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
+                Assert.AreEqual(SchemaUpdater.CurrentSchemaRevision, session.UniqueResult<int>("SELECT SchemaRevision FROM About"));
+
                 testModel.TestOverallCounts();
                 testModel.TestSanity();
                 testModel.TestProteins();
@@ -163,56 +172,104 @@ namespace Test
             }
         }
 
+        void testFilterFile(string filename)
+        {
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename))
+            using (var session = sessionFactory.OpenStatelessSession())
+            {
+                Assert.AreEqual(SchemaUpdater.CurrentSchemaRevision, Convert.ToInt32(session.CreateSQLQuery("SELECT SchemaRevision FROM About").UniqueResult()));
+            }
+        }
+
+        void downgradeToRevision(string filename, int revision)
+        {
+            using (var connection = new SQLiteConnection(String.Format("Data Source={0};Version=3", filename)))
+            {
+                connection.Open();
+                if (revision < 7) downgrade_7_to_4(connection);
+                if (revision < 4) downgrade_4_to_3(connection);
+                if (revision < 3) downgrade_3_to_2(connection);
+                if (revision < 2) downgrade_2_to_1(connection);
+                if (revision < 1) downgrade_1_to_0(connection);
+            }
+        }
+
         [TestMethod]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(6, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(7, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel();
             TestModel.ClassInitialize(null);
             testModelFile(testModel, "testModel.idpDB");
 
-            // we don't need to test upgrade from 5 to 6; it simply forces reapplication of the basic filters
+            string filename = null;
 
+
+            // test all revisions without a data filter applied
+            // we don't need to test upgrade from 5 to 6; it simply forces reapplication of the basic filters
             // we don't need to test upgrade from 4 to 5; it's a simple null value fix
 
-            File.Copy("testModel.idpDB", "testModel-v3.idpDB");
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v3.idpDB"))
-            using (var session = testModel.session = sessionFactory.OpenSession())
-            {
-                downgrade_4_to_3(session);
-            }
-            testModelFile(testModel, "testModel-v3.idpDB");
+            filename = "testModel-v4.idpDB";
+            File.Copy("testModel.idpDB", filename, true);
+            downgradeToRevision(filename, 4);
+            testModelFile(testModel, filename);
 
-            File.Copy("testModel.idpDB", "testModel-v2.idpDB");
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v2.idpDB"))
-            using (var session = testModel.session = sessionFactory.OpenSession())
-            {
-                downgrade_4_to_3(session);
-                downgrade_3_to_2(session);
-            }
-            testModelFile(testModel, "testModel-v2.idpDB");
+            filename = "testModel-v3.idpDB";
+            File.Copy("testModel.idpDB", filename, true);
+            downgradeToRevision(filename, 3);
+            testModelFile(testModel, filename);
 
-            File.Copy("testModel.idpDB", "testModel-v1.idpDB");
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v1.idpDB"))
-            using (var session = testModel.session = sessionFactory.OpenSession())
-            {
-                downgrade_4_to_3(session);
-                downgrade_3_to_2(session);
-                downgrade_2_to_1(session);
-            }
-            testModelFile(testModel, "testModel-v1.idpDB");
+            filename = "testModel-v2.idpDB";
+            File.Copy("testModel.idpDB", filename, true);
+            downgradeToRevision(filename, 2);
+            testModelFile(testModel, filename);
 
-            File.Copy("testModel.idpDB", "testModel-v0.idpDB");
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v0.idpDB"))
+            filename = "testModel-v1.idpDB";
+            File.Copy("testModel.idpDB", filename, true);
+            downgradeToRevision(filename, 1);
+            testModelFile(testModel, filename);
+
+            filename = "testModel-v0.idpDB";
+            File.Copy("testModel.idpDB", filename, true);
+            downgradeToRevision(filename, 0);
+            testModelFile(testModel, filename);
+
+
+            // test all revisions with a data filter applied (only check that the update worked this time)
+
+            File.Copy("testModel.idpDB", "testFilter.idpDB", true);
+            var dataFilter = new DataFilter { MaximumQValue = 1 };
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testFilter.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
-                downgrade_4_to_3(session);
-                downgrade_3_to_2(session);
-                downgrade_2_to_1(session);
-                downgrade_1_to_0(session);
+                dataFilter.ApplyBasicFilters(session);
             }
-            testModelFile(testModel, "testModel-v0.idpDB");
+
+            filename = "testFilter-v4.idpDB";
+            File.Copy("testFilter.idpDB", filename, true);
+            downgradeToRevision(filename, 4);
+            testFilterFile(filename);
+
+            filename = "testFilter-v3.idpDB";
+            File.Copy("testFilter.idpDB", filename, true);
+            downgradeToRevision(filename, 3);
+            testFilterFile(filename);
+
+            filename = "testFilter-v2.idpDB";
+            File.Copy("testFilter.idpDB", filename, true);
+            downgradeToRevision(filename, 2);
+            testFilterFile(filename);
+
+            filename = "testFilter-v1.idpDB";
+            File.Copy("testFilter.idpDB", filename, true);
+            downgradeToRevision(filename, 1);
+            testFilterFile(filename);
+
+            filename = "testFilter-v0.idpDB";
+            File.Copy("testFilter.idpDB", filename, true);
+            downgradeToRevision(filename, 0);
+            testFilterFile(filename);
         }
     }
 }

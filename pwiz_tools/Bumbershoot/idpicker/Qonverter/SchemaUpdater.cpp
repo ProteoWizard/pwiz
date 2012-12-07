@@ -36,12 +36,88 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 6;
+const int CURRENT_SCHEMA_REVISION = 7;
 
 namespace SchemaUpdater {
 
 
 namespace {
+
+void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    // refactor FilteringCriteria table as FilterHistory table
+    db.execute("CREATE TABLE FilterHistory (Id INTEGER PRIMARY KEY,"
+               "                            MaximumQValue NUMERIC,"
+               "                            MinimumDistinctPeptidesPerProtein INT,"
+               "                            MinimumSpectraPerProtein INT,"
+               "                            MinimumAdditionalPeptidesPerProtein INT,"
+               "                            MinimumSpectraPerDistinctMatch INT,"
+               "                            MinimumSpectraPerDistinctPeptide INT,"
+               "                            MaximumProteinGroupsPerPeptide INT,"
+               "                            Clusters INT,"
+               "                            ProteinGroups INT,"
+               "                            Proteins INT,"
+               "                            DistinctPeptides INT,"
+               "                            DistinctMatches INT,"
+               "                            FilteredSpectra INT,"
+               "                            ProteinFDR NUMERIC,"
+               "                            PeptideFDR NUMERIC,"
+               "                            SpectrumFDR NUMERIC"
+               "                           );");
+
+    try
+    {
+        // if the database is currently filtered (FilteringCriteria exists), get the current filter settings
+        sqlite::query q(db, "SELECT * FROM FilteringCriteria");
+        sqlite::query::rows filterCriteriaRow = *q.begin();
+        double maxQValue;
+        int minPeptidesPerProtein, minSpectraPerProtein, minAdditionalPeptides;
+        int minSpectraPerMatch, minSpectraPerPeptide, maxProteinGroups;
+        filterCriteriaRow.getter() >> maxQValue >> minPeptidesPerProtein >> minSpectraPerProtein >> minAdditionalPeptides >>
+                                      minSpectraPerMatch >> minSpectraPerPeptide >> maxProteinGroups;
+
+        // and the summary counts based on that filter for the new FilterHistory table
+        q.prepare("SELECT COUNT(DISTINCT pro.Cluster), "
+                         "COUNT(DISTINCT pro.ProteinGroup), "
+                         "COUNT(DISTINCT pro.Id), "
+                         "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) "
+                  "FROM Protein pro");
+        sqlite::query::rows proteinLevelSummaryRow = *q.begin();
+        int clusters, proteinGroups, proteins;
+        float decoyProteins;
+        proteinLevelSummaryRow.getter() >> clusters >> proteinGroups >> proteins >> decoyProteins;
+        float proteinFDR = 2 * decoyProteins / proteins;
+        
+        q.prepare("SELECT COUNT(*) FROM Peptide"); int distinctPeptides = q.begin()->get<int>(0);
+        q.prepare("SELECT COUNT(DISTINCT DistinctMatchId) FROM DistinctMatch"); int distinctMatches = q.begin()->get<int>(0);
+        q.prepare("SELECT COUNT(*) FROM Spectrum"); int filteredSpectra = q.begin()->get<int>(0);
+
+        sqlite::command insertFilter(db, "INSERT INTO FilterHistory (Id, MaximumQValue, MinimumDistinctPeptidesPerProtein,"
+                                                                    "MinimumSpectraPerProtein, MinimumAdditionalPeptidesPerProtein,"
+                                                                    "MinimumSpectraPerDistinctMatch, MinimumSpectraPerDistinctPeptide,"
+                                                                    "MaximumProteinGroupsPerPeptide,"
+                                                                    "Clusters, ProteinGroups, Proteins,"
+                                                                    "DistinctPeptides, DistinctMatches, FilteredSpectra,"
+                                                                    "ProteinFDR, PeptideFDR, SpectrumFDR"
+                                                                   ") VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,0)");
+        insertFilter.binder() << 1 << maxQValue << minPeptidesPerProtein << minSpectraPerProtein << minAdditionalPeptides <<
+                                      minSpectraPerMatch << minSpectraPerPeptide << maxProteinGroups <<
+                                      clusters << proteinGroups << proteins <<
+                                      distinctPeptides << distinctMatches << filteredSpectra <<
+                                      proteinFDR;
+        insertFilter.execute();
+
+        db.execute("DROP TABLE FilteringCriteria");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "no such")) // column or table
+            throw runtime_error(e.what());
+    }
+
+    // delete previous layouts that are no longer valid since a new IPersistentForm (FilterHistoryForm) was added
+    db.execute("DELETE FROM LayoutProperty");
+}
 
 void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -143,10 +219,21 @@ void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
         }
 
         // if UnfilteredProtein exists but UnfilteredSpectrum does not, create the filtered Spectrum table
-        db.execute("ALTER TABLE Spectrum RENAME TO UnfilteredSpectrum;"
-                   "CREATE TABLE Spectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC);"
-                   "INSERT INTO Spectrum SELECT * FROM UnfilteredSpectrum WHERE Id IN (SELECT Spectrum FROM PeptideSpectrumMatch);");
-        
+        try
+        {
+            sqlite::query q(db, "SELECT Id FROM UnfilteredSpectrum LIMIT 1");
+            q.begin()->get<int>(0);
+        }
+        catch (sqlite::database_error& e)
+        {
+            if (!bal::contains(e.what(), "no such")) // column or table
+                throw runtime_error(e.what());
+
+            db.execute("ALTER TABLE Spectrum RENAME TO UnfilteredSpectrum;"
+                       "CREATE TABLE Spectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC);"
+                       "INSERT INTO Spectrum SELECT * FROM UnfilteredSpectrum WHERE Id IN (SELECT Spectrum FROM PeptideSpectrumMatch);");
+        }
+
         // if UnfilteredProtein exists, replace the UnfilteredPeptideSpectrumMatch's MonoisotopicMass/MolecularWeight columns with a single ObservedNeutralMass column
         try
         {
@@ -221,6 +308,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
         update_4_to_5(db, ilr);
     else if (schemaRevision == 5)
         update_5_to_6(db, ilr);
+    else if (schemaRevision == 6)
+        update_6_to_7(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

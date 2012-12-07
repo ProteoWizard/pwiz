@@ -412,30 +412,41 @@ namespace IDPicker.Forms
             public int Groups;
             public int Sources;
             public long Spectra;
-            public int Charges;
-            public int Analyses;
 
             #region Constructor
             public TotalCounts (NHibernate.ISession session, DataFilter dataFilter)
             {
                 lock (session)
                 {
-                    var total = session.CreateQuery("SELECT " +
-                                                    "COUNT(DISTINCT psm.Spectrum.Source.Group.id), " +
-                                                    "COUNT(DISTINCT psm.Spectrum.Source.id), " +
-                                                    "COUNT(DISTINCT psm.Spectrum.id), " +
-                                                    "COUNT(DISTINCT psm.Charge.id), " +
-                                                    "COUNT(DISTINCT psm.Analysis.id) " +
-                                                    dataFilter.GetFilteredQueryString(
-                                                        DataFilter.FromPeptideSpectrumMatch,
-                                                        DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink))
-                        .List<object[]>()[0];
+                    if (dataFilter.IsBasicFilter)
+                    {
+                        var total = session.CreateQuery("SELECT " +
+                                                        "COUNT(DISTINCT ssgl.Group.id), " +
+                                                        "COUNT(DISTINCT ss.id) " +
+                                                        dataFilter.GetFilteredQueryString(
+                                                            DataFilter.FromSpectrum,
+                                                            DataFilter.SpectrumToSpectrumSourceGroupLink))
+                                           .List<object[]>()[0];
 
-                    Groups = Convert.ToInt32(total[0]);
-                    Sources = Convert.ToInt32(total[1]);
-                    Spectra = Convert.ToInt64(total[2]);
-                    Charges = Convert.ToInt32(total[3]);
-                    Analyses = Convert.ToInt32(total[4]);
+                        Groups = Convert.ToInt32(total[0]);
+                        Sources = Convert.ToInt32(total[1]);
+                        Spectra = dataFilter.PersistentDataFilter.TotalCounts.FilteredSpectra;
+                    }
+                    else
+                    {
+                        var total = session.CreateQuery("SELECT " +
+                                                        "COUNT(DISTINCT ssgl.Group.id), " +
+                                                        "COUNT(DISTINCT ss.id), " +
+                                                        "COUNT(DISTINCT s.id) " +
+                                                        dataFilter.GetFilteredQueryString(
+                                                            DataFilter.FromPeptideSpectrumMatch,
+                                                            DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink))
+                                           .List<object[]>()[0];
+
+                        Groups = Convert.ToInt32(total[0]);
+                        Sources = Convert.ToInt32(total[1]);
+                        Spectra = Convert.ToInt64(total[2]);
+                    }
                 }
             }
             #endregion
@@ -691,7 +702,7 @@ namespace IDPicker.Forms
         }
         #endregion
 
-        public event EventHandler<DataFilter> SpectrumViewFilter;
+        public event EventHandler<ViewFilterEventArgs> SpectrumViewFilter;
         public event EventHandler<SpectrumViewVisualizeEventArgs> SpectrumViewVisualize;
 
         private TotalCounts totalCounts, basicTotalCounts;
@@ -1175,7 +1186,7 @@ namespace IDPicker.Forms
             }
 
             if (SpectrumViewFilter != null)
-                SpectrumViewFilter(this, newDataFilter);
+                SpectrumViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         void treeDataGridView_PreviewKeyDown (object sender, PreviewKeyDownEventArgs e)
@@ -1235,7 +1246,7 @@ namespace IDPicker.Forms
             //if (selectedMatches.Count > 0)
 
             if (SpectrumViewFilter != null)
-                SpectrumViewFilter(this, newDataFilter);
+                SpectrumViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         protected override bool updatePivots (FormProperty formProperty)

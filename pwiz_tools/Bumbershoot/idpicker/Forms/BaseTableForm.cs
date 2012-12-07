@@ -40,7 +40,7 @@ using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
-    public partial class BaseTableForm : DockableForm
+    public partial class BaseTableForm : DockableForm, IPersistentForm
     {
         public BaseTableForm()
         {
@@ -686,6 +686,10 @@ namespace IDPicker.Forms
 
         protected void exportButton_Click (object sender, EventArgs e)
         {
+            copyToClipboardSelectedToolStripMenuItem.Enabled =
+                exportSelectedCellsToFileToolStripMenuItem.Enabled =
+                showInExcelSelectToolStripMenuItem.Enabled = treeDataGridView.SelectedCells.Count > 0;
+
             exportMenu.Show(Cursor.Position);
         }
 
@@ -716,7 +720,7 @@ namespace IDPicker.Forms
 
                 // update default cell style
                 treeDataGridView.ForeColor = treeDataGridView.DefaultCellStyle.ForeColor = ccf.DefaultForeColor ?? SystemColors.WindowText;
-                treeDataGridView.BackgroundColor = treeDataGridView.DefaultCellStyle.BackColor = ccf.DefaultBackColor ?? SystemColors.Window;
+                treeDataGridView.BackgroundColor = treeDataGridView.GridColor = treeDataGridView.DefaultCellStyle.BackColor = ccf.DefaultBackColor ?? SystemColors.Window;
 
                 treeDataGridView.Refresh();
             }

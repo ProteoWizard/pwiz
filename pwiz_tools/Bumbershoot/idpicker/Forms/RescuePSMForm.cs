@@ -283,6 +283,17 @@ namespace IDPicker.Forms
             ClearData();
         }
 
+        public void ClearSession()
+        {
+            ClearData();
+            if (session != null && session.IsOpen)
+            {
+                session.Close();
+                session.Dispose();
+                session = null;
+            }
+        }
+
         /// <summary>
         /// run clustering, Rescue PSMs, update idpDB
         /// </summary>

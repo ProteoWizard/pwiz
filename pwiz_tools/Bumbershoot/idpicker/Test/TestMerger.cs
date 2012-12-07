@@ -88,7 +88,7 @@ namespace Test
             #region Example PSMs
 
             List<SpectrumTuple> mergeSourcePsmSummary1 = new List<SpectrumTuple>()
-             {
+            {
                  //               Group Source Spectrum Analysis     Score  Q   List of Peptide@Charge/ScoreDivider
                  new SpectrumTuple("/A/1", 1, 1, 1, 12, 0, "[C2H2O1]PEPTIDE@2/1 TIDERPEPTIDEK@4/2 EPPIER@1/3"),
                  new SpectrumTuple("/A/1", 1, 2, 1, 23, 0, "PEPTIDER@2/1 PETPDETK@3/3 EDITPEPK@2/5"),
@@ -172,7 +172,8 @@ namespace Test
 
             #endregion
 
-             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB", new SessionFactoryConfig { CreateSchema = true }))
+            File.Delete("testMergeSource1.idpDB");
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB", new SessionFactoryConfig { CreateSchema = true }))
             using (var session = sessionFactory.OpenSession())
             {
                 TestModel.CreateTestProteins(session, testProteinSequences);
@@ -184,7 +185,8 @@ namespace Test
                 session.Flush();
             }
 
-             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource2.idpDB", new SessionFactoryConfig { CreateSchema = true }))
+            File.Delete("testMergeSource2.idpDB");
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource2.idpDB", new SessionFactoryConfig { CreateSchema = true }))
             using (var session = sessionFactory.OpenSession())
             {
                 TestModel.CreateTestProteins(session, testProteinSequences);
@@ -205,6 +207,7 @@ namespace Test
             }
 
             // create a new merged idpDB from two idpDB files
+            File.Delete("testMerger.idpDB");
             var merger = new Merger("testMerger.idpDB", new string[] { "testMergeSource1.idpDB", "testMergeSource2.idpDB" });
             merger.Start();
 

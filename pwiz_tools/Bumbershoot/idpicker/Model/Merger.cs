@@ -125,6 +125,7 @@ namespace IDPicker.DataModel
             conn.ExecuteNonQuery("PRAGMA merged.journal_mode=OFF; PRAGMA merged.synchronous=OFF; PRAGMA merged.cache_size=" + mergedCacheSize);
 
             conn.ExecuteNonQuery("CREATE TABLE IF NOT EXISTS merged.MergedFiles (Filepath TEXT PRIMARY KEY)");
+            conn.ExecuteNonQuery("UPDATE About SET SoftwareVersion = '" + Util.Version + "', StartTime = datetime('now')");
 
             string getMaxIdsSql =
                       @"SELECT (SELECT IFNULL(MAX(Id),0) FROM merged.Protein),

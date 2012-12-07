@@ -231,6 +231,13 @@
     <Compile Include="Forms\EmbedderForm.Designer.cs">
       <DependentUpon>EmbedderForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\FilterHistoryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FilterHistoryForm.Designer.cs">
+      <DependentUpon>FilterHistoryForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\IPersistentForm.cs" />
     <Compile Include="Forms\NewVersionForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -339,6 +346,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\DefaultSettingsManagerForm.resx">
       <DependentUpon>DefaultSettingsManagerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FilterHistoryForm.resx">
+      <DependentUpon>FilterHistoryForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ModificationTableForm.resx">
       <DependentUpon>ModificationTableForm.cs</DependentUpon>

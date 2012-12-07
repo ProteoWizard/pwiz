@@ -26,6 +26,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using IDPicker;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
@@ -95,6 +96,7 @@ namespace Test
             const int sourceCount = 2;
             const int chargeCount = 2;
 
+            File.Delete("testStaticQonversion.idpDB");
             var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testStaticQonversion.idpDB", new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
@@ -191,14 +193,14 @@ namespace Test
                 ExpectedTotalAnalyses = analysisCount * sourceCount // engine 3 is ignored
             };
 
-            System.IO.File.Copy("testStaticQonversion.idpDB", "testStaticQonversion2.idpDB");
+            File.Copy("testStaticQonversion.idpDB", "testStaticQonversion2.idpDB", true);
 
             // test without progress monitor
             qonverter.Qonvert("testStaticQonversion2.idpDB");
 
             qonverter.QonversionProgress += new IDPicker.Qonverter.QonversionProgressEventHandler(progressTester.qonverter_QonversionProgress);
 
-            System.IO.File.Copy("testStaticQonversion.idpDB", "testStaticQonversion3.idpDB");
+            File.Copy("testStaticQonversion.idpDB", "testStaticQonversion3.idpDB", true);
 
             // test progress monitor with cancelling
             // (must before a full qonversion since the QValue test doesn't expect cancellation)

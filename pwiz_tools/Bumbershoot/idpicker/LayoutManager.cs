@@ -30,6 +30,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using IDPicker.Controls;
 using IDPicker.DataModel;
 using IDPicker.Forms;
 using NHibernate.Linq;
@@ -60,17 +61,13 @@ namespace IDPicker
         private NHibernate.ISession _session;
         private List<LayoutProperty> _userLayoutList;
         private IDPickerForm mainForm;
-        private PeptideTableForm peptideTableForm;
-        private ProteinTableForm proteinTableForm;
-        private SpectrumTableForm spectrumTableForm;
+        private IList<IPersistentForm> _persistentForms;
         private DockPanel dockPanel;
 
-        public LayoutManager(IDPickerForm mainForm, PeptideTableForm peptideTableForm, ProteinTableForm proteinTableForm, SpectrumTableForm spectrumTableForm, DockPanel dockPanel)
+        public LayoutManager(IDPickerForm mainForm, DockPanel dockPanel, IList<IPersistentForm> persistentForms)
         {
             this.mainForm = mainForm;
-            this.peptideTableForm = peptideTableForm;
-            this.proteinTableForm = proteinTableForm;
-            this.spectrumTableForm = spectrumTableForm;
+            _persistentForms = persistentForms;
             this.dockPanel = dockPanel;
 
             refreshUserLayoutList();
@@ -194,9 +191,8 @@ namespace IDPicker
                     if (MessageBox.Show("Save column settings as well?", "Save", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         saveColumns = true;
-                        formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
-                        formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                        formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
+                        foreach (var form in _persistentForms)
+                            formProperties[form.Name] = form.GetCurrentProperties(false);
                     }
                     updateLayout(tempItem, saveColumns, false, formProperties);
                 };
@@ -214,11 +210,8 @@ namespace IDPicker
                         {
                             var formProperties = new Dictionary<string, FormProperty>();
                             if (textInput.GetCheckState())
-                            {
-                                formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
-                                formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
-                            }
+                                foreach (var form in _persistentForms)
+                                    formProperties[form.Name] = form.GetCurrentProperties(false);
                             saveNewLayout(textInput.GetText(), textInput.GetCheckState(), false, formProperties);
                         }
                     };
@@ -249,9 +242,8 @@ namespace IDPicker
                         if (MessageBox.Show("Save column settings as well?", "Save", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             saveColumns = true;
-                            formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
-                            formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                            formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
+                            foreach (var form in _persistentForms)
+                                formProperties[form.Name] = form.GetCurrentProperties(false);
                         }
                         updateLayout(tempItem, saveColumns, true, formProperties);
                     };
@@ -269,11 +261,8 @@ namespace IDPicker
                             {
                                 var formProperties = new Dictionary<string, FormProperty>();
                                 if (textInput.GetCheckState())
-                                {
-                                    formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
-                                    formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
-                                }
+                                    foreach (var form in _persistentForms)
+                                        formProperties[form.Name] = form.GetCurrentProperties(false);
                                 saveNewLayout(textInput.GetText(), textInput.GetCheckState(), true, formProperties);
                             }
                         };
@@ -363,9 +352,8 @@ namespace IDPicker
                 if (!userDefault.FormProperties.Any())
                 {
                     var formProperties = new Dictionary<string, FormProperty>();
-                    formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
-                    formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
+                    foreach (var form in _persistentForms)
+                        formProperties[form.Name] = form.GetCurrentProperties(false);
                     updateLayout(userDefault, true, false, formProperties);
                 }
 
@@ -377,9 +365,8 @@ namespace IDPicker
                 if (databaseDefault == null || !databaseDefault.FormProperties.Any())
                 {
                     var formProperties = new Dictionary<string, FormProperty>();
-                    formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
-                    formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
+                    foreach (var form in _persistentForms)
+                        formProperties[form.Name] = form.GetCurrentProperties(false);
                     databaseDefault = saveNewLayout("Database Default", true, true, formProperties);
                 }
 
@@ -427,9 +414,8 @@ namespace IDPicker
             {
                 _userLayoutList = new List<LayoutProperty>();
                 var formProperties = new Dictionary<string, FormProperty>();
-                formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
-                formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
+                foreach (var form in _persistentForms)
+                    formProperties[form.Name] = form.GetCurrentProperties(false);
 
                 saveNewLayout("System Default", true, false, formProperties);
                 saveNewLayout("User Default", true, false, formProperties);

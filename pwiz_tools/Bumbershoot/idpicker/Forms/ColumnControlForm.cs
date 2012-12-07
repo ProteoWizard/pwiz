@@ -109,7 +109,7 @@ namespace IDPicker.Forms
 
         private void columnOptionsDGV_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (e.ColumnIndex == decimalColumn.Index && columnOptionsDGV[typeColumn.Index, e.RowIndex].Value != typeof(float))
+            if (e.ColumnIndex == decimalColumn.Index && (Type) columnOptionsDGV[typeColumn.Index, e.RowIndex].Value != typeof(float))
                 e.Cancel = true;
             else if (e.ColumnIndex == visibleColumn.Index && e.RowIndex == 0)
                 e.Cancel = true;
@@ -117,7 +117,7 @@ namespace IDPicker.Forms
 
         private void columnOptionsDGV_CellFormatting (object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.ColumnIndex == decimalColumn.Index && columnOptionsDGV[typeColumn.Index, e.RowIndex].Value != typeof(float))
+            if (e.ColumnIndex == decimalColumn.Index && (Type) columnOptionsDGV[typeColumn.Index, e.RowIndex].Value != typeof(float))
                 e.CellStyle.BackColor = SystemColors.ControlDark;
             else if (e.ColumnIndex == visibleColumn.Index && e.RowIndex == 0)
                 e.CellStyle.BackColor = SystemColors.ControlDark;

@@ -38,7 +38,7 @@ using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
-    public partial class AnalysisTableForm : DockableForm
+    public partial class AnalysisTableForm : DockableForm, IPersistentForm
     {
         #region Wrapper classes for encapsulating query results
 
@@ -137,7 +137,7 @@ namespace IDPicker.Forms
             };
 
             if (AnalysisViewFilter != null)
-                AnalysisViewFilter(this, newDataFilter);
+                AnalysisViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         void treeDataGridView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -166,10 +166,10 @@ namespace IDPicker.Forms
             }
 
             if (AnalysisViewFilter != null)
-                AnalysisViewFilter(this, newDataFilter);
+                AnalysisViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
-        public event EventHandler<DataFilter> AnalysisViewFilter;
+        public event EventHandler<ViewFilterEventArgs> AnalysisViewFilter;
         public event EventHandler FinishedSetData;
         public event EventHandler StartingSetData;
 
@@ -687,6 +687,4 @@ namespace IDPicker.Forms
             }
         }
     }
-
-    //public delegate void PeptideViewFilterEventHandler (PeptideTableForm sender, DataFilter peptideViewFilter);
 }

@@ -79,16 +79,18 @@ namespace IDPicker
             this.layoutToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.dataFiltersToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tutorialsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.glossaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataImportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.proteinViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.commandLineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tutorialsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.glossaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.dataImportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.proteinViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.developerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -134,12 +136,14 @@ namespace IDPicker
             // 
             // menuStrip1
             // 
+            this.menuStrip1.BackColor = System.Drawing.SystemColors.MenuBar;
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuRoot,
             this.toolsToolStripMenuItem,
             this.layoutToolStripMenuRoot,
             this.dataFiltersToolStripMenuRoot,
-            this.helpToolStripMenuItem});
+            this.helpToolStripMenuItem,
+            this.developerToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(584, 24);
@@ -314,6 +318,37 @@ namespace IDPicker
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
             // 
+            // tutorialsToolStripMenuItem
+            // 
+            this.tutorialsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.glossaryToolStripMenuItem,
+            this.dataImportToolStripMenuItem,
+            this.proteinViewToolStripMenuItem});
+            this.tutorialsToolStripMenuItem.Name = "tutorialsToolStripMenuItem";
+            this.tutorialsToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
+            this.tutorialsToolStripMenuItem.Text = "Tutorials";
+            // 
+            // glossaryToolStripMenuItem
+            // 
+            this.glossaryToolStripMenuItem.Name = "glossaryToolStripMenuItem";
+            this.glossaryToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.glossaryToolStripMenuItem.Text = "Glossary";
+            this.glossaryToolStripMenuItem.Click += new System.EventHandler(this.glossaryToolStripMenuItem_Click);
+            // 
+            // dataImportToolStripMenuItem
+            // 
+            this.dataImportToolStripMenuItem.Name = "dataImportToolStripMenuItem";
+            this.dataImportToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.dataImportToolStripMenuItem.Text = "Data Import";
+            this.dataImportToolStripMenuItem.Click += new System.EventHandler(this.dataImportToolStripMenuItem_Click);
+            // 
+            // proteinViewToolStripMenuItem
+            // 
+            this.proteinViewToolStripMenuItem.Name = "proteinViewToolStripMenuItem";
+            this.proteinViewToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.proteinViewToolStripMenuItem.Text = "Protein View";
+            this.proteinViewToolStripMenuItem.Click += new System.EventHandler(this.proteinViewToolStripMenuItem_Click);
+            // 
             // commandLineHelpMenuItem
             // 
             this.commandLineHelpMenuItem.Name = "commandLineHelpMenuItem";
@@ -353,36 +388,20 @@ namespace IDPicker
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // tutorialsToolStripMenuItem
+            // developerToolStripMenuItem
             // 
-            this.tutorialsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.glossaryToolStripMenuItem,
-            this.dataImportToolStripMenuItem,
-            this.proteinViewToolStripMenuItem});
-            this.tutorialsToolStripMenuItem.Name = "tutorialsToolStripMenuItem";
-            this.tutorialsToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
-            this.tutorialsToolStripMenuItem.Text = "Tutorials";
+            this.developerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showLogToolStripMenuItem});
+            this.developerToolStripMenuItem.Name = "developerToolStripMenuItem";
+            this.developerToolStripMenuItem.Size = new System.Drawing.Size(72, 20);
+            this.developerToolStripMenuItem.Text = "Developer";
             // 
-            // glossaryToolStripMenuItem
+            // showLogToolStripMenuItem
             // 
-            this.glossaryToolStripMenuItem.Name = "glossaryToolStripMenuItem";
-            this.glossaryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.glossaryToolStripMenuItem.Text = "Glossary";
-            this.glossaryToolStripMenuItem.Click += new System.EventHandler(this.glossaryToolStripMenuItem_Click);
-            // 
-            // dataImportToolStripMenuItem
-            // 
-            this.dataImportToolStripMenuItem.Name = "dataImportToolStripMenuItem";
-            this.dataImportToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.dataImportToolStripMenuItem.Text = "Data Import";
-            this.dataImportToolStripMenuItem.Click += new System.EventHandler(this.dataImportToolStripMenuItem_Click);
-            // 
-            // proteinViewToolStripMenuItem
-            // 
-            this.proteinViewToolStripMenuItem.Name = "proteinViewToolStripMenuItem";
-            this.proteinViewToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.proteinViewToolStripMenuItem.Text = "Protein View";
-            this.proteinViewToolStripMenuItem.Click += new System.EventHandler(this.proteinViewToolStripMenuItem_Click);
+            this.showLogToolStripMenuItem.Name = "showLogToolStripMenuItem";
+            this.showLogToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.showLogToolStripMenuItem.Text = "Show Log";
+            this.showLogToolStripMenuItem.Click += new System.EventHandler(this.showLogToolStripMenuItem_Click);
             // 
             // dockPanel
             // 
@@ -461,6 +480,8 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem glossaryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem dataImportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem proteinViewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem developerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showLogToolStripMenuItem;
 
     }
 }

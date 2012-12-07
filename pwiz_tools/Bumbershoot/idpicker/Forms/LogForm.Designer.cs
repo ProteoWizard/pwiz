@@ -55,7 +55,7 @@ namespace IDPicker.Forms
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.timestampColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.entryColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView
@@ -70,7 +70,7 @@ namespace IDPicker.Forms
             this.entryColumn});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView.Name = "logDataGridView";
+            this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
@@ -91,11 +91,10 @@ namespace IDPicker.Forms
             // 
             // entryColumn
             // 
-            this.entryColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
+            this.entryColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.entryColumn.HeaderText = "Entry";
             this.entryColumn.Name = "entryColumn";
             this.entryColumn.ReadOnly = true;
-            this.entryColumn.Width = 56;
             // 
             // LogForm
             // 
@@ -103,15 +102,15 @@ namespace IDPicker.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(412, 369);
             this.Controls.Add(this.dataGridView);
-            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas) (((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
-                        | DigitalRune.Windows.Docking.DockAreas.Top)
-                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
-                        | DigitalRune.Windows.Docking.DockAreas.Document)));
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right) 
+            | DigitalRune.Windows.Docking.DockAreas.Top) 
+            | DigitalRune.Windows.Docking.DockAreas.Bottom) 
+            | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Name = "LogForm";
             this.TabText = "LogForm";
             this.Text = "LogForm";
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
 
         }

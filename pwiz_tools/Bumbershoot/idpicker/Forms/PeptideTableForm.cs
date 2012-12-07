@@ -217,25 +217,31 @@ namespace IDPicker.Forms
 
         struct TotalCounts
         {
-            public int PeptideGroups;
             public int DistinctPeptides;
             public int DistinctMatches;
 
             #region Constructor
             public TotalCounts (NHibernate.ISession session, DataFilter dataFilter)
             {
-                lock (session)
+                if (dataFilter.IsBasicFilter)
                 {
-                    var total = session.CreateQuery("SELECT " +
-                                                    "COUNT(DISTINCT psm.Peptide.PeptideGroup), " +
-                                                    "COUNT(DISTINCT psm.Peptide.id), " +
-                                                    "COUNT(DISTINCT psm.DistinctMatchId) " +
-                                                    dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch))
-                        .UniqueResult<object[]>();
+                    var totalCounts = dataFilter.PersistentDataFilter.TotalCounts;
+                    DistinctPeptides = totalCounts.DistinctPeptides;
+                    DistinctMatches = totalCounts.DistinctMatches;
+                }
+                else
+                {
+                    lock (session)
+                    {
+                        var total = session.CreateQuery("SELECT " +
+                                                        "COUNT(DISTINCT psm.Peptide.id), " +
+                                                        "COUNT(DISTINCT psm.DistinctMatchId) " +
+                                                        dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch))
+                                           .UniqueResult<object[]>();
 
-                    PeptideGroups = Convert.ToInt32(total[0]);
-                    DistinctPeptides = Convert.ToInt32(total[1]);
-                    DistinctMatches = Convert.ToInt32(total[2]);
+                        DistinctPeptides = Convert.ToInt32(total[0]);
+                        DistinctMatches = Convert.ToInt32(total[1]);
+                    }
                 }
             }
             #endregion
@@ -331,7 +337,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        public event PeptideViewFilterEventHandler PeptideViewFilter;
+        public event EventHandler<ViewFilterEventArgs> PeptideViewFilter;
 
         private TotalCounts totalCounts, basicTotalCounts;
 
@@ -618,7 +624,7 @@ namespace IDPicker.Forms
                 newDataFilter.DistinctMatchKey = new List<DistinctMatchKey>() { (row as DistinctMatchRow).DistinctMatch };
 
             if (PeptideViewFilter != null)
-                PeptideViewFilter(this, newDataFilter);
+                PeptideViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         void treeDataGridView_PreviewKeyDown (object sender, PreviewKeyDownEventArgs e)
@@ -663,7 +669,7 @@ namespace IDPicker.Forms
             if (selectedMatches.Count > 0) newDataFilter.DistinctMatchKey = selectedMatches;
 
             if (PeptideViewFilter != null)
-                PeptideViewFilter(this, newDataFilter);
+                PeptideViewFilter(this, new ViewFilterEventArgs(newDataFilter));
         }
 
         private void SetDefaults()
@@ -976,8 +982,8 @@ namespace IDPicker.Forms
             treeDataGridView.RootRowCount = rows.Count();
 
             // show total counts in the form title
-            Text = TabText = String.Format("Peptide View: {0} peptide groups, {1} distinct peptides, {2} distinct matches",
-                                           totalCounts.PeptideGroups, totalCounts.DistinctPeptides, totalCounts.DistinctMatches);
+            Text = TabText = String.Format("Peptide View: {0} distinct peptides, {1} distinct matches",
+                                           totalCounts.DistinctPeptides, totalCounts.DistinctMatches);
 
             addPivotColumns();
 
@@ -1063,6 +1069,4 @@ namespace IDPicker.Forms
             return true;
         }
     }
-
-    public delegate void PeptideViewFilterEventHandler (PeptideTableForm sender, DataFilter peptideViewFilter);
 }

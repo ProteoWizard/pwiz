@@ -62,4 +62,27 @@
         <property name="FormProperties" type="FormPropertiesUserType"/>
     </class>
 
+    <class name="PersistentDataFilter" table="FilterHistory">
+        <id name="Id"><generator class="native"/></id>
+        <property name="MaximumQValue"/>
+        <property name="MinimumDistinctPeptidesPerProtein"/>
+        <property name="MinimumSpectraPerProtein"/>
+        <property name="MinimumAdditionalPeptidesPerProtein"/>
+        <property name="MinimumSpectraPerDistinctMatch"/>
+        <property name="MinimumSpectraPerDistinctPeptide"/>
+        <property name="MaximumProteinGroupsPerPeptide"/>
+
+        <component name="TotalCounts">
+            <property name="Clusters"/>
+            <property name="ProteinGroups"/>
+            <property name="Proteins"/>
+            <property name="DistinctPeptides"/>
+            <property name="DistinctMatches"/>
+            <property name="FilteredSpectra"/>
+            <property name="ProteinFDR"/>
+            <property name="PeptideFDR"/>
+            <property name="SpectrumFDR"/>
+        </component>
+    </class>
+
 </hibernate-mapping>

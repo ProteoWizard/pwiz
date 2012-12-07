@@ -43,7 +43,7 @@ namespace IDPicker
     {
         SequenceCoverageControl control;
 
-        public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
+        public event EventHandler<ViewFilterEventArgs> SequenceCoverageFilter;
 
         public SequenceCoverageForm (NHibernate.ISession session, DataModel.Protein protein, DataFilter viewFilter)
         {
@@ -110,10 +110,10 @@ namespace IDPicker
             this.ResumeLayout(false);
         }
 
-        protected void OnSequenceCoverageFilter (DataModel.DataFilter sequenceCoverageFilter)
+        protected void OnSequenceCoverageFilter (ViewFilterEventArgs e)
         {
             if (SequenceCoverageFilter != null)
-                SequenceCoverageFilter(control, sequenceCoverageFilter);
+                SequenceCoverageFilter(control, e);
         }
     }
 
@@ -209,7 +209,7 @@ namespace IDPicker
         public Font HoverFont { get; set; }
         #endregion
 
-        public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
+        public event EventHandler<ViewFilterEventArgs> SequenceCoverageFilter;
 
         int lineSpacing;
 
@@ -353,7 +353,7 @@ namespace IDPicker
                 MinimumSize = new Size(0, ClientSize.Height)
             };
 
-            surface.SequenceCoverageFilter += (s, filter) => OnSequenceCoverageFilter(filter);
+            surface.SequenceCoverageFilter += (s, e2) => OnSequenceCoverageFilter(e2);
 
             Controls.Add(surface);
             Refresh();
@@ -399,10 +399,10 @@ namespace IDPicker
             surface.Refresh();
         }
 
-        protected void OnSequenceCoverageFilter (DataModel.DataFilter sequenceCoverageFilter)
+        protected void OnSequenceCoverageFilter (ViewFilterEventArgs e)
         {
             if (SequenceCoverageFilter != null)
-                SequenceCoverageFilter(this, sequenceCoverageFilter);
+                SequenceCoverageFilter(this, e);
         }
 
         void bitmapSave()
@@ -508,7 +508,7 @@ namespace IDPicker
         SizeF residueBounds;
         bool[] filteredInOffsets;
 
-        public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
+        public event EventHandler<ViewFilterEventArgs> SequenceCoverageFilter;
 
         //ToolTip toolTip;
 
@@ -829,11 +829,9 @@ namespace IDPicker
                 AminoAcidOffset = newAminoAcidOffset
             };
 
-            SequenceCoverageFilter(owner, newDataFilter);
+            SequenceCoverageFilter(owner, new ViewFilterEventArgs(newDataFilter));
         }
     }
-
-    public delegate void SequenceCoverageFilterEventHandler (SequenceCoverageControl sender, DataModel.DataFilter sequenceCoverageFilter);
 }
 
 namespace System.Drawing

@@ -73,6 +73,9 @@ namespace IDPicker
         PeakStatisticsForm peakStatisticsForm;
         DistributionStatisticsForm distributionStatisticsForm;
         RescuePSMsForm reassignPSMsForm;
+        FilterHistoryForm filterHistoryForm;
+
+        IList<IPersistentForm> persistentForms;
 
         LogForm logForm = null;
         //SpyEventLogForm spyEventLogForm;
@@ -172,6 +175,10 @@ namespace IDPicker
             analysisTableForm.Show(dockPanel, DockState.Document);
             analysisTableForm.AutoHidePortion = 0.5;
 
+            filterHistoryForm = new FilterHistoryForm();
+            filterHistoryForm.Show(dockPanel, DockState.Document);
+            filterHistoryForm.AutoHidePortion = 0.5;
+
             spectrumTableForm.SpectrumViewFilter += handleViewFilter;
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
             spectrumTableForm.FinishedSetData += handleFinishedSetData;
@@ -189,24 +196,44 @@ namespace IDPicker
             analysisTableForm.AnalysisViewFilter += handleViewFilter;
             analysisTableForm.FinishedSetData += handleFinishedSetData;
             analysisTableForm.StartingSetData += handleStartingSetData;
+            filterHistoryForm.LoadPersistentDataFilter += handleLoadPersistentDataFilter;
+            //filterHistoryForm.FinishedSetData += handleFinishedSetData;
+            //filterHistoryForm.StartingSetData += handleStartingSetData;
 
             // hide DockPanel before initializing layout manager
             dockPanel.Visible = false;
             dockPanel.ShowDocumentIcon = true;
 
-            _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
+            persistentForms = new IPersistentForm[]
+            {
+                proteinTableForm,
+                peptideTableForm,
+                spectrumTableForm,
+                analysisTableForm,
+                filterHistoryForm
+            };
+
+            _layoutManager = new LayoutManager(this, dockPanel, persistentForms);
 
             // load last or default location and size
             _layoutManager.LoadMainFormSettings();
 
-            // provide SQL logging for development builds
+            // certain features are only enabled for development builds
             if (Application.ExecutablePath.Contains("build-nt-x86"))
             {
+                // provide SQL logging for development builds
                 logForm = new LogForm();
+                logForm.AutoHidePortion = 0.25;
                 Console.SetOut(logForm.LogWriter);
+
+                developerToolStripMenuItem.ForeColor = SystemColors.MenuBar;
             }
             else
+            {
                 Console.SetOut(TextWriter.Null);
+
+                developerToolStripMenuItem.Visible = false;
+            }
 
             /*spyEventLogForm = new SpyEventLogForm();
             spyEventLogForm.AddEventSpy(new EventSpy("proteinTableForm", proteinTableForm));
@@ -258,7 +285,7 @@ namespace IDPicker
                 var clearProgressInvoker = new BackgroundWorker();
                 clearProgressInvoker.DoWork += delegate
                 {
-                    Thread.Sleep(2000);
+                    Thread.Sleep(500);
                     clearProgress(e.Message);
                 };
                 clearProgressInvoker.RunWorkerAsync();
@@ -569,20 +596,31 @@ namespace IDPicker
         }
         #endregion
 
-        void handleViewFilter(object sender, DataFilter newViewFilter)
+        void handleViewFilter(object sender, ViewFilterEventArgs e)
         {
             lock (this)
                 if (mainViewsLoaded < 5)
                     return;
 
-            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter)o.Tag == newViewFilter) > 0)
+            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter)o.Tag == e.ViewFilter) > 0)
                 return;
 
-            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newViewFilter.ToString(), newViewFilter));
+            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(e.ViewFilter.ToString(), e.ViewFilter));
 
             // build a new DataFilter from the BreadCrumb list
             viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
             setData();
+        }
+
+        void handleLoadPersistentDataFilter(object sender, LoadPersistentDataFilterEventArgs e)
+        {
+            lock (this)
+                if (mainViewsLoaded < 5)
+                    return;
+
+            basicFilter.PersistentDataFilter = e.PersistentDataFilter;
+            basicFilterControl.DataFilter = basicFilter;
+            ApplyBasicFilter();
         }
 
         void breadCrumbControl_BreadCrumbClicked (object sender, BreadCrumbClickedEventArgs e)
@@ -610,7 +648,7 @@ namespace IDPicker
         public void ApplyBasicFilter ()
         {
             clearData();
-            dataFiltersToolStripMenuRoot.Enabled = false;
+            basicFilterControl.Enabled = false;
 
             toolStripStatusLabel.Text = "Applying basic filters...";
             basicFilter.FilteringProgress += progressMonitor.UpdateProgress;
@@ -628,7 +666,7 @@ namespace IDPicker
                 if (e.Result is Exception)
                 {
                     Program.HandleException(e.Result as Exception);
-                    dataFiltersToolStripMenuRoot.Enabled = true;
+                    basicFilterControl.Enabled = true;
                     return;
                 }
 
@@ -664,16 +702,19 @@ namespace IDPicker
 
         void clearData ()
         {
-            if (proteinTableForm != null) proteinTableForm.ClearData(true);
-            if (peptideTableForm != null) peptideTableForm.ClearData(true);
-            if (spectrumTableForm != null) spectrumTableForm.ClearData(true);
-            if (modificationTableForm != null) modificationTableForm.ClearData(true);
-            if (analysisTableForm != null) analysisTableForm.ClearData(true);
+            proteinTableForm.ClearData(true);
+            peptideTableForm.ClearData(true);
+            spectrumTableForm.ClearData(true);
+            modificationTableForm.ClearData(true);
+            analysisTableForm.ClearData(true);
+            filterHistoryForm.ClearData(true);
+            reassignPSMsForm.ClearData(true);
+
             fragmentationStatisticsForm.ClearData(true);
             peakStatisticsForm.ClearData(true);
             distributionStatisticsForm.ClearData();
+
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearData());
-            if (reassignPSMsForm != null) reassignPSMsForm.ClearData(true);
         }
 
         int mainViewsLoaded;
@@ -685,12 +726,14 @@ namespace IDPicker
             spectrumTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             modificationTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             analysisTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
+            filterHistoryForm.SetData(session.SessionFactory.OpenSession(), basicFilter);
+            reassignPSMsForm.SetData(session.SessionFactory.OpenSession(), basicFilter);
 
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);
             distributionStatisticsForm.SetData(session, viewFilter);
+
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
-            reassignPSMsForm.SetData(session, basicFilter);
         }
 
         void handleStartingSetData(object sender, EventArgs e)
@@ -704,7 +747,7 @@ namespace IDPicker
                     if (mainViewsLoaded < 0)
                         throw new Exception("mainViewsLoaded < 0 after update from " + sender.ToString());
 
-                    breadCrumbControl.Enabled = dataFiltersToolStripMenuRoot.Enabled = false;
+                    breadCrumbControl.Enabled = basicFilterControl.Enabled = false;
                     progressMonitor_ProgressUpdate(this, new ProgressUpdateEventArgs()
                     {
                         Current = mainViewsLoaded,
@@ -731,7 +774,7 @@ namespace IDPicker
                     });
 
                     if (mainViewsLoaded == 5)
-                        breadCrumbControl.Enabled = dataFiltersToolStripMenuRoot.Enabled = true;
+                        breadCrumbControl.Enabled = basicFilterControl.Enabled = true;
                 }
             }));
         }
@@ -743,9 +786,13 @@ namespace IDPicker
             spectrumTableForm.ClearSession();
             modificationTableForm.ClearSession();
             analysisTableForm.ClearSession();
+            reassignPSMsForm.ClearSession();
+            filterHistoryForm.ClearSession();
+
             fragmentationStatisticsForm.ClearSession();
             peakStatisticsForm.ClearSession();
             distributionStatisticsForm.ClearSession();
+
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => { o.ClearSession(); o.Close(); });
 
             if (session != null)
@@ -1225,8 +1272,6 @@ namespace IDPicker
                     }
 
                     toolStripStatusLabel.Text = "Ready";
-
-                    if (logForm != null) Invoke(new MethodInvoker(() => logForm.Show(dockPanel, DockState.DockBottomAutoHide)));
                 }));
 
                 //show list of delayed non-fatal errors
@@ -1306,15 +1351,9 @@ namespace IDPicker
                 File.Delete(tempFilepath);
             }
 
-            if (userLayout.HasCustomColumnSettings &&
-                proteinTableForm != null &&
-                peptideTableForm != null &&
-                spectrumTableForm != null)
-            {
-                proteinTableForm.LoadLayout(userLayout.FormProperties["ProteinTableForm"]);
-                peptideTableForm.LoadLayout(userLayout.FormProperties["PeptideTableForm"]);
-                spectrumTableForm.LoadLayout(userLayout.FormProperties["SpectrumTableForm"]);
-            }
+            if (userLayout.HasCustomColumnSettings)
+                foreach (var form in persistentForms)
+                    form.LoadLayout(userLayout.FormProperties[form.Name]);
         }
 
         private IDockableForm DeserializeForm(string persistantString)
@@ -1329,6 +1368,8 @@ namespace IDPicker
                 return modificationTableForm;
             if (persistantString == typeof(AnalysisTableForm).ToString())
                 return analysisTableForm;
+            if (persistantString == typeof(FilterHistoryForm).ToString())
+                return filterHistoryForm;
             if (persistantString == typeof(RescuePSMsForm).ToString())
                 return reassignPSMsForm;
             
@@ -1496,6 +1537,10 @@ namespace IDPicker
             session = sessionFactory.OpenSession();
             //session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
             _layoutManager.SetSession(session);
+
+            // delete old filters since they are not valid with different qonverter settings
+            session.CreateSQLQuery("DELETE FROM FilterHistory").ExecuteUpdate();
+            session.Clear();
 
             if (basicFilter == null)
                 basicFilter = new DataFilter()
@@ -2529,6 +2574,11 @@ namespace IDPicker
         private void proteinViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialProteinView.html");
+        }
+
+        private void showLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            logForm.Show(dockPanel, DockState.DockBottomAutoHide);
         }
     }
 
