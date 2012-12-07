@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model
             }
             if (!string.IsNullOrEmpty(mod.Formula))
                 return ParseModMass(mod.Formula);
-            else if (mod.LabelAtoms != LabelAtoms.None)
+            else if (mod.LabelAtoms != LabelAtoms.None && AminoAcid.IsAA(aa))
                 return ParseModMass(GetHeavyFormula(aa, mod.LabelAtoms));
             return 0;
         }

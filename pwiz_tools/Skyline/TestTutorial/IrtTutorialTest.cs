@@ -672,6 +672,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void VerifyRTRegression(double slope, double intercept, double r)
         {
+            WaitForCondition(() => SkylineWindow.RTGraphController.RegressionRefined != null);
             Assert.AreEqual(slope, SkylineWindow.RTGraphController.RegressionRefined.Conversion.Slope, 0.005);
             Assert.AreEqual(intercept, SkylineWindow.RTGraphController.RegressionRefined.Conversion.Intercept, 0.005);
             Assert.AreEqual(r, SkylineWindow.RTGraphController.StatisticsRefined.R, 0.00005);

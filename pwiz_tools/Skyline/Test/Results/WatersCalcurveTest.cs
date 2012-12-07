@@ -171,7 +171,8 @@ namespace pwiz.SkylineTest.Results
                     {
                         var chromInfoPrevious = transOld[i].Results[j][0];
                         Assert.AreSame(chromInfoPrevious, nodeTranNew.Results[j][0]);
-                        if (!chromInfo.IsEmpty && chromInfoPrevious.Area >= chromInfo.Area)
+                        if ((chromInfo.IsEmpty && !chromInfoPrevious.IsEmpty) ||
+                                (!chromInfo.IsEmpty && chromInfoPrevious.Area >= chromInfo.Area))
                             outOfOrder++;
                     }
                 }
@@ -200,7 +201,7 @@ namespace pwiz.SkylineTest.Results
                 doc = docResults;
             }
 
-            Assert.AreEqual(11, outOfOrder, 1);
+            Assert.AreEqual(13, outOfOrder, 1);
 
             // Remove the original data
             foreach (string path in replicatePaths)

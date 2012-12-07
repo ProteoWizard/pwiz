@@ -868,7 +868,7 @@ namespace pwiz.Skyline.Model
 
         private class ExPeptideRowReader : MassListRowReader
         {
-            private const string REGEX_PEPTIDE_FORMAT =@"([^. ]+)\.([A-Z]+)\.[^. ]+\.(light|{0})"; // Not L10N
+            private const string REGEX_PEPTIDE_FORMAT =@"([^. ]+)\.([A-Z0-9_+\-\[\]]+)\.[^. ]+\.(light|{0})"; // Not L10N
 
             private ExPeptideRowReader(IFormatProvider provider,
                                        char separator,
@@ -891,8 +891,8 @@ namespace pwiz.Skyline.Model
 
                 try
                 {
-                    string proteinName = match.Groups[1].Value;
-                    string peptideSequence = match.Groups[2].Value;
+                    string proteinName = GetProteinName(match);
+                    string peptideSequence = GetSequence(match);
 
                     var info = new ExTransitionInfo(proteinName, peptideSequence, PrecursorMz)
                         {
@@ -967,7 +967,7 @@ namespace pwiz.Skyline.Model
                     Match match = exPeptideRegex.Match(fields[i]);
                     if (match.Success)
                     {
-                        string sequencePart = match.Groups[2].Value;
+                        string sequencePart = GetSequence(match);
                         if (FastaSequence.IsExSequence(sequencePart))
                         {
                             sequence = sequencePart;
@@ -981,6 +981,16 @@ namespace pwiz.Skyline.Model
                 }
                 sequence = null;
                 return -1;
+            }
+
+            private static string GetProteinName(Match match)
+            {
+                return match.Groups[1].Value;
+            }
+
+            private static string GetSequence(Match match)
+            {
+                return FastaSequence.StripModifications(match.Groups[2].Value.Replace('_', '.'));
             }
 
             private static IsotopeLabelType GetLabelType(Match pepExMatch, SrmSettings settings)

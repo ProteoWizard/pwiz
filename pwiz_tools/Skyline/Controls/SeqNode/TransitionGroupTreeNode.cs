@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model;
@@ -290,10 +291,16 @@ namespace pwiz.Skyline.Controls.SeqNode
             // handling of user set peak boundaries.
             MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key);
             var nodeGroup = (TransitionGroupDocNode)DocNode.ChangeChildrenChecked(listChildrenNew);
-            // Update results on the group to correctly handle user set peak boundaries
             var diff = new SrmSettingsDiff(DocSettings, true);
-            nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, DocNode);
-            
+            try
+            {
+                // Update results on the group to correctly handle user set peak boundaries
+                nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, DocNode);
+            }
+            // Ignore I/O exceptions attempting to update results
+            catch (UnauthorizedAccessException) {}
+            catch (IOException) {}
+
             // Make sure any properties that depend on peptide relationships,
             // like ratios get updated.
             nodePep = (PeptideDocNode)nodePep.ReplaceChild(nodeGroup);

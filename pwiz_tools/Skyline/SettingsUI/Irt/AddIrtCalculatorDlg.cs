@@ -62,7 +62,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == IrtCalculatorSource.settings)
                     return (RCalcIrt)comboLibrary.SelectedItem;
-                return new RCalcIrt(string.Empty, textFilePath.Text);
+                return new RCalcIrt("Add", textFilePath.Text);  // Not L10N
             }
         }
 

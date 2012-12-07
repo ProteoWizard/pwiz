@@ -1066,10 +1066,16 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("measured_rt")]
     public sealed class MeasuredRetentionTime : IXmlSerializable
     {
-        public MeasuredRetentionTime(string peptideSequence, double retentionTime)
+        /// <summary>
+        /// To support using iRT values, which can be negative, in place of measured retention times
+        /// </summary>
+        private bool _allowNegative;
+
+        public MeasuredRetentionTime(string peptideSequence, double retentionTime, bool allowNegative = false)
         {
             PeptideSequence = peptideSequence;
             RetentionTime = retentionTime;
+            _allowNegative = allowNegative;
 
             Validate();
         }
@@ -1099,7 +1105,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(string.Format(Resources.MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide,
                                                              PeptideSequence));
             }
-            if (RetentionTime < 0)
+            if (!_allowNegative && RetentionTime < 0)
                 throw new InvalidDataException(Resources.MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values);            
         }
 

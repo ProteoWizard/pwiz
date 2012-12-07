@@ -677,10 +677,13 @@ namespace pwiz.Skyline.Model
             char[] reversedArray = sequence.ToCharArray();
             Array.Reverse(reversedArray);
             seqMods.Sequence = new string(reversedArray) + finalA;
-            seqMods.Mods = new ExplicitMods(seqMods.Peptide,
-                GetReversedMods(seqMods.Mods.StaticModifications, lenSeq),
-                GetReversedHeavyMods(seqMods, lenSeq),
-                seqMods.Mods.IsVariableStaticMods);
+            if (seqMods.Mods != null)
+            {
+                seqMods.Mods = new ExplicitMods(seqMods.Peptide,
+                    GetReversedMods(seqMods.Mods.StaticModifications, lenSeq),
+                    GetReversedHeavyMods(seqMods, lenSeq),
+                    seqMods.Mods.IsVariableStaticMods);
+            }
 
             return seqMods;
         }
@@ -717,10 +720,13 @@ namespace pwiz.Skyline.Model
                 shuffledArray[newIndices[i]] = sequence[i];
 
             seqMods.Sequence = new string(shuffledArray) + finalA;
-            seqMods.Mods = new ExplicitMods(seqMods.Peptide,
-                GetShuffledMods(seqMods.Mods.StaticModifications, lenSeq, newIndices),
-                GetShuffledHeavyMods(seqMods, lenSeq, newIndices),
-                seqMods.Mods.IsVariableStaticMods);
+            if (seqMods.Mods != null)
+            {
+                seqMods.Mods = new ExplicitMods(seqMods.Peptide,
+                    GetShuffledMods(seqMods.Mods.StaticModifications, lenSeq, newIndices),
+                    GetShuffledHeavyMods(seqMods, lenSeq, newIndices),
+                    seqMods.Mods.IsVariableStaticMods);
+            }
 
             return seqMods;
         }

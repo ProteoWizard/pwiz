@@ -74,7 +74,13 @@ namespace pwiz.Skyline.Model
 
         public int ColorIndex { get; private set; }
 
-        public bool IsEmpty { 
+        public Brush ColorBrush
+        {
+            get { return COLOR_BRUSHES[Math.Max(0, Math.Min(COLOR_BRUSHES.Count - 1, ColorIndex))]; }
+        }
+
+        public bool IsEmpty
+        { 
             get
             {
                 return Note == null && _annotations == null;

@@ -649,7 +649,9 @@ namespace pwiz.Skyline.Model
                 writer.Write(1);  // Polarity
                 writer.Write(FieldSeparator);                                    
             }
-            writer.Write(nodePep.Peptide.Sequence);
+            // Write modified sequence for the light peptide molecular structure
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                IsotopeLabelType.light, nodePep.ExplicitMods));
             writer.Write(FieldSeparator);
             writer.WriteDsvField(nodePepGroup.Name, FieldSeparator);
             writer.Write(FieldSeparator);
@@ -789,9 +791,14 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
 
             // Write special ID for AB software
+            // Use light modified sequence for peptide molecular structure, with decimal points replaced by underscores
+            // because AB uses periods as field separators
+            string modifiedPepSequence = Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                IsotopeLabelType.light, nodePep.ExplicitMods).Replace('.', '_'); // Not L10N
+
             string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                 nodePepGroup.Name,
-                                                nodePep.Peptide.Sequence,
+                                                modifiedPepSequence,
                                                 GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
                                                                      nodeTran.Transition),
                                                 nodeTranGroup.TransitionGroup.LabelType);
@@ -1106,7 +1113,9 @@ namespace pwiz.Skyline.Model
         {
             writer.Write(nodePepGroup.Name);
             writer.Write(FieldSeparator);
-            writer.Write(nodePep.Peptide.Sequence);
+            // Write modified sequence for the light peptide molecule
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                IsotopeLabelType.light, nodePep.ExplicitMods));
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)    // ISTD?
@@ -1428,8 +1437,10 @@ namespace pwiz.Skyline.Model
             writer.WriteDsvField(nodePepGroup.Name.Replace(' ', '_'), FieldSeparator);  // Quanpedia can't handle spaces // Not L10N
             writer.Write(FieldSeparator);
             // Write special ID to ensure 1-to-1 relationship between this ID and precursor m/z
+            // Better to use one ID per peptide molecular structure, as Waters has a 512 ID limit
+            // and this allows for 512 peptide charge states and not just 512 precursors.
             writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
-                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
+                IsotopeLabelType.light, nodePep.ExplicitMods));
             writer.Write('.'); // Not L10N
             writer.Write(nodeTranGroup.TransitionGroup.PrecursorCharge);
             if (step != 0)

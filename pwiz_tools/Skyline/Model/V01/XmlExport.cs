@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.V01
     {
         protected readonly CultureInfo _cultureInfo = CultureInfo.InvariantCulture;
 
-        private readonly XmlSrmDocument _document;
+        protected readonly XmlSrmDocument _document;
 
         protected XmlMassListExporter(XmlSrmDocument document)
         {
@@ -246,9 +246,12 @@ namespace pwiz.Skyline.Model.V01
             writer.Write(separator);
 
             // Write special ID for ABI software
+            string modifiedPepSequence = _document.Settings.GetModifiedSequence(peptide.Sequence,
+                IsotopeLabelType.light, null).Replace('.', '_'); // Not L10N
+
             string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                 sequence.Name,
-                                                peptide.Sequence,
+                                                modifiedPepSequence,
                                                 GetTransitionName(transition),
                                                 "light"); // Not L10N : file format
 
