@@ -42,8 +42,9 @@ namespace Crawdad {
             _startIndex = crawPeak.start_rt_idx;
             _endIndex = crawPeak.stop_rt_idx;
             _height = crawPeak.peak_height;
-            // BUG: Crawdad can return negative areas.  Using Math::Max() below
-            //      protects against that but really should be fixed in Crawdad.
+            // Note: Crawdad had a bug that caused it to return negative areas.
+            //       Using Math::Max() below left in place to protect against that,
+            //       even though the bug is believed to be fixed.
             _area = Math::Max(0.0f, crawPeak.peak_area);
             _backgroundArea = Math::Max(0.0f, crawPeak.bg_area);
             _fwhm = crawPeak.fwhm;

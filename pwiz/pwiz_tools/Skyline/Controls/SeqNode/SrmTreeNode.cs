@@ -195,9 +195,12 @@ namespace pwiz.Skyline.Controls.SeqNode
                     zoomFactor = 1;
                 if (Equals(Settings.Default.TextZoom, TreeViewMS.XLRG_TEXT_FACTOR))
                     zoomFactor = 2;
-                g.FillPolygon(Annotations.COLOR_BRUSHES[Model.Annotations.ColorIndex], new[] {new Point(bounds.Right, bounds.Top), 
-                                                        new Point(bounds.Right-(ANNOTATION_WIDTH+zoomFactor), bounds.Top),
-                                                        new Point(bounds.Right, bounds.Top+ANNOTATION_WIDTH+zoomFactor)});
+                g.FillPolygon(Model.Annotations.ColorBrush, new[]
+                    {
+                        new Point(bounds.Right, bounds.Top),
+                        new Point(bounds.Right - (ANNOTATION_WIDTH + zoomFactor), bounds.Top),
+                        new Point(bounds.Right, bounds.Top + ANNOTATION_WIDTH + zoomFactor)
+                    });
             }
         }
 

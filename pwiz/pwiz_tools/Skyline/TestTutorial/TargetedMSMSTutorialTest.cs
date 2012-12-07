@@ -262,8 +262,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(importResultsNameDlg.YesDialog);
             // Give the Raw files some time to be processed.
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes
-
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, 9, 10, 0, 82, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, 9, 10, 0, 87, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, 9, 10, 0, 87, 0);
 
             RunUI(() =>
@@ -322,7 +321,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 var chromGraphs = SkylineWindow.GraphChromatograms.ToArray();
                 Assert.AreEqual(2, chromGraphs.Length);
-                Assert.AreEqual(40.1, chromGraphs[0].GraphItems.First(g => g.BestPeakTime > 0).BestPeakTime, 0.05);
+                // TODO: Fix tutorial.  No longer miss-picked with fix
+                Assert.AreEqual(44.3, chromGraphs[0].GraphItems.First(g => g.BestPeakTime > 0).BestPeakTime, 0.05);
                 Assert.AreEqual(44.3, chromGraphs[1].GraphItems.First(g => g.BestPeakTime > 0).BestPeakTime, 0.05);
             });
             PauseForScreenShot("p. 17 - Miss-picked peak");

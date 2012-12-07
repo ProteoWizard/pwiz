@@ -407,7 +407,12 @@ void CrawPeakAnnotator::set_bg_scratch ( int start_idx, int stop_idx ) {
     else if ( this->pf->method.background_estimation_method == LOWER_BOUNDARY ) {
         float lower_bound = std::min( get_active_chrom()->at(start_idx), get_active_chrom()->at(stop_idx) );
         for ( int i = 0 ; i < len ; i++ ) {
-           bg_scratch[i] = lower_bound;
+            if ( get_active_chrom()->at(start_idx+i) < lower_bound ) {
+                bg_scratch[i] = get_active_chrom()->at(start_idx+i);
+            }
+            else {
+                bg_scratch[i] = lower_bound;
+            }
         }
     }
     else if ( this->pf->method.background_estimation_method == MEAN_BOUNDARY ) {

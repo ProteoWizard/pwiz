@@ -335,8 +335,29 @@ namespace pwiz.Skyline.Model.Results
                 listAreas.RemoveAt(0);
             }
             if (iRemove == 0)
+            {
                 iRemove = _listPeakSets.Count;
-            else if (retentionTimes.Length > 0)
+
+                if (retentionTimes.Length == 0)
+                {
+                    // Backward compatibility: before peptide IDs were integrated
+                    // this sorting happened before peaks were extended.
+                    _listPeakSets.Sort(ComparePeakLists);
+                }
+            }
+            else if (retentionTimes.Length == 0)
+            {
+                // Be sure not to remove anything with a higher combined score than
+                // what happen to look visually like the biggest peaks.
+                double minKeepScore = _listPeakSets.Take(iRemove).Min(peakSet => peakSet.CombinedScore);
+
+                // Backward compatibility: before peptide IDs were integrated
+                // this sorting happened before peaks were extended.
+                _listPeakSets.Sort(ComparePeakLists);
+
+                iRemove = Math.Max(iRemove, _listPeakSets.IndexOf(peakSet => peakSet.CombinedScore == minKeepScore));
+            }
+            else
             {
                 // Make sure no identified peaks are removed.
                 int identIndex = _listPeakSets.LastIndexOf(peakSet => peakSet.IsIdentified);
@@ -356,11 +377,6 @@ namespace pwiz.Skyline.Model.Results
                 if (IsOverlappingPeak(peak, _listPeakSets, iRemove))
                     _listPeakSets.Add(new ChromDataPeakList(peak, _listChromData));
             }
-
-            // Backward compatibility: before peptide IDs were integrated
-            // this sorting happened before peaks were extended.
-            if (retentionTimes.Length == 0)
-                _listPeakSets.Sort(ComparePeakLists);
 
             // Since Crawdad can have a tendency to pick peaks too narrow,
             // use the peak group information to extend the peaks to make

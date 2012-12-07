@@ -246,7 +246,7 @@ namespace pwiz.SkylineTestTutorial
                     dotpExpect.ToString(CultureInfo.CurrentCulture));
                 SkylineWindow.EditDelete();
 
-                dotpExpect = Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
+                dotpExpect = 0.34; // Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
                     dotpExpect.ToString(CultureInfo.CurrentCulture));
@@ -316,9 +316,8 @@ namespace pwiz.SkylineTestTutorial
 //            }
             RunUI(() =>
             {
-                // TODO change back to 70 and 210
-                Assert.AreEqual(65, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(195, SkylineWindow.Document.TransitionCount);
+                Assert.AreEqual(71, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(213, SkylineWindow.Document.TransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });
@@ -334,8 +333,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => SkylineWindow.Document.PeptideCount < 120);
             RunUI(() =>
             {
-                //Todo: Was previously 110
-                Assert.AreEqual(105, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(111, SkylineWindow.Document.PeptideCount);
 
                 // Scheduling for Efficient Acquisition, p. 17 
                 SkylineWindow.Undo();

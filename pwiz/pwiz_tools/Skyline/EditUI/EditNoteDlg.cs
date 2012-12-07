@@ -64,7 +64,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             ColorIndex = annotations.ColorIndex;
-            if(ColorIndex >= 0)
+            if (ColorIndex >= 0 && ColorIndex < toolStrip1.Items.Count)
                 ((ToolStripButton) toolStrip1.Items[ColorIndex]).Checked = true;
 
             ClearAll = false;
