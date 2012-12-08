@@ -1657,7 +1657,9 @@ namespace IDPicker.DataModel
                                                               GROUP BY IsDecoy
                                                               ORDER BY IsDecoy
                                                              ").List<long>();
-            PeptideFDR = 2.0 * peptideLevelDecoys[1] / peptideLevelDecoys.Sum();
+            // without both targets and decoys, FDR can't be calculated
+            if (peptideLevelDecoys.Count == 2)
+                PeptideFDR = 2.0 * peptideLevelDecoys[1] / peptideLevelDecoys.Sum();
 
             // get the count of spectra that are unambiguously targets or decoys (# of Proteins = # of Decoys OR # of Decoys = 0)
             var spectrumLevelDecoys = session.CreateSQLQuery(@"SELECT COUNT(Spectrum)
@@ -1674,7 +1676,9 @@ namespace IDPicker.DataModel
                                                                GROUP BY IsDecoy
                                                                ORDER BY IsDecoy
                                                               ").List<long>();
-            SpectrumFDR = 2.0 * spectrumLevelDecoys[1] / spectrumLevelDecoys.Sum();
+            // without both targets and decoys, FDR can't be calculated
+            if(spectrumLevelDecoys.Count == 2)
+                SpectrumFDR = 2.0 * spectrumLevelDecoys[1] / spectrumLevelDecoys.Sum();
         }
 
         public int Clusters { get; private set; }
