@@ -40,9 +40,11 @@ namespace detail {
 
 
 PWIZ_API_DECL SpectrumList_ABI::SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile,
-                                                 const ExperimentsMap& experimentsMap, int sample)
+                                                 const ExperimentsMap& experimentsMap, int sample,
+                                                 const Reader::Config& config)
 :   msd_(msd),
     wifffile_(wifffile),
+    config_(config),
     experimentsMap_(experimentsMap),
     sample(sample),
     size_(0),
@@ -165,9 +167,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
         doCentroid = continuousData;
     }
 
-    if (experimentType == MRM)
+    /*if (experimentType == MRM)
     {
-        /*MRMTransitions^ transitions = msExperiment->MRMTransitions;
+        MRMTransitions^ transitions = msExperiment->MRMTransitions;
         double q1mz = transitions[ie.transition]->Q1Mass;//ie.transition->first;
         double q3mz = transitions[ie.transition]->Q3Mass;
         double intensity = points[ie.transition]->Y;
@@ -187,9 +189,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
         {
             mzArray.resize(result->defaultArrayLength, q3mz);
             intensityArray.resize(result->defaultArrayLength, intensity);
-        }*/
+        }
     }
-    else
+    else*/
     {
         if (spectrum->getHasPrecursorInfo())
         {
@@ -284,7 +286,8 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
             ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(period, experiment))->second;
 
             ExperimentType experimentType = msExperiment->getExperimentType();
-            if (experimentType == MRM || experimentType == SIM)
+            if ((experimentType == MRM && !config_.srmAsSpectra) ||
+                (experimentType == SIM && !config_.simAsSpectra))
                 continue;
 
             vector<double> times, intensities;

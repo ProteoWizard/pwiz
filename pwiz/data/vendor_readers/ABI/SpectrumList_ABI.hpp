@@ -23,6 +23,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 #include <boost/thread/mutex.hpp>
 
 #ifdef PWIZ_READER_ABI
@@ -50,12 +51,14 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     
 #ifdef PWIZ_READER_ABI
     SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile,
-        const ExperimentsMap& experimentsMap, int sample);
+        const ExperimentsMap& experimentsMap, int sample,
+        const Reader::Config& config);
 
     private:
 
     const MSData& msd_;
     WiffFilePtr wifffile_;
+    const Reader::Config config_;
     ExperimentsMap experimentsMap_;
     int sample;
 
