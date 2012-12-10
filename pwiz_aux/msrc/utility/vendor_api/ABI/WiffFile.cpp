@@ -572,7 +572,12 @@ size_t SpectrumImpl::getDataSize(bool doCentroid) const
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
 #if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
+                if (pointsAreContinuous)
+                {
+                    ExperimentType experimentType = experiment->getExperimentType();
+                    if (experimentType != MRM && experimentType != SIM)
+                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
+                }
 #endif
             }
             return (size_t) spectrum->NumDataPoints;
@@ -606,7 +611,12 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
 #if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
+                if (pointsAreContinuous)
+                {
+                    ExperimentType experimentType = experiment->getExperimentType();
+                    if (experimentType != MRM && experimentType != SIM)
+                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
+                }
 #endif
             }
             ToStdVector(spectrum->GetActualXValues(), mz);
