@@ -150,13 +150,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
     if (ie.controllerType == Controller_MS)
     {
-        switch (ie.msOrder)
+        switch (scanType)
         {
-            case MSOrder_NeutralLoss:   result->set(MS_constant_neutral_loss_spectrum); msLevel = 2; break;
-            case MSOrder_NeutralGain:   result->set(MS_constant_neutral_gain_spectrum); msLevel = 2; break;
-            case MSOrder_ParentScan:    result->set(MS_precursor_ion_spectrum); msLevel = 2; break;
-            case MSOrder_MS:            result->set(MS_MS1_spectrum); break;
-            default:                    result->set(MS_MSn_spectrum); break;
+            case ScanType_SIM: result->set(MS_SIM_spectrum); break;
+            case ScanType_SRM: result->set(MS_SRM_spectrum); break;
+            default:
+                switch (ie.msOrder)
+                {
+                    case MSOrder_NeutralLoss:   result->set(MS_constant_neutral_loss_spectrum); msLevel = 2; break;
+                    case MSOrder_NeutralGain:   result->set(MS_constant_neutral_gain_spectrum); msLevel = 2; break;
+                    case MSOrder_ParentScan:    result->set(MS_precursor_ion_spectrum); msLevel = 2; break;
+                    case MSOrder_MS:            result->set(MS_MS1_spectrum); break;
+                    default:                    result->set(MS_MSn_spectrum); break;
+                }
+                break;
         }
         result->set(MS_ms_level, msLevel);
     }
@@ -281,7 +288,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             result->set(MS_FAIMS_compensation_voltage, scanInfo->CompensationVoltage());
         }
 
-        scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), MS_m_z));
+        size_t scanRangeCount = scanInfo->scanRangeCount();
+        if ((scanType == ScanType_SIM || scanType == ScanType_SRM) && scanRangeCount > 1)
+        {
+            for (size_t i=0; i < scanRangeCount; ++i)
+            {
+                const pair<double, double>& scanRange = scanInfo->scanRange(i);
+                scan.scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
+            }
+        }
+        else
+            scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), MS_m_z));
 
         if (msLevel > 1)
         {

@@ -396,8 +396,8 @@ PWIZ_API_DECL bool Product::operator==(const Product& that) const
 
 PWIZ_API_DECL ScanWindow::ScanWindow(double low, double high, CVID unit)
 {
-    cvParams.push_back(CVParam(MS_scan_window_lower_limit, low, unit));
-    cvParams.push_back(CVParam(MS_scan_window_upper_limit, high, unit));
+    set(MS_scan_window_lower_limit, low, unit);
+    set(MS_scan_window_upper_limit, high, unit);
 }
 
 
