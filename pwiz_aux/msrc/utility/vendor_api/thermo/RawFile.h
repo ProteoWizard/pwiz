@@ -279,6 +279,10 @@ class PWIZ_API_DECL ScanInfo
     virtual double parentMass(long index, bool preferMonoisotope = true) const = 0;
     virtual double parentEnergy(long index) const = 0;
 
+    // scan ranges parsed from filter
+    virtual size_t scanRangeCount() const = 0;
+    virtual const std::pair<double, double>& scanRange(size_t index) const = 0;
+
     // other scan info 
     virtual bool isProfileScan() const = 0;
     virtual bool isCentroidScan() const = 0;

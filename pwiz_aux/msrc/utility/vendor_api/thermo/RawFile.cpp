@@ -783,6 +783,9 @@ class ScanInfoImpl : public ScanInfo
     virtual double parentMass(long index, bool preferMonoisotope) const {return precursorMZ(index, preferMonoisotope);}
     virtual double parentEnergy(long index) const {return precursorActivationEnergy(index);}
 
+    virtual size_t scanRangeCount() const {return scanRanges_.size();}
+    virtual const pair<double, double>& scanRange(size_t index) const {return scanRanges_[index];}
+
     virtual bool isProfileScan() const {return isProfileScan_;}
     virtual bool isCentroidScan() const {return isCentroidScan_;}
     virtual long packetCount() const {return packetCount_;}
@@ -827,6 +830,7 @@ class ScanInfoImpl : public ScanInfo
     bool hasMultiplePrecursors_; // true for "MSX" mode
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
+    vector<pair<double, double> > scanRanges_;
     bool isProfileScan_;
     bool isCentroidScan_;
     long packetCount_;
@@ -1003,6 +1007,9 @@ void ScanInfoImpl::parseFilterString()
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
 	faimsOn_ = filterParser.faimsOn_ == TriBool_True;
 	compensationVoltage_ = filterParser.compensationVoltage_;
+
+    for (size_t i=0; i < filterParser.scanRangeMin_.size(); ++i)
+        scanRanges_.push_back(make_pair(filterParser.scanRangeMin_[i], filterParser.scanRangeMax_[i]));
 }
 
 vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
