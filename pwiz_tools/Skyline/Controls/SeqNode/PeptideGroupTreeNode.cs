@@ -421,10 +421,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return base.GetNodeData();
 
             DataObject data = new DataObject();
-            data.SetData(DataFormats.Text, fastaSeq.FastaFileText);
+            string fastaText = fastaSeq.FastaFileText;
+            // If protein has been renamed in the UI
+            if (!Equals(DocNode.Name, fastaSeq.Name))
+                fastaText = ">" + DocNode.Name + fastaText.Substring(fastaSeq.Name.Length + 1);
+            data.SetData(DataFormats.Text, fastaText);
 
             var sb = new StringBuilder();
-            sb.Append("<b>").Append(Model.Id).Append("</b> "); // Not L10N
+            sb.Append("<b>").Append(DocNode.Name).Append("</b> "); // Not L10N
             sb.Append("<i>"); // Not L10N
             if (string.IsNullOrEmpty(DocNode.Description))
                 sb.AppendLine("<br/>"); // Not L10N

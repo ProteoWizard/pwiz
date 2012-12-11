@@ -1124,7 +1124,7 @@ namespace pwiz.Skyline.Model
                 if (info.Area == 0)
                     return;
 
-                var key = new TransitionKey(nodeTran.Transition);
+                var key = new TransitionKey(nodeTran.Key);
                 if (TranAreas.ContainsKey(key))
                     throw new ArgumentException(String.Format("Duplicate transition '{0}' found for peak areas ", nodeTran.Transition));
                 TranAreas.Add(key, info.Area);
@@ -1166,8 +1166,8 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 float areaNum, areaDenom;
-                var keyNum = new TransitionKey(nodeTran.Transition, labelTypeNum);
-                var keyDenom = new TransitionKey(nodeTran.Transition, labelTypeDenom);
+                var keyNum = new TransitionKey(nodeTran.Key, labelTypeNum);
+                var keyDenom = new TransitionKey(nodeTran.Key, labelTypeDenom);
                 if (!TranAreas.TryGetValue(keyNum, out areaNum) ||
                     !TranAreas.TryGetValue(keyDenom, out areaDenom))
                     return null;
@@ -1253,20 +1253,23 @@ namespace pwiz.Skyline.Model
             private readonly int _massIndex;
             private readonly int _charge;
             private readonly int _precursorCharge;
+            private readonly TransitionLosses _losses;
             private readonly IsotopeLabelType _labelType;
 
-            public TransitionKey(Transition transition)
-                : this (transition, transition.Group.LabelType)
+            public TransitionKey(TransitionLossKey tranLossKey)
+                : this (tranLossKey, tranLossKey.Transition.Group.LabelType)
             {
             }
 
-            public TransitionKey(Transition transition, IsotopeLabelType labelType)
+            public TransitionKey(TransitionLossKey tranLossKey, IsotopeLabelType labelType)
             {
+                var transition = tranLossKey.Transition;
                 _ionType = transition.IonType;
                 _ionOrdinal = transition.Ordinal;
                 _massIndex = transition.MassIndex;
                 _charge = transition.Charge;
                 _precursorCharge = transition.Group.PrecursorCharge;
+                _losses = tranLossKey.Losses;
                 _labelType = labelType;
             }
 
@@ -1277,6 +1280,7 @@ namespace pwiz.Skyline.Model
                 _massIndex = key._massIndex;
                 _charge = key._charge;
                 _precursorCharge = key._precursorCharge;
+                _losses = key._losses;
                 _labelType = labelType;
             }
 
@@ -1292,6 +1296,7 @@ namespace pwiz.Skyline.Model
                        other._massIndex == _massIndex &&
                        other._charge == _charge &&
                        other._precursorCharge == _precursorCharge &&
+                       Equals(other._losses, _losses) &&
                        Equals(other._labelType, _labelType);
             }
 
@@ -1311,6 +1316,7 @@ namespace pwiz.Skyline.Model
                     result = (result*397) ^ _massIndex;
                     result = (result*397) ^ _charge;
                     result = (result*397) ^ _precursorCharge;
+                    result = (result*397) ^ (_losses != null ? _losses.GetHashCode() : 0);
                     result = (result*397) ^ _labelType.GetHashCode();
                     return result;
                 }

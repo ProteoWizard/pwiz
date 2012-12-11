@@ -74,9 +74,11 @@ namespace pwiz.Skyline.EditUI
                     continue;
 
                 string existingName;
-                if (dictNameToName.TryGetValue(currentName, out existingName) &&
-                        !Equals(existingName, newName))
+                if (dictNameToName.TryGetValue(currentName, out existingName))
                 {
+                    // If there are two rows for exactly the same rename, just ignore the repetition
+                    if (Equals(existingName, newName))
+                        continue;
                     MessageDlg.Show(this, string.Format(Resources.RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__, currentName, existingName, newName));
                     return;
                 }
