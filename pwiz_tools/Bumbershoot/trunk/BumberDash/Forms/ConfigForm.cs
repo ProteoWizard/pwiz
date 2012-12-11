@@ -317,7 +317,7 @@ namespace BumberDash.Forms
             DTFragmentMzToleranceUnitsList.Text = "mz";
             DTDeisotopingModeBox.Text = "Off";
             DTModTypeList.Text = "Static";
-            TRPrecursorMzToleranceRuleBox.Text = "mono";
+            TRUseAvgMassOfSequencesBox.Text = "mono";
             TRMinTerminiCleavagesBox.Text = "Fully-Specific";
             TRPrecursorMzToleranceUnitsList.Text = "mz";
             TRFragmentMzToleranceUnitsList.Text = "mz";

@@ -51,6 +51,8 @@ namespace BumberDash.Forms
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddJobForm));
             this.FolderPanel = new System.Windows.Forms.Panel();
+            this.InputFilesList = new System.Windows.Forms.DataGridView();
+            this.FileNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.RemoveDataFilesButton = new System.Windows.Forms.Button();
             this.SearchTypeBox = new System.Windows.Forms.ComboBox();
             this.newFolderBox = new System.Windows.Forms.CheckBox();
@@ -107,10 +109,9 @@ namespace BumberDash.Forms
             this.PepConfigInfoPanel = new System.Windows.Forms.Panel();
             this.PepInfoLabel = new System.Windows.Forms.Label();
             this.PepitomeInfoBox = new System.Windows.Forms.TextBox();
-            this.InputFilesList = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.FileNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.FolderPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.PepPanel.SuspendLayout();
             this.PepConfigGB.SuspendLayout();
@@ -118,12 +119,12 @@ namespace BumberDash.Forms
             this.ConfigDatabasePanel.SuspendLayout();
             this.ConfigTagPanel.SuspendLayout();
             this.TagConfigInfoPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.DatabaseConfigInfoPanel.SuspendLayout();
             this.PepConfigInfoPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).BeginInit();
             this.SuspendLayout();
             // 
             // FolderPanel
@@ -157,6 +158,36 @@ namespace BumberDash.Forms
             this.FolderPanel.Name = "FolderPanel";
             this.FolderPanel.Size = new System.Drawing.Size(435, 497);
             this.FolderPanel.TabIndex = 3;
+            // 
+            // InputFilesList
+            // 
+            this.InputFilesList.AllowUserToAddRows = false;
+            this.InputFilesList.AllowUserToDeleteRows = false;
+            this.InputFilesList.AllowUserToResizeColumns = false;
+            this.InputFilesList.AllowUserToResizeRows = false;
+            this.InputFilesList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.InputFilesList.BackgroundColor = System.Drawing.Color.White;
+            this.InputFilesList.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.InputFilesList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.InputFilesList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.InputFilesList.ColumnHeadersVisible = false;
+            this.InputFilesList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.FileNameColumn});
+            this.InputFilesList.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
+            this.InputFilesList.Location = new System.Drawing.Point(28, 147);
+            this.InputFilesList.Name = "InputFilesList";
+            this.InputFilesList.RowHeadersVisible = false;
+            this.InputFilesList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.InputFilesList.Size = new System.Drawing.Size(306, 106);
+            this.InputFilesList.TabIndex = 39;
+            // 
+            // FileNameColumn
+            // 
+            this.FileNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.FileNameColumn.HeaderText = "File Name";
+            this.FileNameColumn.Name = "FileNameColumn";
             // 
             // RemoveDataFilesButton
             // 
@@ -429,8 +460,8 @@ namespace BumberDash.Forms
             this.PepConfigBox.Size = new System.Drawing.Size(245, 21);
             this.PepConfigBox.TabIndex = 32;
             this.PepConfigBox.SelectedIndexChanged += new System.EventHandler(this.PepConfigBox_SelectedIndexChanged);
-            this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             this.PepConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             // 
             // PepEditButton
             // 
@@ -497,8 +528,8 @@ namespace BumberDash.Forms
             this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
             this.MyriConfigBox.TabIndex = 26;
             this.MyriConfigBox.SelectedIndexChanged += new System.EventHandler(this.MyriConfigBox_SelectedIndexChanged);
-            this.MyriConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             this.MyriConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.MyriConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             // 
             // MyriEditButton
             // 
@@ -556,8 +587,8 @@ namespace BumberDash.Forms
             this.DTConfigBox.Size = new System.Drawing.Size(245, 21);
             this.DTConfigBox.TabIndex = 27;
             this.DTConfigBox.SelectedIndexChanged += new System.EventHandler(this.DTConfigBox_SelectedIndexChanged);
-            this.DTConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             this.DTConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.DTConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             // 
             // TRConfigBox
             // 
@@ -569,8 +600,8 @@ namespace BumberDash.Forms
             this.TRConfigBox.Size = new System.Drawing.Size(245, 21);
             this.TRConfigBox.TabIndex = 28;
             this.TRConfigBox.SelectedIndexChanged += new System.EventHandler(this.TRConfigBox_SelectedIndexChanged);
-            this.TRConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             this.TRConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.TRConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
             // 
             // TREditButton
             // 
@@ -642,7 +673,7 @@ namespace BumberDash.Forms
             this.TagReconInfoBox.Name = "TagReconInfoBox";
             this.TagReconInfoBox.ReadOnly = true;
             this.TagReconInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TagReconInfoBox.Size = new System.Drawing.Size(238, 213);
+            this.TagReconInfoBox.Size = new System.Drawing.Size(246, 256);
             this.TagReconInfoBox.TabIndex = 5;
             this.TagReconInfoBox.WordWrap = false;
             // 
@@ -674,7 +705,7 @@ namespace BumberDash.Forms
             this.DirecTagInfoBox.Name = "DirecTagInfoBox";
             this.DirecTagInfoBox.ReadOnly = true;
             this.DirecTagInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.DirecTagInfoBox.Size = new System.Drawing.Size(237, 136);
+            this.DirecTagInfoBox.Size = new System.Drawing.Size(246, 179);
             this.DirecTagInfoBox.TabIndex = 7;
             this.DirecTagInfoBox.WordWrap = false;
             // 
@@ -782,41 +813,11 @@ namespace BumberDash.Forms
             this.PepitomeInfoBox.TabIndex = 11;
             this.PepitomeInfoBox.WordWrap = false;
             // 
-            // InputFilesList
-            // 
-            this.InputFilesList.AllowUserToAddRows = false;
-            this.InputFilesList.AllowUserToDeleteRows = false;
-            this.InputFilesList.AllowUserToResizeColumns = false;
-            this.InputFilesList.AllowUserToResizeRows = false;
-            this.InputFilesList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.InputFilesList.BackgroundColor = System.Drawing.Color.White;
-            this.InputFilesList.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.InputFilesList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
-            this.InputFilesList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.InputFilesList.ColumnHeadersVisible = false;
-            this.InputFilesList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.FileNameColumn});
-            this.InputFilesList.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.InputFilesList.Location = new System.Drawing.Point(28, 147);
-            this.InputFilesList.Name = "InputFilesList";
-            this.InputFilesList.RowHeadersVisible = false;
-            this.InputFilesList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.InputFilesList.Size = new System.Drawing.Size(306, 106);
-            this.InputFilesList.TabIndex = 39;
-            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.dataGridViewTextBoxColumn1.HeaderText = "File Name";
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-            // 
-            // FileNameColumn
-            // 
-            this.FileNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.FileNameColumn.HeaderText = "File Name";
-            this.FileNameColumn.Name = "FileNameColumn";
             // 
             // AddJobForm
             // 
@@ -834,6 +835,7 @@ namespace BumberDash.Forms
             this.Text = "Add Job";
             this.FolderPanel.ResumeLayout(false);
             this.FolderPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
             this.PepPanel.ResumeLayout(false);
             this.PepPanel.PerformLayout();
@@ -849,12 +851,12 @@ namespace BumberDash.Forms
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.DatabaseConfigInfoPanel.ResumeLayout(false);
             this.DatabaseConfigInfoPanel.PerformLayout();
             this.PepConfigInfoPanel.ResumeLayout(false);
             this.PepConfigInfoPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).EndInit();
             this.ResumeLayout(false);
 
         }
