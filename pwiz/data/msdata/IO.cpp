@@ -2388,10 +2388,6 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
     bool hasSpectrumList = run.spectrumListPtr.get() && run.spectrumListPtr->size() > 0;
     bool hasChromatogramList = run.chromatogramListPtr.get() && run.chromatogramListPtr->size() > 0;
 
-    // at least one spectrum or chromatogram is mandatory for schematic validity
-    if (!hasSpectrumList && !hasChromatogramList)
-        throw runtime_error("[IO::write(Run)] At least one spectrum or chromatogram must be present.");
-
     if (hasSpectrumList)
         write(writer, *run.spectrumListPtr, msd, config, spectrumPositions, iterationListenerRegistry);
 
