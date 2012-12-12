@@ -227,7 +227,8 @@ namespace BumberDash.lib
 
             _runningProgram = new Process
                                   {
-                                      StartInfo = psi
+                                      StartInfo = psi,
+                                      EnableRaisingEvents = true
                                   };
 
             _runningProgram.Start();
