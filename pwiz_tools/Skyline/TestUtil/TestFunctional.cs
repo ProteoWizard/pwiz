@@ -331,7 +331,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
-            Assert.Fail(String.Format("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+            Assert.Fail("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)

@@ -748,7 +748,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public override string ToString()
         {
             if (IsBest)
-                return LabelType == IsotopeLabelType.light ? LibName : String.Format("{0} ({1})", LibName, LabelType); // Not L10N
+                return ReferenceEquals(LabelType, IsotopeLabelType.light) ? LibName : String.Format("{0} ({1})", LibName, LabelType); // Not L10N
             if (IsReplicateUnique)
                 return string.Format("{0} ({1:F02} min)", ReplicateName, RetentionTime); // Not L10N
             return string.Format("{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime); // Not L10N

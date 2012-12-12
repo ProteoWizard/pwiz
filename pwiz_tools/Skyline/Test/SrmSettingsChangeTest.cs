@@ -128,7 +128,7 @@ namespace pwiz.SkylineTest
                 Peptide peptide = nodePeptide.Peptide;
                 char prev = peptide.PrevAA;
                 if (prev != 'M')
-                    Assert.Fail(string.Format("Unexpected preceding cleavage at {0}", prev));
+                    Assert.Fail("Unexpected preceding cleavage at {0}", prev);
                 string seq = peptide.Sequence;
                 char last = seq[seq.Length - 1];
                 if (last != 'M' && peptide.NextAA != '-')
@@ -276,7 +276,7 @@ namespace pwiz.SkylineTest
             for (int i = 0; i < Math.Min(listNodes.Count, existingNodes.Length); i++)
             {
                 if (!ReferenceEquals(listNodes[i], existingNodes[i]))
-                    Assert.Fail(string.Format("The peptide {0} does not match {1}.", listNodes[i], existingNodes[i]));
+                    Assert.Fail("The peptide {0} does not match {1}.", listNodes[i], existingNodes[i]);
             }
             // This should result in the same number as the new document.
             Assert.AreEqual(docNew.PeptideCount, listNodes.Count);

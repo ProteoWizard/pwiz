@@ -271,7 +271,7 @@ namespace pwiz.SkylineTestFunctional
                 Identity id = srmTreeNode == null ? SequenceTree.NODE_INSERT_ID : srmTreeNode.Model.Id;
                 
                 // Check expected selected nodes match actual selected nodes.
-                Assert.IsTrue(id == SequenceTree.NODE_INSERT_ID || _expectedSelNodes.Contains(id));
+                Assert.IsTrue(ReferenceEquals(id, SequenceTree.NODE_INSERT_ID) || _expectedSelNodes.Contains(id));
             }
             SrmTreeNode selNode = null;
             RunUI(() => selNode = seqTree.SelectedNode as SrmTreeNode);

@@ -216,7 +216,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var helper = new MessageBoxHelper(WizardForm);
 
             // Validate and store MS1 full-scan settings
-            FullScanMassAnalyzerType productAnalyzerType = FullScanMassAnalyzerType.none;
+            const FullScanMassAnalyzerType productAnalyzerType = FullScanMassAnalyzerType.none;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
             double? precursorIsotopeFilter = null;
             FullScanMassAnalyzerType precursorAnalyzerType = FullScanMassAnalyzerType.none;
@@ -282,11 +282,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (precursorIsotopes != FullScanPrecursorIsotopes.None &&
                     precursorAnalyzerType != FullScanMassAnalyzerType.qit)
             {
-                if (precursorMassType != MassType.Monoisotopic)
-                {
-                    precursorMassType = MassType.Monoisotopic;
-                }
-
+                precursorMassType = MassType.Monoisotopic;
                 enrichments = _driverEnrichments.SelectedItem;
                 if (enrichments == null)
                 {

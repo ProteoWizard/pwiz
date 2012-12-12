@@ -91,7 +91,9 @@ namespace pwiz.Skyline.SettingsUI
             string exRegex = textExclusionRegex.Text.Trim();
             try
             {
+// ReSharper disable ObjectCreationAsStatement
                 new Regex(exRegex);
+// ReSharper restore ObjectCreationAsStatement
             }
             catch (Exception)
             {

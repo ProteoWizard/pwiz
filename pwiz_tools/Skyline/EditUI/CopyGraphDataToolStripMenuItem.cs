@@ -20,11 +20,9 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Graph;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {

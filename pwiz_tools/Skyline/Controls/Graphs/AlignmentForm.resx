@@ -315,9 +315,6 @@
   <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;dataGridView1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -502,9 +499,6 @@
   <data name="&gt;&gt;bindingNavigator1.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingNavigator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingNavigator1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;bindingNavigator1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -537,9 +531,6 @@
   </data>
   <data name="&gt;&gt;zedGraphControl.Type" xml:space="preserve">
     <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.41992, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphControl.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;zedGraphControl.ZOrder" xml:space="preserve">
     <value>0</value>

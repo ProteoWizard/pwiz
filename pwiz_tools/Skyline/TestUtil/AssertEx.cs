@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestUtil
                     if (expectError)
                     {
                         // Fail if deserialization succeeds.
-                        Assert.Fail(String.Format("Expected error deserializing {0}:\r\n{1}", typeof(TObj).Name, s));
+                        Assert.Fail("Expected error deserializing {0}:\r\n{1}", typeof(TObj).Name, s);
                     }
                 }
                 catch (InvalidOperationException x)
@@ -155,7 +155,7 @@ namespace pwiz.SkylineTestUtil
                     else
                     {
                         String message = GetMessageStack(x, null);
-                        Assert.Fail(String.Format("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace));
+                        Assert.Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
                     }
                 }
                 catch (TEx x)
@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestUtil
                     if (!expectError)
                     {
                         String message = GetMessageStack(x, null);
-                        Assert.Fail(String.Format("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace));
+                        Assert.Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
                     }
                 }
             }
@@ -297,11 +297,11 @@ namespace pwiz.SkylineTestUtil
                     if (lineTarget == null && lineActual == null)
                         return;
                     if (lineTarget == null)
-                        Assert.Fail(String.Format("Target stops at line {0}.", count));
+                        Assert.Fail("Target stops at line {0}.", count);
                     if (lineActual == null)
-                        Assert.Fail(String.Format("Actual stops at line {0}.", count));
+                        Assert.Fail("Actual stops at line {0}.", count);
                     if (lineTarget != lineActual)
-                        Assert.Fail(String.Format("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                        Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     count++;
                 }
 
@@ -326,22 +326,22 @@ namespace pwiz.SkylineTestUtil
                     if (lineTarget == null && lineActual == null)
                         return;
                     if (lineTarget == null)
-                        Assert.Fail(String.Format("Target stops at line {0}.", count));
+                        Assert.Fail("Target stops at line {0}.", count);
                     else if (lineActual == null)
-                        Assert.Fail(String.Format("Actual stops at line {0}.", count));
+                        Assert.Fail("Actual stops at line {0}.", count);
                     else if (lineTarget != lineActual)
                     {
                         string[] fieldsTarget = lineTarget.Split(new[] { ',' });
                         string[] fieldsActual = lineActual.Split(new[] { ',' });
                         if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
-                            Assert.Fail(String.Format("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));                        
+                            Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);                        
                         for (int i = 0; i < countFields; i++)
                         {
                             if (exceptIndex.HasValue && exceptIndex.Value == i)
                                 continue;
 
                             if (!Equals(fieldsTarget[i], fieldsActual[i]))
-                                Assert.Fail(String.Format("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                                Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                         }
                     }
                     count++;
@@ -370,7 +370,7 @@ namespace pwiz.SkylineTestUtil
         {
             string message = GetMessageStack(x, t);
             if (message != null)
-                Assert.Fail(String.Format("Expected exception type {0} not found:\r\n{1}", t.Name, message));
+                Assert.Fail("Expected exception type {0} not found:\r\n{1}", t.Name, message);
         }
 
         private static string GetMessageStack(Exception x, Type t)
@@ -409,8 +409,8 @@ namespace pwiz.SkylineTestUtil
             var nodeDuplicate = FindFirstDuplicateGlobalIndex(document, setIndexes);
             if (nodeDuplicate != null)
             {
-                Assert.Fail(string.Format("Duplicate global index {0} found in node {1}",
-                    nodeDuplicate.Id.GlobalIndex, nodeDuplicate));
+                Assert.Fail("Duplicate global index {0} found in node {1}",
+                    nodeDuplicate.Id.GlobalIndex, nodeDuplicate);
             }
         }
 
@@ -461,14 +461,14 @@ namespace pwiz.SkylineTestUtil
             // Split strings on placeholders
             string[] expectedParts = Regex.Split(expected,@"{\d}");
             Assert.AreEqual(replacements, expectedParts.Length - 1,
-                string.Format("Expected {0} replacements in string resource '{1}'", replacements, expected));
+                "Expected {0} replacements in string resource '{1}'", replacements, expected);
 
             int startIndex = 0;
             foreach (var expectedPart in expectedParts)
             {
                 int partIndex = actual.IndexOf(expectedPart, startIndex, StringComparison.Ordinal);
                 Assert.AreNotEqual(-1, partIndex,
-                    string.Format("Expected part '{0}' not found in the string '{1}'", expectedPart, actual));
+                    "Expected part '{0}' not found in the string '{1}'", expectedPart, actual);
                 startIndex = partIndex + expectedPart.Length;
             }
         }

@@ -610,7 +610,7 @@ namespace pwiz.Skyline.Model
             foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
             {
                 var transGroup = nodeGroup.TransitionGroup;
-                if (useLabel == null || transGroup.LabelType == useLabel)
+                if (useLabel == null || ReferenceEquals(transGroup.LabelType, useLabel))
                 {
 
                     int precursorMassShift = (shiftMass ? GetPrecursorMassShift() : 0);

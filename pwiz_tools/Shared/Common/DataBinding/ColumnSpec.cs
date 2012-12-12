@@ -19,7 +19,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml;
@@ -90,11 +89,13 @@ namespace pwiz.Common.DataBinding
         }
         public static ColumnSpec ReadXml(XmlReader reader)
         {
-            var columnSpec = new ColumnSpec();
-            columnSpec.Name = reader.GetAttribute("name");
-            columnSpec.Caption = reader.GetAttribute("caption");
-            columnSpec.Format = reader.GetAttribute("format");
-            columnSpec.Hidden = "true" == reader.GetAttribute("hidden");
+            var columnSpec = new ColumnSpec
+                {
+                    Name = reader.GetAttribute("name"),
+                    Caption = reader.GetAttribute("caption"),
+                    Format = reader.GetAttribute("format"),
+                    Hidden = "true" == reader.GetAttribute("hidden")
+                };
             string sortIndex = reader.GetAttribute("sortindex");
             if (sortIndex != null)
             {
@@ -222,10 +223,12 @@ namespace pwiz.Common.DataBinding
         }
         public static FilterSpec ReadXml(XmlReader reader)
         {
-            var filterSpec = new FilterSpec();
-            filterSpec.Column = reader.GetAttribute("column");
-            filterSpec.OpName = reader.GetAttribute("opname");
-            filterSpec.Operand = reader.GetAttribute("operand");
+            var filterSpec = new FilterSpec
+                {
+                    Column = reader.GetAttribute("column"),
+                    OpName = reader.GetAttribute("opname"),
+                    Operand = reader.GetAttribute("operand")
+                };
             bool empty = reader.IsEmptyElement;
             reader.ReadElementString("filter");
             if (!empty)
@@ -321,9 +324,11 @@ namespace pwiz.Common.DataBinding
         }
         public static ViewSpec ReadXml(XmlReader reader)
         {
-            var viewSpec = new ViewSpec();
-            viewSpec.Name = reader.GetAttribute("name");
-            viewSpec.SublistName = reader.GetAttribute("sublist");
+            var viewSpec = new ViewSpec
+                {
+                    Name = reader.GetAttribute("name"),
+                    SublistName = reader.GetAttribute("sublist")
+                };
             var columns = new List<ColumnSpec>();
             var filters = new List<FilterSpec>();
             if (reader.IsEmptyElement)

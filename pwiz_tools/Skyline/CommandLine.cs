@@ -1270,7 +1270,9 @@ namespace pwiz.Skyline
             // Try to read the file
             try
             {
+// ReSharper disable ObjectCreationAsStatement
                 new MsDataFileImpl(replicatePath);  
+// ReSharper restore ObjectCreationAsStatement
             }
             catch(Exception e)
             {
@@ -1378,8 +1380,8 @@ namespace pwiz.Skyline
             {
                 string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS);
                 supportedTypes = supportedTypes.Replace(".", "*.");
-                _out.WriteLine(string.Format("Error: the provided command for the tool {0} is not of a supported type", title));
-                _out.WriteLine(string.Format("       Supported Types are: {0}", supportedTypes));
+                _out.WriteLine("Error: the provided command for the tool {0} is not of a supported type", title);
+                _out.WriteLine("       Supported Types are: {0}", supportedTypes);
                 _out.WriteLine("       The tool was not imported...");
                 return;
             }
@@ -1387,16 +1389,16 @@ namespace pwiz.Skyline
             {
                 if (string.IsNullOrEmpty(reportTitle))
                 {
-                    _out.WriteLine(string.Format("Error: If {0} is and argument the tool must have a Report Title", ToolMacros.INPUT_REPORT_TEMP_PATH));
-                    _out.WriteLine(string.Format("        use the --tool-report parameter to specify a report"));
+                    _out.WriteLine("Error: If {0} is and argument the tool must have a Report Title", ToolMacros.INPUT_REPORT_TEMP_PATH);
+                    _out.WriteLine("        use the --tool-report parameter to specify a report");
                     _out.WriteLine("        The tool was not imported...");
                     return;
                 }
 
                 if (!Settings.Default.ReportSpecList.ContainsKey(reportTitle))
                 {
-                    _out.WriteLine(string.Format("Error: Please import the report format for {0}.", reportTitle));
-                    _out.WriteLine(string.Format("        Use the --report-add parameter to add the missing custom report."));
+                    _out.WriteLine("Error: Please import the report format for {0}.", reportTitle);
+                    _out.WriteLine("        Use the --report-add parameter to add the missing custom report.");
                     _out.WriteLine("        The tool was not imported...");
                     return;                    
                 }
@@ -1412,23 +1414,23 @@ namespace pwiz.Skyline
                     if (resolveToolConflictsBySkipping == null)
                     {
                         // Complain. No resolution specified.
-                        _out.WriteLine(string.Format("Error: A tool titled {0} already exists.", tool.Title));
+                        _out.WriteLine("Error: A tool titled {0} already exists.", tool.Title);
                         _out.WriteLine(              "       Please use --tool-conflict-resolution=< overwrite | skip >");
-                        _out.WriteLine(string.Format("       tool titled {0} was not added.", tool.Title));
+                        _out.WriteLine("       tool titled {0} was not added.", tool.Title);
                         return; // Dont add.
                     }
                     // Skip conflicts
                     if (resolveToolConflictsBySkipping == true)
                     {
-                        _out.WriteLine(string.Format("Warning: skipping tool {0} due to a name conflict.", tool.Title));
-//                        _out.WriteLine(string.Format("         tool {0} was not modified.", tool.Title));
+                        _out.WriteLine("Warning: skipping tool {0} due to a name conflict.", tool.Title);
+//                        _out.WriteLine("         tool {0} was not modified.", tool.Title);
                         return;
                     }
                     // Ovewrite conflicts
                     if (resolveToolConflictsBySkipping == false)
                     {
-                        _out.WriteLine(string.Format("Warning: the tool {0} was overwritten", tool.Title));
-//                      _out.WriteLine(string.Format("         tool {0} was modified.", tool.Title));
+                        _out.WriteLine("Warning: the tool {0} was overwritten", tool.Title);
+//                      _out.WriteLine("         tool {0} was modified.", tool.Title);
                         if (toolToRemove == null) // If there are multiple tools with the same name this makes sure the first one with a naming conflict is overwritten.
                             toolToRemove = tool;
                     }
@@ -1440,7 +1442,7 @@ namespace pwiz.Skyline
             // If no tool was overwritten then its a new tool. Show this message. 
             if (toolToRemove == null)
             {
-                _out.WriteLine(string.Format("{0} was added to the Tools Menu", title));
+                _out.WriteLine("{0} was added to the Tools Menu", title);
             }
             // Conflicts have been dealt with now add the tool.                       
             // Adding the tool. ToolArguments and ToolInitialDirectory are optional. 
@@ -1456,7 +1458,7 @@ namespace pwiz.Skyline
         {
             if (!File.Exists(path))
             {
-                _out.WriteLine(string.Format("Error: {0} does not exist. --batch-commands failed.", path));
+                _out.WriteLine("Error: {0} does not exist. --batch-commands failed.", path);
             }
             else
             {
@@ -1477,7 +1479,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception)
                 {
-                    _out.WriteLine(string.Format("Error: failed to open file {0} --batch-commands command failed.", path));
+                    _out.WriteLine("Error: failed to open file {0} --batch-commands command failed.", path);
                 }
             }            
         }
@@ -1503,7 +1505,7 @@ namespace pwiz.Skyline
                     if (!foundSingle)
                         foundSingle = true;
                     // If you have already encountered a quote, it could be a close quote or escaped quote
-                    else if (foundSingle)
+                    else
                     {
                         // In this case its an escaped quote
                         if ((i < inputs.Length - 1) && inputs[i + 1] == '"')
@@ -1538,7 +1540,7 @@ namespace pwiz.Skyline
         {          
             if (!File.Exists(path))
             {
-                _out.WriteLine(string.Format("Error: {0} does not exist. --report-add command failed.", path));
+                _out.WriteLine("Error: {0} does not exist. --report-add command failed.", path);
             }
             else
             {           
@@ -1550,13 +1552,13 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    _out.WriteLine(string.Format("Failure loading {0}. \n {1}", path, e));
+                    _out.WriteLine("Failure loading {0}. \n {1}", path, e);
                     return;
                 }
                 if (imported)
                 {
                     Settings.Default.Save();
-                    _out.WriteLine(string.Format("Success! Imported Reports from {0}", Path.GetFileNameWithoutExtension(path)));
+                    _out.WriteLine("Success! Imported Reports from {0}", Path.GetFileNameWithoutExtension(path));
                 }
             }
         }
@@ -1577,7 +1579,7 @@ namespace pwiz.Skyline
                 string messageFormat = existing.Count == 1
                                            ? "The name '{0}' already exists."
                                            : "The following names already exist:\n\n{0}\n\n";
-                _outWriter.WriteLine(string.Format(messageFormat, string.Join("\n", existing.ToArray())));
+                _outWriter.WriteLine(messageFormat, string.Join("\n", existing.ToArray()));
                 if (resolveSkyrConflictsBySkipping == null)
                 {
                     _outWriter.WriteLine("Error: Please specify a way to resolve conflicts.");
@@ -2041,6 +2043,8 @@ namespace pwiz.Skyline
             get { return _currentProgress; }
             set
             {
+                if (_currentProgress == value)
+                    return;
                 _currentProgress = value;
                 var currentTime = DateTime.Now;
                 // Show progress at least every 2 seconds and at 100%, if any other percentage

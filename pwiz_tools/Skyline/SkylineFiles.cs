@@ -41,7 +41,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1051,7 +1050,7 @@ namespace pwiz.Skyline
 
             ModifyDocument(description, doc =>
             {
-                if (doc != docCurrent)
+                if (!ReferenceEquals(doc, docCurrent))
                     throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
                 if (matcher != null)
                 {
@@ -1203,7 +1202,7 @@ namespace pwiz.Skyline
             ModifyDocument(Resources.SkylineWindow_ImportFiles_Import_Skyline_document_data, doc =>
             {
                 docNew.ValidateResults();
-                if (doc != docCurrent)
+                if (!ReferenceEquals(doc, docCurrent))
                     throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
                 return docNew;
             });

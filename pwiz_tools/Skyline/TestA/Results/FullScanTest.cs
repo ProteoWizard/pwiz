@@ -157,12 +157,16 @@ namespace pwiz.SkylineTestA.Results
                 var peptide = nodeTran.Transition.Group.Peptide;
                 // DRV without FASTA sequence should not have data for non-precursor transitions
                 if (!peptide.Sequence.StartsWith("DRV") || !peptide.Begin.HasValue)
+                {
+                    Assert.IsNotNull(nodeTran.Results[indexResults]);
                     Assert.IsFalse(nodeTran.Results[indexResults][0].IsEmpty);
+                }
                 else if (nodeTran.Transition.IonType != IonType.precursor)
                     Assert.IsNull(nodeTran.Results[indexResults]);
                 else
                 {
                     // Random, bogus peaks chosen in both files
+                    Assert.IsNotNull(nodeTran.Results[indexResults]);
                     Assert.AreEqual(2, nodeTran.Results[indexResults].Count);
                     Assert.IsFalse(nodeTran.Results[indexResults][0].IsEmpty);
                     Assert.IsFalse(nodeTran.Results[indexResults][1].IsEmpty);

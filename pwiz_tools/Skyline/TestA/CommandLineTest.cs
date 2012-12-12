@@ -1203,14 +1203,14 @@ namespace pwiz.SkylineTestA
             string output2 = RunCommand("--report-add=" + skyrFile);
             Assert.IsTrue(output2.Contains("Error"));
             // Do want to use == to show it is the same object, unchanged
-            Assert.IsTrue(skyrAdded == Settings.Default.ReportSpecList.Last());
+            Assert.IsTrue(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
 
             // Specify skip
             string output4 = RunCommand("--report-add=" + skyrFile,
                 "--report-conflict-resolution=skip");
             Assert.IsTrue(output4.Contains("skipping"));
             // Do want to use == to show it is the same object, unchanged
-            Assert.IsTrue(skyrAdded == Settings.Default.ReportSpecList.Last());
+            Assert.IsTrue(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
 
 
             // Specify overwrite
@@ -1218,7 +1218,7 @@ namespace pwiz.SkylineTestA
                 "--report-conflict-resolution=overwrite");
             Assert.IsTrue(output3.Contains("overwriting"));
             // Do want to use == to show it is not the same object, changed
-            Assert.IsFalse(skyrAdded == Settings.Default.ReportSpecList.Last());
+            Assert.IsFalse(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
 
         }
 

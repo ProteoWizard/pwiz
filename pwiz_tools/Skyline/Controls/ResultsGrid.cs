@@ -574,7 +574,7 @@ namespace pwiz.Skyline.Controls
             return OnlyTransitionsSelected(Document, SelectedPaths);
         }
 
-        private static bool OnlyTransitionsSelected(SrmDocument document, IList<IdentityPath> selectedPaths)
+        private static bool OnlyTransitionsSelected(SrmDocument document, IEnumerable<IdentityPath> selectedPaths)
         {
             return selectedPaths.All(
                 path =>
@@ -595,7 +595,7 @@ namespace pwiz.Skyline.Controls
             return OnlyPrecursorsSelected(Document, SelectedPaths);
         }
         
-        private static bool OnlyPrecursorsSelected(SrmDocument document, IList<IdentityPath> selectedPaths)
+        private static bool OnlyPrecursorsSelected(SrmDocument document, IEnumerable<IdentityPath> selectedPaths)
         {
             return selectedPaths.All(
                 path =>
@@ -928,7 +928,7 @@ namespace pwiz.Skyline.Controls
 
             if(noResults)
             {
-                SelectedPaths = new List<IdentityPath>(){IdentityPath.ROOT};
+                SelectedPaths = new List<IdentityPath> {IdentityPath.ROOT};
             }
            
             // If we have more than one node selected, or if the selected node is not a tree node, 
@@ -1957,7 +1957,7 @@ namespace pwiz.Skyline.Controls
                          replicateIndex++)
                     {
                         if (transitionGroupDocNode.Results[replicateIndex].FirstOrDefault(
-                            transitionGroupChromInfo=>chromInfo.FileId == transitionGroupChromInfo.FileId) != null)
+                            transitionGroupChromInfo=> ReferenceEquals(chromInfo.FileId, transitionGroupChromInfo.FileId)) != null)
                         {
                             return replicateIndex;
                         }
@@ -1975,7 +1975,7 @@ namespace pwiz.Skyline.Controls
                         replicateIndex++)
                     {
                         if (transitionDocNode.Results[replicateIndex].FirstOrDefault(
-                            transitionChromInfo => chromInfo.FileId == transitionChromInfo.FileId) != null)
+                            transitionChromInfo => ReferenceEquals(chromInfo.FileId, transitionChromInfo.FileId)) != null)
                         {
                             return replicateIndex;
                         }

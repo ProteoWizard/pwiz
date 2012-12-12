@@ -645,7 +645,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (isCanceled())
                             throw new OperationCanceledException();
                         RecalcRegression(bestOut, standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
-                            ref statisticsResult, ref outIndexes);
+                            out statisticsResult, ref outIndexes);
                         if (bestOut >= variablePeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
                         bestOut++;
@@ -659,7 +659,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (isCanceled())
                         throw new OperationCanceledException();
                     var regression = RecalcRegression(worstIn, standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
-                        ref statisticsResult, ref outIndexes);
+                        out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
                     if (worstIn <= 2 || IsAboveThreshold(statisticsResult.R, threshold, precision))
@@ -675,10 +675,10 @@ namespace pwiz.Skyline.Model.DocSettings
             int mid = (left + right) / 2;
 
             HashSet<int> outIndexesNew = outIndexes;
-            RetentionTimeStatistics statisticsNew = statisticsResult;
+            RetentionTimeStatistics statisticsNew;
             // Rerun the regression
             var regressionNew = RecalcRegression(mid, standardPeptides, variablePeptides, statistics, calculator, scoreCache,
-                ref statisticsNew, ref outIndexesNew);
+                out statisticsNew, ref outIndexesNew);
             // If no regression could be calculated, give up to avoid infinite recursion.
             if (regressionNew == null)
                 return this;
@@ -704,7 +704,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     RetentionTimeStatistics statistics,
                     RetentionScoreCalculatorSpec calculator,
                     RetentionTimeScoreCache scoreCache,
-                    ref RetentionTimeStatistics statisticsResult,
+                    out RetentionTimeStatistics statisticsResult,
                     ref HashSet<int> outIndexes)
         {
             // Create list of deltas between predicted and measured times
@@ -822,7 +822,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Index = index;
             }
 
-            public double Delta { get; private set; }
+            private double Delta { get; set; }
             public int Index { get; private set; }
             public int CompareTo(DeltaIndex other)
             {
@@ -883,8 +883,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public double CalcScore(IRetentionScoreCalculator calculator, string peptide)
         {
             Dictionary<string, double> cacheCalc;
-            if (!_cache.TryGetValue(calculator.Name, out cacheCalc))
-                cacheCalc = null;
+            _cache.TryGetValue(calculator.Name, out cacheCalc);
             return CalcScore(calculator, peptide, cacheCalc);
         }
 

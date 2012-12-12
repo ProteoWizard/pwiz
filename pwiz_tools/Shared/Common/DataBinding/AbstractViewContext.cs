@@ -103,10 +103,10 @@ namespace pwiz.Common.DataBinding
 
         public void Export(Control owner, BindingListView bindingListView)
         {
-            var dataFormats = new[] { DataFormats.Csv, DataFormats.Tsv };
+            var dataFormats = new[] { DataFormats.CSV, DataFormats.TSV };
             string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray());
-            using (var saveFileDialog = new SaveFileDialog()
-            {
+            using (var saveFileDialog = new SaveFileDialog
+                {
                 Filter = fileFilter,
                 InitialDirectory = GetExportDirectory(),
                 FileName = GetDefaultExportFilename(bindingListView.ViewSpec),
@@ -209,8 +209,8 @@ namespace pwiz.Common.DataBinding
                 var valueList = GetValueList(propertyDescriptor);
                 if (valueList != null)
                 {
-                    var result = new DataGridViewComboBoxColumn()
-                    {
+                    var result = new DataGridViewComboBoxColumn
+                        {
                         Name = propertyDescriptor.Name,
                         DataPropertyName = propertyDescriptor.Name,
                         HeaderText = propertyDescriptor.DisplayName,
@@ -224,8 +224,8 @@ namespace pwiz.Common.DataBinding
             }
             if (propertyDescriptor.PropertyType == typeof(bool))
             {
-                return new DataGridViewCheckBoxColumn()
-                           {
+                return new DataGridViewCheckBoxColumn
+                    {
                                Name = propertyDescriptor.Name,
                                DataPropertyName = propertyDescriptor.Name,
                                HeaderText = propertyDescriptor.DisplayName,
@@ -234,8 +234,8 @@ namespace pwiz.Common.DataBinding
             var columnPropertyDescriptor = propertyDescriptor as ColumnPropertyDescriptor;
             if (columnPropertyDescriptor == null)
             {
-                return new DataGridViewTextBoxColumn()
-                           {
+                return new DataGridViewTextBoxColumn
+                    {
                                Name = propertyDescriptor.Name,
                                DataPropertyName = propertyDescriptor.Name,
                                HeaderText = propertyDescriptor.DisplayName

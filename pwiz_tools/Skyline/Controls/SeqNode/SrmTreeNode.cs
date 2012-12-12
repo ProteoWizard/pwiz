@@ -623,7 +623,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         if (ReferenceEquals(nodeTree.Model.Id, nodeDoc.Id))
                         {
                             nodeTree.Model = nodeDoc;
-                            selChanged = (nodeTree == nodeSel);
+                            selChanged = ReferenceEquals(nodeTree, nodeSel);
                         }
                         else
                         {
@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                             if (!ReferenceEquals(nodeTree.Model, nodeDoc))
                             {
                                 nodeTree.Model = nodeDoc;
-                                selChanged = (nodeTree == nodeSel);
+                                selChanged = ReferenceEquals(nodeTree, nodeSel);
                             }
                             treeNodes.Insert(i, nodeTree);
                         }

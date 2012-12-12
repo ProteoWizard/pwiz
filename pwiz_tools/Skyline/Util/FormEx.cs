@@ -79,19 +79,6 @@ namespace pwiz.Skyline.Util
         {
             CancelButton.PerformClick();
         }
-
-        private void InitializeComponent()
-        {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormEx));
-            this.SuspendLayout();
-            // 
-            // FormEx
-            // 
-            resources.ApplyResources(this, "$this"); // Not L10N
-            this.Name = "FormEx"; // Not L10N
-            this.ResumeLayout(false);
-
-        }
     }
 
     public class DockableFormEx : DockableForm

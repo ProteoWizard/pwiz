@@ -329,7 +329,7 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg1.GraphSettings.ShowPrecursorIon = true;
 
                 // Make sure the precursor -98 ion was added
-                var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels;
+                var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels.ToList();
                 Assert.AreEqual(countLossLabels1 + 1, labelsPhospho.Count(label => label.Contains(lossText)));
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText)))); 
                 Assert.AreEqual(countLabels1 + countLossLabels1 + countPrecursors1, labelsPhospho.Count());
@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 viewLibraryDlg1.SelectedIndex = 1;
-                var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels;
+                var labelsPhospho = viewLibraryDlg1.GraphItem.IonLabels.ToList();
                 Assert.AreEqual(countLossLabels2 + 1, labelsPhospho.Count(label => label.Contains(lossText)));
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText))));
                 Assert.AreEqual(countLabels2 + countLossLabels2 + countPrecursors2, labelsPhospho.Count());

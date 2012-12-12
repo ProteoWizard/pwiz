@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 
 namespace pwiz.Common.DataBinding
 {
     public class ViewProperties : PropertyDescriptorCollection
     {
-        public const string ColumnNamePrefix = "COLUMN_";
-        private const string DisplayColumnPrefix = "DISPLAYCOLUMN_";
+        public const string COLUMN_NAME_PREFIX = "COLUMN_";
+        private const string DISPLAY_COLUMN_PREFIX = "DISPLAYCOLUMN_";
         public ViewProperties(ViewInfo viewInfo, IDictionary<IdentifierPath, ICollection<PivotKey>> pivotKeys) 
             : this(viewInfo, new DisplayColumnProperties(viewInfo, pivotKeys))
         {
@@ -29,11 +28,11 @@ namespace pwiz.Common.DataBinding
 
         public override PropertyDescriptor Find(string name, bool ignoreCase)
         {
-            if (!name.StartsWith(ColumnNamePrefix))
+            if (!name.StartsWith(COLUMN_NAME_PREFIX))
             {
                 return base.Find(name, ignoreCase);
             }
-            var identifierPath = IdentifierPath.Parse(name.Substring(ColumnNamePrefix.Length));
+            var identifierPath = IdentifierPath.Parse(name.Substring(COLUMN_NAME_PREFIX.Length));
             PivotKey pivotKey;
             var columnDescriptor = FindColumn(identifierPath, out pivotKey);
             if (columnDescriptor == null)
@@ -64,7 +63,7 @@ namespace pwiz.Common.DataBinding
             column = parentColumn.ResolveChild(null);
             if (column != null)
             {
-                pivotKey = PivotKey.OfValues(pivotKey, IdentifierPath.Root, new[] {
+                pivotKey = PivotKey.OfValues(pivotKey, IdentifierPath.ROOT, new[] {
                     new KeyValuePair<IdentifierPath, object>(column.IdPath, 
                         Convert.ChangeType(identifierPath.Name, column.CollectionInfo.KeyType))});
                 return column;
@@ -85,12 +84,12 @@ namespace pwiz.Common.DataBinding
                     {
                         continue;
                     }
-                    ICollection<PivotKey> pivotKeys = GetPivotKeys(pivotKeysByColumn, displayColumn);
+                    IEnumerable<PivotKey> pivotKeys = GetPivotKeys(pivotKeysByColumn, displayColumn);
                     if (pivotKeys != null)
                     {
-                        List<DisplayColumn> columns;
                         foreach (var value in pivotKeys)
                         {
+                            List<DisplayColumn> columns;
                             if (!displayColumnsByKey.TryGetValue(value, out columns))
                             {
                                 columns = new List<DisplayColumn>();
@@ -119,7 +118,7 @@ namespace pwiz.Common.DataBinding
                 }
                 PropertyDescriptorArray = propertyDescriptors.ToArray();
             }
-            private ICollection<PivotKey> GetPivotKeys(IDictionary<IdentifierPath, ICollection<PivotKey>> pivotKeyDict, DisplayColumn displayColumn)
+            private IEnumerable<PivotKey> GetPivotKeys(IEnumerable<KeyValuePair<IdentifierPath, ICollection<PivotKey>>> pivotKeyDict, DisplayColumn displayColumn)
             {
                 ICollection<PivotKey> result = null;
                 IdentifierPath longestId = null;
@@ -142,9 +141,9 @@ namespace pwiz.Common.DataBinding
         }
         static string MakeUniqueName(HashSet<string> columnNames, IAggregateFunction aggregateFunction, IdentifierPath identifierPath)
         {
-            string baseName = DisplayColumnPrefix + identifierPath;
+            string baseName = DISPLAY_COLUMN_PREFIX + identifierPath;
 
-            if (aggregateFunction != null && AggregateFunctions.GroupBy != aggregateFunction)
+            if (aggregateFunction != null && AggregateFunctions.GROUP_BY != aggregateFunction)
             {
                 baseName = aggregateFunction.Name + "_" + baseName;
             }

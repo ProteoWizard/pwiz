@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
@@ -241,7 +240,9 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
+// ReSharper disable ObjectCreationAsStatement
                 new IsolationWindow(start, end, null, marginLeft, marginRight);
+// ReSharper restore ObjectCreationAsStatement
             }
             catch (InvalidDataException x)
             {

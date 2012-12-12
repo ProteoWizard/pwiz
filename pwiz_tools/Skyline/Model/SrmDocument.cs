@@ -2101,7 +2101,7 @@ namespace pwiz.Skyline.Model
                 // Consume the tag
                 reader.Read();
 
-                if (chromInfo != default(TItem))
+                if (!ReferenceEquals(chromInfo, default(TItem)))
                 {
                     if (arrayListChromInfos[index] == null)
                         arrayListChromInfos[index] = new List<TItem>();

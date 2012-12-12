@@ -33,7 +33,7 @@ namespace pwiz.Common.DataBinding
         {
             DataSchema = dataSchema;
             PropertyType = propertyType;
-            IdPath = IdentifierPath.Root;
+            IdPath = IdentifierPath.ROOT;
         }
         public ColumnDescriptor(ColumnDescriptor parent, String name) : this(parent, name, parent.DataSchema.GetPropertyDescriptor(parent.PropertyType, name))
         {
@@ -77,7 +77,7 @@ namespace pwiz.Common.DataBinding
             {
                 return this;
             }
-            var newIdPath = newParent == null ? IdentifierPath.Root : new IdentifierPath(newParent.IdPath, Name);
+            var newIdPath = newParent == null ? IdentifierPath.ROOT : new IdentifierPath(newParent.IdPath, Name);
             return new ColumnDescriptor(this) {Parent = newParent, IdPath = newIdPath};
         }
         public String Name { get { return IdPath.Name;} }

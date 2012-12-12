@@ -254,7 +254,7 @@ namespace pwiz.Common.DataAnalysis
                     double sumX = 0;
                     double sumXSquared = 0;
                     double sumY = 0;
-                    double sumXY = 0;
+                    double sumXy = 0;
                     double denom = Math.Abs(1.0 / (xval[edge] - x));
                     for (int k = ileft; k <= iright; ++k)
                     {
@@ -267,12 +267,12 @@ namespace pwiz.Common.DataAnalysis
                         sumX += xkw;
                         sumXSquared += xk * xkw;
                         sumY += yk * w;
-                        sumXY += yk * xkw;
+                        sumXy += yk * xkw;
                     }
 
                     double meanX = sumX / sumWeights;
                     double meanY = sumY / sumWeights;
-                    double meanXY = sumXY / sumWeights;
+                    double meanXy = sumXy / sumWeights;
                     double meanXSquared = sumXSquared / sumWeights;
 
                     double beta;
@@ -282,7 +282,7 @@ namespace pwiz.Common.DataAnalysis
                     }
                     else
                     {
-                        beta = (meanXY - meanX * meanY) / (meanXSquared - meanX * meanX);
+                        beta = (meanXy - meanX * meanY) / (meanXSquared - meanX * meanX);
                     }
 
                     double alpha = meanY - beta * meanX;

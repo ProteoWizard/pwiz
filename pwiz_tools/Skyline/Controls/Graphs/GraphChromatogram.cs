@@ -2021,8 +2021,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         CurveItem[] changeCurves = null;
                         // If clicked on the XAxis for a graph of a single precursor, use its first curve
-                        if (nearest is CurveItem)
-                            changeCurves = new[] {(CurveItem) nearest};
+                        var item = nearest as CurveItem;
+                        if (item != null)
+                            changeCurves = new[] {item};
                         else if (nearest is XAxis && IsGroupActive)
                         {
                             changeCurves = IsMultiGroup

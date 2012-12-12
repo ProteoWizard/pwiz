@@ -89,7 +89,7 @@ namespace pwiz.SkylineTest
                     Peptide peptide = nodePeptide.Peptide;
                     char prev = peptide.PrevAA;
                     if (prev != 'K' && prev != 'R')
-                        Assert.Fail(string.Format("Unexpected preceding cleavage at {0}", prev));
+                        Assert.Fail("Unexpected preceding cleavage at {0}", prev);
                     string seq = peptide.Sequence;
                     char last = seq[seq.Length - 1];
                     if (last != 'K' && last != 'R' && peptide.NextAA != '-')
@@ -99,7 +99,7 @@ namespace pwiz.SkylineTest
                     
                     // Make sure peptides are ordered, and not overlapping
                     if (peptide.Begin.Value < lastEnd)
-                        Assert.Fail(string.Format("Begin {0} less than last end {1}.", peptide.Begin.Value, lastEnd));
+                        Assert.Fail("Begin {0} less than last end {1}.", peptide.Begin.Value, lastEnd);
                     lastEnd = peptide.End.Value;
 
                     IList<DocNode> nodesTrans = ((DocNodeParent) nodePeptide.Children[0]).Children;
@@ -109,11 +109,11 @@ namespace pwiz.SkylineTest
                         // Might have been cut off by the instrument limit.
                         if ((trans == 0 && ((TransitionGroupDocNode)nodePeptide.Children[0]).PrecursorMz < maxMz) ||
                                 (trans > 0 && ((TransitionDocNode)nodesTrans[0]).Mz < maxMz))
-                            Assert.Fail(string.Format("Found {0} transitions, expecting 3.", trans));
+                            Assert.Fail("Found {0} transitions, expecting 3.", trans);
                     }
                     // Might have extra proline transitions
                     else if (trans > 3 && peptide.Sequence.IndexOf('P') == -1)
-                        Assert.Fail(string.Format("Found {0} transitions, expecting 3.", trans));
+                        Assert.Fail("Found {0} transitions, expecting 3.", trans);
 
                     // Make sure transitions are ordered correctly
                     IonType lastType = IonType.a;
@@ -160,7 +160,7 @@ namespace pwiz.SkylineTest
                 char prev = nodePeptide.Peptide.PrevAA;
                 char next = nodePeptide.Peptide.NextAA;
                 if (prev != 'X' || next != 'X')
-                    Assert.Fail(string.Format("Expected amino acids X, but found {0} or {1}", prev, next));
+                    Assert.Fail("Expected amino acids X, but found {0} or {1}", prev, next);
                 string seq = nodePeptide.Peptide.Sequence;
                 char last = seq[seq.Length - 1];
                 // Just because they are tryptic peptides in the list
@@ -176,11 +176,11 @@ namespace pwiz.SkylineTest
                     // Might have been cut off by the instrument limit.
                     if ((trans == 0 && ((TransitionGroupDocNode)nodePeptide.Children[0]).PrecursorMz < maxMz) ||
                             (trans > 0 && ((TransitionDocNode)nodesTrans[0]).Mz < maxMz))
-                        Assert.Fail(string.Format("Found {0} transitions, expecting 3.", trans));
+                        Assert.Fail("Found {0} transitions, expecting 3.", trans);
                 }
                 // Might have extra proline transitions
                 else if (trans > 3 && nodePeptide.Peptide.Sequence.IndexOf('P') == -1)
-                    Assert.Fail(string.Format("Found {0} transitions, expecting 3.", trans));
+                    Assert.Fail("Found {0} transitions, expecting 3.", trans);
             }
 
             // Make sure old documents are unmodified.

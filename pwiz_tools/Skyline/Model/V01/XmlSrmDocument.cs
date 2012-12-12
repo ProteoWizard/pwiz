@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.V01
         [XmlElement(ElementName = "start_rt")] // Not L10N
         public string StartRTAttr
         {
-            get { return XmlUtil.ToAttr(StartRT); }            
+            get { return XmlUtil.ToAttr<double>(StartRT ?? 0.0); }            
             set { StartRT = double.Parse(value, CultureInfo.InvariantCulture); }
         }
 
@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model.V01
         [XmlElement(ElementName = "stop_rt")]
         public string StopRTAttr
         {
-            get { return XmlUtil.ToAttr(StopRT); }
+            get { return XmlUtil.ToAttr<double>(StopRT ?? 0.0); }
             set { StopRT = double.Parse(value, CultureInfo.InvariantCulture); }
         }
 

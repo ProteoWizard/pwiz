@@ -26,43 +26,43 @@ namespace pwiz.Common.DataBinding
 {
     public static class AggregateFunctions
     {
-        private static List<IAggregateFunction> _aggregateFunctionList = new List<IAggregateFunction>();
-        private static IDictionary<string, int> _aggregateFunctionIndexesByName = new Dictionary<string, int>();
+        private static readonly List<IAggregateFunction> AGGREGATE_FUNCTION_LIST = new List<IAggregateFunction>();
+        private static readonly IDictionary<string, int> AGGREGATE_FUNCTION_INDEXES_BY_NAME = new Dictionary<string, int>();
 
-        public static readonly IAggregateFunction GroupBy = new AggregateFunctionImpl("groupby", "Group By", "",
+        public static readonly IAggregateFunction GROUP_BY = new AggregateFunctionImpl("groupby", "Group By", "",
                                                                                       Properties.Resources.agg_groupby,
                                                                                       null, cd => cd.PropertyType);
-        public static readonly IAggregateFunction Sum = new AggregateFunctionImpl("sum", "Sum", "Sum of ",
+        public static readonly IAggregateFunction SUM = new AggregateFunctionImpl("sum", "Sum", "Sum of ",
             Properties.Resources.agg_sum, AggSum, cd => IsNumberType(cd) ? typeof (double) : null);
-        public static readonly IAggregateFunction Mean = new AggregateFunctionImpl("mean", "Mean", "Average of ",
+        public static readonly IAggregateFunction MEAN = new AggregateFunctionImpl("mean", "Mean", "Average of ",
             Properties.Resources.agg_mean, AggMean, cd => IsNumberType(cd) ? typeof(double) : null);
-        public static readonly IAggregateFunction Count = new AggregateFunctionImpl("count", "Count", "Count of ",
+        public static readonly IAggregateFunction COUNT = new AggregateFunctionImpl("count", "Count", "Count of ",
             Properties.Resources.agg_count, AggCount, cd => typeof (int));
 
-        public static readonly IAggregateFunction Minimum = new AggregateFunctionImpl("min", "Minimum", "Min of ",
+        public static readonly IAggregateFunction MINIMUM = new AggregateFunctionImpl("min", "Minimum", "Min of ",
             Properties.Resources.agg_min, AggMin, cd => cd.PropertyType);
 
-        public static readonly IAggregateFunction Maximum = new AggregateFunctionImpl("max", "Maximum", "Max of ",
+        public static readonly IAggregateFunction MAXIMUM = new AggregateFunctionImpl("max", "Maximum", "Max of ",
             Properties.Resources.agg_max, AggMax, cd => cd.PropertyType);
 
-        public static readonly IAggregateFunction StdDev = new AggregateFunctionImpl("stddev", "Standard Deviation", "StdDev of ",
+        public static readonly IAggregateFunction STD_DEV = new AggregateFunctionImpl("stddev", "Standard Deviation", "StdDev of ",
             Properties.Resources.agg_stddev, AggStdDev, cd => IsNumberType(cd) ? typeof (double) : null);
 
         static AggregateFunctions()
         {
-            AddAggregateFunction(GroupBy);
-            AddAggregateFunction(Sum);
-            AddAggregateFunction(Mean);
-            AddAggregateFunction(Minimum);
-            AddAggregateFunction(Maximum);
-            AddAggregateFunction(Count);
-            AddAggregateFunction(StdDev);
+            AddAggregateFunction(GROUP_BY);
+            AddAggregateFunction(SUM);
+            AddAggregateFunction(MEAN);
+            AddAggregateFunction(MINIMUM);
+            AddAggregateFunction(MAXIMUM);
+            AddAggregateFunction(COUNT);
+            AddAggregateFunction(STD_DEV);
             // TODO(nicksh): StdErr, Variance, Median
         }
         static void AddAggregateFunction(IAggregateFunction aggregateFunction)
         {
-            _aggregateFunctionIndexesByName.Add(aggregateFunction.Name, _aggregateFunctionList.Count);
-            _aggregateFunctionList.Add(aggregateFunction);
+            AGGREGATE_FUNCTION_INDEXES_BY_NAME.Add(aggregateFunction.Name, AGGREGATE_FUNCTION_LIST.Count);
+            AGGREGATE_FUNCTION_LIST.Add(aggregateFunction);
         }
 
         public static int GetImageIndex(IAggregateFunction aggregateFunction)
@@ -72,7 +72,7 @@ namespace pwiz.Common.DataBinding
                 return -1;
             }
             int result;
-            if (!_aggregateFunctionIndexesByName.TryGetValue(aggregateFunction.Name, out result))
+            if (!AGGREGATE_FUNCTION_INDEXES_BY_NAME.TryGetValue(aggregateFunction.Name, out result))
             {
                 return -1;
             }
@@ -86,23 +86,23 @@ namespace pwiz.Common.DataBinding
                 return null;
             }
             int index;
-            if (!_aggregateFunctionIndexesByName.TryGetValue(name, out index))
+            if (!AGGREGATE_FUNCTION_INDEXES_BY_NAME.TryGetValue(name, out index))
             {
                 return null;
             }
-            return _aggregateFunctionList[index];
+            return AGGREGATE_FUNCTION_LIST[index];
         }
 
         public static ImageList GetSmallIcons()
         {
-            var result = new ImageList(){TransparentColor = Color.Magenta};
-            result.Images.AddRange(_aggregateFunctionList.Select(fn=>fn.SmallIcon).ToArray());
+            var result = new ImageList {TransparentColor = Color.Magenta};
+            result.Images.AddRange(AGGREGATE_FUNCTION_LIST.Select(fn=>fn.SmallIcon).ToArray());
             return result;
         }
 
         public static IList<IAggregateFunction> ListAggregateFunctions()
         {
-            return _aggregateFunctionList.AsReadOnly();
+            return AGGREGATE_FUNCTION_LIST.AsReadOnly();
         }
 
         static object AggCount(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> items)
@@ -176,7 +176,9 @@ namespace pwiz.Common.DataBinding
                 {
                     doubles.Add((double) Convert.ChangeType(unwrappedValue, typeof(double)));
                 }
+// ReSharper disable EmptyGeneralCatchClause
                 catch
+// ReSharper restore EmptyGeneralCatchClause
                 {
                     // ignore
                 }

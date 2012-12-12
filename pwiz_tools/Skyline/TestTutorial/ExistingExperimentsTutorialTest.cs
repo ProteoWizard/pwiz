@@ -540,7 +540,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 PeptideTreeNode selNode = ((PeptideTreeNode)SkylineWindow.SequenceTree.SelectedNode);
-                IEnumerable<DocNode> choices = selNode.GetChoices(true);
+                DocNode[] choices = selNode.GetChoices(true).ToArray();
                 Assert.IsTrue(choices.Contains(node =>
                     ((TransitionGroupDocNode)node).PrecursorMz.ToString(CultureInfo.CurrentCulture)
                         .Contains(expectedPrecursorMz.ToString(CultureInfo.CurrentCulture))));

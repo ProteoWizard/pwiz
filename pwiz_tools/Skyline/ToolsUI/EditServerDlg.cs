@@ -94,9 +94,7 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
 
-            var panoramaClient = PanoramaClient;
-            if (panoramaClient == null)
-                panoramaClient = new WebPanoramaClient(uriServer);
+            var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer);
 
             var waitDlg = new LongWaitDlg { Text = Resources.EditServerDlg_OkDialog_Verifying_server_information };
             try

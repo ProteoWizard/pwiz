@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
@@ -53,7 +51,7 @@ namespace pwiz.Common.DataBinding
         public override void Reset(IEnumerable<RowItem> values)
         {
             Clear();
-            base.Reset(values.Select(rowItem => new ChangeNotifyRowItem(this, rowItem)).Cast<RowItem>());
+            base.Reset(values.Select(rowItem => new ChangeNotifyRowItem(this, rowItem)));
             foreach (var node in Tree)
             {
                 ((ChangeNotifyRowItem) node.Value).TreeNode = node;
@@ -213,7 +211,7 @@ namespace pwiz.Common.DataBinding
                 return Equals(obj as PropertyChangeKey);
             }
 
-            public bool Equals(PropertyChangeKey that)
+            private bool Equals(PropertyChangeKey that)
             {
                 if (null == that)
                 {

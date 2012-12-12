@@ -120,7 +120,7 @@ namespace pwiz.Skyline.EditUI
                 // Handle insert node path
                 if (_selectedPath != null &&
                     _selectedPath.Depth == (int)SrmDocument.Level.PeptideGroups &&
-                    _selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups) == SequenceTree.NODE_INSERT_ID)
+                    ReferenceEquals(_selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups), SequenceTree.NODE_INSERT_ID))
                 {
                     _selectedPath = null;
                 }

@@ -387,7 +387,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     fullPath = null;
                 }
-                bool browse = string.IsNullOrEmpty(path) ||
+                bool browse = path == null ||   // For ReSharper
+                              string.IsNullOrEmpty(path) ||
                               !Equals(path, fullPath) ||
                               Directory.Exists(path);
                 if (!browse)

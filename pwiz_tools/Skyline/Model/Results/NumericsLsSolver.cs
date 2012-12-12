@@ -301,12 +301,12 @@ namespace pwiz.Skyline.Model.Results
                 _tol = db.Masks.Matrix.L1Norm()*10.0*double.Epsilon*maxCount;
                 _maxIter = db.Masks.NumCols*3;
             }
-            var matrixAT = db.Masks.Matrix.Transpose();
+            var matrixAt = db.Masks.Matrix.Transpose();
             FindFirstGuess(db.Masks.Matrix, db.BinnedData.Matrix, ref _firstGuess);
             db.Masks.Matrix.Multiply(_firstGuess, _matrixAx);
             _matrixDiffBig.Clear();
             db.BinnedData.Matrix.Subtract(_matrixAx, _matrixDiffBig);
-            matrixAT.Multiply(_matrixDiffBig, _matrixWs);
+            matrixAt.Multiply(_matrixDiffBig, _matrixWs);
 
             var matrixResult = db.Solution;
             for (int colNum = 0; colNum < db.BinnedData.NumCols; ++colNum)
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results
                 _matrixAx.Column(colNum, _matrixAxCol);
                 _matrixWs.Column(colNum, _matrixWsCol);
                 if (SolveColumn(db.Masks.Matrix, _binnedDataCol,
-                    _initializeCol, matrixAT, _matrixAxCol, _matrixWsCol,
+                    _initializeCol, matrixAt, _matrixAxCol, _matrixWsCol,
                     ref _solutionCol))
                 {
                     matrixResult.Matrix.SetColumn(colNum, _solutionCol);
@@ -332,7 +332,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private bool SolveColumn(Matrix<double> matrixA, Vector<double> colB,
-            Vector<double> initialize, Matrix<double> matrixAT, 
+            Vector<double> initialize, Matrix<double> matrixAt, 
             Vector<double> ax, Vector<double> wFullVector, ref Vector<double> solution)
         {
             // initialize sets to keep track of which columns are active (zero)
@@ -456,7 +456,7 @@ namespace pwiz.Skyline.Model.Results
                 matrixA.Multiply(x, _matrixAxC);
                 _matrixDiff.Clear();
                 colMatrixB.Subtract(_matrixAxC, _matrixDiff);
-                matrixAT.Multiply(_matrixDiff, w);
+                matrixAt.Multiply(_matrixDiff, w);
             }
             x.Column(0, solution);
             return true;

@@ -92,7 +92,9 @@ namespace pwiz.Common.DataBinding
         protected override void ApplySortCore(PropertyDescriptor property, ListSortDirection direction)
         {
             var items = Items as List<T>;
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
             if ((null != items) && (null != property))
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
             {
                 var pc = new PropertyComparer<T>(property, direction);
                 items.Sort(pc);
@@ -202,20 +204,24 @@ namespace pwiz.Common.DataBinding
                 {
                     result = 1;
                 }
-                else if (xValue is IComparable)
-                {
-                    /* If values implement IComparer */
-                    result = ((IComparable)xValue).CompareTo(yValue);
-                }
-                else if (xValue.Equals(yValue))
-                {
-                    /* If values don't implement IComparer but are equivalent */
-                    result = 0;
-                }
                 else
                 {
-                    /* Values don't implement IComparer and are not equivalent, so compare as string values */
-                    result = xValue.ToString().CompareTo(yValue.ToString());
+                    var value = xValue as IComparable;
+                    if (value != null)
+                    {
+                        /* If values implement IComparer */
+                        result = value.CompareTo(yValue);
+                    }
+                    else if (xValue.Equals(yValue))
+                    {
+                        /* If values don't implement IComparer but are equivalent */
+                        result = 0;
+                    }
+                    else
+                    {
+                        /* Values don't implement IComparer and are not equivalent, so compare as string values */
+                        result = String.Compare(xValue.ToString(), yValue.ToString(), StringComparison.Ordinal);
+                    }
                 }
                 /* Return result */
                 return result;

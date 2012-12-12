@@ -53,12 +53,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
             SrmDocument docNew;
             do
             {
-                docCurrent = container.Document;
-                var loadMonitor = new LoadMonitor(this, container, docCurrent);
-                docNew = DocumentRetentionTimes.RecalculateAlignments(docCurrent, loadMonitor);
+                var current = container.Document;
+                var loadMonitor = new LoadMonitor(this, container, current);
+                docNew = DocumentRetentionTimes.RecalculateAlignments(current, loadMonitor);
                 if (null == docNew)
                 {
-                    EndProcessing(docCurrent);
+                    EndProcessing(current);
                     return false;
                 }
             } while (!CompleteProcessing(container, docNew, docCurrent));

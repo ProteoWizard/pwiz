@@ -141,9 +141,6 @@
   <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
@@ -167,9 +164,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>3</value>
@@ -195,9 +189,6 @@
   <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
@@ -221,9 +212,6 @@
   </data>
   <data name="&gt;&gt;textNote.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textNote.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;textNote.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -258,9 +246,6 @@
   <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
   <data name="&gt;&gt;dataGridView1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -290,9 +275,6 @@
   </data>
   <data name="&gt;&gt;btnClearAll.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnClearAll.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;btnClearAll.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -540,9 +522,6 @@
   <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -578,9 +557,6 @@
   </data>
   <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>

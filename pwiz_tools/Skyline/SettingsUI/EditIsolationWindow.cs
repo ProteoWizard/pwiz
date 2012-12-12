@@ -45,7 +45,9 @@ namespace pwiz.Skyline.SettingsUI
         public void Validate()
         {
             // Construct IsolationWindow to perform validation.
+// ReSharper disable ObjectCreationAsStatement
             new IsolationWindow(this);
+// ReSharper restore ObjectCreationAsStatement
         }
 
         #region object overrides

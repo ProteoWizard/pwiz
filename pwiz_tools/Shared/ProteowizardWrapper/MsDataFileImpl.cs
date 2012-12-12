@@ -352,8 +352,10 @@ namespace pwiz.ProteowizardWrapper
                 if (! precursors.All(prec=> prec.PrecursorMz.HasValue))
                     return false;
                 precursorsPerScan = precursors.Length;
-                furthestPrecursorDistance = (int)precursors.Max(prec => prec.PrecursorMz.Value) -
-                                            (int)precursors.Min(prec => prec.PrecursorMz.Value);
+                // The null condition for PrecursorMz below should never happen, due to the
+                // above if statement, but it keeps ReSharper from complaining
+                furthestPrecursorDistance = (int)precursors.Max(prec => prec.PrecursorMz ?? 0) -
+                                            (int)precursors.Min(prec => prec.PrecursorMz ?? 0);
                 break;
             }
             if (precursorsPerScan == 0)
@@ -377,8 +379,10 @@ namespace pwiz.ProteowizardWrapper
                     return false;
                 if (!distanceChange)
                 {
-                    var farPrecDistance = (int) precursors.Max(prec => prec.PrecursorMz.Value) -
-                                          (int) precursors.Min(prec => prec.PrecursorMz.Value);
+                    // The null condition for PrecursorMz below should never happen, due to the
+                    // above if statement, but it keeps ReSharper from complaining
+                    var farPrecDistance = (int)precursors.Max(prec => prec.PrecursorMz ?? 0) -
+                                          (int) precursors.Min(prec => prec.PrecursorMz ?? 0);
                     if (farPrecDistance != furthestPrecursorDistance)
                         distanceChange = true;
                 }

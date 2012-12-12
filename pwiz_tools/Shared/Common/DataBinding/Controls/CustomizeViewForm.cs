@@ -30,10 +30,10 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public partial class CustomizeViewForm : Form
     {
-        private static IList<ListSortDirection?> SortDirections =
+        private static readonly IList<ListSortDirection?> SORT_DIRECTIONS =
             Array.AsReadOnly(new ListSortDirection?[] {null, ListSortDirection.Ascending, ListSortDirection.Descending});
         private ViewSpec _viewSpec = new ViewSpec();
-        private Font _strikeThroughFont;
+        private readonly Font _strikeThroughFont;
         private bool _inChangeView;
         private readonly int _advancedPanelWidth;
         private bool _editingControlListenerAdded;
@@ -84,7 +84,7 @@ namespace pwiz.Common.DataBinding.Controls
                     _viewSpec = value;
                     ViewInfo = new ViewInfo(ParentColumn, _viewSpec);
                     availableFieldsTreeColumns.CheckedColumns = ListColumnsInView();
-                    ListViewHelper.ReplaceItems(listViewColumns, ViewInfo.DisplayColumns.Select(dc=>MakeListViewColumnItem(dc)).ToArray());
+                    ListViewHelper.ReplaceItems(listViewColumns, ViewInfo.DisplayColumns.Select(MakeListViewColumnItem).ToArray());
                     if (dataGridViewFilter.Rows.Count != ViewInfo.Filters.Count)
                     {
                         dataGridViewFilter.Rows.Clear();
@@ -357,7 +357,7 @@ namespace pwiz.Common.DataBinding.Controls
                         tbxCaption.Text = "";
                     }
                 }
-                comboSortOrder.SelectedIndex = SortDirections.IndexOf(selectedColumn.ColumnSpec.SortDirection);
+                comboSortOrder.SelectedIndex = SORT_DIRECTIONS.IndexOf(selectedColumn.ColumnSpec.SortDirection);
                 cbxHidden.Checked = selectedColumn.ColumnSpec.Hidden;
 
                 groupBoxCaption.Visible = true;
@@ -463,8 +463,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void UpdateSublistCombo()
         {
-            var availableSublists = new HashSet<IdentifierPath>();
-            availableSublists.Add(IdentifierPath.Root);
+            var availableSublists = new HashSet<IdentifierPath> {IdentifierPath.ROOT};
             foreach (var columnSpec in ViewSpec.Columns)
             {
                 for (IdentifierPath idPath = columnSpec.IdentifierPath; !idPath.IsRoot; idPath = idPath.Parent)
@@ -603,6 +602,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             listViewColumns.Columns[0].Width = listViewColumns.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 1;
         }
+/*
         class AggregateItem
         {
             public AggregateItem(string displayName, IAggregateFunction function)
@@ -614,6 +614,7 @@ namespace pwiz.Common.DataBinding.Controls
             public IAggregateFunction Function { get; set; }
             public override string ToString() { return DisplayName; }
         }
+*/
         class FilterOperationItem
         {
             public FilterOperationItem(IFilterOperation filterOperation)
@@ -622,8 +623,10 @@ namespace pwiz.Common.DataBinding.Controls
             }
 
             public IFilterOperation Operation { get; private set; }
-            public string DisplayName { get { return Operation.DisplayName; } }
-            public override string ToString() { return Operation.DisplayName; }
+
+            private string DisplayName { get { return Operation.DisplayName; } }
+
+            public override string ToString() { return DisplayName; }
         }
         class SublistItem
         {
@@ -632,7 +635,8 @@ namespace pwiz.Common.DataBinding.Controls
                 DisplayName = displayName;
                 IdentifierPath = identifierPath;
             }
-            public string DisplayName { get; set; }
+
+            private string DisplayName { get; set; }
             public override string ToString()
             {
                 return DisplayName;
@@ -710,8 +714,10 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void AddFilter(ColumnDescriptor columnDescriptor)
         {
-            var newFilters = new List<FilterSpec>(ViewSpec.Filters);
-            newFilters.Add(new FilterSpec(columnDescriptor.IdPath, FilterOperations.OpHasAnyValue, null));
+            var newFilters = new List<FilterSpec>(ViewSpec.Filters)
+                {
+                    new FilterSpec(columnDescriptor.IdPath, FilterOperations._opHasAnyValue, null)
+                };
             ViewSpec = ViewSpec.SetFilters(newFilters);
         }
 
@@ -751,7 +757,6 @@ namespace pwiz.Common.DataBinding.Controls
                 var cell = dataGridViewFilter.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 newFilters[e.RowIndex] = newFilters[e.RowIndex].SetOperand((string) cell.Value);
                 ViewSpec = ViewSpec.SetFilters(newFilters);
-                return;
             }
         }
 
@@ -841,7 +846,7 @@ namespace pwiz.Common.DataBinding.Controls
             var columns = ViewSpec.Columns.ToArray();
             foreach (var index in listViewColumns.SelectedIndices.Cast<int>())
             {
-                columns[index] = columns[index].SetSortDirection(SortDirections[comboSortOrder.SelectedIndex]);
+                columns[index] = columns[index].SetSortDirection(SORT_DIRECTIONS[comboSortOrder.SelectedIndex]);
             }
             ViewSpec = ViewSpec.SetColumns(columns);
         }
@@ -902,9 +907,10 @@ namespace pwiz.Common.DataBinding.Controls
                 newColumns[displayColumnIndex] = newColumns[displayColumnIndex].SetSortIndex(i);
             }
             ViewSpec = ViewSpec.SetColumns(newColumns);
+            var enumerable = newSelectedIndexes as int[] ?? newSelectedIndexes.ToArray();
             for (int i = 0; i < dataGridViewSort.Rows.Count; i++)
             {
-                dataGridViewSort.Rows[i].Selected = newSelectedIndexes.Contains(i);
+                dataGridViewSort.Rows[i].Selected = enumerable.Contains(i);
             }
         }
 

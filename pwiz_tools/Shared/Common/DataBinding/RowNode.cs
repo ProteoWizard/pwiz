@@ -23,7 +23,7 @@ namespace pwiz.Common.DataBinding
 {
     public class RowNode
     {
-        private IDictionary<IdentifierPath, ICollection<RowNode>> _children;
+        private readonly IDictionary<IdentifierPath, ICollection<RowNode>> _children;
         public RowNode(RowItem rowItem)
         {
             RowItem = rowItem;

@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model
         {
             if (pep1.FastaSequence == null || pep2.FastaSequence == null)
                 throw new InvalidOperationException(Resources.FastaSequence_ComparePeptides_Peptides_without_FASTA_sequence_information_may_not_be_compared);
-            if (pep1.FastaSequence != pep2.FastaSequence)
+            if (!ReferenceEquals(pep1.FastaSequence, pep2.FastaSequence))
                 throw new InvalidOperationException(Resources.FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared);
 
             return Comparer<int>.Default.Compare(pep1.Order, pep2.Order);

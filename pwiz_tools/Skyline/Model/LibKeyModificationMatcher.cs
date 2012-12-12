@@ -237,9 +237,9 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                foreach (byte aa in mod.AminoAcids)
+                foreach (char aa in mod.AminoAcids)
                 {
-                    bool? conflict = IsAAConflict(aa, mod.Terminus);
+                    bool? conflict = IsAAConflict((byte) aa, mod.Terminus);
                     if (conflict.HasValue)
                         return conflict.Value;
                 }

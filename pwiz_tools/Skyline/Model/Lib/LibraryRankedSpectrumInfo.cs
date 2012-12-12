@@ -149,9 +149,7 @@ namespace pwiz.Skyline.Model.Lib
             if (minPeaks != -1)
             {
                 // Start searching for good cut-off at mean intensity.
-                double totalIntensity = 0;
-                foreach (float intensity in info.Intensities)
-                    totalIntensity += intensity;
+                double totalIntensity = info.Intensities.Sum();
 
                 FindIntensityCutoff(listMI, 0, (float) (totalIntensity/len)*2, minPeaks, 1, ref intensityCutoff, ref len);
             }

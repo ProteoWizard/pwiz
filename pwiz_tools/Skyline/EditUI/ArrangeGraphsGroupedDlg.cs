@@ -132,7 +132,7 @@ namespace pwiz.Skyline.EditUI
 
         public static GroupGraphsType GetEnum(string enumValue, GroupGraphsType defaultValue)
         {
-            return Helpers.EnumFromLocalizedString<GroupGraphsType>(enumValue, LOCALIZED_VALUES, defaultValue);
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
         }
     }
 
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.EditUI
 
         public static GroupGraphsOrder GetEnum(string enumValue, GroupGraphsOrder defaultValue)
         {
-            return Helpers.EnumFromLocalizedString<GroupGraphsOrder>(enumValue, LOCALIZED_VALUES, defaultValue);
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
         }
     }
 

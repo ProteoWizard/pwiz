@@ -121,7 +121,9 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Average mass of an amino acid from 
+#pragma warning disable 1570 // invalid character (&) in XML comment, and this URL doesn't work if we replace "&" with "&amp;"
         /// http://www.sciencedirect.com/science?_ob=ArticleURL&_udi=B6TH2-3VXYTSN-G&_user=582538&_rdoc=1&_fmt=&_orig=search&_sort=d&view=c&_acct=C000029718&_version=1&_urlVersion=0&_userid=582538&md5=ee0d1eba6e6c7e34d031d85ce9613eec
+#pragma warning restore 1570
         /// </summary>
         public static double MassAveragine { get { return 111.1254; } }
 

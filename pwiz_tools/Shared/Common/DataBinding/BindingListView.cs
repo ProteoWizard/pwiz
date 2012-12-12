@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
 {
@@ -365,14 +364,6 @@ namespace pwiz.Common.DataBinding
         public int IndexOf(object value)
         {
             return RowItemList.IndexOf(value as RowItem);
-        }
-        public override void EndNew(int itemIndex)
-        {
-            base.EndNew(itemIndex);
-        }
-        public override void CancelNew(int itemIndex)
-        {
-            base.CancelNew(itemIndex);
         }
     }
 }

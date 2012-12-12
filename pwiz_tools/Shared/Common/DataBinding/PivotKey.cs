@@ -28,8 +28,8 @@ namespace pwiz.Common.DataBinding
     {
         private readonly KeyValuePair<IdentifierPath, object>[] _valuePairs;
 
-        public static readonly PivotKey Root = 
-            new PivotKey(null, IdentifierPath.Root, new KeyValuePair<IdentifierPath, object>[0]);
+        public static readonly PivotKey ROOT = 
+            new PivotKey(null, IdentifierPath.ROOT, new KeyValuePair<IdentifierPath, object>[0]);
         public static PivotKey OfValues(PivotKey parent, IdentifierPath collectionId, IEnumerable<KeyValuePair<IdentifierPath, object>> valuePairs)
         {
             var valuePairList = new List<KeyValuePair<IdentifierPath, object>>();
@@ -49,7 +49,7 @@ namespace pwiz.Common.DataBinding
             {
                 return parent;
             }
-            valuePairList.Sort(Comparer);
+            valuePairList.Sort(COMPARER);
             return new PivotKey(parent, collectionId, valuePairList.ToArray());
         }
         private PivotKey(PivotKey parent, IdentifierPath collectionId, KeyValuePair<IdentifierPath, object>[] valuePairs)
@@ -69,7 +69,7 @@ namespace pwiz.Common.DataBinding
                 return CompareValuePairs(x, y);
             }
         }
-        private static readonly ValuePairComparer Comparer = new ValuePairComparer();
+        private static readonly ValuePairComparer COMPARER = new ValuePairComparer();
         public PivotKey(IdentifierPath collectionId)
         {
             CollectionId = collectionId;
@@ -77,7 +77,7 @@ namespace pwiz.Common.DataBinding
         }
         public PivotKey(IdentifierPath identifierPath, object value)
         {
-            CollectionId = IdentifierPath.Root;
+            CollectionId = IdentifierPath.ROOT;
             _valuePairs = new[]{new KeyValuePair<IdentifierPath, object>(identifierPath, value)};
         }
         public PivotKey RemoveSublist(IdentifierPath sublistId)
@@ -101,7 +101,7 @@ namespace pwiz.Common.DataBinding
             if (identifierPath.StartsWith(CollectionId))
             {
                 int index = Array.BinarySearch(
-                    _valuePairs, new KeyValuePair<IdentifierPath, object>(identifierPath, null), Comparer);
+                    _valuePairs, new KeyValuePair<IdentifierPath, object>(identifierPath, null), COMPARER);
                 if (index < 0)
                 {
                     return null;
@@ -168,13 +168,13 @@ namespace pwiz.Common.DataBinding
             var collectionIdToString = CollectionId.ToString();
             if (Parent != null)
             {
-                result.Append(Parent.ToString());
+                result.Append(Parent);
                 result.Append("[");
                 result.Append(collectionIdToString.Substring(Parent.CollectionId.ToString().Length));
             }
             else
             {
-                result.Append(CollectionId.ToString());
+                result.Append(CollectionId);
             }
             result.Append("{");
             result.Append(string.Join("},{", ValuePairs.Select(vp => vp.Key.ToString().Substring(collectionIdToString.Length) + "," + vp.Value).ToArray()));
@@ -232,7 +232,7 @@ namespace pwiz.Common.DataBinding
                 DataSchema = dataSchema;
             }
 
-            public DataSchema DataSchema { get; private set; }
+            private DataSchema DataSchema { get; set; }
 
             public int Compare(PivotKey x, PivotKey y)
             {

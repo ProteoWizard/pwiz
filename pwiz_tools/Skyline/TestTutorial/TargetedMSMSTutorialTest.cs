@@ -78,8 +78,8 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            string folderMSMS = UseRawFiles ? "TargetedMSMS" : "TargetedMSMSMzml";
-            return TestFilesDir.GetTestPath(Path.Combine(folderMSMS, relativePath));
+            string folderMsMs = UseRawFiles ? "TargetedMSMS" : "TargetedMSMSMzml";
+            return TestFilesDir.GetTestPath(Path.Combine(folderMsMs, relativePath));
         }
 
         protected override void DoTest()

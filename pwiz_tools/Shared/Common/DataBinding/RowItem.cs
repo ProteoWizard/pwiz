@@ -25,7 +25,7 @@ namespace pwiz.Common.DataBinding
 {
     public class RowItem
     {
-        public RowItem(object key, object value) : this(null, IdentifierPath.Root, key, value)
+        public RowItem(object key, object value) : this(null, IdentifierPath.ROOT, key, value)
         {
         }
         public RowItem(RowItem parent, IdentifierPath sublistId, object key, object value)

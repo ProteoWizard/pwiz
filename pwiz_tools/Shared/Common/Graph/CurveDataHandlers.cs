@@ -47,13 +47,13 @@ namespace pwiz.Common.Graph
         public static ICurveDataHandler FindCurveHandler(CurveItem curveItem)
         {
             var handlerClass = curveItem.GetType().GetCustomAttributes(typeof (CurveDataHandlerAttribute), true)
-                .Cast<CurveDataHandlerAttribute>().Select(attribute=>attribute.Class)
-                .FirstOrDefault();
-            if (handlerClass == null)
-            {
-                handlerClass = (curveItem is HiLowBarItem) ? typeof (HiLowBarDataHandler) : typeof (CurveDataHandler);
-            }
-            return (ICurveDataHandler) handlerClass.GetConstructor(new Type[0]).Invoke(new object[0]);
+                                        .Cast<CurveDataHandlerAttribute>().Select(attribute=>attribute.Class)
+                                        .FirstOrDefault() ??
+                               ((curveItem is HiLowBarItem) ? typeof (HiLowBarDataHandler) : typeof (CurveDataHandler));
+            var constructorInfo = handlerClass.GetConstructor(new Type[0]);
+            if (constructorInfo != null)
+                return (ICurveDataHandler) constructorInfo.Invoke(new object[0]);
+            return null;
         }
     }
     

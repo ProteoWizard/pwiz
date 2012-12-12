@@ -16,19 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel;
 
 namespace pwiz.Common.DataBinding
 {
     public class QueryResults
     {
-        public static QueryResults Empty = new QueryResults();
+        public static QueryResults _empty = new QueryResults();
         private QueryResults()
         {
-            Parameters = QueryParameters.Empty;
+            Parameters = QueryParameters._empty;
             PivotedRows = FilteredRows = SortedRows = new RowItem[0];
             ItemProperties = null;
             Pivoter = null;
@@ -77,7 +76,7 @@ namespace pwiz.Common.DataBinding
             {
                 if (result.Parameters.Rows == null || result.Parameters.ViewInfo == null)
                 {
-                    result.SortedRows = result.FilteredRows = result.PivotedRows = Empty.ResultRows;
+                    result.SortedRows = result.FilteredRows = result.PivotedRows = _empty.ResultRows;
                 }
                 else
                 {
@@ -124,12 +123,12 @@ namespace pwiz.Common.DataBinding
 
     public class QueryParameters
     {
-        public static QueryParameters Empty = new QueryParameters();
+        public static QueryParameters _empty = new QueryParameters();
         private QueryParameters()
         {
             ViewInfo = null;
             Rows = null;
-            RowFilter = RowFilter.Empty;
+            RowFilter = RowFilter.EMPTY;
         }
         public QueryParameters(ViewInfo viewInfo, IList<RowItem> rows, RowFilter rowFilter, ListSortDescriptionCollection sortDescriptions)
         {

@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model
             foreach (var type in settings.PeptideSettings.Modifications.GetModificationTypes())
             {
                 // Set the default heavy type to the first heavy type encountered.
-                if (type != IsotopeLabelType.light && DocDefHeavyLabelType == null)
+                if (!ReferenceEquals(type, IsotopeLabelType.light) && DocDefHeavyLabelType == null)
                     DocDefHeavyLabelType = type;
                 InitUserDefTypedModDict(modifications.GetModificationsByName(type.Name), false);
             }

@@ -48,10 +48,10 @@ namespace pwiz.Common.DataBinding
             var filterPredicates = new Predicate<RowNode>[CollectionColumns.Count];
             for (int iCollectionColumn = 0; iCollectionColumn < CollectionColumns.Count; iCollectionColumn++)
             {
+                int column = iCollectionColumn;
                 filterPredicates[iCollectionColumn] =
                     MakeFilterPredicate(
-                        ViewInfo.Filters.Where(filter => filter.CollectionColumn == CollectionColumns[iCollectionColumn]));
-                var collectionColumn = CollectionColumns[iCollectionColumn];
+                        ViewInfo.Filters.Where(filter => filter.CollectionColumn == CollectionColumns[column]));
             }
             Filters = Array.AsReadOnly(filterPredicates);
 
@@ -97,11 +97,6 @@ namespace pwiz.Common.DataBinding
         /// ColumnDescriptor in CollectionColumns.
         /// </summary>
         public IList<Predicate<RowNode>> Filters { get; private set; }
-        /// <summary>
-        /// Contains the list of columns that are in the View and that have
-        /// an IAggregateFunction.
-        /// </summary>
-        public IList<DisplayColumn> AggregateColumns { get; private set; }
 
         private Predicate<RowNode> MakeFilterPredicate(IEnumerable<FilterInfo> filterInfos)
         {
@@ -273,7 +268,7 @@ namespace pwiz.Common.DataBinding
         {
             return Pivot(NoOp, rowNodes);
         }
-        private static Predicate<T> Conjunction<T>(Predicate<T>[] predicates)
+        private static Predicate<T> Conjunction<T>(IEnumerable<Predicate<T>> predicates)
         {
             return value =>
                        {
@@ -290,14 +285,14 @@ namespace pwiz.Common.DataBinding
 
         public HashSet<PivotKey> GetPivotKeys(IdentifierPath pivotColumnId, IEnumerable<RowItem> rowItems)
         {
-            IdentifierPath sublistId = IdentifierPath.Root;
-            for (int i = 0; i < SublistColumns.Count; i++)
+            IdentifierPath sublistId = IdentifierPath.ROOT;
+            foreach (ColumnDescriptor t in SublistColumns)
             {
-                if (!pivotColumnId.StartsWith(SublistColumns[i].IdPath))
+                if (!pivotColumnId.StartsWith(t.IdPath))
                 {
                     break;
                 }
-                sublistId = SublistColumns[i].IdPath;
+                sublistId = t.IdPath;
             }
             var result = new HashSet<PivotKey>();
             foreach (var sublistItem in rowItems)
@@ -317,9 +312,10 @@ namespace pwiz.Common.DataBinding
         public IDictionary<IdentifierPath, ICollection<PivotKey>> GetAllPivotKeys(IEnumerable<RowItem> rowItems)
         {
             var result = new Dictionary<IdentifierPath, ICollection<PivotKey>>();
+            var enumerable = rowItems as RowItem[] ?? rowItems.ToArray();
             foreach (var pivotColumn in PivotColumns)
             {
-                result.Add(pivotColumn.IdPath, GetPivotKeys(pivotColumn.IdPath, rowItems));
+                result.Add(pivotColumn.IdPath, GetPivotKeys(pivotColumn.IdPath, enumerable));
             }
             return result;
         }
@@ -329,23 +325,24 @@ namespace pwiz.Common.DataBinding
             var columnNames = new HashSet<string>();
             var propertyDescriptors = new List<PropertyDescriptor>();
             var pivotDisplayColumns = new Dictionary<PivotKey, List<DisplayColumn>>();
+            var rowItemsArray = rowItems as RowItem[] ?? rowItems.ToArray();
             foreach (var displayColumn in ViewInfo.DisplayColumns)
             {
                 var pivotColumn = PivotColumns.LastOrDefault(pc => displayColumn.IdentifierPath.StartsWith(pc.IdPath));
                 ICollection<PivotKey> pivotKeys = null;
                 if (pivotColumn != null)
                 {
-                    pivotKeys = GetPivotKeys(pivotColumn.IdPath, rowItems);
+                    pivotKeys = GetPivotKeys(pivotColumn.IdPath, rowItemsArray);
                 }
-                    
+
                 if (pivotKeys == null)
                 {
                     propertyDescriptors.Add(new ColumnPropertyDescriptor(displayColumn, MakeUniqueName(columnNames, displayColumn.IdentifierPath)));
                     continue;
                 }
-                List<DisplayColumn> columns;
                 foreach (var value in pivotKeys)
                 {
+                    List<DisplayColumn> columns;
                     if (!pivotDisplayColumns.TryGetValue(value, out columns))
                     {
                         columns = new List<DisplayColumn>();

@@ -79,8 +79,9 @@ namespace pwiz.Common.DataBinding.Controls
 
         public static void SelectIndexes(ListView listView, IEnumerable<int> selectedIndexes)
         {
-            var unselect = listView.SelectedIndices.Cast<int>().Except(selectedIndexes).ToArray();
-            var select = selectedIndexes.Except(listView.SelectedIndices.Cast<int>()).ToArray();
+            var selectedIndexesArray = selectedIndexes.ToArray();
+            var unselect = listView.SelectedIndices.Cast<int>().Except(selectedIndexesArray).ToArray();
+            var select = selectedIndexesArray.Except(listView.SelectedIndices.Cast<int>()).ToArray();
             if (unselect.Length == 0 && select.Length == 0)
             {
                 return;
@@ -142,14 +143,15 @@ namespace pwiz.Common.DataBinding.Controls
 
         public static IEnumerable<int> MoveSelectedIndexes(int itemCount, IEnumerable<int> selectedIndexes, bool upwards)
         {
+            var selectedIndexesArray = selectedIndexes.ToArray();
             var items = Enumerable.Range(0, itemCount).ToArray();
-            var newItems = MoveItems(items, selectedIndexes, upwards);
+            var newItems = MoveItems(items, selectedIndexesArray, upwards);
             var reverseMap = new int[items.Length];
             for (int i = 0; i < items.Length; i++ )
             {
                 reverseMap[newItems[i]] = i;
             }
-            return selectedIndexes.Select((item, index) => reverseMap[item]);
+            return selectedIndexesArray.Select((item, index) => reverseMap[item]);
         }
     }
 }

@@ -85,10 +85,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     selectedGroup = (TransitionGroupDocNode)selectedTreeNode.SrmParent.Model;
                 else if (selectedTreeNode is TransitionGroupTreeNode)
                     selectedGroup = (TransitionGroupDocNode)selectedTreeNode.Model;
-                else if (selectedTreeNode is PeptideTreeNode)
+                else
                 {
-                    var nodePep = ((PeptideTreeNode)selectedTreeNode).DocNode;
-                    selectedGroup = nodePep.TransitionGroups.FirstOrDefault();
+                    var node = selectedTreeNode as PeptideTreeNode;
+                    if (node != null)
+                    {
+                        var nodePep = node.DocNode;
+                        selectedGroup = nodePep.TransitionGroups.FirstOrDefault();
+                    }
                 }
                 var proteinTreeNode = selectedTreeNode.GetNodeOfType<PeptideGroupTreeNode>();
                 if (proteinTreeNode != null)

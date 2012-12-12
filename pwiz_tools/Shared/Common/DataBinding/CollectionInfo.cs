@@ -30,8 +30,8 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class CollectionInfo
     {
-        private Func<object, IEnumerable> _fnGetKeys;
-        private Func<object, object, object> _fnLookupItemByKey;
+        private readonly Func<object, IEnumerable> _fnGetKeys;
+        private readonly Func<object, object, object> _fnLookupItemByKey;
         
         public CollectionInfo(Type elementType, Type keyType, Func<object, IEnumerable> fnGetKeys, Func<object, object, object> fnLookupItemByKey)
         {
@@ -118,7 +118,7 @@ namespace pwiz.Common.DataBinding
                                 (dict, key) =>
                                     {
                                         var parameters = new[] {key, null};
-                                        if (!(bool) tryGetValueMethod.Invoke(dict, parameters))
+                                        if (!(bool) tryGetValueMethod.Invoke(dict, parameters) || elementConstructor == null)
                                         {
                                             return null;
                                         }

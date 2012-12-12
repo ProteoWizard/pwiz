@@ -56,7 +56,9 @@ namespace pwiz.Skyline.Model
         {
             // If not already read-only, make readonly, and if not already an array
             // convert to an array for minimum allocation overhead.
+// ReSharper disable SuspiciousTypeConversion.Global
             return list as ReadOnlyCollection<TItem> ?? new ReadOnlyCollection<TItem>(list is Array ? list : list.ToArray());
+// ReSharper restore SuspiciousTypeConversion.Global
         }
 
         /// <summary>

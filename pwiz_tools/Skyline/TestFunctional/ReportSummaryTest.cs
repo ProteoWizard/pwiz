@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         double valueParsed;
                         if (!double.TryParse(value, out valueParsed))
-                            Assert.Fail(string.Format("Failed parsing {0} as a double", value));
+                            Assert.Fail("Failed parsing {0} as a double", value);
                         Assert.IsTrue(valueParsed > 0);
                     }
                 }

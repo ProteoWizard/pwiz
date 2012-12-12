@@ -37,8 +37,8 @@ namespace pwiz.Common.DataBinding
         private BindingSource _bindingSource;
         public BoundDataGridView()
         {
-            BindingListView = new BindingListView()
-                                  {
+            BindingListView = new BindingListView
+                {
                                       Owner = this
                                   };
         }
@@ -103,11 +103,6 @@ namespace pwiz.Common.DataBinding
                     linkValue.ClickEventHandler(this, e);
                 }
             }
-        }
-
-        protected override void OnDataError(bool displayErrorDialogIfNoHandler, DataGridViewDataErrorEventArgs e)
-        {
-            base.OnDataError(displayErrorDialogIfNoHandler, e);
         }
     }
 }

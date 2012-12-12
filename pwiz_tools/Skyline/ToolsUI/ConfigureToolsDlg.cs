@@ -253,7 +253,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 try
                 {
+// ReSharper disable ObjectCreationAsStatement
                     new Uri(tool.Command);
+// ReSharper restore ObjectCreationAsStatement
                 }
                 catch (Exception)
                 {

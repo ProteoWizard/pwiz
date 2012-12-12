@@ -172,10 +172,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
             else if (library is XHunterLibrary)
                 libAuthority = XHunterLibrary.DEFAULT_AUTHORITY;
-            else if (library is NistLibrary)
+            else
             {
-                libAuthority = NistLibrary.DEFAULT_AUTHORITY;
-                libId = ((NistLibrary)library).Id ?? libId;
+                var nistLibrary = library as NistLibrary;
+                if (nistLibrary != null)
+                {
+                    libAuthority = NistLibrary.DEFAULT_AUTHORITY;
+                    libId = nistLibrary.Id ?? libId;
+                }
             }
             // Use a very specific LSID, since it really only matches this document.
             string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:minimal:{1}:{2}:{3}.{4}", // Not L10N
@@ -377,10 +381,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 int progressValue = (doneCount) * 100 / totalPeptideCount;
 
-                if (progressValue != WaitBroker.ProgressValue)
-                {
-                    WaitBroker.ProgressValue = progressValue;
-                }
+                WaitBroker.ProgressValue = progressValue;
             }
             return true;
         }

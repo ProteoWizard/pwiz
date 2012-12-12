@@ -2016,8 +2016,9 @@ namespace pwiz.Skyline
         void GraphSummary.IStateProvider.BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt,
             GraphSummary.IController controller)
         {
-            if (controller is RTGraphController)
-                BuildRTGraphMenu(menuStrip, mousePt, (RTGraphController) controller);
+            var graphController = controller as RTGraphController;
+            if (graphController != null)
+                BuildRTGraphMenu(menuStrip, mousePt, graphController);
             else if (controller is AreaGraphController)
                 BuildAreaGraphMenu(menuStrip);
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);

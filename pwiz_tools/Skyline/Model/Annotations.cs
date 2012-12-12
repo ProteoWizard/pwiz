@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model
         }
         private static bool EqualsDict<TK,TV>(ICollection<KeyValuePair<TK, TV>> dictionary1, IDictionary<TK,TV> dictionary2)
         {
-            if (dictionary1 == dictionary2)
+            if (ReferenceEquals(dictionary1, dictionary2))
             {
                 return true;
             }

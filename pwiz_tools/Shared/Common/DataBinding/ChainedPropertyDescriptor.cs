@@ -54,7 +54,11 @@ namespace pwiz.Common.DataBinding
 
         public override void ResetValue(object component)
         {
-            Child.ResetValue(Parent.GetValue(component));
+            var parentComponent = Parent.GetValue(component);
+            if (null != parentComponent)
+            {
+                Child.ResetValue(parentComponent);
+            }
         }
 
         public override void SetValue(object component, object value)

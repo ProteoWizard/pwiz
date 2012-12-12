@@ -125,10 +125,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(chromInfo.Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
             WaitForGraphPanesToUpdate();
             // Show the "precursorResultItems" annotation column
-            var chooseColumnsDlg = ShowDialog<ColumnChooser>(resultsGridForm.ChooseColumns);
-            RunUI(()=>chooseColumnsDlg.CheckedListBox.SetItemChecked(
-                chooseColumnsDlg.CheckedListBox.Items.IndexOf(ANNOTATION_PRECURSOR_RESULTS_ITEMS), true));
-            OkDialog(chooseColumnsDlg, ()=>chooseColumnsDlg.DialogResult=DialogResult.OK);
+            RunDlg<ColumnChooser>(resultsGridForm.ChooseColumns,
+                chooseColumnsDlg =>
+                    {
+                        chooseColumnsDlg.CheckedListBox.SetItemChecked(
+                            chooseColumnsDlg.CheckedListBox.Items.IndexOf(ANNOTATION_PRECURSOR_RESULTS_ITEMS), true);
+                        chooseColumnsDlg.AcceptButton.PerformClick();
+                    });
             // Set the annotation value on the first two rows in the ResultsGrid.
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
             DataGridViewCell cell;
@@ -240,10 +243,12 @@ namespace pwiz.SkylineTestFunctional
             });
             
             // Show the "precursorResultItems" annotation column
-            chooseColumnsDlg = ShowDialog<ColumnChooser>(resultsGridForm.ChooseColumns);
-            RunUI(() => chooseColumnsDlg.CheckedListBox.SetItemChecked(
-                chooseColumnsDlg.CheckedListBox.Items.IndexOf(ANNOTATION_REPLICATE), true));
-            OkDialog(chooseColumnsDlg, () => chooseColumnsDlg.DialogResult = DialogResult.OK);
+            RunDlg<ColumnChooser>(resultsGridForm.ChooseColumns, chooseColumnsDlg =>
+                {
+                    chooseColumnsDlg.CheckedListBox.SetItemChecked(
+                        chooseColumnsDlg.CheckedListBox.Items.IndexOf(ANNOTATION_REPLICATE), true);
+                    chooseColumnsDlg.AcceptButton.PerformClick();
+                });
             const string newValueOfReplicateAnnotation = "New value of replicate annotation";
             Assert.IsNull(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Annotations.GetAnnotation(ANNOTATION_REPLICATE));
             RunUI(() =>

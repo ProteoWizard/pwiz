@@ -726,7 +726,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     // in order to give the user a more informative error expression.
                     try
                     {
+// ReSharper disable ObjectCreationAsStatement
                         new Regex(exclude.Regex);
+// ReSharper restore ObjectCreationAsStatement
                     }
                     catch(ArgumentException x)
                     {
@@ -1929,8 +1931,9 @@ namespace pwiz.Skyline.Model.DocSettings
             var librarySpecs = new LibrarySpec[list.Count];
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i] is Library)
-                    libraries[i] = (Library) list[i];
+                var library = list[i] as Library;
+                if (library != null)
+                    libraries[i] = library;
                 else
                     librarySpecs[i] = (LibrarySpec) list[i];
             }

@@ -101,7 +101,7 @@ namespace pwiz.Common.DataBinding
         public IEnumerable<ColumnDescriptor> AllColumnDescriptors { get { return _columnDescriptors.Values.ToArray(); } }
         public ICollection<ColumnDescriptor> GetCollectionColumns()
         {
-            var unboundColumnSet = new HashSet<ColumnDescriptor>(){ParentColumn};
+            var unboundColumnSet = new HashSet<ColumnDescriptor> {ParentColumn};
             foreach (var displayColumn in DisplayColumns)
             {
                 for (var unboundParent = displayColumn.ColumnDescriptor.FirstUnboundParent(); unboundParent != null; unboundParent = unboundParent.Parent.FirstUnboundParent())

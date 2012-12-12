@@ -33,8 +33,8 @@ namespace pwiz.Common.DataBinding
 
     public static class DataFormats
     {
-        public static readonly IDataFormat Tsv = new TextFormat("\t", "Tab Separated Values(*.tsv)|*.tsv");
-        public static readonly IDataFormat Csv = new TextFormat(",", "Comma Separated Values(*.csv)|*.csv");
+        public static readonly IDataFormat TSV = new TextFormat("\t", "Tab Separated Values(*.tsv)|*.tsv");
+        public static readonly IDataFormat CSV = new TextFormat(",", "Comma Separated Values(*.csv)|*.csv");
         class TextFormat : IDataFormat
         {
             public TextFormat(string separator, string fileFilter)
@@ -56,7 +56,7 @@ namespace pwiz.Common.DataBinding
                 }
                 writer.WriteLine();
             }
-            static readonly Regex RegexQuote = new Regex("\"");
+            static readonly Regex REGEX_QUOTE = new Regex("\"");
             private string Escape(object o)
             {
                 if (o == null)
@@ -67,7 +67,7 @@ namespace pwiz.Common.DataBinding
                 {
                     return o.ToString();
                 }
-                return "\"" + RegexQuote.Replace(o.ToString(), "\"\"") + "\"";
+                return "\"" + REGEX_QUOTE.Replace(o.ToString(), "\"\"") + "\"";
             }
         }
     }

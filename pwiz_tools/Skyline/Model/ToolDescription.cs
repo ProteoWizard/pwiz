@@ -143,9 +143,7 @@ namespace pwiz.Skyline.Model
         {
             if (IsWebPage)
             {
-                var webHelpers = WebHelpers;
-                if (webHelpers == null)
-                    webHelpers = new WebHelpers();
+                var webHelpers = WebHelpers ?? new WebHelpers();
 
                 if (String.IsNullOrEmpty(ReportTitle))
                 {

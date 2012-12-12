@@ -1683,7 +1683,7 @@ namespace pwiz.Skyline.Model
 
                     stdinBuilder.AppendLine(fs.SafeName);
                     stdinBuilder.AppendLine(fs.RealName);
-                    stdinBuilder.Append(pair.Value.ToString());
+                    stdinBuilder.Append(pair.Value);
                 }
 
                 argv.AddRange(new[] { "-s", "-m", "\"" + templateName + "\"" });  // Read from stdin, multi-file format // Not L10N

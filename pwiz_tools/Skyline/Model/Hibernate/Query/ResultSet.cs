@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
@@ -43,14 +42,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             foreach (var row in rows)
             {
-                if (row is Object[])
-                {
-                    _rows.Add((Object[])row);
-                }
-                else
-                {
-                    _rows.Add(new[] { row });
-                }
+                var item = row as object[];
+                _rows.Add(item ?? new[] { row });
             }
         }
 

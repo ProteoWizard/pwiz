@@ -210,9 +210,6 @@
   <data name="&gt;&gt;PeptideListPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;PeptideListPanel.Parent" xml:space="preserve">
-    <value>splitPeptideList.Panel1</value>
-  </data>
   <data name="&gt;&gt;PeptideListPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -258,9 +255,6 @@
   <data name="&gt;&gt;PageCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;PageCount.Parent" xml:space="preserve">
-    <value>splitPeptideList.Panel2</value>
-  </data>
   <data name="&gt;&gt;PageCount.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -287,9 +281,6 @@
   </data>
   <data name="&gt;&gt;PeptideCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PeptideCount.Parent" xml:space="preserve">
-    <value>splitPeptideList.Panel2</value>
   </data>
   <data name="&gt;&gt;PeptideCount.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -318,9 +309,6 @@
   <data name="&gt;&gt;NextLink.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;NextLink.Parent" xml:space="preserve">
-    <value>splitPeptideList.Panel2</value>
-  </data>
   <data name="&gt;&gt;NextLink.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
@@ -347,9 +335,6 @@
   </data>
   <data name="&gt;&gt;PreviousLink.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PreviousLink.Parent" xml:space="preserve">
-    <value>splitPeptideList.Panel2</value>
   </data>
   <data name="&gt;&gt;PreviousLink.ZOrder" xml:space="preserve">
     <value>3</value>
@@ -383,9 +368,6 @@
   </data>
   <data name="&gt;&gt;splitPeptideList.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitPeptideList.Parent" xml:space="preserve">
-    <value>splitMain.Panel1</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -554,9 +536,6 @@
   </data>
   <data name="&gt;&gt;PeptideEditPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PeptideEditPanel.Parent" xml:space="preserve">
-    <value>splitMain.Panel1</value>
   </data>
   <data name="&gt;&gt;PeptideEditPanel.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -795,9 +774,6 @@
   <data name="&gt;&gt;GraphPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;GraphPanel.Parent" xml:space="preserve">
-    <value>splitMain.Panel2</value>
-  </data>
   <data name="&gt;&gt;GraphPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -983,9 +959,6 @@
   </data>
   <data name="&gt;&gt;panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>splitMain.Panel2</value>
   </data>
   <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
     <value>1</value>

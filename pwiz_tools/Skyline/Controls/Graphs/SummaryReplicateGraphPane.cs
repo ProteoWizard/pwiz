@@ -182,6 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 List<DocNode> docNodes = new List<DocNode>();
                 List<List<PointPairList>> pointPairLists = new List<List<PointPairList>>();
                 List<String> docNodeLabels = new List<string>();
+// ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
                 if (_docNode is TransitionDocNode)
                 {
                     var nodeTran = (TransitionDocNode)_docNode;
@@ -221,6 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
                     }
                 }
+// ReSharper restore CanBeReplacedWithTryCastAndCheckForNull
                 PointPairLists = pointPairLists;
                 DocNodes = docNodes;
                 DocNodeLabels = docNodeLabels;
@@ -437,7 +439,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     keys.Remove(null);
                 }
                 keys.Sort();
-                return keys.Select(key => new ReplicateGroup((key ?? "").ToString(), ReplicateIndexSet.OfValues(lookup[key])));
+// ReSharper disable AssignNullToNotNullAttribute
+                return keys.Select(key => new ReplicateGroup((key ?? string.Empty).ToString(), ReplicateIndexSet.OfValues(lookup[key])));
+// ReSharper restore AssignNullToNotNullAttribute
             }
 
             private IEnumerable<int> GetReplicateIndices(PeptideDocNode nodePep)

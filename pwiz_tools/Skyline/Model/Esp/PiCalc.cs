@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Esp
         /// The original had support for a chargeIncrement variable, which
         /// I did not understand, but reviewing a calculate_pi program written by Jimmy Eng,
         /// I found that he used zero for this variable:
-        /// http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/util/calculate_pi.cpp?revision=5807&view=markup
+        /// http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/util/calculate_pi.cpp?revision=5807&amp;view=markup
         /// The results of using zero are different from using 1, and they match up perfectly
         /// with this web-based pI calculator:
         /// http://expasy.org/tools/pi_tool.html

@@ -20,7 +20,6 @@ using System;
 using System.Drawing;
 using ZedGraph;
 using pwiz.Common.Graph;
-using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Controls.Graphs
 {

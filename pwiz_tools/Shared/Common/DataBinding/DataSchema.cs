@@ -283,9 +283,10 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
-                if (pd is ColumnPropertyDescriptor)
+                var descriptor = pd as ColumnPropertyDescriptor;
+                if (descriptor != null)
                 {
-                    var columnDescriptor = ((ColumnPropertyDescriptor) pd).DisplayColumn.ColumnDescriptor;
+                    var columnDescriptor = descriptor.DisplayColumn.ColumnDescriptor;
                     if (columnDescriptor == null)
                     {
                         continue;

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 
 namespace pwiz.Common.DataBinding
 {
@@ -48,7 +49,7 @@ namespace pwiz.Common.DataBinding
         }
         public override string ToString()
         {
-            return _doubleValue.ToString();
+            return _doubleValue.ToString(CultureInfo.CurrentCulture);
         }
         public override int GetHashCode()
         {

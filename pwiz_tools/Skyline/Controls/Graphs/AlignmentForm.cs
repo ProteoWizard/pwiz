@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class AlignmentForm : Form
     {
-        private readonly BindingList<DataRow> _dataRows = new BindingList<DataRow>()
+        private readonly BindingList<DataRow> _dataRows = new BindingList<DataRow>
                                                               {
                                                                   AllowEdit = false,
                                                                   AllowNew = false,
@@ -126,9 +126,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var goodPointsLineItem = new LineItem("Peptides", points, Color.Black, SymbolType.Diamond);
-            goodPointsLineItem.Symbol.Size = 8f;
-            goodPointsLineItem.Line.IsVisible = false;
+            var goodPointsLineItem = new LineItem("Peptides", points, Color.Black, SymbolType.Diamond)
+                {
+                    Symbol = {Size = 8f},
+                    Line = {IsVisible = false}
+                };
             goodPointsLineItem.Symbol.Border.IsVisible = false;
             goodPointsLineItem.Symbol.Fill = new Fill(RTLinearRegressionGraphPane.COLOR_REFINED);
             

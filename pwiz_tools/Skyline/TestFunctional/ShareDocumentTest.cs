@@ -115,15 +115,18 @@ namespace pwiz.SkylineTestFunctional
             // Remove the last replicate from the document.
             // Share the minimal document
             var doc = SkylineWindow.Document;
-            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults,
-                                     dlg =>
-                                         {
-                                             var chromatograms =
-                                                 doc.Settings.MeasuredResults.Chromatograms;
-                                             dlg.SelectedChromatograms = new[] { chromatograms[1] };
-                                             dlg.Remove();
-                                             dlg.OkDialog();
-                                         });
+            {
+                var doc1 = doc;
+                RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults,
+                                         dlg =>
+                                             {
+                                                 var chromatograms =
+                                                     doc1.Settings.MeasuredResults.Chromatograms;
+                                                 dlg.SelectedChromatograms = new[] { chromatograms[1] };
+                                                 dlg.Remove();
+                                                 dlg.OkDialog();
+                                             });
+            }
             WaitForDocumentChange(doc);
 
             string shareMinPath3 = TestFilesDirs[1].GetTestPath(zipFileMin3);

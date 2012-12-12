@@ -144,9 +144,6 @@
   <data name="&gt;&gt;treeView.Type" xml:space="preserve">
     <value>System.Windows.Forms.TreeView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;treeView.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;treeView.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -195,9 +192,6 @@
   <data name="&gt;&gt;panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -233,9 +227,6 @@
   </data>
   <data name="&gt;&gt;lbxColumns.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lbxColumns.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;lbxColumns.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -299,9 +290,6 @@
   </data>
   <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
     <value>1</value>

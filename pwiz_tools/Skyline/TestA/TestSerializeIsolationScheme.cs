@@ -56,7 +56,9 @@ namespace pwiz.SkylineTestA
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
             isolationWindow.Equals((object)null);
             isolationWindow.Equals((object)isolationWindow);
+// ReSharper disable SuspiciousTypeConversion.Global
             isolationWindow.Equals(2);
+// ReSharper restore SuspiciousTypeConversion.Global
             isolationWindow.GetHashCode();
             isolationWindow.GetSchema();
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed

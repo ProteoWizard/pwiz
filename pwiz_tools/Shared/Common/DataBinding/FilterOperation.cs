@@ -34,63 +34,63 @@ namespace pwiz.Common.DataBinding
     public static class FilterOperations
     {
 
-        public static IFilterOperation OpHasAnyValue = new FilterOperation("", "Has Any Value", null,
+        public static IFilterOperation _opHasAnyValue = new FilterOperation("", "Has Any Value", null,
                                                                          (cd, operand) => rowNode => true);
 
-        public static IFilterOperation OpEquals 
+        public static IFilterOperation _opEquals 
             = new FilterOperation("equals", "Equals", typeof (object), FnEquals);
 
-        public static IFilterOperation OpNotEquals 
+        public static IFilterOperation _opNotEquals 
             = new FilterOperation("<>", "Does Not Equal", typeof (object), FnNotEquals);
 
-        public static IFilterOperation OpIsBlank
+        public static IFilterOperation _opIsBlank
             = new FilterOperation("isnullorblank", "Is Blank", null, FnIsBlank);
 
-        public static IFilterOperation OpIsNotBlank
+        public static IFilterOperation _opIsNotBlank
             = new FilterOperation("isnotnullorblank", "Is Not Blank", null, FnIsNotBlank);
 
-        public static IFilterOperation OpIsGreaterThan
+        public static IFilterOperation _opIsGreaterThan
             = new FilterOperation(">", "Is Greater Than", typeof (object), MakeFnCompare(i => i > 0));
-        public static IFilterOperation OpIsLessThan
+        public static IFilterOperation _opIsLessThan
             = new FilterOperation("<", "Is Less Than", typeof(object), MakeFnCompare(i => i < 0));
-        public static IFilterOperation OpIsGreaterThanOrEqual
+        public static IFilterOperation _opIsGreaterThanOrEqual
             = new FilterOperation(">=", "Is Greater Than Or Equal To", typeof(object), MakeFnCompare(i => i >= 0));
-        public static IFilterOperation OpIsLessThanOrEqual
+        public static IFilterOperation _opIsLessThanOrEqual
             = new FilterOperation("<=", "Is Less Than Or Equal To", typeof(object), MakeFnCompare(i => i <= 0));
 
-        public static IFilterOperation OpContains = new StringFilterOperation("contains", "Contains", FnContains);
-        public static IFilterOperation OpNotContains = new StringFilterOperation("notcontains", "Does Not Contain", FnNotContains);
-        public static IFilterOperation OpStartsWith = new StringFilterOperation("startswith", "Starts With", FnStartsWith);
-        public static IFilterOperation OpNotStartsWith = new StringFilterOperation("notstartswith", "Does Not Start With", FnNotStartsWith);
+        public static IFilterOperation _opContains = new StringFilterOperation("contains", "Contains", FnContains);
+        public static IFilterOperation _opNotContains = new StringFilterOperation("notcontains", "Does Not Contain", FnNotContains);
+        public static IFilterOperation _opStartsWith = new StringFilterOperation("startswith", "Starts With", FnStartsWith);
+        public static IFilterOperation _opNotStartsWith = new StringFilterOperation("notstartswith", "Does Not Start With", FnNotStartsWith);
 
-        private static readonly IList<IFilterOperation> _lstFilterOperations = Array.AsReadOnly(new[]
+        private static readonly IList<IFilterOperation> LST_FILTER_OPERATIONS = Array.AsReadOnly(new[]
                                                                                            {
-                                                                                               OpHasAnyValue,
-                                                                                               OpEquals,
-                                                                                               OpNotEquals,
-                                                                                               OpIsBlank,
-                                                                                               OpIsNotBlank,
-                                                                                               OpIsGreaterThan,
-                                                                                               OpIsLessThan,
-                                                                                               OpIsGreaterThanOrEqual,
-                                                                                               OpIsLessThanOrEqual,
-                                                                                               OpContains,
-                                                                                               OpNotContains,
-                                                                                               OpStartsWith,
-                                                                                               OpNotStartsWith,
+                                                                                               _opHasAnyValue,
+                                                                                               _opEquals,
+                                                                                               _opNotEquals,
+                                                                                               _opIsBlank,
+                                                                                               _opIsNotBlank,
+                                                                                               _opIsGreaterThan,
+                                                                                               _opIsLessThan,
+                                                                                               _opIsGreaterThanOrEqual,
+                                                                                               _opIsLessThanOrEqual,
+                                                                                               _opContains,
+                                                                                               _opNotContains,
+                                                                                               _opStartsWith,
+                                                                                               _opNotStartsWith,
                                                                                            });
 
-        private static readonly IDictionary<string, IFilterOperation> _dictFilterOperations =
-            _lstFilterOperations.ToDictionary(op => op.OpName, op => op);
+        private static readonly IDictionary<string, IFilterOperation> DICT_FILTER_OPERATIONS =
+            LST_FILTER_OPERATIONS.ToDictionary(op => op.OpName, op => op);
         public static IFilterOperation GetOperation(string name)
         {
             IFilterOperation result;
-            _dictFilterOperations.TryGetValue(name, out result);
+            DICT_FILTER_OPERATIONS.TryGetValue(name, out result);
             return result;
         }
         public static IList<IFilterOperation> ListOperations()
         {
-            return _lstFilterOperations;
+            return LST_FILTER_OPERATIONS;
         }
 
         public static Predicate<object> FnEquals(ColumnDescriptor columnDescriptor, string strOperand)
@@ -123,11 +123,11 @@ namespace pwiz.Common.DataBinding
         }
         public static Predicate<object> FnContains(ColumnDescriptor columnDescriptor, string strOperand)
         {
-            return value => null != value && value.ToString().IndexOf(strOperand) >= 0;
+            return value => null != value && value.ToString().IndexOf(strOperand, StringComparison.Ordinal) >= 0;
         }
         public static Predicate<object> FnNotContains(ColumnDescriptor columnDescriptor, string strOperand)
         {
-            return value => null != value && value.ToString().IndexOf(strOperand) < 0;
+            return value => null != value && value.ToString().IndexOf(strOperand, StringComparison.Ordinal) < 0;
         }
         public static Predicate<object> FnStartsWith(ColumnDescriptor columnDescriptor, string strOperand)
         {
@@ -223,8 +223,8 @@ namespace pwiz.Common.DataBinding
 
         class FilterOperation : IFilterOperation
         {
-            private Func<ColumnDescriptor, string, Predicate<object>> _fnMakePredicate;
-            private Type _operandType;
+            private readonly Func<ColumnDescriptor, string, Predicate<object>> _fnMakePredicate;
+            private readonly Type _operandType;
             public FilterOperation(string opName, string displayName, Type operandType, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
             {
                 OpName = opName;

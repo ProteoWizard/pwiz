@@ -205,8 +205,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 peptides++;
                 int progressValue = (int)((peptides + 0.0) / totalPeptides * PERCENT_PEPTIDE_MATCH);
-                if (progressValue != broker.ProgressValue)
-                    broker.ProgressValue = progressValue;
+                broker.ProgressValue = progressValue;
             }
             PeptideMatches = dictNewNodePeps;
         }
@@ -280,10 +279,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public SrmDocument AddPeptides(SrmDocument document, ILongWaitBroker broker, IdentityPath toPath, out IdentityPath selectedPath)
         {
-            selectedPath = toPath;
             if (toPath != null &&
                 toPath.Depth == (int)SrmDocument.Level.PeptideGroups &&
-                toPath.GetIdentity((int)SrmDocument.Level.PeptideGroups) == SequenceTree.NODE_INSERT_ID)
+                ReferenceEquals(toPath.GetIdentity((int)SrmDocument.Level.PeptideGroups), SequenceTree.NODE_INSERT_ID))
             {
                 toPath = null;
             }

@@ -25,6 +25,9 @@ using log4net;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
+//TODO(nicksh) fix these warnings
+// ReSharper disable UnusedMember.Local
+
 namespace pwiz.Common.DataBinding
 {
     /// <summary>
@@ -33,7 +36,7 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     internal class BindingListEventHandler
     {
-        private static readonly ILog Log
+        private static readonly ILog LOG
             = LogManager.GetLogger(typeof (BindingListEventHandler));
         private bool _singleThreaded;
 
@@ -41,7 +44,7 @@ namespace pwiz.Common.DataBinding
         private IBindingList _innerBindingList;
         private TreeList<object> _innerTreeList;
 
-        private QueryResults _queryResults = QueryResults.Empty;
+        private QueryResults _queryResults = QueryResults._empty;
         private QueryWorker _queryWorker;
 
         private ListIndex _listIndex;
@@ -53,7 +56,7 @@ namespace pwiz.Common.DataBinding
         public BindingListEventHandler(BindingListView bindingListView)
         {
             BindingListView = bindingListView;
-            _queryResults = QueryResults.Empty;
+            _queryResults = QueryResults._empty;
             IsSingleThreaded = true;
         }
 
@@ -167,11 +170,11 @@ namespace pwiz.Common.DataBinding
 
         void InnerBindingList_ListChanged(object sender, ListChangedEventArgs e)
         {
-            Log.DebugFormat("ListChangedType: {0} NewIndex: {1} OldIndex: {2}", 
+            LOG.DebugFormat("ListChangedType: {0} NewIndex: {1} OldIndex: {2}", 
                 e.ListChangedType, e.NewIndex, e.OldIndex);
             if (!ReferenceEquals(sender, _innerBindingList))
             {
-                Log.Warn("Event received from wrong list");
+                LOG.Warn("Event received from wrong list");
                 return;
             }
             switch (e.ListChangedType)
@@ -180,7 +183,7 @@ namespace pwiz.Common.DataBinding
                     if (_inAddNew)
                     {
                         _addNewIndex = e.NewIndex;
-                        Log.DebugFormat("AddNewIndex:{0}", _addNewIndex);
+                        LOG.DebugFormat("AddNewIndex:{0}", _addNewIndex);
                     }
                     _innerTreeList.Insert(e.NewIndex, _innerBindingList[e.NewIndex]);
                     RepivotBindingList();
@@ -299,9 +302,9 @@ namespace pwiz.Common.DataBinding
 
         class ListIndex
         {
-            private ViewInfo _viewInfo;
-            private RedBlackTree<LongDecimal, object> _innerTree;
-            private IDictionary<object, EntityRow> _entityRows;
+            private readonly ViewInfo _viewInfo;
+            private readonly RedBlackTree<LongDecimal, object> _innerTree;
+            private readonly IDictionary<object, EntityRow> _entityRows;
             public ListIndex(ViewInfo viewInfo, RedBlackTree<LongDecimal, object> innerTree)
             {
                 _viewInfo = viewInfo;
@@ -364,9 +367,9 @@ namespace pwiz.Common.DataBinding
 
         class ListIndexer : MustDispose
         {
-            private BindingListEventHandler _bindingListEventHandler;
-            private ViewInfo _viewInfo;
-            private RedBlackTree<LongDecimal, RowItem>.Node[] _treeNodes;
+            private readonly BindingListEventHandler _bindingListEventHandler;
+            private readonly ViewInfo _viewInfo;
+            private readonly RedBlackTree<LongDecimal, RowItem>.Node[] _treeNodes;
             public ListIndexer(BindingListEventHandler bindingListEventHandler)
             {
                 _bindingListEventHandler = bindingListEventHandler;
@@ -553,7 +556,7 @@ namespace pwiz.Common.DataBinding
                 {
                     _addNewIndex = -1;
                     _inAddNew = true;
-                    object o = _innerBindingList.AddNew();
+                    _innerBindingList.AddNew();
                     if (_addNewIndex == -1)
                     {
                         throw new InvalidOperationException();

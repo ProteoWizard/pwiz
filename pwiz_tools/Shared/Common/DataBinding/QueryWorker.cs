@@ -26,7 +26,7 @@ namespace pwiz.Common.DataBinding
 {
     internal class QueryWorker : MustDispose
     {
-        private BindingListEventHandler _bindingListEventHandler;
+        private readonly BindingListEventHandler _bindingListEventHandler;
         private QueryResults _queryResults;
         public QueryWorker(BindingListEventHandler bindingListEventHandler)
         {
@@ -84,9 +84,8 @@ namespace pwiz.Common.DataBinding
                     }
                 }
 
-                for (int iRow = 0; iRow < unfilteredRows.Count; iRow++)
+                foreach (var row in unfilteredRows)
                 {
-                    var row = unfilteredRows[iRow];
                     for (int iProperty = 0; iProperty < properties.Count; iProperty++)
                     {
                         var property = properties[iProperty];
@@ -140,7 +139,7 @@ namespace pwiz.Common.DataBinding
             }
             class SortRow : IComparable<SortRow>
             {
-                private object[] _keys;
+                private readonly object[] _keys;
                 public SortRow(QueryWorker worker, RowItem rowItem, int rowIndex)
                 {
                     Worker = worker;
@@ -152,10 +151,12 @@ namespace pwiz.Common.DataBinding
                         _keys[i] = Sorts[i].PropertyDescriptor.GetValue(RowItem);
                     }
                 }
-                public QueryWorker Worker { get; private set; }
+
+                private QueryWorker Worker { get; set; }
                 public RowItem RowItem { get; private set; }
-                public int OriginalRowIndex { get; private set; }
-                public ListSortDescriptionCollection Sorts
+                private int OriginalRowIndex { get; set; }
+
+                private ListSortDescriptionCollection Sorts
                 {
                     get { return Worker._queryResults.Parameters.SortDescriptions; }
                 }

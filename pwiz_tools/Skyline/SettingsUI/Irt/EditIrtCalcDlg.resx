@@ -345,9 +345,6 @@
   <data name="&gt;&gt;btnCalibrate.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCalibrate.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
   <data name="&gt;&gt;btnCalibrate.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
@@ -398,9 +395,6 @@
   </data>
   <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -519,9 +513,6 @@
   <data name="&gt;&gt;btnPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnPeptides.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
   <data name="&gt;&gt;btnPeptides.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -563,9 +554,6 @@
   </data>
   <data name="&gt;&gt;gridViewStandard.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;gridViewStandard.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -611,9 +599,6 @@
   </data>
   <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.ZOrder" xml:space="preserve">
     <value>0</value>

@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Find
                 }
                 _nodeIndexPath.Add(childCount - 1);
                 docNode = docNodeParent.Children[childCount - 1];
-                Debug.Assert(docNode == CurrentDocNode);
+                Debug.Assert(ReferenceEquals(docNode, CurrentDocNode));
             }
             MovedToNewDocNode(false);
         }

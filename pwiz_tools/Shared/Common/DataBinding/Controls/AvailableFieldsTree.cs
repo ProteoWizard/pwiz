@@ -33,9 +33,6 @@ namespace pwiz.Common.DataBinding.Controls
         private bool _showAdvancedFields;
         private ICollection<IdentifierPath> _checkedColumns = new IdentifierPath[0];
 
-        public AvailableFieldsTree()
-        {
-        }
         [Browsable(false)]
         public ColumnDescriptor RootColumn
         {
@@ -115,7 +112,7 @@ namespace pwiz.Common.DataBinding.Controls
             node.Text = columnDescriptor.DisplayName;
             node.Checked = _checkedColumns.Contains(nodeData.ValueColumn.IdPath);
             node.Nodes.Clear();
-            node.Nodes.Add(new TreeNode {Tag = NodeData.UninitializedTag});
+            node.Nodes.Add(new TreeNode {Tag = NodeData.UNINITIALIZED_TAG});
         }
 
         protected override void OnBeforeExpand(TreeViewCancelEventArgs e)
@@ -134,7 +131,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         protected void EnsureChildren(TreeNode treeNode)
         {
-            if (treeNode.Nodes.Count != 1 || treeNode.Nodes[0].Tag != NodeData.UninitializedTag)
+            if (treeNode.Nodes.Count != 1 || treeNode.Nodes[0].Tag != NodeData.UNINITIALIZED_TAG)
             {
                 return;
             }
@@ -281,7 +278,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         class NodeData
         {
-            public static NodeData UninitializedTag = new NodeData();
+            public static readonly NodeData UNINITIALIZED_TAG = new NodeData();
             private NodeData()
             {
             }

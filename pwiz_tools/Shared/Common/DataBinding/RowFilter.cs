@@ -21,7 +21,7 @@ namespace pwiz.Common.DataBinding
 {
     public class RowFilter
     {
-        public static readonly RowFilter Empty = new RowFilter(null, true);
+        public static readonly RowFilter EMPTY = new RowFilter(null, true);
         private readonly string _normalizedText;
 
         public RowFilter(string text, bool caseSensitive)
@@ -49,9 +49,9 @@ namespace pwiz.Common.DataBinding
             }
             if (CaseSensitive)
             {
-                return value.IndexOf(_normalizedText) >= 0;
+                return value.IndexOf(_normalizedText, System.StringComparison.Ordinal) >= 0;
             }
-            return value.ToLower().IndexOf(_normalizedText) >= 0;
+            return value.ToLower().IndexOf(_normalizedText, System.StringComparison.Ordinal) >= 0;
         }
 
         public bool Equals(RowFilter other)

@@ -28,7 +28,7 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class IdentifierPath : IComparable<IdentifierPath>
     {
-        public static readonly IdentifierPath Root = new IdentifierPath();
+        public static readonly IdentifierPath ROOT = new IdentifierPath();
         public IdentifierPath(IdentifierPath parent, string name)
         {
             Parent = parent;
@@ -41,7 +41,7 @@ namespace pwiz.Common.DataBinding
             Name = null;
             Length = 0;
         }
-        public bool IsRoot { get { return ReferenceEquals(this, Root); } }
+        public bool IsRoot { get { return ReferenceEquals(this, ROOT); } }
         public IdentifierPath Parent { get; private set; }
         public string Name { get; private set; }
         public int Length { get; private set; }
@@ -73,7 +73,7 @@ namespace pwiz.Common.DataBinding
             {
                 return that.Name == null ? defResult : -1;
             }
-            result = Name.CompareTo(that.Name);
+            result = String.Compare(Name, that.Name, StringComparison.Ordinal);
             if (result != 0)
             {
                 return result;
@@ -112,9 +112,9 @@ namespace pwiz.Common.DataBinding
         {
             if (string.IsNullOrEmpty(path))
             {
-                return Root;
+                return ROOT;
             }
-            IdentifierPath current = Root;
+            IdentifierPath current = ROOT;
             int lastIndex = 0;
             while (true)
             {

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.Hibernate;
@@ -272,7 +271,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private static bool ListEquals<TItem>(IList<TItem> list1, IList<TItem> list2)
         {
-            if (list1 == list2)
+            if (ReferenceEquals(list1, list2))
             {
                 return true;
             }
