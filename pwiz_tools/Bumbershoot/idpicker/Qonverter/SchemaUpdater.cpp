@@ -123,6 +123,8 @@ void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
 {
     // force the basic filters to be reapplied
     db.execute("DROP TABLE IF EXISTS FilteringCriteria");
+
+    update_6_to_7(db, ilr);
 }
 
 void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
