@@ -320,8 +320,11 @@ void write_analysis_summary(XMLWriter& xmlWriter, const IdentData& mzid, const A
     XMLWriter::Attributes attributes;
 
     CVParam searchEngine = as.softwareName.cvParamChild(MS_analysis_software);
+    CVParam customTool = as.softwareName.cvParam(MS_custom_unreleased_software_tool);
     if (!searchEngine.empty())
         attributes.add("analysis", searchEngine.name());
+    else if (!customTool.value.empty())
+        attributes.add("analysis", customTool.value);
     else if (!as.softwareName.userParams.empty())
         attributes.add("analysis", as.softwareName.userParams[0].name);
     else

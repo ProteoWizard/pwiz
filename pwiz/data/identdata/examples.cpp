@@ -151,6 +151,12 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
     as->contactRolePtr->cvid = MS_software_vendor;
     as->contactRolePtr->contactPtr = pwizOrg;
 
+    as.reset(new AnalysisSoftware("AS_Transmogrifier", "Transmogrifier"));
+    as->version = "42";
+    as->softwareName.set(MS_custom_unreleased_software_tool, "Transmogrifier");
+    as->URI = "http://en.wikipedia.org/wiki/Transmogrifier";
+    mzid.analysisSoftwareList.push_back(as);
+
     as.reset(new AnalysisSoftware("AS_Mascot_2.2.101", "Mascot"));
     as->version = "2.2.101";
     as->softwareName.set(MS_Mascot);
