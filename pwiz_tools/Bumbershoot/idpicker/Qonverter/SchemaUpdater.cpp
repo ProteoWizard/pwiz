@@ -46,35 +46,44 @@ namespace {
 void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
 {
     // refactor FilteringCriteria table as FilterHistory table
-    db.execute("CREATE TABLE FilterHistory (Id INTEGER PRIMARY KEY,"
-               "                            MaximumQValue NUMERIC,"
-               "                            MinimumDistinctPeptidesPerProtein INT,"
-               "                            MinimumSpectraPerProtein INT,"
-               "                            MinimumAdditionalPeptidesPerProtein INT,"
-               "                            MinimumSpectraPerDistinctMatch INT,"
-               "                            MinimumSpectraPerDistinctPeptide INT,"
-               "                            MaximumProteinGroupsPerPeptide INT,"
-               "                            Clusters INT,"
-               "                            ProteinGroups INT,"
-               "                            Proteins INT,"
-               "                            DistinctPeptides INT,"
-               "                            DistinctMatches INT,"
-               "                            FilteredSpectra INT,"
-               "                            ProteinFDR NUMERIC,"
-               "                            PeptideFDR NUMERIC,"
-               "                            SpectrumFDR NUMERIC"
-               "                           );");
+    db.execute("CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, "
+                                                         "MaximumQValue NUMERIC, "
+                                                         "MinimumDistinctPeptidesPerProtein INT, "
+                                                         "MinimumSpectraPerProtein INT, "
+                                                         "MinimumAdditionalPeptidesPerProtein INT, "
+                                                         "MinimumSpectraPerDistinctMatch INT, "
+                                                         "MinimumSpectraPerDistinctPeptide INT, "
+                                                         "MaximumProteinGroupsPerPeptide INT, "
+                                                         "Clusters INT, "
+                                                         "ProteinGroups INT, "
+                                                         "Proteins INT, "
+                                                         "DistinctPeptides INT, "
+                                                         "DistinctMatches INT, "
+                                                         "FilteredSpectra INT, "
+                                                         "ProteinFDR NUMERIC, "
+                                                         "PeptideFDR NUMERIC, "
+                                                         "SpectrumFDR NUMERIC"
+                                                        ");");
+
+    // delete previous layouts that are no longer valid since a new IPersistentForm (FilterHistoryForm) was added
+    db.execute("DELETE FROM LayoutProperty");
 
     try
     {
         // if the database is currently filtered (FilteringCriteria exists), get the current filter settings
-        sqlite::query q(db, "SELECT * FROM FilteringCriteria");
-        sqlite::query::rows filterCriteriaRow = *q.begin();
+        sqlite::query q(db, "SELECT MaximumQValue, MinimumDistinctPeptidesPerProtein,"
+                                   "MinimumSpectraPerProtein, MinimumAdditionalPeptidesPerProtein,"
+                                   "MinimumSpectraPerDistinctMatch, MinimumSpectraPerDistinctPeptide,"
+                                   "MaximumProteinGroupsPerPeptide "
+                            "FROM FilteringCriteria");
+        sqlite::query::iterator qItr = q.begin();
+        if (qItr == q.end())
+            return;
         double maxQValue;
         int minPeptidesPerProtein, minSpectraPerProtein, minAdditionalPeptides;
         int minSpectraPerMatch, minSpectraPerPeptide, maxProteinGroups;
-        filterCriteriaRow.getter() >> maxQValue >> minPeptidesPerProtein >> minSpectraPerProtein >> minAdditionalPeptides >>
-                                      minSpectraPerMatch >> minSpectraPerPeptide >> maxProteinGroups;
+        qItr->getter() >> maxQValue >> minPeptidesPerProtein >> minSpectraPerProtein >> minAdditionalPeptides >>
+                          minSpectraPerMatch >> minSpectraPerPeptide >> maxProteinGroups;
 
         // and the summary counts based on that filter for the new FilterHistory table
         q.prepare("SELECT COUNT(DISTINCT pro.Cluster), "
@@ -82,15 +91,62 @@ void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
                          "COUNT(DISTINCT pro.Id), "
                          "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) "
                   "FROM Protein pro");
-        sqlite::query::rows proteinLevelSummaryRow = *q.begin();
         int clusters, proteinGroups, proteins;
         float decoyProteins;
-        proteinLevelSummaryRow.getter() >> clusters >> proteinGroups >> proteins >> decoyProteins;
+        q.begin()->getter() >> clusters >> proteinGroups >> proteins >> decoyProteins;
         float proteinFDR = 2 * decoyProteins / proteins;
         
         q.prepare("SELECT COUNT(*) FROM Peptide"); int distinctPeptides = q.begin()->get<int>(0);
         q.prepare("SELECT COUNT(DISTINCT DistinctMatchId) FROM DistinctMatch"); int distinctMatches = q.begin()->get<int>(0);
         q.prepare("SELECT COUNT(*) FROM Spectrum"); int filteredSpectra = q.begin()->get<int>(0);
+        
+        // get the count of peptides that are unambiguously targets or decoys (# of Proteins = # of Decoys OR # of Decoys = 0)
+        q.prepare("SELECT COUNT(Peptide)"
+                  "FROM (SELECT pep.Id AS Peptide, "
+                               "COUNT(DISTINCT pro.Id) AS Proteins, "
+                               "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) AS Decoys, "
+                               "CASE WHEN SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IsDecoy "
+                        "FROM Peptide pep "
+                        "JOIN PeptideInstance pi ON pep.Id=pi.Peptide "
+                        "JOIN Protein pro ON pi.Protein=pro.Id "
+                        "GROUP BY pep.Id "
+                        "HAVING Proteins=Decoys OR Decoys=0 "
+                       ") "
+                  "GROUP BY IsDecoy "
+                  "ORDER BY IsDecoy");
+        vector<int> peptideLevelDecoys;
+        BOOST_FOREACH(sqlite::query::rows row, q)
+            peptideLevelDecoys.push_back(row.get<int>(0));
+
+        // without both targets and decoys, FDR can't be calculated
+        float peptideFDR = 0;
+        if (peptideLevelDecoys.size() == 2)
+            peptideFDR = 2.0 * peptideLevelDecoys[1] / (peptideLevelDecoys[0] + peptideLevelDecoys[1]);
+        
+        // get the count of spectra that are unambiguously targets or decoys (# of Proteins = # of Decoys OR # of Decoys = 0)
+        q.prepare("SELECT COUNT(Spectrum)"
+                  "FROM (SELECT psm.Spectrum, "
+                               "COUNT(DISTINCT pro.Id) AS Proteins, "
+                               "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) AS Decoys, "
+                               "CASE WHEN SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IsDecoy "
+                        "FROM PeptideSpectrumMatch psm "
+                        "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
+                        "JOIN Protein pro ON pi.Protein=pro.Id "
+                        "GROUP BY psm.Spectrum "
+                        "HAVING Proteins=Decoys OR Decoys=0 "
+                       ") "
+                  "GROUP BY IsDecoy "
+                  "ORDER BY IsDecoy");
+        vector<int> spectrumLevelDecoys;
+        BOOST_FOREACH(sqlite::query::rows row, q)
+            spectrumLevelDecoys.push_back(row.get<int>(0));
+
+        // without both targets and decoys, FDR can't be calculated
+        float spectrumFDR = 0;
+        if (spectrumLevelDecoys.size() == 2)
+            spectrumFDR = 2.0 * spectrumLevelDecoys[1] / (spectrumLevelDecoys[0] + spectrumLevelDecoys[1]);
+
+        q.finish();
 
         sqlite::command insertFilter(db, "INSERT INTO FilterHistory (Id, MaximumQValue, MinimumDistinctPeptidesPerProtein,"
                                                                     "MinimumSpectraPerProtein, MinimumAdditionalPeptidesPerProtein,"
@@ -99,12 +155,12 @@ void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
                                                                     "Clusters, ProteinGroups, Proteins,"
                                                                     "DistinctPeptides, DistinctMatches, FilteredSpectra,"
                                                                     "ProteinFDR, PeptideFDR, SpectrumFDR"
-                                                                   ") VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,0)");
-        insertFilter.binder() << 1 << maxQValue << minPeptidesPerProtein << minSpectraPerProtein << minAdditionalPeptides <<
-                                      minSpectraPerMatch << minSpectraPerPeptide << maxProteinGroups <<
-                                      clusters << proteinGroups << proteins <<
-                                      distinctPeptides << distinctMatches << filteredSpectra <<
-                                      proteinFDR;
+                                                                   ") VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        insertFilter.binder() << maxQValue << minPeptidesPerProtein << minSpectraPerProtein << minAdditionalPeptides <<
+                                 minSpectraPerMatch << minSpectraPerPeptide << maxProteinGroups <<
+                                 clusters << proteinGroups << proteins <<
+                                 distinctPeptides << distinctMatches << filteredSpectra <<
+                                 proteinFDR << peptideFDR << spectrumFDR;
         insertFilter.execute();
 
         db.execute("DROP TABLE FilteringCriteria");
@@ -114,9 +170,6 @@ void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
         if (!bal::contains(e.what(), "no such")) // column or table
             throw runtime_error(e.what());
     }
-
-    // delete previous layouts that are no longer valid since a new IPersistentForm (FilterHistoryForm) was added
-    db.execute("DELETE FROM LayoutProperty");
 }
 
 void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
