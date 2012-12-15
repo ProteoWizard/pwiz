@@ -642,6 +642,32 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
 
     if (entry == jumpTableEnd_)
     {
+		// possibly a quoted commandline copied to a config file, 
+		// eg filter=\"index [3,7]\" or filter=\"precursorRecalculation\"
+		string quot;
+		if (bal::starts_with(command,"\""))
+			quot="\"";
+		else if (bal::starts_with(command,"'"))
+			quot="\'";
+		if (quot.size())
+		{
+			command = command.substr(1);
+			if (arg.size())
+			{
+				if  (bal::ends_with(arg,quot))
+				{
+					arg	= arg.substr(0,arg.size()-1);
+				}
+			}
+			else if (bal::ends_with(command,quot)) 
+			{
+				command	= command.substr(0,command.size()-1);
+			}
+			entry = find_if(jumpTable_, jumpTableEnd_, HasCommand(command));
+		}
+	}
+    if (entry == jumpTableEnd_)
+    {
         cerr << "[SpectrumListFactory] Ignoring wrapper: " << wrapper << endl;
         return;
     }

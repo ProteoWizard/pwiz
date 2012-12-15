@@ -59,7 +59,9 @@ void testWrap()
     SpectrumListFactory::wrap(msd, "scanNumber [19,20]");
     unit_assert(sl->size() == 2);
 
-    SpectrumListFactory::wrap(msd, "index [1,1]");
+	// make sure we can handle config file lines copied from commandline
+	// with quotes intact
+    SpectrumListFactory::wrap(msd, "'index [1,1]'");
     unit_assert(sl->size() == 1);
     unit_assert(sl->spectrumIdentity(0).id == "scan=20");
 
