@@ -25,6 +25,7 @@
 #include <vector>
 #include <map>
 #include <limits>
+#include <cmath>
 #include "Verbosity.h"
 #include "ProgressIndicator.h"
 #include "saxhandler.h"

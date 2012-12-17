@@ -29,6 +29,7 @@
 #include "BuildParser.h"
 #include "pwiz/data/msdata/BinaryDataEncoder.hpp"
 #include <assert.h>
+#include <algorithm>
 
 using namespace std;
 namespace BiblioSpec {
