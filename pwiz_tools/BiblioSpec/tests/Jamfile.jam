@@ -283,18 +283,57 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-tandem
   : check-tandem ;
 
-make output/pride.blib : inputs/empty : @common.copy : $(test_output_req) ;
+make output/pride.mascot.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
-  : ../src//BlibBuild inputs/test.pride.xml output/pride.blib
+  : ../src//BlibBuild inputs/test.mascot.pride.xml output/pride.mascot.blib
   : 
-  : build-pride ;
+  : build-pride-mascot ;
 run-if-exists CompareLibraryContents.cpp compare-src
   :
-  : output/pride.blib reference/pride.check reference/zbuild.skip-lines
+  : output/pride.mascot.blib reference/pride.mascot.check reference/zbuild.skip-lines
   : $(compare-reqs)
-    <dependency>build-pride
-  : check-pride ;
+    <dependency>build-pride-mascot
+  : check-pride-mascot ;
+
+make output/pride.xcorr.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/test.xcorr.pride.xml output/pride.xcorr.blib
+  : 
+  : build-pride-xcorr ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/pride.xcorr.blib reference/pride.xcorr.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-pride-xcorr
+  : check-pride-xcorr ;
+
+make output/pride.xcorr.nocharges.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/test.xcorr.nocharges.pride.xml output/pride.xcorr.nocharges.blib
+  : 
+  : build-pride-xcorr-no-charges ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/pride.xcorr.nocharges.blib reference/pride.xcorr.nocharges.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-pride-xcorr-no-charges
+  : check-pride-xcorr-no-charges ;
+
+make output/pride.mill.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/test.mill.pride.xml output/pride.mill.blib
+  : 
+  : build-pride-mill ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/pride.mill.blib reference/pride.mill.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-pride-mill
+  : check-pride-mill ;
 
 make output/pilot.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp

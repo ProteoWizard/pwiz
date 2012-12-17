@@ -34,6 +34,7 @@
 #include "PSM.h"
 #include "SpecFileReader.h"
 #include "PwizReader.h"
+#include "AminoAcidMasses.h"
 
 using namespace std;
 
@@ -41,6 +42,8 @@ namespace BiblioSpec {
 
 const static int SMALL_BUFFER_SIZE = 64;
 const static int LARGE_BUFFER_SIZE = 8192;
+
+const static double H2O_MASS = 18.01056469252;
 
 // todo move to BlibUtils
 bool seqsILEquivalent(string seq1, string seq2);
@@ -83,11 +86,14 @@ class BuildParser : protected SAXHandler{
   void insertSpectrum(PSM* psm, SpecData& curSpectrum, 
                       sqlite3_int64 fileId, PSM_SCORE_TYPE scoreType);
   void sortPsmMods(PSM* psm);
+  double calculatePeptideMass(PSM* psm);
+  int calculateCharge(double neutralMass, double precursorMz);
   string generateModifiedSeq(const char* unmodSeq, const vector<SeqMod>& mods);
   void removeDuplicates();
   string fileNotFoundMessage(const char* specfileroot,
                              const vector<const char*>& extensions,
                              const vector<const char*>& directories);
+  double aaMasses_[128];
 
  protected:
   ProgressIndicator* readAddProgress_;  ///< 2 steps: read file, add spec

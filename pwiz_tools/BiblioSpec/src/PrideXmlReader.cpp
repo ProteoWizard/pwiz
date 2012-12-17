@@ -35,13 +35,17 @@ PrideXmlReader::PrideXmlReader(BlibBuilder& maker,
                                const ProgressIndicator* parentProgress)
 : BuildParser(maker, xmlfilename, parentProgress),
     scoreType_(UNKNOWN_SCORE_TYPE),
-    foundScoreType_(false),
+    threshold_(-1),
+    thresholdIsMax_(false),
     curState_(ROOT_STATE)
 {
    this->setFileName(xmlfilename); // this is for the saxhandler
    setSpecFileName(xmlfilename,    // this is for the BuildParser
                    false);         // don't look for the file
+
    lookUpBy_ = INDEX_ID;
+
+   curBinaryConfig_.compression = BinaryDataEncoder::Compression_None;
 
    // point to self as spec reader
    delete specReader_;
@@ -97,11 +101,11 @@ void PrideXmlReader::startElement(const XML_Char* name,
     }
     else if (isElement("Sequence", name))
     {
-        newState(PEPTIDE_SEQUENCE_STATE);
+        prepareCharRead(PEPTIDE_SEQUENCE_STATE);
     }
     else if (isElement("SpectrumReference", name))
     {
-        newState(SPECTRUM_REFERENCE_STATE);
+        prepareCharRead(SPECTRUM_REFERENCE_STATE);
     }
     else if (isElement("ModificationItem", name))
     {
@@ -109,11 +113,11 @@ void PrideXmlReader::startElement(const XML_Char* name,
     }
     else if (isElement("ModLocation", name))
     {
-        newState(MOD_LOCATION_STATE);
+        prepareCharRead(MOD_LOCATION_STATE);
     }
     else if (isElement("ModMonoDelta", name))
     {
-        newState(MOD_MONO_DELTA_STATE);
+        prepareCharRead(MOD_MONO_DELTA_STATE);
     }
 
 }
@@ -130,15 +134,15 @@ void PrideXmlReader::endElement(const XML_Char* name)
     }
     else if (isElement("ionSelection", name))
     {
-        curState_ = getLastState();
+        lastState();
     }
     else if (isElement("mzArrayBinary", name))
     {
-        curState_ = getLastState();
+        lastState();
     }
     else if (isElement("intenArrayBinary", name))
     {
-        curState_ = getLastState();
+        lastState();
     }
     else if (isElement("data", name) &&
              (curState_ == PEAKS_MZ_DATA_STATE || curState_ == PEAKS_INTENSITY_DATA_STATE))
@@ -155,7 +159,7 @@ void PrideXmlReader::endElement(const XML_Char* name)
     }
     else if (isElement("SpectrumReference", name))
     {
-        curState_ = getLastState();
+        endSpectrumReference();
     }
     else if (isElement("ModificationItem", name))
     {
@@ -163,11 +167,11 @@ void PrideXmlReader::endElement(const XML_Char* name)
     }
     else if (isElement("ModLocation", name))
     {
-        curState_ = getLastState();
+        endModLocation();
     }
     else if (isElement("ModMonoDelta", name))
     {
-        curState_ = getLastState();
+        endModMonoDelta();
     }
 }
 
@@ -178,64 +182,130 @@ void PrideXmlReader::parseSpectrum(const XML_Char** attr)
     numIntensities_ = 0;
 
     // setup a SpecData
-    curSpec_ = new SpecData;
+    curSpec_ = new SpecData();
     curSpec_->id = getIntRequiredAttrValue("id", attr);
-    curSpec_->retentionTime = 0.0;  // PRIDE files do not have retention time
 }
 
 void PrideXmlReader::parseCvParam(const XML_Char** attr)
 {
     string nameAttr(getRequiredAttrValue("name", attr));
+    // make name lowercase for case insensitive comparison
+    transform(nameAttr.begin(), nameAttr.end(), nameAttr.begin(), tolower);
     
     // get precursor info
     if (curState_ == ION_SELECTION_STATE)
     {
-        if (nameAttr == "Mass To Charge Ratio")
+        if (nameAttr == "mass to charge ratio" || // PSI:1000040
+            nameAttr == "selected ion m/z"        // MS:1000744
+            )
         {
             double mz = getDoubleRequiredAttrValue("value", attr);
             curSpec_->mz = mz;
         }
-        else if (nameAttr == "Charge State")
+        else if (nameAttr == "charge state") // PSI:1000041 ; MS:1000041
         {
             int chargeState = getIntRequiredAttrValue("value", attr);
             spectraChargeStates_[curSpec_->id] = chargeState;
+        }
+        else if (nameAttr == "parent ion retention time" || // PRIDE:0000203
+                 nameAttr == "retention time"               // PSI:RETENTION TIME
+                 )
+        {
+            const char* rtStr = getRequiredAttrValue("value", attr);
+            double rt;
+            if (sscanf(rtStr, "PT%lfS", &rt) > 0) // in seconds
+                curSpec_->retentionTime = rt / 60; // to minutes
+            else if (sscanf(rtStr, "%lf", &rt) > 0) // in minutes
+                curSpec_->retentionTime = rt;
         }
     }
     // get score info
     else if (curState_ == PEPTIDE_ITEM_STATE)
     {
-        if (nameAttr == "Sequest score" || nameAttr == "Mascot score")
+        if (nameAttr == "mass to charge ratio" || // PSI:1000040
+            nameAttr == "selected ion m/z"        // MS:1000744
+            )
         {
-            PSM_SCORE_TYPE curType;
-            if (nameAttr == "Sequest score") curType = SEQUEST_XCORR;
-            else if (nameAttr == "Mascot score") curType = MASCOT_IONS_SCORE;
-
-            if (!foundScoreType_)
-            {
-                foundScoreType_ = true;
-                scoreType_ = curType;
-                
-                // set threshold
-                if (scoreType_ == SEQUEST_XCORR) threshold_ = getScoreThreshold(SQT);
-                else if (scoreType_ == MASCOT_IONS_SCORE) threshold_ = getScoreThreshold(MASCOT);
-            }
-            else if (scoreType_ != curType)
-            {
-                Verbosity::warn("Score type conflict, expected %d but was %d",
-                                scoreType_, curType);
-            }
-            double score = getDoubleRequiredAttrValue("value", attr);
-            curPSM_->score = score;
+            // found a m/z in the PeptideItem, keep track of it
+            // and save it later when we reach the end of the PeptideItem
+            foundMz_ = getDoubleRequiredAttrValue("value", attr);            
         }
-        else if (nameAttr.find("score") != string::npos)
+        // is it a charge state?
+        if (nameAttr == "charge state") // PSI:1000041 ; MS:1000041
         {
-            // Found some unknown cvParam in PeptideItem containing "score"
-            foundScoreType_ = true;
-            double score = getDoubleRequiredAttrValue("value", attr);
-            curPSM_->score = score;
+            // found charge state, don't bother saving to spectraChargeStates_
+            int chargeState = getIntRequiredAttrValue("value", attr);
+            curPSM_->charge = chargeState;
+        }
+        else
+        {
+            // determine type of score, if any
+            PSM_SCORE_TYPE curType = UNKNOWN_SCORE_TYPE;
+            if      (nameAttr == "x correlation" || // PRIDE:0000013
+                     nameAttr == "sequest:xcorr")   // MS:1001155
+            {
+                curType = SEQUEST_XCORR;
+            }
+            else if (nameAttr == "mascot score" || // PRIDE:0000069
+                     nameAttr == "mascot:score")   // MS:1001171
+            {
+                curType = MASCOT_IONS_SCORE;
+            }
+            else if (nameAttr == "expect" ||        // PRIDE:0000183
+                     nameAttr == "x!tandem:expect") // MS:1001330
+            {
+                curType = TANDEM_EXPECTATION_VALUE;
+                if (scoreType_ == UNKNOWN_SCORE_TYPE) setThreshold(TANDEM, true);
+            }
+            else if (nameAttr == "spectrum mill peptide score" || // PRIDE:0000177
+                     nameAttr == "spectrummill:score")            // MS:1001572
+            {
+                curType = SPECTRUM_MILL;
+            }
+            else if (nameAttr == "percolator:q value") // MS:1001491
+            {
+                curType = PERCOLATOR_QVALUE;
+            }
+            else if (nameAttr == "peptideprophet probability score") // PRIDE:0000099
+            {
+                curType = PEPTIDE_PROPHET_SOMETHING;
+                if (scoreType_ == UNKNOWN_SCORE_TYPE) setThreshold(PEPXML, false);
+            }
+            else if (nameAttr == "scaffold:peptide probability") // MS:1001568
+            {
+                curType = SCAFFOLD_SOMETHING;
+                if (scoreType_ == UNKNOWN_SCORE_TYPE) setThreshold(SCAFFOLD, false);
+            }
+            else if (nameAttr == "omssa e-value" || // PRIDE:0000185
+                     nameAttr == "omssa:evalue")    // MS:1001328
+            {
+                curType = OMSSA_EXPECTATION_SCORE;
+                if (scoreType_ == UNKNOWN_SCORE_TYPE) setThreshold(OMSSA, true);
+            }
+            else if (nameAttr == "proteinprospector:expectation value") // MS:1002045
+            {
+                curType = PROTEIN_PROSPECTOR_EXPECT;
+                if (scoreType_ == UNKNOWN_SCORE_TYPE) setThreshold(PROT_PROSPECT, true);
+            }
 
-            Verbosity::warn("Found unknown score type in PeptideItem: %s",
-                            nameAttr.c_str());
+            // recognized score type
+            if (curType != UNKNOWN_SCORE_TYPE)
+            {
+                // we've found score type for this file
+                if (scoreType_ == UNKNOWN_SCORE_TYPE) scoreType_ = curType;
+
+                if (scoreType_ == curType)
+                {
+                    // save score
+                    double score = getDoubleRequiredAttrValue("value", attr);
+                    curPSM_->score = score;
+                }
+                else
+                {
+                    Verbosity::warn("Skipping unexpected score type, expected %s but was %s",
+                                    scoreTypeToString(scoreType_), scoreTypeToString(curType));
+                }
+            }
         }
     }
 }
@@ -252,12 +322,12 @@ void PrideXmlReader::parseData(const XML_Char** attr)
     if (curState_ == PEAKS_MZ_STATE)
     {
         numMzs_ = length;
-        newState(PEAKS_MZ_DATA_STATE);
+        prepareCharRead(PEAKS_MZ_DATA_STATE);
     }
     else if (curState_ == PEAKS_INTENSITY_STATE)
     {
         numIntensities_ = length;
-        newState(PEAKS_INTENSITY_DATA_STATE);
+        prepareCharRead(PEAKS_INTENSITY_DATA_STATE);
     }
 }
 
@@ -268,39 +338,54 @@ void PrideXmlReader::endData()
         // decode mzs
         BinaryDataEncoder encoder(curBinaryConfig_);
         vector<double> decoded;
-        encoder.decode(dataMzs_, decoded);
+        encoder.decode(charBuf_, decoded);
 
         curSpec_->mzs = new double[decoded.size()];
         copy(decoded.begin(), decoded.end(), curSpec_->mzs);
 
-        dataMzs_.clear();
-        curState_ = getLastState();
+        lastState();
     }
     else if (curState_ == PEAKS_INTENSITY_DATA_STATE)
     {
         // decode intensities
         BinaryDataEncoder encoder(curBinaryConfig_);
         vector<double> decoded;
-        encoder.decode(dataIntensities_, decoded);
+        encoder.decode(charBuf_, decoded);
 
         vector<float> decodedToFloats(decoded.begin(), decoded.end());
 
         curSpec_->intensities = new float[decodedToFloats.size()];
         copy(decodedToFloats.begin(), decodedToFloats.end(), curSpec_->intensities);
 
-        dataIntensities_.clear();
-        curState_ = getLastState();
+        lastState();
     }
 }
 
 void PrideXmlReader::parsePeptideItem()
 {
     curPSM_ = new PSM();
+    foundMz_ = 0;
     newState(PEPTIDE_ITEM_STATE);
 }
 
 void PrideXmlReader::endPeptideItem()
 {
+    // we found an m/z in this PeptideItem, save it if needed
+    if (foundMz_ > 0)
+    {
+        map<int, SpecData*>::iterator found = spectra_.find(curPSM_->specIndex);
+        if (found == spectra_.end())
+        {
+            Verbosity::warn("Failed saving m/z to spectrum %d",
+                            curPSM_->specIndex);
+        }
+        // set precursor m/z if it wasn't set in the Spectrum
+        else if (found->second->mz <= 0)
+        {
+            found->second->mz = foundMz_;
+        }
+    }
+
     // Loop through mods and make sure positions are [1, peptide length]
     for(vector<SeqMod>::iterator iter = curPSM_->mods.begin();
         iter != curPSM_->mods.end();
@@ -309,29 +394,59 @@ void PrideXmlReader::endPeptideItem()
         iter->position = min((int)curPSM_->unmodSeq.length(), max(iter->position, 1));
     }
 
-    // save psm if above threshold or unknown scores type
-    if ((scoreType_ != UNKNOWN_SCORE_TYPE && curPSM_->score > threshold_) ||
-        (scoreType_ == UNKNOWN_SCORE_TYPE))
+    // save psm if above threshold
+    if ((curPSM_->score >= threshold_ && !thresholdIsMax_) ||
+        (curPSM_->score <= threshold_ && thresholdIsMax_))
     {
         psms_.push_back(curPSM_);
     }
 
-    curState_ = getLastState();
+    lastState();
 }
 
 void PrideXmlReader::endSequence()
 {
     // done reading peptide sequence
-    curPSM_->unmodSeq = dataPeptide_;
+    curPSM_->unmodSeq = charBuf_;
+    lastState();
+}
 
-    dataPeptide_.clear();
-    curState_ = getLastState();
+void PrideXmlReader::endSpectrumReference()
+{
+    // done reading spectrum reference
+    int specRef = atoi(charBuf_.c_str());
+    curPSM_->specIndex = specRef;
+    curPSM_->charge = spectraChargeStates_[specRef];
+
+    lastState();
 }
 
 void PrideXmlReader::parseModificationItem(const XML_Char** attr)
 {
     curMod_.position = -1;
     curMod_.deltaMass = 0;
+}
+
+void PrideXmlReader::endModLocation()
+{
+    int modLocation = atoi(charBuf_.c_str());
+    curMod_.position = modLocation;
+
+    lastState();
+}
+
+void PrideXmlReader::endModMonoDelta()
+{
+    double modMonoDelta = atof(charBuf_.c_str());
+    curMod_.deltaMass = modMonoDelta;
+
+    lastState();
+}
+
+void PrideXmlReader::prepareCharRead(STATE dataState)
+{
+    charBuf_.clear();
+    newState(dataState);
 }
 
 bool PrideXmlReader::parseFile()
@@ -352,46 +467,14 @@ bool PrideXmlReader::parseFile()
  */
 void PrideXmlReader::characters(const XML_Char *s, int len)
 {
-    if (curState_ != PEAKS_MZ_DATA_STATE &&
-        curState_ != PEAKS_INTENSITY_DATA_STATE &&
-        curState_ != PEPTIDE_SEQUENCE_STATE &&
-        curState_ != SPECTRUM_REFERENCE_STATE &&
-        curState_ != MOD_LOCATION_STATE &&
-        curState_ != MOD_MONO_DELTA_STATE)
+    if (curState_ == PEAKS_MZ_DATA_STATE ||
+        curState_ == PEAKS_INTENSITY_DATA_STATE ||
+        curState_ == PEPTIDE_SEQUENCE_STATE ||
+        curState_ == SPECTRUM_REFERENCE_STATE ||
+        curState_ == MOD_LOCATION_STATE ||
+        curState_ == MOD_MONO_DELTA_STATE)
     {
-        return;
-    }
-
-    // get characters
-    string buf(s, len);
-
-    if (curState_ == PEAKS_MZ_DATA_STATE)
-    {
-        dataMzs_.append(buf);
-    }
-    else if (curState_ == PEAKS_INTENSITY_DATA_STATE)
-    {
-        dataIntensities_.append(buf);
-    }
-    else if (curState_ == PEPTIDE_SEQUENCE_STATE)
-    {
-        dataPeptide_.append(buf);
-    }
-    else if (curState_ == SPECTRUM_REFERENCE_STATE)
-    {
-        int specRef = atoi(buf.c_str());
-        curPSM_->specIndex = specRef;
-        curPSM_->charge = spectraChargeStates_[specRef];
-    }
-    else if (curState_ == MOD_LOCATION_STATE)
-    {
-        int modLocation = atoi(buf.c_str());
-        curMod_.position = modLocation;
-    }
-    else if (curState_ == MOD_MONO_DELTA_STATE)
-    {
-        double modMonoDelta = atof(buf.c_str());
-        curMod_.deltaMass = modMonoDelta;
+        charBuf_.append(s, len);
     }
 }
 
@@ -410,11 +493,11 @@ void PrideXmlReader::newState(STATE nextState)
  * Return to the previous state (usually at the end of an element) by
  * popping the last state off the stack and setting the current to it.
  */
-PrideXmlReader::STATE PrideXmlReader::getLastState()
+void PrideXmlReader::lastState()
 {
     STATE lastState = stateHistory_.at(stateHistory_.size() - 1);
     stateHistory_.pop_back();
-    return lastState;
+    curState_ = lastState;
 }
 
 /**
@@ -437,6 +520,12 @@ void PrideXmlReader::saveSpectrum()
     Verbosity::debug("Saving spectrum id %d.",
                       curSpec_->id);
     spectra_[curSpec_->id] = curSpec_;
+}
+
+void PrideXmlReader::setThreshold(BUILD_INPUT type, bool isMax)
+{
+    threshold_ = getScoreThreshold(type);
+    thresholdIsMax_ = isMax;
 }
 
 // SpecFileReader methods

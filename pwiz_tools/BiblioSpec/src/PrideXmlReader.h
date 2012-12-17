@@ -74,10 +74,15 @@ private:
   void parsePeptideItem();
   void endPeptideItem();
   void endSequence();
+  void endSpectrumReference();
   void parseModificationItem(const XML_Char** attr);
+  void endModLocation();
+  void endModMonoDelta();
+  void prepareCharRead(STATE dataState);
   void newState(STATE nextState);
-  STATE getLastState();
+  void lastState();
   void saveSpectrum();
+  void setThreshold(BUILD_INPUT type, bool isMax);
 
   // for SpecFileReader interface
   virtual void openFile(const char*, bool mzSort = false);
@@ -91,7 +96,8 @@ private:
 
   // for parsing results
   double threshold_;
-  bool foundScoreType_;
+  bool thresholdIsMax_;
+  double foundMz_;
   PSM_SCORE_TYPE scoreType_;
   vector<STATE> stateHistory_;  ///< a stack for keeping states
   STATE curState_;              ///< current state (not on the stack)
@@ -102,9 +108,7 @@ private:
   BinaryDataEncoder::Config curBinaryConfig_;
   int numMzs_;
   int numIntensities_;
-  string dataMzs_;
-  string dataIntensities_;
-  string dataPeptide_;
+  string charBuf_;
   map<int, SpecData*> spectra_;
   map<int, int> spectraChargeStates_;
 };

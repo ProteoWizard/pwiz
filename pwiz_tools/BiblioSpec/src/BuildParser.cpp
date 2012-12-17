@@ -32,6 +32,10 @@ BuildParser::BuildParser(BlibBuilder& maker,
   fileProgressIncrement_(0),
   lookUpBy_(SCAN_NUM_ID)
 {
+    // initialize amino acid masses
+    fill(aaMasses_, aaMasses_ + sizeof(aaMasses_)/sizeof(double), 0);
+    AminoAcidMasses::initializeMass(aaMasses_, 1);
+
     // parse full file name to get path and fileroot
     filepath_ = getPath(fullFilename_);
     fileroot_ = getFileRoot(fullFilename_);
@@ -360,6 +364,26 @@ void BuildParser::insertSpectrum(PSM* psm,
 
     // get the spec id in the spec file
     string specIdStr = psm->idAsString();
+
+    // check if charge state exists
+    if (psm->charge < 1)
+    {
+        // try to calculate charge
+        Verbosity::debug("Attempting to calculate charge state for spectrum %s (%s)",
+                         specIdStr.c_str(), psm->modifiedSeq.c_str());
+        double pepMass = calculatePeptideMass(psm);
+        int calcCharge = calculateCharge(pepMass, curSpectrum.mz);
+        if (calcCharge > 0)
+        {
+            psm->charge = calcCharge;
+        }
+        else
+        {
+            Verbosity::warn("Could not calculate charge state for spectrum %s (%s, "
+                            "mass %f and precursor m/z %f)",
+                            specIdStr.c_str(), psm->modifiedSeq.c_str(), pepMass, curSpectrum.mz);
+        }
+    }
     
     // construct insert statement for RefSpectra
     sprintf(sql_statement_buf,
@@ -692,6 +716,46 @@ void BuildParser::sortPsmMods(PSM* psm){
             }
         }
     }
+}
+
+double BuildParser::calculatePeptideMass(PSM* psm){
+    double total = H2O_MASS;
+    string seq = psm->unmodSeq;
+
+    // sum amino acid masses
+    for (int i = 0; i < (int)seq.length(); i++)
+    {
+        double curMass = aaMasses_[seq[i]];
+        if (curMass > 0)
+        {
+            total += curMass;
+        }
+        else
+        {
+            Verbosity::warn("Ignoring unrecognized amino acid '%c' during calculation of "
+                            "peptide mass: %s", seq[i], seq.c_str());
+        }
+    }
+
+    // account for mods
+    for(vector<SeqMod>::iterator iter = psm->mods.begin(); iter != psm->mods.end(); ++iter)
+    {
+        total += iter->deltaMass;
+    }
+
+    return total;
+}
+
+int BuildParser::calculateCharge(double neutralMass, double precursorMz){
+    double estCharge = neutralMass / (precursorMz - PROTON_MASS);
+    if (estCharge < 0.5)
+    {
+        return -1;
+    }
+
+    // round to nearest integer
+    int calcCharge = floor(estCharge + 0.5);
+    return calcCharge;
 }
 
 /**
