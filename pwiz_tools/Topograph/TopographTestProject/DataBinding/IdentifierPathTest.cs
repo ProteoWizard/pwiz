@@ -31,8 +31,8 @@ namespace pwiz.Topograph.Test.DataBinding
         public void TestCompareTo()
         {
             var idPath = IdentifierPath.Parse("HalfLives.[]");
-            Assert.AreEqual(-1, IdentifierPath.Root.CompareTo(idPath));
-            Assert.AreEqual(1, idPath.CompareTo(IdentifierPath.Root));
+            Assert.AreEqual(-1, IdentifierPath.ROOT.CompareTo(idPath));
+            Assert.AreEqual(1, idPath.CompareTo(IdentifierPath.ROOT));
             Assert.AreEqual(-1, idPath.Parent.CompareTo(idPath));
             Assert.AreEqual(1, idPath.CompareTo(idPath.Parent));
         }

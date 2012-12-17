@@ -43,7 +43,7 @@ namespace pwiz.Topograph.Test.DataBinding.Controls
             {
                 var columnIds = new[]
                                     {
-                                        IdentifierPath.Root,
+                                        IdentifierPath.ROOT,
                                         IdentifierPath.Parse("Sequence"),
                                         IdentifierPath.Parse("AminoAcidsList.[].Code"),
                                         IdentifierPath.Parse("Molecule.[]"),

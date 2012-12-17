@@ -118,7 +118,7 @@ namespace pwiz.Topograph.Test.DataBinding
         public void TestFilter()
         {
             var viewSpec = new ViewSpec().SetColumns(new[] {new ColumnSpec(IdentifierPath.Parse("Code"))})
-                .SetFilters(new[] {new FilterSpec(IdentifierPath.Parse("CharCode"), FilterOperations.OpEquals, "A"),});
+                .SetFilters(new[] {new FilterSpec(IdentifierPath.Parse("CharCode"), FilterOperations.OP_EQUALS, "A"),});
             var viewInfo = new ViewInfo(new DataSchema(), typeof (AminoAcid), viewSpec);
             var pivoter = new Pivoter(viewInfo);
             var alaAcid = new AminoAcid("Ala");
@@ -126,7 +126,7 @@ namespace pwiz.Topograph.Test.DataBinding
             var argAcid = new AminoAcid("Arg");
             Assert.AreEqual('R', argAcid.CharCode);
             viewSpec = viewSpec.SetFilters(
-                new[] { new FilterSpec(IdentifierPath.Parse("Code"), FilterOperations.OpStartsWith, "Ar") });
+                new[] { new FilterSpec(IdentifierPath.Parse("Code"), FilterOperations.OP_STARTS_WITH, "Ar") });
             pivoter = new Pivoter(new ViewInfo(new DataSchema(), typeof(AminoAcid), viewSpec));
             var rowItems = pivoter.ExpandAndPivot(new[] { new RowItem(null, alaAcid), new RowItem(null, argAcid) }).ToArray();
             Assert.AreEqual(1, rowItems.Length);

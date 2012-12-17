@@ -43,7 +43,7 @@ namespace pwiz.Common.DataBinding
         public Predicate<object> Predicate { get; private set; }
         private Predicate<object> MakePredicate()
         {
-            var operation = FilterSpec.Operation ?? FilterOperations._opHasAnyValue;
+            var operation = FilterSpec.Operation ?? FilterOperations.OP_HAS_ANY_VALUE;
             if (ColumnDescriptor == null || string.IsNullOrEmpty(operation.OpName))
             {
                 return null;

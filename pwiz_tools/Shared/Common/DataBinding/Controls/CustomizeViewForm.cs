@@ -716,7 +716,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             var newFilters = new List<FilterSpec>(ViewSpec.Filters)
                 {
-                    new FilterSpec(columnDescriptor.IdPath, FilterOperations._opHasAnyValue, null)
+                    new FilterSpec(columnDescriptor.IdPath, FilterOperations.OP_HAS_ANY_VALUE, null)
                 };
             ViewSpec = ViewSpec.SetFilters(newFilters);
         }

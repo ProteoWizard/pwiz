@@ -34,50 +34,50 @@ namespace pwiz.Common.DataBinding
     public static class FilterOperations
     {
 
-        public static IFilterOperation _opHasAnyValue = new FilterOperation("", "Has Any Value", null,
+        public static readonly IFilterOperation OP_HAS_ANY_VALUE = new FilterOperation("", "Has Any Value", null,
                                                                          (cd, operand) => rowNode => true);
 
-        public static IFilterOperation _opEquals 
+        public static readonly IFilterOperation OP_EQUALS 
             = new FilterOperation("equals", "Equals", typeof (object), FnEquals);
 
-        public static IFilterOperation _opNotEquals 
+        public static readonly IFilterOperation OP_NOT_EQUALS 
             = new FilterOperation("<>", "Does Not Equal", typeof (object), FnNotEquals);
 
-        public static IFilterOperation _opIsBlank
+        public static readonly IFilterOperation OP_IS_BLANK
             = new FilterOperation("isnullorblank", "Is Blank", null, FnIsBlank);
 
-        public static IFilterOperation _opIsNotBlank
+        public static readonly IFilterOperation OP_IS_NOT_BLANK
             = new FilterOperation("isnotnullorblank", "Is Not Blank", null, FnIsNotBlank);
 
-        public static IFilterOperation _opIsGreaterThan
+        public static readonly IFilterOperation OP_IS_GREATER_THAN
             = new FilterOperation(">", "Is Greater Than", typeof (object), MakeFnCompare(i => i > 0));
-        public static IFilterOperation _opIsLessThan
+        public static readonly IFilterOperation OP_IS_LESS_THAN
             = new FilterOperation("<", "Is Less Than", typeof(object), MakeFnCompare(i => i < 0));
-        public static IFilterOperation _opIsGreaterThanOrEqual
+        public static readonly IFilterOperation OP_IS_GREATER_THAN_OR_EQUAL
             = new FilterOperation(">=", "Is Greater Than Or Equal To", typeof(object), MakeFnCompare(i => i >= 0));
-        public static IFilterOperation _opIsLessThanOrEqual
+        public static readonly IFilterOperation OP_IS_LESS_THAN_OR_EQUAL
             = new FilterOperation("<=", "Is Less Than Or Equal To", typeof(object), MakeFnCompare(i => i <= 0));
 
-        public static IFilterOperation _opContains = new StringFilterOperation("contains", "Contains", FnContains);
-        public static IFilterOperation _opNotContains = new StringFilterOperation("notcontains", "Does Not Contain", FnNotContains);
-        public static IFilterOperation _opStartsWith = new StringFilterOperation("startswith", "Starts With", FnStartsWith);
-        public static IFilterOperation _opNotStartsWith = new StringFilterOperation("notstartswith", "Does Not Start With", FnNotStartsWith);
+        public static readonly IFilterOperation OP_CONTAINS = new StringFilterOperation("contains", "Contains", FnContains);
+        public static readonly IFilterOperation OP_NOT_CONTAINS = new StringFilterOperation("notcontains", "Does Not Contain", FnNotContains);
+        public static readonly IFilterOperation OP_STARTS_WITH = new StringFilterOperation("startswith", "Starts With", FnStartsWith);
+        public static readonly IFilterOperation OP_NOT_STARTS_WITH = new StringFilterOperation("notstartswith", "Does Not Start With", FnNotStartsWith);
 
         private static readonly IList<IFilterOperation> LST_FILTER_OPERATIONS = Array.AsReadOnly(new[]
                                                                                            {
-                                                                                               _opHasAnyValue,
-                                                                                               _opEquals,
-                                                                                               _opNotEquals,
-                                                                                               _opIsBlank,
-                                                                                               _opIsNotBlank,
-                                                                                               _opIsGreaterThan,
-                                                                                               _opIsLessThan,
-                                                                                               _opIsGreaterThanOrEqual,
-                                                                                               _opIsLessThanOrEqual,
-                                                                                               _opContains,
-                                                                                               _opNotContains,
-                                                                                               _opStartsWith,
-                                                                                               _opNotStartsWith,
+                                                                                               OP_HAS_ANY_VALUE,
+                                                                                               OP_EQUALS,
+                                                                                               OP_NOT_EQUALS,
+                                                                                               OP_IS_BLANK,
+                                                                                               OP_IS_NOT_BLANK,
+                                                                                               OP_IS_GREATER_THAN,
+                                                                                               OP_IS_LESS_THAN,
+                                                                                               OP_IS_GREATER_THAN_OR_EQUAL,
+                                                                                               OP_IS_LESS_THAN_OR_EQUAL,
+                                                                                               OP_CONTAINS,
+                                                                                               OP_NOT_CONTAINS,
+                                                                                               OP_STARTS_WITH,
+                                                                                               OP_NOT_STARTS_WITH
                                                                                            });
 
         private static readonly IDictionary<string, IFilterOperation> DICT_FILTER_OPERATIONS =
