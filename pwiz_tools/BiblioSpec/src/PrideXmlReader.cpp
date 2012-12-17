@@ -190,7 +190,7 @@ void PrideXmlReader::parseCvParam(const XML_Char** attr)
 {
     string nameAttr(getRequiredAttrValue("name", attr));
     // make name lowercase for case insensitive comparison
-    transform(nameAttr.begin(), nameAttr.end(), nameAttr.begin(), tolower);
+    transform(nameAttr.begin(), nameAttr.end(), nameAttr.begin(), ::tolower);
     
     // get precursor info
     if (curState_ == ION_SELECTION_STATE)

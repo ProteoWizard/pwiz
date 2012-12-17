@@ -30,6 +30,7 @@
 #include "pwiz/data/msdata/BinaryDataEncoder.hpp"
 #include <assert.h>
 #include <algorithm>
+#include <cctype>
 
 using namespace std;
 namespace BiblioSpec {
