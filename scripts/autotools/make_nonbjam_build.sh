@@ -58,10 +58,13 @@ echo "Please visit http://proteowizard.sourceforge.net for the full official bja
 echo "grab the boost autotools support stuff..."
 # sigh... which version of wget is present?
 wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4 --no-check-certificate
-echo $?
 if [ ! -e boost.m4 ]; then
 wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4
 fi
+echo "patch boost.m4 for 64bit RHEL"
+sed -i 's#boost_$1$boost_tag_$boost_ver_#boost_$1$boost_tag_$boost_ver_ boost_$1#g' boost.m4
+sed -i 's#"$with_boost" C:/Boost/lib /lib\*#"$with_boost" C:/Boost/lib /lib\* $with_boost/lib64#g' boost.m4
+
 echo "do autoconf stuff..."
 export PWIZ_VER_DOTTED=`grep "ProteoWizard " $TMPDIR/build.log | cut -f 2 -d " "`
 export PWIZ_VER=`echo $PWIZ_VER_DOTTED | sed s/\\\\./_/g`
