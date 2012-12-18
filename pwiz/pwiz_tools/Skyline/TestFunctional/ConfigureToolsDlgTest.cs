@@ -173,21 +173,20 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("ImWindowTestWithMacro", SkylineWindow.GetToolText(1)); // Not L10N
                 SkylineWindow.RunTool(0);                                               
             });
-            Thread.Sleep(1000); // The tool is run on a different thread, without a pause it has touble writing across in time.
-            RunUI(()=>
+            string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio" // Not L10N
+                .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
+            WaitForConditionUI(() => SkylineWindow.ImmediateWindow != null);
+            WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
+            RunUI(() =>
             {
-                string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio" // Not L10N
-                    .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
-                Assert.IsTrue(SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
                 SkylineWindow.ImmediateWindow.Clear();
                 SkylineWindow.RunTool(1);
             });
-            Thread.Sleep(1000); // The tool is run on a different thread, without a pause it has touble writing across in time.
+            string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank" //Not L10N
+                .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
+            WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));
             RunUI(() =>
             {
-                string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank" //Not L10N
-                    .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
-                Assert.IsTrue(SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));              
                 SkylineWindow.ImmediateWindow.Clear();
                 SkylineWindow.ImmediateWindow.Close();
             });            
