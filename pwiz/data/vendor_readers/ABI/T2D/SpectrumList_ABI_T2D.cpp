@@ -24,10 +24,10 @@
 
 
 #include "SpectrumList_ABI_T2D.hpp"
-#include "Reader_ABI_T2D_Detail.hpp"
 
 
 #ifdef PWIZ_READER_ABI_T2D
+#include "Reader_ABI_T2D_Detail.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"

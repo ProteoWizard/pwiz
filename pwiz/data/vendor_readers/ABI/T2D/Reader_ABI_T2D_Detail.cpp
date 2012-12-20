@@ -22,10 +22,10 @@
 
 #define PWIZ_SOURCE
 
+#ifdef PWIZ_READER_ABI_T2D
 #include "Reader_ABI_T2D_Detail.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
-#ifdef PWIZ_READER_ABI_T2D
 using namespace pwiz::vendor_api::ABI;
 
 

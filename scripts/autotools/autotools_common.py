@@ -14,9 +14,10 @@ def set_pwizroot(str) :
 def get_pwizroot() :
     return pwizroot
 
-# we want to deal in straight up code that could be found on any platform
-forbidden=set(["bindings","mz5","Image.cpp","COM","automation_vector","Pseudo2DGel","pwiz_tools\\commandline","\\utility\\misc\\sha1calc.cpp","RegionAnalyzerTest"])
-excepted=set(["pwiz_tools\\commandline\\msconvert","pwiz_tools\\commandline\\idconvert","pwiz_tools\\commandline\\pepcat","\\Version."])
+# we want to deal in straight up code that could be found on any platform - don't pull in libgd etc
+# also avoid any non-apache code like RAMP (LGPL) and vendor-supplied headers
+forbidden=set(["bindings","mz5","Image.cpp","COM",".svn","automation_vector","Pseudo2DGel","pwiz_tools\\commandline","pwiz_tools\\BiblioSpec","\\utility\\misc\\sha1calc.cpp","RegionAnalyzerTest","msbenchmark","data\\msdata\\ramp","hello_ramp","pwiz_aux","RAMPAdapter","MascotReader.cpp","Reader_Agilent_Detail","Reader_ABI_T2D_Detail"])
+excepted=set(["pwiz_tools\\commandline\\msconvert","pwiz_tools\\commandline\\idconvert","pwiz_tools\\commandline\\pepcat","\\Version.","ExtendedReaderList"])
 welcomeIncludes=set(["pwiz\\pwiz","pwiz\\data","libraries\\zlib","libraries\\libsvm","libraries\\boost_aux"])
 welcomeSrcDirs=set(["pwiz\\data","pwiz\\analysis","pwiz\\utility","pwiz_tools\\examples\\"])
 
@@ -50,7 +51,7 @@ def isSrcFile(filestr) :
         if ("\\pwiz\\pwiz\\" in file):
             return True
         if ("\\pwiz\\libraries\\libsvm" in file):
-            if ("svm." in file):
+            if ("svm." in file) or ("COPYRIGHT" in file) or ("README" in file):
                 return True
         if ("\\common\\" in file) :
             return True

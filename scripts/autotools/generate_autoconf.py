@@ -105,7 +105,7 @@ def addShipDir(in_d,addTree=False) :
 					addShipDir(ddd,addTree)
 
 def addFile(file) :
-	if not ".svn" in file :
+	if ac.isNotForbidden(file) :
 		addShipDir(os.path.dirname(file))
 		if ("/pwiz/libraries/libsvm" in file):
 			if ("libsvm" in file):
@@ -145,7 +145,8 @@ for line in open(logfile):
 		pwizinc = ' -I"%s/pwiz'%ac.get_pwizroot()
 		while (pwizinc in iseek) :
 			incl = iseek.rpartition(pwizinc)[2]
-			includes.add("pwiz"+incl.partition('"')[0])
+			if ac.isNotForbidden(incl) :
+				includes.add("pwiz"+incl.partition('"')[0])
 			iseek = iseek.rpartition(pwizinc)[0]
 		if ("libraries/boost_aux" in line) : # forward looking boostiness
 			includes.add("libraries/boost_aux")
@@ -279,7 +280,7 @@ if (not dryrun) :
 		for file in os.listdir(shipdir) :
 			f = shipdir+"/"+file
 			ext = file.partition(".")[2]
-			if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
+			if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts) and ac.isNotForbidden(f)) :
 				tarname = ac.replace_pwizroot(f,"pwiz")
 				if (not tarname in unwanted) :
 					if dbug :

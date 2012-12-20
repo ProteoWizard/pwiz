@@ -24,10 +24,10 @@
 
 
 #include "ChromatogramList_ABI.hpp"
-#include "Reader_ABI_Detail.hpp"
 
 
 #ifdef PWIZ_READER_ABI
+#include "Reader_ABI_Detail.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
