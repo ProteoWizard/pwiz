@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -76,12 +77,13 @@ namespace pwiz.Skyline.FileUI
         {
             if (_database == null)
             {
+                var status = new ProgressStatus(Resources.ExportReportDlg_GetDatabase_Generating_Report_Data);
                 var longWait = new LongWaitDlg
                                    {
-                                       Text = Resources.ExportReportDlg_GetDatabase_Generating_Report_Data,
+                                       Text = status.Message,
                                        Message = Resources.ExportReportDlg_GetDatabase_Analyzing_document
                                    };
-                longWait.PerformWork(owner, 1500, broker => EnsureDatabase(broker, 100));
+                longWait.PerformWork(owner, 1500, broker => EnsureDatabase(broker, 100, ref status));
             }
 
             return _database;
@@ -94,7 +96,7 @@ namespace pwiz.Skyline.FileUI
             return Report.Load(reportSpec);
         }
 
-        public Database EnsureDatabase(ILongWaitBroker longWaitBroker, int percentOfWait)
+        public Database EnsureDatabase(IProgressMonitor progressMonitor, int percentOfWait, ref ProgressStatus status)
         {
             var document = _documentUiContainer.Document;
             if (_database != null)
@@ -107,11 +109,13 @@ namespace pwiz.Skyline.FileUI
             }
             Database database = new Database(document.Settings)
                                     {
-                                        LongWaitBroker = longWaitBroker,
+                                        ProgressMonitor = progressMonitor,
+                                        Status = status,
                                         PercentOfWait = percentOfWait
                                     };
             database.AddSrmDocument(document);
-            if (!longWaitBroker.IsCanceled)
+            status = database.Status;
+            if (!progressMonitor.IsCanceled)
                 _database = database;
             return _database;
         }
@@ -189,17 +193,17 @@ namespace pwiz.Skyline.FileUI
                         var longWait = new LongWaitDlg { Text = Resources.ExportReportDlg_ExportReport_Generating_Report };
                         longWait.PerformWork(this, 1500, broker =>
                         {
-                            broker.Message = Resources.ExportReportDlg_GetDatabase_Analyzing_document;
-                            broker.ProgressValue = 0;
-                            Database database = EnsureDatabase(broker, 80);
+                            var status = new ProgressStatus(Resources.ExportReportDlg_GetDatabase_Analyzing_document);
+                            broker.UpdateProgress(status);
+                            Database database = EnsureDatabase(broker, 80, ref status);
                             if (broker.IsCanceled)
                                 return;
-                            broker.Message = Resources.ExportReportDlg_ExportReport_Building_report;
+                            broker.UpdateProgress(status = status.ChangeMessage(Resources.ExportReportDlg_ExportReport_Building_report));
                             ResultSet resultSet = report.Execute(database);
                             if (broker.IsCanceled)
                                 return;
-                            broker.ProgressValue = 95;
-                            broker.Message = Resources.ExportReportDlg_ExportReport_Writing_report;
+                            broker.UpdateProgress(status = status.ChangePercentComplete(95)
+                                .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
                             
                             ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo);
 
@@ -208,7 +212,7 @@ namespace pwiz.Skyline.FileUI
 
                             if (broker.IsCanceled)
                                 return;
-                            broker.ProgressValue = 100;
+                            broker.UpdateProgress(status.Complete());
 
                             saver.Commit();
                             success = true;

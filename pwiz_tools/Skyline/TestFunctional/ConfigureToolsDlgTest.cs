@@ -119,35 +119,40 @@ namespace pwiz.SkylineTestFunctional
         private void TestHttpPost()
         {            
             ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            FakeWebHelper fakeWebHelper = new FakeWebHelper();
             RunUI(() =>
-                      {                          
-                          //Remove all tools.
-                          configureToolsDlg.RemoveAllTools();
-                          configureToolsDlg.AddDialog("OpenLinkTest", "http://www.google.com", _empty, _empty, false, _empty); // Not L10N
-                          configureToolsDlg.AddDialog("HttpPostTest", "http://www.google.com", _empty, _empty, false, "Transition Results"); // Not L10N
-                          Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
-                          configureToolsDlg.OkDialog();
+                {
+                    //Remove all tools.
+                    configureToolsDlg.RemoveAllTools();
+                    configureToolsDlg.AddDialog("OpenLinkTest", "http://www.google.com", _empty, _empty, false, _empty);
+                    // Not L10N
+                    configureToolsDlg.AddDialog("HttpPostTest", "http://www.google.com", _empty, _empty, false,
+                                                "Transition Results"); // Not L10N
+                    Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
+                    configureToolsDlg.OkDialog();
 
-                          FakeWebHelper fakeWebHelper = new FakeWebHelper();
-                          Settings.Default.ToolList[0].WebHelpers = fakeWebHelper;
-                          Settings.Default.ToolList[1].WebHelpers = fakeWebHelper;
+                    Settings.Default.ToolList[0].WebHelpers = fakeWebHelper;
+                    Settings.Default.ToolList[1].WebHelpers = fakeWebHelper;
 
-                          SkylineWindow.PopulateToolsMenu();
-                          Assert.IsFalse(fakeWebHelper._openLinkCalled);
-                          SkylineWindow.RunTool(0);
-                          Assert.IsTrue(fakeWebHelper._openLinkCalled);
-                          Assert.IsFalse((fakeWebHelper._httpPostCalled));
-                          SkylineWindow.RunTool(1);
-                          Assert.IsTrue(fakeWebHelper._httpPostCalled);
+                    SkylineWindow.PopulateToolsMenu();
+                    Assert.IsFalse(fakeWebHelper._openLinkCalled);
+                    SkylineWindow.RunTool(0);
+                    Assert.IsTrue(fakeWebHelper._openLinkCalled);
+                    Assert.IsFalse((fakeWebHelper._httpPostCalled));
+                    SkylineWindow.RunTool(1);
+                });
+            // The post now happens on a background thread, since report export can take a long time
+            WaitForCondition(() => fakeWebHelper._httpPostCalled);
+            RunUI(() =>
+                {
+                    // Remove all tools
+                    while (Settings.Default.ToolList.Count > 0)
+                    {
+                        Settings.Default.ToolList.RemoveAt(0);
+                    }
+                    SkylineWindow.PopulateToolsMenu();
 
-                          // Remove all tools
-                          while (Settings.Default.ToolList.Count > 0)
-                          {
-                              Settings.Default.ToolList.RemoveAt(0);
-                          }
-                          SkylineWindow.PopulateToolsMenu();
-
-                      });
+                });
         }
 
         private void TestImmediateWindow()

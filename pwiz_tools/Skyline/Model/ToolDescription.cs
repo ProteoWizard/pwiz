@@ -25,6 +25,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -151,10 +152,8 @@ namespace pwiz.Skyline.Model
                 }
                 else // It has a selected report that must be posted. 
                 {
-                    string report = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title);
-                    if (report != null)
-                        webHelpers.PostToLink(Command, report);                    
-                }                              
+                    PostToLink(doc, exceptionHandler, webHelpers);
+                }
             }
             else // Not a website. Needs its own thread.
             {                
@@ -162,9 +161,23 @@ namespace pwiz.Skyline.Model
                 IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
                 RunExecutable(doc, newToolMacroProvider, textWriter, exceptionHandler);                
             }           
-        }    
+        }
 
-        public Thread RunExecutable(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        private Thread PostToLink(SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
+        {
+            var thread = new Thread(() => PostToLinkBackground(doc, exceptionHandler, webHelpers));
+            thread.Start();
+            return thread;
+        }
+
+        private void PostToLinkBackground(SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
+        {
+            string report = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, exceptionHandler);
+            if (report != null)
+                webHelpers.PostToLink(Command, report);
+        }
+
+        private Thread RunExecutable(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
         {
             var thread = new Thread(() => RunExecutableBackground(doc, toolMacroProvider, textWriter, exceptionHandler));
             thread.Start();
@@ -194,7 +207,7 @@ namespace pwiz.Skyline.Model
                 string reportCsv = null;
                 if (!String.IsNullOrEmpty(ReportTitle) && !containsInputReportTempPath) // Then pipe to stdin.
                 {
-                    reportCsv = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title);
+                    reportCsv = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, exceptionHandler);
                     startInfo.RedirectStandardInput = true;
                 }
 
@@ -373,7 +386,7 @@ namespace pwiz.Skyline.Model
             {
                 if (arguments.Contains(macro.ShortText))
                 {
-                    string contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc));
+                    string contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc, exceptionHandler));
                     if (contents == null)
                     {
                         exceptionHandler.HandleException(new Exception(macro.ErrorMessage));
@@ -410,7 +423,7 @@ namespace pwiz.Skyline.Model
                     {
                         try // InputReportTempPath throws more specific exceptions, this case deals with those.
                         {
-                             contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc));
+                            contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc, exceptionHandler));
                             tool.ReportTempPath_toDelete = contents;                            
                         }
                         catch(Exception e)
@@ -421,7 +434,7 @@ namespace pwiz.Skyline.Model
                     }
                     else
                     {
-                        contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc));                        
+                        contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc, exceptionHandler));                        
                     }
                     if (contents == null)
                     {
@@ -451,7 +464,7 @@ namespace pwiz.Skyline.Model
             string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + "_" + reportFileName + ".csv");
 
 
-            string report = ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle);
+            string report = ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle, toolMacroInfo.ExceptionHandler);
             
             if (report!=null)
             {
@@ -549,17 +562,23 @@ namespace pwiz.Skyline.Model
     {
         private readonly IToolMacroProvider _macroProvider;
 
-        public ToolMacroInfo(IToolMacroProvider macroProvider, string toolTitle, string reportName, SrmDocument document)
+        public ToolMacroInfo(IToolMacroProvider macroProvider,
+                             string toolTitle,
+                             string reportName,
+                             SrmDocument document,
+                             IExceptionHandler exceptionHandler)
         {
             _macroProvider = macroProvider;
             ToolTitle = toolTitle;
             ReportName = reportName;
             Doc = document;
+            ExceptionHandler = exceptionHandler;
         }
 
         public string ToolTitle { get; private set; }
         public string ReportName { get; private set; }
         public SrmDocument Doc { get; private set; }
+        public IExceptionHandler ExceptionHandler { get; private set; }
 
         #region Implementation of IToolMacroProvider
 
@@ -650,40 +669,32 @@ namespace pwiz.Skyline.Model
 
     public class ToolDescriptionHelpers
     {
-
         /// <summary>
         ///  A helper function that generates the report with reportTitle from the SrmDocument.
         ///  Throws an error if the reportSpec no longer exists in Settings.Default.
         /// </summary>
-        /// <param name="doc"> Document to create the report from. </param>                
-        /// <param name="reportTitle"> Title of the reportSpec to make a report from. </param>
-        /// <param name="toolTitle"> Title of tool for exception error message. </param>
+        /// <param name="doc">Document to create the report from.</param>                
+        /// <param name="reportTitle">Title of the reportSpec to make a report from.</param>
+        /// <param name="toolTitle">Title of tool for exception error message.</param>
+        /// <param name="exceptionHandler">Handler for any exception thrown or null, if exceptions are to be thrown directly to caller</param>
         /// <returns> Returns a string representation of the ReportTitle report, or throws an error that the reportSpec no longer exist. </returns>
-        public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle)
-        {
-            return GetReport(doc, reportTitle, toolTitle, null);
-        }
-
         public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle, IExceptionHandler exceptionHandler)
         {
             ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportTitle);
             if (reportSpec == null)
             {
                 // Complain that the report no longer exist.
-                Exception e = new Exception(string.Format(
-                        Resources.
-                            ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
+                var x = new Exception(string.Format(
+                        Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
                         toolTitle, reportTitle));
                 if (exceptionHandler == null)
-                {
-                    throw e;
-                }
-                else exceptionHandler.HandleException(e);
+                    throw x;
+
+                exceptionHandler.HandleException(x);
+                return null;
             }
-            // At this point the null case should have been dealt with.
-            Debug.Assert(reportSpec != null, "reportSpec != null"); // Change to Util.Assume?
-            if (reportSpec != null) return reportSpec.ReportToCsvString(doc);
-            return null;
+
+            return reportSpec.ReportToCsvString(doc, exceptionHandler as IProgressMonitor);
         }
     }
 }

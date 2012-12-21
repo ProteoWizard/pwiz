@@ -9333,6 +9333,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exporting {0} report.
+        /// </summary>
+        public static string ReportSpec_ReportToCsvString_Exporting__0__report {
+            get {
+                return ResourceManager.GetString("ReportSpec_ReportToCsvString_Exporting__0__report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An unexpected error occurred while analyzing the current document..
         /// </summary>
         public static string ReportSpecList_EditItem_An_unexpected_error_occurred_while_analyzing_the_current_document {

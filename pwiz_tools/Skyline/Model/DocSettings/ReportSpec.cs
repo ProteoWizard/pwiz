@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -76,27 +77,42 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Returns a string representation of the report based on the document.         
         /// </summary>       
-        public string ReportToCsvString (SrmDocument doc)
+        public string ReportToCsvString(SrmDocument doc, IProgressMonitor progressMonitor)
         {
-            return ReportToCsvString(doc, TextUtil.CsvSeparator);
+            return ReportToCsvString(doc, TextUtil.CsvSeparator, progressMonitor);
         }
 
         /// <summary>
         /// Returns a string representation of the report based on the document.         
         /// </summary>       
-        public string ReportToCsvString (SrmDocument doc, char separator)
+        private string ReportToCsvString(SrmDocument doc, char separator, IProgressMonitor progressMonitor)
         {
+            var status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report, Name));
+            progressMonitor.UpdateProgress(status);
+
             Report report = Report.Load(this);
             StringWriter writer = new StringWriter();
-            using (Database database = new Database(doc.Settings))
+            using (Database database = new Database(doc.Settings)
+                {
+                    ProgressMonitor = progressMonitor,
+                    Status = status,
+                    PercentOfWait = 80
+                })
             {
                 database.AddSrmDocument(doc);
+                status = database.Status;
+
                 ResultSet resultSet = report.Execute(database);
+
+                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(95));
+
                 ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo.CurrentCulture);
             }
             writer.Flush();
             string csv = writer.ToString();
             writer.Close();
+            progressMonitor.UpdateProgress(status.Complete());
+
             return csv;
         }
 

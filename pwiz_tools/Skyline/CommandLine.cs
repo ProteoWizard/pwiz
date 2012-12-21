@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -1330,29 +1329,35 @@ namespace pwiz.Skyline
                         _out.WriteLine("Check to make sure it is not read-only.");
                     }
 
+                    var status = new ProgressStatus(string.Empty);
+                    IProgressMonitor broker = new CommandWaitBroker(_out, status);
+
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
                         Report report = Report.Load(reportSpec);
 
                         using (Database database = new Database(_doc.Settings)
                         {
-                            LongWaitBroker = new CommandWaitBroker(_out),
-                            PercentOfWait = 100
+                            ProgressMonitor = broker,
+                            Status = status,
+                            PercentOfWait = 80
                         })
                         {
                             database.AddSrmDocument(_doc);
+                            status = database.Status;
 
                             ResultSet resultSet = report.Execute(database);
 
+                            broker.UpdateProgress(status = status.ChangePercentComplete(95));
                             ResultSet.WriteReportHelper(resultSet, reportColSeparator, writer,
                                                         CultureInfo.CurrentCulture);
                         }
 
                         writer.Flush();
-
                         writer.Close();
                     }
 
+                    broker.UpdateProgress(status.Complete());
                     saver.Commit();
                     _out.WriteLine("Report {0} exported successfully.", reportName);
                 }
@@ -2011,65 +2016,59 @@ namespace pwiz.Skyline
 
         public override void PerformLongExport(Action<IProgressMonitor> performExport)
         {
-            var waitBroker = new CommandWaitBroker(_out);
-            new ProgressWaitBroker(performExport).PerformWork(waitBroker);
+            var waitBroker = new CommandWaitBroker(_out, new ProgressStatus(string.Empty));
+            performExport(waitBroker);
         }
     }
 
 
-    internal class CommandWaitBroker : ILongWaitBroker
+    internal class CommandWaitBroker : IProgressMonitor
     {
         #region Implementation of ILongWaitBroker
 
-        private int _currentProgress;
+        private ProgressStatus _currentProgress;
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
 
         private readonly TextWriter _out;
 
-        public CommandWaitBroker(TextWriter outWriter)
+        public CommandWaitBroker(TextWriter outWriter, ProgressStatus status)
         {
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.Now;
+
+            UpdateProgress(status);
         }
 
-        bool ILongWaitBroker.IsCanceled
+        bool IProgressMonitor.IsCanceled
         {
             get { return false; }
         }
 
-        int ILongWaitBroker.ProgressValue
+        void IProgressMonitor.UpdateProgress(ProgressStatus status)
         {
-            get { return _currentProgress; }
-            set
+            UpdateProgress(status);
+        }
+
+        private void UpdateProgress(ProgressStatus status)
+        {
+            if (!string.IsNullOrEmpty(status.Message) &&
+                (_currentProgress == null || !ReferenceEquals(status.Message, _currentProgress.Message)))
             {
-                if (_currentProgress == value)
-                    return;
-                _currentProgress = value;
-                var currentTime = DateTime.Now;
+                _out.WriteLine(status.Message);
+            }
+            if (_currentProgress != null && status.PercentComplete != _currentProgress.PercentComplete)
+            {
                 // Show progress at least every 2 seconds and at 100%, if any other percentage
                 // output has been shown.
-                if ((currentTime - _lastOutput).Seconds > 2 || (_currentProgress == 100 && _lastOutput != _waitStart))
+                var currentTime = DateTime.Now;
+                if ((currentTime - _lastOutput).Seconds > 2 || (status.PercentComplete == 100 && _lastOutput != _waitStart))
                 {
-                    _out.WriteLine("{0}%", _currentProgress);
+                    _out.WriteLine("{0}%", status.PercentComplete);
                     _lastOutput = currentTime;
                 }
             }
-        }
-
-        string ILongWaitBroker.Message
-        {
-            set { _out.WriteLine(value); }
-        }
-
-        bool ILongWaitBroker.IsDocumentChanged(SrmDocument docOrig)
-        {
-            return false;
-        }
-
-        DialogResult ILongWaitBroker.ShowDialog(Func<IWin32Window, DialogResult> show)
-        {
-            throw new InvalidOperationException("Attempt to show a window in command-line mode.");
+            _currentProgress = status;
         }
 
         #endregion

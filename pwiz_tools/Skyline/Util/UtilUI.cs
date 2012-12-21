@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Util
         public ProgressWaitBroker(Action<IProgressMonitor> performWork)
         {
             _performWork = performWork;
-            Status = new ProgressStatus("");
+            Status = new ProgressStatus(string.Empty);
         }
 
         public void PerformWork(ILongWaitBroker broker)
