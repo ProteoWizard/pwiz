@@ -110,24 +110,33 @@ namespace pwiz.SkylineTestUtil
             Serializable(Deserialize<TObj>(s), validate);
         }
 
-        public static void DeserializeNoError<TObj>(string s)
+        public static void DeserializeNoError<TObj>(string s, bool roundTrip = true)
+            where TObj : class
         {
-            DeserializeError<TObj, Exception>(s, false);
+            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error);
         }
 
         public static void DeserializeError<TObj>(string s)
+            where TObj : class
         {
             DeserializeError<TObj, InvalidDataException>(s);
         }
 
         public static void DeserializeError<TObj, TEx>(string s)
             where TEx : Exception
+            where TObj : class
         {
-            DeserializeError<TObj, TEx>(s, true);
+            DeserializeError<TObj, TEx>(s, DeserializeType.error);
         }
 
-        public static void DeserializeError<TObj, TEx>(string s, bool expectError)
+        private enum DeserializeType
+        {
+            error, no_error, roundtrip
+        }
+
+        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType)
             where TEx : Exception
+            where TObj : class
         {
             s = XmlUtil.XML_DIRECTIVE + s;
 
@@ -136,17 +145,20 @@ namespace pwiz.SkylineTestUtil
             {
                 try
                 {
-                    ser.Deserialize(reader);
+                    TObj obj = (TObj) ser.Deserialize(reader);
 
-                    if (expectError)
+                    if (deserializeType == DeserializeType.error)
                     {
                         // Fail if deserialization succeeds.
                         Assert.Fail("Expected error deserializing {0}:\r\n{1}", typeof(TObj).Name, s);
                     }
+
+                    if (deserializeType == DeserializeType.roundtrip)
+                        Serializable(obj, Cloned);
                 }
                 catch (InvalidOperationException x)
                 {
-                    if (expectError)
+                    if (deserializeType == DeserializeType.error)
                     {
                         // Make sure the XML parsing exception was thrown
                         // with the expected innerException type.
@@ -160,7 +172,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (TEx x)
                 {
-                    if (!expectError)
+                    if (deserializeType != DeserializeType.error)
                     {
                         String message = GetMessageStack(x, null);
                         Assert.Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);

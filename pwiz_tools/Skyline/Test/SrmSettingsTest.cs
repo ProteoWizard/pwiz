@@ -232,6 +232,7 @@ namespace pwiz.SkylineTest
             "    <enzyme name=\"Trypsin/P\" cut=\"KR\" no_cut=\"\" sense=\"C\" />\n" +
             "    <enzyme name=\"Chymotrypsin\" cut=\"FWYM\" no_cut=\"P\" sense=\"C\" />\n" +
             "    <enzyme name=\"AspN\" cut=\"D\" no_cut=\"\" sense=\"N\" />\n" +
+            "    <enzyme name=\"Trypsin AspN\" cut_c=\"KR\" no_cut_c=\"P\" cut_n=\"D\" no_cut_n=\"\" />\n" +
             "</EnzymeList>";
 
         private const string SETTINGS_STATIC_MOD_LIST =
@@ -339,6 +340,10 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (1)\" cut=\"M\" no_cut=\"P\" sense=\"C\" />");
             AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (2)\" cut=\"M\" sense=\"N\" />");
             AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (3)\" cut=\"ACDEFGHIKLMNPQRSTVWY\" />");
+            AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (4)\" cut_c=\"M\" cut_n=\"K\" />");
+            AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (4)\" cut_c=\"M\" no_cut_c=\"N\" cut_n=\"K\" no_cut_n=\"P\" />");
+            AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (1)\" cut_c=\"M\" no_cut_c=\"P\" />");
+            AssertEx.DeserializeNoError<Enzyme>("<enzyme name=\"Validate (1)\" cut_n=\"M\" no_cut_n=\"P\" />");
 
             // Missing parameters
             AssertEx.DeserializeError<Enzyme>("<enzyme/>");
@@ -346,14 +351,59 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<Enzyme>("<enzyme cut=\"KR\" no_cut=\"P\" sense=\"C\" />");
             // No cleavage
             AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut=\"\" no_cut=\"P\" sense=\"C\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut=\"\" no_cut=\"P\" sense=\"N\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_c=\"\" no_cut_c=\"P\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_n=\"\" no_cut_n=\"P\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_c=\"M\" no_cut_c=\"N\" cut_n=\"\" no_cut_n=\"P\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_c=\"\" no_cut_c=\"N\" cut_n=\"K\" no_cut_n=\"P\" />");
             // Bad cleavage
             AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut=\"X\" no_cut=\"P\" sense=\"C\" />");
             AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut=\"MKRM\" no_cut=\"P\" sense=\"C\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_c=\"MKRM\" no_cut_c=\"P\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_n=\"MKRM\" no_cut_n=\"P\" />");
             // Bad restrict
             AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"+\" sense=\"C\" />");
             AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"AMRGR\" sense=\"C\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_c=\"KR\" no_cut_c=\"+\" sense=\"C\" />");
+            AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut_n=\"KR\" no_cut_n=\"AMRGR\" sense=\"C\" />");
             // Bad sense
             AssertEx.DeserializeError<Enzyme>("<enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"P\" sense=\"X\" />");
+        }
+
+        /// <summary>
+        /// Test Enzyme digestion
+        /// </summary>
+        [TestMethod]
+        public void EnzymeDigestionTest()
+        {
+            const string sequence = "FAHFAHPRFAHKPAHKAHMERMLST";
+            var enzymeTrypsin = new Enzyme("Trypsin", "KR", "P");
+            DigestsTo(sequence, enzymeTrypsin, "FAHFAHPR", "FAHKPAHK", "AHMER", "MLST");
+            var enzymeReverseTrypsin = new Enzyme("R-Trypsin", "KR", "P", SequenceTerminus.N);
+            DigestsTo(sequence, enzymeReverseTrypsin, "FAHFAHPRFAH", "KPAH", "KAHME", "RMLST");
+            var enzymeUnrestrictedTrypsin = new Enzyme("U-Trypsin", "KR", null);
+            DigestsTo(sequence, enzymeUnrestrictedTrypsin, "FAHFAHPR", "FAHK", "PAHK", "AHMER", "MLST");
+            var enzymeUnReverseTrypsin = new Enzyme("U-R-Trypsin", "KR", null, SequenceTerminus.N);
+            DigestsTo(sequence, enzymeUnReverseTrypsin, "FAHFAHP", "RFAH", "KPAH", "KAHME", "RMLST");
+            var enzymeBothTrypsinR = new Enzyme("B-TrypsinR", "R", "P", "K", "P");
+            DigestsTo(sequence, enzymeBothTrypsinR, "FAHFAHPR", "FAH", "KPAH", "KAHMER", "MLST");
+            var enzymeBothTrypsinK = new Enzyme("B-TrypsinK", "K", "P", "R", "P");
+            DigestsTo(sequence, enzymeBothTrypsinK, "FAHFAHPRFAHKPAHK", "AHME", "RMLST");
+            var enzymeUnrestrictedBothTrypsin = new Enzyme("U-B-Trypsin", "K", null, "R", null);
+            DigestsTo(sequence, enzymeUnrestrictedBothTrypsin, "FAHFAHP", "RFAHK", "PAHK", "AHME", "RMLST");
+        }
+
+        private static void DigestsTo(string sequence, Enzyme enzyme, params string[] pepSeqs)
+        {
+            var fastaSeq = new FastaSequence("p", "d", new AlternativeProtein[0], sequence);
+            var digestSettings = new DigestSettings(0, false);
+            var pepSeqEnum = pepSeqs.GetEnumerator();
+            foreach (var peptide in enzyme.Digest(fastaSeq, digestSettings))
+            {
+                Assert.IsTrue(pepSeqEnum.MoveNext());
+                Assert.AreEqual(pepSeqEnum.Current, peptide.Sequence);
+            }
+            Assert.IsFalse(pepSeqEnum.MoveNext());
         }
 
         /// <summary>
@@ -768,19 +818,19 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 LegacyAcquisitionMethod.None + "\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                LegacyAcquisitionMethod.Single + "\"/>");  // Use defaults
+                LegacyAcquisitionMethod.Single + "\"/>", false);  // Use defaults
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                LegacyAcquisitionMethod.Multiple + "\"/>");  // Use defaults
+                LegacyAcquisitionMethod.Multiple + "\"/>", false);  // Use defaults
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 LegacyAcquisitionMethod.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>");
+                LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>", false);
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 LegacyAcquisitionMethod.Multiple + "\" precursor_filter=\"2\" product_filter_type=\"" +
-                LEGACY_HIGH_ACCURACY + "\" product_filter=\"10\"/>");
+                LEGACY_HIGH_ACCURACY + "\" product_filter=\"10\"/>", false);
             // Ignore extra filter values when None specified for precursor filter type
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 LegacyAcquisitionMethod.None + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>");
+                LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>", false);
 
             // Empty element
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument />");

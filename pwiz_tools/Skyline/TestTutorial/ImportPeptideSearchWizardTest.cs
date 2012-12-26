@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             WaitForClosedForm(importPeptideSearchDlg);
-            doc = WaitForDocumentChangeLoaded(doc, 5 * 60 * 1000); // 5 minutes
+            doc = WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 8 minutes
             
             AssertEx.IsDocumentState(doc, null, 11, 40, 40, 120);
             RunUI(SkylineWindow.IntegrateAll);

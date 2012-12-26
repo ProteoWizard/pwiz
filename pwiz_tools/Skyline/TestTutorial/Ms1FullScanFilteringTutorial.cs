@@ -260,7 +260,7 @@ namespace pwiz.SkylineTestTutorial
 
                 OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
             }
-            SrmDocument docAfter = WaitForDocumentChangeLoaded(doc, 5*60*1000); // 5 minutes
+            SrmDocument docAfter = WaitForDocumentChangeLoaded(doc, 8*60*1000); // 8 minutes
             AssertEx.IsDocumentState(docAfter, null, 11, 40, 40, 120);
 
             RunUI(SkylineWindow.AutoZoomNone);

@@ -4967,4 +4967,10 @@ Are you sure you want to continue?</value>
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>Exporting {0} report</value>
   </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_" xml:space="preserve">
+    <value>Enzyme must have C-terminal cleavage to have C-terminal restrictions.</value>
+  </data>
+  <data name="Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_" xml:space="preserve">
+    <value>Enzyme must have N-terminal cleavage to have N-terminal restrictions.</value>
+  </data>
 </root>

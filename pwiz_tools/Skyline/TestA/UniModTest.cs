@@ -89,12 +89,12 @@ namespace pwiz.SkylineTestA
             StreamReader staticReader = new StreamReader(GetTestStream(STATIC_LIST_FILE));
             string staticMods = staticReader.ReadToEnd();
             staticReader.Close();
-            AssertEx.DeserializeNoError<StaticModList>(staticMods);
+            AssertEx.DeserializeNoError<StaticModList>(staticMods, false);
 
             StreamReader heavyReader = new StreamReader(GetTestStream(HEAVY_LIST_FILE));
             string heavyMods = heavyReader.ReadToEnd();
             heavyReader.Close();
-            AssertEx.DeserializeNoError<HeavyModList>(heavyMods);
+            AssertEx.DeserializeNoError<HeavyModList>(heavyMods, false);
         }
 
         public Stream GetTestStream(string fileName)

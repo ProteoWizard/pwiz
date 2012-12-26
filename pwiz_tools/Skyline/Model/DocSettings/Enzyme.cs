@@ -35,39 +35,81 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class Enzyme : XmlNamedElement
     {
         public Enzyme(string name, string cleavage, string restrict)
-            : this(name, cleavage, restrict, SequenceTerminus.C)
+            : this(name, cleavage, restrict, null, null)
         {
         }
 
-        public Enzyme(string name, string cleavage, string restrict,
-                      SequenceTerminus type)
+        public Enzyme(string name, string cleavage, string restrict, SequenceTerminus type)
+            : this(name,
+                type == SequenceTerminus.C ? cleavage : null,
+                type == SequenceTerminus.C ? restrict : null,
+                type == SequenceTerminus.N ? cleavage : null,
+                type == SequenceTerminus.N ? restrict : null)
+        {            
+        }
+
+        public Enzyme(string name, string cleavage, string restrict, string cleavageN, string restrictN)
             : base(name)
         {
-            Cleavage = cleavage;
-            Restrict = restrict;
-            Type = type;
+            CleavageC = MakeEmptyNull(cleavage);
+            RestrictC = MakeEmptyNull(restrict);
+            CleavageN = MakeEmptyNull(cleavageN);
+            RestrictN = MakeEmptyNull(restrictN);
 
             Validate();
         }
 
-        public string Cleavage { get; private set; }
+        private static string MakeEmptyNull(string s)
+        {
+            return !string.IsNullOrEmpty(s) ? s : null;
+        }
 
-        public string Restrict { get; private set; }
+        public string CleavageC { get; private set; }
 
-        public SequenceTerminus Type { get; private set; }
+        public string RestrictC { get; private set; }
+
+        public string CleavageN { get; private set; }
+
+        public string RestrictN { get; private set; }
+
+        public SequenceTerminus? Type
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(CleavageN))
+                    return SequenceTerminus.C;
+                if (string.IsNullOrEmpty(CleavageC))
+                    return SequenceTerminus.N;
+                return null;
+            }
+        }
+
+        public bool IsCTerm { get { return Type == SequenceTerminus.C; } }
+        public bool IsNTerm { get { return Type == SequenceTerminus.N; } }
+        public bool IsBothTerm { get { return Type == null; } }
 
         public string Regex
         {
             get
             {
-                string cut = "[" + Cleavage + "]"; // Not L10N
-                string nocut = (Restrict == string.Empty ? "[A-Z]" : "[^" + Restrict + "]"); // Not L10N
-                return (IsCTerm() ? cut + nocut : nocut + cut);
+                string regexC = GetRegex(CleavageC, RestrictC, SequenceTerminus.C);
+                string regexN = GetRegex(CleavageN, RestrictN, SequenceTerminus.N);
+                if (regexC == null)
+                    return regexN;
+                else if (regexN == null)
+                    return regexC;
+                return regexC + "|" + regexN;
             }
         }
 
-        public bool IsNTerm() { return Type == SequenceTerminus.N; }
-        public bool IsCTerm() { return Type == SequenceTerminus.C; }
+        private static string GetRegex(string cleavage, string restrict, SequenceTerminus terminus)
+        {
+            if (string.IsNullOrEmpty(cleavage))
+                return null;
+            string cut = "[" + cleavage + "]"; // Not L10N
+            string nocut = (string.IsNullOrEmpty(restrict) ? "[A-Z]" : "[^" + restrict + "]"); // Not L10N
+            return terminus == SequenceTerminus.C ? cut + nocut : nocut + cut;
+        }
 
         public IEnumerable<Peptide> Digest(FastaSequence fastaSeq, DigestSettings settings)
         {
@@ -198,16 +240,41 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             cut,
             no_cut,
-            sense
+            sense,
+            cut_c,
+            no_cut_c,
+            cut_n,
+            no_cut_n,
         }
 
         private void Validate()
         {
-            if (string.IsNullOrEmpty(Cleavage))
+            if (string.IsNullOrEmpty(CleavageC) && string.IsNullOrEmpty(CleavageN))
                 throw new InvalidDataException(Resources.Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point);
-            AminoAcid.ValidateAAList(Cleavage);
-            if (!string.IsNullOrEmpty(Restrict))
-                AminoAcid.ValidateAAList(Restrict);
+            if (string.IsNullOrEmpty(CleavageC))
+            {
+                if (!string.IsNullOrEmpty(RestrictC))
+                    throw new InvalidDataException(Resources.Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_);
+                CleavageC = RestrictC = null;
+            }
+            else
+            {
+                AminoAcid.ValidateAAList(CleavageC);
+                if (!string.IsNullOrEmpty(RestrictC))
+                    AminoAcid.ValidateAAList(RestrictC);
+            }
+            if (string.IsNullOrEmpty(CleavageN))
+            {
+                if (!string.IsNullOrEmpty(RestrictN))
+                    throw new InvalidDataException(Resources.Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_);
+                CleavageN = RestrictN = null;
+            }
+            else
+            {
+                AminoAcid.ValidateAAList(CleavageN);
+                if (!string.IsNullOrEmpty(RestrictN))
+                    AminoAcid.ValidateAAList(RestrictN);
+            }
         }
 
         private static SequenceTerminus ToSeqTerminus(string value)
@@ -224,9 +291,21 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read tag attributes
             base.ReadXml(reader);
-            Cleavage = reader.GetAttribute(ATTR.cut);
-            Restrict = reader.GetAttribute(ATTR.no_cut);
-            Type = reader.GetAttribute(ATTR.sense, ToSeqTerminus) ?? SequenceTerminus.C;
+            CleavageC = reader.GetAttribute(ATTR.cut) ?? reader.GetAttribute(ATTR.cut_c);
+            RestrictC = MakeEmptyNull(reader.GetAttribute(ATTR.no_cut) ?? reader.GetAttribute(ATTR.no_cut_c));
+            var type = reader.GetAttribute(ATTR.sense, ToSeqTerminus);
+            if (!type.HasValue)
+            {
+                CleavageN = reader.GetAttribute(ATTR.cut_n);
+                RestrictN = MakeEmptyNull(reader.GetAttribute(ATTR.no_cut_n));
+            }
+            else if (type.Value == SequenceTerminus.N)
+            {
+                CleavageN = CleavageC;
+                CleavageC = null;
+                RestrictN = RestrictC;
+                RestrictC = null;
+            }
             // Consume tag
             reader.Read();
 
@@ -237,9 +316,26 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write tag attributes
             base.WriteXml(writer);
-            writer.WriteAttributeString(ATTR.cut, Cleavage);
-            writer.WriteAttributeString(ATTR.no_cut, Restrict);
-            writer.WriteAttribute(ATTR.sense, Type);
+            // If not cleavage both directions, then write the enzyme out the old way
+            if (IsBothTerm)
+            {
+                writer.WriteAttributeString(ATTR.cut_c, CleavageC);
+                writer.WriteAttributeString(ATTR.no_cut_c, RestrictC);
+                writer.WriteAttributeString(ATTR.cut_n, CleavageN);
+                writer.WriteAttributeString(ATTR.no_cut_n, RestrictN);                
+            }
+            else if (IsCTerm)
+            {
+                writer.WriteAttributeString(ATTR.cut, CleavageC);
+                writer.WriteAttributeString(ATTR.no_cut, RestrictC);
+                writer.WriteAttribute(ATTR.sense, SequenceTerminus.C);
+            }
+            else
+            {
+                writer.WriteAttributeString(ATTR.cut, CleavageN);
+                writer.WriteAttributeString(ATTR.no_cut, RestrictN);
+                writer.WriteAttribute(ATTR.sense, SequenceTerminus.N);
+            }
         }
 
         #endregion
@@ -248,43 +344,56 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString()
         {
-            string restrict = (Restrict == string.Empty ? "-" : Restrict);  // Not L10N
-            if (IsCTerm())
-                return Name + " [" + Cleavage + " | " + restrict + "]"; // Not L10N
-            return Name + " [" + restrict + " | " + Cleavage + "] n-term"; // Not L10N
+            string textC = ToString(CleavageC, RestrictC, SequenceTerminus.C);
+            string textN = ToString(CleavageN, RestrictN, SequenceTerminus.N);
+            if (string.IsNullOrEmpty(textN))
+                return string.Format("{0} {1}", Name, textC);
+            if (string.IsNullOrEmpty(textC))
+                return string.Format("{0} {1} n-term", Name, textN);
+            return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN);
         }
 
-        public bool Equals(Enzyme obj)
+        private static string ToString(string cleavage, string restrict, SequenceTerminus term)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Name, Name) &&
-                   Equals(obj.Cleavage, Cleavage) &&
-                   Equals(obj.Restrict, Restrict) &&
-                   Equals(obj.Type, Type);
+            if (string.IsNullOrEmpty(cleavage))
+                return string.Empty;
+            if (string.IsNullOrEmpty(restrict))
+                restrict = "-";  // Not L10N
+            return term == SequenceTerminus.C
+                ? "[" + cleavage + " | " + restrict + "]"   // Not L10N
+                : "[" + restrict + " | " + cleavage + "]";  // Not L10N
+        }
+
+        private bool Equals(Enzyme other)
+        {
+            return base.Equals(other) &&
+                string.Equals(CleavageC, other.CleavageC) &&
+                string.Equals(RestrictC, other.RestrictC) &&
+                string.Equals(CleavageN, other.CleavageN) &&
+                string.Equals(RestrictN, other.RestrictN);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (Enzyme)) return false;
-            return Equals((Enzyme) obj);
+            return obj is Enzyme && Equals((Enzyme) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int result = Name.GetHashCode();
-                result = (result*397) ^ Cleavage.GetHashCode();
-                result = (result*397) ^ Restrict.GetHashCode();
-                result = (result*397) ^ Type.GetHashCode();
-                return result;
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode*397) ^ (CleavageC != null ? CleavageC.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (RestrictC != null ? RestrictC.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (CleavageN != null ? CleavageN.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (RestrictN != null ? RestrictN.GetHashCode() : 0);
+                return hashCode;
             }
         }
 
-        #endregion // object overrides
+        #endregion
     }
 
     /// <summary>

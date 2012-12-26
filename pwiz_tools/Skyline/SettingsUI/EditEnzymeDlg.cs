@@ -34,9 +34,11 @@ namespace pwiz.Skyline.SettingsUI
     {
         private Enzyme _enzyme;
         private readonly IEnumerable<Enzyme> _existing;
-        private bool _clickedOk;
 
-        private readonly MessageBoxHelper _helper;
+        private readonly string _cleavageCLabelText;
+        private readonly string _restrictCLabelText;
+        private readonly string _cleavageNLabelText;
+        private readonly string _restrictNLabelText;
 
         public EditEnzymeDlg(IEnumerable<Enzyme> existing)
         {
@@ -44,9 +46,11 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
-            _helper = new MessageBoxHelper(this);
+            _cleavageCLabelText = labelCleavage.Text;
+            _restrictCLabelText = labelRestrict.Text;
+            _cleavageNLabelText = labelCleavageN.Text;
+            _restrictNLabelText = labelRestrictN.Text;
 
-            // Seems like there should be a way to set this in the properties.
             comboDirection.SelectedIndex = 0;
         }
 
@@ -67,55 +71,192 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     textName.Text = _enzyme.Name;
-                    textCleavage.Text = _enzyme.Cleavage;
-                    textRestrict.Text = _enzyme.Restrict;
-                    comboDirection.SelectedIndex = (_enzyme.Type == SequenceTerminus.C ? 0 : 1);
+                    if (_enzyme.IsBothTerm)
+                    {
+                        comboDirection.SelectedIndex = 2;
+                        textCleavage.Text = _enzyme.CleavageC;
+                        textRestrict.Text = _enzyme.RestrictC;
+                        textCleavageN.Text = _enzyme.CleavageN;
+                        textRestrictN.Text = _enzyme.RestrictN;
+                    }
+                    else if (_enzyme.IsNTerm)
+                    {
+                        comboDirection.SelectedIndex = 1;
+                        textCleavage.Text = _enzyme.CleavageN;
+                        textRestrict.Text = _enzyme.RestrictN;
+                    }
+                    else
+                    {
+                        comboDirection.SelectedIndex = 0;
+                        textCleavage.Text = _enzyme.CleavageC;
+                        textRestrict.Text = _enzyme.RestrictC;
+                    }
                 }
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            var helper = new MessageBoxHelper(this);
+            var e = new CancelEventArgs();
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            string cleavageC;
+            if (!helper.ValidateAATextBox(e, textCleavage, false, out cleavageC))
+                return;
+            string restrictC;
+            if (!helper.ValidateAATextBox(e, textRestrict, true, out restrictC))
+                return;
+
+            string cleavageN;
+            string restrictN;
+            if (comboDirection.SelectedIndex == 2)
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
+                if (!helper.ValidateAATextBox(e, textCleavageN, false, out cleavageN))
                     return;
-
-                string cleavage;
-                if (!ValidateAATextBox(e, textCleavage, false, out cleavage))
+                if (!helper.ValidateAATextBox(e, textRestrictN, true, out restrictN))
                     return;
-                string restrict;
-                if (!ValidateAATextBox(e, textRestrict, true, out restrict))
-                    return;
-
-                SequenceTerminus direction = (comboDirection.SelectedIndex == 0 ?
-                        SequenceTerminus.C : SequenceTerminus.N);
-
-                Enzyme enzyme = new Enzyme(name, cleavage, restrict, direction);
-                if (_enzyme == null && _existing.Contains(enzyme))
-                {
-                    _helper.ShowTextBoxError(textName, Resources.EditEnzymeDlg_OnClosing_The_enzyme__0__already_exists, name);
-                    e.Cancel = true;
-                    return;
-                }
-
-                _enzyme = enzyme;
+            }
+            else if (comboDirection.SelectedIndex == 1)
+            {
+                cleavageN = cleavageC;
+                cleavageC = null;
+                restrictN = restrictC;
+                restrictC = null;
+            }
+            else
+            {
+                cleavageN = null;
+                restrictN = null;
             }
 
-            base.OnClosing(e);
+            Enzyme enzyme = new Enzyme(name, cleavageC, restrictC, cleavageN, restrictN);
+            if (_enzyme == null && _existing.Contains(enzyme))
+            {
+                helper.ShowTextBoxError(textName, Resources.EditEnzymeDlg_OnClosing_The_enzyme__0__already_exists, name);
+                e.Cancel = true;
+                return;
+            }
+
+            _enzyme = enzyme;
+            DialogResult = DialogResult.OK;
         }
 
-        private bool ValidateAATextBox(CancelEventArgs e, TextBox control, bool allowEmpty, out string aaText)
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        private void comboDirection_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboDirection.SelectedIndex == 1)
+            {
+                labelCleavage.Text = _cleavageNLabelText;
+                labelRestrict.Text = _restrictNLabelText;
+            }
+            else
+            {
+                labelCleavage.Text = _cleavageCLabelText;
+                labelRestrict.Text = _restrictCLabelText;
+            }
+            if (comboDirection.SelectedIndex == 2)
+            {
+                labelCleavageN.Visible =
+                    textCleavageN.Visible =
+                    labelRestrictN.Visible =
+                    textRestrictN.Visible = true;
+                if (textRestrictN.Bottom > ClientRectangle.Bottom)
+                {
+                    Height += textRestrictN.Bottom - textRestrict.Bottom;
+                }
+            }
+            else
+            {
+                labelCleavageN.Visible =
+                    textCleavageN.Visible =
+                    labelRestrictN.Visible =
+                    textRestrictN.Visible = false;
+                if (textRestrictN.Bottom < ClientRectangle.Bottom)
+                {
+                    Height -= textRestrictN.Bottom - textRestrict.Bottom;
+                }
+            }
+        }
+
+        #region Functional test support
+        
+        public string EnzymeName
+        {
+            get { return textName.Text; }
+            set { textName.Text = value; }
+        }
+
+        public string Cleavage
+        {
+            get { return textCleavage.Text; }
+            set { textCleavage.Text = value; }
+        }
+
+        public string Restrict
+        {
+            get { return textRestrict.Text; }
+            set { textRestrict.Text = value;}
+        }
+
+        public string CleavageN
+        {
+            get { return textCleavageN.Text; }
+            set { textCleavageN.Text = value; }
+        }
+
+        public string RestrictN
+        {
+            get { return textRestrictN.Text; }
+            set { textRestrictN.Text = value; }
+        }
+
+        public SequenceTerminus? Type
+        {
+            get
+            {
+                switch (comboDirection.SelectedIndex)
+                {
+                    case 0:
+                        return SequenceTerminus.C;
+                    case 1:
+                        return SequenceTerminus.N;
+                    default:
+                        return null;
+                }
+            }
+            set
+            {
+                if (!value.HasValue)
+                    comboDirection.SelectedIndex = 2;
+                else if (value.Value == SequenceTerminus.N)
+                    comboDirection.SelectedIndex = 1;
+                else
+                    comboDirection.SelectedIndex = 0;
+
+            }
+        }
+
+        #endregion
+    }
+
+    internal static class EnzymeMessageBoxHelper
+    {
+        public static bool ValidateAATextBox(this MessageBoxHelper helper, CancelEventArgs e, TextBox control, bool allowEmpty, out string aaText)
         {
             aaText = control.Text.Trim().ToUpper();
             if (aaText.Length == 0)
             {
                 if (!allowEmpty)
                 {
-                    _helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid);
+                    helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid);
                     e.Cancel = true;
                     return false;
                 }
@@ -128,7 +269,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!AminoAcid.IsAA(c))
                     {
-                        _helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid, c);
+                        helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid, c);
                         e.Cancel = true;
                         return false;
                     }
@@ -142,11 +283,6 @@ namespace pwiz.Skyline.SettingsUI
                 aaText = aaBuilder.ToString();
             }
             return true;
-        }
-
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            _clickedOk = true;
         }
     }
 }

@@ -3759,6 +3759,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enzyme must have C-terminal cleavage to have C-terminal restrictions..
+        /// </summary>
+        public static string Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_ {
+            get {
+                return ResourceManager.GetString("Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restricti" +
+                        "ons_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enzyme must have N-terminal cleavage to have N-terminal restrictions..
+        /// </summary>
+        public static string Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_ {
+            get {
+                return ResourceManager.GetString("Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restricti" +
+                        "ons_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enzymes must have at least one cleavage point..
         /// </summary>
         public static string Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point {

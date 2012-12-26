@@ -483,7 +483,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write this bool whether it is true or false, to allow its absence
             // as a marker of needing default values.
-            writer.WriteAttribute(ATTR.use_measured_rts, UseMeasuredRTs);
+            writer.WriteAttribute(ATTR.use_measured_rts, UseMeasuredRTs, !UseMeasuredRTs);
             writer.WriteAttributeNullable(ATTR.measured_rt_window, MeasuredRTWindow);
 
             // Write child elements

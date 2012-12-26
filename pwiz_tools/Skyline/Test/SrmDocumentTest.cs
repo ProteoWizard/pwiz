@@ -613,7 +613,7 @@ namespace pwiz.SkylineTest
         public void PeptideGroupSerializeTest()
         {
             foreach (string xml in _peptideGroupValid)
-                AssertEx.DeserializeNoError<SrmDocument>(xml);
+                AssertEx.DeserializeNoError<SrmDocument>(xml, false);
             foreach (string xml in _peptideGroupInvalid)
                 AssertEx.DeserializeError<SrmDocument>(xml);
             foreach (string xml in _peptideGroupInvalidXml)
@@ -676,13 +676,13 @@ namespace pwiz.SkylineTest
             };
 
         /// <summary>
-        /// A test for PeptideGroup serialization.
+        /// A test for Peptide serialization.
         /// </summary>
         [TestMethod]
         public void PeptideSerializeTest()
         {
             foreach (string xml in _peptideValid)
-                AssertEx.DeserializeNoError<SrmDocument>(xml);
+                AssertEx.DeserializeNoError<SrmDocument>(xml, false);
             foreach (string xml in _peptideInvalid)
                 AssertEx.DeserializeError<SrmDocument>(xml);
         }

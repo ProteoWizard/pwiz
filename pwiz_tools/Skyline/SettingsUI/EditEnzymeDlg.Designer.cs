@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditEnzymeDlg));
-            this.label1 = new System.Windows.Forms.Label();
+            this.labelCleavage = new System.Windows.Forms.Label();
             this.textCleavage = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
+            this.labelRestrict = new System.Windows.Forms.Label();
             this.textRestrict = new System.Windows.Forms.TextBox();
             this.comboDirection = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -41,12 +41,16 @@
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.textRestrictN = new System.Windows.Forms.TextBox();
+            this.textCleavageN = new System.Windows.Forms.TextBox();
+            this.labelRestrictN = new System.Windows.Forms.Label();
+            this.labelCleavageN = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // label1
+            // labelCleavage
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.labelCleavage, "labelCleavage");
+            this.labelCleavage.Name = "labelCleavage";
             // 
             // textCleavage
             // 
@@ -54,10 +58,10 @@
             this.textCleavage.Name = "textCleavage";
             this.helpTip.SetToolTip(this.textCleavage, resources.GetString("textCleavage.ToolTip"));
             // 
-            // label2
+            // labelRestrict
             // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
+            resources.ApplyResources(this.labelRestrict, "labelRestrict");
+            this.labelRestrict.Name = "labelRestrict";
             // 
             // textRestrict
             // 
@@ -71,10 +75,12 @@
             this.comboDirection.FormattingEnabled = true;
             this.comboDirection.Items.AddRange(new object[] {
             resources.GetString("comboDirection.Items"),
-            resources.GetString("comboDirection.Items1")});
+            resources.GetString("comboDirection.Items1"),
+            resources.GetString("comboDirection.Items2")});
             resources.ApplyResources(this.comboDirection, "comboDirection");
             this.comboDirection.Name = "comboDirection";
             this.helpTip.SetToolTip(this.comboDirection, resources.GetString("comboDirection.ToolTip"));
+            this.comboDirection.SelectedIndexChanged += new System.EventHandler(this.comboDirection_SelectedIndexChanged);
             // 
             // label3
             // 
@@ -83,7 +89,6 @@
             // 
             // btnOk
             // 
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
             this.btnOk.UseVisualStyleBackColor = true;
@@ -107,12 +112,38 @@
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
             // 
+            // textRestrictN
+            // 
+            resources.ApplyResources(this.textRestrictN, "textRestrictN");
+            this.textRestrictN.Name = "textRestrictN";
+            this.helpTip.SetToolTip(this.textRestrictN, resources.GetString("textRestrictN.ToolTip"));
+            // 
+            // textCleavageN
+            // 
+            resources.ApplyResources(this.textCleavageN, "textCleavageN");
+            this.textCleavageN.Name = "textCleavageN";
+            this.helpTip.SetToolTip(this.textCleavageN, resources.GetString("textCleavageN.ToolTip"));
+            // 
+            // labelRestrictN
+            // 
+            resources.ApplyResources(this.labelRestrictN, "labelRestrictN");
+            this.labelRestrictN.Name = "labelRestrictN";
+            // 
+            // labelCleavageN
+            // 
+            resources.ApplyResources(this.labelCleavageN, "labelCleavageN");
+            this.labelCleavageN.Name = "labelCleavageN";
+            // 
             // EditEnzymeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textRestrictN);
+            this.Controls.Add(this.labelRestrictN);
+            this.Controls.Add(this.textCleavageN);
+            this.Controls.Add(this.labelCleavageN);
             this.Controls.Add(this.textName);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnCancel);
@@ -120,9 +151,9 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.comboDirection);
             this.Controls.Add(this.textRestrict);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.labelRestrict);
             this.Controls.Add(this.textCleavage);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.labelCleavage);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -135,9 +166,9 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelCleavage;
         private System.Windows.Forms.TextBox textCleavage;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label labelRestrict;
         private System.Windows.Forms.TextBox textRestrict;
         private System.Windows.Forms.ComboBox comboDirection;
         private System.Windows.Forms.Label label3;
@@ -146,5 +177,9 @@
         private System.Windows.Forms.TextBox textName;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.TextBox textRestrictN;
+        private System.Windows.Forms.Label labelRestrictN;
+        private System.Windows.Forms.TextBox textCleavageN;
+        private System.Windows.Forms.Label labelCleavageN;
     }
 }

@@ -248,8 +248,8 @@ namespace pwiz.Skyline.ToolsUI
         public void ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            Username = reader.GetAttribute(ATTR.username);
-            Password = reader.GetAttribute(ATTR.password);
+            Username = reader.GetAttribute(ATTR.username) ?? "";
+            Password = reader.GetAttribute(ATTR.password) ?? "";
             string uriText = reader.GetAttribute(ATTR.uri);
             if (string.IsNullOrEmpty(uriText))
             {
@@ -276,6 +276,35 @@ namespace pwiz.Skyline.ToolsUI
             writer.WriteAttributeString(ATTR.password, Password);
             writer.WriteAttribute(ATTR.uri, URI);
         }
+        #endregion
+
+        #region object overrides
+
+        private bool Equals(Server other)
+        {
+            return string.Equals(Username, other.Username) &&
+                string.Equals(Password, other.Password) &&
+                Equals(URI, other.URI);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is Server && Equals((Server) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = (Username != null ? Username.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Password != null ? Password.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (URI != null ? URI.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
         #endregion
     }
 
