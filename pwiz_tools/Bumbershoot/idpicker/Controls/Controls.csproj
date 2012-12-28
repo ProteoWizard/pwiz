@@ -88,9 +88,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="InteropQonverter, Version=3.0.214.0, Culture=neutral, processorArchitecture=$(Platform)">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\InteropQonverter.dll</HintPath>
+    <Reference Include="InteropQonverter">
+      <HintPath>..\build-nt-x86\msvc-release\InteropQonverter.dll</HintPath>
     </Reference>
     <Reference Include="ObjectListView, Version=2.4.1.26393, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -100,9 +99,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\SimplePopup\PopupControl.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=$(Platform)">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+    <Reference Include="pwiz_bindings_cli">
+      <HintPath>..\build-nt-x86\msvc-release\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
