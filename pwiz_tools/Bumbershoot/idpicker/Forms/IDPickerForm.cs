@@ -73,7 +73,6 @@ namespace IDPicker
         PeakStatisticsForm peakStatisticsForm;
         DistributionStatisticsForm distributionStatisticsForm;
         RescuePSMsForm reassignPSMsForm;
-        PTMAttestationForm ptmAttestationForm;
         FilterHistoryForm filterHistoryForm;
 
         IList<IPersistentForm> persistentForms;
@@ -155,10 +154,6 @@ namespace IDPicker
             reassignPSMsForm = new RescuePSMsForm(this);
             reassignPSMsForm.Show(dockPanel, DockState.DockBottomAutoHide);
             reassignPSMsForm.AutoHidePortion = 0.5;
-
-            ptmAttestationForm = new PTMAttestationForm(this);
-            ptmAttestationForm.Show(dockPanel, DockState.DockBottomAutoHide);
-            ptmAttestationForm.AutoHidePortion = 0.5;
 
             spectrumTableForm = new SpectrumTableForm();
             spectrumTableForm.Show(dockPanel, DockState.DockLeft);
@@ -739,7 +734,6 @@ namespace IDPicker
             distributionStatisticsForm.SetData(session, viewFilter);
 
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
-            ptmAttestationForm.SetData(session, basicFilter);
         }
 
         void handleStartingSetData(object sender, EventArgs e)
@@ -1378,8 +1372,6 @@ namespace IDPicker
                 return filterHistoryForm;
             if (persistantString == typeof(RescuePSMsForm).ToString())
                 return reassignPSMsForm;
-            if (persistantString == typeof(PTMAttestationForm).ToString())
-                return ptmAttestationForm;
             
             return null;
         }

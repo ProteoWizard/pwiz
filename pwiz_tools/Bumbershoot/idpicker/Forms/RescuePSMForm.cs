@@ -131,6 +131,7 @@ namespace IDPicker.Forms
             public long SpectrumId { get; private set; }
             public string SpectrumNativeID { get; private set; }
             public double PrecursorMZ { get; private set; }
+            //public Set<long> PsmIds { get; private set; }
 
             public IList<double> OriginalMZs { get;  set; }
             public IList<double> OriginalIntensities { get;  set; }
@@ -142,6 +143,15 @@ namespace IDPicker.Forms
                 SourceName = (string)queryRow[1];
                 SpectrumNativeID = (string)queryRow[2];
                 PrecursorMZ = Convert.ToDouble(queryRow[3]);
+
+                //if (!String.IsNullOrEmpty((string)queryRow[4]))
+                //{
+                //    var psmIds = ((string)queryRow[4]).Split(',');
+                //    foreach (var psmId in psmIds)
+                //    {
+                //        PsmIds.Add(psmId);
+                //    }
+                //}
 
                 OriginalMZs = null;
                 OriginalIntensities = null;
