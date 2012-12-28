@@ -66,16 +66,16 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
                 const SpectrumListPtr& spectrumListPtr,
                 const vector<stream_offset>& positions)
 {
+    XMLWriter::Attributes indexAttributes;
+    indexAttributes.push_back(make_pair("name", "spectrum"));        
+    xmlWriter.startElement("index", indexAttributes);
+    xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
     if (spectrumListPtr.get() && spectrumListPtr->size() > 0)
     {
-        XMLWriter::Attributes indexAttributes;
-        indexAttributes.push_back(make_pair("name", "spectrum"));        
-        xmlWriter.startElement("index", indexAttributes);
 
         if (spectrumListPtr->size() != positions.size())
             throw runtime_error("[Serializer_mzML::writeSpectrumIndex()] Sizes differ.");
 
-        xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
         for (unsigned int i=0; i<positions.size(); ++i)
         {
             const SpectrumIdentity& spectrum = spectrumListPtr->spectrumIdentity(i);
@@ -89,25 +89,25 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
             xmlWriter.characters(lexical_cast<string>(positions[i]));
             xmlWriter.endElement();
         }
-        xmlWriter.popStyle();
-        xmlWriter.endElement(); 
     }
+    xmlWriter.popStyle();
+    xmlWriter.endElement(); 
 }
 
 void writeChromatogramIndex(XMLWriter& xmlWriter, 
                 const ChromatogramListPtr& chromatogramListPtr,
                 const vector<stream_offset>& positions)
 {
+    XMLWriter::Attributes indexAttributes;
+    indexAttributes.push_back(make_pair("name", "chromatogram"));        
+    xmlWriter.startElement("index", indexAttributes);
+    xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
     if (chromatogramListPtr.get() && chromatogramListPtr->size() > 0)
     {
-        XMLWriter::Attributes indexAttributes;
-        indexAttributes.push_back(make_pair("name", "chromatogram"));        
-        xmlWriter.startElement("index", indexAttributes);
 
         if (chromatogramListPtr->size() != positions.size())
             throw runtime_error("[Serializer_mzML::WriteChromatogramIndex()] sizes differ.");
 
-        xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
         for (unsigned int i=0; i<positions.size(); ++i)
         {
             const ChromatogramIdentity& chromatogram = chromatogramListPtr->chromatogramIdentity(i);
@@ -119,9 +119,9 @@ void writeChromatogramIndex(XMLWriter& xmlWriter,
             xmlWriter.characters(lexical_cast<string>(positions[i]));
             xmlWriter.endElement();
         }
-        xmlWriter.popStyle();
-        xmlWriter.endElement(); 
     }
+    xmlWriter.popStyle();
+    xmlWriter.endElement(); 
 }
 
 } // namespace
