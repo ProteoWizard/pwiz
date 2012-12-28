@@ -33,6 +33,7 @@
 
 const string CDATA_begin("![CDATA["), CDATA_end("]]");
 const string comment_begin("!--"), comment_end("--");
+const string DOCTYPE_begin("!DOCTYPE");
 
 #ifdef _DEBUG_READCOUNT 
 // in case you want to verify that you aren't doing excessive reads
@@ -512,7 +513,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
                     Handler::Status status = wrangler.characters(buf.substr(CDATA_begin.length(), buffer.length()-CDATA_begin.length()-CDATA_end.length()), position);
                     if (status.flag == Handler::Status::Done) return;
                 }
-                else if (!buffer.starts_with( "!--") || !buffer.ends_with("--"))
+                else if (!buffer.starts_with(DOCTYPE_begin.c_str()) && (!buffer.starts_with("!--") || !buffer.ends_with("--")))
                     throw runtime_error("[SAXParser::parse()] Illegal comment \"" + string(buffer.c_str()) + "\" at offset " + lexical_cast<string>(position) + ".");
                 break;
             }

@@ -38,6 +38,7 @@ ostream* os_;
 // note: this tests single-quoted double quotes
 const char* sampleXML = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<!DOCTYPE foo>\n"
     "<RootElement param=\"value\">\n"
     "    <FirstElement escaped_attribute=\"&quot;&lt;&amp;lt;&gt;&quot;\">\n"
     "        Some Text with Entity References: &lt;&amp;&gt;\n"
@@ -211,14 +212,14 @@ class FirstHandler : public Handler
 
     virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
-        unit_assert_operator_equal(0x8f, position);
+        unit_assert_operator_equal(158, position);
         object_.text = text.c_str();          
         return Status::Ok;
     }
 
     virtual Status endElement(const string& name, stream_offset position)
     {
-        unit_assert_operator_equal(0xc3, position);
+        unit_assert_operator_equal(210, position);
         return Status::Ok;
     }
 
@@ -302,7 +303,7 @@ class FifthHandler : public Handler
 
     virtual Status endElement(const string& name, stream_offset position)
     {
-        unit_assert_operator_equal(0x262, position);
+        unit_assert_operator_equal(625, position);
         return Status::Ok;
     }
 
@@ -333,12 +334,12 @@ class RootHandler : public Handler
         if (name == "RootElement")
         {
             readAttribute(attributes, "param", object_.param);
-            unit_assert_operator_equal(0x27, position);
+            unit_assert_operator_equal(54, position);
         }
         else if (name == "FirstElement")
         {
             // delegate handling to a FirstHandler
-            unit_assert_operator_equal(0x47, position);
+            unit_assert_operator_equal(86, position);
             return Status(Status::Delegate, &firstHandler_); 
         }
         else if (name == "SecondElement")
@@ -445,7 +446,7 @@ class AnotherRootHandler : public Handler
     {
         if (name == "AnotherRoot")
         {
-            unit_assert_operator_equal(0x281, position);
+            unit_assert_operator_equal(656, position);
             return Status::Done; 
         }
 
