@@ -144,17 +144,10 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
 
     if (config_.indexed)
     {
-        bool hasSpectrumList = msd.run.spectrumListPtr.get() && msd.run.spectrumListPtr->size() > 0;
-        bool hasChromatogramList = msd.run.chromatogramListPtr.get() && msd.run.chromatogramListPtr->size() > 0;
-
-        // for an indexed file, at least one spectrum or chromatogram is mandatory for schematic validity
-        if (!hasSpectrumList && !hasChromatogramList)
-            throw runtime_error("[Serializer_mzML::write] At least one spectrum or chromatogram must be present in an indexed file.");
-
         XMLWriter::Attributes attributes; 
         attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/mzml"));
         attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-        attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.1_idx.xsd"));
+        attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.2_idx.xsd"));
         
         xmlWriter.startElement("indexedmzML", attributes);
         attributes.clear();
