@@ -912,4 +912,50 @@ namespace pwiz.Skyline.Util
             DirectoryEx.SafeDelete(DirPath);
         }
     }
+
+    public class FlushingWriter : TextWriter
+    {
+        private TextWriter _writer;
+
+        public FlushingWriter(TextWriter writer) : base(writer.FormatProvider)
+        {
+            _writer = writer;
+        }
+
+        public override Encoding Encoding
+        {
+            get { return _writer.Encoding; }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_writer != null)
+            {
+                _writer.Dispose();
+                _writer = null;
+            }
+        }
+
+        public override void Flush()
+        {
+            _writer.Flush();
+        }
+
+        public override void Write(char value)
+        {
+            _writer.Write(value);
+        }
+
+        public override void WriteLine()
+        {
+            _writer.WriteLine();
+            Flush();
+        }
+
+        public override void WriteLine(string value)
+        {
+            _writer.WriteLine(value);
+            Flush();
+        }
+    }
 }

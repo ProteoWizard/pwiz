@@ -508,21 +508,31 @@ namespace pwiz.Skyline
             //           will get the wrong path for the current document.
             //           It may really be necessary to synchronize access
             //           to DocumentFilePath.
+            var documentPrevious = Document;
             string pathPrevious = DocumentFilePath;
             DocumentFilePath = pathOnDisk;
 
             try
             {
                 RestoreDocument(document);
-
-                _savedVersion = document.RevisionIndex;
-
-                SetActiveFile(pathOnDisk);
             }
-            catch (Exception)
+            finally
             {
-                DocumentFilePath = pathPrevious;
-                throw;
+                // If an exception caused setting the document to fail,
+                // revert to the previous path.
+                if (!ReferenceEquals(Document.Id, document.Id))
+                {
+                    Helpers.Assume(ReferenceEquals(Document.Id, documentPrevious.Id));
+                    DocumentFilePath = pathPrevious;
+                }
+                // Otherwise, try to update the UI to show the new active
+                // document, no matter whether an exception was thrown or not
+                else
+                {
+                    _savedVersion = document.RevisionIndex;
+
+                    SetActiveFile(pathOnDisk);                    
+                }
             }
         }
 

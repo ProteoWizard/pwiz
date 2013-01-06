@@ -63,7 +63,11 @@ namespace pwiz.Skyline.Model.Irt
             if (_database != null)
                 return this;
 
-            return ChangeDatabase(IrtDb.GetIrtDb(DatabasePath, loadMonitor));
+            var database = IrtDb.GetIrtDb(DatabasePath, loadMonitor);
+            // Check for the case where an exception was handled by the progress monitor
+            if (database == null)
+                return null;
+            return ChangeDatabase(database);
         }
 
         public override string PersistencePath
