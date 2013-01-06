@@ -1874,15 +1874,18 @@ namespace pwiz.Skyline.Model
                         if (peakNew.IsEmpty || peakNew.IsForcedIntegration)
                         {
                             var tranInfoList = nodeTran.Results[indexSet];
-                            int iTran = tranInfoList.IndexOf(info =>
-                                ReferenceEquals(info.FileId, fileId) && info.OptimizationStep == step);
-                            if (iTran != -1)
+                            if (tranInfoList != null)
                             {
-                                var tranInfoOld = tranInfoList[iTran];
-                                if (Math.Min(tranInfoOld.EndRetentionTime, endMax) -
-                                    Math.Max(tranInfoOld.StartRetentionTime, startMin) > overlapThreshold)
+                                int iTran = tranInfoList.IndexOf(info =>
+                                    ReferenceEquals(info.FileId, fileId) && info.OptimizationStep == step);
+                                if (iTran != -1)
                                 {
-                                    continue;
+                                    var tranInfoOld = tranInfoList[iTran];
+                                    if (Math.Min(tranInfoOld.EndRetentionTime, endMax) -
+                                        Math.Max(tranInfoOld.StartRetentionTime, startMin) > overlapThreshold)
+                                    {
+                                        continue;
+                                    }
                                 }
                             }
                         }

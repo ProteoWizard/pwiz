@@ -40,7 +40,6 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static PeptideGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
-            Debug.Assert(nodeDoc is PeptideGroupDocNode);
             var nodeTree = new PeptideGroupTreeNode(tree, (PeptideGroupDocNode)nodeDoc);
 
             if (ExpandDefault)

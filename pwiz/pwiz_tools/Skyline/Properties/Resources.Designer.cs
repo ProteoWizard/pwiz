@@ -2962,6 +2962,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure updating peptides in the iRT database.  The database may be out of synch..
+        /// </summary>
+        public static string EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_datab" +
+                        "ase_may_be_out_of_synch_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to library.
         /// </summary>
         public static string EditIrtCalcDlg_OkDialog_library_table_name {
