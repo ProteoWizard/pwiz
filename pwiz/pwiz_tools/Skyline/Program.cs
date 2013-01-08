@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -75,7 +76,7 @@ namespace pwiz.Skyline
             // For testing and debugging Skyline command-line interface
             if (args != null && args.Length > 0)
             {
-                CommandLineRunner.RunCommand(args, Console.Out);
+                CommandLineRunner.RunCommand(args, new CommandStatusWriter(new DebugWriter()));
 
                 return;
             }
@@ -232,6 +233,32 @@ namespace pwiz.Skyline
                         Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : string.Empty)); // Not L10N
             }
         }
+
+        /// <summary>
+        /// A text writer that writes to the debug console
+        /// </summary>
+        private class DebugWriter : TextWriter
+        {
+            public override Encoding Encoding
+            {
+                get { return Console.Out.Encoding; }
+            }
+
+            public override void Write(char value)
+            {
+                Debug.Write(value);
+            }
+
+            public override void WriteLine()
+            {
+                Debug.WriteLine(string.Empty);
+            }
+
+            public override void WriteLine(string value)
+            {
+                Debug.WriteLine(value);
+            }
+        }
     }
 
     public class CommandLineRunner
@@ -239,7 +266,7 @@ namespace pwiz.Skyline
         private static readonly object SERVER_CONNECTION_LOCK = new object();
         private bool _connected;
 
-        public static void RunCommand(string[] inputArgs, TextWriter consoleOut)
+        public static void RunCommand(string[] inputArgs, CommandStatusWriter consoleOut)
         {
             using (CommandLine cmd = new CommandLine(consoleOut))
             {
@@ -287,7 +314,7 @@ namespace pwiz.Skyline
                 {
                     return;
                 }
-                using (StreamWriter sw = new StreamWriter(serverStream))
+                using (var sw = new CommandStatusWriter(new StreamWriter(serverStream)))
                 {
                     RunCommand(args.ToArray(), sw);
                 }

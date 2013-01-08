@@ -10447,13 +10447,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find the document specific library {0} for this document. Without the document specific library, you will not be able to perform peptide searches..
+        ///   Looks up a localized string similar to Could not find the spectral library {0} for this document. Without the library, no spectrum ID information will be available..
         /// </summary>
-        public static string SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0__for_this_document__Without_the_document_specific_library__you_will_not_be_able_to_perform_peptide_searches_ {
+        public static string SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0" +
-                        "__for_this_document__Without_the_document_specific_library__you_will_not_be_able" +
-                        "_to_perform_peptide_searches_", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_thi" +
+                        "s_document__Without_the_library__no_spectrum_ID_information_will_be_available_", resourceCulture);
             }
         }
         

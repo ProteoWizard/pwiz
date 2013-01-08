@@ -4757,9 +4757,6 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts">
     <value xml:space="preserve">Perl Scripts</value>
   </data>
-  <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0__for_this_document__Without_the_document_specific_library__you_will_not_be_able_to_perform_peptide_searches_">
-    <value xml:space="preserve">Could not find the document specific library {0} for this document. Without the document specific library, you will not be able to perform peptide searches.</value>
-  </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_">
     <value xml:space="preserve">You must save this document before importing a peptide search.</value>
   </data>
@@ -4966,5 +4963,8 @@ Are you sure you want to continue?</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_" xml:space="preserve">
     <value>Failure updating peptides in the iRT database.  The database may be out of synch.</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_" xml:space="preserve">
+    <value>Could not find the spectral library {0} for this document. Without the library, no spectrum ID information will be available.</value>
   </data>
 </root>

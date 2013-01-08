@@ -246,7 +246,7 @@ namespace pwiz.Skyline
                 string docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
                 if (!File.Exists(docLibFile))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0__for_this_document__Without_the_document_specific_library__you_will_not_be_able_to_perform_peptide_searches_, docLibFile));
+                    MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_, docLibFile));
                 }
             }
 
@@ -309,9 +309,9 @@ namespace pwiz.Skyline
         {
             var settings = document.Settings.ConnectIrtDatabase(calc => FindIrtDatabase(documentPath, calc));
             if (settings == null)
-            {
                 return null;
-            }
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
             return document.ChangeSettings(settings);
         }
 
@@ -384,9 +384,9 @@ namespace pwiz.Skyline
             var settings = document.Settings.ConnectBackgroundProteome(backgroundProteomeSpec =>
                 FindBackgroundProteome(documentPath, backgroundProteomeSpec));
             if (settings == null)
-            {
                 return null;
-            }
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
             return document.ChangeSettings(settings);
         }
 

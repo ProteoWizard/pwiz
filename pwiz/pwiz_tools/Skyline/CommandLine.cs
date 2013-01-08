@@ -31,6 +31,9 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -281,9 +284,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private readonly TextWriter _out;
+        private readonly CommandStatusWriter _out;
 
-        public CommandArgs(TextWriter output)
+        public CommandArgs(CommandStatusWriter output)
         {
             ResolveToolConflictsBySkipping = null;
             ResolveSkyrConflictsBySkipping = null;
@@ -352,6 +355,14 @@ namespace pwiz.Skyline
                     SkylineFile = GetFullPath(pair.Value);
                     // Set requiresInCommand to be true so if SkylineFile is null or empty it still complains.
                     RequiresSkylineDocument = true;
+                }
+                else if (IsNameValue(pair, "dir"))
+                {
+                    Directory.SetCurrentDirectory(pair.Value);
+                }
+                else if (IsNameOnly(pair, "timestamp"))
+                {
+                    _out.IsTimeStamped = true;
                 }
 
                 // A command that exports all the tools to a text file in a SkylineRunner form for --batch-commands
@@ -821,13 +832,13 @@ namespace pwiz.Skyline
 
     public class CommandLine : IDisposable
     {
-        private readonly TextWriter _out;
+        private readonly CommandStatusWriter _out;
 
         SrmDocument _doc;
 
         private ExportCommandProperties _exportProperties;
 
-        public CommandLine(TextWriter output)
+        public CommandLine(CommandStatusWriter output)
         {
             _out = output;
         }
@@ -929,7 +940,9 @@ namespace pwiz.Skyline
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine("Opening file...");
 
-                    _doc = (SrmDocument)xmlSerializer.Deserialize(stream);
+                    _doc = ConnectDocument((SrmDocument)xmlSerializer.Deserialize(stream), filePath);
+                    if (_doc == null)
+                        return false;
 
                     _out.WriteLine("File {0} opened.", Path.GetFileName(filePath));
                 }
@@ -947,6 +960,130 @@ namespace pwiz.Skyline
                 return false;
             }
             return true;
+        }
+
+        private SrmDocument ConnectDocument(SrmDocument document, string path)
+        {
+            document = ConnectLibrarySpecs(document, path);
+            if (document != null)
+                document = ConnectBackgroundProteome(document, path);
+            if (document != null)
+                document = ConnectIrtDatabase(document, path);
+            return document;
+        }
+
+        private SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath)
+        {
+            if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.DocumentLibrary)
+            {
+                string docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
+                if (!File.Exists(docLibFile))
+                {
+                    _out.WriteLine("Error: Could not find the spectral library {0} for this document.", docLibFile);
+                    return null;
+                }
+            }
+
+            var settings = document.Settings.ConnectLibrarySpecs(library =>
+            {
+                LibrarySpec spec;
+                if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
+                    return spec;
+
+                string fileName = library.FileNameHint;
+                if (fileName != null)
+                {
+                    // First look for the file name in the document directory
+                    string pathLibrary = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName);
+                    if (File.Exists(pathLibrary))
+                        return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
+                    // In the user's default library directory
+                    pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
+                    if (File.Exists(pathLibrary))
+                        return library.CreateSpec(pathLibrary);
+                }
+                _out.WriteLine("Warning: Could not find the spectral library {0}", library.Name);
+                return library.CreateSpec(null);
+            });
+
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
+
+            // If the libraries were moved to disconnected state, then avoid updating
+            // the document tree for this change, or it will strip all the library
+            // information off the document nodes.
+            if (settings.PeptideSettings.Libraries.DisconnectedLibraries != null)
+                return document.ChangeSettingsNoDiff(settings);
+
+            return document.ChangeSettings(settings);
+        }
+
+        private SrmDocument ConnectIrtDatabase(SrmDocument document, string documentPath)
+        {
+            var settings = document.Settings.ConnectIrtDatabase(calc => FindIrtDatabase(documentPath, calc));
+            if (settings == null)
+                return null;
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
+            return document.ChangeSettings(settings);
+        }
+
+
+        private RCalcIrt FindIrtDatabase(string documentPath, RCalcIrt irtCalc)
+        {
+
+            RetentionScoreCalculatorSpec result;
+            if (Settings.Default.RTScoreCalculatorList.TryGetValue(irtCalc.Name, out result))
+                return result as RCalcIrt;
+
+            // First look for the file name in the document directory
+            string fileName = Path.GetFileName(irtCalc.DatabasePath);
+            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    return irtCalc.ChangeDatabasePath(filePath);
+                }
+                catch (CalculatorException)
+                {
+                    //Todo: should this fail silenty or report an error
+                }
+            }
+
+            _out.WriteLine("Error: Could not find the iRT database {0}", Path.GetFileName(irtCalc.DatabasePath));
+            return null;
+        }
+
+        private SrmDocument ConnectBackgroundProteome(SrmDocument document, string documentPath)
+        {
+            var settings = document.Settings.ConnectBackgroundProteome(backgroundProteomeSpec =>
+                FindBackgroundProteome(documentPath, backgroundProteomeSpec));
+            if (settings == null)
+                return null;
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
+            return document.ChangeSettings(settings);
+        }
+
+        private BackgroundProteomeSpec FindBackgroundProteome(string documentPath, BackgroundProteomeSpec backgroundProteomeSpec)
+        {
+            var result = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(backgroundProteomeSpec.Name);
+            if (result != null)
+                return result;
+
+            string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
+            // First look for the file name in the document directory
+            string pathBackgroundProteome = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
+            if (File.Exists(pathBackgroundProteome))
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
+            // In the user's default library directory
+            pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? string.Empty);
+            if (File.Exists(pathBackgroundProteome))
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
+            _out.WriteLine("Warning: Could not find the background proteome file {0}", Path.GetFileName(fileName));
+            return BackgroundProteomeList.GetDefault();
         }
 
         public bool ImportResultsInDir(string sourceDir, Regex namingPattern, string skylineFile)
@@ -1914,7 +2051,10 @@ namespace pwiz.Skyline
         /// </summary>
         public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile, out ProgressStatus status)
         {
-            var docContainer = new ResultsMemoryDocumentContainer(doc, docPath);
+            var docContainer = new ResultsMemoryDocumentContainer(null, docPath);
+            // Make sure library loading happens, which may not happen, if the doc
+            // parameter is used as the baseline document.
+            docContainer.SetDocument(doc, null);
 
             var listChromatograms = new List<ChromatogramSet>();
 
@@ -1996,6 +2136,56 @@ namespace pwiz.Skyline
             _out.Close();
         }
 
+    }
+
+    public class CommandStatusWriter : TextWriter
+    {
+        private TextWriter _writer;
+
+        public CommandStatusWriter(TextWriter writer)
+            : base(writer.FormatProvider)
+        {
+            _writer = writer;
+        }
+
+        public bool IsTimeStamped { get; set; }
+
+        public override Encoding Encoding
+        {
+            get { return _writer.Encoding; }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_writer != null)
+            {
+                _writer.Dispose();
+                _writer = null;
+            }
+        }
+
+        public override void Flush()
+        {
+            _writer.Flush();
+        }
+
+        public override void Write(char value)
+        {
+            _writer.Write(value);
+        }
+
+        public override void WriteLine()
+        {
+            WriteLine(string.Empty);
+        }
+
+        public override void WriteLine(string value)
+        {
+            if (IsTimeStamped)
+                value = DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t") + value;
+            _writer.WriteLine(value);
+            Flush();
+        }
     }
 
     public class ExportCommandProperties : ExportProperties
