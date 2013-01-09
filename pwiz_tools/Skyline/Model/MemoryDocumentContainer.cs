@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Model
 
         public string DocumentFilePath { get; set; }
 
+        public IProgressMonitor ProgressMonitor { get; set; }
+
         /// <summary>
         /// Override for background loaders that update the document with
         /// partially complete results, to keep the container waiting until
@@ -92,6 +94,9 @@ namespace pwiz.Skyline.Model
                 if (e.Progress.IsCanceled || e.Progress.IsError)
                     Monitor.Pulse(CHANGE_EVENT_LOCK);
             }
+
+            if (ProgressMonitor != null)
+                ProgressMonitor.UpdateProgress(e.Progress);
         }
 
         public void Register(BackgroundLoader loader)

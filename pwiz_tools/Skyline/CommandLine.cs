@@ -1335,9 +1335,11 @@ namespace pwiz.Skyline
             //This function will also detect whether the replicate exists in the document
             ProgressStatus status;
             SrmDocument newDoc;
+            IProgressMonitor progressMonitor = new CommandWaitBroker(_out, new ProgressStatus(string.Empty));
+
             try
             {
-                newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile, out status);
+                newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile, progressMonitor, out status);
             }
             catch (Exception x)
             {
@@ -2056,9 +2058,11 @@ namespace pwiz.Skyline
         /// This function will add the given replicate, from dataFile, to the given document. If the replicate
         /// does not exist, it will be added. If it does exist, it will be appended to.
         /// </summary>
-        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile, out ProgressStatus status)
+        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile,
+                                                IProgressMonitor progressMonitor, out ProgressStatus status)
         {
-            var docContainer = new ResultsMemoryDocumentContainer(null, docPath);
+            var docContainer = new ResultsMemoryDocumentContainer(null, docPath) {ProgressMonitor = progressMonitor};
+
             // Make sure library loading happens, which may not happen, if the doc
             // parameter is used as the baseline document.
             docContainer.SetDocument(doc, null);
