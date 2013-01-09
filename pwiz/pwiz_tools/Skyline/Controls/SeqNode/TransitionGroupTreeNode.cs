@@ -304,10 +304,12 @@ namespace pwiz.Skyline.Controls.SeqNode
             // Make sure any properties that depend on peptide relationships,
             // like ratios get updated.
             nodePep = (PeptideDocNode)nodePep.ReplaceChild(nodeGroup);
-            int iGroup = nodePep.Children.IndexOf(nodeGroup);
             diff = new SrmSettingsDiff(diff, SrmSettingsDiff.PROPS);
             nodePep = nodePep.ChangeSettings(DocSettings, diff);
-            nodeGroup = (TransitionGroupDocNode) nodePep.Children[iGroup];
+            var id = nodeGroup.Id;
+            int iGroup = nodePep.Children.IndexOf(n => ReferenceEquals(n.Id, id));
+            if (iGroup != -1)
+                nodeGroup = (TransitionGroupDocNode)nodePep.Children[iGroup];
             listChildrenNew = new List<DocNode>(nodeGroup.Children);
             // Merge with existing transitions again to avoid changes based on the settings
             // updates.

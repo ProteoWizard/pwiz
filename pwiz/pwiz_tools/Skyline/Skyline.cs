@@ -1284,14 +1284,20 @@ namespace pwiz.Skyline
         public void EditNote()
         {
             IList<IdentityPath> selPaths = SequenceTree.SelectedPaths;
+            var selectedSrmTreeNode = SequenceTree.SelectedNode as SrmTreeNode;
+            // Should not be possible to get here through the UI without a SrmTreeNode selected,
+            // but a stack trace for it seems to have been posted to the unexpected error page
+            if (selectedSrmTreeNode == null)
+                return;
+
             using (EditNoteDlg dlg = new EditNoteDlg
             {
-                Text = selPaths.Count > 1 ? Resources.SkylineWindow_EditNote_Edit_Note :
-                    TextUtil.SpaceSeparate(Resources.SkylineWindow_EditNote_Edit_Note,((SrmTreeNode)SequenceTree.SelectedNode).Heading, SequenceTree.SelectedNode.Text)
-
+                Text = selPaths.Count > 1
+                            ? Resources.SkylineWindow_EditNote_Edit_Note
+                            : TextUtil.SpaceSeparate(Resources.SkylineWindow_EditNote_Edit_Note, selectedSrmTreeNode.Heading, SequenceTree.SelectedNode.Text)
             })
             {
-                dlg.Init(((SrmTreeNode) SequenceTree.SelectedNode).Document, selPaths);
+                dlg.Init(selectedSrmTreeNode.Document, selPaths);
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
