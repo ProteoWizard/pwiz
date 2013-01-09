@@ -1551,13 +1551,20 @@ namespace pwiz.Skyline.Model
             string dacServerPath = AdvApi.GetPathFromProgId("DACScanStats.DACScanStats"); // Not L10N
             if (dacServerPath == null)
             {
-                // If all the necessary libraries exist, then continue even if MassLynx is gone.
-                foreach (var libraryName in DEPENDENCY_LIBRARIES)
+                dacServerPath = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE,
+                                                        @"SOFTWARE\Wow6432Node\Micromass\MassLynx", "Root"); // Not L10N
+                if (dacServerPath == null)
                 {
-                    if (!File.Exists(Path.Combine(exeDir, libraryName)))
-                        throw new IOException(Resources.WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation);
+                    // If all the necessary libraries exist, then continue even if MassLynx is gone.
+                    foreach (var libraryName in DEPENDENCY_LIBRARIES)
+                    {
+                        if (!File.Exists(Path.Combine(exeDir, libraryName)))
+                            throw new IOException(Resources.WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation);
+                    }
+                    return;
                 }
-                return;
+
+                dacServerPath = Path.Combine(dacServerPath, "bin"); // Not L10N
             }
 
             string massLynxDir = Path.GetDirectoryName(dacServerPath) ?? string.Empty;

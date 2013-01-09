@@ -62,6 +62,9 @@ namespace SkylineRunner
 
                 using (StreamWriter sw = new StreamWriter(serverStream))
                 {
+                    // Send the directory of SkylineRunner to Skyline
+                    sw.WriteLine("--dir=" + Directory.GetCurrentDirectory());
+
                     foreach (string arg in args)
                     {
                         sw.WriteLine(arg);

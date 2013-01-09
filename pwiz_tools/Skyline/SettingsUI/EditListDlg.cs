@@ -180,6 +180,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditItem()
         {
+            if (_editor == null)
+                return;
             CheckDisposed();
             int i = listBox.SelectedIndex;
             if (i == -1)

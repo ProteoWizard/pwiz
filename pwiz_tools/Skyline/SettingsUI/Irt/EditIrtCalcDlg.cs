@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -356,10 +357,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 Calculator = calculator.ChangeDatabase(db);
             }
-            catch(DatabaseOpeningException x)
+            catch (DatabaseOpeningException x)
             {
                 MessageDlg.Show(this, x.Message);
                 textDatabase.Focus();
+                return;
+            }
+            catch (StaleStateException)
+            {
+                // CONSIDER: Not sure if this is the right thing to do.  It would
+                //           be nice to solve whatever is causing this, but this is
+                //           better than showing an unexpected error form with stack trace.
+                MessageDlg.Show(this, Resources.EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_);
                 return;
             }
 

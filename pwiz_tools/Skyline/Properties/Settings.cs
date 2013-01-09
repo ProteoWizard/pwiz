@@ -1543,6 +1543,8 @@ namespace pwiz.Skyline.Properties
             return new[] { GetDefault() };
         }
 
+        public override int ExcludeDefaults { get { return 1; } }
+
         public override string Title { get { return Resources.SrmSettingsList_Title_Edit_Settings; } }
 
         public override string Label { get { return Resources.SrmSettingsList_Label_Saved_Settings; } }

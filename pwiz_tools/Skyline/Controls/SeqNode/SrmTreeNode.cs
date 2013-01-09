@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             _sequenceTree = tree;
 
-            Debug.Assert(model != null);
+            Helpers.Assume(model != null);
 
             Model = model;
         }

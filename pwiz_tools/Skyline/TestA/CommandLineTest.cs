@@ -616,7 +616,7 @@ namespace pwiz.SkylineTestA
         private static string RunCommand(params string[] inputArgs)
         {
             var consoleBuffer = new StringBuilder();
-            var consoleOutput = new StringWriter(consoleBuffer);
+            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
             CommandLineRunner.RunCommand(inputArgs, consoleOutput);
             return consoleBuffer.ToString();
         }
@@ -626,7 +626,7 @@ namespace pwiz.SkylineTestA
         public void TestLorenzo()
         {
             var consoleBuffer = new StringBuilder();
-            var consoleOutput = new StringWriter(consoleBuffer);
+            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
 
             var testFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
 

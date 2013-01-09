@@ -562,9 +562,10 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                catch (IOException)
-                {
-                }
+                // Catch and ignore file access exceptions
+                catch (IOException) {}
+                catch (UnauthorizedAccessException) {}
+                catch (ObjectDisposedException) {}
             }
         }
 
