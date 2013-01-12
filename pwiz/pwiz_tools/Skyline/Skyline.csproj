@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4101</ApplicationRevision>
-    <ApplicationVersion>1.4.0.4101</ApplicationVersion>
+    <ApplicationRevision>4254</ApplicationRevision>
+    <ApplicationVersion>1.4.0.4254</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1066,16 +1066,16 @@
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="..\Shared\BiblioSpec\binaries\quantitation_1.xsd">
+    <Content Include="..\Shared\BiblioSpec\binaries\quantitation_1.xsd">
       <Link>quantitation_1.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Shared\BiblioSpec\binaries\quantitation_2.xsd">
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\quantitation_2.xsd">
       <Link>quantitation_2.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
