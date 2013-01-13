@@ -239,14 +239,6 @@ namespace pwiz.Skyline
             base.OnHandleCreated(e);
         }
 
-        protected override void OnClosed(EventArgs e)
-        {
-            _timerGraphs.Dispose();
-            _timerProgress.Dispose();
-
-            base.OnClosed(e);
-        }
-
         void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentChangedEvent += listener;
@@ -713,6 +705,25 @@ namespace pwiz.Skyline
             _closing = true;
 
             base.OnClosing(e);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _timerGraphs.Dispose();
+            _timerProgress.Dispose();
+
+            base.OnClosed(e);
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            
+            if (!Program.FunctionalTest)
+            {
+                // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
+                Process.GetCurrentProcess().Kill();
+            }
         }
 
         #region File menu

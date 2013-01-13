@@ -467,6 +467,8 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
+                Program.FunctionalTest = true;
+
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
                 var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread", CurrentUICulture = Thread.CurrentThread.CurrentCulture }; // Not L10N

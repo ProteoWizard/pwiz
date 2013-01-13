@@ -48,6 +48,7 @@ namespace pwiz.Skyline
         
         // Parameters for stress testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing.
+        public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
@@ -89,6 +90,8 @@ namespace pwiz.Skyline
                 CommandLineRunner clr = new CommandLineRunner();
                 clr.Start();
 
+                // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
+                Process.GetCurrentProcess().Kill();
                 return;
             }
 
