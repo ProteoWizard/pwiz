@@ -2056,36 +2056,38 @@ namespace pwiz.Skyline
             // parameter is used as the baseline document.
             docContainer.SetDocument(doc, null);
 
-            var listChromatograms = new List<ChromatogramSet>();
-
-            if (doc.Settings.HasResults)
-                listChromatograms.AddRange(doc.Settings.MeasuredResults.Chromatograms);
-
-            int indexChrom = listChromatograms.IndexOf(chrom => chrom.Name.Equals(replicate));
-            if (indexChrom != -1)
+            SrmDocument docAdded;
+            do
             {
-                var chromatogram = listChromatograms[indexChrom];
-                var paths = chromatogram.MSDataFilePaths;
-                var listFilePaths = paths.ToList();
-                listFilePaths.Add(dataFile);
-                listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
-            }
-            else
-            {
-                string dataFileNormalized = Path.GetFullPath(dataFile);
-                listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFileNormalized }));
-            }
+                doc = docContainer.Document;
 
-            var results = doc.Settings.HasResults
-                              ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
-                              : new MeasuredResults(listChromatograms);
+                var listChromatograms = new List<ChromatogramSet>();
 
-            var docAdded = doc.ChangeMeasuredResults(results);
+                if (doc.Settings.HasResults)
+                    listChromatograms.AddRange(doc.Settings.MeasuredResults.Chromatograms);
 
-            if (!docContainer.SetDocument(docAdded, doc, true))
-            {
-                throw new ApplicationException("Threading error while setting document after importing");
+                int indexChrom = listChromatograms.IndexOf(chrom => chrom.Name.Equals(replicate));
+                if (indexChrom != -1)
+                {
+                    var chromatogram = listChromatograms[indexChrom];
+                    var paths = chromatogram.MSDataFilePaths;
+                    var listFilePaths = paths.ToList();
+                    listFilePaths.Add(dataFile);
+                    listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
+                }
+                else
+                {
+                    string dataFileNormalized = Path.GetFullPath(dataFile);
+                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFileNormalized }));
+                }
+
+                var results = doc.Settings.HasResults
+                                  ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
+                                  : new MeasuredResults(listChromatograms);
+
+                docAdded = doc.ChangeMeasuredResults(results);
             }
+            while (!docContainer.SetDocument(docAdded, doc, true));
 
             status = docContainer.LastProgress;
 
