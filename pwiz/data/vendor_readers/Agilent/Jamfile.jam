@@ -127,6 +127,10 @@ rule test-requirements ( properties * )
         {
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
+        else if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) )
+        {
+            echo "[$(READER_PATH)] MSVC 9.0: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
         else if ! [ project-exists $(API_PATH) ]
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
