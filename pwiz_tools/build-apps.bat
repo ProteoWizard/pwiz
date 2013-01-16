@@ -7,6 +7,7 @@ set TARGETPLATFORM=32
 set ARGS=
 set TARGETS=
 set REGISTER=
+set OPTIMIZATION=space
 
 set ALL_ARGS= %*
 
@@ -25,6 +26,12 @@ if "%ALL_ARGS: register=%" neq "%ALL_ARGS%" (
 if "%ALL_ARGS: REGISTER=%" neq "%ALL_ARGS%" (
     set REGISTER=1
     set ALL_ARGS=%ALL_ARGS: REGISTER=%
+)
+if "%ALL_ARGS: debug=%" neq "%ALL_ARGS%" (
+    set OPTIMIZATION=off
+)
+if "%ALL_ARGS: DEBUG=%" neq "%ALL_ARGS%" (
+    set OPTIMIZATION=off
 )
 
 REM # quickbuild.bat should be in the current directory or parent directory
@@ -58,8 +65,8 @@ echo Build output: %QUICKBUILDLOG%
 
 REM # build!
 echo.
-echo %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash optimization=space secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
-call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash optimization=space secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS% >%QUICKBUILDLOG% 2>&1
+echo %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
+call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS% >%QUICKBUILDLOG% 2>&1
 echo.
 echo Build done.
 echo.
