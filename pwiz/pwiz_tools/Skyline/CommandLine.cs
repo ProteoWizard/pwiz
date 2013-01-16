@@ -285,12 +285,14 @@ namespace pwiz.Skyline
         }
 
         private readonly CommandStatusWriter _out;
+        private readonly bool _isDocumentLoaded;
 
-        public CommandArgs(CommandStatusWriter output)
+        public CommandArgs(CommandStatusWriter output, bool isDocumentLoaded)
         {
             ResolveToolConflictsBySkipping = null;
             ResolveSkyrConflictsBySkipping = null;
             _out = output;
+            _isDocumentLoaded = isDocumentLoaded;
 
             ReportColumnSeparator = TextUtil.CsvSeparator;
             MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
@@ -753,7 +755,7 @@ namespace pwiz.Skyline
             }
            
             // If skylineFile isn't set and one of the commands that requires --in is called, complain.
-            if (String.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument)
+            if (String.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument && !_isDocumentLoaded)
             {
                 _out.WriteLine("Error: Use --in to specify a Skyline document to open.");
                 return false;
@@ -834,7 +836,8 @@ namespace pwiz.Skyline
     {
         private readonly CommandStatusWriter _out;
 
-        SrmDocument _doc;
+        private SrmDocument _doc;
+        private string _skylineFile;
 
         private ExportCommandProperties _exportProperties;
 
@@ -846,7 +849,7 @@ namespace pwiz.Skyline
         public void Run(string[] args)
         {
 
-            var commandArgs = new CommandArgs(_out);
+            var commandArgs = new CommandArgs(_out, _doc != null);
 
             if(!commandArgs.ParseArgs(args))
             {
@@ -875,7 +878,9 @@ namespace pwiz.Skyline
                 return;
             }
 
-            if (!OpenSkyFile(commandArgs.SkylineFile))
+            string skylineFile = commandArgs.SkylineFile;
+            if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
+                (skylineFile == null && _doc == null))
             {
                 _out.WriteLine("Exiting...");
                 return;
@@ -888,22 +893,20 @@ namespace pwiz.Skyline
                     // If expected results are not imported successfully, terminate
                     if (!ImportResultsFile(commandArgs.ReplicateFile,
                                            commandArgs.ReplicateName,
-                                           commandArgs.SkylineFile,
                                            commandArgs.ImportAppend))
                         return;
                 }
                 else if(commandArgs.ImportingSourceDirectory)
                 {
                     // If expected results are not imported successfully, terminate
-                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern,
-                                       commandArgs.SkylineFile))
+                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern))
                     	return;
                 }
             }
 
             if (commandArgs.Saving)
             {
-                SaveFile(commandArgs.SaveFile);
+                SaveFile(commandArgs.SaveFile ?? _skylineFile);
             }
 
             if (commandArgs.ExportingReport)
@@ -931,34 +934,35 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool OpenSkyFile(string filePath)
+        public bool OpenSkyFile(string skylineFile)
         {
             try
             {
-                using (var stream = new FileStream(filePath, FileMode.Open))
+                using (var stream = new FileStream(skylineFile, FileMode.Open))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine("Opening file...");
 
-                    _doc = ConnectDocument((SrmDocument)xmlSerializer.Deserialize(stream), filePath);
+                    _doc = ConnectDocument((SrmDocument)xmlSerializer.Deserialize(stream), skylineFile);
                     if (_doc == null)
                         return false;
 
-                    _out.WriteLine("File {0} opened.", Path.GetFileName(filePath));
+                    _out.WriteLine("File {0} opened.", Path.GetFileName(skylineFile));
                 }
             }
             catch (FileNotFoundException)
             {
-                _out.WriteLine("Error: The Skyline file {0} does not exist.", filePath);
+                _out.WriteLine("Error: The Skyline file {0} does not exist.", skylineFile);
                 return false;
             }
             catch (Exception x)
             {
                 _out.WriteLine("Error: There was an error opening the file");
-                _out.WriteLine("{0}", filePath);
-                _out.WriteLine(XmlUtil.GetInvalidDataMessage(filePath, x));
+                _out.WriteLine("{0}", skylineFile);
+                _out.WriteLine(XmlUtil.GetInvalidDataMessage(skylineFile, x));
                 return false;
             }
+            _skylineFile = skylineFile;
             return true;
         }
 
@@ -1086,7 +1090,7 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, string skylineFile)
+        public bool ImportResultsInDir(string sourceDir, Regex namingPattern)
         {
             var listNamedPaths = GetDataSources(sourceDir, namingPattern);
             if (listNamedPaths == null)
@@ -1100,7 +1104,7 @@ namespace pwiz.Skyline
                 string[] files = namedPaths.Value;
                 foreach (var file in files)
                 {
-                    if (!ImportResultsFile(file, replicateName, skylineFile))
+                    if (!ImportResultsFile(file, replicateName))
                         return false;
                 }
             }
@@ -1285,7 +1289,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool ImportResultsFile(string replicateFile, string replicateName, string skylineFile, bool append)
+        public bool ImportResultsFile(string replicateFile, string replicateName, bool append)
         {
             if (string.IsNullOrEmpty(replicateName))
                 replicateName = Path.GetFileNameWithoutExtension(replicateFile);
@@ -1318,10 +1322,10 @@ namespace pwiz.Skyline
                 }
             }
 
-            return ImportResultsFile(replicateFile, replicateName, skylineFile);
+            return ImportResultsFile(replicateFile, replicateName);
         }
 
-        public bool ImportResultsFile(string replicateFile, string replicateName, string skylineFile)
+        public bool ImportResultsFile(string replicateFile, string replicateName)
         {
             _out.WriteLine("Adding results...");
 
@@ -1338,7 +1342,7 @@ namespace pwiz.Skyline
             SrmDocument newDoc;
             try
             {
-                newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile, out status);
+                newDoc = ImportResults(_doc, _skylineFile, replicateName, replicateFile, out status);
             }
             catch (Exception x)
             {
@@ -1607,8 +1611,7 @@ namespace pwiz.Skyline
                         {
                             // Parse the line and run it.
                             string[] args = ParseInput(input);
-                            CommandLine commandLine = new CommandLine(_out);
-                            commandLine.Run(args);                            
+                            Run(args);
                         }
                     }
                 }
