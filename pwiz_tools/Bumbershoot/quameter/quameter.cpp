@@ -1593,7 +1593,8 @@ namespace quameter
 
             // P-2C: Number of distinct tryptic peptides
             // P-3: Ratio of semi to fully tryptic peptides
-            float ratioSemiToFullyTryptic = (float) distinctPeptideCountBySpecificity[1] /
+            float ratioSemiToFullyTryptic = distinctPeptideCountBySpecificity[2] == 0 ? 0 :
+                                            (float) distinctPeptideCountBySpecificity[1] /
                                                     distinctPeptideCountBySpecificity[2];
 
             // MS1-2B: Median MS1 TIC within C-2A

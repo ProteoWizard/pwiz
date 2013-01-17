@@ -73,6 +73,8 @@ IDPDBReader::IDPDBReader(const string& file, const string& spectrumSourceId)
             ppmErrors(massErrorPPM);
         }
         
+        absMassErrors(0); // HACK: avoid NaN if there are no rows
+
         _precursorMassErrorStats.medianError = accs::percentile(massErrors, accs::percentile_number = 50);
         _precursorMassErrorStats.meanAbsError = accs::mean(absMassErrors);
         _precursorMassErrorStats.medianPPMError = accs::percentile(ppmErrors, accs::percentile_number = 50);
