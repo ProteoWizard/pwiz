@@ -172,16 +172,20 @@ namespace pwiz.Skyline.SettingsUI
             _nodeTip = new NodeTip(this);
 
             // Restore window placement.
-            Point location = Settings.Default.ViewLibraryLocation;
             Size size = Settings.Default.ViewLibrarySize;
-
+            if (!size.IsEmpty)
+                Size = size;
+            Point location = Settings.Default.ViewLibraryLocation;
             if (!location.IsEmpty)
             {
                 StartPosition = FormStartPosition.Manual;
+
+                // Make sure the window is entirely on screen
+                var screen = Screen.FromPoint(location);
+                location.X = Math.Min(location.X, screen.WorkingArea.Right - Size.Width);
+                location.Y = Math.Min(location.Y, screen.WorkingArea.Bottom - Size.Height);
                 Location = location;
             }
-            if (!size.IsEmpty)
-                Size = size;
 
             _matcher = new LibKeyModificationMatcher();
         }
