@@ -1614,8 +1614,8 @@ namespace quameter
             int identifiedOnce = peptideSamplingRates[ONCE];
             int identifiedTwice = peptideSamplingRates[TWICE];
             int identifiedThrice = peptideSamplingRates[THRICE];
-            float DS1A = (float)identifiedOnce/identifiedTwice;
-            float DS1B = (float)identifiedTwice/identifiedThrice;
+            float DS1A = identifiedTwice == 0 ? 1.f : (float)identifiedOnce/identifiedTwice;
+            float DS1B = identifiedThrice == 0 ? 1.f : (float)identifiedTwice/identifiedThrice;
 
             // metrics that depend on binary data
             int numDuplicatePeptides = 0, peakTailing = 0, bleed = 0,
@@ -2006,7 +2006,7 @@ namespace quameter
                 }
 
                 // Metrics C-1[AB]: # of PSMs that occur +/- 4 minutes away from the chosen precursor peak
-                int duplicatePeptides = 0;
+                int duplicatePeptides = 1;
                 BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
                 {
                     if (distinctMatch.PSMs.size() == 1 || !distinctMatch.bestPeak)
