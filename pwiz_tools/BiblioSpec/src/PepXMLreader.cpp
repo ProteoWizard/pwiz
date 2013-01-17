@@ -99,11 +99,19 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
           fileroot.erase(0, slash + 1);
           
       setSpecFileName(fileroot.c_str(), extensions, dirs); 
+
+      // Check if this pepXML file is from Proteome Discoverer
+      string rawType = getRequiredAttrValue("raw_data_type", attr);
+      if (rawType == ".msf") {
+          Verbosity::comment(V_DEBUG, "Pepxml file is from Proteome Discoverer.");
+          analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
+      }
    }
 
    //get massType and search engine
    else if(isElement("search_summary",name)) {
-       if (analysisType_ == UNKNOWN_ANALYSIS ) {
+       if (analysisType_ == UNKNOWN_ANALYSIS ||
+           analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
            const char* search_engine = getAttrValue("search_engine",attr);
            if(strncmp("Spectrum Mill", search_engine,
                       strlen("Spectrum Mill")) == 0 ) {
@@ -126,17 +134,15 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                scoreType_ = PROTEIN_PROSPECTOR_EXPECT;
                probCutOff = getScoreThreshold(PROT_PROSPECT);
            } else if(strncmp("SEQUEST", search_engine,
-                              strlen("SEQUEST")) == 0) {
-               Verbosity::comment(V_DEBUG, "Pepxml file is from SEQUEST (Proteome Discoverer?).");
-               analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
+                              strlen("SEQUEST")) == 0 && analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from SEQUEST Proteome Discoverer.");
                scoreType_ = PERCOLATOR_QVALUE;
                probCutOff = getScoreThreshold(SQT);
            } else if(strncmp("MASCOT", search_engine,
-                              strlen("MASCOT")) == 0) {
-               Verbosity::comment(V_DEBUG, "Pepxml file is from Mascot (Proteome Discoverer?).");
-               analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
+                              strlen("MASCOT")) == 0 && analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Mascot Proteome Discoverer.");
                scoreType_ = MASCOT_IONS_SCORE;
-               probCutOff = getScoreThreshold(SQT);
+               probCutOff = getScoreThreshold(MASCOT);
            } else if(analysisType_ != PEPTIDE_PROPHET_ANALYSIS &&
                    strncmp("X! Tandem", search_engine,
                            strlen("X! Tandem")) == 0) {
@@ -145,6 +151,16 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                scoreType_ = TANDEM_EXPECTATION_VALUE;
                probCutOff = getScoreThreshold(TANDEM);
            }// else assume peptide prophet or inter prophet 
+
+           if (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS &&
+               scoreType_ != PERCOLATOR_QVALUE &&
+               scoreType_ != MASCOT_IONS_SCORE) {
+               throw BlibException(false, "The .pep.xml file appears to be from "
+                                "Proteome Discoverer but not from one of the supported "
+                                "search engines (SEQUEST, Mascot).");
+
+           }
+
        }
        
        if(strcmp("monoisotopic",getAttrValue("fragment_mass_type",attr)) == 0)
@@ -227,7 +243,11 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                                pepSeq, modPosition-1, strlen(pepSeq));
        }
        
-       curmod.deltaMass = modMass - aminoacidmass[(int)pepSeq[modPosition-1]];
+       curmod.deltaMass = modMass;
+       // workaround for Proteome Discoverer mod masses being incorrect
+       if (analysisType_ != PROTEOME_DISCOVERER_ANALYSIS) {
+           curmod.deltaMass -= aminoacidmass[(int)pepSeq[modPosition-1]];
+       }
        
        mods.push_back(curmod);
    } else if(analysisType_ == PEPTIDE_PROPHET_ANALYSIS && isElement("peptideprophet_result", name)) {
@@ -262,7 +282,7 @@ void PepXMLreader::endElement(const XML_Char* name)
             throw BlibException(false, "The .pep.xml file is not from one of "
                                 "the recognized sources (PeptideProphet, "
                                 "iProphet, SpectrumMill, OMSSA, Protein Prospector, "
-                                "X! Tandem).");
+                                "X! Tandem, Proteome Discoverer).");
         }
         // if we are using pep.xml from Spectrum mill, we still don't have
         // scan numbers/indexes, here's a hack to get them
