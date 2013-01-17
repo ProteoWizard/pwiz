@@ -1540,7 +1540,7 @@ namespace quameter
             }
 
             // Metric C-2B: number of distinct peptides identified over C-2A
-            double iqIDRate = iqDistinctModifiedPeptides.size() / iqIDTime;
+            double iqIDRate = iqIDTime == 0 ? 0 : iqDistinctModifiedPeptides.size() / iqIDTime;
 
             // Metric IS-1A: number of times that MS1 TIC jumps by 10x in adjacent scans within C-2A
             // Metric IS-1B: number of times that MS1 TIC falls by 10x in adjacent scans within C-2A
@@ -1563,9 +1563,9 @@ namespace quameter
 
             // Metrics IS-3A, IS3-B, IS3-C
             const vector<size_t>& allIDedPrecCharges = idpReader.distinctMatchCountByCharge();
-            float IS3A = (float)allIDedPrecCharges[ONE]/allIDedPrecCharges[TWO];
-            float IS3B = (float)allIDedPrecCharges[THREE]/allIDedPrecCharges[TWO];
-            float IS3C = (float)allIDedPrecCharges[FOUR]/allIDedPrecCharges[TWO];
+            float IS3A = allIDedPrecCharges[TWO] == 0 ? 0 : (float)allIDedPrecCharges[ONE] / allIDedPrecCharges[TWO];
+            float IS3B = allIDedPrecCharges[TWO] == 0 ? 0 : (float)allIDedPrecCharges[THREE] / allIDedPrecCharges[TWO];
+            float IS3C = allIDedPrecCharges[TWO] == 0 ? 0 : (float)allIDedPrecCharges[FOUR] / allIDedPrecCharges[TWO];
 
             // MS1-1: Median MS1 ion injection time
             double medianInjectionTimeMS1 = accs::percentile(ms1IonInjectionTimes, accs::percentile_number = 50);;
@@ -1614,8 +1614,8 @@ namespace quameter
             int identifiedOnce = peptideSamplingRates[ONCE];
             int identifiedTwice = peptideSamplingRates[TWICE];
             int identifiedThrice = peptideSamplingRates[THRICE];
-            float DS1A = identifiedTwice == 0 ? 1.f : (float)identifiedOnce/identifiedTwice;
-            float DS1B = identifiedThrice == 0 ? 1.f : (float)identifiedTwice/identifiedThrice;
+            float DS1A = identifiedTwice == 0 ? 1 : (float)identifiedOnce / identifiedTwice;
+            float DS1B = identifiedThrice == 0 ? 1 : (float)identifiedTwice / identifiedThrice;
 
             // metrics that depend on binary data
             int numDuplicatePeptides = 0, peakTailing = 0, bleed = 0,
