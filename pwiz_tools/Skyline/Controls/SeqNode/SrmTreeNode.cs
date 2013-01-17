@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using System.Diagnostics;
 using System.Drawing.Imaging;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;

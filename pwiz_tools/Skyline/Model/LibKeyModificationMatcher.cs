@@ -154,27 +154,31 @@ namespace pwiz.Skyline.Model
                                 listMasses.Add(modArr);
                             double mass;
                             string massString = Encoding.Default.GetString(modArr);
-                            if (!double.TryParse(massString,
-                                                 NumberStyles.Float | NumberStyles.AllowThousands,
-                                                 CultureInfo.InvariantCulture,
-                                                 out mass))
+                            if (double.TryParse(massString,
+                                                NumberStyles.Float | NumberStyles.AllowThousands,
+                                                CultureInfo.InvariantCulture,
+                                                out mass))
+                            {
+
+                                yield return new AAModInfo
+                                    {
+                                        IndexAA = indexAA,
+                                        ModKey = new AAModKey
+                                            {
+                                                AA = (char) prevAA,
+                                                Terminus = terminus,
+                                                AppearsToBeSpecificMod = isSpecificHeavy,
+                                                Mass = mass,
+                                                RoundedTo = 1
+                                            }
+                                    };
+                            }
+                            // NistLibraryBase writes [?] for any modification it does not understand
+                            else if (!Equals("?", massString))
                             {
                                 // Get more information on a failure that was posted to the exception web page
                                 throw new FormatException(string.Format("The number '{0}' is not in the correct format.", massString));
                             }
-
-                            yield return new AAModInfo
-                            {
-                                IndexAA = indexAA,
-                                ModKey = new AAModKey
-                                {
-                                    AA = (char)prevAA,
-                                    Terminus = terminus,
-                                    AppearsToBeSpecificMod = isSpecificHeavy,
-                                    Mass = mass,
-                                    RoundedTo = 1
-                                }
-                            };
                         }
                     }
                     prevAA = 0;

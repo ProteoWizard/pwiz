@@ -19,7 +19,6 @@
 
 using System;
 using System.IO;
-using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
