@@ -131,6 +131,12 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
                scoreType_ = PERCOLATOR_QVALUE;
                probCutOff = getScoreThreshold(SQT);
+           } else if(strncmp("MASCOT", search_engine,
+                              strlen("MASCOT")) == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Mascot (Proteome Discoverer?).");
+               analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
+               scoreType_ = MASCOT_IONS_SCORE;
+               probCutOff = getScoreThreshold(SQT);
            } else if(analysisType_ != PEPTIDE_PROPHET_ANALYSIS &&
                    strncmp("X! Tandem", search_engine,
                            strlen("X! Tandem")) == 0) {
@@ -233,7 +239,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 	   bal::to_lower(score_name);
 
        if ((analysisType_ != PROTEOME_DISCOVERER_ANALYSIS && strcmp(score_name.c_str(), "expect") == 0) ||
-               (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && strcmp(score_name.c_str(), "q-value") == 0)) {
+               (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == PERCOLATOR_QVALUE && strcmp(score_name.c_str(), "q-value") == 0) ||
+               (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && strcmp(score_name.c_str(), "exp value") == 0)) {
             pepProb = getDoubleRequiredAttrValue("value", attr);
        }
    }
