@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model
                     if (nodePep.Children.Count == 0)
                         continue;                    
                     int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
-                    var sortInfo = new PepAreaSortInfo(nodePep, internalStandardTypes, bestResultIndex, i);
+                    var sortInfo = new PepAreaSortInfo(nodePep, internalStandardTypes, bestResultIndex, listAreaIndexes.Count);
                     listAreaIndexes.Add(sortInfo);
                 }
 

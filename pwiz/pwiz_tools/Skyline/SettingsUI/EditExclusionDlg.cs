@@ -89,6 +89,11 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             string exRegex = textExclusionRegex.Text.Trim();
+            if (string.IsNullOrEmpty(exRegex))
+            {
+                helper.ShowTextBoxError(textExclusionRegex, Resources.EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_);
+                return;
+            }
             try
             {
                 new Regex(exRegex);

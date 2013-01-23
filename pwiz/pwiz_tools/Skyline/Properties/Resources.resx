@@ -4967,4 +4967,7 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_" xml:space="preserve">
     <value>Could not find the spectral library {0} for this document. Without the library, no spectrum ID information will be available.</value>
   </data>
+  <data name="EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_" xml:space="preserve">
+    <value>{0} must contain a valid regular expression.</value>
+  </data>
 </root>
