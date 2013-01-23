@@ -29,14 +29,19 @@ project
 
 exe iddump
     : iddump.cpp
+      ../../pwiz/data/identdata//pwiz_data_identdata
+    ;
+
+exe ThermoRawMetaDump
+    : ThermoRawMetaDump.cpp
       ../../pwiz/data/misc
-    : <include>../../..
+      ../../pwiz_aux/msrc/utility/vendor_api/thermo//pwiz_vendor_api_thermo
     ;
 
 # local install for testing
 
 install bin 
-    : iddump
+    : iddump ThermoRawMetaDump
     : <location>bin ;
 
 explicit bin ;
