@@ -94,6 +94,8 @@ lib blibbuild
     PepXMLreader.cpp
     PercolatorXmlReader.cpp
     PrideXmlReader.cpp
+    MaxQuantModReader.cpp
+    MaxQuantReader.cpp
     ProteinPilotReader.cpp
     saxhandler.cpp
     SQTreader.cpp
@@ -227,3 +229,6 @@ exe LibToSqlite3
 make unimod_2.xsd : ./unimod_2.xsd : @common.copy : ;
 make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy : ;
 make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy : ;
+
+# required file for runnign BlibBuild with maxquant support
+make modifications.xml : ./modifications.xml : @common.copy : ;

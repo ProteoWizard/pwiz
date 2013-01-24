@@ -46,6 +46,7 @@ level_compress(3), fileSizeThresholdForCaching(800000000)
     scoreThresholds[MSE] = 6;       // Waters MSe peptide score
     scoreThresholds[OMSSA] = 0.00001; // Max OMSSA expect score
     scoreThresholds[PROT_PROSPECT] = 0.001; // expect score
+    scoreThresholds[MAXQUANT] = 0.05; // MaxQuant PEP
 }
 
 BlibBuilder::~BlibBuilder()
@@ -55,7 +56,7 @@ BlibBuilder::~BlibBuilder()
 void BlibBuilder::usage()
 {
     const char* usage =
-        "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.mzid|*.perc.xml|*final_fragment.csv>+ <library_name>\n"
+        "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.msms.txt|*.mzid|*.perc.xml|*final_fragment.csv>+ <library_name>\n"
         "   -o                Overwrite existing library. Default append.\n"
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
         "   -q  <max score>   Maximum FDR for accepting results from Percolator (.sqt or .perc.xml) files. Default 0.01.\n"
@@ -67,6 +68,7 @@ void BlibBuilder::usage()
         "   -P  <min score>   Minimum ProteinPilot confidence level. Default 0.95 (or 95%)\n"
         "   -E  <max score>   Maximum expectation value for accepting results from OMSAA .pep.xml files. Default 0.00001\n"
         "   -R  <max score>   Maximum expectation value for accepting results from Protein Prospector .pep.xml files. Default 0.00001\n"
+        "   -M  <max score>   Maximum PEP for accepting results from MaxQuant (.msms.txt) files. Default 0.05.\n"
         "   -C  <file size>   Minimum file size required to use caching for .dat files.  Specifiy units as B,K,G or M.  Default 800M.\n"
         "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default status.\n"
         "   -L                Write status and warning messages to log file.\n"
@@ -140,6 +142,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                has_extension(file_name, ".idpXML") ||
                has_extension(file_name, ".group.xml") ||
                has_extension(file_name, ".pride.xml") ||
+               has_extension(file_name, ".msms.txt") ||
                has_extension(file_name, ".mzid") ||
                has_extension(file_name, "final_fragment.csv") ||
                has_extension(file_name, ".ssl") ) {
@@ -148,8 +151,9 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
             } else {
                 Verbosity::error("Unsupported file type '%s'.  Must be .sqt, "
                                  ".pep.xml/.pep.XML/.pepXML, .idpXML, .dat, "
-                                 ".xtan.xml, .ssl, .group.xml, .pride.xml, .mzid, "
-                                 "perc.xml, final_fragment.csv or .blib.", file_name);
+                                 ".xtan.xml, .ssl, .group.xml, .pride.xml, .msms.txt, "
+                                 ".mzid, perc.xml, final_fragment.csv or .blib.",
+                                 file_name);
             }
         }
     }
@@ -267,7 +271,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         scoreThresholds[TANDEM] = 1 - probability_cutoff;
         scoreThresholds[SCAFFOLD] = probability_cutoff;
         scoreThresholds[OMSSA] = 1 - probability_cutoff;
-        scoreThresholds[PROT_PROSPECT] = 1 - probability_cutoff;        
+        scoreThresholds[PROT_PROSPECT] = 1 - probability_cutoff;
+        scoreThresholds[MAXQUANT] = 1 - probability_cutoff;
     } else if (switchName == 'q' && ++i < argc) {
         scoreThresholds[SQT] = atof(argv[i]);
     } else if (switchName == 'p' && ++i < argc) {
@@ -278,6 +283,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         scoreThresholds[OMSSA] = atof(argv[i]);
     } else if (switchName == 'R' && ++i < argc) {
         scoreThresholds[PROT_PROSPECT] = atof(argv[i]);
+    } else if (switchName == 'M' && ++i < argc) {
+        scoreThresholds[MAXQUANT] = atof(argv[i]);
     } else if (switchName == 'e' && ++i < argc) {
         scoreThresholds[MASCOT] = atof(argv[i]);
     } else if (switchName == 't' && ++i < argc) {

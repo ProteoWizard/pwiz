@@ -31,6 +31,7 @@
 #include "MascotResultsReader_dummy.h"
 #endif
 #include "PrideXmlReader.h"
+#include "MaxQuantReader.h"
 #include "SslReader.h"
 #include "TandemNativeParser.h"
 #include "PwizReader.h"

@@ -30,6 +30,7 @@
  */
 
 #include <string>
+#include <vector>
 #include "boost/lexical_cast.hpp"
 
 /**
@@ -71,7 +72,7 @@ struct PSM{
   PSM()
   : charge(0), specKey(-1), specIndex(-1), score(0) {};
 
-  ~PSM(){ };
+  virtual ~PSM(){ };
 
   void clear(){
     charge = 0;

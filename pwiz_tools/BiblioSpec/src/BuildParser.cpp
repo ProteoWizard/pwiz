@@ -255,7 +255,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
  *
  * Requires that the curSpecFilename be set.
  */
-void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename) {
+void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, bool showSpecProgress) {
     // return if no psms for this file
     if( psms_.size() == 0 ) {
         Verbosity::status("No matches found in %s.", curSpecFileName_.c_str() );
@@ -318,7 +318,9 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename) {
         try{
             insertSpectrum(psm, curSpectrum, fileId, scoreType);
 
-            specProgress_->increment();
+            if (showSpecProgress) {
+                specProgress_->increment();
+            }
 
         } catch(BlibException& e){
             e.addMessage("Could not add spectrum to library: "

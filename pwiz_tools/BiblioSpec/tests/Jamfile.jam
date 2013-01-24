@@ -348,6 +348,20 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-pilot
   : check-pilot ;
 
+# Test maxquant text file
+make output/maxquant.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/test.msms.txt output/maxquant.blib
+  :
+  : build-maxquant ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/maxquant.blib reference/maxquant.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-maxquant
+  : check-maxquant ;
+
 # Test mzid format from scaffold
 
 make output/scaffold.blib : inputs/empty : @common.copy : $(test_output_req) ;

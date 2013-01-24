@@ -73,6 +73,7 @@ enum PSM_SCORE_TYPE {
     OMSSA_EXPECTATION_SCORE,  // pepxml files
     PROTEIN_PROSPECTOR_EXPECT,// pepxml with expectation score
     SEQUEST_XCORR,            // sequest (no percolator) .sqt files
+    MAXQUANT_SCORE,           // maxquant msms.txt files
 
     NUM_PSM_SCORE_TYPES
 };

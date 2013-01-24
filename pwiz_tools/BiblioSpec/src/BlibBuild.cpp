@@ -126,6 +126,10 @@ int main(int argc, char* argv[])
                 PrideXmlReader prideXmlReader(builder, result_file, progress_cptr);
 
                 success = prideXmlReader.parseFile();
+            } else if (has_extension(result_file, ".msms.txt")) {
+                MaxQuantReader maxQuantReader(builder, result_file, progress_cptr);
+                
+                success = maxQuantReader.parseFile();
             } else if (has_extension(result_file, ".mzid")) {
                 MzIdentMLReader mzidReader(builder, result_file, progress_cptr);
                 success = mzidReader.parseFile();

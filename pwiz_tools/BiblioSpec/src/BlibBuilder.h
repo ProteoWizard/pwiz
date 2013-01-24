@@ -59,6 +59,7 @@ enum BUILD_INPUT
     MSE,
     OMSSA,
     PROT_PROSPECT,
+    MAXQUANT,
 
     // Keep this last
     NUM_BUILD_INPUTS
