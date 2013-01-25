@@ -101,6 +101,37 @@ InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID m
     return InstrumentConfigurationPtr();
 }
 
+inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)
+{
+    if (scanInfo.activationType() & ActivationType_HCD)
+    {
+        try
+        {
+            return scanInfo.trailerExtraValueDouble("HCD Energy eV:");
+        }
+        catch (RawEgg&)
+        {
+            try
+            {
+                string ftMessage = scanInfo.trailerExtraValue("FT Analyzer Message:");
+                size_t hcdIndex = ftMessage.find("HCD=");
+                if (hcdIndex != string::npos)
+                {
+                    hcdIndex += 4;
+                    return lexical_cast<double>(ftMessage.substr(hcdIndex, ftMessage.find_first_not_of("0123456789", hcdIndex) - hcdIndex));
+                }
+            }
+            catch (RawEgg&)
+            {}
+            return scanInfo.precursorActivationEnergy(0);
+        }
+    }
+    else if (scanInfo.activationType() & ActivationType_CID)
+        return scanInfo.precursorActivationEnergy(0);
+    else
+        return boost::optional<double>();
+}
+
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const
 {
@@ -356,6 +387,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             Precursor precursor;
             SelectedIon selectedIon;
 
+            //boost::optional<double> electronvoltActivationEnergy = getElectronvoltActivationEnergy(*scanInfo); 
+
             for (long i = 0; i < precursorCount; i++)
             {
                 double isolationMz = scanInfo->precursorMZ(i);
@@ -368,8 +401,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 if (activationType == ActivationType_Unknown)
                     activationType = ActivationType_CID; // assume CID
                 SetActivationType(activationType, precursor.activation);
+
+                // TODO: replace with commented out code below after mailing list discussion
                 if ((activationType & ActivationType_CID) || (activationType & ActivationType_HCD))
-                    precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
+                     precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
+
+                //if (i == 0 && electronvoltActivationEnergy)
+                //    precursor.activation.set(MS_collision_energy, electronvoltActivationEnergy.get(), UO_electronvolt);
+                //else
+                //    precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
 
                 selectedIon.set(MS_selected_ion_m_z, isolationMz, MS_m_z);
                 precursor.selectedIons.clear();
@@ -424,9 +464,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
             }
 
-            if (scanInfo->precursorMZ(i) > 0 && detailLevel != DetailLevel_FastMetadata)
+            double selectedIonMz = scanInfo->precursorMZ(i); // monoisotopic m/z is preferred
+            if (selectedIonMz > 0 && detailLevel != DetailLevel_FastMetadata)
             {
-                double selectedIonMz = scanInfo->precursorMZ(i); // monoisotopic m/z is preferred
                 long precursorCharge = scanInfo->precursorCharge();
 
                 // if an appropriate zoom scan was found, try to get monoisotopic m/z and/or charge from it
@@ -455,6 +495,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                         {}
                     }
                 }
+
+                // if the monoisotopic m/z is outside the isolation window (due to Thermo firmware bug), reset it to isolation m/z
+                if ((selectedIonMz < (isolationMz - isolationWidth)) || (selectedIonMz > (isolationMz + isolationWidth)))
+                    selectedIonMz = isolationMz;
 
                 // add selected ion m/z (even if it's still equal to isolation m/z)
                 selectedIon.set(MS_selected_ion_m_z, selectedIonMz, MS_m_z);
@@ -524,8 +568,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             if (activationType == ActivationType_Unknown)
                 activationType = ActivationType_CID; // assume CID
             SetActivationType(activationType, precursor.activation);
+
+            // TODO: replace with commented out code below after mailing list discussion
             if ((activationType & ActivationType_CID) || (activationType & ActivationType_HCD))
                 precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
+
+
+            //if (electronvoltActivationEnergy)
+            //    precursor.activation.set(MS_collision_energy, electronvoltActivationEnergy.get(), UO_electronvolt);
 
             if (ie.msOrder != MSOrder_ParentScan)
                 precursor.selectedIons.push_back(selectedIon);
