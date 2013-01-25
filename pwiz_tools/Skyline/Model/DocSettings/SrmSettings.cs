@@ -515,7 +515,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
         {
-            var source = DocumentRetentionTimes.RetentionTimeSources.Find(Path.GetFileNameWithoutExtension(filePath));
+            string basename = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(filePath));
+            var source = DocumentRetentionTimes.RetentionTimeSources.Find(basename);
             if (source == null)
             {
                 return new double[0];
@@ -533,7 +534,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public double[] GetAlignedRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
         {
             var times = new List<double>();
-            var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(Path.GetFileNameWithoutExtension(filePath));
+            string basename = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(filePath));
+            var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(basename);
             if (fileAlignments != null)
             {
                 foreach (var retentionTimeAlignment in fileAlignments.RetentionTimeAlignments.Values)

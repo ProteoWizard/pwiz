@@ -2885,7 +2885,7 @@ namespace pwiz.Skyline
 
         private void sequenceTree_DragDrop(object sender, DragEventArgs e)
         {
-            List<SrmTreeNode> nodeSources = (List<SrmTreeNode>) e.Data.GetData(typeof (PeptideGroupTreeNode).FullName) ??
+            List<SrmTreeNode> nodeSources = (List<SrmTreeNode>) e.Data.GetData(typeof(PeptideGroupTreeNode)) ??
                 (List<SrmTreeNode>) e.Data.GetData(typeof(PeptideTreeNode));
 
             if (nodeSources == null)

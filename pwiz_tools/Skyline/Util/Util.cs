@@ -1211,6 +1211,8 @@ namespace pwiz.Skyline.Util
             for (int i = 1 ; i < labelParts.Length - 1; i++)
             {
                 replaceString = labelParts[i];
+                if (string.IsNullOrEmpty(replaceString))
+                    continue;
                 string partMiddle = LABEL_SEP_CHAR + replaceString + LABEL_SEP_CHAR;
                 // If all labels contain the middle part
                 if (!labelsRemove.Contains(label => !label.Contains(partMiddle)))

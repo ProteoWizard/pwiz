@@ -2839,6 +2839,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must contain a valid regular expression..
+        /// </summary>
+        public static string EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_ {
+            get {
+                return ResourceManager.GetString("EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The peptide exclusion &apos;{0}&apos; already exists..
         /// </summary>
         public static string EditExclusionDlg_OkDialog_The_peptide_exclusion__0__already_exists {
