@@ -20,7 +20,7 @@
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
     <SignAssembly>false</SignAssembly>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4254</ApplicationRevision>
-    <ApplicationVersion>1.4.0.4254</ApplicationVersion>
+    <ApplicationRevision>4277</ApplicationRevision>
+    <ApplicationVersion>1.4.0.4277</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1066,6 +1066,10 @@
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
+    <Content Include="..\Shared\BiblioSpec\binaries\modifications.xml">
+      <Link>modifications.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\Shared\BiblioSpec\binaries\quantitation_1.xsd">
       <Link>quantitation_1.xsd</Link>
       <SubType>Designer</SubType>

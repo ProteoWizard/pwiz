@@ -49,6 +49,7 @@ namespace pwiz.Skyline.SettingsUI
                 BiblioSpecLiteBuilder.EXT_IDP_XML,
                 BiblioSpecLiteBuilder.EXT_SQT,
                 BiblioSpecLiteBuilder.EXT_SSL,
+                BiblioSpecLiteBuilder.EXT_MAX_QUANT,
                 BiblioSpecLiteBuilder.EXT_PERCOLATOR,
                 BiblioSpecLiteBuilder.EXT_PERCOLATOR_XML,
                 BiblioSpecLiteBuilder.EXT_WATERS_MSE,
