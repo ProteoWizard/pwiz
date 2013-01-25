@@ -157,7 +157,7 @@ bool MaxQuantReader::parseFile()
     Verbosity::debug("Building tables.");
     // add psms by filename
     initSpecFileProgress(fileMap_.size());
-    for (map<string, vector<MaxQuantPSM*>>::iterator iter = fileMap_.begin();
+    for (map< string, vector<MaxQuantPSM*> >::iterator iter = fileMap_.begin();
          iter != fileMap_.end();
          ++iter)
     {
@@ -340,7 +340,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     addDoublesToVector(curMaxQuantPSM_->intensities, entry.intensities);
 
     // Save PSM
-    map<string, vector<MaxQuantPSM*>>::iterator mapAccess
+    map< string, vector<MaxQuantPSM*> >::iterator mapAccess
         = fileMap_.find(entry.rawFile);
     // file not in map yet, add it
     if (mapAccess == fileMap_.end())

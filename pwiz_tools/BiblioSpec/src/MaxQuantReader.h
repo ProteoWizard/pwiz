@@ -163,7 +163,7 @@ public:
  */
 class MaxQuantReader : public BuildParser, public SpecFileReader
 {
-    typedef tokenizer<escaped_list_separator<char>> LineParser;
+    typedef tokenizer< escaped_list_separator<char> > LineParser;
 
 public:
     MaxQuantReader(BlibBuilder& maker,
@@ -188,7 +188,7 @@ private:
     ifstream tsvFile_;
     double scoreThreshold_;
     int lineNum_;
-    map<string, vector<MaxQuantPSM*>> fileMap_; // store psms by filename
+    map< string, vector<MaxQuantPSM*> > fileMap_; // store psms by filename
     MaxQuantPSM* curMaxQuantPSM_; // use this instead of curPSM_
     int numColumns_;   // size of targetColumns_;
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
