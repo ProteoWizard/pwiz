@@ -1103,38 +1103,41 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var graphData = listGraphData[i];
 
-                int step = i - totalSteps;
-                int width = lineWidth;
-                Color color;
-                if (step == 0)
+                if (graphData.InfoPrimary != null)
                 {
-                    color = ChromGraphItem.ColorSelected;
-                    width++;
-                }
-                else if (nodeGroup.HasLibInfo)
-                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
-                else
-                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
-                //                                color = COLORS_HEURISTIC[iColor % COLORS_HEURISTIC.Length];
+                    int step = i - totalSteps;
+                    int width = lineWidth;
+                    Color color;
+                    if (step == 0)
+                    {
+                        color = ChromGraphItem.ColorSelected;
+                        width++;
+                    }
+                    else if (nodeGroup.HasLibInfo)
+                        color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
+                    else
+                        color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
+                    //                                color = COLORS_HEURISTIC[iColor % COLORS_HEURISTIC.Length];
 
-                TransitionChromInfo tranPeakInfoGraph = null;
-                if (bestPeakData == i)
-                    tranPeakInfoGraph = tranPeakInfo;
-                var graphItem = new ChromGraphItem(nodeGroup,
-                                                   null,
-                                                   graphData.InfoPrimary,
-                                                   tranPeakInfoGraph,
-                                                   timeRegressionFunction,
-                                                   GetAnnotationFlags(i, maxPeakData, maxPeakHeights),
-                                                   null,
-                                                   0,
-                                                   false,
-                                                   step,
-                                                   color,
-                                                   fontSize,
-                                                   width);
-                listChromGraphs.Add(graphItem);
-                graphControl.AddGraphItem(GraphPane, graphItem, false);
+                    TransitionChromInfo tranPeakInfoGraph = null;
+                    if (bestPeakData == i)
+                        tranPeakInfoGraph = tranPeakInfo;
+                    var graphItem = new ChromGraphItem(nodeGroup,
+                                                       null,
+                                                       graphData.InfoPrimary,
+                                                       tranPeakInfoGraph,
+                                                       timeRegressionFunction,
+                                                       GetAnnotationFlags(i, maxPeakData, maxPeakHeights),
+                                                       null,
+                                                       0,
+                                                       false,
+                                                       step,
+                                                       color,
+                                                       fontSize,
+                                                       width);
+                    listChromGraphs.Add(graphItem);
+                    graphControl.AddGraphItem(GraphPane, graphItem, false);
+                }
 
                 iColor++;
             }
