@@ -60,6 +60,9 @@ BOOST_ENUM(QuantitationMethod,
     (TMT6plex)
 );
 
+// allow enum values to be the LHS of an equality expression
+BOOST_ENUM_DOMAIN_OPERATORS(QuantitationMethod);
+
 
 namespace Embedder {
 

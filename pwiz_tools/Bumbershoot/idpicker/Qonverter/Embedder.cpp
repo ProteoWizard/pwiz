@@ -423,10 +423,10 @@ struct SpectrumList_Quantifier
                     for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
                     {
                         vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
-                        /*114*/ rii[1] -= icf[1][1]*rii[2];
-                        /*115*/ rii[2] -= icf[0][2]*rii[1] + icf[2][1]*rii[3] + icf[3][0]*rii[4];
-                        /*116*/ rii[3] -= icf[0][3]*rii[1] + icf[1][2]*rii[2] + icf[3][1]*rii[4];
-                        /*117*/ rii[4] -= icf[1][3]*rii[2] + icf[2][2]*rii[3];
+                        /*114*/ rii[1] = max(0, rii[1] - icf[1][1]*rii[2]);
+                        /*115*/ rii[2] = max(0, rii[2] - (icf[0][2]*rii[1] + icf[2][1]*rii[3] + icf[3][0]*rii[4]));
+                        /*116*/ rii[3] = max(0, rii[3] - (icf[0][3]*rii[1] + icf[1][2]*rii[2] + icf[3][1]*rii[4]));
+                        /*117*/ rii[4] = max(0, rii[4] - (icf[1][3]*rii[2] + icf[2][2]*rii[3]));
                     }
                     break;
                 }
@@ -438,13 +438,13 @@ struct SpectrumList_Quantifier
                     for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
                     {
                         vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
-                        /*113*/ rii[0] -= icf[1][1]*rii[1];
-                        /*114*/ rii[1] -= icf[0][2]*rii[0] + icf[2][1]*rii[2];
-                        /*115*/ rii[2] -= icf[0][3]*rii[0] + icf[1][2]*rii[1] + icf[3][1]*rii[3] + icf[4][0]*rii[4];
-                        /*116*/ rii[3] -= icf[1][3]*rii[1] + icf[2][2]*rii[2] + icf[4][1]*rii[4] + icf[5][0]*rii[5];
-                        /*117*/ rii[4] -= icf[2][3]*rii[2] + icf[3][2]*rii[3] + icf[5][1]*rii[5] + icf[6][0]*rii[6];
-                        /*118*/ rii[5] -= icf[3][3]*rii[3] + icf[4][2]*rii[4] + icf[6][1]*rii[6];
-                        /*119*/ rii[6] -= icf[5][2]*rii[5];
+                        /*113*/ rii[0] = max(0, rii[0] - icf[1][1]*rii[1]);
+                        /*114*/ rii[1] = max(0, rii[1] - (icf[0][2]*rii[0] + icf[2][1]*rii[2]));
+                        /*115*/ rii[2] = max(0, rii[2] - (icf[0][3]*rii[0] + icf[1][2]*rii[1] + icf[3][1]*rii[3] + icf[4][0]*rii[4]));
+                        /*116*/ rii[3] = max(0, rii[3] - (icf[1][3]*rii[1] + icf[2][2]*rii[2] + icf[4][1]*rii[4] + icf[5][0]*rii[5]));
+                        /*117*/ rii[4] = max(0, rii[4] - (icf[2][3]*rii[2] + icf[3][2]*rii[3] + icf[5][1]*rii[5] + icf[6][0]*rii[6]));
+                        /*118*/ rii[5] = max(0, rii[5] - (icf[3][3]*rii[3] + icf[4][2]*rii[4] + icf[6][1]*rii[6]));
+                        /*119*/ rii[6] = max(0, rii[6] - icf[5][2]*rii[5]);
                         /*121*/ //rii[7] -= icf[][1] *rii[1];
                     }
                     break;
@@ -653,9 +653,14 @@ void embed(const string& idpDbFilepath,
 
         scoped_ptr<SpectrumList_Quantifier> slq;
 
-        QuantitationMethod newQuantitationMethod = quantitationMethodBySource.find(source.id) != quantitationMethodBySource.end() ?
-                                                   quantitationMethodBySource.find(source.id)->second :
-                                                   QuantitationMethod::None;
+        QuantitationMethod newQuantitationMethod;
+
+        if (quantitationMethodBySource.count(source.id) > 0)
+            newQuantitationMethod = quantitationMethodBySource.find(source.id)->second;
+        else if (quantitationMethodBySource.count(0) > 0)
+            newQuantitationMethod = quantitationMethodBySource.find(0)->second; // applies to all sources
+        else
+            newQuantitationMethod = QuantitationMethod::None;
 
         if (newQuantitationMethod != source.quantitationMethod)
         {
@@ -813,9 +818,14 @@ void embedScanTime(const string& idpDbFilepath,
 
         scoped_ptr<SpectrumList_Quantifier> slq;
 
-        QuantitationMethod newQuantitationMethod = quantitationMethodBySource.find(source.id) != quantitationMethodBySource.end() ?
-                                                   quantitationMethodBySource.find(source.id)->second :
-                                                   QuantitationMethod::None;
+        QuantitationMethod newQuantitationMethod;
+        
+        if (quantitationMethodBySource.count(source.id) > 0)
+            newQuantitationMethod = quantitationMethodBySource.find(source.id)->second;
+        else if (quantitationMethodBySource.count(0) > 0)
+            newQuantitationMethod = quantitationMethodBySource.find(0)->second; // applies to all sources
+        else
+            newQuantitationMethod = QuantitationMethod::None;
 
         if (newQuantitationMethod != source.quantitationMethod)
         {

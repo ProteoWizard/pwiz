@@ -59,7 +59,9 @@
     RTCONFIG_VARIABLE( Qonverter::ChargeStateHandling, ChargeStateHandling, "Partition" ) \
     RTCONFIG_VARIABLE( Qonverter::TerminalSpecificityHandling, TerminalSpecificityHandling, "Partition" ) \
     RTCONFIG_VARIABLE( Qonverter::MissedCleavagesHandling, MissedCleavagesHandling, "Ignore" ) \
-    RTCONFIG_VARIABLE( Qonverter::MassErrorHandling, MassErrorHandling, "Ignore" )
+    RTCONFIG_VARIABLE( Qonverter::MassErrorHandling, MassErrorHandling, "Ignore" ) \
+    RTCONFIG_VARIABLE( IDPICKER_NAMESPACE::QuantitationMethod, QuantitationMethod, "None" )
+
 
 BEGIN_IDPICKER_NAMESPACE
 
@@ -166,6 +168,9 @@ private:
                 break;
             }
         }
+
+        if (!EmbedSpectrumScanTimes && QuantitationMethod != QuantitationMethod::None)
+            EmbedSpectrumScanTimes = true;
 
         BaseRunTimeConfig::finalize();
     }

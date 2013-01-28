@@ -514,19 +514,28 @@ int main( int argc, char* argv[] )
             BOOST_FOREACH(const string& filepath, parserFilepaths)
                 idpDbFilepaths.push_back(Parser::outputFilepath(filepath).string());
 
+            map<int, QuantitationMethod> allSourcesQuantitationMethodMap;
+            allSourcesQuantitationMethodMap[0] = g_rtConfig->QuantitationMethod;
+
             for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
             {
-                cout << "\rEmbedding subset spectra: " << (i+1) << "/" << idpDbFilepaths.size() << flush;
+                cout << "\rEmbedding subset spectra" << (g_rtConfig->EmbedSpectrumSources ? "" : " scan times")
+                     << (g_rtConfig->QuantitationMethod == QuantitationMethod::None ? ": " : " and quantitation data: ")
+                     << (i+1) << "/" << idpDbFilepaths.size()
+                     << flush;
+
                 if (g_rtConfig->EmbedSpectrumSources)
-                    Embedder::embed(idpDbFilepaths[i], g_rtConfig->SourceSearchPath);
+                    Embedder::embed(idpDbFilepaths[i], g_rtConfig->SourceSearchPath, allSourcesQuantitationMethodMap);
                 else
-                    Embedder::embedScanTime(idpDbFilepaths[i], g_rtConfig->SourceSearchPath);
+                    Embedder::embedScanTime(idpDbFilepaths[i], g_rtConfig->SourceSearchPath, allSourcesQuantitationMethodMap);
             }
         }
     }
     catch (exception& e)
     {
         cerr << "\nError: " << e.what() << endl;
+        if (bal::contains(e.what(), "no filepath could be found"))
+            cerr << "Find the file and add its parent directory to SourceSearchPath (a semicolon delimited list)." << endl;
         return QONVERT_ERROR_UNHANDLED_EXCEPTION;
     }
     catch (...)
