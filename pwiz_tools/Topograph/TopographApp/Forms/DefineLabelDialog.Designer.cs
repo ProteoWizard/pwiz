@@ -73,7 +73,7 @@
             this.tbxTracerSymbol.Name = "tbxTracerSymbol";
             this.tbxTracerSymbol.Size = new System.Drawing.Size(100, 20);
             this.tbxTracerSymbol.TabIndex = 1;
-            this.tbxTracerSymbol.Leave += new System.EventHandler(this.tbxEnrichedSymbol_Leave);
+            this.tbxTracerSymbol.Leave += new System.EventHandler(this.TbxEnrichedSymbolOnLeave);
             // 
             // label2
             // 
@@ -119,7 +119,7 @@
             this.btn15N.TabIndex = 11;
             this.btn15N.Text = "15N";
             this.btn15N.UseVisualStyleBackColor = true;
-            this.btn15N.Click += new System.EventHandler(this.btn15N_Click);
+            this.btn15N.Click += new System.EventHandler(this.Btn15NOnClick);
             // 
             // btnD3Leu
             // 
@@ -129,7 +129,7 @@
             this.btnD3Leu.TabIndex = 12;
             this.btnD3Leu.Text = "D3 Leu";
             this.btnD3Leu.UseVisualStyleBackColor = true;
-            this.btnD3Leu.Click += new System.EventHandler(this.btnD3Leu_Click);
+            this.btnD3Leu.Click += new System.EventHandler(this.BtnD3LeuOnClick);
             // 
             // btnSaveAndClose
             // 
@@ -139,7 +139,7 @@
             this.btnSaveAndClose.TabIndex = 9;
             this.btnSaveAndClose.Text = "OK";
             this.btnSaveAndClose.UseVisualStyleBackColor = true;
-            this.btnSaveAndClose.Click += new System.EventHandler(this.btnSaveAndClose_Click);
+            this.btnSaveAndClose.Click += new System.EventHandler(this.BtnSaveAndCloseOnClick);
             // 
             // label3
             // 
@@ -284,7 +284,7 @@
             this.btnCancel.TabIndex = 10;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            this.btnCancel.Click += new System.EventHandler(this.BtnCancelOnClick);
             // 
             // label13
             // 

@@ -16,13 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace pwiz.Topograph.Data
 {
+    // ReSharper disable InconsistentNaming
     public enum ValidationStatus
     {
         unvalidated,
@@ -30,4 +26,5 @@ namespace pwiz.Topograph.Data
         reject,
         maybe,
     }
+    // ReSharper restore InconsistentNaming
 }

@@ -70,7 +70,7 @@
             this.btnAddSearchResults.TabIndex = 3;
             this.btnAddSearchResults.Text = "Add Search Results...";
             this.btnAddSearchResults.UseVisualStyleBackColor = true;
-            this.btnAddSearchResults.Click += new System.EventHandler(this.btnAddSearchResults_Click);
+            this.btnAddSearchResults.Click += new System.EventHandler(this.BtnAddSearchResultsOnClick);
             // 
             // panel1
             // 
@@ -104,7 +104,7 @@
             this.btnChooseFastaFile.TabIndex = 1;
             this.btnChooseFastaFile.Text = "Browse for FASTA file...";
             this.btnChooseFastaFile.UseVisualStyleBackColor = true;
-            this.btnChooseFastaFile.Click += new System.EventHandler(this.btnChooseFastaFile_Click);
+            this.btnChooseFastaFile.Click += new System.EventHandler(this.BtnChooseFastaFileOnClick);
             // 
             // label1
             // 

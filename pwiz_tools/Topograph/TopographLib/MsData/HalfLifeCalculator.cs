@@ -1,19 +1,37 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using NHibernate;
 using pwiz.Common.DataAnalysis;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Model.Data;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.MsData
 {
-    public class HalfLifeCalculator : ILongOperationJob
+    public class HalfLifeCalculator
     {
         private IDictionary<long, double> _precursorPools;
         private readonly IDictionary<string, TurnoverCalculator> _turnoverCalculators 
@@ -53,14 +71,14 @@ namespace pwiz.Topograph.MsData
         public ICollection<IntegrationNote> AcceptIntegrationNotes { get; set; }
         public int? MaxResults { get; set; }
         /// <summary>
-        /// For bug 395 : Automated outlier-trimming algorithm/QC filter
+        /// For bugfix 395 : Automated outlier-trimming algorithm/QC filter
         /// Apply Evvie's special criteria to filter out outliers:
         /// 1) Treat each time point separately.
         /// 2) Divide standard deviation by mean.
         /// 3) If the ratio is less than 0.3, set a cutoff of 2 standard deviations above or below the *median*--not the mean. If the ratio is 0.3 or greater, set a cutoff of 1 standard deviation.
         /// 4) Exclude any data point falling outside the cutoffs.
         /// 
-        /// Also, for bug 91:
+        /// Also, for bugfix 91:
         /// If EvviesFilter is EvviesFilterEnum.Oct2011:
         /// 1.1) Exclude all points more than 3 standard deviations above or below the MEDIAN.
         /// 1.2) Exclude all points that are 99% or 100% and are 2 standard deviations above the median.
@@ -81,86 +99,88 @@ namespace pwiz.Topograph.MsData
 
         public ICollection<double> ExcludedTimePoints { get; set; }
 
-        private List<RawRowData> QueryRowDatas(LongOperationBroker longOperationBroker)
-        {
-            var hql = new StringBuilder();
-            hql.Append("SELECT"
-                       +"\nF.Turnover * 100,"
-                       +"\nF.TracerPercent,"
-                       +"\nF.DeconvolutionScore, "
-                       + "\nF.PeptideAnalysis.Peptide.Id, "
-                       + "\nF.MsDataFile.Id, "
-                       + "\nF.Id,"
-                       + "\nF.PrecursorEnrichment,"
-                       + "\nF.TurnoverScore,"
-                       + "\nF.ValidationStatus,"
-                       + "\nF.PsmCount,"
-                       + "\nF.IntegrationNote"
-                       + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
-                       + "\nWHERE F.TracerPercent IS NOT NULL");
-            var query = Session.CreateQuery(hql.ToString());
-            if (MaxResults.HasValue)
-            {
-                query.SetMaxResults(MaxResults.Value);
-            }
-            longOperationBroker.UpdateStatusMessage("Querying database");
-            var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea, P.StartTime, P.EndTime"
-                                                 + "\nFROM " + typeof (DbPeak) + " P");
-            var peaksDict = new Dictionary<long, IDictionary<TracerFormula, PeakData>>();
-            foreach (object[] row in peaksQuery.List())
-            {
-                var peptideFileAnalysisId = Convert.ToInt32(row[0]);
-                IDictionary<TracerFormula, PeakData> dict;
-                if (!peaksDict.TryGetValue(peptideFileAnalysisId, out dict))
-                {
-                    dict = new Dictionary<TracerFormula, PeakData>();
-                    peaksDict.Add(peptideFileAnalysisId, dict);
-                }
-                dict.Add(TracerFormula.Parse(Convert.ToString(row[1])),
-                         new PeakData
-                             {
-                                 TotalArea = Convert.ToDouble(row[2]),
-                                 StartTime = Convert.ToDouble(row[3]),
-                                 EndTime = Convert.ToDouble(row[4]),
-                        }
-                    );
-            }
-            var result = new List<RawRowData>();
-            var rowList = new List<object[]>();
-            query.List(rowList);
-            for (int iRow = 0; iRow < rowList.Count; iRow ++)
-            {
-                var row = rowList[iRow];
-                longOperationBroker.UpdateStatusMessage(string.Format("Calculating row {0} of {1}", iRow, rowList.Count));
-                try
-                {
-                    var peptideFileAnalysisId = Convert.ToInt32(row[5]);
-                    IDictionary<TracerFormula, PeakData> peaks;
-                    peaksDict.TryGetValue(peptideFileAnalysisId, out peaks);
-                    var rowData = new RawRowData
-                                      {
-                                          IndTurnover = (double?)row[0],
-                                          IndPrecursorEnrichment = (double?)row[6],
-                                          IndTurnoverScore = (double?)row[7],
-                                          TracerPercent = (double)row[1],
-                                          DeconvolutionScore = (double)row[2],
-                                          Peptide = Workspace.Peptides.GetChild((long)row[3]),
-                                          MsDataFile = Workspace.MsDataFiles.GetChild((long)row[4]),
-                                          Peaks = peaks,
-                                          PeptideFileAnalysisId = peptideFileAnalysisId,
-                                          ValidationStatus = (ValidationStatus)row[8],
-                                          PsmCount = (int)row[9],
-                                          IntegrationNote = IntegrationNote.Parse((string)row[10]),
-                                      };
-                    result.Add(rowData);
-                }
-                catch (Exception e)
-                {
-                    Console.Out.WriteLine(e);
-                }
-            }
-            return result;
-        }
+//        private List<RawRowData> QueryRowDatas(LongOperationBroker longOperationBroker)
+//        {
+//            
+//            longOperationBroker.CancellationToken.Register(Cancel);
+//            var hql = new StringBuilder();
+//            hql.Append("SELECT"
+//                       +"\nF.Turnover * 100,"
+//                       +"\nF.TracerPercent,"
+//                       +"\nF.DeconvolutionScore, "
+//                       + "\nF.PeptideAnalysis.Peptide.Id, "
+//                       + "\nF.MsDataFile.Id, "
+//                       + "\nF.Id,"
+//                       + "\nF.PrecursorEnrichment,"
+//                       + "\nF.TurnoverScore,"
+//                       + "\nF.ValidationStatus,"
+//                       + "\nF.PsmCount,"
+//                       + "\nF.IntegrationNote"
+//                       + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
+//                       + "\nWHERE F.TracerPercent IS NOT NULL");
+//            var query = Session.CreateQuery(hql.ToString());
+//            if (MaxResults.HasValue)
+//            {
+//                query.SetMaxResults(MaxResults.Value);
+//            }
+//            longOperationBroker.UpdateStatusMessage("Querying database");
+//            var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea, P.StartTime, P.EndTime"
+//                                                 + "\nFROM " + typeof (DbPeak) + " P");
+//            var peaksDict = new Dictionary<long, IDictionary<TracerFormula, PeakData>>();
+//            foreach (object[] row in peaksQuery.List())
+//            {
+//                var peptideFileAnalysisId = Convert.ToInt32(row[0]);
+//                IDictionary<TracerFormula, PeakData> dict;
+//                if (!peaksDict.TryGetValue(peptideFileAnalysisId, out dict))
+//                {
+//                    dict = new Dictionary<TracerFormula, PeakData>();
+//                    peaksDict.Add(peptideFileAnalysisId, dict);
+//                }
+//                dict.Add(TracerFormula.Parse(Convert.ToString(row[1])),
+//                         new PeakData
+//                             {
+//                                 TotalArea = Convert.ToDouble(row[2]),
+//                                 StartTime = Convert.ToDouble(row[3]),
+//                                 EndTime = Convert.ToDouble(row[4]),
+//                        }
+//                    );
+//            }
+//            var result = new List<RawRowData>();
+//            var rowList = new List<object[]>();
+//            query.List(rowList);
+//            for (int iRow = 0; iRow < rowList.Count; iRow ++)
+//            {
+//                var row = rowList[iRow];
+//                longOperationBroker.UpdateStatusMessage(string.Format("Calculating row {0} of {1}", iRow, rowList.Count));
+//                try
+//                {
+//                    var peptideFileAnalysisId = Convert.ToInt32(row[5]);
+//                    IDictionary<TracerFormula, PeakData> peaks;
+//                    peaksDict.TryGetValue(peptideFileAnalysisId, out peaks);
+//                    var rowData = new RawRowData
+//                                      {
+//                                          IndTurnover = (double?)row[0],
+//                                          IndPrecursorEnrichment = (double?)row[6],
+//                                          IndTurnoverScore = (double?)row[7],
+//                                          TracerPercent = (double)row[1],
+//                                          DeconvolutionScore = (double)row[2],
+//                                          Peptide = Workspace.Peptides[(long)row[3]],
+//                                          MsDataFile = Workspace.MsDataFiles[(long)row[4]],
+//                                          Peaks = peaks,
+//                                          PeptideFileAnalysisId = peptideFileAnalysisId,
+//                                          ValidationStatus = (ValidationStatus)row[8],
+//                                          PsmCount = (int)row[9],
+//                                          IntegrationNote = IntegrationNote.Parse((string)row[10]),
+//                                      };
+//                    result.Add(rowData);
+//                }
+//                catch (Exception e)
+//                {
+//                    Console.Out.WriteLine(e);
+//                }
+//            }
+//            return result;
+//        }
 
         private RejectReason? IsAcceptable(RawRowData rowData)
         {
@@ -176,8 +196,8 @@ namespace pwiz.Topograph.MsData
             {
                 return RejectReason.LowDeconvolutionScore;
             }
-            Debug.Assert(Equals(rowData.AreaUnderCurve, rowData.PeakAreas.Values.Sum()));
-            Debug.Assert(Equals(rowData.AreaUnderCurve, rowData.Peaks.Values.Select(peakData => peakData.TotalArea).Sum()));
+            Debug.Assert(Equals(rowData.AreaUnderCurve, rowData.PeakAreas.Sum()));
+            Debug.Assert(Equals(rowData.AreaUnderCurve, rowData.Peaks.Select(peakData => peakData.Area).Sum()));
             if (MinAuc > 0 && rowData.AreaUnderCurve < MinAuc)
             {
                 return RejectReason.LowAreaUnderCurve;
@@ -200,33 +220,35 @@ namespace pwiz.Topograph.MsData
                                  RejectReason = IsAcceptable(rowData),
                              };
             result.InitialPrecursorPool = HalfLifeSettings.InitialPrecursorPool;
-            switch (HalfLifeSettings.PrecursorPoolCalculation)
+            result.CurrentPrecursorPool = rowData.MsDataFile.PrecursorPool;
+            if (!result.CurrentPrecursorPool.HasValue)
             {
-                case PrecursorPoolCalculation.Fixed:
-                    result.CurrentPrecursorPool = HalfLifeSettings.CurrentPrecursorPool;
-                    break;
-                case PrecursorPoolCalculation.MedianPerSample:
-                    double precursorPool;
-                    if (_precursorPools.TryGetValue(rowData.MsDataFile.Id.Value, out precursorPool))
-                    {
-                        result.CurrentPrecursorPool = precursorPool;
-                    }
-                    break;
-                case PrecursorPoolCalculation.Individual:
-                    result.CurrentPrecursorPool = rowData.IndPrecursorEnrichment * 100;
-                    break;
+                switch (HalfLifeSettings.PrecursorPoolCalculation)
+                {
+                    case PrecursorPoolCalculation.Fixed:
+                        result.CurrentPrecursorPool = HalfLifeSettings.CurrentPrecursorPool;
+                        break;
+                    case PrecursorPoolCalculation.MedianPerSample:
+                        double precursorPool;
+                        if (_precursorPools.TryGetValue(rowData.MsDataFile.Id, out precursorPool))
+                        {
+                            result.CurrentPrecursorPool = precursorPool;
+                        }
+                        break;
+                    case PrecursorPoolCalculation.Individual:
+                        result.CurrentPrecursorPool = rowData.IndPrecursorEnrichment * 100;
+                        break;
+                }
             }
-
             switch (HalfLifeSettings.NewlySynthesizedTracerQuantity)
             {
                 case TracerQuantity.LabeledAminoAcid:
                     result.RawValue = rowData.TracerPercent/100;
                     break;
                 case TracerQuantity.UnlabeledPeptide:
-                    PeakData peakData;
-                    if (rowData.Peaks.TryGetValue(TracerFormula.Empty, out peakData))
+                    if (rowData.Peaks.Count > 0) 
                     {
-                        result.RawValue = peakData.TotalArea/rowData.AreaUnderCurve;
+                        result.RawValue = rowData.Peaks[0].Area/rowData.AreaUnderCurve;
                     }
                     break;
             }
@@ -253,7 +275,8 @@ namespace pwiz.Topograph.MsData
                             var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
                             double? turnover;
                             double? turnoverScore;
-                            turnoverCalculator.ComputeTurnover(result.CurrentPrecursorPool.Value, rowData.PeakAreas, out turnover, out turnoverScore);
+                            
+                            turnoverCalculator.ComputeTurnover(result.CurrentPrecursorPool.Value, turnoverCalculator.ToTracerFormulaDict(rowData.PeakAreas), out turnover, out turnoverScore);
                             result.Turnover = turnover;
                             result.TurnoverScore = turnoverScore;
                         }
@@ -279,68 +302,71 @@ namespace pwiz.Topograph.MsData
                     }
                 }
             }
+            if (null == result.RejectReason && !result.Turnover.HasValue)
+            {
+                result.RejectReason = RejectReason.ValueOutOfRange;
+            }
             return result;
         }
 
-        private IDictionary<long, double> GetPrecursorPools(ISession session)
+        private IDictionary<long, double> GetPrecursorPools()
         {
-            var query = session.CreateQuery("SELECT F.MsDataFile.Id, F.PrecursorEnrichment * 100 FROM " + typeof (DbPeptideFileAnalysis) + " F"
-                        + "\nWHERE F.TracerPercent IS NOT NULL"
-                        + "\nAND F.PrecursorEnrichment IS NOT NULL"
-                        + "\nAND F.ValidationStatus <> " + (int) ValidationStatus.reject
-                        + "\nAND F.DeconvolutionScore >= :minScore").SetParameter("minScore", Workspace.GetMinDeconvolutionScoreForAvgPrecursorPool());
-            var valueLists = new Dictionary<long, IList<double>>();
-            foreach (object[] row in query.List())
-            {
-                IList<double> list;
-                var dataFileId = (long) row[0];
-                var precursorEnrichment = (double) row[1];
-                if (!valueLists.TryGetValue(dataFileId, out list))
-                {
-                    list = new List<double>();
-                    valueLists.Add(dataFileId, list);
-                }
-                list.Add(precursorEnrichment);
-            }
-            return valueLists.ToDictionary(kv => kv.Key, kv => new Statistics(kv.Value.ToArray()).Median());
+            var minScore = Workspace.GetMinDeconvolutionScoreForAvgPrecursorPool();
+            var valueLists = Workspace.PeptideAnalyses
+                .SelectMany(peptideAnalysis => peptideAnalysis.FileAnalyses)
+                .Where(peptideFileAnalysis => null != peptideFileAnalysis.CalculatedPeaks
+                                              && ValidationStatus.reject != peptideFileAnalysis.ValidationStatus
+                                              && peptideFileAnalysis.CalculatedPeaks.DeconvolutionScore >= minScore)
+                .ToLookup(peptideFileAnalysis => peptideFileAnalysis.MsDataFile.Id,
+                          peptideFileAnalysis => peptideFileAnalysis.CalculatedPeaks.PrecursorEnrichment);
+            return valueLists.ToDictionary(grouping => grouping.Key, grouping => new Statistics(grouping.ToArray()).Median());
         }
 
         public void Run(LongOperationBroker longOperationBroker)
         {
-            using (Session = Workspace.OpenSession())
+            if (RequiresPrecursorPool)
             {
-                if (RequiresPrecursorPool)
-                {
-                    longOperationBroker.UpdateStatusMessage("Querying precursor pools");
-                    _precursorPools = GetPrecursorPools(Session);
-                }
-                RowDatas = QueryRowDatas(longOperationBroker);
+                longOperationBroker.UpdateStatusMessage("Querying precursor pools");
+                _precursorPools = GetPrecursorPools();
             }
-            var groupedRowDatas = new Dictionary<String, List<RawRowData>>();
-            var cohorts = new HashSet<String> {""};
-            longOperationBroker.UpdateStatusMessage("Grouping results");
-            using (Workspace.GetReadLock())
+            RowDatas = new List<RawRowData>();
+            foreach (var peptideAnalysis in Workspace.PeptideAnalyses.ToArray())
             {
-                foreach (var rowData in RowDatas)
+                foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses)
                 {
                     if (longOperationBroker.WasCancelled)
                     {
                         return;
                     }
-                    if (rowData.ValidationStatus == ValidationStatus.reject)
+                    var rawRowData = ToRawRowData(peptideFileAnalysis);
+                    if (null != rawRowData)
                     {
-                        continue;
+                        RowDatas.Add(rawRowData);
                     }
-                    cohorts.Add(GetCohort(rowData));
-                    var key = ByProtein ? rowData.ProteinName : rowData.Peptide.Sequence;
-                    List<RawRowData> list;
-                    if (!groupedRowDatas.TryGetValue(key, out list))
-                    {
-                        list = new List<RawRowData>();
-                        groupedRowDatas.Add(key, list);
-                    }
-                    list.Add(rowData);
                 }
+            }
+            var groupedRowDatas = new Dictionary<String, List<RawRowData>>();
+            var cohorts = new HashSet<String> {""};
+            longOperationBroker.UpdateStatusMessage("Grouping results");
+            foreach (var rowData in RowDatas)
+            {
+                if (longOperationBroker.WasCancelled)
+                {
+                    return;
+                }
+                if (rowData.ValidationStatus == ValidationStatus.reject)
+                {
+                    continue;
+                }
+                cohorts.Add(GetCohort(rowData));
+                var key = ByProtein ? rowData.ProteinName : rowData.Peptide.Sequence;
+                List<RawRowData> list;
+                if (!groupedRowDatas.TryGetValue(key, out list))
+                {
+                    list = new List<RawRowData>();
+                    groupedRowDatas.Add(key, list);
+                }
+                list.Add(rowData);
             }
             Cohorts = cohorts;
             var groupRowDatasList = groupedRowDatas.ToArray();
@@ -411,7 +437,7 @@ namespace pwiz.Topograph.MsData
             return resultRow;
         }
 
-        private ResultData CalculateHalfLife(IEnumerable<ProcessedRowData> rowDatas)
+        private ResultData CalculateHalfLife(ICollection<ProcessedRowData> rowDatas)
         {
             IEnumerable<ProcessedRowData> filteredRowDatas;
             if (EvviesFilter != EvviesFilterEnum.None)
@@ -585,7 +611,7 @@ namespace pwiz.Topograph.MsData
                     dataPoints.Add(new KeyValuePair<double, double>(time.Value, y.Value));
                 }
                 var timePoints =
-                    Workspace.MsDataFiles.ListChildren().Select(msDataFile => msDataFile.TimePoint)
+                    Workspace.MsDataFiles.Select(msDataFile => msDataFile.TimePoint)
                     .Where(timePoint => timePoint.HasValue).ToList();
                 var resultData = new ResultData
                                      {
@@ -632,58 +658,36 @@ namespace pwiz.Topograph.MsData
             }
         }
 
-        public double? GetPrecursorPool(MsDataFile msDataFile)
-        {
-            double precursorPool;
-            if (!_precursorPools.TryGetValue(msDataFile.Id.Value, out precursorPool))
-            {
-                return null;
-            }
-            return precursorPool;
-        }
-
         public ProcessedRowData ToRowData(PeptideFileAnalysis peptideFileAnalysis)
         {
-            if (!peptideFileAnalysis.Peaks.IsCalculated)
+            var rawRowData = ToRawRowData(peptideFileAnalysis);
+            if (null == rawRowData)
             {
                 return null;
             }
-            var peaks = new Dictionary<TracerFormula, PeakData>();
-            foreach (var dbPeak in peptideFileAnalysis.Peaks.ListChildren())
+            return ComputeAvgTurnover(rawRowData);
+        }
+
+        RawRowData ToRawRowData(PeptideFileAnalysis peptideFileAnalysis)
+        {
+            if (!peptideFileAnalysis.PeakData.IsCalculated)
             {
-                peaks.Add(dbPeak.TracerFormula, new PeakData
-                                                    {
-                                                        TotalArea = dbPeak.TotalArea,
-                                                        StartTime = dbPeak.StartTime,
-                                                        EndTime = dbPeak.EndTime,
-                                                    });
+                return null;
             }
-            var rowData = new RawRowData
-                              {
-                                  MsDataFile = peptideFileAnalysis.MsDataFile,
-                                  Peptide = peptideFileAnalysis.Peptide,
-                                  DeconvolutionScore = peptideFileAnalysis.Peaks.DeconvolutionScore.Value,
-                                  TracerPercent = peptideFileAnalysis.Peaks.TracerPercent.Value,
-                                  IndTurnover = peptideFileAnalysis.Peaks.Turnover*100,
-                                  IndTurnoverScore = peptideFileAnalysis.Peaks.TurnoverScore,
-                                  IndPrecursorEnrichment = peptideFileAnalysis.Peaks.PrecursorEnrichment,
-                                  Peaks = peaks,
-                                  PeptideFileAnalysisId = peptideFileAnalysis.Id.Value,
-                                  PsmCount = peptideFileAnalysis.PsmCount,
-                                  ValidationStatus = peptideFileAnalysis.ValidationStatus,
-                                  IntegrationNote = peptideFileAnalysis.Peaks.IntegrationNote,
-                       };
-            return ComputeAvgTurnover(rowData);
+            return new RawRowData(peptideFileAnalysis.Data)
+            {
+                MsDataFile = peptideFileAnalysis.MsDataFile,
+                Peptide = peptideFileAnalysis.Peptide,
+                PeptideFileAnalysisId = peptideFileAnalysis.Id,
+                PsmCount = peptideFileAnalysis.PsmCount,
+            };
         }
 
         public ResultData CalculateHalfLife(IEnumerable<PeptideFileAnalysis> peptideFileAnalyses)
         {
             if (RequiresPrecursorPool && _precursorPools == null)
             {
-                using (var session = Workspace.OpenSession())
-                {
-                    _precursorPools = GetPrecursorPools(session);
-                }
+                _precursorPools = GetPrecursorPools();
             }
             var rowDatas = new List<ProcessedRowData>();
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
@@ -707,27 +711,15 @@ namespace pwiz.Topograph.MsData
             {
                 if (string.IsNullOrEmpty(cohort) || cohort == GetCohort(rowData))
                 {
+                    var processedRowData = ComputeAvgTurnover(rowData);
+                    if (null == processedRowData.Turnover && null == processedRowData.RejectReason)
+                    {
+                        Trace.TraceInformation("Null turnover for " + processedRowData);
+                    }
                     result.Add(ComputeAvgTurnover(rowData));
                 }
             }
             return result;
-        }
-
-
-        public bool Cancel()
-        {
-            if (Session != null)
-            {
-                try
-                {
-                    Session.CancelQuery();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // ignore
-                }
-            }
-            return true;
         }
 
         public Workspace Workspace { get; private set; }
@@ -737,7 +729,6 @@ namespace pwiz.Topograph.MsData
         public double MinScore { get { return HalfLifeSettings.MinimumDeconvolutionScore; } }
         public double MinTurnoverScore { get { return HalfLifeSettings.MinimumTurnoverScore; } }
         public double MinAuc { get { return HalfLifeSettings.MinimumAuc; } }
-        ISession Session { get; set; }
         public IList<ResultRow> ResultRows { get; private set; }
         public IList<RawRowData> RowDatas { get; private set; }
         public class ProcessedRowData
@@ -759,20 +750,29 @@ namespace pwiz.Topograph.MsData
         }
         public class RawRowData
         {
-            public double TracerPercent { get; set; }
-            public double DeconvolutionScore { get; set; }
-            public double? IndPrecursorEnrichment { get; set; }
-            public double? IndTurnover { get; set; }
-            public double? IndTurnoverScore { get; set; }
+            private PeptideFileAnalysisData _peptideFileAnalysisData;
+            public RawRowData(PeptideFileAnalysisData peptideFileAnalysisData)
+            {
+                _peptideFileAnalysisData = peptideFileAnalysisData;
+            }
+            private PeptideFileAnalysisData.PeakSet PeakSet { get { return _peptideFileAnalysisData.Peaks; } }
+            public double TracerPercent { get { return PeakSet.TracerPercent.GetValueOrDefault(double.NaN); } }
+            public double DeconvolutionScore { get { return PeakSet.DeconvolutionScore.GetValueOrDefault(double.NaN); } }
+            public double? IndPrecursorEnrichment { get { return PeakSet.PrecursorEnrichment; } }
+            public double? IndTurnover { get { return PeakSet.Turnover; } }
+            public double? IndTurnoverScore { get { return PeakSet.TurnoverScore; } }
             public Peptide Peptide { get; set; }
-            public ValidationStatus ValidationStatus { get; set; }
+            public ValidationStatus ValidationStatus { get { return _peptideFileAnalysisData.ValidationStatus; } }
             public String ProteinName { get { return Peptide.ProteinName; } }
             public String ProteinDescription { get { return Peptide.ProteinDescription; } }
             public MsDataFile MsDataFile { get; set; }
             public long PeptideFileAnalysisId { get; set; }
             public int PsmCount { get; set; }
-            public IntegrationNote IntegrationNote { get; set; }
-            public IDictionary<TracerFormula, PeakData> Peaks { get; set; }
+            public IntegrationNote IntegrationNote { get { return PeakSet.IntegrationNote; } }
+            public IList<PeptideFileAnalysisData.Peak> Peaks
+            {
+                get { return PeakSet.Peaks; }
+            }
             public double? AreaUnderCurve
             {
                 get
@@ -781,14 +781,14 @@ namespace pwiz.Topograph.MsData
                     {
                         return null;
                     }
-                    return Peaks.Values.Select(p=>p.TotalArea).Sum();
+                    return Peaks.Select(p=>p.Area).Sum();
                 }
             }
-            public IDictionary<TracerFormula, double> PeakAreas
+            public IList<double> PeakAreas
             {
                 get
                 {
-                    return Peaks == null ? new Dictionary<TracerFormula, double>() : Peaks.Keys.ToDictionary(k => k, k => Peaks[k].TotalArea);
+                    return Peaks == null ? new double[0] : Peaks.Select(peak=>peak.Area).ToArray();
                 }
             }
             public double? StartTime
@@ -799,7 +799,7 @@ namespace pwiz.Topograph.MsData
                     {
                         return null;
                     }
-                    return Peaks.Values.Select(p => p.StartTime).Min();
+                    return Peaks.Select(p => p.StartTime).Min();
                 }
             }
             public double? EndTime
@@ -810,7 +810,7 @@ namespace pwiz.Topograph.MsData
                     {
                         return null;
                     }
-                    return Peaks.Values.Select(p => p.EndTime).Max();
+                    return Peaks.Select(p => p.EndTime).Max();
                 }
             }
         }

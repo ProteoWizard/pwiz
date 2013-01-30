@@ -146,7 +146,7 @@
             this.btnRegenerateChromatograms.TabIndex = 1;
             this.btnRegenerateChromatograms.Text = "Regenerate Chromatograms";
             this.btnRegenerateChromatograms.UseVisualStyleBackColor = true;
-            this.btnRegenerateChromatograms.Click += new System.EventHandler(this.btnRegenerateChromatograms_Click);
+            this.btnRegenerateChromatograms.Click += new System.EventHandler(this.BtnRegenerateChromatogramsOnClick);
             // 
             // btnRecalculateResults
             // 
@@ -156,7 +156,7 @@
             this.btnRecalculateResults.TabIndex = 2;
             this.btnRecalculateResults.Text = "Recalculate Results";
             this.btnRecalculateResults.UseVisualStyleBackColor = true;
-            this.btnRecalculateResults.Click += new System.EventHandler(this.btnRecalculateResults_Click);
+            this.btnRecalculateResults.Click += new System.EventHandler(this.BtnRecalculateResultsOnClick);
             // 
             // btnRefresh
             // 
@@ -166,7 +166,7 @@
             this.btnRefresh.TabIndex = 3;
             this.btnRefresh.Text = "Refresh";
             this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            this.btnRefresh.Click += new System.EventHandler(this.BtnRefreshOnClick);
             // 
             // RecalculateResultsForm
             // 

@@ -22,7 +22,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows.Forms;
+using System.Threading.Tasks;
+using pwiz.Common.DataBinding.RowSources;
 
 namespace pwiz.Common.DataBinding
 {
@@ -40,37 +41,39 @@ namespace pwiz.Common.DataBinding
     /// the BindingListView populates itself asynchronously.
     /// </summary>
     [DebuggerTypeProxy(typeof(object))]
-    public class BindingListView : BindingList<RowItem>, ITypedList, IBindingListView, IRaiseItemChangedEvents
+    public class BindingListView : BindingList<RowItem>, ITypedList, IBindingListView, IRaiseItemChangedEvents, IDisposable
     {
-        private readonly BindingListEventHandler _bindingListEventHandler;
         private readonly HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
         private PropertyDescriptorCollection _itemProperties;
-        private Control _owner;
+        private QueryResults _queryResults;
+        private readonly QueryRequestor _queryRequestor;
 
-        public BindingListView() : base(new RowItemList())
+        public BindingListView(TaskScheduler eventTaskScheduler) : base(new RowItemList())
         {
-            _bindingListEventHandler = new BindingListEventHandler(this);
+            EventTaskScheduler = eventTaskScheduler;
+            _queryResults = QueryResults.Empty;
             _itemProperties = new PropertyDescriptorCollection(new PropertyDescriptor[0], true);
-            
+            _queryRequestor = new QueryRequestor(this);
             AllowNew = AllowRemove = AllowEdit = false;
         }
 
         protected override object AddNewCore()
         {
-            return _bindingListEventHandler.AddNew();
+            return null;
+            //return _bindingListEventHandler.AddNew();
         }
 
         protected override void RemoveItem(int index)
         {
-            _bindingListEventHandler.RemoveItem(this[index]);
+            // _bindingListEventHandler.RemoveItem(this[index]);
         }
 
         public ViewInfo ViewInfo
         {
-            get { return _bindingListEventHandler.ViewInfo; }
+            get { return _queryRequestor.QueryParameters.ViewInfo; }
             set
             {
-                _bindingListEventHandler.ViewInfo = value;
+                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetViewInfo(value);
             }
         }
         public ViewSpec ViewSpec
@@ -78,42 +81,11 @@ namespace pwiz.Common.DataBinding
             get
             {
                 // TODO(nicksh):Apply current sort if any.
-                return _bindingListEventHandler.ViewInfo.GetViewSpec();
+                return ViewInfo.GetViewSpec();
             }
             set
             {
-                _bindingListEventHandler.ViewInfo = new ViewInfo(_bindingListEventHandler.ViewInfo.ParentColumn, value);
-            }
-        }
-
-        public Control Owner
-        {
-            get
-            {
-                return _owner;
-            }
-            set
-            {
-                if (ReferenceEquals(_owner, value))
-                {
-                    return;
-                }
-                if (Owner != null)
-                {
-                    Owner.HandleCreated -= OwnerHandleCreated;
-                    Owner.HandleDestroyed -= OwnerHandleDestroyed;
-                }
-                _owner = value;
-                if (Owner != null)
-                {
-                    Owner.HandleCreated += OwnerHandleCreated;
-                    Owner.HandleDestroyed += OwnerHandleDestroyed;
-                    _bindingListEventHandler.IsSingleThreaded = !Owner.IsHandleCreated;
-                }
-                else
-                {
-                    _bindingListEventHandler.IsSingleThreaded = true;
-                }
+                ViewInfo = new ViewInfo(ViewInfo.ParentColumn, value);
             }
         }
 
@@ -121,27 +93,17 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                return _bindingListEventHandler.RowSource;
+                return _queryRequestor.RowSource;
             }
             set
             {
-                _bindingListEventHandler.RowSource = value;
+                _queryRequestor.RowSource = value;
             }
-        }
-
-        private void OwnerHandleCreated(object sender, EventArgs args)
-        {
-            _bindingListEventHandler.IsSingleThreaded = false;
-        }
-
-        private void OwnerHandleDestroyed(object sender, EventArgs args)
-        {
-            _bindingListEventHandler.IsSingleThreaded = true;
         }
 
         public void ApplySort(ListSortDescriptionCollection sorts)
         {
-            _bindingListEventHandler.SortDescriptions = sorts;
+            _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetSortDescriptions(sorts);
         }
 
         public void RemoveFilter()
@@ -173,7 +135,7 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                var sortDescriptions = _bindingListEventHandler.SortDescriptions;
+                var sortDescriptions = SortDescriptions;
                 return sortDescriptions != null && sortDescriptions.Count > 0;
             }
         }
@@ -219,9 +181,11 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                return _bindingListEventHandler.SortDescriptions;
+                return _queryRequestor.QueryParameters.SortDescriptions;
             }
         }
+
+        public TaskScheduler EventTaskScheduler { get; private set; }
 
         public string GetListName(PropertyDescriptor[] listAccessors)
         {
@@ -255,23 +219,32 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public void ResetList(PropertyDescriptorCollection newItemProperties, IEnumerable<RowItem> newItems)
+        public void UpdateResults()
         {
-            RowItemList.Reset(newItems);
+            if (null == _queryRequestor)
+            {
+                return;
+            }
+            if (ReferenceEquals(_queryRequestor.QueryResults,  QueryResults))
+            {
+                return;
+            }
+            _queryResults = _queryRequestor.QueryResults;
+            RowItemList.Reset(QueryResults.ResultRows);
             bool propsChanged = true;
             if (_itemProperties != null)
             {
                 var oldNameSet = new HashSet<string>(_itemProperties.Cast<PropertyDescriptor>().Select(pd => pd.Name));
-                var newNameSet = new HashSet<string>(newItemProperties.Cast<PropertyDescriptor>().Select(pd => pd.Name));
+                var newNameSet = new HashSet<string>(QueryResults.ItemProperties.Cast<PropertyDescriptor>().Select(pd => pd.Name));
                 if (oldNameSet.SetEquals(newNameSet))
                 {
                     propsChanged = false;
                 }
             }
-            _itemProperties = newItemProperties;
-            AllowNew = _bindingListEventHandler.AllowNew;
-            AllowEdit = _bindingListEventHandler.AllowEdit;
-            AllowRemove = _bindingListEventHandler.AllowRemove;
+            _itemProperties = QueryResults.ItemProperties;
+            AllowNew = false;
+            AllowEdit = true;
+            AllowRemove = false;
             if (propsChanged)
             {
                 OnListChanged(new ListChangedEventArgs(ListChangedType.PropertyDescriptorChanged, 0));
@@ -292,16 +265,16 @@ namespace pwiz.Common.DataBinding
 
         public RowFilter RowFilter
         {
-            get { return _bindingListEventHandler.RowFilter; }
-            set { _bindingListEventHandler.RowFilter = value; }
+            get { return QueryResults.Parameters.RowFilter; }
+            set
+            {
+                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetRowFilter(value);
+            }
         }
 
         public QueryResults QueryResults
         {
-            get
-            {
-                return _bindingListEventHandler.QueryResults;
-            }
+            get { return _queryResults; }
         }
         /// <summary>
         /// Indicates that this IBindingList will send ListItemChange events 
@@ -364,6 +337,11 @@ namespace pwiz.Common.DataBinding
         public int IndexOf(object value)
         {
             return RowItemList.IndexOf(value as RowItem);
+        }
+
+        public void Dispose()
+        {
+            _queryRequestor.Dispose();
         }
     }
 }

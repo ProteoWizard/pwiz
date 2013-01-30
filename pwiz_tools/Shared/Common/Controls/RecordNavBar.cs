@@ -71,9 +71,9 @@ namespace pwiz.Common.Controls
             }
             if (DataGridView != null)
             {
-                DataGridView.RowsAdded += DataGridView_RowsAdded;
-                DataGridView.RowsRemoved += DataGridView_RowsRemoved;
-                DataGridView.CurrentCellChanged += DataGridView_CurrentCellChanged;
+                DataGridView.RowsAdded += DataGridViewOnRowsAdded;
+                DataGridView.RowsRemoved += DataGridViewOnRowsRemoved;
+                DataGridView.CurrentCellChanged += DataGridViewOnCurrentCellChanged;
             }
         }
 
@@ -81,24 +81,24 @@ namespace pwiz.Common.Controls
         {
             if (DataGridView != null)
             {
-                DataGridView.RowsAdded -= DataGridView_RowsAdded;
-                DataGridView.RowsRemoved -= DataGridView_RowsRemoved;
-                DataGridView.CurrentCellChanged -= DataGridView_CurrentCellChanged;
+                DataGridView.RowsAdded -= DataGridViewOnRowsAdded;
+                DataGridView.RowsRemoved -= DataGridViewOnRowsRemoved;
+                DataGridView.CurrentCellChanged -= DataGridViewOnCurrentCellChanged;
                 
             }
         }
 
-        void DataGridView_CurrentCellChanged(object sender, EventArgs e)
+        void DataGridViewOnCurrentCellChanged(object sender, EventArgs e)
         {
             UpdateAll();
         }
 
-        void DataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        void DataGridViewOnRowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
             UpdateAll();
         }
 
-        void DataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        void DataGridViewOnRowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
             UpdateAll();
         }
@@ -134,7 +134,7 @@ namespace pwiz.Common.Controls
             }
         }
 
-        private void btnNavFirst_Click(object sender, EventArgs e)
+        private void BtnNavFirstOnClick(object sender, EventArgs e)
         {
             NavToRow(GetAbsoluteRowIndex(0));
         }
@@ -164,7 +164,7 @@ namespace pwiz.Common.Controls
             DataGridView.CurrentCell = row.Cells[columnIndex.Value];
         }
 
-        private void btnNavLast_Click(object sender, EventArgs e)
+        private void BtnNavLastOnClick(object sender, EventArgs e)
         {
             NavToRow(GetAbsoluteRowIndex(GetVisibleRowCount() - 1));
         }
@@ -210,23 +210,23 @@ namespace pwiz.Common.Controls
             return DataGridView.CurrentCell == null ? -1 : DataGridView.CurrentCell.RowIndex;
         }
 
-        private void btnNavPrev_Click(object sender, EventArgs e)
+        private void BtnNavPrevOnClick(object sender, EventArgs e)
         {
             NavToRow(GetVisibleRowIndex(GetCurrentRowIndex()) - 1);
         }
 
-        private void btnNavNext_Click(object sender, EventArgs e)
+        private void BtnNavNextOnClick(object sender, EventArgs e)
         {
             NavToRow(GetVisibleRowIndex(GetCurrentRowIndex()) + 1);
         }
 
-        private void tbxRecordNumber_Enter(object sender, EventArgs e)
+        private void TbxRecordNumberOnEnter(object sender, EventArgs e)
         {
             int currentVisibleRowIndex = GetVisibleRowIndex(GetCurrentRowIndex());
             tbxRecordNumber.Text = (currentVisibleRowIndex + 1).ToString(CultureInfo.InvariantCulture);
         }
 
-        private void tbxRecordNumber_Leave(object sender, EventArgs e)
+        private void TbxRecordNumberOnLeave(object sender, EventArgs e)
         {
             int value;
             if (int.TryParse(tbxRecordNumber.Text, out value))

@@ -109,7 +109,7 @@ namespace pwiz.Topograph.ui.Forms
 
         public String Filename { get; set; }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOkOnClick(object sender, EventArgs e)
         {
             if (!CheckRequiredField(tbxServer) 
                 || !CheckRequiredField(comboDatabaseName) 
@@ -145,9 +145,9 @@ namespace pwiz.Topograph.ui.Forms
                                               exception), Program.AppName);
                 return;
             }
-            using (var fileDialog = new SaveFileDialog()
+            using (var fileDialog = new SaveFileDialog
                                  {
-                                     Filter = TurnoverForm.OnlineWorkspaceFilter,
+                                     Filter = TopographForm.OnlineWorkspaceFilter,
                                      InitialDirectory = Settings.Default.WorkspaceDirectory,
                                      FileName = comboDatabaseName.Text + ".tpglnk",
                                  })
@@ -174,7 +174,7 @@ namespace pwiz.Topograph.ui.Forms
                     break;
                 }
             }
-            Settings.Default.ConnectionSettings = new ConnectionSettings()
+            Settings.Default.ConnectionSettings = new ConnectionSettings
                                                       {
                                                           Server = tbxServer.Text,
                                                           Port = tbxPort.Text,
@@ -197,14 +197,14 @@ namespace pwiz.Topograph.ui.Forms
         }
         
 
-        private void btnShowDatabases_Click(object sender, EventArgs e)
+        private void BtnShowDatabasesOnClick(object sender, EventArgs e)
         {
             var tpgLnkDef = GetTpgLinkDef();
             try
             {
                 var databaseNames = tpgLnkDef.ListDatabaseNames();
                 comboDatabaseName.Items.Clear();
-                comboDatabaseName.Items.AddRange(databaseNames.ToArray());
+                comboDatabaseName.Items.AddRange(databaseNames.Cast<object>().ToArray());
                 comboDatabaseName.Focus();
                 comboDatabaseName.DroppedDown = true;
             }

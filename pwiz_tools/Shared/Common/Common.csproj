@@ -113,9 +113,7 @@
     <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
-    <Compile Include="DataBinding\AggregateFunction.cs" />
-    <Compile Include="DataBinding\AggregateFunctions.cs" />
-    <Compile Include="DataBinding\BindingListEventHandler.cs" />
+    <Compile Include="DataBinding\BindingListSupport.cs" />
     <Compile Include="DataBinding\BindingListView.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -128,6 +126,9 @@
     <Compile Include="DataBinding\ColumnPropertyDescriptor.cs" />
     <Compile Include="DataBinding\ColumnSpec.cs" />
     <Compile Include="DataBinding\Controls\AvailableFieldsTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\BindingListSource.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="DataBinding\Controls\CustomizeViewForm.cs">
@@ -157,20 +158,30 @@
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
+    <Compile Include="DataBinding\ICloneableList.cs" />
+    <Compile Include="DataBinding\IListChanged.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
     <Compile Include="DataBinding\IdentifierPath.cs" />
-    <Compile Include="DataBinding\IEntity.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
     <Compile Include="DataBinding\LongDecimal.cs" />
     <Compile Include="DataBinding\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\Pivoter.cs" />
-    <Compile Include="DataBinding\QueryWorker.cs" />
+    <Compile Include="DataBinding\PropertyChangeSupport.cs" />
     <Compile Include="DataBinding\QueryResults.cs" />
     <Compile Include="DataBinding\RowFilter.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
-    <Compile Include="DataBinding\RowItemTree.cs" />
+    <Compile Include="DataBinding\RowItemList.cs" />
     <Compile Include="DataBinding\RowNode.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
+    <Compile Include="DataBinding\RowSources\AbstractQuery.cs" />
+    <Compile Include="DataBinding\RowSources\AbstractRowSourceWrapper.cs" />
+    <Compile Include="DataBinding\RowSources\BackgroundQuery.cs" />
+    <Compile Include="DataBinding\RowSources\CloneableRowSourceWrapper.cs" />
+    <Compile Include="DataBinding\RowSources\ForegroundQuery.cs" />
+    <Compile Include="DataBinding\RowSources\QueryRequestor.cs" />
+    <Compile Include="DataBinding\RowSources\RowItemIndex.cs" />
+    <Compile Include="DataBinding\RowSources\RowSourceWrappers.cs" />
+    <Compile Include="DataBinding\RowSources\IQueryRequest.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
     <Compile Include="DataBinding\TreeList.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
@@ -210,6 +221,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +244,13 @@
     <Content Include="Resources\agg_max.bmp" />
     <Content Include="Resources\agg_stddev.bmp" />
     <Content Include="Resources\close.bmp" />
+    <Content Include="Resources\BoolColumn.bmp" />
+    <Content Include="Resources\SublistColumn.bmp" />
+    <Content Include="Resources\LinkColumn.bmp" />
+    <Content Include="Resources\DataColumn.bmp" />
+    <Content Include="Resources\TextColumn.bmp" />
+    <Content Include="Resources\NumberColumn.bmp" />
+    <Content Include="Resources\PivotColumn.bmp" />
     <Content Include="Resources\restore.bmp" />
     <Content Include="Resources\maximize.bmp" />
     <Content Include="Resources\MatchCase.bmp" />

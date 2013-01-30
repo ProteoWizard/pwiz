@@ -26,16 +26,16 @@ namespace pwiz.Topograph.Util
     public static class ErrorHandler
     {
         public const int MaxErrorCount = 1000;
-        static readonly List<Error> errors = new List<Error>();
+        static readonly List<Error> Errors = new List<Error>();
         public static void AddError(Error error)
         {
-            lock(errors)
+            lock(Errors)
             {
-                while (errors.Count >= MaxErrorCount)
+                while (Errors.Count >= MaxErrorCount)
                 {
-                    errors.RemoveAt(0);
+                    Errors.RemoveAt(0);
                 }
-                errors.Add(error);
+                Errors.Add(error);
             }
             var handler = ErrorAdded;
             if (handler != null)
@@ -50,23 +50,23 @@ namespace pwiz.Topograph.Util
             {
                 return;
             }
-            AddError(new Error(component, message, exception, new StackTrace(1)));
+            AddError(new Error(component, message, exception, new StackTrace(1, true)));
             Console.Out.WriteLine(exception);
         }
 
         public static void ClearErrors()
         {
-            lock(errors)
+            lock(Errors)
             {
-                errors.Clear();
+                Errors.Clear();
             }
         }
 
         public static IList<Error> GetErrors()
         {
-            lock(errors)
+            lock(Errors)
             {
-                return errors.ToArray();
+                return Errors.ToArray();
             }
         }
 

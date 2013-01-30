@@ -17,24 +17,26 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Data
 {
-    public class DbMsDataFile : DbAnnotatedEntity<DbMsDataFile>, IComparable<DbMsDataFile>
+    public class DbMsDataFile : DbEntity<DbMsDataFile>, IComparable<DbMsDataFile>
     {
-        public virtual DbWorkspace Workspace { get; set; }
         public virtual String Name { get; set; }
         public virtual String Label { get; set; }
         public virtual String Cohort { get; set; }
         public virtual String Sample { get; set; }
         public virtual double? TimePoint { get; set; }
+
+        /// <devdoc>
+        /// Currently PrecursorPool is only allowed to be a double, but in the future it may also be
+        /// a <see cref="TracerPercentFormula"/>, so we persist it as a string.
+        /// </devdoc>
+        public virtual string PrecursorPool { get; set; }
         public virtual byte[] TimesBytes { get; set; }
         public virtual byte[] TotalIonCurrentBytes { get; set; }
         public virtual byte[] MsLevels { get; set; }
-
         public virtual double[] Times {
             get
             {
@@ -75,7 +77,7 @@ namespace pwiz.Topograph.Data
         }
         public virtual int CompareTo(DbMsDataFile that)
         {
-            return Name.ToLower().CompareTo(that.Name.ToLower());
+            return string.Compare(Name, that.Name, StringComparison.CurrentCultureIgnoreCase);
         }
         public virtual double SafeGetTime(int scanIndex)
         {
@@ -89,6 +91,5 @@ namespace pwiz.Topograph.Data
             Buffer.BlockCopy(TimesBytes, byteLength * scanIndex, times, 0, byteLength);
             return times[0];
         }
-
     }
 }

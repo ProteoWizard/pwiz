@@ -1,4 +1,5 @@
 ﻿using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -31,6 +32,9 @@ namespace pwiz.Topograph.ui.Forms
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -41,7 +45,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label2 = new System.Windows.Forms.Label();
             this.tbxMaxResults = new System.Windows.Forms.TextBox();
             this.navBar21 = new pwiz.Common.DataBinding.Controls.NavBar();
-            this.bindingSourceResults = new System.Windows.Forms.BindingSource(this.components);
+            this.bindingSourceResults = new BindingListSource(this.components);
             this.dataGridViewResults = new pwiz.Common.DataBinding.BoundDataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -103,7 +107,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnRequery.TabIndex = 1;
             this.btnRequery.Text = "Requery";
             this.btnRequery.UseVisualStyleBackColor = true;
-            this.btnRequery.Click += new System.EventHandler(this.btnRequery_Click);
+            this.btnRequery.Click += new System.EventHandler(this.BtnRequeryOnClick);
             // 
             // btnSave
             // 
@@ -140,14 +144,14 @@ namespace pwiz.Topograph.ui.Forms
             // navBar21
             // 
             this.navBar21.AutoSize = true;
-            this.navBar21.BindingSource = this.bindingSourceResults;
+            this.navBar21.BindingListSource = this.bindingSourceResults;
             this.tableLayoutPanel1.SetColumnSpan(this.navBar21, 4);
             this.navBar21.Dock = System.Windows.Forms.DockStyle.Fill;
             this.navBar21.Location = new System.Drawing.Point(3, 53);
             this.navBar21.Name = "navBar21";
             this.navBar21.Size = new System.Drawing.Size(730, 19);
             this.navBar21.TabIndex = 10;
-            this.navBar21.ViewContext = null;
+            this.navBar21.BindingListSource = this.bindingSourceResults;
             this.navBar21.WaitingMessage = "Press \"Requery\" button to see data";
             // 
             // dataGridViewResults
@@ -155,6 +159,14 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridViewResults.AllowUserToAddRows = false;
             this.dataGridViewResults.AllowUserToDeleteRows = false;
             this.dataGridViewResults.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewResults.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -165,6 +177,14 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridViewResults.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridViewResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewResults.DataSource = this.bindingSourceResults;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewResults.DefaultCellStyle = dataGridViewCellStyle2;
             dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -176,6 +196,14 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridViewResults.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewResults.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewResults.Name = "dataGridViewResults";
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewResults.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -184,7 +212,6 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridViewResults.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
-            this.dataGridViewResults.RowSource = null;
             this.dataGridViewResults.Size = new System.Drawing.Size(736, 440);
             this.dataGridViewResults.TabIndex = 0;
             // 
@@ -212,7 +239,7 @@ namespace pwiz.Topograph.ui.Forms
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.BindingSource bindingSourceResults;
+        private BindingListSource bindingSourceResults;
         private BoundDataGridView dataGridViewResults;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Button btnRequery;

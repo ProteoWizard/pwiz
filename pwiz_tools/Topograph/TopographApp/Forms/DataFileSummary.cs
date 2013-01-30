@@ -50,7 +50,7 @@ namespace pwiz.Topograph.ui.Forms
                 + "\n,F.DeconvolutionScore"
                 + "\n,F.ValidationStatus"
                 + "\nFROM " + typeof(DbPeptideFileAnalysis) + " F"
-                + "\nWHERE F.MsDataFile.Id = " + this.MsDataFile.Id
+                + "\nWHERE F.MsDataFile.Id = " + MsDataFile.Id
                 );
             var rowDatas = new Dictionary<long, RowData>();
             foreach (object[] row in query.List()) 
@@ -114,19 +114,19 @@ namespace pwiz.Topograph.ui.Forms
                     continue;
                 }
                 PeptideFileAnalysis peptideFileAnalysis = null;
-                var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(rowData.PeptideAnalysisId);
+                var peptideAnalysis = Workspace.PeptideAnalyses.FindByKey(rowData.PeptideAnalysisId);
                 if (peptideAnalysis != null)
                 {
-                    peptideFileAnalysis = peptideAnalysis.FileAnalyses.GetChild(rowData.PeptideFileAnalysisId);
+                    peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(rowData.PeptideFileAnalysisId);
                 }
                 if (peptideFileAnalysis != null)
                 {
-                    row.Cells[colApe.Index].Value = peptideFileAnalysis.Peaks.TracerPercent;
+                    row.Cells[colApe.Index].Value = peptideFileAnalysis.CalculatedPeaks.TracerPercent;
                     row.Cells[colPeakStart.Index].Value = peptideFileAnalysis.PeakStartTime;
                     row.Cells[colPeakEnd.Index].Value = peptideFileAnalysis.PeakEndTime;
                     row.Cells[colSequence.Index].Value = peptideFileAnalysis.Peptide.FullSequence;
                     row.Cells[colStatus.Index].Value = peptideFileAnalysis.ValidationStatus;
-                    row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
+                    row.Cells[colTurnover.Index].Value = peptideFileAnalysis.CalculatedPeaks.Turnover;
                 }
                 else
                 {
@@ -140,9 +140,9 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnCreateFileAnalyses_Click(object sender, EventArgs e)
+        private void BtnCreateFileAnalysesOnClick(object sender, EventArgs e)
         {
-            
+            // TODO(nicksh)
         }
 
         private void ShowPeptideFileAnalysisForm<T>(long peptideFileAnalysisId) where T:PeptideFileAnalysisForm
@@ -154,7 +154,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewOnCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             var row = dataGridView.Rows[e.RowIndex];
             var rowData = (RowData) row.Tag;
@@ -162,7 +162,7 @@ namespace pwiz.Topograph.ui.Forms
             var cell = row.Cells[e.ColumnIndex];
             if (column == colStatus)
             {
-                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(rowData.PeptideAnalysisId);
+                var peptideAnalysis = TopographForm.Instance.LoadPeptideAnalysis(rowData.PeptideAnalysisId);
                 if (peptideAnalysis == null)
                 {
                     return;
@@ -170,10 +170,7 @@ namespace pwiz.Topograph.ui.Forms
                 var peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(rowData.PeptideFileAnalysisId);
                 if (peptideFileAnalysis != null)
                 {
-                    using (Workspace.GetWriteLock())
-                    {
-                        peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
-                    }
+                    peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
                 }
             }
         }
@@ -189,7 +186,7 @@ namespace pwiz.Topograph.ui.Forms
             public ValidationStatus Status { get; set; }
         }
 
-        private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewOnCellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
             {
@@ -199,7 +196,6 @@ namespace pwiz.Topograph.ui.Forms
             if (e.ColumnIndex == colSequence.Index)
             {
                 ShowPeptideFileAnalysisForm<TracerChromatogramForm>(rowData.PeptideFileAnalysisId);
-                return;
             }
         }
     }

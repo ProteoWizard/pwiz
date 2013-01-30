@@ -18,45 +18,157 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using NHibernate;
-using NHibernate.Criterion;
 using pwiz.Topograph.Data;
-using pwiz.Topograph.Data.Snapshot;
 using pwiz.Topograph.Enrichment;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class PeptideAnalysis : AnnotatedEntityModel<DbPeptideAnalysis>
+    public class PeptideAnalysis : EntityModel<long, PeptideAnalysisData>
     {
-        private int _minCharge;
-        private int _maxCharge;
+        private IDictionary<long, CalculatedPeaks> _calculatedPeaks;
+        public PeptideAnalysis(Workspace workspace, long id, PeptideAnalysisData savedData) : base(workspace, id, savedData)
+        {
+            FileAnalyses = new PeptideFileAnalyses(this);
+        }
+
+        public PeptideAnalysis(Workspace workspace, long id) : base(workspace, id)
+        {
+            FileAnalyses = new PeptideFileAnalyses(this);
+        }
+
+        public PeptideAnalysis(Workspace workspace, PeptideAnalysis peptideAnalysis) : base(workspace, peptideAnalysis.Id)
+        {
+            _chromatogramRefCount = 0;
+        }
+
+        public long Id { get { return Key; } }
+
+        public void SetCalculatedPeaks(IList<CalculatedPeaks> calculatedPeaksList)
+        {
+            if (!calculatedPeaksList.All(cp => ReferenceEquals(this, cp.PeptideAnalysis)))
+            {
+                throw new ArgumentException("Wrong Peptide Analysis");
+            }
+            _calculatedPeaks = calculatedPeaksList.ToDictionary(peaks => peaks.PeptideFileAnalysis.Id);
+            var data = Data;
+            foreach (var entry in _calculatedPeaks)
+            {
+                PeptideFileAnalysisData peptideFileAnalysisData;
+                if (!data.FileAnalyses.TryGetValue(entry.Key, out peptideFileAnalysisData))
+                {
+                    continue;
+                }
+                peptideFileAnalysisData = peptideFileAnalysisData.SetPeaks(entry.Value.AutoFindPeak, entry.Value.ToPeakSetData());
+                data = data.SetFileAnalyses(data.FileAnalyses.Replace(entry.Key, peptideFileAnalysisData));
+            }
+            Data = data;
+        }
+
+        public CalculatedPeaks GetCalculatePeaks(PeptideFileAnalysis peptideFileAnalysis)
+        {
+            if (null == _calculatedPeaks)
+            {
+                return null;
+            }
+            CalculatedPeaks calculatedPeaks;
+            _calculatedPeaks.TryGetValue(peptideFileAnalysis.Id, out calculatedPeaks);
+            return calculatedPeaks;
+        }
+
+        public void InvalidatePeaks()
+        {
+            _calculatedPeaks = null;
+            foreach (var fileAnalysis in FileAnalyses)
+            {
+                fileAnalysis.InvalidatePeaks();
+            }
+        }
+
+        public void EnsurePeaksCalculated()
+        {
+            if (0 == GetChromatogramRefCount())
+            {
+                throw new InvalidOperationException("No chromatograms");
+            }
+            if (null != _calculatedPeaks)
+            {
+                return;
+            }
+            var peaksList = new List<CalculatedPeaks>();
+            var peptideFileAnalyses = FileAnalyses.ToArray();
+            Array.Sort(peptideFileAnalyses,
+                (f1, f2) => (null == f1.PsmTimes).CompareTo(null == f2.PsmTimes)
+            );
+            bool changed = false;
+            foreach (var peptideFileAnalysis in peptideFileAnalyses)
+            {
+                if (peptideFileAnalysis.ChromatogramSet == null
+                    || !peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.ChromatogramSet.Chromatograms.Keys))
+                {
+                    continue;
+                }
+                
+                var peaks = peptideFileAnalysis.CalculatedPeaks;
+                if (peaks == null || changed)
+                {
+                    peaks = CalculatedPeaks.Calculate(peptideFileAnalysis, peaksList);
+                    changed = changed || peaks != null;
+                }
+                peaksList.Add(peaks);
+            }
+            SetCalculatedPeaks(peaksList);
+        }
+
+        public PeptideFileAnalysisData GetFileAnalysisData(long id)
+        {
+            if (null == Data)
+            {
+                return null;
+            }
+            PeptideFileAnalysisData fileAnalysisData;
+            Data.FileAnalyses.TryGetValue(id, out fileAnalysisData);
+            return fileAnalysisData;
+        }
+
+        public void SetFileAnalysisData(long id, PeptideFileAnalysisData data)
+        {
+            if (Data == null)
+            {
+                return;
+            }
+            if (data == null)
+            {
+                Data.SetFileAnalyses(Data.FileAnalyses.RemoveKey(id));
+            }
+            else
+            {
+                Data.SetFileAnalyses(Data.FileAnalyses.Replace(id, data));
+            }
+        }
+             
+
         private TurnoverCalculator _turnoverCalculator;
         private int _chromatogramRefCount;
-        private double? _massAccuracy;
-        private WorkspaceVersion _workspaceVersion;
 
-        public PeptideAnalysis(Workspace workspace, DbPeptideAnalysis dbPeptideAnalysis) : base(workspace, dbPeptideAnalysis)
+        public Peptide Peptide { get { return Workspace.Peptides.FindByKey(Data.PeptideId); } }
+        public PeptideFileAnalyses FileAnalyses
         {
-            FileAnalyses = new PeptideFileAnalyses(this, dbPeptideAnalysis);
-            ExcludedMzs.ChangedEvent += ExcludedMzs_ChangedEvent;
-            SetWorkspaceVersion(workspace.WorkspaceVersion);
-            ChromatogramsWereLoaded = true;
+            get; private set;
         }
-
-        public PeptideAnalysis(Workspace workspace, PeptideAnalysisSnapshot snapshot) : this(workspace, snapshot.DbPeptideAnalysis)
+        public PeptideFileAnalysis GetFileAnalysis(long id)
         {
-            Merge(snapshot);
+            PeptideFileAnalysis peptideFileAnalysis;
+            FileAnalyses.TryGetValue(id, out peptideFileAnalysis);
+            return peptideFileAnalysis;
         }
-
-        public Peptide Peptide { get; private set; }
-        public PeptideFileAnalyses FileAnalyses { get; private set; }
+        
         public ValidationStatus? GetValidationStatus() 
         {
             ValidationStatus? result = null;
-            foreach (var peptideFileAnalysis in FileAnalyses.ListChildren())
+            foreach (var peptideFileAnalysis in FileAnalyses)
             {
                 if (result == null)
                 {
@@ -79,92 +191,25 @@ namespace pwiz.Topograph.Model
             {
                 return;
             }
-            foreach (var peptideFileAnalysis in FileAnalyses.ListChildren())
+            foreach (var peptideFileAnalysis in FileAnalyses)
             {
                 peptideFileAnalysis.ValidationStatus = value.Value;
             }
-        }
-
-        protected override IEnumerable<ModelProperty> GetModelProperties()
-        {
-            foreach (var modelProperty in base.GetModelProperties())
-            {
-                yield return modelProperty;
-            }
-            yield return Property<PeptideAnalysis,int>(
-                m=>m._minCharge,(m,v)=>m._minCharge = v, e => e.MinCharge, (e,v)=>e.MinCharge = v);
-            yield return Property<PeptideAnalysis, int>(
-                m=>m._maxCharge,(m,v)=>m._maxCharge = v, e=>e.MaxCharge,(e,v)=>e.MaxCharge = v);
-            yield return Property<PeptideAnalysis, byte[]>(
-                m => m.ExcludedMzs.ToByteArray(),
-                (m, v) => (m).ExcludedMzs.SetByteArray(v),
-                e => e.ExcludedMasses ?? new byte[0],
-                (e,v)=>e.ExcludedMasses = ArrayConverter.ZeroLengthToNull(v));
-            yield return Property<PeptideAnalysis, double?>(
-                m => m._massAccuracy, (m, v) => m._massAccuracy = v, 
-                e => e.MassAccuracy, (e, v) => e.MassAccuracy = v);
-        }
-
-        protected override void Load(DbPeptideAnalysis entity)
-        {
-            ExcludedMzs = ExcludedMzs ?? new ExcludedMzs();
-            Peptide = Workspace.Peptides.GetPeptide(entity.Peptide);
-            base.Load(entity);
-            _workspaceVersion = Workspace.SavedWorkspaceVersion;
-        }
-
-        public override bool IsDirty()
-        {
-            if (base.IsDirty())
-            {
-                return true;
-            }
-            foreach (var fileAnalysis in FileAnalyses.ListChildren())
-            {
-                if (fileAnalysis.IsDirty())
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public void Merge(PeptideAnalysisSnapshot peptideAnalysisSnapshot)
-        {
-            Load(peptideAnalysisSnapshot.DbPeptideAnalysis);
-            foreach (var snapshot in peptideAnalysisSnapshot.FileAnalysisSnapshots.Values)
-            {
-                var fileAnalysis = FileAnalyses.GetChild(snapshot.Id);
-                if (fileAnalysis == null)
-                {
-                    fileAnalysis = new PeptideFileAnalysis(this, snapshot.DbPeptideFileAnalysis);
-                    FileAnalyses.AddChild(fileAnalysis.Id.Value, fileAnalysis);
-                }
-                fileAnalysis.Merge(snapshot);
-            }
-            ChromatogramsWereLoaded = peptideAnalysisSnapshot.ChromatogramsWereLoaded;
-        }
-
-        void ExcludedMzs_ChangedEvent(ExcludedMzs obj)
-        {
-            OnChange();
         }
 
         public double? MassAccuracy
         {
             get
             {
-                return _massAccuracy;
+                return Data.MassAccuracy;
             }
             set
             {
-                if (_massAccuracy == value)
+                if (Data.MassAccuracy == value)
                 {
                     return;
                 }
-                _massAccuracy = value;
-                InvalidateChromatograms();
-                OnChange();
+                Data = Data.SetMassAccuracy(value);
             }
         }
 
@@ -173,16 +218,17 @@ namespace pwiz.Topograph.Model
             return MassAccuracy ?? Workspace.GetMassAccuracy();
         }
 
-        public void SaveDeep(ISession session)
+        public void Save(ISession session)
         {
-            Save(session);
-            foreach (var fileAnalysis in FileAnalyses.ListChildren())
+            var dbPeptideAnalysis = session.Get<DbPeptideAnalysis>(Id);
+            dbPeptideAnalysis.MassAccuracy = Data.MassAccuracy;
+            dbPeptideAnalysis.MinCharge = Data.MinCharge;
+            dbPeptideAnalysis.MaxCharge = Data.MaxCharge;
+            dbPeptideAnalysis.ExcludedMasses = Data.ExcludedMasses.ToByteArray();
+            session.Update(dbPeptideAnalysis);
+            foreach (var fileAnalysis in FileAnalyses)
             {
                 fileAnalysis.Save(session);
-                if (fileAnalysis.Peaks.IsDirty)
-                {
-                    fileAnalysis.Peaks.Save(session);
-                }
             }
             session.Save(new DbChangeLog(this));
         }
@@ -201,49 +247,46 @@ namespace pwiz.Topograph.Model
         { 
             get
             {
-                return _minCharge;
+                return Data.MinCharge;
             }
             set
             {
-                using (GetWriteLock())
+                if (MinCharge == value)
                 {
-                    if (_minCharge == value)
-                    {
-                        return;
-                    }
-                    _minCharge = value;
-                    InvalidateChromatograms();
-                    OnChange();
+                    return;
                 }
+                Data = Data.SetMinCharge(value);
             }
         }
 
-        public void InvalidateChromatograms()
-        {
-            foreach (var fileAnalysis in FileAnalyses.ListChildren())
-            {
-                fileAnalysis.InvalidateChromatograms();
-            }
-        }
         public int MaxCharge 
         { 
             get
             {
-                return _maxCharge;
+                return Data.MaxCharge;
             }
             set
             {
-                using (GetWriteLock())
+                if (value == MaxCharge)
                 {
-                    if (_maxCharge == value)
-                    {
-                        return;
-                    }
-                    _maxCharge = value;
-                    InvalidateChromatograms();
-                    OnChange();
+                    return;
                 }
+                Data = Data.SetMaxCharge(value);
             } 
+        }
+
+        public override void Update(WorkspaceChangeArgs workspaceChange, PeptideAnalysisData data)
+        {
+            base.Update(workspaceChange, data);
+            FileAnalyses.Update(workspaceChange);
+            PeptideAnalysisData newData;
+            if (Workspace.Data.PeptideAnalyses.TryGetValue(Id, out newData))
+            {
+                if (workspaceChange.HasPeakPickingChange || newData.CheckRecalculatePeaks(Data))
+                {
+                    InvalidatePeaks();
+                }
+            }
         }
 
         public int GetMassCount()
@@ -251,29 +294,31 @@ namespace pwiz.Topograph.Model
             return GetTurnoverCalculator().MassCount;
         }
 
-        public ExcludedMzs ExcludedMzs { get; private set; }
+        public ExcludedMasses ExcludedMasses
+        {
+            get { return Data.ExcludedMasses; }
+        }
 
         public TurnoverCalculator GetTurnoverCalculator()
         {
-            using(GetReadLock())
+            var turnoverCalculator = _turnoverCalculator;
+            if (turnoverCalculator != null)
             {
-                var turnoverCalculator = _turnoverCalculator;
-                if (turnoverCalculator != null)
-                {
-                    return turnoverCalculator;
-                }
-                _turnoverCalculator = turnoverCalculator = new TurnoverCalculator(Workspace, Peptide.Sequence);
                 return turnoverCalculator;
             }
+            _turnoverCalculator = turnoverCalculator = new TurnoverCalculator(Workspace, Peptide.Sequence);
+            return turnoverCalculator;
         }
 
         public IList<PeptideFileAnalysis> GetFileAnalyses(bool filterRejects)
         {
-            return FileAnalyses.ListPeptideFileAnalyses(filterRejects);
-        }
-        public PeptideFileAnalysis GetFileAnalysis(long id)
-        {
-            return FileAnalyses.GetChild(id);
+            if (filterRejects)
+            {
+                return FileAnalyses
+                    .Where(fileAnalysis => ValidationStatus.reject != fileAnalysis.ValidationStatus)
+                    .ToArray();
+            }
+            return FileAnalyses.ToArray();
         }
         public String GetLabel()
         {
@@ -288,30 +333,46 @@ namespace pwiz.Topograph.Model
         {
             return _chromatogramRefCount;
         }
-        public void IncChromatogramRefCount()
+        public IDisposable IncChromatogramRefCount()
         {
             _chromatogramRefCount++;
+            return new RefCountHolder(this);
         }
         public void DecChromatogramRefCount()
         {
             _chromatogramRefCount--;
         }
-        public void SetWorkspaceVersion(WorkspaceVersion newWorkspaceVersion)
+        public bool ChromatogramsWereLoaded { get { return Data.ChromatogramsWereLoaded; } }
+        class RefCountHolder : IDisposable
         {
-            _workspaceVersion = newWorkspaceVersion;
-            _turnoverCalculator = null;
-            foreach (var peptideFileAnalysis in FileAnalyses.ListChildren())
+            private PeptideAnalysis _peptideAnalysis;
+            public RefCountHolder(PeptideAnalysis peptideAnalysis)
             {
-                peptideFileAnalysis.SetWorkspaceVersion(newWorkspaceVersion);
+                _peptideAnalysis = peptideAnalysis;
+            }
+            public void Dispose()
+            {
+                if (_peptideAnalysis != null)
+                {
+                    _peptideAnalysis.DecChromatogramRefCount();
+                    _peptideAnalysis = null;
+                }
             }
         }
-        public bool ChromatogramsWereLoaded { get; private set; }
-    }
-    public enum IntensityScaleMode
-    {
-        none,
-        relative_include_all,
-        relative_exclude_any_charge,
-        relative_total,
+
+        public override PeptideAnalysisData GetData(WorkspaceData workspaceData)
+        {
+            PeptideAnalysisData peptideAnalysisData = null;
+            if (null != workspaceData.PeptideAnalyses)
+            {
+                workspaceData.PeptideAnalyses.TryGetValue(Id, out peptideAnalysisData);
+            }
+            return peptideAnalysisData;
+        }
+
+        public override WorkspaceData SetData(WorkspaceData workspaceData, PeptideAnalysisData value)
+        {
+            return workspaceData.SetPeptideAnalyses(workspaceData.PeptideAnalyses.Replace(Id, value));
+        }
     }
 }

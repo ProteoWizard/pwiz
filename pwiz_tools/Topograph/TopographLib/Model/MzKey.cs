@@ -17,13 +17,10 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace pwiz.Topograph.Model
 {
-    public class MzKey
+    public class MzKey : IComparable<MzKey>
     {
         public MzKey(int charge, int massIndex)
         {
@@ -48,6 +45,16 @@ namespace pwiz.Topograph.Model
                 return false;
             }
             return Charge == that.Charge && MassIndex == that.MassIndex;
+        }
+
+        public int CompareTo(MzKey other)
+        {
+            int result = Charge.CompareTo(other.Charge);
+            if (0 == result)
+            {
+                result = MassIndex.CompareTo(other.MassIndex);
+            }
+            return result;
         }
     }
 }

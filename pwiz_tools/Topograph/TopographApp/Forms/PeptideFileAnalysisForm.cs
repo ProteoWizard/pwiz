@@ -17,16 +17,8 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Topograph.Model;
-using ZedGraph;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -46,14 +38,6 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysis PeptideAnalysis
         {
             get { return PeptideFileAnalysis == null ? null : PeptideFileAnalysis.PeptideAnalysis; }
-        }
-
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
-        {
-            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideFileAnalysis.Peaks))
-            {
-                PeptideFileAnalysisChanged();
-            }
         }
 
         private void UpdateTitle()

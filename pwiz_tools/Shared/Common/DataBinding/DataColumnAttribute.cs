@@ -25,5 +25,6 @@ namespace pwiz.Common.DataBinding
         public bool Advanced { get; set; }
         public string Format { get; set; }
         public string ColumnDisplayName { get; set; }
+        public Type DataGridViewColumnType { get; set; }
     }
 }

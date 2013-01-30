@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
@@ -26,27 +27,24 @@ namespace pwiz.Topograph.ui.Forms
         public MiscSettingsForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            tbxMassAccuracy.Text = workspace.GetMassAccuracy().ToString();
+            tbxMassAccuracy.Text = workspace.GetMassAccuracy().ToString(CultureInfo.CurrentCulture);
             tbxProteinDescriptionKey.Text = workspace.GetProteinDescriptionKey();
-            tbxMaxRetentionTimeShift.Text = workspace.GetMaxIsotopeRetentionTimeShift().ToString();
-            tbxMinCorrelationCoefficient.Text = workspace.GetMinCorrelationCoefficient().ToString();
-            tbxMinDeconvolutionScoreForAvgPrecursorPool.Text = workspace.GetMinDeconvolutionScoreForAvgPrecursorPool().ToString();
+            tbxMaxRetentionTimeShift.Text = workspace.GetMaxIsotopeRetentionTimeShift().ToString(CultureInfo.CurrentCulture);
+            tbxMinCorrelationCoefficient.Text = workspace.GetMinCorrelationCoefficient().ToString(CultureInfo.CurrentCulture);
+            tbxMinDeconvolutionScoreForAvgPrecursorPool.Text = workspace.GetMinDeconvolutionScoreForAvgPrecursorPool().ToString(CultureInfo.CurrentCulture);
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOkOnClick(object sender, EventArgs e)
         {
-            using (Workspace.GetWriteLock())
-            {
-                Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
-                Workspace.SetProteinDescriptionKey(tbxProteinDescriptionKey.Text);
-                Workspace.SetMaxIsotopeRetentionTimeShift(Convert.ToDouble(tbxMaxRetentionTimeShift.Text));
-                Workspace.SetMinCorrelationCoefficient(double.Parse(tbxMinCorrelationCoefficient.Text));
-                Workspace.SetMinDeconvolutionScoreForAvgPrecursorPool(double.Parse(tbxMinDeconvolutionScoreForAvgPrecursorPool.Text));
-            }
+            Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text, CultureInfo.CurrentCulture));
+            Workspace.SetProteinDescriptionKey(tbxProteinDescriptionKey.Text);
+            Workspace.SetMaxIsotopeRetentionTimeShift(Convert.ToDouble(tbxMaxRetentionTimeShift.Text, CultureInfo.CurrentCulture));
+            Workspace.SetMinCorrelationCoefficient(double.Parse(tbxMinCorrelationCoefficient.Text, CultureInfo.CurrentCulture));
+            Workspace.SetMinDeconvolutionScoreForAvgPrecursorPool(double.Parse(tbxMinDeconvolutionScoreForAvgPrecursorPool.Text, CultureInfo.CurrentCulture));
             Close();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void BtnCancelOnClick(object sender, EventArgs e)
         {
             Close();
         }

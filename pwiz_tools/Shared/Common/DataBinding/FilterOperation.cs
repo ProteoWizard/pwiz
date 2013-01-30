@@ -63,8 +63,7 @@ namespace pwiz.Common.DataBinding
         public static readonly IFilterOperation OP_STARTS_WITH = new StringFilterOperation("startswith", "Starts With", FnStartsWith);
         public static readonly IFilterOperation OP_NOT_STARTS_WITH = new StringFilterOperation("notstartswith", "Does Not Start With", FnNotStartsWith);
 
-        private static readonly IList<IFilterOperation> LST_FILTER_OPERATIONS = Array.AsReadOnly(new[]
-                                                                                           {
+        private static readonly IList<IFilterOperation> LstFilterOperations = Array.AsReadOnly(new[]{
                                                                                                OP_HAS_ANY_VALUE,
                                                                                                OP_EQUALS,
                                                                                                OP_NOT_EQUALS,
@@ -80,17 +79,17 @@ namespace pwiz.Common.DataBinding
                                                                                                OP_NOT_STARTS_WITH
                                                                                            });
 
-        private static readonly IDictionary<string, IFilterOperation> DICT_FILTER_OPERATIONS =
-            LST_FILTER_OPERATIONS.ToDictionary(op => op.OpName, op => op);
+        private static readonly IDictionary<string, IFilterOperation> DictFilterOperations =
+            LstFilterOperations.ToDictionary(op => op.OpName, op => op);
         public static IFilterOperation GetOperation(string name)
         {
             IFilterOperation result;
-            DICT_FILTER_OPERATIONS.TryGetValue(name, out result);
+            DictFilterOperations.TryGetValue(name, out result);
             return result;
         }
         public static IList<IFilterOperation> ListOperations()
         {
-            return LST_FILTER_OPERATIONS;
+            return LstFilterOperations;
         }
 
         public static Predicate<object> FnEquals(ColumnDescriptor columnDescriptor, string strOperand)

@@ -2,7 +2,7 @@
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2012 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,46 +16,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using NHibernate;
-using pwiz.Topograph.Data;
+using pwiz.Common.Collections;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class Peptides : EntityModelCollection<DbWorkspace, long, DbPeptide, Peptide> 
+    public class Peptides : EntityModelList<long, PeptideData, Peptide>
     {
-        public Peptides(Workspace workspace, DbWorkspace dbWorkspace) : base(workspace, dbWorkspace)
+        public Peptides(Workspace workspace) : base(workspace)
         {
-        }
-        protected override bool TrustChildCount { get { return false;}}
-        protected override IEnumerable<KeyValuePair<long, DbPeptide>> GetChildren(DbWorkspace parent)
-        {
-            foreach (var dbPeptide in parent.Peptides)
-            {
-                yield return new KeyValuePair<long, DbPeptide>(dbPeptide.Id.Value, dbPeptide);
-            }
+            
         }
 
-        public override Peptide WrapChild(DbPeptide entity)
+        protected override ImmutableSortedList<long, Peptide> CreateEntityList()
         {
-            return new Peptide(Workspace, entity);
+            return
+                ImmutableSortedList.FromValues(Workspace.Data.Peptides
+                .Select(entry => new KeyValuePair<long, Peptide>(
+                    entry.Key, new Peptide(Workspace, entry.Key, entry.Value))));
         }
 
-        protected override int GetChildCount(DbWorkspace parent)
+        public override IList<Peptide> DeepClone()
         {
-            return parent.PeptideCount;
+            return Workspace.Clone().Peptides;
         }
 
-        protected override void SetChildCount(DbWorkspace parent, int childCount)
+        protected override Peptide CreateEntityForKey(long key, PeptideData data)
         {
-            parent.PeptideCount = childCount;
+            return new Peptide(Workspace, key, data);
         }
-        public Peptide GetPeptide(DbPeptide dbPeptide)
+
+        public override long GetKey(Peptide value)
         {
-            return GetChild(dbPeptide.Id.Value);
+            return value.Id;
+        }
+
+        protected override ImmutableSortedList<long, PeptideData> GetData(WorkspaceData workspaceData)
+        {
+            return workspaceData.Peptides;
+        }
+
+        protected override WorkspaceData SetData(WorkspaceData workspaceData, ImmutableSortedList<long, PeptideData> data)
+        {
+            return workspaceData.SetPeptides(data);
         }
     }
 }

@@ -90,7 +90,7 @@
             this.Name = "PeptideFileAnalysisFrame";
             this.TabText = "PeptideDataForm";
             this.Text = "PeptideDataForm";
-            this.Resize += new System.EventHandler(this.PeptideFileAnalysisFrame_Resize);
+            this.Resize += new System.EventHandler(this.PeptideFileAnalysisFrameOnResize);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
             this.ResumeLayout(false);

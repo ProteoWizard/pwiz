@@ -1,1 +1,1 @@
-pscp -r publish\* proteome.gs.washington.edu:/www/html/software/topograph/
+pscp -r publish\* proteome.gs.washington.edu:/www/html/software/topograph/daily/

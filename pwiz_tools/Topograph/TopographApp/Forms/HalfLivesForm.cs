@@ -26,6 +26,7 @@ using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Util;
+using pwiz.Topograph.ui.DataBinding;
 using pwiz.Topograph.ui.Properties;
 
 namespace pwiz.Topograph.ui.Forms
@@ -39,7 +40,7 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.Reload();
             HalfLifeSettings = Workspace.GetHalfLifeSettings(Settings.Default.HalfLifeSettings);
             UpdateTimePoints();
-            navBar1.ViewContext = _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
+            bindingSource1.SetViewContext(_viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)}));
         }
 
         private ViewSpec GetDefaultViewSpec(bool byProtein)
@@ -72,7 +73,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnRequery_Click(object sender, EventArgs e)
+        private void BtnRequeryOnClick(object sender, EventArgs e)
         {
             var halfLifeSettings = HalfLifeSettings;
             Settings.Default.Reload();
@@ -84,20 +85,20 @@ namespace pwiz.Topograph.ui.Forms
                                  };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
-                var longOperationBroker = new LongOperationBroker(calculator, longWaitDialog);
+                var longOperationBroker = new LongOperationBroker(calculator.Run, longWaitDialog);
                 if (!longOperationBroker.LaunchJob())
                 {
                     return;
                 }
             }
-            var viewInfo = dataGridView1.BindingListView.ViewInfo;
+            var viewInfo = bindingSource1.BindingListView.ViewInfo;
             var rows = calculator.ResultRows.Select(row => new ResultRow(this, row)).ToArray();
             if (viewInfo == null || "default" == viewInfo.Name)
             {
                 viewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein));
             }
-            dataGridView1.BindingListView.ViewInfo = viewInfo;
-            dataGridView1.BindingListView.RowSource = rows;
+            bindingSource1.BindingListView.ViewInfo = viewInfo;
+            bindingSource1.BindingListView.RowSource = rows;
         }
 
         /// <summary>
@@ -112,9 +113,11 @@ namespace pwiz.Topograph.ui.Forms
             {
                 existingListItems[i] = (double) checkedListBoxTimePoints.Items[i];
             }            
-            var allTimePoints = new HashSet<double>(Workspace.MsDataFiles.ListChildren()
+            var allTimePoints = new HashSet<double>(Workspace.MsDataFiles
                                                         .Where(d => d.TimePoint.HasValue)
+// ReSharper disable PossibleInvalidOperationException
                                                         .Select(d => d.TimePoint.Value))
+// ReSharper restore PossibleInvalidOperationException
                                                         .ToArray();
             Array.Sort(allTimePoints);
             var excludedTimePoints =
@@ -200,8 +203,8 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         return;
                     }
-                    var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
-                    if (peptideAnalysis == null)
+                    PeptideAnalysis peptideAnalysis;
+                    if (!_form.Workspace.PeptideAnalyses.TryGetValue(dbPeptideAnalysis.Id.GetValueOrDefault(), out peptideAnalysis))
                     {
                         return;
                     }
@@ -211,9 +214,12 @@ namespace pwiz.Topograph.ui.Forms
                         form.Activate();
                         return;
                     }
-                    form = new PeptideAnalysisFrame(peptideAnalysis);
-                    form.Show(_form.DockPanel, _form.DockState);
-                    return;
+                    using (peptideAnalysis.IncChromatogramRefCount())
+                    {
+                        TopographForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.GetValueOrDefault());
+                        form = new PeptideAnalysisFrame(peptideAnalysis);
+                        form.Show(_form.DockPanel, _form.DockState);
+                    }
                 }
             }
             private void ProteinClickHandler(object sender, EventArgs eventArgs)

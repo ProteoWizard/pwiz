@@ -1,9 +1,25 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.IO;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Data;
@@ -18,13 +34,6 @@ namespace pwiz.Topograph.Test
     [TestClass]
     public class ChromatogramGeneratorTest : BaseTest
     {
-        public ChromatogramGeneratorTest()
-        {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
         #region Additional test attributes
         //
         // You can use the following additional attributes as you write your tests:
@@ -51,7 +60,7 @@ namespace pwiz.Topograph.Test
         public void TestChromatogramGenerator()
         {
             String dbPath = Path.Combine(TestContext.TestDir, "test" + Guid.NewGuid() + ".tpg");
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, SessionFactoryFlags.create_schema))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, SessionFactoryFlags.CreateSchema))
             {
                 using (var session = sessionFactory.OpenSession())
                 {
@@ -76,21 +85,19 @@ namespace pwiz.Topograph.Test
                 }
             }
             Workspace workspace = new Workspace(dbPath);
-            MsDataFile msDataFile;
+            workspace.SetTaskScheduler(TaskScheduler.Default);
+            var dbMsDataFile = new DbMsDataFile
+                {
+                    Name = "20090724_HT3_0",
+                };
             using (var session = workspace.OpenWriteSession())
             {
                 session.BeginTransaction();
-                var dbMsDataFile = new DbMsDataFile()
-                {
-                    Name = "20090724_HT3_0",
-                    Workspace = workspace.LoadDbWorkspace(session),
-                };
                 session.Save(dbMsDataFile);
                 session.Transaction.Commit();
-
-                msDataFile = new MsDataFile(workspace, dbMsDataFile);
             }
-            workspace.Reconciler.ReconcileNow();
+            workspace.DatabasePoller.LoadAndMergeChanges(null);
+            var msDataFile = workspace.MsDataFiles.FindByKey(dbMsDataFile.GetId());
             Assert.IsTrue(MsDataFileUtil.InitMsDataFile(workspace, msDataFile));
             DbPeptide dbPeptide;
             using (var session = workspace.OpenWriteSession())
@@ -101,33 +108,32 @@ namespace pwiz.Topograph.Test
                     Protein = "TestProtein",
                     Sequence = "YLAAYLLLVQGGNAAPSAADIK",
                     FullSequence = "K.YLAAYLLLVQGGNAAPSAADIK.A",
-                    Workspace = workspace.LoadDbWorkspace(session),
                 };
                 session.Save(dbPeptide);
-                var searchResult = new DbPeptideSearchResult
+                var searchResult = new DbPeptideSpectrumMatch
                 {
                     Peptide = dbPeptide,
                     MsDataFile = session.Load<DbMsDataFile>(msDataFile.Id),
-                    MinCharge = 3,
-                    MaxCharge = 3,
-                    FirstDetectedScan = 45,
-                    LastDetectedScan = 45
+                    PrecursorCharge = 3,
+                    RetentionTime = 20.557 * 60,
                 };
                 session.Save(searchResult);
                 session.Transaction.Commit();
             }
             var peptide = new Peptide(workspace, dbPeptide);
             var peptideAnalysis = peptide.EnsurePeptideAnalysis();
+            peptideAnalysis.IncChromatogramRefCount();
             var peptideFileAnalysis = PeptideFileAnalysis.EnsurePeptideFileAnalysis(peptideAnalysis, msDataFile);
+            workspace.DatabasePoller.LoadAndMergeChanges(null);
+            peptideAnalysis.IncChromatogramRefCount();
             var chromatogramGenerator = new ChromatogramGenerator(workspace);
             chromatogramGenerator.Start();
-            while (peptideFileAnalysis.Chromatograms == null)
+            while (peptideFileAnalysis.ChromatogramSet == null)
             {
                 Thread.Sleep(100);
-                workspace.Reconciler.ReconcileNow();
             }
             var chromatogramDatas = peptideFileAnalysis.GetChromatograms();
-            Assert.IsFalse(chromatogramDatas.GetChildCount() == 0);
+            Assert.IsFalse(chromatogramDatas.Chromatograms.Count == 0);
             chromatogramGenerator.Stop();
             while (chromatogramGenerator.IsThreadAlive)
             {

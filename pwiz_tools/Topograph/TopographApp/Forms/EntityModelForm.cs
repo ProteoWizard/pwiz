@@ -16,40 +16,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
 {
-    public partial class EntityModelForm : WorkspaceForm
+    public class EntityModelForm : WorkspaceForm
     {
         private EntityModelForm() : this(null)
         {
         }
-        public EntityModelForm(EntityModel entityModel) : base(entityModel == null ? null : entityModel.Workspace)
+        public EntityModelForm(EntityModel entityModel)
+            : base(entityModel == null ? null : entityModel.Workspace)
         {
-            InitializeComponent();
             EntityModel = entityModel;
         }
 
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        protected override void OnHandleCreated(EventArgs e)
         {
-            base.OnWorkspaceEntitiesChanged(args);
-            if (args.Contains(EntityModel))
+            base.OnHandleCreated(e);
+            if (null != EntityModel)
             {
-                EntityChanged(new EntityModelChangeEventArgs(EntityModel));
+                EntityModel.PropertyChanged += EntityModelOnPropertyChanged;
             }
         }
 
+        private void EntityModelOnPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            EntityChanged();
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            if (null != EntityModel)
+            {
+                EntityModel.PropertyChanged -= EntityModelOnPropertyChanged;
+            }
+            base.OnHandleDestroyed(e);
+        }
+
         public EntityModel EntityModel { get; private set; }
-        protected virtual void EntityChanged(EntityModelChangeEventArgs args)
+        protected virtual void EntityChanged()
         {
         }
     }

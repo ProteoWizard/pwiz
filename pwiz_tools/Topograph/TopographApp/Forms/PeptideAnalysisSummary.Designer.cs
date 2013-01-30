@@ -30,6 +30,11 @@ namespace pwiz.Topograph.ui.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
@@ -206,7 +211,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMinCharge.Name = "tbxMinCharge";
             this.tbxMinCharge.Size = new System.Drawing.Size(130, 20);
             this.tbxMinCharge.TabIndex = 6;
-            this.tbxMinCharge.Leave += new System.EventHandler(this.tbxMinCharge_Leave);
+            this.tbxMinCharge.Leave += new System.EventHandler(this.TbxMinChargeOnLeave);
             // 
             // tbxMaxCharge
             // 
@@ -215,14 +220,30 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMaxCharge.Name = "tbxMaxCharge";
             this.tbxMaxCharge.Size = new System.Drawing.Size(130, 20);
             this.tbxMaxCharge.TabIndex = 7;
-            this.tbxMaxCharge.TextChanged += new System.EventHandler(this.tbxMaxCharge_TextChanged);
+            this.tbxMaxCharge.TextChanged += new System.EventHandler(this.TbxMaxChargeOnTextChanged);
             // 
             // gridViewExcludedMzs
             // 
             this.gridViewExcludedMzs.AllowUserToAddRows = false;
             this.gridViewExcludedMzs.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridViewExcludedMzs.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridViewExcludedMzs.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.tableLayoutPanel1.SetColumnSpan(this.gridViewExcludedMzs, 2);
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridViewExcludedMzs.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridViewExcludedMzs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridViewExcludedMzs.Location = new System.Drawing.Point(3, 253);
             this.gridViewExcludedMzs.Name = "gridViewExcludedMzs";
@@ -239,7 +260,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnCreateAnalyses.TabIndex = 8;
             this.btnCreateAnalyses.Text = "Create File Analyses";
             this.btnCreateAnalyses.UseVisualStyleBackColor = true;
-            this.btnCreateAnalyses.Click += new System.EventHandler(this.btnCreateAnalyses_Click);
+            this.btnCreateAnalyses.Click += new System.EventHandler(this.BtnCreateAnalysesOnClick);
             // 
             // label8
             // 
@@ -310,7 +331,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnShowGraph.TabIndex = 22;
             this.btnShowGraph.Text = "Half Lives";
             this.btnShowGraph.UseVisualStyleBackColor = true;
-            this.btnShowGraph.Click += new System.EventHandler(this.btnShowGraph_Click);
+            this.btnShowGraph.Click += new System.EventHandler(this.BtnShowGraphOnClick);
             // 
             // label5
             // 
@@ -330,7 +351,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMassAccuracy.Name = "tbxMassAccuracy";
             this.tbxMassAccuracy.Size = new System.Drawing.Size(130, 20);
             this.tbxMassAccuracy.TabIndex = 24;
-            this.tbxMassAccuracy.Leave += new System.EventHandler(this.tbxMassAccuracy_Leave);
+            this.tbxMassAccuracy.Leave += new System.EventHandler(this.TbxMassAccuracyOnLeave);
             // 
             // splitContainer2
             // 
@@ -355,6 +376,14 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colStatus,
@@ -367,14 +396,30 @@ namespace pwiz.Topograph.ui.Forms
             this.colScore,
             this.colPrecursorEnrichment,
             this.colTurnover});
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView.DefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridView.Size = new System.Drawing.Size(982, 206);
             this.dataGridView.TabIndex = 0;
-            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
-            this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
-            this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
+            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewOnCellContentClick);
+            this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewOnCellEndEdit);
+            this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.DataGridViewOnRowHeaderMouseDoubleClick);
             // 
             // colStatus
             // 
@@ -457,7 +502,7 @@ namespace pwiz.Topograph.ui.Forms
             this.zedGraphControl.ScrollMinY2 = 0D;
             this.zedGraphControl.Size = new System.Drawing.Size(982, 202);
             this.zedGraphControl.TabIndex = 0;
-            this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl_ContextMenuBuilder);
+            this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.ZedGraphControlOnContextMenuBuilder);
             // 
             // PeptideAnalysisSummary
             // 

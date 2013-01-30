@@ -17,11 +17,8 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.ui.Forms;
@@ -45,47 +42,30 @@ namespace pwiz.Topograph.ui.Controls
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            if (PeptideAnalysis != null)
+            {
+                PeptideAnalysis.PropertyChanged += PeptideAnalysisOnPropertyChanged;
+            }
+            if (PeptideFileAnalysis != null)
+            {
+                PeptideFileAnalysis.PropertyChanged += PeptideAnalysisOnPropertyChanged;
+            }
             if (Workspace != null)
             {
-                Workspace.EntitiesChange += Workspace_EntitiesChangedEvent;
                 UpdateGrid();
             }
-        }
-
-        void Workspace_EntitiesChangedEvent(EntitiesChangedEventArgs args)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            bool changed = false;
-            changed = changed || args.Contains(PeptideAnalysis);
-            changed = changed || PeptideFileAnalysis != null && args.Contains(PeptideFileAnalysis);
-
-            if (!changed && PeptideFileAnalysis == null)
-            {
-                foreach (var peptideFileAnalysis in args.GetEntities<PeptideFileAnalysis>())
-                {
-                    if (PeptideAnalysis.GetFileAnalysis(peptideFileAnalysis.Id.Value) != null)
-                    {
-                        changed = true;
-                        break;
-                    }
-                }
-            }
-            if (!changed)
-            {
-                return;
-            }
-            UpdateGrid();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
             base.OnHandleDestroyed(e);
-            if (Workspace != null)
+            if (PeptideAnalysis != null)
             {
-                Workspace.EntitiesChange -= Workspace_EntitiesChangedEvent;    
+                PeptideAnalysis.PropertyChanged -= PeptideAnalysisOnPropertyChanged;
+            }
+            if (PeptideFileAnalysis != null)
+            {
+                PeptideFileAnalysis.PropertyChanged -= PeptideAnalysisOnPropertyChanged;
             }
         }
 
@@ -94,10 +74,7 @@ namespace pwiz.Topograph.ui.Controls
             base.OnCellEndEdit(e);
             var row = Rows[e.RowIndex];
             var cell = row.Cells[e.ColumnIndex];
-            using (Workspace.GetWriteLock())
-            {
-                ExcludedMzs.SetExcluded((int)row.Tag, (bool)cell.Value);
-            }
+            ExcludedMasses.SetExcluded((int)row.Tag, (bool)cell.Value);
         }
 
         protected override void OnCellValueChanged(DataGridViewCellEventArgs e)
@@ -146,7 +123,19 @@ namespace pwiz.Topograph.ui.Controls
             } 
             set 
             { 
+                if (ReferenceEquals(PeptideAnalysis, value))
+                {
+                    return;
+                }
+                if (PeptideAnalysis != null)
+                {
+                    PeptideAnalysis.PropertyChanged -= PeptideAnalysisOnPropertyChanged;
+                }
                 _peptideAnalysis = value;
+                if (IsHandleCreated && PeptideAnalysis != null)
+                {
+                    PeptideAnalysis.PropertyChanged += PeptideAnalysisOnPropertyChanged;
+                }
             }
         }
         public PeptideFileAnalysis PeptideFileAnalysis
@@ -157,22 +146,34 @@ namespace pwiz.Topograph.ui.Controls
             }
             set
             {
-                _peptideFileAnalysis = value;
-                if (_peptideFileAnalysis != null)
+                if (ReferenceEquals(PeptideFileAnalysis, value))
                 {
-                    _peptideAnalysis = PeptideFileAnalysis.PeptideAnalysis;
+                    return;
+                }
+                if (PeptideFileAnalysis != null)
+                {
+                    PeptideFileAnalysis.PropertyChanged -= PeptideAnalysisOnPropertyChanged;
+                }
+                _peptideFileAnalysis = value;
+                if (PeptideFileAnalysis != null)
+                {
+                    if (IsHandleCreated)
+                    {
+                        PeptideFileAnalysis.PropertyChanged += PeptideAnalysisOnPropertyChanged;
+                    }
+                    PeptideAnalysis = PeptideFileAnalysis.PeptideAnalysis;
                 }
             }
         }
-        public ExcludedMzs ExcludedMzs
+        public ExcludedMasses ExcludedMasses
         {
             get
             {
                 if (PeptideFileAnalysis != null)
                 {
-                    return PeptideFileAnalysis.ExcludedMzs;
+                    return PeptideFileAnalysis.ExcludedMasses;
                 }
-                return PeptideAnalysis.ExcludedMzs;
+                return PeptideAnalysis.ExcludedMasses;
             }
         }
         public void UpdateGrid()
@@ -226,7 +227,7 @@ namespace pwiz.Topograph.ui.Controls
                 row.Cells[MassColumn.Index].Value = label;
                 row.Cells[MassColumn.Index].ToolTipText = "Mass:" + masses[iMass];
                 row.Cells[MassColumn.Index].Style.BackColor = TracerChromatogramForm.GetColor(iRow, Rows.Count);
-                row.Cells[ExcludedColumn.Index].Value = ExcludedMzs.IsMassExcluded(iMass);
+                row.Cells[ExcludedColumn.Index].Value = ExcludedMasses.IsMassExcluded(iMass);
             }
         }
 
@@ -277,6 +278,11 @@ namespace pwiz.Topograph.ui.Controls
                 }
             }
             return result;
+        }
+
+        public void PeptideAnalysisOnPropertyChanged(object sender, PropertyChangedEventArgs args)
+        {
+            UpdateGrid();
         }
     }
 }

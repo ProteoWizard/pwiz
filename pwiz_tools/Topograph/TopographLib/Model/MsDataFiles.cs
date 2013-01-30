@@ -16,47 +16,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using pwiz.Topograph.Data;
+using pwiz.Common.Collections;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class MsDataFiles : EntityModelCollection<DbWorkspace, long, DbMsDataFile, MsDataFile>
+    public class MsDataFiles : EntityModelList<long, MsDataFileData, MsDataFile>
     {
-        public MsDataFiles(Workspace workspace, DbWorkspace dbWorkspace) : base(workspace, dbWorkspace)
+        public MsDataFiles(Workspace workspace) : base(workspace)
         {
-            
         }
-        protected override bool TrustChildCount { get { return false; } }
 
-        protected override IEnumerable<KeyValuePair<long, DbMsDataFile>> GetChildren(DbWorkspace parent)
+        protected override ImmutableSortedList<long, MsDataFile> CreateEntityList()
         {
-            foreach (var dbMsDataFile in parent.MsDataFiles)
+            var data = Workspace.Data.MsDataFiles;
+            if (data == null)
             {
-                yield return new KeyValuePair<long, DbMsDataFile>(dbMsDataFile.Id.Value, dbMsDataFile);
+                return ImmutableSortedList<long, MsDataFile>.Empty;
             }
+            return
+                ImmutableSortedList.FromValues(data.Select(entry => new KeyValuePair<long, MsDataFile>(
+                    entry.Key, new MsDataFile(Workspace, entry.Key, entry.Value))));
         }
 
-        public override MsDataFile WrapChild(DbMsDataFile entity)
+        public override IList<MsDataFile> DeepClone()
         {
-            return new MsDataFile(Workspace, entity);
+            return Workspace.Clone().MsDataFiles;
         }
 
-        protected override int GetChildCount(DbWorkspace parent)
+        protected override MsDataFile CreateEntityForKey(long key, MsDataFileData data)
         {
-            return parent.MsDataFileCount;
+            return new MsDataFile(Workspace, key, data);
         }
 
-        protected override void SetChildCount(DbWorkspace parent, int childCount)
+        public override long GetKey(MsDataFile value)
         {
-            parent.MsDataFileCount = childCount;
+            return value.Id;
         }
-        public MsDataFile GetMsDataFile(DbMsDataFile dbMsDataFile)
+
+        protected override ImmutableSortedList<long, MsDataFileData> GetData(WorkspaceData workspaceData)
         {
-            return GetChild(dbMsDataFile.Id.Value);
+            return workspaceData.MsDataFiles;
+        }
+
+        protected override WorkspaceData SetData(WorkspaceData workspaceData, ImmutableSortedList<long, MsDataFileData> data)
+        {
+            return workspaceData.SetMsDataFiles(data);
         }
     }
 }

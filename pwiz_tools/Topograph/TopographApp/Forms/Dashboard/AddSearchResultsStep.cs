@@ -31,12 +31,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         public override bool IsCurrent
         {
-            get { return Workspace != null && (Workspace.Peptides.ChildCount == 0 || Workspace.MsDataFiles.ChildCount == 0); }
+            get { return Workspace != null && Workspace.IsLoaded && (Workspace.Peptides.Count == 0 || Workspace.MsDataFiles.Count == 0); }
         }
 
         private String Description
         {
+// ReSharper disable UnusedMember.Local
             get { return lblStatus.Text; }
+// ReSharper restore UnusedMember.Local
             set { lblStatus.Text = value; }
         }
 
@@ -54,14 +56,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             else
             {
                 Enabled = true;
-                if (Workspace.Peptides.ChildCount == 0)
+                if (Workspace.Peptides.Count == 0)
                 {
                     Description = "No search results have been added to this workspace yet.";
                 }
                 else
                 {
-                    string strPeptides = Workspace.Peptides.ChildCount == 1 ? "1 peptide" : (Workspace.Peptides.ChildCount + " peptides");
-                    if (Workspace.MsDataFiles.ChildCount == 0)
+                    string strPeptides = Workspace.Peptides.Count == 1 ? "1 peptide" : (Workspace.Peptides.Count + " peptides");
+                    if (Workspace.MsDataFiles.Count == 0)
                     {
                         Description =
                             string.Format(
@@ -69,17 +71,17 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                     }
                     else
                     {
-                        string strDataFiles = Workspace.MsDataFiles.ChildCount == 1
+                        string strDataFiles = Workspace.MsDataFiles.Count == 1
                                                   ? "1 MS data file"
-                                                  : (Workspace.MsDataFiles.ChildCount + " MS data files");
+                                                  : (Workspace.MsDataFiles.Count + " MS data files");
                         Description =
                             string.Format("{0} in {1} have been added to this workspace.",
                                           strPeptides, strDataFiles);
                     }
                     var peptidesWithoutDescription =
-                        Workspace.Peptides.ListChildren().Where(
+                        Workspace.Peptides.Where(
                             peptide => string.IsNullOrEmpty(peptide.ProteinDescription)).ToArray();
-                    if (peptidesWithoutDescription.Length > Workspace.Peptides.ChildCount / 2)
+                    if (peptidesWithoutDescription.Length > Workspace.Peptides.Count / 2)
                     {
                         panelUpdateProteinNames.Visible = true;
                     }
@@ -92,14 +94,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             base.UpdateStepStatus();
         }
 
-        private void btnAddSearchResults_Click(object sender, EventArgs e)
+        private void BtnAddSearchResultsOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.AddSearchResults();
+            TopographForm.AddSearchResults();
         }
 
-        private void btnChooseFastaFile_Click(object sender, EventArgs e)
+        private void BtnChooseFastaFileOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.ChooseFastaFile();
+            TopographForm.ChooseFastaFile();
         }
     }
 }

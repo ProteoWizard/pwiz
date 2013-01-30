@@ -49,7 +49,7 @@ namespace pwiz.Common.DataBinding.Controls
             btnRemove.Enabled = listView1.SelectedIndices.Count > 0;
         }
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        private void BtnAddOnClick(object sender, EventArgs e)
         {
             var newView = ViewContext.CustomizeView(this, new ViewSpec());
             if (newView != null)
@@ -63,23 +63,23 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void btnRefresh_Click(object sender, EventArgs e)
+        private void BtnRefreshOnClick(object sender, EventArgs e)
         {
             RefreshUi(true);
         }
 
-        private void btnEdit_Click(object sender, EventArgs e)
+        private void BtnEditOnClick(object sender, EventArgs e)
         {
             ViewContext.CustomizeView(this, _viewSpecs[listView1.SelectedIndices[0]]);
             RefreshUi(true);
         }
 
-        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListView1OnSelectedIndexChanged(object sender, EventArgs e)
         {
             RefreshUi(false);
         }
 
-        private void btnRemove_Click(object sender, EventArgs e)
+        private void BtnRemoveOnClick(object sender, EventArgs e)
         {
             var selectedItems = listView1.SelectedIndices.Cast<int>().Select(i => _viewSpecs[i]).ToArray();
             if (selectedItems.Length == 0)
@@ -103,7 +103,7 @@ namespace pwiz.Common.DataBinding.Controls
             RefreshUi(true);
         }
 
-        private void listView1_Resize(object sender, EventArgs e)
+        private void ListView1OnResize(object sender, EventArgs e)
         {
             colHdrName.Width = listView1.ClientSize.Width;
         }

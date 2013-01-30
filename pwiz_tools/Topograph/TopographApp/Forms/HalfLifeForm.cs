@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -38,7 +39,6 @@ namespace pwiz.Topograph.ui.Forms
     {
         private readonly List<PeptideAnalysis> _peptideAnalyses = new List<PeptideAnalysis>();
         private HalfLifeSettings? _lastCalcedHalfLifeSettings;
-        private WorkspaceVersion _workspaceVersion;
         private ZedGraphControl _zedGraphControl;
         private LineItem _pointsCurve;
         private IList<PeptideFileAnalysis> _peptideFileAnalysisPoints;
@@ -52,14 +52,14 @@ namespace pwiz.Topograph.ui.Forms
                                        GraphPane = { Title = {Text = null}}
                                    };
             _zedGraphControl.GraphPane.XAxis.Title.Text = "Time";
-            _zedGraphControl.MouseDownEvent += _zedGraphControl_MouseDownEvent;
+            _zedGraphControl.MouseDownEvent += ZedGraphControlOnMouseDownEvent;
             splitContainer1.Panel2.Controls.Add(_zedGraphControl);
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             SetHalfLifeSettings(Workspace.GetHalfLifeSettings(Settings.Default.HalfLifeSettings));
         }
 
-        bool _zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        bool ZedGraphControlOnMouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (_pointsCurve == null)
             {
@@ -194,10 +194,10 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 foreach (DbPeptideAnalysis dbPeptideAnalysis in query.List())
                 {
-                    peptideAnalysisIds.Add(dbPeptideAnalysis.Id.Value);
+                    peptideAnalysisIds.Add(dbPeptideAnalysis.Id.GetValueOrDefault());
                 }
             }
-            var peptideAnalyses = TurnoverForm.Instance.LoadPeptideAnalyses(peptideAnalysisIds);
+            var peptideAnalyses = TopographForm.Instance.LoadPeptideAnalyses(peptideAnalysisIds);
             ClearPeptideAnalyses();
             foreach (var peptideAnalysis in peptideAnalyses.Values)
             {
@@ -209,7 +209,7 @@ namespace pwiz.Topograph.ui.Forms
         private void UpdateCohortCombo()
         {
             var cohortSet = new HashSet<String> {""};
-            foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
+            foreach (var msDataFile in Workspace.MsDataFiles)
             {
                 cohortSet.Add(HalfLifeCalculator.GetCohort(msDataFile, GetHalfLifeSettings().BySample));
             }
@@ -243,22 +243,19 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            _workspaceVersion = Workspace.WorkspaceVersion;
             dataGridView1.Rows.Clear();
             RequeryPeptideAnalyses();
-            using (Workspace.GetReadLock())
+            foreach (var peptideAnalysis in _peptideAnalyses)
             {
-                foreach (var peptideAnalysis in _peptideAnalyses)
+                peptideAnalysis.EnsurePeaksCalculated();
+                tbxProteinDescription.Text = peptideAnalysis.Peptide.ProteinDescription;
+                foreach (var peptideFileAnalysis in peptideAnalysis.GetFileAnalyses(false))
                 {
-                    tbxProteinDescription.Text = peptideAnalysis.Peptide.ProteinDescription;
-                    foreach (var peptideFileAnalysis in peptideAnalysis.GetFileAnalyses(false))
-                    {
-                        var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
-                        row.Tag = peptideFileAnalysis;
-                    }
+                    var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
+                    row.Tag = peptideFileAnalysis;
                 }
-                UpdateRows(true);
             }
+            UpdateRows(true);
         }
 
         private void UpdateRows(bool force)
@@ -274,72 +271,82 @@ namespace pwiz.Topograph.ui.Forms
             }
             colSample.Visible = halfLifeSettings.BySample;
             colEvviesFilter.Visible = halfLifeSettings.EvviesFilter != EvviesFilterEnum.None;
-            using (Workspace.GetReadLock())
+            var peptideFileAnalyses = new List<PeptideFileAnalysis>();
+            for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
             {
-                var peptideFileAnalyses = new List<PeptideFileAnalysis>();
-                for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                var row = dataGridView1.Rows[iRow];
+                var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
+                peptideFileAnalysis.PeptideAnalysis.EnsurePeaksCalculated();
+                bool included = IsIncluded(halfLifeSettings, peptideFileAnalysis);
+                SetIncluded(row, included);
+                if (included)
                 {
-                    var row = dataGridView1.Rows[iRow];
-                    var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
-                    bool included = IsIncluded(halfLifeSettings, peptideFileAnalysis);
-                    SetIncluded(row, included);
-                    if (included)
-                    {
-                        peptideFileAnalyses.Add(peptideFileAnalysis);
-                    }
-                    row.Cells[colPeptide.Index].Value = peptideFileAnalysis.Peptide.Sequence;
-                    row.Cells[colFile.Index].Value = peptideFileAnalysis.MsDataFile.Label;
-                    row.Cells[colStatus.Index].Value = peptideFileAnalysis.ValidationStatus;
-                    row.Cells[colTimePoint.Index].Value = peptideFileAnalysis.MsDataFile.TimePoint;
-                    row.Cells[colCohort.Index].Value = peptideFileAnalysis.MsDataFile.Cohort;
-                    row.Cells[colTracerPercent.Index].Value = peptideFileAnalysis.Peaks.TracerPercent;
-                    row.Cells[colScore.Index].Value = peptideFileAnalysis.Peaks.DeconvolutionScore;
-                    row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
-                    row.Cells[colPrecursorPool.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
-                    row.Cells[colTurnoverScore.Index].Value = peptideFileAnalysis.Peaks.TurnoverScore;
-                    row.Cells[colSample.Index].Value = peptideFileAnalysis.MsDataFile.Sample;
-                    row.Cells[colAuc.Index].Value = peptideFileAnalysis.Peaks.AreaUnderCurve;
+                    peptideFileAnalyses.Add(peptideFileAnalysis);
                 }
-                HalfLifeCalculator.ResultData resultData;
-                var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, halfLifeSettings, out resultData);
-                var allRowDatas = resultData.RowDatas.ToDictionary(rowData=>rowData.RawRowData.PeptideFileAnalysisId, rowData=>rowData);
-                colTurnoverAvg.Visible = true;
-                colPrecursorPoolAvg.Visible = true;
-                colTurnoverScoreAvg.Visible = true;
-
-                for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                row.Cells[colPeptide.Index].Value = peptideFileAnalysis.Peptide.Sequence;
+                row.Cells[colFile.Index].Value = peptideFileAnalysis.MsDataFile.Label;
+                row.Cells[colStatus.Index].Value = peptideFileAnalysis.ValidationStatus;
+                row.Cells[colTimePoint.Index].Value = peptideFileAnalysis.MsDataFile.TimePoint;
+                row.Cells[colCohort.Index].Value = peptideFileAnalysis.MsDataFile.Cohort;
+                if (peptideFileAnalysis.CalculatedPeaks == null)
                 {
-                    var row = dataGridView1.Rows[iRow];
-                    var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
-                    HalfLifeCalculator.ProcessedRowData rowData;
-                    if (allRowDatas.TryGetValue(peptideFileAnalysis.Id.Value, out rowData))
+                    row.Cells[colTracerPercent.Index].Value = null;
+                    row.Cells[colScore.Index].Value = null;
+                    row.Cells[colTurnover.Index].Value = null;
+                    row.Cells[colPrecursorPool.Index].Value = null;
+                    row.Cells[colTurnoverScore.Index].Value = null;
+                    row.Cells[colAuc.Index].Value = null;
+                }
+                else
+                {
+                    row.Cells[colTracerPercent.Index].Value = peptideFileAnalysis.CalculatedPeaks.TracerPercent;
+                    row.Cells[colScore.Index].Value = peptideFileAnalysis.CalculatedPeaks.DeconvolutionScore;
+                    row.Cells[colTurnover.Index].Value = peptideFileAnalysis.CalculatedPeaks.Turnover;
+                    row.Cells[colPrecursorPool.Index].Value = peptideFileAnalysis.CalculatedPeaks.PrecursorEnrichment;
+                    row.Cells[colTurnoverScore.Index].Value = peptideFileAnalysis.CalculatedPeaks.TurnoverScore;
+                    row.Cells[colAuc.Index].Value = peptideFileAnalysis.CalculatedPeaks.AreaUnderCurve;
+                }
+                row.Cells[colSample.Index].Value = peptideFileAnalysis.MsDataFile.Sample;
+            }
+            HalfLifeCalculator.ResultData resultData;
+            var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, halfLifeSettings, out resultData);
+            var allRowDatas = resultData.RowDatas.ToDictionary(rowData=>rowData.RawRowData.PeptideFileAnalysisId, rowData=>rowData);
+            colTurnoverAvg.Visible = true;
+            colPrecursorPoolAvg.Visible = true;
+            colTurnoverScoreAvg.Visible = true;
+
+            for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+            {
+                var row = dataGridView1.Rows[iRow];
+                var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
+                HalfLifeCalculator.ProcessedRowData rowData;
+                if (allRowDatas.TryGetValue(peptideFileAnalysis.Id, out rowData))
+                {
+                    SetBackColor(row, rowData.RejectReason == null ? Color.White : Color.LightGray);
+                }
+                else
+                {
+                    rowData = halfLifeCalculator.ToRowData(peptideFileAnalysis);
+                }
+                if (rowData != null)
+                {
+                    row.Cells[colTurnoverAvg.Index].Value = rowData.Turnover;
+                    row.Cells[colPrecursorPoolAvg.Index].Value =
+                        rowData.CurrentPrecursorPool;
+                    row.Cells[colTurnoverScoreAvg.Index].Value = rowData.TurnoverScore;
+                    row.Cells[colRejectReason.Index].Value = rowData.RejectReason;
+                    if (rowData.EvviesFilterMin.HasValue || rowData.EvviesFilterMax.HasValue)
                     {
-                        SetBackColor(row, rowData.RejectReason == null ? Color.White : Color.LightGray);
+                        row.Cells[colEvviesFilter.Index].Value = "[" + rowData.EvviesFilterMin + "," + rowData.EvviesFilterMax + "]";
                     }
-                    else
-                    {
-                        rowData = halfLifeCalculator.ToRowData(peptideFileAnalysis);
-                    }
-                    if (rowData != null)
-                    {
-                        row.Cells[colTurnoverAvg.Index].Value = rowData.Turnover;
-                        row.Cells[colPrecursorPoolAvg.Index].Value =
-                            rowData.CurrentPrecursorPool;
-                        row.Cells[colTurnoverScoreAvg.Index].Value = rowData.TurnoverScore;
-                        row.Cells[colRejectReason.Index].Value = rowData.RejectReason;
-                        if (rowData.EvviesFilterMin.HasValue || rowData.EvviesFilterMax.HasValue)
-                        {
-                            row.Cells[colEvviesFilter.Index].Value = "[" + rowData.EvviesFilterMin + "," + rowData.EvviesFilterMax + "]";
-                        }
-                    }
-                    else
-                    {
-                        row.Cells[colTurnoverAvg.Index].Value = null;
-                        row.Cells[colPrecursorPoolAvg.Index].Value = null;
-                        row.Cells[colTurnoverScoreAvg.Index].Value = null;
-                        row.Cells[colRejectReason.Index].Value = null;
-                        row.Cells[colEvviesFilter.Index].Value = null;
-                    }
+                }
+                else
+                {
+                    row.Cells[colTurnoverAvg.Index].Value = null;
+                    row.Cells[colPrecursorPoolAvg.Index].Value = null;
+                    row.Cells[colTurnoverScoreAvg.Index].Value = null;
+                    row.Cells[colRejectReason.Index].Value = null;
+                    row.Cells[colEvviesFilter.Index].Value = null;
                 }
             }
             _lastCalcedHalfLifeSettings = halfLifeSettings;
@@ -359,7 +366,7 @@ namespace pwiz.Topograph.ui.Forms
                 new HashSet<long>(resultData.FilteredRowDatas.Select(rd => rd.RawRowData.PeptideFileAnalysisId));
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
-                if (!filteredFileAnalysisIds.Contains(peptideFileAnalysis.Id.Value))
+                if (!filteredFileAnalysisIds.Contains(peptideFileAnalysis.Id))
                 {
                     continue;
                 }
@@ -381,6 +388,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     continue;
                 }
+                Debug.Assert(peptideFileAnalysis.MsDataFile.TimePoint != null);
                 xValues.Add(peptideFileAnalysis.MsDataFile.TimePoint.Value);
                 yValues.Add(value.Value);
                 fileAnalysisPoints.Add(peptideFileAnalysis);
@@ -403,9 +411,11 @@ namespace pwiz.Topograph.ui.Forms
                 _zedGraphControl.GraphPane.YAxis.Title.Text = "% Newly Synthesized";
                 funcConvertToDisplayedValue = x => (1 - Math.Exp(x)) * 100;
             }
+            // ReSharper disable ImplicitlyCapturedClosure
             AddFunction("Best Fit", x=>funcConvertToDisplayedValue(funcMiddle(x)), Color.Black);
             AddFunction("Minimum Bound", x=>funcConvertToDisplayedValue(funcMin(x)), Color.LightBlue);
             AddFunction("Maximum Bound", x=>funcConvertToDisplayedValue(funcMax(x)), Color.LightGreen);
+            // ReSharper restore ImplicitlyCapturedClosure
             _zedGraphControl.GraphPane.AxisChange();
             _zedGraphControl.Invalidate();
             _pointsCurve = pointsCurve;
@@ -450,37 +460,44 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 values.Add(value);
             }
-            var allTimePoints = new HashSet<double>(Workspace.MsDataFiles.ListChildren()
+            var allTimePoints = new HashSet<double>(Workspace.MsDataFiles
                                             .Where(d => d.TimePoint.HasValue)
+// ReSharper disable PossibleInvalidOperationException
                                             .Select(d => d.TimePoint.Value))
+// ReSharper restore PossibleInvalidOperationException
                                             .ToArray();
             Array.Sort(allTimePoints);
             gridViewStats.Rows.Clear();
-            gridViewStats.Rows.Add(allTimePoints.Length);
-            for (int i = 0; i < allTimePoints.Length; i++)
+            if (allTimePoints.Length > 0)
             {
-                var row = gridViewStats.Rows[i];
-                var time = allTimePoints[i];
-                row.Cells[colStatsTime.Index].Value = time;
-                row.Cells[colStatsInclude.Index].Value = !IsTimePointExcluded(time);
-                IList<double> values;
-                if (timeToValuesDict.TryGetValue(time, out values))
+                gridViewStats.Rows.Add(allTimePoints.Length);
+                for (int i = 0; i < allTimePoints.Length; i++)
                 {
-                    var stats = new Statistics(values.ToArray());
-                    row.Cells[colStatsMean.Index].Value = stats.Mean();
-                    row.Cells[colStatsMedian.Index].Value = stats.Median();
-                    row.Cells[colStatsStdDev.Index].Value = stats.StdDev();
-                    row.Cells[colStatsPointCount.Index].Value = stats.Length;
+                    var row = gridViewStats.Rows[i];
+                    var time = allTimePoints[i];
+                    row.Cells[colStatsTime.Index].Value = time;
+                    row.Cells[colStatsInclude.Index].Value = !IsTimePointExcluded(time);
+                    IList<double> values;
+                    if (timeToValuesDict.TryGetValue(time, out values))
+                    {
+                        var stats = new Statistics(values.ToArray());
+                        row.Cells[colStatsMean.Index].Value = stats.Mean();
+                        row.Cells[colStatsMedian.Index].Value = stats.Median();
+                        row.Cells[colStatsStdDev.Index].Value = stats.StdDev();
+                        row.Cells[colStatsPointCount.Index].Value = stats.Length;
 
+                    }
                 }
             }
         }
 
+// ReSharper disable UnusedMethodReturnValue.Local
         private CurveItem AddFunction(string name, Func<double,double> func, Color color)
+// ReSharper restore UnusedMethodReturnValue.Local
         {
             double minTime = 0;
             double maxTime = 0;
-            foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
+            foreach (var msDataFile in Workspace.MsDataFiles)
             {
                 if (!msDataFile.TimePoint.HasValue)
                 {
@@ -521,7 +538,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (halfLifeSettings.PrecursorPoolCalculation == PrecursorPoolCalculation.Individual)
             {
-                if (!peptideFileAnalysis.Peaks.Turnover.HasValue)
+                if (null == peptideFileAnalysis.CalculatedPeaks || !peptideFileAnalysis.CalculatedPeaks.Turnover.HasValue)
                 {
                     return false;
                 }
@@ -543,17 +560,17 @@ namespace pwiz.Topograph.ui.Forms
             
         }
 
-        private void cbxLogPlot_CheckedChanged(object sender, EventArgs e)
+        private void CbxLogPlotOnCheckedChanged(object sender, EventArgs e)
         {
             UpdateRows(true);
         }
 
-        private void comboCohort_SelectedIndexChanged(object sender, EventArgs e)
+        private void ComboCohortOnSelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateRows(true);
         }
 
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView1OnCellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
             {
@@ -567,17 +584,12 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        protected override void WorkspaceOnChange(object sender, WorkspaceChangeArgs args)
         {
-            if (Workspace.WorkspaceVersion != _workspaceVersion)
-            {
-                Requery();
-                return;
-            }
             UpdateRows(true);
         }
 
-        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView1OnCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex < 0 || e.RowIndex < 0)
             {
@@ -588,10 +600,7 @@ namespace pwiz.Topograph.ui.Forms
             var cell = row.Cells[e.ColumnIndex];
             if (e.ColumnIndex == colStatus.Index)
             {
-                using (Workspace.GetWriteLock())
-                {
-                    peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
-                }
+                peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
             }
         }
 
@@ -621,16 +630,16 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void gridViewStats_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        private void GridViewStatsOnCellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
             gridViewStats.EndEdit();
         }
 
-        private void gridViewStats_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        private void GridViewStatsOnCellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             gridViewStats.EndEdit();
         }
-        private void gridViewStats_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void GridViewStatsOnCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             var row = gridViewStats.Rows[e.RowIndex];
             var time = (double)row.Cells[colStatsTime.Index].Value;
@@ -638,12 +647,12 @@ namespace pwiz.Topograph.ui.Forms
             SetTimePointExcluded(time, excluded);
         }
 
-        private void cbxBySample_CheckedChanged(object sender, EventArgs e)
+        private void CbxBySampleOnCheckedChanged(object sender, EventArgs e)
         {
             Requery();
         }
 
-        private void halfLifeSettingsControl_SettingsChange(object sender, EventArgs e)
+        private void HalfLifeSettingsControlOnSettingsChange(object sender, EventArgs e)
         {
             UpdateRows(false);
         }

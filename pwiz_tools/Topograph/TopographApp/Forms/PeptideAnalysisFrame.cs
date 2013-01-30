@@ -17,16 +17,9 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.ui.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -60,6 +53,11 @@ namespace pwiz.Topograph.ui.Forms
             base.OnHandleDestroyed(e);
             PeptideAnalysis.DecChromatogramRefCount();
         }
+        protected override void EntityChanged()
+        {
+            base.EntityChanged();
+            OnPeptideAnalysisChanged();
+        }
 
         private void OnPeptideAnalysisChanged()
         {
@@ -69,16 +67,12 @@ namespace pwiz.Topograph.ui.Forms
             tbxProteinName.Text = PeptideAnalysis.Peptide.GetProteinKey();
         }
 
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        protected override void WorkspaceOnChange(object sender, WorkspaceChangeArgs args)
         {
-            base.OnWorkspaceEntitiesChanged(args);
-            if (args.IsRemoved(PeptideAnalysis))
+            base.WorkspaceOnChange(sender, args);
+            if (null == Workspace.PeptideAnalyses.FindByKey(PeptideAnalysis.Id))
             {
                 Close();
-            }
-            else if (args.IsChanged(PeptideAnalysis))
-            {
-                OnPeptideAnalysisChanged();
             }
         }
 
@@ -100,13 +94,20 @@ namespace pwiz.Topograph.ui.Forms
                 form.Activate();
                 return form;
             }
-            peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(peptideAnalysis.Id.Value);
-            form = new PeptideAnalysisFrame(peptideAnalysis);
-            form.Show(TurnoverForm.Instance.DocumentPanel, DockState.Document);
-            return form;
+            using (peptideAnalysis.IncChromatogramRefCount())
+            {
+                TopographForm.Instance.LoadPeptideAnalysis(peptideAnalysis.Id);
+                if (!peptideAnalysis.ChromatogramsWereLoaded)
+                {
+                    return null;
+                }
+                form = new PeptideAnalysisFrame(peptideAnalysis);
+                form.Show(TopographForm.Instance.DocumentPanel, DockState.Document);
+                return form;
+            }
         }
 
-        private void PeptideAnalysisFrame_Resize(object sender, EventArgs e)
+        private void PeptideAnalysisFrameOnResize(object sender, EventArgs e)
         {
             SuspendLayout();
             ResumeLayout(true);

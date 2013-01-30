@@ -76,7 +76,7 @@
             this.comboTarget.Name = "comboTarget";
             this.comboTarget.Size = new System.Drawing.Size(225, 21);
             this.comboTarget.TabIndex = 2;
-            this.comboTarget.SelectedIndexChanged += new System.EventHandler(this.comboTarget_SelectedIndexChanged);
+            this.comboTarget.SelectedIndexChanged += new System.EventHandler(this.ComboTargetOnSelectedIndexChanged);
             // 
             // splitContainer1
             // 
@@ -177,7 +177,7 @@
             // 
             // bindingSource
             // 
-            this.bindingSource.CurrentChanged += new System.EventHandler(this.bindingSource_CurrentChanged);
+            this.bindingSource.CurrentChanged += new System.EventHandler(this.BindingSourceOnCurrentChanged);
             // 
             // zedGraphControl
             // 

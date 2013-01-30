@@ -57,14 +57,14 @@ namespace pwiz.Topograph.ui.Forms
             this.toolStripMenuItemSmooth.Name = "toolStripMenuItemSmooth";
             this.toolStripMenuItemSmooth.Size = new System.Drawing.Size(179, 22);
             this.toolStripMenuItemSmooth.Text = "Smooth";
-            this.toolStripMenuItemSmooth.Click += new System.EventHandler(this.toolStripMenuItemSmooth_Click);
+            this.toolStripMenuItemSmooth.Click += new System.EventHandler(this.ToolStripMenuItemSmoothOnClick);
             // 
             // toolStripMenuItemShowSpectrum
             // 
             this.toolStripMenuItemShowSpectrum.Name = "toolStripMenuItemShowSpectrum";
             this.toolStripMenuItemShowSpectrum.Size = new System.Drawing.Size(179, 22);
             this.toolStripMenuItemShowSpectrum.Text = "Show Spectrum";
-            this.toolStripMenuItemShowSpectrum.Click += new System.EventHandler(this.toolStripMenuItemShowSpectrum_Click);
+            this.toolStripMenuItemShowSpectrum.Click += new System.EventHandler(this.ToolStripMenuItemShowSpectrumOnClick);
             // 
             // AbstractChromatogramForm
             // 

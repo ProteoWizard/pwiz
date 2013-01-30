@@ -16,10 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace pwiz.Topograph.Util
 {
@@ -77,26 +76,7 @@ namespace pwiz.Topograph.Util
             }
             return result;
         }
-        public static bool EqualsDeep<K,V>(IDictionary<K,V> dict1, IDictionary<K,V> dict2)
-        {
-            if (dict1.Count != dict2.Count)
-            {
-                return false;
-            }
-            foreach (var entry in dict1)
-            {
-                V value2;
-                if (!dict2.TryGetValue(entry.Key, out value2))
-                {
-                    return false;
-                }
-                if (!Equals(entry.Value, value2))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+
         public static Dictionary<double, double> SetResolution(Dictionary<double, double> dict, double resolution, double threshhold)
         {
             var sortedDict = new SortedDictionary<double, double>(dict);
@@ -123,12 +103,43 @@ namespace pwiz.Topograph.Util
             }
             return result;
         }
-        public V GetValueOrDefault<K,V>(Dictionary<K,V> dict, K key, V defaultValue)
+
+        public IDictionary<TKey, TValue> Merge<TKey, TValue>(IDictionary<TKey, TValue> mine,
+                                                             IDictionary<TKey, TValue> original,
+                                                             IDictionary<TKey, TValue> theirs)
         {
-            V result;
-            if (!dict.TryGetValue(key, out result))
+            var result = new Dictionary<TKey, TValue>(theirs);
+            foreach (var entry in mine.Except(original))
             {
-                return defaultValue;
+                result[entry.Key] = entry.Value;
+            }
+            foreach (var key in original.Keys.Except(mine.Keys))
+            {
+                result.Remove(key);
+            }
+            return result;
+        }
+
+        public delegate TValue MergeFunc<TValue>(TValue mine, TValue original, TValue theirs);
+        public IDictionary<TKey, TValue> Merge<TKey, TValue>(IDictionary<TKey, TValue> mine,
+                                                             IDictionary<TKey, TValue> original,
+                                                             IDictionary<TKey, TValue> theirs,
+                                                             MergeFunc<TValue> mergeFunc)
+        {
+            var result = new Dictionary<TKey, TValue>(theirs);
+            foreach (var entry in mine.Except(original))
+            {
+                TValue theirValue;
+                if (result.TryGetValue(entry.Key, out theirValue))
+                {
+                    TValue originalValue;
+                    original.TryGetValue(entry.Key, out originalValue);
+                    result[entry.Key] = mergeFunc(entry.Value, originalValue, theirValue);
+                }
+            }
+            foreach (var key in original.Keys.Except(mine.Keys))
+            {
+                result.Remove(key);
             }
             return result;
         }

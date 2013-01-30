@@ -31,22 +31,22 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         public override bool IsCurrent
         {
-            get { return Workspace != null && Workspace.PeptideAnalyses.ChildCount > 0; }
+            get { return Workspace != null && Workspace.PeptideAnalyses.Count > 0; }
         }
 
-        private void linkResultsPerReplicate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void LinkResultsPerReplicateOnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            TurnoverForm.ShowResultsByReplicate();
+            TopographForm.ShowResultsByReplicate();
         }
 
-        private void linkResultsByCohort_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void LinkResultsByCohortOnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            TurnoverForm.ShowResultsPerGroup();
+            TopographForm.ShowResultsPerGroup();
         }
 
-        private void linkHalfLives_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void LinkHalfLivesOnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            TurnoverForm.ShowHalfLivesForm();
+            TopographForm.ShowHalfLivesForm();
         }
 
         protected override void UpdateStepStatus()
@@ -66,7 +66,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 else
                 {
                     bool anyTimePoints =
-                        Workspace.MsDataFiles.ListChildren().Any(msDataFile => null != msDataFile.TimePoint);
+                        Workspace.MsDataFiles.Any(msDataFile => null != msDataFile.TimePoint);
                     if (!anyTimePoints)
                     {
                         linkHalfLives.Enabled = false;
@@ -83,9 +83,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             base.UpdateStepStatus();
         }
 
-        private void linkDataFiles_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void LinkDataFilesOnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            TurnoverForm.ShowDataFiles();
+            TopographForm.ShowDataFiles();
+        }
+
+        private void LinkPeptideAnalysesOnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            TopographForm.ShowPeptideAnalyses();
         }
     }
 }

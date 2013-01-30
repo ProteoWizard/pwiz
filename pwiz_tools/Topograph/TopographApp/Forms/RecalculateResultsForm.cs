@@ -1,10 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
@@ -26,7 +39,7 @@ namespace pwiz.Topograph.ui.Forms
             RefreshStats();
         }
 
-        private void btnRefresh_Click(object sender, EventArgs e)
+        private void BtnRefreshOnClick(object sender, EventArgs e)
         {
             RefreshStats();
         }
@@ -58,35 +71,41 @@ namespace pwiz.Topograph.ui.Forms
                 int chromatogramsMissing = Convert.ToInt32(queryChromatogramsMissing.UniqueResult());
                 BeginInvoke(new Action(delegate
                                 {
-                                    tbxResultsPresent.Text = resultsPresent.ToString();
-                                    tbxResultsMissing.Text = resultsMissing.ToString();
-                                    tbxChromatogramsPresent.Text = chromatogramsPresent.ToString();
-                                    tbxChromatogramsMissing.Text = chromatogramsMissing.ToString();
+                                    tbxResultsPresent.Text = resultsPresent.ToString(CultureInfo.CurrentCulture);
+                                    tbxResultsMissing.Text = resultsMissing.ToString(CultureInfo.CurrentCulture);
+                                    tbxChromatogramsPresent.Text = chromatogramsPresent.ToString(CultureInfo.CurrentCulture);
+                                    tbxChromatogramsMissing.Text = chromatogramsMissing.ToString(CultureInfo.CurrentCulture);
 
                                 }));
             }
         }
 
-        private void btnRegenerateChromatograms_Click(object sender, EventArgs e)
+        private void BtnRegenerateChromatogramsOnClick(object sender, EventArgs e)
         {
             if (MessageBox.Show(this, "Are you sure you want to delete all of the chromatograms in this workspace?  Regenerating chromatograms can take a really long time.", Program.AppName, MessageBoxButtons.OKCancel) != DialogResult.OK)
             {
                 return;
             }
 
-            UpdateWorkspaceVersion(Workspace.SavedWorkspaceVersion.IncMassVersion());
+            var change = new WorkspaceChangeArgs(Workspace.Data, Workspace.SavedData);
+            change.AddChromatogramMassChange();
+            
+            UpdateWorkspaceVersion(change);
             Workspace.ChromatogramGenerator.SetRequeryPending();
             RefreshStats();
         }
 
-        private void btnRecalculateResults_Click(object sender, EventArgs e)
+        private void BtnRecalculateResultsOnClick(object sender, EventArgs e)
         {
-            UpdateWorkspaceVersion(Workspace.SavedWorkspaceVersion.IncChromatogramPeakVersion());
+            var change = new WorkspaceChangeArgs(Workspace.Data, Workspace.SavedData);
+            change.AddPeakPickingChange();
+            UpdateWorkspaceVersion(change);
             Workspace.ResultCalculator.SetRequeryPending();
             RefreshStats();
         }
 
-        private void UpdateWorkspaceVersion(WorkspaceVersion v)
+        // ReSharper disable AccessToDisposedClosure
+        private void UpdateWorkspaceVersion(WorkspaceChangeArgs v)
         {
             using (var session = Workspace.OpenSession())
             {
@@ -102,5 +121,6 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
         }
+        // ReSharper restore AccessToDisposedClosure
     }
 }

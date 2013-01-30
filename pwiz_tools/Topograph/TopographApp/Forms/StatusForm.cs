@@ -17,13 +17,8 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
@@ -35,12 +30,12 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void Timer1OnTick(object sender, EventArgs e)
         {
             String chromatogramStatus;
             int chromatogramProgress;
             Workspace.ChromatogramGenerator.GetProgress(out chromatogramStatus, out chromatogramProgress);
-            if (Workspace.SavedWorkspaceVersion.ChromatogramsValid(Workspace.WorkspaceVersion))
+            if (!Workspace.SavedWorkspaceChange.HasChromatogramMassChange)
             {
                 tbxChromatogramMessage.Text = Workspace.ChromatogramGenerator.PendingAnalysisCount + " analyses left to process.";
                 if (Workspace.ChromatogramGenerator.IsRequeryPending())
@@ -57,7 +52,7 @@ namespace pwiz.Topograph.ui.Forms
                 tbxChromatogramMessage.Text =
                     "Workspace settings are unsaved.  Only processing open Analyses.";
             }
-            if (Workspace.SavedWorkspaceVersion.Equals(Workspace.WorkspaceVersion))
+            if (!Workspace.SavedWorkspaceChange.HasTurnoverChange)
             {
                 tbxResultCalculatorMessage.Text = Workspace.ResultCalculator.PendingAnalysisCount + " analyses left to process.";
                 if (Workspace.ResultCalculator.IsRequeryPending())
@@ -73,22 +68,31 @@ namespace pwiz.Topograph.ui.Forms
             tbxChromatogramStatus.Text = chromatogramStatus;
             pbChromatogram.Value = chromatogramProgress;
             tbxResultCalculatorStatus.Text = Workspace.ResultCalculator.StatusMessage;
-            tbxOpenAnalyses.Text = Workspace.PeptideAnalyses.ListChildren().Count.ToString();
+            int openAnalyses = 0;
+            if (Workspace.Data.PeptideAnalyses != null)
+            {
+                openAnalyses = Workspace.Data.PeptideAnalyses.Values.Count(pa => pa.ChromatogramsWereLoaded);
+            }
+            if (Workspace.SavedData.PeptideAnalyses != null)
+            {
+                openAnalyses = Math.Max(openAnalyses, Workspace.SavedData.PeptideAnalyses.Values.Count(pa => pa.ChromatogramsWereLoaded));
+            }
+            tbxOpenAnalyses.Text = openAnalyses.ToString(CultureInfo.CurrentCulture);
             tbxMemory.Text = Math.Round(System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1048576.0, 1) + "MB";
             btnSuspendChromatogram.Text = Workspace.ChromatogramGenerator.IsSuspended ? "Resume" : "Suspend";
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOkOnClick(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void btnGarbageCollect_Click(object sender, EventArgs e)
+        private void BtnGarbageCollectOnClick(object sender, EventArgs e)
         {
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
         }
 
-        private void btnSuspendChromatogram_Click(object sender, EventArgs e)
+        private void BtnSuspendChromatogramOnClick(object sender, EventArgs e)
         {
             Workspace.ChromatogramGenerator.IsSuspended = !Workspace.ChromatogramGenerator.IsSuspended;
         }

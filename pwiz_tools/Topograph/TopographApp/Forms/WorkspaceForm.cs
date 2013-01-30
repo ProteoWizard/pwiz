@@ -17,11 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.DataBinding;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
@@ -42,7 +38,7 @@ namespace pwiz.Topograph.ui.Forms
             base.OnHandleCreated(e);
             if (Workspace != null)
             {
-                Workspace.EntitiesChange += OnWorkspaceEntitiesChanged;
+                Workspace.Change += WorkspaceOnChange;
             }
         }
 
@@ -51,11 +47,11 @@ namespace pwiz.Topograph.ui.Forms
             base.OnHandleDestroyed(e);
             if (Workspace != null)
             {
-                Workspace.EntitiesChange -= OnWorkspaceEntitiesChanged;
+                Workspace.Change -= WorkspaceOnChange;
             }
         }
 
-        public virtual Workspace Workspace { get; private set; }
+        public Workspace Workspace { get; private set; }
         protected void SafeBeginInvoke(Action action)
         {
             lock(this)
@@ -66,8 +62,9 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
         }
-        protected virtual void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        protected virtual void WorkspaceOnChange(object sender, WorkspaceChangeArgs args)
         {
+            
         }
     }
 }

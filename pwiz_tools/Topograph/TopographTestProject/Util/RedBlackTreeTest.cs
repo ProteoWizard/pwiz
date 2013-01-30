@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -65,7 +66,7 @@ RedBlackTreeTest
                             sortedList.Select(i => new KeyValuePair<IComparable, object>(i, i)).ToArray());
                     treeFromSorted.Validate();
                     Assert.IsTrue(sortedList.SequenceEqual(treeFromSorted.Keys.Cast<int>()));
-                    string message = "[" + string.Join(",", intList.Select(i => i.ToString()).ToArray()) + "]";
+                    string message = "[" + string.Join(",", intList.Select(i => i.ToString(CultureInfo.InvariantCulture)).ToArray()) + "]";
                     Assert.IsNull(tree.Lower(int.MinValue), message);
                     Assert.IsTrue(sortedList.SequenceEqual(tree.Keys.Cast<int>()), message);
                     var indexes = tree.Select(node => node.Index).ToArray();

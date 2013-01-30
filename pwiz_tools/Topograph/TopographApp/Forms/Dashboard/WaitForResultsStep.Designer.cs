@@ -100,7 +100,7 @@
             // 
             this.timer.Enabled = true;
             this.timer.Interval = 60000;
-            this.timer.Tick += new System.EventHandler(this.timer_Tick);
+            this.timer.Tick += new System.EventHandler(this.TimerOnTick);
             // 
             // panelForeignLocks
             // 
@@ -135,7 +135,7 @@
             this.btnCancelTasks.TabIndex = 6;
             this.btnCancelTasks.Text = "Cancel Other Tasks";
             this.btnCancelTasks.UseVisualStyleBackColor = true;
-            this.btnCancelTasks.Click += new System.EventHandler(this.btnCancelTasks_Click);
+            this.btnCancelTasks.Click += new System.EventHandler(this.BtnCancelTasksOnClick);
             // 
             // label2
             // 

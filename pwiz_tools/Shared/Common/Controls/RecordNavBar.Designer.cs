@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnNavFirst = new System.Windows.Forms.Button();
             this.btnNavPrev = new System.Windows.Forms.Button();
@@ -84,7 +83,7 @@
             this.btnNavFirst.TabIndex = 0;
             this.btnNavFirst.Text = "|<";
             this.btnNavFirst.UseVisualStyleBackColor = true;
-            this.btnNavFirst.Click += new System.EventHandler(this.btnNavFirst_Click);
+            this.btnNavFirst.Click += new System.EventHandler(this.BtnNavFirstOnClick);
             // 
             // btnNavPrev
             // 
@@ -96,7 +95,7 @@
             this.btnNavPrev.TabIndex = 1;
             this.btnNavPrev.Text = "<";
             this.btnNavPrev.UseVisualStyleBackColor = true;
-            this.btnNavPrev.Click += new System.EventHandler(this.btnNavPrev_Click);
+            this.btnNavPrev.Click += new System.EventHandler(this.BtnNavPrevOnClick);
             // 
             // tbxRecordNumber
             // 
@@ -107,9 +106,9 @@
             this.tbxRecordNumber.Size = new System.Drawing.Size(139, 20);
             this.tbxRecordNumber.TabIndex = 2;
             this.tbxRecordNumber.Text = "####### of #######";
-            this.tbxRecordNumber.TextChanged += new System.EventHandler(this.tbxRecordNumber_Leave);
-            this.tbxRecordNumber.Leave += new System.EventHandler(this.tbxRecordNumber_Leave);
-            this.tbxRecordNumber.Enter += new System.EventHandler(this.tbxRecordNumber_Enter);
+            this.tbxRecordNumber.TextChanged += new System.EventHandler(this.TbxRecordNumberOnLeave);
+            this.tbxRecordNumber.Enter += new System.EventHandler(this.TbxRecordNumberOnEnter);
+            this.tbxRecordNumber.Leave += new System.EventHandler(this.TbxRecordNumberOnLeave);
             // 
             // label1
             // 
@@ -132,7 +131,7 @@
             this.btnNavNext.TabIndex = 4;
             this.btnNavNext.Text = ">";
             this.btnNavNext.UseVisualStyleBackColor = true;
-            this.btnNavNext.Click += new System.EventHandler(this.btnNavNext_Click);
+            this.btnNavNext.Click += new System.EventHandler(this.BtnNavNextOnClick);
             // 
             // btnNavLast
             // 
@@ -144,7 +143,7 @@
             this.btnNavLast.TabIndex = 5;
             this.btnNavLast.Text = ">|";
             this.btnNavLast.UseVisualStyleBackColor = true;
-            this.btnNavLast.Click += new System.EventHandler(this.btnNavLast_Click);
+            this.btnNavLast.Click += new System.EventHandler(this.BtnNavLastOnClick);
             // 
             // label2
             // 
@@ -181,22 +180,20 @@
             // navBar1
             // 
             this.navBar1.AutoSize = true;
-            this.navBar1.BindingSource = null;
+            this.navBar1.BindingListSource = null;
             this.navBar1.Location = new System.Drawing.Point(0, 0);
             this.navBar1.Name = "navBar1";
             this.navBar1.Size = new System.Drawing.Size(0, 25);
             this.navBar1.TabIndex = 1;
-            this.navBar1.ViewContext = null;
             // 
             // navBar2
             // 
             this.navBar2.AutoSize = true;
-            this.navBar2.BindingSource = null;
+            this.navBar2.BindingListSource = null;
             this.navBar2.Location = new System.Drawing.Point(0, 0);
             this.navBar2.Name = "navBar2";
             this.navBar2.Size = new System.Drawing.Size(0, 25);
             this.navBar2.TabIndex = 2;
-            this.navBar2.ViewContext = null;
             // 
             // RecordNavBar
             // 

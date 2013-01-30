@@ -158,7 +158,7 @@
             this.btnGo.TabIndex = 8;
             this.btnGo.Text = "Go";
             this.btnGo.UseVisualStyleBackColor = true;
-            this.btnGo.Click += new System.EventHandler(this.btnGo_Click);
+            this.btnGo.Click += new System.EventHandler(this.BtnGoOnClick);
             // 
             // label5
             // 
@@ -248,7 +248,7 @@
             this.graphResults.ScrollMinY2 = 0;
             this.graphResults.Size = new System.Drawing.Size(698, 247);
             this.graphResults.TabIndex = 0;
-            this.graphResults.MouseUpEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.GraphResults_MouseUpEvent);
+            this.graphResults.MouseUpEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.GraphResultsOnMouseUpEvent);
             // 
             // zedGraphControlEx2
             // 

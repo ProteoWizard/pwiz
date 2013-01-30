@@ -70,7 +70,7 @@
             this.btnClear.TabIndex = 1;
             this.btnClear.Text = "Clear";
             this.btnClear.UseVisualStyleBackColor = true;
-            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            this.btnClear.Click += new System.EventHandler(this.BtnClearOnClick);
             // 
             // label1
             // 
@@ -89,11 +89,11 @@
             this.btnCopy.TabIndex = 3;
             this.btnCopy.Text = "Copy To Clipboard";
             this.btnCopy.UseVisualStyleBackColor = true;
-            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
+            this.btnCopy.Click += new System.EventHandler(this.BtnCopyOnClick);
             // 
             // bindingSource1
             // 
-            this.bindingSource1.CurrentChanged += new System.EventHandler(this.bindingSource1_CurrentChanged);
+            this.bindingSource1.CurrentChanged += new System.EventHandler(this.BindingSource1OnCurrentChanged);
             // 
             // textBox1
             // 

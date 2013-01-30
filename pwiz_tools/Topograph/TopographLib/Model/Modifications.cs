@@ -16,40 +16,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Linq;
-using System.Collections.Generic;
+using NHibernate;
+using NHibernate.Criterion;
+using pwiz.Common.Collections;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class Modifications : SettingCollection<DbWorkspace, String, DbModification, Modification>
+    public class Modifications : AbstractSettings<string, double>
     {
-        public Modifications(Workspace workspace, DbWorkspace dbWorkspace)
-            : base(workspace, dbWorkspace)
+        public Modifications(Workspace workspace) : base(workspace)
         {
         }
-        protected override IEnumerable<KeyValuePair<string, DbModification>> GetChildren(DbWorkspace parent)
+
+        protected override void Diff(WorkspaceChangeArgs workspaceChange, ImmutableSortedList<string, double> newValues, ImmutableSortedList<string, double> oldValues)
         {
-            foreach (var modification in parent.Modifications)
+            if (!Equals(newValues, oldValues))
             {
-                yield return new KeyValuePair<string, DbModification>(modification.Symbol, modification);
+                workspaceChange.AddChromatogramMassChange();
             }
         }
 
-        protected override int GetChildCount(DbWorkspace parent)
+        public override bool Save(ISession session, DbWorkspace dbWorkspace)
         {
-            return parent.ModificationCount;
+            var existingModifications = session.CreateCriteria<DbModification>()
+                                  .Add(Restrictions.Eq("Workspace", dbWorkspace))
+                                  .List<DbModification>()
+                                  .ToDictionary(dbModification=>dbModification.Symbol);
+            return SaveChangedEntities(session, existingModifications, 
+                dbModification=>dbModification.DeltaMass,
+                (dbModification, value)=>dbModification.DeltaMass = value,
+                key=>new DbModification
+                         {
+                             Symbol = key,
+                             Workspace = dbWorkspace
+                         });
         }
 
-        protected override void SetChildCount(DbWorkspace parent, int childCount)
+        protected override ImmutableSortedList<string, double> GetData(WorkspaceData workspaceData)
         {
-            parent.ModificationCount = childCount;
+            return workspaceData.Modifications;
         }
 
-        public override Modification WrapChild(DbModification entity)
+        protected override WorkspaceData SetData(WorkspaceData workspaceData, ImmutableSortedList<string, double> value)
         {
-            return new Modification(Workspace, entity);
+            return workspaceData.SetModifications(value);
         }
     }
 }

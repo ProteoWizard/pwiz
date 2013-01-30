@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Topograph.Model;
@@ -22,7 +20,7 @@ namespace pwiz.Topograph.ui
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += Application_ThreadExceptionEventHandler;
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new TurnoverForm());
+            Application.Run(new TopographForm());
         }
         public static void Application_ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
@@ -39,7 +37,7 @@ namespace pwiz.Topograph.ui
             }
             return null;
         }
-        public static T FindOpenEntityForm<T>(EntityModel entity) where T:EntityModelForm
+        public static T FindOpenEntityForm<T>(EntityModel entity) where T : EntityModelForm
         {
             foreach (var form in Application.OpenForms)
             {

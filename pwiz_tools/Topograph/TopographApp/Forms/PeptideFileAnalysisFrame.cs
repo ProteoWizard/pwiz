@@ -17,36 +17,32 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using NHibernate;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.ui.Controls;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class PeptideFileAnalysisFrame : PeptideFileAnalysisForm
     {
-        private readonly DockPanel dockPanel;
+        private readonly DockPanel _dockPanel;
         private ChromatogramForm _chromatogramForm;
         private TracerChromatogramForm _tracerChromatogramForm;
         private PrecursorPoolForm _precursorPoolForm;
         private PeptideFileAnalysisFrame(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
         {
             InitializeComponent();
-            dockPanel = new DockPanel
+            // TODO(nicksh): Move this into .designer file.
+            _dockPanel = new DockPanel
                             {
                                 Dock = DockStyle.Fill
                             };
-            panel1.Controls.Add(dockPanel);
+            panel1.Controls.Add(_dockPanel);
             tbxDataFile.Text = peptideFileAnalysis.MsDataFile.Name;
             tbxSequence.Text = peptideFileAnalysis.PeptideAnalysis.Peptide.Sequence;
         }
@@ -97,6 +93,10 @@ namespace pwiz.Topograph.ui.Forms
         public static PeptideFileAnalysisFrame ShowFileAnalysisForm<T>(PeptideFileAnalysis peptideFileAnalysis) where T : PeptideFileAnalysisForm
         {
             var analysisForm = PeptideAnalysisFrame.ShowPeptideAnalysis(peptideFileAnalysis.PeptideAnalysis);
+            if (null == analysisForm)
+            {
+                return null;
+            }
             return ActivatePeptideDataForm<T>(analysisForm.PeptideAnalysisSummary, peptideFileAnalysis);
         }
 
@@ -106,28 +106,34 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return null;
             }
+            DbPeptideFileAnalysis dbPeptideFileAnalysis;
             using (var session = workspace.OpenSession())
             {
-                var dbPeptideFileAnalysis = session.Get<DbPeptideFileAnalysis>(peptideFileAnalysisId);
+                dbPeptideFileAnalysis = session.Get<DbPeptideFileAnalysis>(peptideFileAnalysisId);
                 if (dbPeptideFileAnalysis == null)
                 {
                     return null;
                 }
-                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideFileAnalysis.PeptideAnalysis.Id.Value);
-                if (peptideAnalysis == null)
-                {
-                    return null;
-                }
-                var peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(peptideFileAnalysisId.Value);
-                return PeptideFileAnalysisFrame.ShowFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
             }
+            PeptideAnalysis peptideAnalysis;
+            workspace.PeptideAnalyses.TryGetValue(dbPeptideFileAnalysis.PeptideAnalysis.Id.GetValueOrDefault(), out peptideAnalysis);
+            if (peptideAnalysis == null)
+            {
+                return null;
+            }
+            PeptideFileAnalysis peptideFileAnalysis;
+            if (!peptideAnalysis.FileAnalyses.TryGetValue(dbPeptideFileAnalysis.GetId(), out peptideFileAnalysis))
+            {
+                return null;
+            }
+            return ShowFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
         }
 
 
         public T ShowForm<T>() where T : PeptideFileAnalysisForm
         {
             Activate();
-            foreach (var form in dockPanel.Contents)
+            foreach (var form in _dockPanel.Contents)
             {
                 T tForm = form as T;
                 if (tForm == null)
@@ -140,7 +146,9 @@ namespace pwiz.Topograph.ui.Forms
             T newForm;
             try
             {
-                newForm = (T)typeof(T).GetConstructor(new[] { typeof(PeptideFileAnalysis) }).Invoke(new object[] { PeptideFileAnalysis });
+                var constructor = typeof (T).GetConstructor(new[] {typeof (PeptideFileAnalysis)});
+                Debug.Assert(null != constructor);
+                newForm = (T)constructor.Invoke(new object[] { PeptideFileAnalysis });
             }
             catch (TargetInvocationException targetInvocationException)
             {
@@ -148,7 +156,7 @@ namespace pwiz.Topograph.ui.Forms
                 return null;
             }
 
-            newForm.Show(dockPanel, DockState.Document);
+            newForm.Show(_dockPanel, DockState.Document);
             return newForm;
         }
 
@@ -165,7 +173,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     CloseButton = false
                 };
-                _tracerChromatogramForm.Show(dockPanel, DockState.Document);
+                _tracerChromatogramForm.Show(_dockPanel, DockState.Document);
             }
             if (_chromatogramForm == null)
             {
@@ -173,7 +181,7 @@ namespace pwiz.Topograph.ui.Forms
                                         {
                                             CloseButton = false
                                         };
-                _chromatogramForm.Show(dockPanel, DockState.Document);
+                _chromatogramForm.Show(_dockPanel, DockState.Document);
             }
             if (_precursorPoolForm == null)
             {
@@ -181,7 +189,7 @@ namespace pwiz.Topograph.ui.Forms
                                          {
                                              CloseButton = false,
                                          };
-                _precursorPoolForm.Show(dockPanel, DockState.Document);
+                _precursorPoolForm.Show(_dockPanel, DockState.Document);
             }
             UpdateForm();
         }
@@ -192,15 +200,10 @@ namespace pwiz.Topograph.ui.Forms
             TabText = PeptideFileAnalysis.MsDataFile.Label;
         }
 
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        protected override void WorkspaceOnChange(object sender, WorkspaceChangeArgs args)
         {
-            base.OnWorkspaceEntitiesChanged(args);
-            if (args.Contains(PeptideFileAnalysis)
-                || args.Contains(PeptideAnalysis)
-                || args.Contains(PeptideFileAnalysis.MsDataFile))
-            {
-                UpdateForm();
-            }
+            base.WorkspaceOnChange(sender, args);
+            UpdateForm();
         }
         /// <summary>
         /// The docking windows have a problem where resizing doesn't update heavily nested docking windows.
@@ -209,8 +212,12 @@ namespace pwiz.Topograph.ui.Forms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PeptideFileAnalysisFrame_Resize(object sender, EventArgs e)
+        private void PeptideFileAnalysisFrameOnResize(object sender, EventArgs e)
         {
+            if (!IsHandleCreated)
+            {
+                return;
+            }
             try
             {
                 var controls = Controls.Cast<Control>().Where(control => control.Dock == DockStyle.Fill).ToList();
@@ -229,11 +236,10 @@ namespace pwiz.Topograph.ui.Forms
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                ErrorHandler.LogException("PeptideFileAnalysisFrame", "Exception while resizing form", ex);
             }
-
         }
     }
 }

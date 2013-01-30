@@ -18,13 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using pwiz.Topograph.Data;
+using pwiz.Common.Collections;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
@@ -48,7 +42,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOkOnClick(object sender, EventArgs e)
         {
             var modifications = new Dictionary<String,double>();
             for (int i = 0; i < dataGridView1.Rows.Count; i++)
@@ -61,7 +55,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 modifications[Convert.ToString(row.Cells[colSymbol.Index].Value)] = deltaMass;
             }
-            Workspace.Modifications = modifications;
+            Workspace.Data = Workspace.Data.SetModifications(ImmutableSortedList.FromValues(modifications));
             Close();
         }
     }

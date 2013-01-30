@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -31,8 +32,37 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private ColumnDescriptor _rootColumn;
         private bool _showAdvancedFields;
+        private IdentifierPath _sublistId = IdentifierPath.Root;
         private ICollection<IdentifierPath> _checkedColumns = new IdentifierPath[0];
+        private static readonly Image[] ImagelistImages = new Image[]
+            {
+                Resources.DataColumn,
+                Resources.TextColumn,
+                Resources.NumberColumn,
+                Resources.BoolColumn,
+                Resources.LinkColumn,
+                Resources.SublistColumn,
+                Resources.PivotColumn,
+            };
+        private enum ImageIndexes
+        {
+            Unknown,
+            Text,
+            Number,
+            Boolean,
+            Link,
+            Sublist,
+            Pivot,
+        }
 
+        public AvailableFieldsTree()
+        {
+            ImageList = new ImageList
+                {
+                    TransparentColor = Color.Magenta,
+                };
+            ImageList.Images.AddRange(ImagelistImages);
+        }
         [Browsable(false)]
         public ColumnDescriptor RootColumn
         {
@@ -110,9 +140,9 @@ namespace pwiz.Common.DataBinding.Controls
             var nodeData = new NodeData(columnDescriptor);
             node.Tag = nodeData;
             node.Text = columnDescriptor.DisplayName;
-            node.Checked = _checkedColumns.Contains(nodeData.ValueColumn.IdPath);
+            UpdateNode(node);
             node.Nodes.Clear();
-            node.Nodes.Add(new TreeNode {Tag = NodeData.UNINITIALIZED_TAG});
+            node.Nodes.Add(new TreeNode {Tag = NodeData.UninitializedTag});
         }
 
         protected override void OnBeforeExpand(TreeViewCancelEventArgs e)
@@ -126,12 +156,23 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 EnsureChildren(child);
             }
+        }
 
+        protected override void OnAfterExpand(TreeViewEventArgs e)
+        {
+            base.OnAfterExpand(e);
+            UpdateNode(e.Node);
+        }
+
+        protected override void OnAfterCollapse(TreeViewEventArgs e)
+        {
+            base.OnAfterCollapse(e);
+            UpdateNode(e.Node);
         }
 
         protected void EnsureChildren(TreeNode treeNode)
         {
-            if (treeNode.Nodes.Count != 1 || treeNode.Nodes[0].Tag != NodeData.UNINITIALIZED_TAG)
+            if (treeNode.Nodes.Count != 1 || treeNode.Nodes[0].Tag != NodeData.UninitializedTag)
             {
                 return;
             }
@@ -154,10 +195,78 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     child.ForeColor = Color.Gray;
                 }
+                child.SelectedImageIndex = child.ImageIndex = (int) GetImageIndex(columnDescriptor);
                 SetColumnDescriptor(child, columnDescriptor);
+//                if (CheckedColumns.Any(columnId => columnId.StartsWith(columnDescriptor.IdPath)))
+//                {
+//                    EnsureChildren(child);
+//                    child.Expand();
+//                }
                 result.Add(child);
             }
             return result;
+        }
+
+        private ImageIndexes GetImageIndex(ColumnDescriptor columnDescriptor)
+        {
+            if (null == columnDescriptor)
+            {
+                return 0;
+            }
+            if (null != columnDescriptor.CollectionInfo)
+            {
+                if (null != SublistId && SublistId.StartsWith(columnDescriptor.IdPath))
+                {
+                    return ImageIndexes.Sublist;
+                }
+                return ImageIndexes.Pivot;
+            }
+            var propertyType = columnDescriptor.PropertyType;
+            if (null == propertyType)
+            {
+                return ImageIndexes.Unknown;
+            }
+            if (typeof (ILinkValue).IsAssignableFrom(propertyType))
+            {
+                return ImageIndexes.Link;
+            }
+            propertyType = columnDescriptor.DataSchema.GetWrappedValueType(propertyType);
+            if (typeof (string) == propertyType)
+            {
+                return ImageIndexes.Text;
+            }
+            if (typeof (bool) == propertyType)
+            {
+                return ImageIndexes.Boolean;
+            }
+            if (propertyType.IsPrimitive)
+            {
+                return ImageIndexes.Number;
+            }
+            return ImageIndexes.Unknown;
+        }
+
+        private void UpdateNode(TreeNode node)
+        {
+            var columnDescriptor = GetTreeColumn(node);
+            if (null == columnDescriptor)
+            {
+                return;
+            }
+            node.SelectedImageIndex = node.ImageIndex = (int) GetImageIndex(columnDescriptor);
+            // Avoid firing Checked related events unless the actual checked state is changing.
+            if (node.Checked != CheckedColumns.Contains(GetValueColumn(node).IdPath))
+            {
+                node.Checked = !node.Checked;
+            }
+            if (!node.Checked && CheckedColumns.Any(idPath => idPath.StartsWith(columnDescriptor.IdPath)))
+            {
+                node.BackColor = SystemColors.ControlLight;
+            }
+            else
+            {
+                node.BackColor = SystemColors.Window;
+            }
         }
 
         protected IList<ColumnDescriptor> ListChildren(ColumnDescriptor parent)
@@ -198,31 +307,31 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     return;
                 }
-                foreach (var idPath in oldValue)
-                {
-                    if (newValue.Contains(idPath))
-                    {
-                        continue;
-                    }
-                    var node = FindTreeNode(idPath, false);
-                    if (node != null)
-                    {
-                        node.Checked = false;
-                    }
-                }
-                foreach (var idPath in newValue)
-                {
-                    if (oldValue.Contains(idPath))
-                    {
-                        continue;
-                    }
-                    var node = FindTreeNode(idPath, false);
-                    if (node != null)
-                    {
-                        node.Checked = true;
-                    }
-                }
                 _checkedColumns = newValue;
+                UpdateNodes(Nodes);
+            }
+        }
+
+        public IdentifierPath SublistId 
+        { 
+            get { return _sublistId; }
+            set
+            {
+                if (Equals(SublistId, value))
+                {
+                    return;
+                }
+                _sublistId = value;
+                UpdateNodes(Nodes);
+            }
+        }
+
+        private void UpdateNodes(TreeNodeCollection nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                UpdateNode(node);
+                UpdateNodes(node.Nodes);
             }
         }
         public void SelectColumn(IdentifierPath idPath)
@@ -278,7 +387,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         class NodeData
         {
-            public static readonly NodeData UNINITIALIZED_TAG = new NodeData();
+            public static readonly NodeData UninitializedTag = new NodeData();
             private NodeData()
             {
             }

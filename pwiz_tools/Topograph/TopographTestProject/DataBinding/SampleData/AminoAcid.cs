@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;

@@ -17,6 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 
 namespace pwiz.Topograph.Data
 {
@@ -32,6 +35,12 @@ namespace pwiz.Topograph.Data
         { 
             get; set;
         }
+        public virtual long GetId()
+        {
+            // ReSharper disable PossibleInvalidOperationException
+            return Id.Value;
+            // ReSharper restore PossibleInvalidOperationException
+        }
         public override int GetHashCode()
         {
             return typeof(T).GetHashCode() ^ Id.GetHashCode();
@@ -40,7 +49,7 @@ namespace pwiz.Topograph.Data
         {
             if (Id == null)
             {
-                return base.Equals(obj);
+                return ReferenceEquals(this, obj);
             }
             var that = obj as T;
             if (that == null)
@@ -53,14 +62,19 @@ namespace pwiz.Topograph.Data
         {
             return typeof (T);
         }
+        [DataMember]
         public virtual int Version { get; set; }
         public virtual T Detach()
         {
-            return (T) MemberwiseClone();
-        }
-        public virtual T Merge(T original, T theirs)
-        {
-            return (T) this;
+            if (GetType() == typeof(T))
+            {
+                return (T)MemberwiseClone();
+            }
+            var serializer = new DataContractJsonSerializer(typeof(DbMsDataFile));
+            var stream = new MemoryStream();
+            serializer.WriteObject(stream, this);
+            stream.Seek(0, SeekOrigin.Begin);
+            return (T) serializer.ReadObject(stream);
         }
     }
 }

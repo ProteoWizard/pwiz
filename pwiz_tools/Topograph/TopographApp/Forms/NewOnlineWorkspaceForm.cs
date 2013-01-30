@@ -90,7 +90,7 @@ namespace pwiz.Topograph.ui.Forms
 
         public String Filename { get; set; }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOkOnClick(object sender, EventArgs e)
         {
             if (!CheckRequiredField(tbxServer) 
                 || !CheckRequiredField(tbxDatabase) 
@@ -152,7 +152,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     using (var sessionFactory = tpgLnkDef.CreateDatabase())
                     {
-                        TurnoverForm.InitWorkspace(sessionFactory);
+                        TopographForm.InitWorkspace(sessionFactory);
                     }
                 }
                 catch (Exception exception)
@@ -163,9 +163,9 @@ namespace pwiz.Topograph.ui.Forms
             }
             while (true)
             {
-                using (var fileDialog = new SaveFileDialog()
+                using (var fileDialog = new SaveFileDialog
                 {
-                    Filter = TurnoverForm.OnlineWorkspaceFilter,
+                    Filter = TopographForm.OnlineWorkspaceFilter,
                     InitialDirectory = Settings.Default.WorkspaceDirectory,
                     FileName = tbxDatabase.Text + ".tpglnk",
                 })
@@ -189,7 +189,7 @@ namespace pwiz.Topograph.ui.Forms
                     break;
                 }
             }
-            Settings.Default.ConnectionSettings = new ConnectionSettings()
+            Settings.Default.ConnectionSettings = new ConnectionSettings
             {
                 Server = tbxServer.Text,
                 Port = tbxPort.Text,
@@ -211,7 +211,7 @@ namespace pwiz.Topograph.ui.Forms
             return false;
         }
 
-        private void btnVerifyCredentials_Click(object sender, EventArgs e)
+        private void BtnVerifyCredentialsOnClick(object sender, EventArgs e)
         {
             try
             {

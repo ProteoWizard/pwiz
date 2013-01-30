@@ -1,8 +1,25 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using pwiz.Common.DataBinding;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Collections.Generic;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
+using pwiz.Topograph.ui.DataBinding;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -12,15 +29,14 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             var viewContext = new TopographViewContext(workspace, typeof(HalfLifeCalculator.ProcessedRowData));
-            boundDataGridView1.RowSource = new HalfLifeCalculator.ProcessedRowData[0];
-            boundDataGridView1.BindingListView.ViewInfo = new ViewInfo(viewContext.ParentColumn, viewContext.BuiltInViewSpecs.First());
-            navBar1.ViewContext = viewContext;
+            bindingSource1.RowSource = new HalfLifeCalculator.ProcessedRowData[0];
+            bindingSource1.SetViewContext(viewContext);
         }
 
         public IList<HalfLifeCalculator.ProcessedRowData> RowDatas
         {
-            get { return (IList<HalfLifeCalculator.ProcessedRowData>)boundDataGridView1.RowSource; }
-            set { boundDataGridView1.RowSource = value; }
+            get { return (IList<HalfLifeCalculator.ProcessedRowData>)bindingSource1.RowSource; }
+            set { bindingSource1.RowSource = value; }
         }
 
         public string Peptide

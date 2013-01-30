@@ -130,7 +130,7 @@
             this.btnOK.TabIndex = 14;
             this.btnOK.Text = "Create Workspace";
             this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            this.btnOK.Click += new System.EventHandler(this.BtnOkOnClick);
             // 
             // btnCancel
             // 
@@ -203,7 +203,7 @@
             this.btnVerifyCredentials.TabIndex = 11;
             this.btnVerifyCredentials.Text = "Verify Credentials";
             this.btnVerifyCredentials.UseVisualStyleBackColor = true;
-            this.btnVerifyCredentials.Click += new System.EventHandler(this.btnVerifyCredentials_Click);
+            this.btnVerifyCredentials.Click += new System.EventHandler(this.BtnVerifyCredentialsOnClick);
             // 
             // NewOnlineWorkspaceForm
             // 

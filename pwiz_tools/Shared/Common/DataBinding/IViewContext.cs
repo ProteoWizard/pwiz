@@ -41,5 +41,8 @@ namespace pwiz.Common.DataBinding
         Icon ApplicationIcon { get; }
         IViewContext GetViewContext(ColumnDescriptor column);
         DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor);
+        void OnDataError(object sender, DataGridViewDataErrorEventArgs dataGridViewDataErrorEventArgs);
+        bool DeleteEnabled { get; }
+        void Delete();
     }
 }

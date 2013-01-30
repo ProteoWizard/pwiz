@@ -1,9 +1,28 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
@@ -19,13 +38,6 @@ namespace pwiz.Topograph.Test
     [TestClass]
     public class PeakFinderTest : BaseTest
     {
-        public PeakFinderTest()
-        {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
         #region Additional test attributes
         //
         // You can use the following additional attributes as you write your tests:
@@ -52,7 +64,7 @@ namespace pwiz.Topograph.Test
         public void TestPeakFinder()
         {
             String dbPath = Path.Combine(TestContext.TestDir, "PeakFinderTest.tpg");
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, SessionFactoryFlags.create_schema))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, SessionFactoryFlags.CreateSchema))
             {
                 using (var session = sessionFactory.OpenSession())
                 {
@@ -85,7 +97,8 @@ namespace pwiz.Topograph.Test
                 }
             }
             Workspace workspace = new Workspace(dbPath);
-            workspace.Reconciler.ReconcileNow();
+            workspace.SetTaskScheduler(TaskScheduler.Default);
+            workspace.DatabasePoller.LoadAndMergeChanges(null);
 
             foreach (var peakFinderPeptide in peptides)
             {
@@ -104,11 +117,21 @@ namespace pwiz.Topograph.Test
                 }
                 Thread.Sleep(100);
             }
-            workspace.Reconciler.ReconcileNow();
+            workspace.DatabasePoller.LoadAndMergeChanges(null);
+            var exceptions = new List<Exception>();
             foreach (var peptide in peptides)
             {
-                TestPeptide(workspace, peptide);
+                try
+                {
+                    TestPeptide(workspace, peptide);
+                }
+                catch (Exception exception)
+                {
+                    exceptions.Add(exception);
+                    Trace.TraceError("{0}:{1}", peptide.PeptideSequence, exception);
+                }
             }
+            CollectionAssert.AreEqual(new Exception[0], exceptions);
         }
 
         private void AddPeptide(Workspace workspace, PeakFinderPeptide peakFinderPeptide)
@@ -117,21 +140,19 @@ namespace pwiz.Topograph.Test
             Peptide peptide;
             using (var session = workspace.OpenWriteSession())
             {
-                var dbWorkspace = workspace.LoadDbWorkspace(session);
+                var dbMsDataFile = new DbMsDataFile
+                {
+                    Name = peakFinderPeptide.DataFile,
+                    Label = peakFinderPeptide.DataFile,
+                };
                 if (msDataFile == null)
                 {
-                    var dbMsDataFile = new DbMsDataFile
-                    {
-                        Name = peakFinderPeptide.DataFile,
-                        Label = peakFinderPeptide.DataFile,
-                        Workspace = dbWorkspace,
-                    };
                     session.BeginTransaction();
                     session.Save(dbMsDataFile);
                     session.Transaction.Commit();
-                    msDataFile = new MsDataFile(workspace, dbMsDataFile);
                 }
-                workspace.MsDataFiles.AddChild(msDataFile.Id.Value, msDataFile);
+                workspace.DatabasePoller.LoadAndMergeChanges(null);
+                msDataFile = workspace.MsDataFiles.FindByKey(dbMsDataFile.GetId());
                 var dbPeptide = (DbPeptide)
                     session.CreateCriteria<DbPeptide>().Add(Restrictions.Eq("Sequence",
                                                                             peakFinderPeptide.PeptideSequence)).
@@ -142,52 +163,66 @@ namespace pwiz.Topograph.Test
                     {
                         FullSequence = peakFinderPeptide.PeptideSequence,
                         Sequence = peakFinderPeptide.PeptideSequence,
-                        Workspace = dbWorkspace,
                     };
                     session.BeginTransaction();
                     session.Save(dbPeptide);
                     session.Transaction.Commit();
                 }
 
-                var dbPeptideSearchResult = new DbPeptideSearchResult
+                session.BeginTransaction();
+                session.Save(new DbPeptideSpectrumMatch
                 {
-                    FirstDetectedScan = peakFinderPeptide.FirstDetectedScan,
-                    LastDetectedScan = peakFinderPeptide.LastDetectedScan,
-                    MinCharge = peakFinderPeptide.MinCharge,
-                    MaxCharge = peakFinderPeptide.MaxCharge,
+                    RetentionTime = peakFinderPeptide.FirstDetectedTime * 60,
+                    PrecursorCharge = peakFinderPeptide.MinCharge,
                     Peptide = dbPeptide,
                     MsDataFile = session.Load<DbMsDataFile>(msDataFile.Id),
-                };
-                session.BeginTransaction();
-                session.Save(dbPeptideSearchResult);
+                });
+                if (peakFinderPeptide.LastDetectedTime != peakFinderPeptide.FirstDetectedTime)
+                {
+                    session.Save(new DbPeptideSpectrumMatch
+                                     {
+                                         RetentionTime = peakFinderPeptide.LastDetectedTime * 60,
+                                         PrecursorCharge = peakFinderPeptide.MaxCharge,
+                                         Peptide = dbPeptide,
+                                         MsDataFile = session.Load<DbMsDataFile>(msDataFile.Id),
+                                     });
+                }
                 session.Transaction.Commit();
                 peptide = new Peptide(workspace, dbPeptide);
             }
             MsDataFileUtil.InitMsDataFile(workspace, msDataFile);
             var peptideAnalysis = peptide.EnsurePeptideAnalysis();
-            var peptideFileAnalysis = PeptideFileAnalysis.EnsurePeptideFileAnalysis(peptideAnalysis, msDataFile);
+            if (peptideAnalysis == null)
+            {
+                Assert.Fail();
+            }
+            PeptideFileAnalysis.EnsurePeptideFileAnalysis(peptideAnalysis, msDataFile);
+            
         }
 
         private void TestPeptide(Workspace workspace, PeakFinderPeptide peakFinderPeptide)
         {
-            PeptideFileAnalysis peptideFileAnalysis;
+            DbPeptideFileAnalysis dbPeptideFileAnalysis;
             using (var session = workspace.OpenSession())
             {
-                var dbPeptideFileAnalysis = (DbPeptideFileAnalysis) session.CreateQuery(
+                dbPeptideFileAnalysis = (DbPeptideFileAnalysis) session.CreateQuery(
                     "FROM DbPeptideFileAnalysis T WHERE T.MsDataFile.Name = :dataFile AND T.PeptideAnalysis.Peptide.Sequence = :sequence")
-                    .SetParameter("dataFile", peakFinderPeptide.DataFile)
-                    .SetParameter("sequence", peakFinderPeptide.PeptideSequence)
-                    .UniqueResult();
-                var peptideAnalysis =
-                    workspace.Reconciler.LoadPeptideAnalysis(dbPeptideFileAnalysis.PeptideAnalysis.Id.Value);
-                peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(dbPeptideFileAnalysis.Id.Value);
+                                                                    .SetParameter("dataFile", peakFinderPeptide.DataFile)
+                                                                    .SetParameter("sequence",
+                                                                                  peakFinderPeptide.PeptideSequence)
+                                                                    .UniqueResult();
             }
-            var peaks = new Peaks(peptideFileAnalysis);
-            peaks.CalcIntensities(new Peaks[0]);
-            const string format = "0.000";
-            Assert.AreEqual(
-                peakFinderPeptide.ExpectedPeakStart.ToString(format) + "-" + peakFinderPeptide.ExpectedPeakEnd.ToString(format),
-                peaks.StartTime.Value.ToString(format) + "-" + peaks.EndTime.Value.ToString(format));
+            PeptideAnalysis peptideAnalysis = workspace.PeptideAnalyses.FindByKey(dbPeptideFileAnalysis.PeptideAnalysis.Id.GetValueOrDefault());
+            using (peptideAnalysis.IncChromatogramRefCount())
+            {
+                workspace.DatabasePoller.LoadAndMergeChanges(new Dictionary<long, bool> {{peptideAnalysis.Id, true}});
+                PeptideFileAnalysis peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(dbPeptideFileAnalysis.Id.GetValueOrDefault());
+                var peaks = CalculatedPeaks.Calculate(peptideFileAnalysis, new CalculatedPeaks[0]);
+                const string format = "0.000";
+                Assert.AreEqual(
+                    peakFinderPeptide.ExpectedPeakStart.ToString(format) + "-" + peakFinderPeptide.ExpectedPeakEnd.ToString(format),
+                    (peaks.StartTime.GetValueOrDefault() / 60).ToString(format) + "-" + (peaks.EndTime.GetValueOrDefault() / 60).ToString(format), peakFinderPeptide.PeptideSequence);
+            }
         }
 
         private MsDataFile GetMsDataFile(Workspace workspace, String name)
@@ -199,8 +234,8 @@ namespace pwiz.Topograph.Test
         {
             public string DataFile;
             public string PeptideSequence;
-            public int FirstDetectedScan;
-            public int LastDetectedScan;
+            public double FirstDetectedTime;
+            public double LastDetectedTime;
             public int MinCharge;
             public int MaxCharge;
             public double ExpectedPeakStart;
@@ -214,56 +249,56 @@ namespace pwiz.Topograph.Test
                 {
                     DataFile = "ADLEETGR",
                     PeptideSequence = "ADLEETGR",
-                    FirstDetectedScan = 298,
-                    LastDetectedScan = 304,
+                    FirstDetectedTime = 32.852,
+                    LastDetectedTime = 33.034,
                     MinCharge = 2,
                     MaxCharge = 2,
-                    ExpectedPeakStart = 1.935,
-                    ExpectedPeakEnd = 2.154,
+                    ExpectedPeakStart = 32.792,
+                    ExpectedPeakEnd = 33.121,
                 },
                 new PeakFinderPeptide
                 {
                    DataFile = "HMELNTYADKIER",
                    PeptideSequence = "HMELNTYADKIER",
-                   FirstDetectedScan = 137,
-                   LastDetectedScan = 137,
+                   FirstDetectedTime = 71.131,
+                   LastDetectedTime = 71.131,
                    MinCharge = 3,
                    MaxCharge = 3,
-                   ExpectedPeakStart = .594,
-                   ExpectedPeakEnd = 1.088,
+                   ExpectedPeakStart = 71.072,
+                   ExpectedPeakEnd = 71.219,
                 },
                 new PeakFinderPeptide
                     {
                         DataFile = "YLTGDLGGR",
                         PeptideSequence = "YLTGDLGGR",
-                        FirstDetectedScan = 162,
-                        LastDetectedScan = 169,
+                        FirstDetectedTime = 56.248,
+                        LastDetectedTime = 56.457,
                         MinCharge = 2,
                         MaxCharge = 2,
-                        ExpectedPeakStart = .993,
-                        ExpectedPeakEnd = 2.209,
+                        ExpectedPeakStart = 56.186,
+                        ExpectedPeakEnd = 56.517,
                     },
                 new PeakFinderPeptide
                     {
                         DataFile    = "ATEHQIPDRLK",
                         PeptideSequence = "ATEHQIPDRLK",
-                        FirstDetectedScan = 243,
-                        LastDetectedScan = 243,
+                        FirstDetectedTime = 30.167,
+                        LastDetectedTime = 30.167,
                         MinCharge = 3,
                         MaxCharge = 3,
-                        ExpectedPeakStart = 1.564,
-                        ExpectedPeakEnd = 1.746,
+                        ExpectedPeakStart = 30.135,
+                        ExpectedPeakEnd = 30.232,
                     },
                 new PeakFinderPeptide
                     {
                         DataFile = "VVDLLAPYAK",
                         PeptideSequence = "VVDLLAPYAK",
-                        FirstDetectedScan = 71,
-                        LastDetectedScan = 87,
+                        FirstDetectedTime = 104.238,
+                        LastDetectedTime = 104.770,
                         MinCharge = 2,
                         MaxCharge = 2,
-                        ExpectedPeakStart = .268,
-                        ExpectedPeakEnd = .590,
+                        ExpectedPeakStart = 104.172,
+                        ExpectedPeakEnd = 104.804,
                     }
             };
     }

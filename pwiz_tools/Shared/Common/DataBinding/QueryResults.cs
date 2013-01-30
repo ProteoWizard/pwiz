@@ -16,18 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System.Collections.Generic;
 using System.ComponentModel;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
 {
     public class QueryResults
     {
-        public static QueryResults _empty = new QueryResults();
+        public static readonly QueryResults Empty = new QueryResults();
         private QueryResults()
         {
-            Parameters = QueryParameters._empty;
+            Parameters = QueryParameters.Empty;
             PivotedRows = FilteredRows = SortedRows = new RowItem[0];
             ItemProperties = null;
             Pivoter = null;
@@ -36,6 +36,9 @@ namespace pwiz.Common.DataBinding
         {
             Parameters = copy.Parameters;
             Pivoter = copy.Pivoter;
+
+            SourceRows = copy.SourceRows;
+
             PivotedRows = copy.PivotedRows;
             ItemProperties = copy.ItemProperties;
 
@@ -74,9 +77,9 @@ namespace pwiz.Common.DataBinding
             }
             else
             {
-                if (result.Parameters.Rows == null || result.Parameters.ViewInfo == null)
+                if (result.Parameters.ViewInfo == null)
                 {
-                    result.SortedRows = result.FilteredRows = result.PivotedRows = _empty.ResultRows;
+                    result.SortedRows = result.FilteredRows = result.PivotedRows = Empty.ResultRows;
                 }
                 else
                 {
@@ -98,49 +101,54 @@ namespace pwiz.Common.DataBinding
         }
         public PropertyDescriptorCollection ItemProperties { get; private set; }
 
-        public IList<RowItem> PivotedRows { get; private set; }
-        public QueryResults SetPivotedRows(Pivoter pivoter, IList<RowItem> pivotedRows)
+        public IList<RowItem> SourceRows { get; private set; }
+        public QueryResults SetSourceRows(IEnumerable<RowItem> sourceRows)
         {
+            return new QueryResults(this) {
+                SourceRows = ImmutableList.ValueOf(sourceRows)
+            };
+        }
+        public IList<RowItem> PivotedRows { get; private set; }
+        public QueryResults SetPivotedRows(Pivoter pivoter, IEnumerable<RowItem> pivotedRows)
+        {
+            var pivotedRowList = ImmutableList.ValueOf(pivotedRows);
             return new QueryResults(this)
                        {
                            Pivoter = pivoter,
-                           PivotedRows = pivotedRows,
-                           ItemProperties = new ViewProperties(pivoter.ViewInfo, pivoter.GetAllPivotKeys(pivotedRows)),
+                           PivotedRows = pivotedRowList,
+                           ItemProperties = new ViewProperties(pivoter.ViewInfo, pivoter.GetAllPivotKeys(pivotedRowList)),
                        };
         }
         public IList<RowItem> FilteredRows { get; private set; }
-        public QueryResults SetFilteredRows(IList<RowItem> value)
+        public QueryResults SetFilteredRows(IEnumerable<RowItem> value)
         {
-            return new QueryResults(this) {FilteredRows = value};
+            return new QueryResults(this) {FilteredRows = ImmutableList.ValueOf(value)};
         }
         public IList<RowItem> SortedRows { get; private set; }
-        public QueryResults SetSortedRows(IList<RowItem> value)
+        public QueryResults SetSortedRows(IEnumerable<RowItem> value)
         {
-            return new QueryResults(this) {SortedRows = value};
+            return new QueryResults(this) {SortedRows = ImmutableList.ValueOf(value)};
         }
         public IList<RowItem> ResultRows { get { return SortedRows;} }
     }
 
     public class QueryParameters
     {
-        public static QueryParameters _empty = new QueryParameters();
+        public static QueryParameters Empty = new QueryParameters();
         private QueryParameters()
         {
             ViewInfo = null;
-            Rows = null;
-            RowFilter = RowFilter.EMPTY;
+            RowFilter = RowFilter.Empty;
         }
-        public QueryParameters(ViewInfo viewInfo, IList<RowItem> rows, RowFilter rowFilter, ListSortDescriptionCollection sortDescriptions)
+        public QueryParameters(ViewInfo viewInfo, RowFilter rowFilter, ListSortDescriptionCollection sortDescriptions)
         {
             ViewInfo = viewInfo;
-            Rows = rows;
             RowFilter = rowFilter;
             SortDescriptions = sortDescriptions;
         }
         public QueryParameters(QueryParameters that)
         {
             ViewInfo = that.ViewInfo;
-            Rows = that.Rows;
             RowFilter = that.RowFilter;
             SortDescriptions = that.SortDescriptions;
         }
@@ -149,9 +157,6 @@ namespace pwiz.Common.DataBinding
         {
             return new QueryParameters(this) {ViewInfo = value};
         }
-        public IList<RowItem> Rows { get; private set;}
-        public QueryParameters SetRows(IList<RowItem> value) 
-        { return new QueryParameters(this) {Rows = value}; }
         public RowFilter RowFilter { get; private set; }
         public QueryParameters SetRowFilter(RowFilter value)
         {
@@ -164,7 +169,7 @@ namespace pwiz.Common.DataBinding
         }
         public bool PivotValid(QueryParameters that)
         {
-            return ReferenceEquals(ViewInfo, that.ViewInfo) && ReferenceEquals(Rows, that.Rows);
+            return ReferenceEquals(ViewInfo, that.ViewInfo);
         }
         public bool FilterValid(QueryParameters that)
         {

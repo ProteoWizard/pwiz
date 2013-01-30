@@ -27,8 +27,8 @@ namespace pwiz.Topograph.ui.Forms
         public AboutDlg()
         {
             InitializeComponent();
-            this.Text = String.Format("About {0}", Program.AppName);
-            this.labelVersion.Text = String.Format("Version {0}", ApplicationDeployment.IsNetworkDeployed 
+            Text = String.Format("About {0}", Program.AppName);
+            labelVersion.Text = String.Format("Version {0}", ApplicationDeployment.IsNetworkDeployed 
                 ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString() : "");
             if (Environment.Is64BitProcess)
             {

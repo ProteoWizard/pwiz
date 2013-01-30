@@ -20,13 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using pwiz.Common.Chemistry;
-using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Enrichment
 {
@@ -173,6 +170,7 @@ namespace pwiz.Topograph.Enrichment
         /// Analytical Chemistry 1966 38 (4), 607-610
         /// </para>
         /// </summary>
+        // ReSharper disable InconsistentNaming
         internal static Vector FindBestCombination(Vector targetVector, params Vector[] candidateVectors)
         {
             Matrix matrixA = new Matrix(targetVector.Length, candidateVectors.Length);
@@ -191,6 +189,7 @@ namespace pwiz.Topograph.Enrichment
             Matrix matrixResult = matrixATAInv.Multiply(matrixAT).Multiply(matrixP);
             return matrixResult.GetColumnVector(0);
         }
+        // ReSharper restore InconsistentNaming
 
         internal Vector FindBestCombination(Vector targetVector, Vector[] candidateVectors, bool errOnSideOfLowerAbundance)
         {
@@ -649,6 +648,21 @@ namespace pwiz.Topograph.Enrichment
                                       initialVector.Scale(combination[0]).Add(
                                           newlySynthesizedVector.Scale(combination[1])));
             }
+        }
+
+        public IDictionary<TracerFormula, T> ToTracerFormulaDict<T>(IList<T> values)
+        {
+            var tracerFormulae = ListTracerFormulas();
+            if (tracerFormulae.Count != values.Count)
+            {
+                return null;
+            }
+            var dict = new Dictionary<TracerFormula, T>();
+            for (int i = 0; i < values.Count; i++)
+            {
+                dict.Add(tracerFormulae[i], values[i]);
+            }
+            return dict;
         }
 
         public double ExpectedUnlabeledFraction(double precursorPool)

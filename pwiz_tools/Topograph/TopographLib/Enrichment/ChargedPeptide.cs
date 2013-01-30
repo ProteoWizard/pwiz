@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
 
@@ -30,13 +28,13 @@ namespace pwiz.Topograph.Enrichment
         public ChargedPeptide(String sequence, int charge)
         {
             Sequence = sequence;
-            int ichDot = sequence.IndexOf(".");
+            int ichDot = sequence.IndexOf(".", StringComparison.Ordinal);
             if (ichDot >= 0)
             {
                 Prefix = Sequence.Substring(0, ichDot);
                 Sequence = Sequence.Substring(ichDot + 1);
             }
-            ichDot = Sequence.IndexOf(".");
+            ichDot = Sequence.IndexOf(".", StringComparison.Ordinal);
             if (ichDot >= 0)
             {
                 Suffix = Sequence.Substring(ichDot + 1);

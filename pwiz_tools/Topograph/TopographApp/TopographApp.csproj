@@ -37,6 +37,14 @@
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <PublishUrl>publish64\</PublishUrl>
+    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/daily/x64/</InstallUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x86'">
+    <PublishUrl>publish\</PublishUrl>
+    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/daily/</InstallUrl>
+  </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -46,7 +54,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.Topograph.ui</RootNamespace>
-    <AssemblyName>Topograph</AssemblyName>
+    <AssemblyName>Topograph-daily</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
@@ -63,7 +71,6 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
-    <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -73,14 +80,13 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/</InstallUrl>
-    <ProductName>Topograph</ProductName>
+    <ProductName>Topograph-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>259</ApplicationRevision>
-    <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
+    <ApplicationRevision>283</ApplicationRevision>
+    <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -106,6 +112,9 @@
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -160,8 +169,11 @@
     <Compile Include="Controls\MsGraphControlEx.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\QueryGrid.cs">
-      <SubType>Component</SubType>
+    <Compile Include="Controls\StatusBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\StatusBar.Designer.cs">
+      <DependentUpon>StatusBar.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ValidationStatusColumn.cs" />
     <Compile Include="Controls\CopyEmfToolStripMenuItem.cs">
@@ -204,12 +216,6 @@
     <Compile Include="Forms\BasePeptideAnalysesForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\BuiltInQueryForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\BuiltInQueryForm.Designer.cs">
-      <DependentUpon>BuiltInQueryForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\ChromatogramForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -221,6 +227,9 @@
     </Compile>
     <Compile Include="Forms\ConnectToOnlineWorkspaceForm.Designer.cs">
       <DependentUpon>ConnectToOnlineWorkspaceForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\EntityModelForm.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\CreateFileAnalysesForm.cs">
       <SubType>Form</SubType>
@@ -327,18 +336,6 @@
     <Compile Include="Forms\DefineLabelDialog.Designer.cs">
       <DependentUpon>DefineLabelDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\EntityGridForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\EntityGridForm.Designer.cs">
-      <DependentUpon>EntityGridForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\EntityModelForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\EntityModelForm.Designer.cs">
-      <DependentUpon>EntityModelForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\AddSearchResultsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -381,11 +378,11 @@
     <Compile Include="Forms\MiscSettingsForm.Designer.cs">
       <DependentUpon>MiscSettingsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\MercuryForm.cs">
+    <Compile Include="Forms\IsotopeDistributionForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\MercuryForm.Designer.cs">
-      <DependentUpon>MercuryForm.cs</DependentUpon>
+    <Compile Include="Forms\IsotopeDistributionForm.Designer.cs">
+      <DependentUpon>IsotopeDistributionForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ModificationsForm.cs">
       <SubType>Form</SubType>
@@ -435,18 +432,6 @@
     <Compile Include="Forms\PrecursorPoolSimulator.Designer.cs">
       <DependentUpon>PrecursorPoolSimulator.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\QueriesForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\QueriesForm.Designer.cs">
-      <DependentUpon>QueriesForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\QueryForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\QueryForm.Designer.cs">
-      <DependentUpon>QueryForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\HalfLivesForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -458,12 +443,6 @@
     </Compile>
     <Compile Include="Forms\RecalculateResultsForm.Designer.cs">
       <DependentUpon>RecalculateResultsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\RelexForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\RelexForm.Designer.cs">
-      <DependentUpon>RelexForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ResultsPerReplicateForm.cs">
       <SubType>Form</SubType>
@@ -513,17 +492,11 @@
     <Compile Include="Forms\TracerChromatogramForm.Designer.cs">
       <DependentUpon>TracerChromatogramForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\TracerPercentPrecisionForm.cs">
+    <Compile Include="Forms\TopographForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\TracerPercentPrecisionForm.Designer.cs">
-      <DependentUpon>TracerPercentPrecisionForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\TurnoverForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\TurnoverForm.Designer.cs">
-      <DependentUpon>TurnoverForm.cs</DependentUpon>
+    <Compile Include="Forms\TopographForm.Designer.cs">
+      <DependentUpon>TopographForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\UpdateProteinNames.cs">
       <SubType>Form</SubType>
@@ -539,6 +512,9 @@
     <Content Include="TopographLogoSmall.png" />
     <EmbeddedResource Include="Controls\HalfLifeSettingsControl.resx">
       <DependentUpon>HalfLifeSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\StatusBar.resx">
+      <DependentUpon>StatusBar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\AboutDlg.resx">
       <DependentUpon>AboutDlg.cs</DependentUpon>
@@ -560,10 +536,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\AnalyzePeptidesForm.resx">
       <DependentUpon>AnalyzePeptidesForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\BuiltInQueryForm.resx">
-      <DependentUpon>BuiltInQueryForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ChromatogramForm.resx">
@@ -654,8 +626,8 @@
       <DependentUpon>MiscSettingsForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\MercuryForm.resx">
-      <DependentUpon>MercuryForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\IsotopeDistributionForm.resx">
+      <DependentUpon>IsotopeDistributionForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ModificationsForm.resx">
@@ -697,24 +669,12 @@
     <EmbeddedResource Include="Forms\PrecursorPoolSimulator.resx">
       <DependentUpon>PrecursorPoolSimulator.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\QueriesForm.resx">
-      <DependentUpon>QueriesForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\QueryForm.resx">
-      <DependentUpon>QueryForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Forms\HalfLivesForm.resx">
       <DependentUpon>HalfLivesForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\RecalculateResultsForm.resx">
       <DependentUpon>RecalculateResultsForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\RelexForm.resx">
-      <DependentUpon>RelexForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ResultsPerReplicateForm.resx">
@@ -741,8 +701,8 @@
       <DependentUpon>TracerChromatogramForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TurnoverForm.resx">
-      <DependentUpon>TurnoverForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\TopographForm.resx">
+      <DependentUpon>TopographForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\UpdateProteinNames.resx">
@@ -786,15 +746,15 @@
     </None>
     <None Include="TopographApp_TemporaryKey.pfx" />
     <None Include="topograph_2_TemporaryKey.pfx" />
+    <Compile Include="Properties\Settings.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Settings.cs" />
     <Compile Include="DataBinding\TopographViewContext.cs" />
+    <Compile Include="Util\DeleteHandler.cs" />
     <Compile Include="Util\GridUtil.cs" />
-    <Compile Include="Util\LongWaitAction.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">

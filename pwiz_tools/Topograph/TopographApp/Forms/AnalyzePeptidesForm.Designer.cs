@@ -100,7 +100,7 @@
             this.btnCreateAnalyses.TabIndex = 4;
             this.btnCreateAnalyses.Text = "Create Analyses";
             this.btnCreateAnalyses.UseVisualStyleBackColor = true;
-            this.btnCreateAnalyses.Click += new System.EventHandler(this.btnCreateAnalyses_Click);
+            this.btnCreateAnalyses.Click += new System.EventHandler(this.BtnCreateAnalysesOnClick);
             // 
             // btnCancel
             // 
@@ -112,7 +112,7 @@
             this.btnCancel.TabIndex = 5;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            this.btnCancel.Click += new System.EventHandler(this.BtnCancelOnClick);
             // 
             // tbxStatus
             // 

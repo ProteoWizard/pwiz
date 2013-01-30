@@ -20,7 +20,9 @@ using System;
 
 namespace pwiz.Common.SystemUtil
 {
+// ReSharper disable InconsistentNaming
     public enum ProgressState { begin, running, complete, cancelled, error }
+// ReSharper restore InconsistentNaming
 
     public class ProgressStatus
     {

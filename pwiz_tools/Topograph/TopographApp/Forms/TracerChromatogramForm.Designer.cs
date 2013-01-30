@@ -44,13 +44,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.tbxScore = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.colFormula = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colAreaPct = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colSlopePct = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colArea = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colStartTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colEndTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colCorr = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label1 = new System.Windows.Forms.Label();
             this.tbxTracerPercentByAreas = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -66,6 +59,14 @@
             this.cbxSmooth = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.comboOverlay = new System.Windows.Forms.ComboBox();
+            this.colFormula = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colAreaPct = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colSlopePct = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArea = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStartTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colEndTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colCorr = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -270,48 +271,6 @@
             this.dataGridView1.TabIndex = 15;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.dataGridView1_SelectionChanged);
             // 
-            // colFormula
-            // 
-            this.colFormula.HeaderText = "Formula";
-            this.colFormula.Name = "colFormula";
-            this.colFormula.ReadOnly = true;
-            // 
-            // colAreaPct
-            // 
-            this.colAreaPct.HeaderText = "Area %";
-            this.colAreaPct.Name = "colAreaPct";
-            this.colAreaPct.ReadOnly = true;
-            // 
-            // colSlopePct
-            // 
-            this.colSlopePct.HeaderText = "Slope %";
-            this.colSlopePct.Name = "colSlopePct";
-            this.colSlopePct.ReadOnly = true;
-            // 
-            // colArea
-            // 
-            this.colArea.HeaderText = "Area";
-            this.colArea.Name = "colArea";
-            this.colArea.ReadOnly = true;
-            // 
-            // colStartTime
-            // 
-            this.colStartTime.HeaderText = "Start";
-            this.colStartTime.Name = "colStartTime";
-            this.colStartTime.ReadOnly = true;
-            // 
-            // colEndTime
-            // 
-            this.colEndTime.HeaderText = "End";
-            this.colEndTime.Name = "colEndTime";
-            this.colEndTime.ReadOnly = true;
-            // 
-            // colCorr
-            // 
-            this.colCorr.HeaderText = "Corr";
-            this.colCorr.Name = "colCorr";
-            this.colCorr.ReadOnly = true;
-            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -467,6 +426,49 @@
             this.comboOverlay.TabIndex = 18;
             this.comboOverlay.SelectedIndexChanged += new System.EventHandler(this.comboOverlay_SelectedIndexChanged);
             // 
+            // colFormula
+            // 
+            this.colFormula.HeaderText = "Formula";
+            this.colFormula.Name = "colFormula";
+            this.colFormula.ReadOnly = true;
+            // 
+            // colAreaPct
+            // 
+            this.colAreaPct.HeaderText = "Area %";
+            this.colAreaPct.Name = "colAreaPct";
+            this.colAreaPct.ReadOnly = true;
+            // 
+            // colSlopePct
+            // 
+            this.colSlopePct.HeaderText = "Slope %";
+            this.colSlopePct.Name = "colSlopePct";
+            this.colSlopePct.ReadOnly = true;
+            this.colSlopePct.Visible = false;
+            // 
+            // colArea
+            // 
+            this.colArea.HeaderText = "Area";
+            this.colArea.Name = "colArea";
+            this.colArea.ReadOnly = true;
+            // 
+            // colStartTime
+            // 
+            this.colStartTime.HeaderText = "Start";
+            this.colStartTime.Name = "colStartTime";
+            this.colStartTime.ReadOnly = true;
+            // 
+            // colEndTime
+            // 
+            this.colEndTime.HeaderText = "End";
+            this.colEndTime.Name = "colEndTime";
+            this.colEndTime.ReadOnly = true;
+            // 
+            // colCorr
+            // 
+            this.colCorr.HeaderText = "Corr";
+            this.colCorr.Name = "colCorr";
+            this.colCorr.ReadOnly = true;
+            // 
             // TracerChromatogramForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -477,6 +479,7 @@
             this.TabText = "TracerChromatogramForm";
             this.Text = "Tracer Chromatograms";
             this.splitContainer1.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
@@ -506,13 +509,6 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button btnAdjustPeaks;
         private System.Windows.Forms.ComboBox comboAdjustPeaks;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colFormula;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colAreaPct;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colSlopePct;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colArea;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colStartTime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colEndTime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colCorr;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracer;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracerPercent;
         private System.Windows.Forms.Label label5;
@@ -522,5 +518,12 @@
         private System.Windows.Forms.CheckBox cbxSmooth;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox comboOverlay;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colFormula;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAreaPct;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colSlopePct;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArea;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStartTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colEndTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colCorr;
     }
 }

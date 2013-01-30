@@ -42,16 +42,16 @@ namespace pwiz.Common.DataAnalysis
     {
 
         /** Default value of the bandwidth parameter. */
-        public const double DEFAULT_BANDWIDTH = 0.3;
+        public const double DefaultBandwidth = 0.3;
 
         /** Default value of the number of robustness iterations. */
-        public const int DEFAULT_ROBUSTNESS_ITERS = 2;
+        public const int DefaultRobustnessIters = 2;
 
         /**
          * Default value for accuracy.
          * @since 2.1
          */
-        public const double DEFAULT_ACCURACY = 1e-12;
+        public const double DefaultAccuracy = 1e-12;
 
         /**
          * The bandwidth parameter: when computing the loess fit at
@@ -88,9 +88,9 @@ namespace pwiz.Common.DataAnalysis
          */
         public LoessInterpolator()
         {
-            _bandwidth = DEFAULT_BANDWIDTH;
-            _robustnessIters = DEFAULT_ROBUSTNESS_ITERS;
-            _accuracy = DEFAULT_ACCURACY;
+            _bandwidth = DefaultBandwidth;
+            _robustnessIters = DefaultRobustnessIters;
+            _accuracy = DefaultAccuracy;
         }
 
         /**
@@ -117,7 +117,7 @@ namespace pwiz.Common.DataAnalysis
          * @see #LoessInterpolator(double, int, double)
          */
         public LoessInterpolator(double bandwidth, int robustnessIters) :
-            this(bandwidth, robustnessIters, DEFAULT_ACCURACY)
+            this(bandwidth, robustnessIters, DefaultAccuracy)
         {
         }
 

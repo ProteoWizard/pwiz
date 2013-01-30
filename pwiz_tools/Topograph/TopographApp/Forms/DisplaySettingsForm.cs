@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Topograph.ui.Properties;
 
@@ -30,8 +25,8 @@ namespace pwiz.Topograph.ui.Forms
             cbxPeaksVerticalLines.Checked = Settings.Default.PeaksAsVerticalLines;
             cbxShowDeconvolutionScore.Checked = Settings.Default.ShowChromatogramScore;
             cbxSmoothChromatograms.Checked = Settings.Default.SmoothChromatograms;
-            tbxFileMruLength.Text = Settings.Default.MruLength.ToString();
-            tbxChromatogramLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString();
+            tbxFileMruLength.Text = Settings.Default.MruLength.ToString(CultureInfo.CurrentCulture);
+            tbxChromatogramLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString(CultureInfo.CurrentCulture);
         }
 
         private void SaveSettings()
@@ -41,12 +36,12 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.PeaksAsVerticalLines = cbxPeaksVerticalLines.Checked;
             Settings.Default.ShowChromatogramScore = cbxShowDeconvolutionScore.Checked;
             Settings.Default.SmoothChromatograms = cbxSmoothChromatograms.Checked;
-            Settings.Default.MruLength = int.Parse(tbxFileMruLength.Text);
-            Settings.Default.ChromatogramLineWidth = float.Parse(tbxChromatogramLineWidth.Text);
+            Settings.Default.MruLength = int.Parse(tbxFileMruLength.Text, CultureInfo.InvariantCulture);
+            Settings.Default.ChromatogramLineWidth = float.Parse(tbxChromatogramLineWidth.Text, CultureInfo.InvariantCulture);
             Settings.Default.Save();
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOkOnClick(object sender, EventArgs e)
         {
             SaveSettings();
             DialogResult = DialogResult.OK;

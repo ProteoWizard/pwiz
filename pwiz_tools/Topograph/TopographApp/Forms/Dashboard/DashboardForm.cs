@@ -24,10 +24,10 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 {
     public partial class DashboardForm : DockableForm
     {
-        public DashboardForm(TurnoverForm turnoverForm)
+        public DashboardForm(TopographForm topographForm)
         {
             InitializeComponent();
-            TurnoverForm = turnoverForm;
+            TopographForm = topographForm;
             Icon = Properties.Resources.TopographIcon;
             var frames = new List<Control>();
             foreach (var step in new DashboardStep[]
@@ -53,6 +53,6 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             panelSteps.Controls.AddRange(frames.ToArray());
         }
 
-        public TurnoverForm TurnoverForm { get; private set; }
+        public TopographForm TopographForm { get; private set; }
     }
 }

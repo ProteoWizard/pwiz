@@ -31,11 +31,9 @@ namespace pwiz.Topograph.ui.Forms
         private void InitializeComponent()
         {
             this.gridIntensities = new pwiz.Topograph.ui.Controls.ExcludedMzsGrid();
-            this.cbxOverrideExcludedMzs = new System.Windows.Forms.CheckBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.cbxAutoFindPeak = new System.Windows.Forms.CheckBox();
-            this.cbxOverrideExcludedMasses = new System.Windows.Forms.CheckBox();
             this.cbxSmooth = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.gridIntensities)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -56,17 +54,6 @@ namespace pwiz.Topograph.ui.Forms
             this.gridIntensities.Size = new System.Drawing.Size(291, 183);
             this.gridIntensities.TabIndex = 3;
             // 
-            // cbxOverrideExcludedMzs
-            // 
-            this.cbxOverrideExcludedMzs.AutoSize = true;
-            this.cbxOverrideExcludedMzs.Location = new System.Drawing.Point(3, 28);
-            this.cbxOverrideExcludedMzs.Name = "cbxOverrideExcludedMzs";
-            this.cbxOverrideExcludedMzs.Size = new System.Drawing.Size(134, 17);
-            this.cbxOverrideExcludedMzs.TabIndex = 13;
-            this.cbxOverrideExcludedMzs.Text = "Override excluded Mzs";
-            this.cbxOverrideExcludedMzs.UseVisualStyleBackColor = true;
-            this.cbxOverrideExcludedMzs.CheckedChanged += new System.EventHandler(this.cbxOverrideExcludedMzs_CheckedChanged);
-            // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -86,7 +73,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this.cbxAutoFindPeak, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.cbxOverrideExcludedMasses, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.gridIntensities, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.cbxSmooth, 0, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -110,19 +96,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxAutoFindPeak.TabIndex = 0;
             this.cbxAutoFindPeak.Text = "Auto Find Peak";
             this.cbxAutoFindPeak.UseVisualStyleBackColor = true;
-            this.cbxAutoFindPeak.CheckedChanged += new System.EventHandler(this.cbxAutoFindPeak_CheckedChanged);
-            // 
-            // cbxOverrideExcludedMasses
-            // 
-            this.cbxOverrideExcludedMasses.AutoSize = true;
-            this.tableLayoutPanel1.SetColumnSpan(this.cbxOverrideExcludedMasses, 2);
-            this.cbxOverrideExcludedMasses.Location = new System.Drawing.Point(3, 28);
-            this.cbxOverrideExcludedMasses.Name = "cbxOverrideExcludedMasses";
-            this.cbxOverrideExcludedMasses.Size = new System.Drawing.Size(150, 17);
-            this.cbxOverrideExcludedMasses.TabIndex = 1;
-            this.cbxOverrideExcludedMasses.Text = "Override excluded masses";
-            this.cbxOverrideExcludedMasses.UseVisualStyleBackColor = true;
-            this.cbxOverrideExcludedMasses.CheckedChanged += new System.EventHandler(this.cbxOverrideExcludedMasses_CheckedChanged);
+            this.cbxAutoFindPeak.CheckedChanged += new System.EventHandler(this.CbxAutoFindPeakOnCheckedChanged);
             // 
             // cbxSmooth
             // 
@@ -133,7 +107,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxSmooth.TabIndex = 2;
             this.cbxSmooth.Text = "S&mooth";
             this.cbxSmooth.UseVisualStyleBackColor = true;
-            this.cbxSmooth.CheckedChanged += new System.EventHandler(this.cbxSmooth_CheckedChanged);
+            this.cbxSmooth.CheckedChanged += new System.EventHandler(this.CbxSmoothOnCheckedChanged);
             // 
             // ChromatogramForm
             // 
@@ -143,8 +117,8 @@ namespace pwiz.Topograph.ui.Forms
             this.Controls.Add(this.splitContainer1);
             this.Name = "ChromatogramForm";
             this.Text = "Raw Chromatograms";
-            this.ResizeEnd += new System.EventHandler(this.ChromatogramForm_ResizeEnd);
-            this.Resize += new System.EventHandler(this.ChromatogramForm_Resize);
+            this.ResizeEnd += new System.EventHandler(this.ChromatogramFormOnResizeEnd);
+            this.Resize += new System.EventHandler(this.ChromatogramFormOnResize);
             ((System.ComponentModel.ISupportInitialize)(this.gridIntensities)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.ResumeLayout(false);
@@ -154,13 +128,11 @@ namespace pwiz.Topograph.ui.Forms
 
         }
         protected ExcludedMzsGrid gridIntensities;
-        private System.Windows.Forms.CheckBox cbxOverrideExcludedMzs;
 
         #endregion
         private System.Windows.Forms.SplitContainer splitContainer1;
         protected System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.CheckBox cbxAutoFindPeak;
-        private System.Windows.Forms.CheckBox cbxOverrideExcludedMasses;
         private System.Windows.Forms.CheckBox cbxSmooth;
     }
 }

@@ -33,8 +33,10 @@ namespace pwiz.Common.DataBinding
 
     public static class DataFormats
     {
+        // ReSharper disable InconsistentNaming
         public static readonly IDataFormat TSV = new TextFormat("\t", "Tab Separated Values(*.tsv)|*.tsv");
         public static readonly IDataFormat CSV = new TextFormat(",", "Comma Separated Values(*.csv)|*.csv");
+        // ReSharper restore InconsistentNaming
         class TextFormat : IDataFormat
         {
             public TextFormat(string separator, string fileFilter)
@@ -56,7 +58,7 @@ namespace pwiz.Common.DataBinding
                 }
                 writer.WriteLine();
             }
-            static readonly Regex REGEX_QUOTE = new Regex("\"");
+            static readonly Regex RegexQuote = new Regex("\"");
             private string Escape(object o)
             {
                 if (o == null)
@@ -67,7 +69,7 @@ namespace pwiz.Common.DataBinding
                 {
                     return o.ToString();
                 }
-                return "\"" + REGEX_QUOTE.Replace(o.ToString(), "\"\"") + "\"";
+                return "\"" + RegexQuote.Replace(o.ToString(), "\"\"") + "\"";
             }
         }
     }

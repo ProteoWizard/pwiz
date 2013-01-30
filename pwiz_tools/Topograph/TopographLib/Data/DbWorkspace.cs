@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace pwiz.Topograph.Data
 {
@@ -27,20 +25,10 @@ namespace pwiz.Topograph.Data
     {
         public DbWorkspace()
         {
-            MsDataFiles = new List<DbMsDataFile>();
-            Peptides = new List<DbPeptide>();
-            PeptideAnalyses = new List<DbPeptideAnalysis>();
             Modifications = new List<DbModification>();
             Settings = new List<DbSetting>();
             TracerDefs = new List<DbTracerDef>();
-            
         }
-        public virtual ICollection<DbMsDataFile> MsDataFiles { get; set; }
-        public virtual int MsDataFileCount { get; set; }
-        public virtual ICollection<DbPeptide> Peptides{ get; set;}
-        public virtual int PeptideCount { get; set; }
-        public virtual ICollection<DbPeptideAnalysis> PeptideAnalyses { get; set; }
-        public virtual int PeptideAnalysisCount { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
         public virtual int ModificationCount { get; set; }
         public virtual ICollection<DbSetting> Settings { get; set; }

@@ -49,6 +49,10 @@ namespace pwiz.Topograph.Model
             Slope = statsTarget.Slope(statsOriginal);
             Intercept = statsTarget.Intercept(statsOriginal);
             R = statsTarget.R(statsOriginal);
+            if (double.IsNaN(R))
+            {
+                R = 0;
+            }
         }
 
         public IList<double> OriginalTimes { get; private set; }

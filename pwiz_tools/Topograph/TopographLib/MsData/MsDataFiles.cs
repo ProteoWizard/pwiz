@@ -19,10 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using pwiz.ProteowizardWrapper;
-using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
 
@@ -73,10 +71,10 @@ namespace pwiz.Topograph.MsData
         public static bool InitMsDataFile(Workspace workspace, MsDataFile msDataFile)
         {
             String error;
-            return TryInitMsDataFile(workspace, msDataFile, out error);
+            return TryInitMsDataFile(workspace, msDataFile, CancellationToken.None, out error);
         }
 
-        public static bool TryInitMsDataFile(Workspace workspace, MsDataFile msDataFile, out String message)
+        public static bool TryInitMsDataFile(Workspace workspace, MsDataFile msDataFile, CancellationToken cancellationToken, out String message)
         {
             if (string.IsNullOrEmpty(workspace.GetDataDirectory()))
             {
@@ -98,11 +96,11 @@ namespace pwiz.Topograph.MsData
             {
                 using(var cMsDataFile = new MsDataFileImpl(path))
                 {
-                    msDataFile.Init(cMsDataFile);
+                    msDataFile.Init(cancellationToken, cMsDataFile);
                     using (var session = workspace.OpenWriteSession())
                     {
                         session.BeginTransaction();
-                        msDataFile.MsDataFileData.Save(session);
+                        msDataFile.SaveBinary(session);
                         session.Transaction.Commit();
                         message = "Success";
                         return true;

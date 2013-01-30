@@ -69,7 +69,7 @@
             this.btnAnalyzePeptides.TabIndex = 0;
             this.btnAnalyzePeptides.Text = "Analyze peptides...";
             this.btnAnalyzePeptides.UseVisualStyleBackColor = true;
-            this.btnAnalyzePeptides.Click += new System.EventHandler(this.btnAnalyzePeptides_Click);
+            this.btnAnalyzePeptides.Click += new System.EventHandler(this.BtnAnalyzePeptidesOnClick);
             // 
             // lblStatus
             // 
@@ -91,7 +91,7 @@
             this.linkPeptideAnalyses.TabIndex = 1;
             this.linkPeptideAnalyses.TabStop = true;
             this.linkPeptideAnalyses.Text = "View Peptide Analyses";
-            this.linkPeptideAnalyses.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkPeptideAnalyses_LinkClicked);
+            this.linkPeptideAnalyses.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkPeptideAnalysesOnLinkClicked);
             // 
             // AnalyzePeptidesStep
             // 

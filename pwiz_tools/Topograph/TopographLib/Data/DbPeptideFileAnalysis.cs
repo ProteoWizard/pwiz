@@ -16,15 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using pwiz.Topograph.Data;
-using pwiz.Topograph.Model;
+using System.Runtime.Serialization;
 
 namespace pwiz.Topograph.Data
 {
+    [DataContract]
     public class DbPeptideFileAnalysis : DbAnnotatedEntity<DbPeptideFileAnalysis>
     {
         public DbPeptideFileAnalysis()
@@ -33,6 +30,7 @@ namespace pwiz.Topograph.Data
         }
         public virtual DbPeptideAnalysis PeptideAnalysis { get; set; }
         public virtual DbChromatogramSet ChromatogramSet { get; set; }
+        [DataMember]
         public virtual DbMsDataFile MsDataFile { get; set; }
         public virtual ICollection<DbPeak> Peaks { get; set; }
         public virtual int PeakCount { get; set; }
@@ -40,8 +38,6 @@ namespace pwiz.Topograph.Data
         public virtual bool OverrideExcludedMasses { get; set; }
         public virtual double ChromatogramStartTime { get; set; }
         public virtual double ChromatogramEndTime { get; set; }
-        public virtual int? FirstDetectedScan { get; set; }
-        public virtual int? LastDetectedScan { get; set; }
         public virtual byte[] ExcludedMasses { get; set; }
         public virtual string BasePeakName { get; set; }
         public virtual double? TracerPercent { get; set; }

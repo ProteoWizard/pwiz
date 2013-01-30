@@ -32,7 +32,7 @@ namespace pwiz.Topograph.Test.DataBinding.Controls
         [TestMethod]
         public void TestMapAttribute()
         {
-            var tree = new AvailableFieldsTree()
+            var tree = new AvailableFieldsTree
                            {
                                RootColumn = new ColumnDescriptor(new DataSchema(), typeof (Peptide))
                            };

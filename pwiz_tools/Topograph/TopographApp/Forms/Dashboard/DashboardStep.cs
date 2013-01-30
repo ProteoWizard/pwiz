@@ -24,7 +24,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 {
     public class DashboardStep : UserControl
     {
-        private TurnoverForm _turnoverForm;
+        private TopographForm _topographForm;
         private Workspace _workspace;
         public virtual bool IsCurrent
         {
@@ -41,7 +41,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             base.OnHandleCreated(e);
             if (DashboardForm != null)
             {
-                TurnoverForm = DashboardForm.TurnoverForm;
+                TopographForm = DashboardForm.TopographForm;
                 UpdateStepStatus();
             }
         }
@@ -49,27 +49,27 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         protected override void OnHandleDestroyed(EventArgs e)
         {
             base.OnHandleDestroyed(e);
-            TurnoverForm = null;
+            TopographForm = null;
         }
 
-        protected TurnoverForm TurnoverForm
+        protected TopographForm TopographForm
         {
-            get { return _turnoverForm; } 
+            get { return _topographForm; } 
             private set
             {
-                if (ReferenceEquals(value, _turnoverForm))
+                if (ReferenceEquals(value, _topographForm))
                 {
                     return;
                 }
-                if (TurnoverForm != null)
+                if (TopographForm != null)
                 {
-                    TurnoverForm.WorkspaceChange -= TurnoverFormOnWorkspaceChange;
+                    TopographForm.WorkspaceChange -= TurnoverFormOnWorkspaceChange;
                 }
-                _turnoverForm = value;
-                if (TurnoverForm != null)
+                _topographForm = value;
+                if (TopographForm != null)
                 {
-                    TurnoverForm.WorkspaceChange += TurnoverFormOnWorkspaceChange;
-                    Workspace = TurnoverForm.Workspace;
+                    TopographForm.WorkspaceChange += TurnoverFormOnWorkspaceChange;
+                    Workspace = TopographForm.Workspace;
                 }
                 else
                 {
@@ -89,22 +89,15 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 }
                 if (Workspace != null)
                 {
-                    Workspace.EntitiesChange -= OnWorkspaceEntitiesChanged;
-                    Workspace.WorkspaceLoaded -= OnWorkspaceLoaded;
+                    Workspace.Change -= WorkspaceOnChange;
                 }
                 _workspace = value;
                 if (Workspace != null)
                 {
-                    Workspace.EntitiesChange += OnWorkspaceEntitiesChanged;
-                    Workspace.WorkspaceLoaded += OnWorkspaceLoaded;
+                    Workspace.Change += WorkspaceOnChange;
                 }
                 OnWorkspaceChanged();
             }
-        }
-
-        private void OnWorkspaceLoaded(Workspace workspace)
-        {
-            BeginInvoke(new Action(UpdateStepStatus));
         }
 
         protected virtual void OnWorkspaceChanged()
@@ -114,10 +107,10 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         private void TurnoverFormOnWorkspaceChange(object sender, EventArgs eventArgs)
         {
-            Workspace = TurnoverForm.Workspace;
+            Workspace = TopographForm.Workspace;
         }
 
-        protected virtual void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs entitiesChangedEventArgs)
+        protected virtual void WorkspaceOnChange(object sender, WorkspaceChangeArgs change)
         {
             UpdateStepStatus();
         }

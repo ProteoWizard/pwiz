@@ -52,8 +52,8 @@
             this.listView1.TabIndex = 0;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
-            this.listView1.Resize += new System.EventHandler(this.listView1_Resize);
-            this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
+            this.listView1.Resize += new System.EventHandler(this.ListView1OnResize);
+            this.listView1.SelectedIndexChanged += new System.EventHandler(this.ListView1OnSelectedIndexChanged);
             // 
             // colHdrName
             // 
@@ -68,7 +68,7 @@
             this.btnEdit.TabIndex = 1;
             this.btnEdit.Text = "Edit...";
             this.btnEdit.UseVisualStyleBackColor = true;
-            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
+            this.btnEdit.Click += new System.EventHandler(this.BtnEditOnClick);
             // 
             // btnRemove
             // 
@@ -79,7 +79,7 @@
             this.btnRemove.TabIndex = 2;
             this.btnRemove.Text = "Remove";
             this.btnRemove.UseVisualStyleBackColor = true;
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            this.btnRemove.Click += new System.EventHandler(this.BtnRemoveOnClick);
             // 
             // btnAdd
             // 
@@ -90,7 +90,7 @@
             this.btnAdd.TabIndex = 3;
             this.btnAdd.Text = "Add...";
             this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnAdd.Click += new System.EventHandler(this.BtnAddOnClick);
             // 
             // btnOk
             // 
@@ -112,7 +112,7 @@
             this.btnRefresh.TabIndex = 5;
             this.btnRefresh.Text = "Refresh";
             this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            this.btnRefresh.Click += new System.EventHandler(this.BtnRefreshOnClick);
             // 
             // ManageViewsForm
             // 

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
@@ -52,7 +53,7 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysis PeptideAnalysis { get { return (PeptideAnalysis) EntityModel; } }
         public Peptide Peptide { get { return PeptideAnalysis.Peptide;} }
 
-        private void btnCreateAnalyses_Click(object sender, EventArgs e)
+        private void BtnCreateAnalysesOnClick(object sender, EventArgs e)
         {
             using (var form = new CreateFileAnalysesForm(PeptideAnalysis))
             {
@@ -75,8 +76,8 @@ namespace pwiz.Topograph.ui.Forms
         {
             using (var session = Workspace.OpenSession())
             {
-                var query = session.CreateQuery("SELECT MIN(S.MinCharge), MAX(S.MaxCharge) FROM " +
-                                                typeof (DbPeptideSearchResult) + " S WHERE S.Peptide.Id = :peptideId")
+                var query = session.CreateQuery("SELECT MIN(S.PrecursorCharge), MAX(S.PrecursorCharge) FROM " +
+                                                typeof (DbPeptideSpectrumMatch) + " S WHERE S.Peptide.Id = :peptideId")
                     .SetParameter("peptideId", Peptide.Id);
                 var row = (object[]) query.UniqueResult();
                 _originalMinCharge = Convert.ToInt32(row[0]);
@@ -111,57 +112,62 @@ namespace pwiz.Topograph.ui.Forms
             row.Cells[colTimePoint.Name].Value = peptideFileAnalysis.MsDataFile.TimePoint;
             row.Cells[colCohort.Name].Value = peptideFileAnalysis.MsDataFile.Cohort;
             row.Cells[colDataFileLabel.Name].Value = peptideFileAnalysis.MsDataFile.Label;
-            row.Cells[colPeakStart.Name].Value = peptideFileAnalysis.Peaks.StartTime;
-            row.Cells[colPeakEnd.Name].Value = peptideFileAnalysis.Peaks.EndTime;
             row.Cells[colPeakStart.Index].Style.Font 
                 = row.Cells[colPeakEnd.Index].Style.Font
                 = peptideFileAnalysis.AutoFindPeak
                     ? row.DataGridView.Font
                     : new Font(row.DataGridView.Font, FontStyle.Bold);
-            if (peptideFileAnalysis.Peaks.TracerPercent.HasValue)
+            if (peptideFileAnalysis.CalculatedPeaks != null)
             {
-                row.Cells[colTracerPercent.Index].Value = peptideFileAnalysis.Peaks.TracerPercent/100;
-            }
-            else
-            {
-                row.Cells[colTracerPercent.Index].Value = null;
-            }
-            row.Cells[colScore.Index].Value = peptideFileAnalysis.Peaks.DeconvolutionScore;
-            row.Cells[colScore.Index].Style.BackColor
-                = peptideFileAnalysis.FirstDetectedScan.HasValue ? Color.White : Color.LightGray;
-
-            if (Workspace.GetTracerDefs().Count > 1)
-            {
-                row.Cells[colPrecursorEnrichment.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichmentFormula;
-            }
-            else
-            {
-                row.Cells[colPrecursorEnrichment.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
-            }
-            row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
-        }
-
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
-        {
-            base.OnWorkspaceEntitiesChanged(args);
-            if (args.GetEntities<MsDataFile>().Count > 0 || args.Contains(PeptideAnalysis))
-            {
-                UpdateRows(PeptideAnalysis.FileAnalyses.ListChildren());
-            }
-            else
-            {
-                var peptideFileAnalyses = new HashSet<PeptideFileAnalysis>(
-                    args.GetEntities<PeptideFileAnalysis>().Where(f=>Equals(PeptideAnalysis, f.PeptideAnalysis)));
-                foreach (var peaks in args.GetEntities<Peaks>())
+                row.Cells[colPeakStart.Index].Value = peptideFileAnalysis.CalculatedPeaks.StartTime;
+                row.Cells[colPeakEnd.Index].Value = peptideFileAnalysis.CalculatedPeaks.EndTime;
+                row.Cells[colTracerPercent.Index].Value = peptideFileAnalysis.CalculatedPeaks.TracerPercent / 100;
+                row.Cells[colScore.Index].Value = peptideFileAnalysis.CalculatedPeaks.DeconvolutionScore;
+                if (Workspace.GetTracerDefs().Count > 1)
                 {
-                    if (Equals(PeptideAnalysis, peaks.PeptideAnalysis))
-                    {
-                        peptideFileAnalyses.Add(peaks.PeptideFileAnalysis);
-                    }
+                    row.Cells[colPrecursorEnrichment.Index].Value = peptideFileAnalysis.CalculatedPeaks.PrecursorEnrichmentFormula;
                 }
-                UpdateRows(peptideFileAnalyses);
+                else
+                {
+                    row.Cells[colPrecursorEnrichment.Index].Value = peptideFileAnalysis.CalculatedPeaks.PrecursorEnrichment;
+                }
+                row.Cells[colTurnover.Index].Value = peptideFileAnalysis.CalculatedPeaks.Turnover;
             }
+            else
+            {
+                row.Cells[colPeakStart.Index].Value = null;
+                row.Cells[colPeakEnd.Index].Value = null;
+                row.Cells[colTracerPercent.Index].Value = null;
+                row.Cells[colScore.Index].Value = null;
+                row.Cells[colPrecursorEnrichment.Index].Value = null;
+                row.Cells[colTurnover.Index].Value = null;
+            }
+            row.Cells[colScore.Index].Style.BackColor
+                = peptideFileAnalysis.PsmCount > 0 ? Color.White : Color.LightGray;
+
         }
+
+//        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+//        {
+//            base.OnWorkspaceEntitiesChanged(args);
+////            if (args.GetEntities<MsDataFile>().Count > 0)
+////            {
+////                UpdateRows(PeptideAnalysis.FileAnalyses.Values);
+////            }
+////            else
+//            {
+////                var peptideFileAnalyses = new HashSet<PeptideFileAnalysis>(
+////                    args.GetEntities<PeptideFileAnalysis>().Where(f=>Equals(PeptideAnalysis, f.PeptideAnalysis)));
+////                foreach (var peaks in args.GetEntities<CalculatedPeaks>())
+////                {
+////                    if (Equals(PeptideAnalysis, peaks.PeptideAnalysis))
+////                    {
+////                        peptideFileAnalyses.Add(peaks.PeptideFileAnalysis);
+////                    }
+////                }
+////                UpdateRows(peptideFileAnalyses);
+//            }
+//        }
         private void UpdateRows(ICollection<PeptideFileAnalysis> peptideFileAnalyses)
         {
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
@@ -200,7 +206,11 @@ namespace pwiz.Topograph.ui.Forms
             for (int iFileAnalysis = 0; iFileAnalysis < fileAnalyses.Count; iFileAnalysis++)
             {
                 var fileAnalysis = fileAnalyses[iFileAnalysis];
-                var peaks = fileAnalysis.Peaks;
+                var peaks = fileAnalysis.CalculatedPeaks;
+                if (peaks == null)
+                {
+                    continue;
+                }
                 for (int iTracerFormula = 0; iTracerFormula < tracerFormulas.Count; iTracerFormula++)
                 {
                     var pointPairList = pointPairLists[iTracerFormula];
@@ -213,7 +223,7 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         if (normalizeTo == null)
                         {
-                            pointPairList.Add(new PointPair(iFileAnalysis + 1, peak.EndTime, peak.StartTime));
+                            pointPairList.Add(new PointPair(iFileAnalysis + 1, peak.Value.EndTime, peak.Value.StartTime));
                         }
                         else
                         {
@@ -224,7 +234,7 @@ namespace pwiz.Topograph.ui.Forms
                             }
                             else
                             {
-                                pointPairList.Add(new PointPair(iFileAnalysis + 1, alignment.GetTargetTime(peak.EndTime), alignment.GetTargetTime(peak.StartTime), fileAnalysis));
+                                pointPairList.Add(new PointPair(iFileAnalysis + 1, alignment.GetTargetTime(peak.Value.EndTime), alignment.GetTargetTime(peak.Value.StartTime), fileAnalysis));
                             }
                         }
                     }
@@ -238,7 +248,7 @@ namespace pwiz.Topograph.ui.Forms
             
             for (int iTracerFormula = 0; iTracerFormula < tracerFormulas.Count; iTracerFormula++)
             {
-                var curve = zedGraphControl.GraphPane.AddHiLowBar(tracerFormulas[iTracerFormula].ToDisplayString(),
+                zedGraphControl.GraphPane.AddHiLowBar(tracerFormulas[iTracerFormula].ToDisplayString(),
                                                                   pointPairLists[iTracerFormula],
                                                                   TracerChromatogramForm.GetColor(iTracerFormula,
                                                                                                   tracerFormulas.Count));
@@ -247,7 +257,7 @@ namespace pwiz.Topograph.ui.Forms
             zedGraphControl.Invalidate();
         }
 
-        private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        private void DataGridViewOnRowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             var row = dataGridView.Rows[e.RowIndex];
             var peptideAnalysis = (PeptideFileAnalysis) row.Tag;
@@ -256,14 +266,15 @@ namespace pwiz.Topograph.ui.Forms
 
         protected void OnPeptideAnalysisChanged()
         {
+            PeptideAnalysis.EnsurePeaksCalculated();
             var res = Workspace.GetAminoAcidFormulas();
             tbxFormula.Text = res.GetFormula(Peptide.Sequence).ToString();
             tbxMonoMass.Text = Peptide.GetChargedPeptide(1).GetMonoisotopicMass(res).ToString("0.####");
             tbxAvgMass.Text = Peptide.GetChargedPeptide(1).GetMassDistribution(res).AverageMass.ToString("0.####");
-            tbxMinCharge.Text = PeptideAnalysis.MinCharge.ToString();
-            tbxMaxCharge.Text = PeptideAnalysis.MaxCharge.ToString();
+            tbxMinCharge.Text = PeptideAnalysis.MinCharge.ToString(CultureInfo.CurrentCulture);
+            tbxMaxCharge.Text = PeptideAnalysis.MaxCharge.ToString(CultureInfo.CurrentCulture);
             tbxProtein.Text = Peptide.ProteinName + " " + Peptide.ProteinDescription;
-            tbxMassAccuracy.Text = PeptideAnalysis.GetMassAccuracy().ToString();
+            tbxMassAccuracy.Text = PeptideAnalysis.GetMassAccuracy().ToString(CultureInfo.CurrentCulture);
             if (PeptideAnalysis.MassAccuracy == null)
             {
                 tbxMassAccuracy.Font = Font;
@@ -290,26 +301,26 @@ namespace pwiz.Topograph.ui.Forms
             }
 
             UpdateMassGrid();
-            UpdateRows(PeptideAnalysis.FileAnalyses.ListChildren());
+            UpdateRows(PeptideAnalysis.FileAnalyses);
         }
 
-        protected override void EntityChanged(EntityModelChangeEventArgs args)
+        protected override void EntityChanged()
         {
-            base.EntityChanged(args);
+            base.EntityChanged();
             OnPeptideAnalysisChanged();
         }
 
-        private void tbxMinCharge_Leave(object sender, EventArgs e)
+        private void TbxMinChargeOnLeave(object sender, EventArgs e)
         {
             PeptideAnalysis.MinCharge = Convert.ToInt32(tbxMinCharge.Text);
         }
 
-        private void tbxMaxCharge_TextChanged(object sender, EventArgs e)
+        private void TbxMaxChargeOnTextChanged(object sender, EventArgs e)
         {
             PeptideAnalysis.MaxCharge = Convert.ToInt32(tbxMaxCharge.Text);
         }
 
-        private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewOnCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             var row = dataGridView.Rows[e.RowIndex];
             var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
@@ -338,7 +349,7 @@ namespace pwiz.Topograph.ui.Forms
             gridViewExcludedMzs.UpdateGrid();
         }
 
-        private void btnShowGraph_Click(object sender, EventArgs e)
+        private void BtnShowGraphOnClick(object sender, EventArgs e)
         {
             var halfLifeForm = new HalfLifeForm(Workspace)
                                    {
@@ -348,7 +359,7 @@ namespace pwiz.Topograph.ui.Forms
             halfLifeForm.Show(DockPanel, DockState);
         }
 
-        private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewOnCellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex < 0 || e.RowIndex < 0)
             {
@@ -371,7 +382,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void tbxMassAccuracy_Leave(object sender, EventArgs e)
+        private void TbxMassAccuracyOnLeave(object sender, EventArgs e)
         {
             double value;
             try
@@ -382,20 +393,17 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            using (Workspace.GetWriteLock())
+            if (value == Workspace.GetMassAccuracy())
             {
-                if (value == Workspace.GetMassAccuracy())
-                {
-                    PeptideAnalysis.MassAccuracy = null;
-                }
-                else
-                {
-                    PeptideAnalysis.MassAccuracy = value;
-                }
+                PeptideAnalysis.MassAccuracy = null;
+            }
+            else
+            {
+                PeptideAnalysis.MassAccuracy = value;
             }
         }
 
-        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        private void ZedGraphControlOnContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             menuStrip.Items.Add(new ToolStripMenuItem("Normalize Times", null, NormalizeTimesOnClick)
                                     {CheckOnClick = true, Checked = _normalizeRetentionTimes});

@@ -18,9 +18,11 @@
  */
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Topograph.Test.DataBinding.SampleData;
 
 namespace pwiz.Topograph.Test.DataBinding.Controls
@@ -34,16 +36,16 @@ namespace pwiz.Topograph.Test.DataBinding.Controls
         [TestMethod]
         public void TestSubList()
         {
-            var boundDataGridView = new BoundDataGridView()
+            var boundDataGridView = new BoundDataGridView
                                         {
                                             BindingContext = new BindingContext(),
-                                            DataSource = new BindingSource(),
+                                            DataSource = new BindingListSource(),
                                         };
             using (boundDataGridView)
             {
                 var columnIds = new[]
                                     {
-                                        IdentifierPath.ROOT,
+                                        IdentifierPath.Root,
                                         IdentifierPath.Parse("Sequence"),
                                         IdentifierPath.Parse("AminoAcidsList.[].Code"),
                                         IdentifierPath.Parse("Molecule.[]"),
@@ -52,10 +54,11 @@ namespace pwiz.Topograph.Test.DataBinding.Controls
                     .SetColumns(columnIds.Select(id => new ColumnSpec().SetIdentifierPath(id)))
                     .SetSublistId(IdentifierPath.Parse("AminoAcidsList.[]"));
                 var viewInfo = new ViewInfo(new DataSchema(), typeof (LinkValue<Peptide>), viewSpec);
-                boundDataGridView.BindingListView.ViewInfo = viewInfo;
+                var bindingListView = ((BindingListSource) boundDataGridView.DataSource).BindingListView;
+                bindingListView.ViewInfo = viewInfo;
                 var innerList = new BindingList<LinkValue<Peptide>>();
                 innerList.Add(new LinkValue<Peptide>(new Peptide("AD"), null));
-                boundDataGridView.BindingListView.RowSource = innerList;
+                bindingListView.RowSource = innerList;
                 Assert.AreEqual(2, boundDataGridView.Rows.Count);
                 innerList.Add(new LinkValue<Peptide>(new Peptide("TISE"), null));
                 Assert.AreEqual(6, boundDataGridView.Rows.Count);

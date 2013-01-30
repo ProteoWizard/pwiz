@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Data;
@@ -29,7 +30,7 @@ namespace pwiz.Topograph.ui.Forms
         public AcceptanceCriteriaForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            checkedListBoxAcceptableIntegrationNotes.Items.AddRange(IntegrationNote.Values().ToArray());
+            checkedListBoxAcceptableIntegrationNotes.Items.AddRange(IntegrationNote.Values().Cast<object>().ToArray());
             AcceptSamplesWithoutMs2Id = workspace.GetAcceptSamplesWithoutMs2Id();
             MinDeconvolutionScore = workspace.GetAcceptMinDeconvolutionScore();
             MinAuc = workspace.GetAcceptMinAreaUnderChromatogramCurve();
@@ -39,14 +40,11 @@ namespace pwiz.Topograph.ui.Forms
 
         public void Save()
         {
-            using (Workspace.GetWriteLock())
-            {
-                Workspace.SetAcceptSamplesWithoutMs2Id(AcceptSamplesWithoutMs2Id);
-                Workspace.SetAcceptMinDeconvolutionScore(MinDeconvolutionScore);
-                Workspace.SetAcceptMinAreaUnderChromatogramCurve(MinAuc);
-                Workspace.SetAcceptIntegrationNotes(IntegrationNotes);
-                Workspace.SetAcceptMinTurnoverScore(MinTurnoverScore);
-            }
+            Workspace.SetAcceptSamplesWithoutMs2Id(AcceptSamplesWithoutMs2Id);
+            Workspace.SetAcceptMinDeconvolutionScore(MinDeconvolutionScore);
+            Workspace.SetAcceptMinAreaUnderChromatogramCurve(MinAuc);
+            Workspace.SetAcceptIntegrationNotes(IntegrationNotes);
+            Workspace.SetAcceptMinTurnoverScore(MinTurnoverScore);
         }
 
         public bool AcceptSamplesWithoutMs2Id
@@ -68,7 +66,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             set
             {
-                tbxMinDeconvolutionScore.Text = value.ToString();
+                tbxMinDeconvolutionScore.Text = value.ToString(CultureInfo.CurrentCulture);
             }
         }
 
@@ -84,7 +82,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             set
             {
-                tbxMinAuc.Text = value.ToString();
+                tbxMinAuc.Text = value.ToString(CultureInfo.CurrentCulture);
             }
         }
 
@@ -99,7 +97,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 return 0;
             }
-            set { tbxMinTurnoverScore.Text = value.ToString(); }
+            set { tbxMinTurnoverScore.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public IEnumerable<IntegrationNote> IntegrationNotes
@@ -119,7 +117,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnSave_Click(object sender, EventArgs e)
+        private void BtnSaveOnClick(object sender, EventArgs e)
         {
             Save();
             Close();

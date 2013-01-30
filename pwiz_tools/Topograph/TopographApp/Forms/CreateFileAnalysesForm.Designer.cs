@@ -55,7 +55,7 @@
             this.btnOK.TabIndex = 1;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            this.btnOK.Click += new System.EventHandler(this.BtnOkOnClick);
             // 
             // btnCancel
             // 
@@ -65,7 +65,7 @@
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            this.btnCancel.Click += new System.EventHandler(this.BtnCancelOnClick);
             // 
             // btnSelectAll
             // 
@@ -75,7 +75,7 @@
             this.btnSelectAll.TabIndex = 3;
             this.btnSelectAll.Text = "Select All";
             this.btnSelectAll.UseVisualStyleBackColor = true;
-            this.btnSelectAll.Click += new System.EventHandler(this.btnSelectAll_Click);
+            this.btnSelectAll.Click += new System.EventHandler(this.BtnSelectAllOnClick);
             // 
             // btnDeselectAll
             // 
@@ -85,7 +85,7 @@
             this.btnDeselectAll.TabIndex = 4;
             this.btnDeselectAll.Text = "Deselect All";
             this.btnDeselectAll.UseVisualStyleBackColor = true;
-            this.btnDeselectAll.Click += new System.EventHandler(this.btnDeselectAll_Click);
+            this.btnDeselectAll.Click += new System.EventHandler(this.BtnDeselectAllOnClick);
             // 
             // CreateFileAnalysesForm
             // 

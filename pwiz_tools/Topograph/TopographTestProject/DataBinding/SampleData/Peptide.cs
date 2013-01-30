@@ -19,11 +19,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
-using pwiz.Common.DataBinding;
 
 namespace pwiz.Topograph.Test.DataBinding.SampleData
 {
-    public class Peptide : IEntity
+    public class Peptide
     {
         public Peptide(string sequence)
         {

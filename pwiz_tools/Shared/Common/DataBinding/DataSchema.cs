@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -35,6 +36,10 @@ namespace pwiz.Common.DataBinding
     {
         public virtual IEnumerable<PropertyDescriptor> GetPropertyDescriptors(Type type)
         {
+            if (null == type)
+            {
+                return new PropertyDescriptor[0];
+            }
             var chainParent = GetChainedPropertyDescriptorParent(type);
             if (chainParent != null)
             {
@@ -275,7 +280,7 @@ namespace pwiz.Common.DataBinding
             var properties = bindingListView.GetItemProperties(new PropertyDescriptor[0])
                 .Cast<PropertyDescriptor>()
                 .ToDictionary(pd => pd.Name, pd => pd);
-            for (int iCol = 0; iCol < columnArray.Count(); iCol++)
+            for (int iCol = 0; iCol < columnArray.Length; iCol++)
             {
                 var dataGridViewColumn = columnArray[iCol];
                 PropertyDescriptor pd;
@@ -298,6 +303,12 @@ namespace pwiz.Common.DataBinding
                             DataColumnAttribute;
                         if (dataColumnAttribute != null)
                         {
+                            if (dataColumnAttribute.DataGridViewColumnType != null)
+                            {
+                                var newColumn = ChangeColumnToType(dataGridViewColumn, dataColumnAttribute.DataGridViewColumnType);
+                                dataGridViewColumn = newColumn;
+                                columnArray[iCol] = dataGridViewColumn;
+                            }
                             if (dataColumnAttribute.Format != null)
                             {
                                 dataGridViewColumn.DefaultCellStyle.Format = dataColumnAttribute.Format;
@@ -325,8 +336,32 @@ namespace pwiz.Common.DataBinding
                     DisplayIndex = textBoxColumn.DisplayIndex,
                     HeaderText = textBoxColumn.HeaderText,
                     SortMode = textBoxColumn.SortMode,
+                    TrackVisitedState = false,
                 };
                 columnArray[iCol] = linkColumn;
+            }
+        }
+
+        protected DataGridViewColumn ChangeColumnToType(DataGridViewColumn srcColumn, Type newType)
+        {
+            if (newType == null || newType.IsInstanceOfType(srcColumn))
+            {
+                return srcColumn;
+            }
+            try
+            {
+                var constructor = newType.GetConstructor(new Type[0]);
+                Debug.Assert(null != constructor);
+                var newColumn = (DataGridViewColumn) constructor.Invoke(new object[0]);
+                newColumn.DisplayIndex = srcColumn.DisplayIndex;
+                newColumn.DataPropertyName = srcColumn.DataPropertyName;
+                newColumn.HeaderText = srcColumn.HeaderText;
+                return newColumn;
+            }
+            catch (Exception exception)
+            {
+                Trace.TraceError("Error constructing column of type {0}:{1}", newType, exception);
+                return srcColumn;
             }
         }
     }

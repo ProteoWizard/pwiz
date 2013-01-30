@@ -51,7 +51,7 @@
             this.panelTitle.Name = "panelTitle";
             this.panelTitle.Size = new System.Drawing.Size(472, 20);
             this.panelTitle.TabIndex = 0;
-            this.panelTitle.Click += new System.EventHandler(this.btnExpandCollapse_Click);
+            this.panelTitle.Click += new System.EventHandler(this.BtnExpandCollapseOnClick);
             // 
             // imgExpandCollapse
             // 
@@ -63,7 +63,7 @@
             this.imgExpandCollapse.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgExpandCollapse.TabIndex = 1;
             this.imgExpandCollapse.TabStop = false;
-            this.imgExpandCollapse.Click += new System.EventHandler(this.btnExpandCollapse_Click);
+            this.imgExpandCollapse.Click += new System.EventHandler(this.BtnExpandCollapseOnClick);
             // 
             // lblTitle
             // 
@@ -75,7 +75,7 @@
             this.lblTitle.Size = new System.Drawing.Size(78, 13);
             this.lblTitle.TabIndex = 0;
             this.lblTitle.Text = "Step #: Title";
-            this.lblTitle.Click += new System.EventHandler(this.btnExpandCollapse_Click);
+            this.lblTitle.Click += new System.EventHandler(this.BtnExpandCollapseOnClick);
             // 
             // imageList
             // 

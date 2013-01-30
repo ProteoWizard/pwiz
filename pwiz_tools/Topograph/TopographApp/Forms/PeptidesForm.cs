@@ -25,21 +25,21 @@ using NHibernate.Criterion;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.DataBinding;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class PeptidesForm : WorkspaceForm
     {
-        private TopographViewContext _viewContext;
         private BindingList<LinkValue<Peptide>> _peptides;
         public PeptidesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
             TabText = Name = "Peptides";
-            btnAnalyzePeptides.Enabled = Workspace.Peptides.GetChildCount() > 0;
+            btnAnalyzePeptides.Enabled = Workspace.Peptides.Count > 0;
             var defaultColumns = new[]
                                      {
-                                         new ColumnSpec().SetIdentifierPath(IdentifierPath.ROOT),
+                                         new ColumnSpec().SetIdentifierPath(IdentifierPath.Root),
                                          new ColumnSpec().SetName("ProteinName").SetCaption("Protein"),
                                          new ColumnSpec().SetName("ProteinDescription"),
                                          new ColumnSpec().SetName("MaxTracerCount"),
@@ -48,8 +48,7 @@ namespace pwiz.Topograph.ui.Forms
             var defaultViewSpec = new ViewSpec()
                 .SetName("default")
                 .SetColumns(defaultColumns);
-            navBar1.ViewContext = _viewContext = new TopographViewContext(workspace, typeof(LinkValue<Peptide>), new[] { defaultViewSpec });
-            dataGridView.BindingListView.ViewInfo = new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First());
+            peptidesBindingSource.SetViewContext(new TopographViewContext(workspace, typeof(LinkValue<Peptide>), new[] { defaultViewSpec }));
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -60,16 +59,8 @@ namespace pwiz.Topograph.ui.Forms
 
         private void Requery()
         {
-            _peptides = new BindingList<LinkValue<Peptide>>(Workspace.Peptides.ListChildren().Select(p=>MakeLinkValue(p)).ToList());
-            dataGridView.BindingListView.RowSource = _peptides;
-        }
-
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
-        {
-            foreach (var peptide in args.GetNewEntities().OfType<Peptide>())
-            {
-                _peptides.Add(MakeLinkValue(peptide));
-            }
+            _peptides = new BindingList<LinkValue<Peptide>>(Workspace.Peptides.Select(MakeLinkValue).ToList());
+            peptidesBindingSource.RowSource = _peptides;
         }
 
         private LinkValue<Peptide> MakeLinkValue(Peptide peptide)
@@ -93,11 +84,8 @@ namespace pwiz.Topograph.ui.Forms
                     .UniqueResult();
                 if (dbPeptideAnalysis == null)
                 {
-                    var searchResults = session
-                         .CreateCriteria(typeof(DbPeptideSearchResult))
-                         .Add(Restrictions.Eq("Peptide", dbPeptide))
-                         .List();
-                    if (searchResults.Count == 0)
+                    var psmTimesByDataFileId = dbPeptide.PsmTimesByDataFileId(session);
+                    if (psmTimesByDataFileId.Count == 0)
                     {
                         MessageBox.Show(
                             "This peptide cannot be analyzed because it has no search results.",
@@ -110,21 +98,21 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     session.BeginTransaction();
                     session.Save(dbPeptideAnalysis = Peptide.CreateDbPeptideAnalysis(session, dbPeptide));
-                    foreach (DbPeptideSearchResult dbPeptideSearchResult in searchResults)
+                    foreach (var grouping in psmTimesByDataFileId)
                     {
-                        var msDataFile = Workspace.MsDataFiles.GetMsDataFile(dbPeptideSearchResult.MsDataFile);
-                        if (!TurnoverForm.Instance.EnsureMsDataFile(msDataFile, true))
+                        MsDataFile msDataFile;
+                        if (!Workspace.MsDataFiles.TryGetValue(grouping.Key, out msDataFile))
                         {
                             continue;
                         }
                         session.Save(PeptideFileAnalysis.CreatePeptideFileAnalysis(
-                            session, msDataFile, dbPeptideAnalysis, dbPeptideSearchResult, false));
+                            session, msDataFile, dbPeptideAnalysis, psmTimesByDataFileId));
                         dbPeptideAnalysis.FileAnalysisCount++;
                     }
                     session.Update(dbPeptideAnalysis);
                     session.Transaction.Commit();
                 }
-                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+                var peptideAnalysis = TopographForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.GetId());
                 if (peptideAnalysis == null)
                 {
                     return;
@@ -133,11 +121,11 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnAnalyzePeptides_Click(object sender, EventArgs e)
+        private void BtnAnalyzePeptidesOnClick(object sender, EventArgs e)
         {
-            var oldCount = Workspace.PeptideAnalyses.ChildCount;
+            var oldCount = Workspace.PeptideAnalyses.Count;
             new AnalyzePeptidesForm(Workspace).Show(TopLevelControl);
-            if (oldCount == Workspace.PeptideAnalyses.ChildCount)
+            if (oldCount == Workspace.PeptideAnalyses.Count)
             {
                 return;
             }
@@ -151,7 +139,7 @@ namespace pwiz.Topograph.ui.Forms
             peptideAnalysesForm.Show(DockPanel, DockState.Document);
         }
 
-        private void btnAddSearchResults_Click(object sender, EventArgs e)
+        private void BtnAddSearchResultsOnClick(object sender, EventArgs e)
         {
             new AddSearchResultsForm(Workspace).Show(TopLevelControl);
         }

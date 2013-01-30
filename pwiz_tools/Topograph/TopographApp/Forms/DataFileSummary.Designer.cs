@@ -90,7 +90,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnCreateFileAnalyses.TabIndex = 0;
             this.btnCreateFileAnalyses.Text = "Create Analyses";
             this.btnCreateFileAnalyses.UseVisualStyleBackColor = true;
-            this.btnCreateFileAnalyses.Click += new System.EventHandler(this.btnCreateFileAnalyses_Click);
+            this.btnCreateFileAnalyses.Click += new System.EventHandler(this.BtnCreateFileAnalysesOnClick);
             // 
             // dataGridView
             // 
@@ -109,8 +109,8 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.Size = new System.Drawing.Size(398, 243);
             this.dataGridView.TabIndex = 0;
-            this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
-            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
+            this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewOnCellEndEdit);
+            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewOnCellContentClick);
             // 
             // colStatus
             // 

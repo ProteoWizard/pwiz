@@ -99,38 +99,58 @@ namespace pwiz.Common.Collections
         /// </summary>
         public static int BinarySearch<TItem>(IList<TItem> items, Func<TItem, int> compareFunc, bool firstIndex)
         {
-            int lo = 0;
-            int hi = items.Count - 1;
-            while (lo <= hi)
+            var range = BinarySearch(items, compareFunc);
+            if (range.Length == 0)
             {
-                int mid = (lo + hi) / 2;
-
-                int c = compareFunc(items[mid]);
-                if (c == 0)
+                return ~range.Start;
+            }
+            return firstIndex ? range.Start : range.End - 1;
+        }
+        public static Range BinarySearch<TItem>(IList<TItem> items, Func<TItem, int> compareFunc)
+        {
+            Range result = new Range(0, items.Count);
+            foreach (bool firstIndex in new[] { true, false })
+            {
+                int lo = result.Start;
+                int hi = result.End;
+                while (lo < hi)
                 {
-                    if (lo == hi)
+                    int mid = (lo + hi) / 2;
+
+                    int c = compareFunc(items[mid]);
+                    if (c == 0)
                     {
-                        return lo;
+                        if (firstIndex)
+                        {
+                            hi = mid;
+                        }
+                        else
+                        {
+                            lo = mid + 1;
+                        }
                     }
-                    if (firstIndex)
+                    else if (c < 0)
                     {
-                        hi = mid;
+                        lo = mid + 1;
+                        result = new Range(lo, result.End);
                     }
                     else
                     {
-                        lo = mid;
+                        hi = mid;
+                        result = new Range(result.Start, hi);
                     }
                 }
-                else if (c < 0)
-                {
-                    lo = mid + 1;
-                }
-                else
-                {
-                    hi = mid - 1;
-                }
             }
-            return ~lo;
+            return result;
+        }
+        public static int BinarySearch<TItem>(IList<TItem> items, TItem key) where TItem : IComparable
+        {
+            Range range = BinarySearch(items, item => item.CompareTo(key));
+            if (range.Length == 0)
+            {
+                return ~range.Start;
+            }
+            return range.Start;
         }
     }
 }

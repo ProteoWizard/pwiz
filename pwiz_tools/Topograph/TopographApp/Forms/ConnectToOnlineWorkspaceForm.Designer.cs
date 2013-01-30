@@ -121,7 +121,7 @@
             this.btnOK.TabIndex = 14;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            this.btnOK.Click += new System.EventHandler(this.BtnOkOnClick);
             // 
             // btnCancel
             // 
@@ -195,7 +195,7 @@
             this.btnShowDatabases.TabIndex = 11;
             this.btnShowDatabases.Text = "Fetch List of Database Names";
             this.btnShowDatabases.UseVisualStyleBackColor = true;
-            this.btnShowDatabases.Click += new System.EventHandler(this.btnShowDatabases_Click);
+            this.btnShowDatabases.Click += new System.EventHandler(this.BtnShowDatabasesOnClick);
             // 
             // label7
             // 

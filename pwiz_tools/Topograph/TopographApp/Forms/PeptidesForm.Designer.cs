@@ -1,4 +1,5 @@
 ﻿using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -31,29 +32,16 @@ namespace pwiz.Topograph.ui.Forms
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.dataGridView = new pwiz.Common.DataBinding.BoundDataGridView();
-            this.peptidesBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
             this.btnAddSearchResults = new System.Windows.Forms.Button();
+            this.dataGridView = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.peptidesBindingSource = new BindingListSource(this.components);
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.peptidesBindingSource)).BeginInit();
-            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // dataGridView
-            // 
-            this.dataGridView.AllowUserToAddRows = false;
-            this.dataGridView.AllowUserToDeleteRows = false;
-            this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView.DataSource = this.peptidesBindingSource;
-            this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView.Location = new System.Drawing.Point(0, 27);
-            this.dataGridView.Name = "dataGridView";
-            this.dataGridView.ReadOnly = true;
-            this.dataGridView.Size = new System.Drawing.Size(941, 535);
-            this.dataGridView.TabIndex = 0;
             // 
             // tableLayoutPanel1
             // 
@@ -82,7 +70,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnAnalyzePeptides.TabIndex = 4;
             this.btnAnalyzePeptides.Text = "Analyze Peptides...";
             this.btnAnalyzePeptides.UseVisualStyleBackColor = true;
-            this.btnAnalyzePeptides.Click += new System.EventHandler(this.btnAnalyzePeptides_Click);
+            this.btnAnalyzePeptides.Click += new System.EventHandler(this.BtnAnalyzePeptidesOnClick);
             // 
             // btnAddSearchResults
             // 
@@ -92,18 +80,31 @@ namespace pwiz.Topograph.ui.Forms
             this.btnAddSearchResults.TabIndex = 6;
             this.btnAddSearchResults.Text = "Add Search Results...";
             this.btnAddSearchResults.UseVisualStyleBackColor = true;
-            this.btnAddSearchResults.Click += new System.EventHandler(this.btnAddSearchResults_Click);
+            this.btnAddSearchResults.Click += new System.EventHandler(this.BtnAddSearchResultsOnClick);
+            // 
+            // dataGridView
+            // 
+            this.dataGridView.AllowUserToAddRows = false;
+            this.dataGridView.AllowUserToDeleteRows = false;
+            this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView.DataSource = this.peptidesBindingSource;
+            this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView.Location = new System.Drawing.Point(0, 27);
+            this.dataGridView.Name = "dataGridView";
+            this.dataGridView.ReadOnly = true;
+            this.dataGridView.Size = new System.Drawing.Size(941, 535);
+            this.dataGridView.TabIndex = 0;
             // 
             // navBar1
             // 
             this.navBar1.AutoSize = true;
-            this.navBar1.BindingSource = this.peptidesBindingSource;
+            this.navBar1.BindingListSource = this.peptidesBindingSource;
             this.navBar1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.navBar1.Location = new System.Drawing.Point(279, 3);
             this.navBar1.Name = "navBar1";
             this.navBar1.Size = new System.Drawing.Size(659, 24);
             this.navBar1.TabIndex = 7;
-            this.navBar1.BindingSource = peptidesBindingSource;
+            this.navBar1.WaitingMessage = "Waiting for data...";
             // 
             // PeptidesForm
             // 
@@ -115,10 +116,10 @@ namespace pwiz.Topograph.ui.Forms
             this.Name = "PeptidesForm";
             this.TabText = "PeptidesForm";
             this.Text = "PeptidesForm";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.peptidesBindingSource)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.peptidesBindingSource)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -129,7 +130,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Button btnAnalyzePeptides;
         private System.Windows.Forms.Button btnAddSearchResults;
         private pwiz.Common.DataBinding.Controls.NavBar navBar1;
-        private System.Windows.Forms.BindingSource peptidesBindingSource;
+        private BindingListSource peptidesBindingSource;
         private BoundDataGridView dataGridView;
 
     }

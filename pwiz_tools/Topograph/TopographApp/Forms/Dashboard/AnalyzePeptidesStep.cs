@@ -33,10 +33,10 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             get
             {
                 return Workspace != null
-                       && Workspace.Peptides.ChildCount != 0
-                       && Workspace.MsDataFiles.ChildCount != 0
+                       && Workspace.Peptides.Count != 0
+                       && Workspace.MsDataFiles.Count != 0
                        && Workspace.GetDataDirectory() != null
-                       && Workspace.PeptideAnalyses.ChildCount == 0;
+                       && Workspace.PeptideAnalyses.Count == 0;
             }
         }
 
@@ -56,20 +56,20 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 return;
             }
             Enabled = true;
-            if (Workspace.PeptideAnalyses.ChildCount > 0)
+            if (Workspace.PeptideAnalyses.Count > 0)
             {
-                if (Workspace.PeptideAnalyses.ChildCount == 1)
+                if (Workspace.PeptideAnalyses.Count == 1)
                 {
                     lblStatus.Text = "1 peptide has been analyzed";
                 }
                 else
                 {
                     lblStatus.Text = string.Format("{0} peptides have been analyzed.",
-                                                   Workspace.PeptideAnalyses.ChildCount);
+                                                   Workspace.PeptideAnalyses.Count);
                 }
                 return;
             }
-            if (Workspace.Peptides.ChildCount == 0 || Workspace.MsDataFiles.ChildCount == 0)
+            if (Workspace.Peptides.Count == 0 || Workspace.MsDataFiles.Count == 0)
             {
                 lblStatus.Text = "You need to add search results before you can analyze any peptides";
                 return;
@@ -77,14 +77,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             lblStatus.Text = "No peptides have been analyzed yet.";
         }
 
-        private void btnAnalyzePeptides_Click(object sender, EventArgs e)
+        private void BtnAnalyzePeptidesOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.AnalyzePeptides();
+            TopographForm.AnalyzePeptides();
         }
 
-        private void linkPeptideAnalyses_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
+        private void LinkPeptideAnalysesOnLinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
-            TurnoverForm.ShowPeptideAnalyses();
+            TopographForm.ShowPeptideAnalyses();
         }
     }
 }

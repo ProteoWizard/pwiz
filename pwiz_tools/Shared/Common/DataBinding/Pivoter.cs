@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 
 namespace pwiz.Common.DataBinding
 {
@@ -130,9 +131,9 @@ namespace pwiz.Common.DataBinding
             }
             return columnDescriptor.GetPropertyValueFromParent(parentValue, null);
         }
-        private int Expand(Action checkCancelled, RowNode rowNode, int columnIndex)
+        private int Expand(TickCounter tickCounter, RowNode rowNode, int columnIndex)
         {
-            checkCancelled();
+            tickCounter.Tick();
             var unboundColumn = CollectionColumns[columnIndex];
             if (!unboundColumn.IdPath.StartsWith(rowNode.IdentifierPath))
             {
@@ -172,12 +173,12 @@ namespace pwiz.Common.DataBinding
 
                 for (int currentColumnIndex = columnIndex + 1; currentColumnIndex < result;)
                 {
-                    currentColumnIndex = Expand(checkCancelled, child, currentColumnIndex);
+                    currentColumnIndex = Expand(tickCounter, child, currentColumnIndex);
                 }
             }
             return result;
         }
-        public IEnumerable<RowNode> Expand(Action checkCancelled, RowItem rowItem)
+        public IEnumerable<RowNode> Expand(TickCounter tickCounter, RowItem rowItem)
         {
             var root = new RowNode(rowItem);
             if (!Filters[0](root))
@@ -187,33 +188,29 @@ namespace pwiz.Common.DataBinding
 
             for (int currentColumnIndex = 1; currentColumnIndex < CollectionColumns.Count; )
             {
-                currentColumnIndex = Expand(checkCancelled, root, currentColumnIndex);
+                currentColumnIndex = Expand(tickCounter, root, currentColumnIndex);
             }
             return new[]{root};
         }
         public IEnumerable<RowNode> Expand(RowItem rowItem)
         {
-            return Expand(NoOp, rowItem);
+            return Expand(new TickCounter(), rowItem);
         }
 
 
-        public IEnumerable<RowItem> ExpandAndPivot(Action throwIfCancelled, IEnumerable<RowItem> rowItems)
+        public IEnumerable<RowItem> ExpandAndPivot(TickCounter tickCounter, IEnumerable<RowItem> rowItems)
         {
-            var expandedNodes = rowItems.SelectMany(rowItem => Expand(throwIfCancelled, rowItem)).ToArray();
-            return Pivot(expandedNodes);
-        }
-        public IEnumerable<RowItem> ExpandAndPivot(IEnumerable<RowItem> rowItems)
-        {
-            return ExpandAndPivot(NoOp, rowItems);
+            var expandedNodes = rowItems.SelectMany(rowItem => Expand(rowItem)).ToArray();
+            return Pivot(tickCounter, expandedNodes);
         }
         private PivotKey GetPivotKey(RowItem rowItem)
         {
             return rowItem.GetGroupKey().RemoveSublist(ViewInfo.SublistId);
         }
 
-        private IEnumerable<RowItem> GetSublistItems(Action throwIfCancelled, RowNode rowNode, RowItem parentRowItem, int sublistColumnIndex)
+        private IEnumerable<RowItem> GetSublistItems(TickCounter tickCounter, RowNode rowNode, RowItem parentRowItem, int sublistColumnIndex)
         {
-            throwIfCancelled();
+            tickCounter.Tick();
             if (sublistColumnIndex == SublistColumns.Count)
             {
                 return new[] {rowNode.RowItem.SetParent(parentRowItem)};
@@ -236,7 +233,7 @@ namespace pwiz.Common.DataBinding
                 }
                 foreach (var descendant in rowNode.GetDescendants(pivotColumn.IdPath))
                 {
-                    throwIfCancelled();
+                    tickCounter.Tick();
                     var pivotKey = GetPivotKey(descendant.RowItem);
                     pivotKeySet.Add(pivotKey);
                 }
@@ -245,7 +242,7 @@ namespace pwiz.Common.DataBinding
             rowItem = rowItem.SetPivotKeys(pivotKeySet);
             foreach (var child in rowNode.GetChildren(sublistColumn.IdPath))
             {
-                result.AddRange(GetSublistItems(throwIfCancelled, child, rowItem, sublistColumnIndex + 1));
+                result.AddRange(GetSublistItems(tickCounter, child, rowItem, sublistColumnIndex + 1));
             }
             if (result.Count > 0)
             {
@@ -257,16 +254,9 @@ namespace pwiz.Common.DataBinding
             }
             return new[] {rowItem};
         }
-        private static void NoOp()
+        public IEnumerable<RowItem> Pivot(TickCounter tickCounter, IEnumerable<RowNode> rowNodes)
         {
-        }
-        private IEnumerable<RowItem> Pivot(Action throwIfCancelled, IEnumerable<RowNode> rowNodes)
-        {
-            return GetSublistItems(throwIfCancelled, new RowNode(rowNodes), null, 0);
-        }
-        public IEnumerable<RowItem> Pivot(IEnumerable<RowNode> rowNodes)
-        {
-            return Pivot(NoOp, rowNodes);
+            return GetSublistItems(tickCounter, new RowNode(rowNodes), null, 0);
         }
         private static Predicate<T> Conjunction<T>(IEnumerable<Predicate<T>> predicates)
         {
@@ -285,7 +275,7 @@ namespace pwiz.Common.DataBinding
 
         public HashSet<PivotKey> GetPivotKeys(IdentifierPath pivotColumnId, IEnumerable<RowItem> rowItems)
         {
-            IdentifierPath sublistId = IdentifierPath.ROOT;
+            IdentifierPath sublistId = IdentifierPath.Root;
             foreach (ColumnDescriptor t in SublistColumns)
             {
                 if (!pivotColumnId.StartsWith(t.IdPath))
@@ -373,6 +363,36 @@ namespace pwiz.Common.DataBinding
                 columnName = baseName + identifierPath + index;
             }
             return columnName;
+        }
+
+        public class TickCounter
+        {
+            private long _tickCount;
+            public TickCounter(CancellationToken cancellationToken) : this(cancellationToken, long.MaxValue)
+            {
+            }
+            public TickCounter(CancellationToken cancellationToken, long maxTickCount)
+            {
+                CancellationToken = cancellationToken;
+                MaxTickCount = maxTickCount;
+            }
+            public TickCounter(long maxTickCount) : this(CancellationToken.None, maxTickCount)
+            {
+            }
+            public TickCounter() : this(1000000)
+            {
+            }
+            public long TickCount {get { return _tickCount; }}
+            public void Tick()
+            {
+                CancellationToken.ThrowIfCancellationRequested();
+                if (Interlocked.Increment(ref _tickCount) >= MaxTickCount)
+                {
+                    throw new OperationCanceledException(string.Format("Number of steps exceeded {0}", MaxTickCount));
+                }
+            }
+            public long MaxTickCount { get; private set; }
+            public CancellationToken CancellationToken { get; private set; }
         }
     }
 

@@ -2,7 +2,7 @@
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2012 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,70 +16,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using NHibernate;
-using pwiz.Topograph.Data;
+using pwiz.Common.Collections;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class PeptideFileAnalyses : EntityModelCollection<DbPeptideAnalysis, long, DbPeptideFileAnalysis,PeptideFileAnalysis>
+    public class PeptideFileAnalyses : EntityModelList<long, PeptideFileAnalysisData, PeptideFileAnalysis>
     {
-        public PeptideFileAnalyses(PeptideAnalysis peptideAnalysis, DbPeptideAnalysis dbPeptideAnalysis) : base(peptideAnalysis.Workspace, dbPeptideAnalysis)
+        public PeptideFileAnalyses(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis.Workspace)
         {
-            Parent = peptideAnalysis;
+            PeptideAnalysis = peptideAnalysis;
         }
 
-        public PeptideAnalysis PeptideAnalysis { get { return (PeptideAnalysis) Parent;} }
-        protected override IEnumerable<KeyValuePair<long, DbPeptideFileAnalysis>> GetChildren(DbPeptideAnalysis parent)
+        public PeptideAnalysis PeptideAnalysis { get; private set; }
+        protected override ImmutableSortedList<long, PeptideFileAnalysis> CreateEntityList()
         {
-            foreach (var fileAnalysis in parent.FileAnalyses)
+            return ImmutableSortedList.FromValues(
+                PeptideAnalysis.Data.FileAnalyses.Select(
+                    pair => new KeyValuePair<long, PeptideFileAnalysis>(pair.Key, new PeptideFileAnalysis(PeptideAnalysis, pair.Key, pair.Value))));
+        }
+
+        public override IList<PeptideFileAnalysis> DeepClone()
+        {
+            return Workspace.Clone().PeptideAnalyses.FindByKey(PeptideAnalysis.Id).FileAnalyses;
+        }
+
+        protected override ImmutableSortedList<long, PeptideFileAnalysisData> GetData(WorkspaceData workspaceData)
+        {
+            if (null == workspaceData.PeptideAnalyses)
             {
-                yield return new KeyValuePair<long, DbPeptideFileAnalysis>(fileAnalysis.Id.Value, fileAnalysis);
+                return null;
             }
-        }
-
-        protected override void SetChildCount(DbPeptideAnalysis parent, int childCount)
-        {
-            parent.FileAnalysisCount = childCount;
-        }
-
-        protected override int GetChildCount(DbPeptideAnalysis parent)
-        {
-            return parent.FileAnalysisCount;
-        }
-
-        public override PeptideFileAnalysis WrapChild(DbPeptideFileAnalysis entity)
-        {
-            return new PeptideFileAnalysis(PeptideAnalysis, entity);
-        }
-
-        public IList<PeptideFileAnalysis> ListPeptideFileAnalyses(bool filterRejects)
-        {
-            var result = new List<PeptideFileAnalysis>();
-            foreach (var peptideFileAnalysis in ListChildren())
+            PeptideAnalysisData peptideAnalysisData;
+            if (!workspaceData.PeptideAnalyses.TryGetValue(PeptideAnalysis.Id, out peptideAnalysisData))
             {
-                if (filterRejects && peptideFileAnalysis.ValidationStatus == ValidationStatus.reject)
-                {
-                    continue;
-                }
-                result.Add(peptideFileAnalysis);
+                return null;
             }
-            return result;
+            return peptideAnalysisData.FileAnalyses;
         }
 
-        public PeptideFileAnalysis EnsurePeptideFileAnalysis(DbPeptideFileAnalysis dbPeptideFileAnalysis)
+        protected override WorkspaceData SetData(WorkspaceData workspaceData, ImmutableSortedList<long, PeptideFileAnalysisData> data)
         {
-            var result = GetChild(dbPeptideFileAnalysis.Id.Value);
-            if (result != null)
-            {
-                return result;
-            }
-            result = new PeptideFileAnalysis(PeptideAnalysis, dbPeptideFileAnalysis);
-            AddChild(result.Id.Value, result);
-            return result;
+            PeptideAnalysisData peptideAnalysisData;
+            workspaceData.PeptideAnalyses.TryGetValue(PeptideAnalysis.Id, out peptideAnalysisData);
+            peptideAnalysisData = peptideAnalysisData.SetFileAnalyses(data);
+            return workspaceData.SetPeptideAnalyses(workspaceData.PeptideAnalyses
+                .Replace(PeptideAnalysis.Id, peptideAnalysisData));
+        }
+
+        protected override PeptideFileAnalysis CreateEntityForKey(long key, PeptideFileAnalysisData data)
+        {
+            return new PeptideFileAnalysis(PeptideAnalysis, key, data);
+        }
+
+        public override long GetKey(PeptideFileAnalysis value)
+        {
+            return value.Id;
         }
     }
 }

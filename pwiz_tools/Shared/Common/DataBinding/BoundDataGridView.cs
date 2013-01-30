@@ -18,15 +18,15 @@
  */
 
 using System;
-using System.Collections;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Common.DataBinding
 {
     /// <summary>
-    /// Enhancement ot a DataGridView which automatically creates a <see cref="BindingListView" />
-    /// to use as its DataSource.
+    /// Enhancement ot a DataGridView which automatically creates a 
+    /// <see cref="pwiz.Common.DataBinding.BindingListView" /> to use as its DataSource.
     /// Setting the DataSource of a BoundDataGridView to a BindingSource automatically causes
     /// the BindingSource's DataSource to be set to the BindingListView.
     /// 
@@ -34,41 +34,24 @@ namespace pwiz.Common.DataBinding
     public class BoundDataGridView : DataGridView
     {
         private DataGridViewColumn[] _oldColumns = new DataGridViewColumn[0];
-        private BindingSource _bindingSource;
-        public BoundDataGridView()
-        {
-            BindingListView = new BindingListView
-                {
-                                      Owner = this
-                                  };
-        }
-
-        protected override void OnDataSourceChanged(EventArgs e)
-        {
-            _bindingSource = DataSource as BindingSource;
-            if (_bindingSource != null)
-            {
-                _bindingSource.DataSource = BindingListView;
-            }
-            base.OnDataSourceChanged(e);
-        }
-
-        public IEnumerable RowSource
-        {
-            get
-            {
-                return BindingListView.RowSource;
-            }
-            set
-            {
-                BindingListView.RowSource = value;
-            }
-        }
-
-        public BindingListView BindingListView { get; private set; }
+        private IViewContext _viewContext;
 
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
+            var bindingListSource = DataSource as BindingListSource;
+            var newViewContext = bindingListSource == null ? null : bindingListSource.ViewContext;
+            if (!ReferenceEquals(_viewContext, newViewContext))
+            {
+                if (_viewContext != null)
+                {
+                    DataError -= _viewContext.OnDataError;
+                }
+                _viewContext = newViewContext;
+                if (_viewContext != null)
+                {
+                    DataError += _viewContext.OnDataError;
+                }
+            }
             AutoGenerateColumns = true;
             base.OnDataBindingComplete(e);
             if (DesignMode)
@@ -83,9 +66,13 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
+            if (bindingListSource == null)
+            {
+                return;
+            }
             var columnArray = new DataGridViewColumn[Columns.Count];
             Columns.CopyTo(columnArray, 0);
-            BindingListView.ViewInfo.DataSchema.UpdateGridColumns(BindingListView, columnArray);
+            bindingListSource.BindingListView.ViewInfo.DataSchema.UpdateGridColumns(bindingListSource.BindingListView, columnArray);
             Columns.Clear();
             Columns.AddRange(columnArray);
             _oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
@@ -103,6 +90,11 @@ namespace pwiz.Common.DataBinding
                     linkValue.ClickEventHandler(this, e);
                 }
             }
+        }
+        [Obsolete]
+        public BindingListView BindingListView
+        {
+            get { return ((BindingListSource) DataSource).BindingListView; }
         }
     }
 }

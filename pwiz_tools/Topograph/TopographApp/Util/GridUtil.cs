@@ -29,7 +29,7 @@ namespace pwiz.Topograph.ui.Util
                 String filename = dialog.FileName;
                 Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
                 Settings.Default.Save();
-                var columns = GetColumnsSortedByDisplayIndex(dataGridView).Where(c => c.Visible);
+                var columns = GetColumnsSortedByDisplayIndex(dataGridView).Where(c => c.Visible).ToArray();
                 using (var stream = File.OpenWrite(filename))
                 {
                     using (var writer = new StreamWriter(stream))

@@ -20,9 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -49,59 +50,56 @@ namespace pwiz.Topograph.ui.Forms
             btnRemove.Enabled = listView1.SelectedItems.Count > 0;
         }
 
-        private IList<DbTracerDef> GetTracerDefs()
+        private IList<TracerDefData> GetTracerDefs()
         {
-            var array = Workspace.GetDbTracerDefs().ToArray();
-            Array.Sort(array, (dbTracerDef1, dbTracerDef2) => dbTracerDef1.Name.CompareTo(dbTracerDef2.Name));
-            return array;
+            return Workspace.Data.TracerDefs.Values;
         }
 
-        private ListViewItem MakeListViewItem(DbTracerDef tracerDef)
+        private ListViewItem MakeListViewItem(TracerDefData tracerDef)
         {
             return new ListViewItem(tracerDef.Name);
         }
 
-        private void btnEdit_Click(object sender, EventArgs e)
+        private void BtnEditOnClick(object sender, EventArgs e)
         {
             var firstSelectedItem = listView1.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
             if (firstSelectedItem == null)
             {
                 return;
             }
-            var dbTracerDef = Workspace.GetDbTracerDefs().FirstOrDefault(td => firstSelectedItem.Text == td.Name);
-            if (dbTracerDef == null)
+            var tracerDefData = Workspace.Data.TracerDefs.Values.FirstOrDefault(td => firstSelectedItem.Text == td.Name);
+            if (tracerDefData == null)
             {
                 RefreshUi(true);
                 return;
             }
-            EditTracerDef(dbTracerDef);
+            EditTracerDef(tracerDefData);
         }
 
-        protected override void  OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        protected override void WorkspaceOnChange(object sender, WorkspaceChangeArgs change)
         {
-         	RefreshUi(true); 
-            base.OnWorkspaceEntitiesChanged(args);
+         	base.WorkspaceOnChange(sender, change);
+            RefreshUi(true); 
         }
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        private void BtnAddOnClick(object sender, EventArgs e)
         {
             EditTracerDef(null);
         }
 
-        private void EditTracerDef(DbTracerDef dbTracerDef)
+        private void EditTracerDef(TracerDefData tracerDefData)
         {
-            using (var dlg = new DefineLabelDialog(Workspace, dbTracerDef))
+            using (var dlg = new DefineLabelDialog(Workspace, tracerDefData))
             {
                 dlg.ShowDialog(this);
             }
         }
 
-        private void btnRemove_Click(object sender, EventArgs e)
+        private void BtnRemoveOnClick(object sender, EventArgs e)
         {
-            var selectedItems = new HashSet<string>(listView1.SelectedItems.Cast<ListViewItem>().Select(listViewItem=>listViewItem.Text));
-            var allTracerDefs = Workspace.GetDbTracerDefs();
-            ICollection<DbTracerDef> tracerDefsToDelete = 
-                allTracerDefs.Where(dbTracerDef => selectedItems.Contains(dbTracerDef.Name)).ToArray();
+            var selectedItems = new HashSet<string>(listView1.SelectedItems.Cast<ListViewItem>().Select(listViewItem => listViewItem.Text));
+            var tracerDefs = Workspace.Data.TracerDefs;
+            ICollection<string> tracerDefsToDelete = tracerDefs.Keys.Where(selectedItems.Contains).ToArray();
             if (tracerDefsToDelete.Count == 0)
             {
                 RefreshUi(true);
@@ -110,7 +108,7 @@ namespace pwiz.Topograph.ui.Forms
             string message;
             if (tracerDefsToDelete.Count == 1)
             {
-                message = string.Format("Are you sure you want to delete the label '{0}'?", tracerDefsToDelete.First().Name);
+                message = string.Format("Are you sure you want to delete the label '{0}'?", tracerDefsToDelete.First());
             }
             else
             {
@@ -120,13 +118,13 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var newTracerDefs =
-                Workspace.GetDbTracerDefs().Where(dbTracerDef => !selectedItems.Contains(dbTracerDef.Name)).ToList();
-            Workspace.SetDbTracerDefs(newTracerDefs);
+            var newTracerDefs = Workspace.Data.TracerDefs.Where(pair => !selectedItems.Contains(pair.Key)).ToList();
+
+            Workspace.Data = Workspace.Data.SetTracerDefs(ImmutableSortedList.FromValues(newTracerDefs));
             RefreshUi(true);
         }
 
-        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListView1OnSelectedIndexChanged(object sender, EventArgs e)
         {
             RefreshUi(false);
         }

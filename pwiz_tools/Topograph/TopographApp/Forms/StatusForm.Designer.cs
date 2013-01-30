@@ -75,7 +75,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnSuspendChromatogram.TabIndex = 3;
             this.btnSuspendChromatogram.Text = "Suspend";
             this.btnSuspendChromatogram.UseVisualStyleBackColor = true;
-            this.btnSuspendChromatogram.Click += new System.EventHandler(this.btnSuspendChromatogram_Click);
+            this.btnSuspendChromatogram.Click += new System.EventHandler(this.BtnSuspendChromatogramOnClick);
             // 
             // pbChromatogram
             // 
@@ -141,7 +141,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.timer1.Enabled = true;
             this.timer1.Interval = 1000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            this.timer1.Tick += new System.EventHandler(this.Timer1OnTick);
             // 
             // btnOK
             // 
@@ -153,7 +153,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnOK.TabIndex = 0;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            this.btnOK.Click += new System.EventHandler(this.BtnOkOnClick);
             // 
             // tbxAnalysisCount
             // 
@@ -172,7 +172,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnGarbageCollect.TabIndex = 3;
             this.btnGarbageCollect.Text = "Garbage Collect";
             this.btnGarbageCollect.UseVisualStyleBackColor = true;
-            this.btnGarbageCollect.Click += new System.EventHandler(this.btnGarbageCollect_Click);
+            this.btnGarbageCollect.Click += new System.EventHandler(this.BtnGarbageCollectOnClick);
             // 
             // tableLayoutPanel1
             // 

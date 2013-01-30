@@ -17,78 +17,60 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Diagnostics;
 using NHibernate;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class Peptide : AnnotatedEntityModel<DbPeptide>
+    public class Peptide : EntityModel<long, PeptideData>
     {
+// ReSharper disable UnassignedField.Local
+        // TODO(nicksh): Set valid search result count
         private int _searchResultCount;
+// ReSharper restore UnassignedField.Local
         public static String TrimSequence(String sequence)
         {
             return new ChargedPeptide(sequence, 1).Sequence;
         }
-        public Peptide(Workspace workspace, DbPeptide dbPeptide)
-            : base(workspace, dbPeptide)
+        public Peptide(Workspace workspace, long id, PeptideData peptideData) : base(workspace, id, peptideData)
+        {
+        }
+        public Peptide(Workspace workspace, DbPeptide dbPeptide) : this(workspace, dbPeptide.GetId(), new PeptideData(dbPeptide))
+        {
+            
+        }
+        public Peptide(Workspace workspace, long id) : base(workspace, id)
         {
         }
 
-        protected override IEnumerable<ModelProperty> GetModelProperties()
-        {
-            foreach (var property in base.GetModelProperties())
-            {
-                yield return property;
-            }
-            yield return Property<Peptide,String>(
-                m=>m.ProteinName, (m,v)=>m.ProteinName=v,
-                e=>e.Protein, (e,v)=>e.Protein=v);
-            yield return Property<Peptide, String>(
-                m => m.ProteinDescription, (m, v) => m.ProteinDescription = v,
-                e => e.ProteinDescription, (e, v) => e.ProteinDescription = v);
-        }
-
-        protected override void Load(DbPeptide entity)
-        {
-            Sequence = entity.Sequence;
-            FullSequence = entity.FullSequence;
-            _searchResultCount = entity.SearchResultCount;
-            base.Load(entity);
-        }
-
-        protected override DbPeptide UpdateDbEntity(ISession session)
-        {
-            var peptide = base.UpdateDbEntity(session);
-            peptide.Protein = ProteinName;
-            peptide.ProteinDescription = ProteinDescription;
-            session.Save(new DbChangeLog(this));
-            return peptide;
-        }
+        public long Id { get { return Key; } }
 
         public ChargedPeptide GetChargedPeptide(int charge)
         {
             return new ChargedPeptide(FullSequence, charge);
         }
         [Browsable(false)]
-        public String FullSequence { get; private set; }
-        public String Sequence { get; private set; }
-        public String ProteinName { get; private set; }
-        public String ProteinDescription { get; private set; }
-        public void UpdateProtein(String name, String description)
+        public String FullSequence { get { return Data.FullSequence; } }
+        public String Sequence { get { return Data.Sequence; } }
+        public String ProteinName { get { return Data.ProteinName; } }
+        public String ProteinDescription { get { return Data.ProteinDescription; } }
+        public void Save(ISession session)
         {
-            using (GetWriteLock())
-            {
-                ProteinName = name;
-                ProteinDescription = description;
-                OnChange();
-            }
+            var dbPeptide = session.Get<DbPeptide>(Id);
+            dbPeptide.Sequence = Sequence;
+            dbPeptide.FullSequence = FullSequence;
+            dbPeptide.Protein = ProteinName;
+            dbPeptide.ProteinDescription = ProteinDescription;
+            session.Update(dbPeptide);
+        }
+        public void UpdateProtein(string fullSequence, String name, String description)
+        {
+            Data = Data.SetFullSequence(fullSequence).SetProteinName(name).SetProteinDescription(description);
         }
         [DisplayName("Max Tracers")]
         public int MaxTracerCount { 
@@ -101,8 +83,8 @@ namespace pwiz.Topograph.Model
         public static DbPeptideAnalysis CreateDbPeptideAnalysis(ISession session, DbPeptide dbPeptide)
         {
             int minCharge, maxCharge;
-            var query = session.CreateQuery("SELECT MIN(s.MinCharge), MAX(s.MaxCharge)"
-                                            + "\nFROM " + typeof (DbPeptideSearchResult) +
+            var query = session.CreateQuery("SELECT MIN(s.PrecursorCharge), MAX(s.PrecursorCharge)"
+                                            + "\nFROM " + typeof (DbPeptideSpectrumMatch) +
                                             " s WHERE s.Peptide = :peptide")
                 .SetParameter("peptide", dbPeptide);
             var minMaxCharge = (object[]) query.UniqueResult();
@@ -115,7 +97,6 @@ namespace pwiz.Topograph.Model
             return new DbPeptideAnalysis
             {
                 Peptide = dbPeptide,
-                Workspace = dbPeptide.Workspace,
                 MinCharge = minCharge,
                 MaxCharge = maxCharge,
             };
@@ -129,29 +110,31 @@ namespace pwiz.Topograph.Model
         public PeptideAnalysis EnsurePeptideAnalysis()
         {
             DbPeptideAnalysis dbPeptideAnalysis;
-            using (Workspace.GetReadLock())
+            using (var session = Workspace.OpenWriteSession())
             {
-                using (var session = Workspace.OpenWriteSession())
+                var dbPeptide = session.Load<DbPeptide>(Id);
+                var criteria = session.CreateCriteria(typeof (DbPeptideAnalysis))
+                                      .Add(Restrictions.Eq("Peptide", dbPeptide));
+                dbPeptideAnalysis = (DbPeptideAnalysis) criteria.UniqueResult();
+                if (dbPeptideAnalysis == null)
                 {
-                    var dbPeptide = session.Load<DbPeptide>(Id);
-                    var criteria = session.CreateCriteria(typeof (DbPeptideAnalysis))
-                        .Add(Restrictions.Eq("Peptide", dbPeptide))
-                        .Add(Restrictions.Eq("Workspace", Workspace.LoadDbWorkspace(session)));
-                    dbPeptideAnalysis = (DbPeptideAnalysis) criteria.UniqueResult();
+                    dbPeptideAnalysis = CreateDbPeptideAnalysis(session);
                     if (dbPeptideAnalysis == null)
                     {
-                        dbPeptideAnalysis = CreateDbPeptideAnalysis(session);
-                        if (dbPeptideAnalysis == null)
-                        {
-                            return null;
-                        }
-                        session.BeginTransaction();
-                        session.Save(dbPeptideAnalysis);
-                        session.Transaction.Commit();
+                        return null;
                     }
+                    session.BeginTransaction();
+                    session.Save(dbPeptideAnalysis);
+                    session.Transaction.Commit();
                 }
             }
-            return Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+            Workspace.DatabasePoller.LoadAndMergeChanges(null);
+            var peptideAnalysis =  Workspace.PeptideAnalyses.FindByKey(dbPeptideAnalysis.GetId());
+            if (null == peptideAnalysis)
+            {
+                Debug.Assert(false);
+            }
+            return peptideAnalysis;
         }
         [DisplayName("# Data Files")]
         public int SearchResultCount
@@ -159,10 +142,6 @@ namespace pwiz.Topograph.Model
             get
             {
                 return _searchResultCount;
-            }
-            set
-            {
-                SetIfChanged(ref _searchResultCount, value);
             }
         }
 
@@ -187,6 +166,18 @@ namespace pwiz.Topograph.Model
         public override string ToString()
         {
             return FullSequence;
+        }
+
+        public override PeptideData GetData(WorkspaceData workspaceData)
+        {
+            PeptideData peptideData;
+            workspaceData.Peptides.TryGetValue(Id, out peptideData);
+            return peptideData;
+        }
+
+        public override WorkspaceData SetData(WorkspaceData workspaceData, PeptideData value)
+        {
+            return workspaceData.SetPeptides(workspaceData.Peptides.Replace(Id, value));
         }
     }
 }

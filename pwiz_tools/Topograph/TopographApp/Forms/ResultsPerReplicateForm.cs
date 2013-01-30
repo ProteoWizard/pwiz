@@ -20,11 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
+using pwiz.Topograph.ui.DataBinding;
 using pwiz.Topograph.ui.Util;
 using pwiz.Topograph.Util;
 
@@ -32,16 +32,15 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class ResultsPerReplicateForm : WorkspaceForm
     {
-        private IViewContext _viewContext;
         public ResultsPerReplicateForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            bool hasTimePoints = Workspace.MsDataFiles.ListChildren().Where(f=>f.TimePoint != null).Count() != 0;
-            bool hasCohorts = Workspace.MsDataFiles.ListChildren().Where(f=>f.Cohort != null).Count() != 0;
-            bool hasSamples = Workspace.MsDataFiles.ListChildren().Where(f=>f.Sample != null).Count() != 0;
+            bool hasTimePoints = Workspace.MsDataFiles.Count(f => f.TimePoint != null) != 0;
+            bool hasCohorts = Workspace.MsDataFiles.Count(f => f.Cohort != null) != 0;
+            bool hasSamples = Workspace.MsDataFiles.Count(f => f.Sample != null) != 0;
             bool hasTracerDefs = Workspace.GetTracerDefs().Count != 0;
             bool hasOneTracerDef = Workspace.GetTracerDefs().Count == 1;
-            var defaultColumns = new List<ColumnSpec>()
+            var defaultColumns = new List<ColumnSpec>
                                      {
                                          new ColumnSpec().SetName("Accept"),
                                          new ColumnSpec().SetName("Peptide"),
@@ -88,10 +87,10 @@ namespace pwiz.Topograph.ui.Forms
             var defaultViewSpec = new ViewSpec()
                 .SetName("default")
                 .SetColumns(defaultColumns);
-            navBar21.ViewContext = _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {defaultViewSpec});
+            bindingSourceResults.SetViewContext(new TopographViewContext(workspace, typeof (ResultRow), new[] {defaultViewSpec}));
         }
 
-        private void btnRequery_Click(object sender, EventArgs e)
+        private void BtnRequeryOnClick(object sender, EventArgs e)
         {
             var calculator = new HalfLifeCalculator(Workspace, HalfLifeSettings.Default)
             {
@@ -99,7 +98,7 @@ namespace pwiz.Topograph.ui.Forms
             };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
-                var longOperationBroker = new LongOperationBroker(calculator, longWaitDialog);
+                var longOperationBroker = new LongOperationBroker(calculator.Run, longWaitDialog);
                 if (!longOperationBroker.LaunchJob())
                 {
                     return;
@@ -112,14 +111,7 @@ namespace pwiz.Topograph.ui.Forms
         private void UpdateRows(HalfLifeCalculator halfLifeCalculator)
         {
             var resultRows = halfLifeCalculator.RowDatas.Select(rd => new ResultRow(halfLifeCalculator.ComputeAvgTurnover(rd))).ToArray();
-            var bindingListView = dataGridViewResults.BindingListView;
-            var viewInfo = bindingListView.ViewInfo;
-            if (viewInfo == null)
-            {
-                viewInfo = new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First());
-            }
-            bindingListView.ViewInfo = viewInfo;
-            bindingListView.RowSource = resultRows;
+            bindingSourceResults.RowSource = resultRows;
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -216,8 +208,7 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         return null;
                     }
-                    return _rowData.RawRowData.MsDataFile.MsDataFileData
-                        .GetTotalIonCurrent(_rowData.RawRowData.StartTime.Value, _rowData.RawRowData.EndTime.Value);
+                    return _rowData.RawRowData.MsDataFile.GetTotalIonCurrent(_rowData.RawRowData.StartTime.Value, _rowData.RawRowData.EndTime.Value);
                 }
             }
         }

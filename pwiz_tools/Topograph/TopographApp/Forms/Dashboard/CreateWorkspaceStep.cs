@@ -61,51 +61,51 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 {
                     panelWorkspaceOpen.Visible = true;
                     labelCurrentWorkspace.Text = string.Format("The current workspace is {0}",
-                                                               TurnoverForm.Workspace.DatabasePath);
+                                                               TopographForm.Workspace.DatabasePath);
                     panelNoWorkspace.Visible = false;
                 }
                 base.UpdateStepStatus();
             }
         }
 
-        private void btnCloseWorkspace_Click(object sender, EventArgs e)
+        private void BtnCloseWorkspaceOnClick(object sender, EventArgs e)
         {
-            DashboardForm.TurnoverForm.CloseWorkspace();
+            DashboardForm.TopographForm.CloseWorkspace();
         }
 
-        private void btnOpenDifferentWorkspace_Click(object sender, EventArgs e)
+        private void BtnOpenDifferentWorkspaceOnClick(object sender, EventArgs e)
         {
-            DashboardForm.TurnoverForm.DisplayOpenWorkspaceDialog();
+            DashboardForm.TopographForm.DisplayOpenWorkspaceDialog();
         }
 
-        private void listBoxRecentWorkspaces_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListBoxRecentWorkspacesOnSelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedItem = listBoxRecentWorkspaces.SelectedItem as string;
             if (selectedItem != null)
             {
-                TurnoverForm.Workspace = TurnoverForm.OpenWorkspace(selectedItem);
+                TopographForm.Workspace = TopographForm.OpenWorkspace(selectedItem);
                 listBoxRecentWorkspaces.SelectedItems.Clear();
             }
         }
 
-        private void btnCreateOnlineWorkspace_Click(object sender, EventArgs e)
+        private void BtnCreateOnlineWorkspaceOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.NewOnlineWorkspace();
+            TopographForm.NewOnlineWorkspace();
         }
 
-        private void btnCreateLocalWorkspace_Click(object sender, EventArgs e)
+        private void BtnCreateLocalWorkspaceOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.NewWorkspace();
+            TopographForm.NewWorkspace();
         }
 
-        private void btnConnectToOnlineWorkspace_Click(object sender, EventArgs e)
+        private void BtnConnectToOnlineWorkspaceOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.ConnectToOnlineWorkspace();
+            TopographForm.ConnectToOnlineWorkspace();
         }
 
-        private void btnBrowse_Click(object sender, EventArgs e)
+        private void BtnBrowseOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.DisplayOpenWorkspaceDialog();
+            TopographForm.DisplayOpenWorkspaceDialog();
         }
     }
 }

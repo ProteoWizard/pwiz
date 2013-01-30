@@ -1,4 +1,5 @@
-﻿using pwiz.Topograph.ui.Controls;
+﻿using pwiz.Common.DataBinding.Controls;
+using pwiz.Topograph.ui.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -30,22 +31,22 @@ namespace pwiz.Topograph.ui.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataFilesForm));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label2 = new System.Windows.Forms.Label();
-            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
-            this.gridView = new System.Windows.Forms.DataGridView();
-            this.colName = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colSample = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.recordNavBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.bindingSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
+            this.gridView = new pwiz.Common.DataBinding.BoundDataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -90,69 +91,51 @@ namespace pwiz.Topograph.ui.Forms
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label2.Location = new System.Drawing.Point(3, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(766, 44);
+            this.label2.Size = new System.Drawing.Size(766, 37);
             this.label2.TabIndex = 2;
             this.label2.Text = resources.GetString("label2.Text");
             // 
             // recordNavBar1
             // 
+            this.recordNavBar1.AutoSize = true;
+            this.recordNavBar1.BindingListSource = this.bindingSource1;
             this.tableLayoutPanel1.SetColumnSpan(this.recordNavBar1, 2);
-            this.recordNavBar1.DataGridView = this.gridView;
             this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.recordNavBar1.Location = new System.Drawing.Point(3, 47);
+            this.recordNavBar1.Location = new System.Drawing.Point(3, 40);
             this.recordNavBar1.Name = "recordNavBar1";
-            this.recordNavBar1.Size = new System.Drawing.Size(766, 18);
+            this.recordNavBar1.Size = new System.Drawing.Size(766, 25);
             this.recordNavBar1.TabIndex = 3;
+            // 
+            // bindingSource1
+            // 
+            this.bindingSource1.RowSource = null;
             // 
             // gridView
             // 
             this.gridView.AllowUserToAddRows = false;
-            this.gridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colName,
-            this.colLabel,
-            this.colTimePoint,
-            this.colCohort,
-            this.colSample});
+            this.gridView.DataSource = this.bindingSource1;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridView.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridView.Location = new System.Drawing.Point(0, 0);
             this.gridView.Name = "gridView";
             this.gridView.Size = new System.Drawing.Size(772, 192);
             this.gridView.TabIndex = 0;
-            this.gridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellContentClick);
-            this.gridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellEndEdit);
-            this.gridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridView_RowHeaderMouseDoubleClick);
-            this.gridView.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridView_RowsRemoved);
-            this.gridView.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.gridView_SortCompare);
-            // 
-            // colName
-            // 
-            this.colName.HeaderText = "Name";
-            this.colName.Name = "colName";
-            this.colName.ReadOnly = true;
-            this.colName.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colLabel
-            // 
-            this.colLabel.HeaderText = "Label";
-            this.colLabel.Name = "colLabel";
-            // 
-            // colTimePoint
-            // 
-            this.colTimePoint.HeaderText = "Time Point";
-            this.colTimePoint.Name = "colTimePoint";
-            // 
-            // colCohort
-            // 
-            this.colCohort.HeaderText = "Cohort";
-            this.colCohort.Name = "colCohort";
-            // 
-            // colSample
-            // 
-            this.colSample.HeaderText = "Sample";
-            this.colSample.Name = "colSample";
             // 
             // DataFilesForm
             // 
@@ -168,6 +151,8 @@ namespace pwiz.Topograph.ui.Forms
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView)).EndInit();
             this.ResumeLayout(false);
 
@@ -176,14 +161,10 @@ namespace pwiz.Topograph.ui.Forms
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.DataGridView gridView;
+        private pwiz.Common.DataBinding.BoundDataGridView gridView;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.DataGridViewLinkColumn colName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colLabel;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colCohort;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colSample;
-        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
+        private pwiz.Common.DataBinding.Controls.NavBar recordNavBar1;
+        private BindingListSource bindingSource1;
     }
 }

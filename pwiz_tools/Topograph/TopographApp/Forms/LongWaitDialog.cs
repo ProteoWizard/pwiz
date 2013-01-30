@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Topograph.Util;
 using pwiz.Topograph.ui.Properties;
@@ -44,7 +45,7 @@ namespace pwiz.Topograph.ui.Forms
         public void DisplayLongOperationUi(LongOperationBroker broker)
         {
             LongOperationBroker = broker;
-            timer1_Tick(timer1, new EventArgs());
+            Timer1OnTick(timer1, new EventArgs());
             ShowDialog(ParentWindow);
         }
 
@@ -61,9 +62,9 @@ namespace pwiz.Topograph.ui.Forms
                     BeginInvoke(new Action(Close));
                 }
             }
-            catch
+            catch (Exception exception)
             {
-                // ignore
+                Trace.TraceWarning("Exception:{0}", exception);
             }
         }
 
@@ -79,12 +80,12 @@ namespace pwiz.Topograph.ui.Forms
             LongOperationBroker.WaitUntilFinished();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void BtnCancelOnClick(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void Timer1OnTick(object sender, EventArgs e)
         {
             if (LongOperationBroker != null)
             {

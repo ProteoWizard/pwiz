@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.ui.Properties;
@@ -64,7 +65,7 @@ namespace pwiz.Topograph.ui.Controls
                             radioUnlabeledPeptide.Checked = true;
                             break;
                     }
-                    tbxInitialPrecursorPool.Text = value.InitialPrecursorPool.ToString();
+                    tbxInitialPrecursorPool.Text = value.InitialPrecursorPool.ToString(CultureInfo.CurrentCulture);
                     if (value.PrecursorPoolCalculation == PrecursorPoolCalculation.Fixed)
                     {
                         radioFixedPrecursorPool.Checked = true;
@@ -82,10 +83,10 @@ namespace pwiz.Topograph.ui.Controls
                             radioIndividualPrecursorPool.Checked = true;
                         }
                     }
-                    tbxCurrentPrecursorPool.Text = value.CurrentPrecursorPool.ToString();
-                    tbxMinAuc.Text = value.MinimumAuc.ToString();
-                    tbxMinimumDeconvolutionScore.Text = value.MinimumDeconvolutionScore.ToString();
-                    tbxMinTurnoverScore.Text = value.MinimumTurnoverScore.ToString();
+                    tbxCurrentPrecursorPool.Text = value.CurrentPrecursorPool.ToString(CultureInfo.CurrentCulture);
+                    tbxMinAuc.Text = value.MinimumAuc.ToString(CultureInfo.CurrentCulture);
+                    tbxMinimumDeconvolutionScore.Text = value.MinimumDeconvolutionScore.ToString(CultureInfo.CurrentCulture);
+                    tbxMinTurnoverScore.Text = value.MinimumTurnoverScore.ToString(CultureInfo.CurrentCulture);
                     comboEvviesFilter.SelectedIndex = (int)value.EvviesFilter;
 
                     cbxForceThroughOrigin.Checked = value.ForceThroughOrigin;
@@ -162,7 +163,7 @@ namespace pwiz.Topograph.ui.Controls
             }
         }
 
-        private void imgExpandCollapse_Click(object sender, EventArgs e)
+        private void ImgExpandCollapseOnClick(object sender, EventArgs e)
         {
             IsExpanded = !IsExpanded;
         }

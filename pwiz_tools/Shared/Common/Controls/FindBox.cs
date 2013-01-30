@@ -24,7 +24,6 @@ namespace pwiz.Common.Controls
 {
     public partial class FindBox : UserControl
     {
-        private Timer _timer;
         private bool _filtering;
         private DataGridView _dataGridView;
 
@@ -55,8 +54,8 @@ namespace pwiz.Common.Controls
         {
             if (DataGridView != null)
             {
-                DataGridView.RowsAdded -= DataGridView_RowsAdded;
-                DataGridView.RowsRemoved -= DataGridView_RowsRemoved;
+                DataGridView.RowsAdded -= DataGridViewOnRowsAdded;
+                DataGridView.RowsRemoved -= DataGridViewOnRowsRemoved;
             }
         }
         private void AttachEvents()
@@ -67,17 +66,17 @@ namespace pwiz.Common.Controls
             }
             if (DataGridView != null)
             {
-                DataGridView.RowsAdded += DataGridView_RowsAdded;
-                DataGridView.RowsRemoved += DataGridView_RowsRemoved;
+                DataGridView.RowsAdded += DataGridViewOnRowsAdded;
+                DataGridView.RowsRemoved += DataGridViewOnRowsRemoved;
             }
         }
 
-        void DataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        void DataGridViewOnRowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
             StartTimer();
         }
 
-        void DataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        void DataGridViewOnRowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
             StartTimer();
         }
@@ -92,15 +91,10 @@ namespace pwiz.Common.Controls
         protected override void OnHandleDestroyed(EventArgs e)
         {
             base.OnHandleDestroyed(e);
-            if (_timer != null)
-            {
-                _timer.Dispose();
-                _timer = null;
-            }
             DetachEvents();
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
+        private void TextBox1OnTextChanged(object sender, EventArgs e)
         {
             StartTimer();
         }
@@ -111,24 +105,12 @@ namespace pwiz.Common.Controls
             {
                 return;
             }
-            if (_timer == null)
-            {
-                _timer = new Timer
-                {
-                    Interval = 2000,
-                };
-                _timer.Tick += _timer_Tick;
-            }
-            _timer.Start();
+            timer.Start();
         }
 
-        void _timer_Tick(object sender, EventArgs e)
+        void TimerOnTick(object sender, EventArgs e)
         {
-            if (_timer == null)
-            {
-                return;
-            }
-            _timer.Stop();
+            timer.Stop();
             var dataGridView = DataGridView;
             if (dataGridView == null)
             {

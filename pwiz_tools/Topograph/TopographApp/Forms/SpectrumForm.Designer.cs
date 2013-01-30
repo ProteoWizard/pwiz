@@ -69,6 +69,7 @@
             this.btnNextScan = new System.Windows.Forms.Button();
             this.btnNextNextScan = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -143,7 +144,7 @@
             this.cbxShowPeptideMzs.TabIndex = 27;
             this.cbxShowPeptideMzs.Text = "Show Peptide Channels";
             this.cbxShowPeptideMzs.UseVisualStyleBackColor = true;
-            this.cbxShowPeptideMzs.CheckedChanged += new System.EventHandler(this.cbxShowPeptideMzs_CheckedChanged);
+            this.cbxShowPeptideMzs.CheckedChanged += new System.EventHandler(this.CbxShowPeptideMzsOnCheckedChanged);
             // 
             // msGraphControlEx1
             // 
@@ -154,13 +155,13 @@
             this.msGraphControlEx1.IsEnableVZoom = false;
             this.msGraphControlEx1.Location = new System.Drawing.Point(0, 0);
             this.msGraphControlEx1.Name = "msGraphControlEx1";
-            this.msGraphControlEx1.ScrollGrace = 0;
-            this.msGraphControlEx1.ScrollMaxX = 0;
-            this.msGraphControlEx1.ScrollMaxY = 0;
-            this.msGraphControlEx1.ScrollMaxY2 = 0;
-            this.msGraphControlEx1.ScrollMinX = 0;
-            this.msGraphControlEx1.ScrollMinY = 0;
-            this.msGraphControlEx1.ScrollMinY2 = 0;
+            this.msGraphControlEx1.ScrollGrace = 0D;
+            this.msGraphControlEx1.ScrollMaxX = 0D;
+            this.msGraphControlEx1.ScrollMaxY = 0D;
+            this.msGraphControlEx1.ScrollMaxY2 = 0D;
+            this.msGraphControlEx1.ScrollMinX = 0D;
+            this.msGraphControlEx1.ScrollMinY = 0D;
+            this.msGraphControlEx1.ScrollMinY2 = 0D;
             this.msGraphControlEx1.Size = new System.Drawing.Size(617, 475);
             this.msGraphControlEx1.TabIndex = 0;
             // 
@@ -293,8 +294,8 @@
             this.tbxPeptideSequence.Name = "tbxPeptideSequence";
             this.tbxPeptideSequence.Size = new System.Drawing.Size(154, 20);
             this.tbxPeptideSequence.TabIndex = 17;
-            this.tbxPeptideSequence.TextChanged += new System.EventHandler(this.tbxPeptideSequence_TextChanged);
-            this.tbxPeptideSequence.Leave += new System.EventHandler(this.tbxPeptideSequence_Leave);
+            this.tbxPeptideSequence.TextChanged += new System.EventHandler(this.TbxPeptideSequenceOnTextChanged);
+            this.tbxPeptideSequence.Leave += new System.EventHandler(this.TbxPeptideSequenceOnLeave);
             // 
             // label8
             // 
@@ -311,7 +312,7 @@
             this.tbxMinCharge.Name = "tbxMinCharge";
             this.tbxMinCharge.Size = new System.Drawing.Size(154, 20);
             this.tbxMinCharge.TabIndex = 19;
-            this.tbxMinCharge.Leave += new System.EventHandler(this.tbxMinCharge_Leave);
+            this.tbxMinCharge.Leave += new System.EventHandler(this.TbxMinChargeOnLeave);
             // 
             // label9
             // 
@@ -328,7 +329,7 @@
             this.tbxMaxCharge.Name = "tbxMaxCharge";
             this.tbxMaxCharge.Size = new System.Drawing.Size(154, 20);
             this.tbxMaxCharge.TabIndex = 21;
-            this.tbxMaxCharge.Leave += new System.EventHandler(this.tbxMaxCharge_Leave);
+            this.tbxMaxCharge.Leave += new System.EventHandler(this.TbxMaxChargeOnLeave);
             // 
             // label10
             // 
@@ -359,7 +360,7 @@
             this.cbxShowCentroids.TabIndex = 26;
             this.cbxShowCentroids.Text = "Show Centroids";
             this.cbxShowCentroids.UseVisualStyleBackColor = true;
-            this.cbxShowCentroids.CheckedChanged += new System.EventHandler(this.cbxShowCentroids_CheckedChanged);
+            this.cbxShowCentroids.CheckedChanged += new System.EventHandler(this.CbxShowCentroidsOnCheckedChanged);
             // 
             // label11
             // 
@@ -376,7 +377,7 @@
             this.tbxMassAccuracy.Name = "tbxMassAccuracy";
             this.tbxMassAccuracy.Size = new System.Drawing.Size(154, 20);
             this.tbxMassAccuracy.TabIndex = 23;
-            this.tbxMassAccuracy.Leave += new System.EventHandler(this.tbxMassAccuracy_Leave);
+            this.tbxMassAccuracy.Leave += new System.EventHandler(this.TbxMassAccuracyOnLeave);
             // 
             // cbxShowProfile
             // 
@@ -389,7 +390,7 @@
             this.cbxShowProfile.TabIndex = 28;
             this.cbxShowProfile.Text = "Show Profile";
             this.cbxShowProfile.UseVisualStyleBackColor = true;
-            this.cbxShowProfile.CheckedChanged += new System.EventHandler(this.cbxShowProfile_CheckedChanged);
+            this.cbxShowProfile.CheckedChanged += new System.EventHandler(this.CbxShowProfileOnCheckedChanged);
             // 
             // label5
             // 
@@ -436,7 +437,8 @@
             this.comboChromatogram.Name = "comboChromatogram";
             this.comboChromatogram.Size = new System.Drawing.Size(154, 21);
             this.comboChromatogram.TabIndex = 11;
-            this.comboChromatogram.SelectedIndexChanged += new System.EventHandler(this.comboChromatogram_SelectedIndexChanged);
+            this.comboChromatogram.DropDown += new System.EventHandler(this.ComboChromatogramOnDropDown);
+            this.comboChromatogram.SelectedIndexChanged += new System.EventHandler(this.ComboChromatogramOnSelectedIndexChanged);
             // 
             // tbxCentroidIntensitySum
             // 
@@ -491,7 +493,7 @@
             this.btnPrevPrevScan.Text = "<<";
             this.toolTip1.SetToolTip(this.btnPrevPrevScan, "Previous MS1");
             this.btnPrevPrevScan.UseVisualStyleBackColor = true;
-            this.btnPrevPrevScan.Click += new System.EventHandler(this.btnPrevPrevScan_Click);
+            this.btnPrevPrevScan.Click += new System.EventHandler(this.BtnPrevPrevScanOnClick);
             // 
             // btnPrevScan
             // 
@@ -504,7 +506,7 @@
             this.btnPrevScan.Text = "<";
             this.toolTip1.SetToolTip(this.btnPrevScan, "Previous Scan");
             this.btnPrevScan.UseVisualStyleBackColor = true;
-            this.btnPrevScan.Click += new System.EventHandler(this.btnPrevScan_Click);
+            this.btnPrevScan.Click += new System.EventHandler(this.BtnPrevScanOnClick);
             // 
             // btnNextScan
             // 
@@ -517,7 +519,7 @@
             this.btnNextScan.Text = ">";
             this.toolTip1.SetToolTip(this.btnNextScan, "Next Scan");
             this.btnNextScan.UseVisualStyleBackColor = true;
-            this.btnNextScan.Click += new System.EventHandler(this.btnNextScan_Click);
+            this.btnNextScan.Click += new System.EventHandler(this.BtnNextScanOnClick);
             // 
             // btnNextNextScan
             // 
@@ -530,7 +532,7 @@
             this.btnNextNextScan.Text = ">>";
             this.toolTip1.SetToolTip(this.btnNextNextScan, "Next MS1 Scan");
             this.btnNextNextScan.UseVisualStyleBackColor = true;
-            this.btnNextNextScan.Click += new System.EventHandler(this.btnNextNextScan_Click);
+            this.btnNextNextScan.Click += new System.EventHandler(this.BtnNextNextScanOnClick);
             // 
             // SpectrumForm
             // 
@@ -544,6 +546,7 @@
             this.Text = "SpectrumForm";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();

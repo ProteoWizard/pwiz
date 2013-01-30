@@ -21,7 +21,7 @@ namespace pwiz.Common.DataBinding
 {
     public class RowFilter
     {
-        public static readonly RowFilter EMPTY = new RowFilter(null, true);
+        public static readonly RowFilter Empty = new RowFilter(null, true);
         private readonly string _normalizedText;
 
         public RowFilter(string text, bool caseSensitive)

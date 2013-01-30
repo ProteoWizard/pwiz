@@ -1,9 +1,26 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using NHibernate.Mapping;
@@ -13,7 +30,7 @@ using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Data
 {
-    public class DatabaseDumper : ILongOperationJob
+    public class DatabaseDumper
     {
         private LongOperationBroker _longOperationBroker;
         private Configuration _targetConfiguration;
@@ -24,8 +41,11 @@ namespace pwiz.Topograph.Data
             Workspace = workspace;
             DatabaseTypeEnum = databaseTypeEnum;
             Path = path;
-            Dialect = (Dialect) SessionFactoryFactory
-                .GetDialectClass(DatabaseTypeEnum).GetConstructor(new Type[0]).Invoke(new object[0]);
+            var constructor = SessionFactoryFactory
+                .GetDialectClass(DatabaseTypeEnum).GetConstructor(new Type[0]);
+
+            Debug.Assert(constructor != null);
+            Dialect = (Dialect) constructor.Invoke(new object[0]);
         }
 
         public Workspace Workspace { get; private set; }
@@ -80,41 +100,45 @@ namespace pwiz.Topograph.Data
                 }
             }
             var sqlSelect = "SELECT " + Lists.Join(columnNames, ",") + " FROM " + classMapping.Table.Name;
-            var cmd = _sourceConnection.CreateCommand();
-            cmd.CommandText = sqlSelect;
-            var reader = cmd.ExecuteReader();
-            bool lockTable = DatabaseTypeEnum == DatabaseTypeEnum.mysql;
-            if (lockTable)
+            using (var cmd = _sourceConnection.CreateCommand())
             {
-                _writer.WriteLine("LOCK TABLES " + classMapping.Table.Name + " WRITE;");
-            }
-            else
-            {
-                _writer.WriteLine("BEGIN TRANSACTION;");
-            }
-            int recordCount = 0;
-            while (reader.Read())
-            {
-                _longOperationBroker.UpdateStatusMessage("Exporting " + typeof(T).Name + " #" + (++recordCount));
-                _writer.Write("INSERT INTO " + classMapping.Table.Name + " VALUES(");
-                for (int i = 0; i < columnNames.Count; i++)
+                cmd.CommandText = sqlSelect;
+                using (var reader = cmd.ExecuteReader())
                 {
-                    var value = reader.GetValue(i);
-                    if (i != 0)
+                    bool lockTable = DatabaseTypeEnum == DatabaseTypeEnum.mysql;
+                    if (lockTable)
                     {
-                        _writer.Write(",");
+                        _writer.WriteLine("LOCK TABLES " + classMapping.Table.Name + " WRITE;");
                     }
-                    WriteValue(_writer, value);
+                    else
+                    {
+                        _writer.WriteLine("BEGIN TRANSACTION;");
+                    }
+                    int recordCount = 0;
+                    while (reader.Read())
+                    {
+                        _longOperationBroker.UpdateStatusMessage("Exporting " + typeof (T).Name + " #" + (++recordCount));
+                        _writer.Write("INSERT INTO " + classMapping.Table.Name + " VALUES(");
+                        for (int i = 0; i < columnNames.Count; i++)
+                        {
+                            var value = reader.GetValue(i);
+                            if (i != 0)
+                            {
+                                _writer.Write(",");
+                            }
+                            WriteValue(_writer, value);
+                        }
+                        _writer.WriteLine(");");
+                    }
+                    if (lockTable)
+                    {
+                        _writer.WriteLine("UNLOCK TABLES;");
+                    }
+                    else
+                    {
+                        _writer.WriteLine("COMMIT TRANSACTION;");
+                    }
                 }
-                _writer.WriteLine(");");
-            }
-            if (lockTable)
-            {
-                _writer.WriteLine("UNLOCK TABLES;");
-            }
-            else
-            {
-                _writer.WriteLine("COMMIT TRANSACTION;");
             }
         }
         public void Run(LongOperationBroker longOperationBroker)
@@ -142,7 +166,7 @@ namespace pwiz.Topograph.Data
                     ExportTable<DbModification>();
                     ExportTable<DbTracerDef>();
                     ExportTable<DbPeptide>();
-                    ExportTable<DbPeptideSearchResult>();
+                    ExportTable<DbPeptideSpectrumMatch>();
                     ExportTable<DbPeptideAnalysis>();
                     ExportTable<DbPeptideFileAnalysis>();
                     ExportTable<DbChromatogramSet>();
@@ -151,11 +175,6 @@ namespace pwiz.Topograph.Data
                 }
                 _writer.Flush();
             }
-        }
-
-        public bool Cancel()
-        {
-            return true;
         }
     }
 }

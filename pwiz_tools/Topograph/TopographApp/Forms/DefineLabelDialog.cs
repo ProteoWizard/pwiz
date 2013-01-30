@@ -17,56 +17,55 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class DefineLabelDialog : WorkspaceForm
     {
-        private DbTracerDef _originalTracerDef;
-        public DefineLabelDialog(Workspace workspace, DbTracerDef originalTracerDef) : base(workspace)
+        private TracerDefData _originalTracerDef;
+        public DefineLabelDialog(Workspace workspace, TracerDefData tracerDefData) : base(workspace)
         {
             InitializeComponent();
-            _originalTracerDef = originalTracerDef;
+            _originalTracerDef = tracerDefData;
             if (_originalTracerDef != null)
             {
                 SetTracerDef(_originalTracerDef);
             }
         }
 
-        private void SetTracerDef(DbTracerDef tracerDef)
+        private void SetTracerDef(TracerDefData tracerDef)
         {
             tbxTracerName.Text = tracerDef.Name;
             tbxTracerSymbol.Text = tracerDef.TracerSymbol;
-            tbxMassDifference.Text = tracerDef.DeltaMass.ToString();
-            tbxAtomCount.Text = tracerDef.AtomCount.ToString();
-            tbxAtomicPercentEnrichment.Text = tracerDef.AtomPercentEnrichment.ToString();
+            tbxMassDifference.Text = tracerDef.DeltaMass.ToString(CultureInfo.CurrentCulture);
+            tbxAtomCount.Text = tracerDef.AtomCount.ToString(CultureInfo.CurrentCulture);
+            tbxAtomicPercentEnrichment.Text = tracerDef.AtomPercentEnrichment.ToString(CultureInfo.CurrentCulture);
             cbxEluteEarlier.Checked = tracerDef.IsotopesEluteEarlier;
             cbxEluteLater.Checked = tracerDef.IsotopesEluteLater;
+            tbxInitialApe.Text = tracerDef.InitialEnrichment.ToString(CultureInfo.CurrentCulture);
+            tbxFinalApe.Text = tracerDef.FinalEnrichment.ToString(CultureInfo.CurrentCulture);
         }
 
-        private DbTracerDef GetTracerDef()
+        private TracerDefData GetTracerDef()
         {
-            var tracerDef = new DbTracerDef();
-            if (_originalTracerDef != null)
+            string name = NormalizeName(tbxTracerName.Text);
+            if (_originalTracerDef == null || name != _originalTracerDef.Name)
             {
-                tracerDef.Id = _originalTracerDef.Id;
-            }
-            tracerDef.Name = NormalizeName(tbxTracerName.Text);
-            if (_originalTracerDef == null || tracerDef.Name != _originalTracerDef.Name)
-            {
-                if (Workspace.GetTracerDefs().Any(td=>tracerDef.Name == td.Name))
+                if (Workspace.GetTracerDefs().Any(pair=>pair.Name == name))
                 {
                     ShowError("There is already a label defined with this name.", tbxTracerName);
                     return null;
                 }
             }
-            foreach (var ch in tracerDef.Name.ToLower())
+            foreach (var ch in name.ToLower())
             {
                 if (ch < 'a' || ch > 'z')
                 {
@@ -74,51 +73,53 @@ namespace pwiz.Topograph.ui.Forms
                     return null;
                 }
             }
-            if (IsotopeAbundances.Default.ContainsKey(tracerDef.Name) || AminoAcidFormulas.LongNames.ContainsKey(tracerDef.Name))
+            if (IsotopeAbundances.Default.ContainsKey(name) || AminoAcidFormulas.LongNames.ContainsKey(name))
             {
                 ShowError("Name cannot be the same as a 3 letter amino acid code, or an atomic element", 
                                  tbxTracerName);
                 return null;
             }
 
-            tracerDef.TracerSymbol = NormalizeName(tbxTracerSymbol.Text);
-            if (string.IsNullOrEmpty(tracerDef.TracerSymbol))
+            string tracerSymbol = NormalizeName(tbxTracerSymbol.Text);
+            if (string.IsNullOrEmpty(tracerSymbol))
             {
                 ShowError("Symbol cannot be blank", tbxTracerSymbol);
                 return null;
             }
-            if (!IsotopeAbundances.Default.ContainsKey(tracerDef.TracerSymbol) && !AminoAcidFormulas.LongNames.ContainsKey(tracerDef.TracerSymbol))
+            if (!IsotopeAbundances.Default.ContainsKey(tracerSymbol) && !AminoAcidFormulas.LongNames.ContainsKey(tracerSymbol))
             {
                 ShowError("Symbol must be either a three letter amino acid code, or an atomic element",
                                  tbxTracerSymbol);
                 return null;
             }
 
+            double deltaMass;
             try
             {
-                tracerDef.DeltaMass = double.Parse(tbxMassDifference.Text);
+                deltaMass = double.Parse(tbxMassDifference.Text);
             }
             catch
             {
                 ShowError("This must be a number", tbxMassDifference);
                 return null;
             }
-            if (tracerDef.DeltaMass == 0)
+            if (deltaMass == 0)
             {
                 ShowError("Mass cannot be 0", tbxMassDifference);
                 return null;
             }
 
+            int atomCount;
             try
             {
-                tracerDef.AtomCount = int.Parse(tbxAtomCount.Text);
+                atomCount = int.Parse(tbxAtomCount.Text);
             }
             catch
             {
                 ShowError("This must be a positive integer", tbxAtomCount);
                 return null;
             }
-            if (tracerDef.AtomCount <= 0)
+            if (atomCount <= 0)
             {
                 ShowError("This must be a positive integer", tbxAtomCount);
                 return null;
@@ -132,22 +133,29 @@ namespace pwiz.Topograph.ui.Forms
             }
 
 
-            tracerDef.AtomPercentEnrichment = atomicPercentEnrichment;
-            tracerDef.InitialEnrichment = initialApe;
-            tracerDef.FinalEnrichment = finalApe;
-            tracerDef.IsotopesEluteEarlier = cbxEluteEarlier.Checked;
-            tracerDef.IsotopesEluteLater = cbxEluteLater.Checked;
-            return tracerDef;
+            var dbTracerDef = new DbTracerDef
+                                  {
+                                      AtomCount = atomCount,
+                                      AtomPercentEnrichment = atomicPercentEnrichment,
+                                      DeltaMass = deltaMass,
+                                      InitialEnrichment = initialApe,
+                                      FinalEnrichment = finalApe,
+                                      IsotopesEluteEarlier = cbxEluteEarlier.Checked,
+                                      IsotopesEluteLater = cbxEluteLater.Checked,
+                                      Name = name,
+                                      TracerSymbol = tracerSymbol,
+                                  };
+            return new TracerDefData(dbTracerDef);
         }
         
-        private void btn15N_Click(object sender, EventArgs e)
+        private void Btn15NOnClick(object sender, EventArgs e)
         {
-            SetTracerDef(TracerDef.GetN15Enrichment());
+            SetTracerDef(new TracerDefData(TracerDef.GetN15Enrichment()));
         }
 
-        private void btnD3Leu_Click(object sender, EventArgs e)
+        private void BtnD3LeuOnClick(object sender, EventArgs e)
         {
-            SetTracerDef(TracerDef.GetD3LeuEnrichment());
+            SetTracerDef(new TracerDefData(TracerDef.GetD3LeuEnrichment()));
         }
 
         private String NormalizeName(String name)
@@ -166,24 +174,18 @@ namespace pwiz.Topograph.ui.Forms
             return false;
         }
 
-        private void btnSaveAndClose_Click(object sender, EventArgs e)
+        private void BtnSaveAndCloseOnClick(object sender, EventArgs e)
         {
             var newTracerDef = GetTracerDef();
             if (newTracerDef == null)
             {
                 return;
             }
-            var tracerDefs = Workspace.GetDbTracerDefs();
-            if (_originalTracerDef != null)
-            {
-                tracerDefs = tracerDefs.Where(td => _originalTracerDef.Name != td.Name).ToList();
-            }
-            tracerDefs.Add(newTracerDef);
-            Workspace.SetDbTracerDefs(tracerDefs);
+            Workspace.Data = Workspace.Data.SetTracerDefs(Workspace.Data.TracerDefs.Replace(newTracerDef.Name, newTracerDef));
             Close();
         }
 
-        private void tbxEnrichedSymbol_Leave(object sender, EventArgs e)
+        private void TbxEnrichedSymbolOnLeave(object sender, EventArgs e)
         {
             String symbol = tbxTracerSymbol.Text;
             if (AminoAcidFormulas.LongNames.ContainsKey(symbol))
@@ -225,7 +227,7 @@ namespace pwiz.Topograph.ui.Forms
             return true;
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void BtnCancelOnClick(object sender, EventArgs e)
         {
             Close();
         }

@@ -72,7 +72,7 @@ namespace pwiz.Topograph.Enrichment
                     result[currentElement] = quantity;
                 }
             }
-            return new TracerPercentFormula() { Dictionary = result };
+            return new TracerPercentFormula { Dictionary = result };
         }
         public override String ToString()
         {

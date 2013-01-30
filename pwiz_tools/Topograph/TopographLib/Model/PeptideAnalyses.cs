@@ -16,63 +16,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using NHibernate.Criterion;
-using pwiz.Topograph.Data;
+using pwiz.Common.Collections;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class PeptideAnalyses : WeakEntityModelCollection<DbWorkspace, DbPeptideAnalysis, PeptideAnalysis>
+    public class PeptideAnalyses : EntityModelList<long, PeptideAnalysisData, PeptideAnalysis>
     {
-        public PeptideAnalyses(Workspace workspace, DbWorkspace dbWorkspace) : base(workspace, dbWorkspace)
+        public PeptideAnalyses(Workspace workspace) : base(workspace)
         {
             
         }
 
-        protected override IEnumerable<KeyValuePair<long, DbPeptideAnalysis>> GetChildren(DbWorkspace parent)
+        protected override ImmutableSortedList<long, PeptideAnalysis> CreateEntityList()
         {
-            foreach (var dbPeptideAnalysis in parent.PeptideAnalyses)
+            var data = Workspace.Data.PeptideAnalyses;
+            if (data == null)
             {
-                yield return new KeyValuePair<long, DbPeptideAnalysis>(dbPeptideAnalysis.Id.Value, dbPeptideAnalysis);
+                return ImmutableSortedList<long, PeptideAnalysis>.Empty;
             }
+            return
+                ImmutableSortedList.FromValues(data.Select(entry => new KeyValuePair<long, PeptideAnalysis>(
+                    entry.Key, new PeptideAnalysis(Workspace, entry.Key, entry.Value))));
         }
 
-        public override PeptideAnalysis WrapChild(DbPeptideAnalysis entity)
+        public override IList<PeptideAnalysis> DeepClone()
         {
-            throw new InvalidOperationException();
+            return new Workspace(Workspace).PeptideAnalyses;
         }
 
-        protected override int GetChildCount(DbWorkspace parent)
+        protected override ImmutableSortedList<long, PeptideAnalysisData> GetData(WorkspaceData workspaceData)
         {
-            return parent.PeptideAnalysisCount;
+            return workspaceData.PeptideAnalyses;
         }
 
-        protected override void SetChildCount(DbWorkspace parent, int childCount)
+        protected override WorkspaceData SetData(WorkspaceData workspaceData, ImmutableSortedList<long, PeptideAnalysisData> data)
         {
-            parent.PeptideAnalysisCount = childCount;
+            return workspaceData.SetPeptideAnalyses(data);
         }
 
-        public PeptideAnalysis GetPeptideAnalysis(DbPeptideAnalysis dbPeptideAnalysis)
+        public override long GetKey(PeptideAnalysis value)
         {
-            return GetChild(dbPeptideAnalysis.Id.Value);
+            return value.Id;
         }
-        public List<PeptideAnalysis> ListOpenPeptideAnalyses()
+
+        protected override PeptideAnalysis CreateEntityForKey(long key, PeptideAnalysisData data)
         {
-            using (GetReadLock())
-            {
-                var result = new List<PeptideAnalysis>();
-                foreach (var peptideAnalysis in ListChildren())
-                {
-                    if (peptideAnalysis.GetChromatogramRefCount() > 0)
-                    {
-                        result.Add(peptideAnalysis);
-                    }
-                }
-                return result;
-            }
+            return new PeptideAnalysis(Workspace, key, data);
+        }
+
+        protected override bool CheckDirty(PeptideAnalysisData data, PeptideAnalysisData savedData)
+        {
+            return data.CheckDirty(savedData);
         }
     }
 }

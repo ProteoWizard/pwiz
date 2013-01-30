@@ -100,7 +100,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             }
         }
 
-        private void btnExpandCollapse_Click(object sender, EventArgs e)
+        private void BtnExpandCollapseOnClick(object sender, EventArgs e)
         {
             AutoExpand = false;
             IsExpanded = !IsExpanded;

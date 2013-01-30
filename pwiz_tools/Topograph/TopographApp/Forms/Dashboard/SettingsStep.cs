@@ -31,17 +31,17 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         public override bool IsCurrent
         {
-            get { return Workspace != null && Workspace.PeptideAnalyses.ChildCount == 0 && Workspace.Peptides.ChildCount > 0; }
+            get { return Workspace != null && Workspace.PeptideAnalyses.Count == 0 && Workspace.Peptides.Count > 0; }
         }
 
-        private void btnEditModifications_Click(object sender, EventArgs e)
+        private void BtnEditModificationsOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.EditModifications();
+            TopographForm.EditModifications();
         }
 
-        private void btnDefineLabels_Click(object sender, EventArgs e)
+        private void BtnDefineLabelsOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.EditIsotopeLabels();
+            TopographForm.EditIsotopeLabels();
         }
 
         protected override void UpdateStepStatus()
@@ -59,14 +59,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             else
             {
                 Enabled = true;
-                if (Workspace.Modifications.Count == 0)
+                if (!Workspace.Modifications.Any())
                 {
                     lblModifications.Text =
                         "No modifications are defined.  Use this feature to tell Topograph about the static modifications that your experimental protocol uses.";
                 }
                 else
                 {
-                    if (Workspace.Modifications.Count == 1)
+                    if (Workspace.Modifications.Count() == 1)
                     {
                         var modification = Workspace.Modifications.First();
                         lblModifications.Text = string.Format(
@@ -78,7 +78,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                     else
                     {
                         lblModifications.Text = string.Format("This workspace uses '{0}' static modifications.",
-                                                              Workspace.Modifications.Count);
+                                                              Workspace.Modifications.Count());
                     }
                 }
                 var tracerDefs = Workspace.GetTracerDefs();
@@ -118,9 +118,9 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             base.UpdateStepStatus();
         }
 
-        private void btnEditMisc_Click(object sender, EventArgs e)
+        private void BtnEditMiscOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.EditMachineSettings();
+            TopographForm.EditMachineSettings();
         }
     }
 }

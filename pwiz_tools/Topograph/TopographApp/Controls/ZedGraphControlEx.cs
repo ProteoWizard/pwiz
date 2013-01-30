@@ -25,10 +25,10 @@ namespace pwiz.Topograph.ui.Controls
     {
         public ZedGraphControlEx()
         {
-            ContextMenuBuilder += ZedGraphControlEx_ContextMenuBuilder;
+            ContextMenuBuilder += ZedGraphControlExOnContextMenuBuilder;
         }
 
-        void ZedGraphControlEx_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, System.Drawing.Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        void ZedGraphControlExOnContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, System.Drawing.Point mousePt, ContextMenuObjectState objState)
         {
             AddContextMenuItems(this, menuStrip);
         }

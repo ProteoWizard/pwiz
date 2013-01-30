@@ -1,21 +1,37 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class UpdateProteinNames : WorkspaceForm
     {
-        private const int PEPTIDE_INDEX_LENGTH = 5;
+        private const int PeptideIndexLength = 5;
         private bool _running;
         private bool _canceled;
         private String _statusText;
@@ -25,7 +41,7 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void BtnCancelOnClick(object sender, EventArgs e)
         {
             Close();
         }
@@ -107,7 +123,7 @@ namespace pwiz.Topograph.ui.Forms
             return !_canceled;
         }
 
-        private void timer_Tick(object sender, EventArgs e)
+        private void TimerOnTick(object sender, EventArgs e)
         {
             tbxStatus.Text = _statusText;
             progressBar.Value = _progress;
@@ -120,28 +136,94 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var peptides = Workspace.Peptides.ListChildren();
-            for (int i = 0; i < peptides.Count(); i++)
+            for (int retryCount = 0; ;retryCount++)
             {
-                if (!UpdateProgress("Peptide " + i + "/" + peptides.Count, 100 * i / peptides.Count))
+                var originalPeptides = Workspace.Data.Peptides;
+                var peptides = originalPeptides.ToArray();
+                for (int i = 0; i < peptides.Length; i++)
+                {
+                    string message = string.Format("Peptide {0}/{1}", i, peptides.Length);
+                    if (retryCount > 0)
+                    {
+                        message += string.Format(" (Retry #{0})", retryCount);
+                    }
+                    if (!UpdateProgress(message, 100 * i / peptides.Length))
+                    {
+                        return;
+                    }
+                    var peptide = peptides[i].Value;
+                    var proteinSequences = FindPeptides(peptide.Sequence, peptideIndex);
+                    if (proteinSequences.Count == 0)
+                    {
+                        continue;
+                    }
+                    var names = new SortedDictionary<String, String>();
+                    var prevAAs = new List<string>();
+                    var nextAAs = new List<string>();
+                    foreach (var proteinSequence in proteinSequences)
+                    {
+                        var proteinData = allProteins[proteinSequence];
+                        names[proteinData.GetName()] = proteinData.GetDescription();
+                        for (int ichPeptide = proteinSequence.IndexOf(peptide.Sequence, StringComparison.Ordinal);
+                             ichPeptide >= 0;
+                             ichPeptide = proteinSequence.IndexOf(peptide.Sequence, ichPeptide + 1, StringComparison.Ordinal))
+                        {
+                            if (ichPeptide == 0)
+                            {
+                                prevAAs.Add("-");
+                            }
+                            else
+                            {
+                                prevAAs.Add(proteinSequence.Substring(ichPeptide - 1, 1));
+                            }
+                            int ichPeptideEnd = ichPeptide + peptide.Sequence.Length;
+                            if (ichPeptideEnd == proteinSequence.Length)
+                            {
+                                nextAAs.Add("-");
+                            }
+                            else
+                            {
+                                nextAAs.Add(proteinSequence.Substring(ichPeptideEnd, 1));
+                            }
+                        }
+                    }
+                    string fullSequence;
+                    if (prevAAs.Distinct().Count() == 1)
+                    {
+                        fullSequence = prevAAs[0] + ".";
+                    }
+                    else
+                    {
+                        fullSequence = "?.";
+                    }
+                    fullSequence += peptide.Sequence;
+                    if (nextAAs.Distinct().Count() == 1)
+                    {
+                        fullSequence += "." + nextAAs[0];
+                    }
+                    else
+                    {
+                        fullSequence += ".?";
+                    }
+                    peptide = peptide.SetFullSequence(fullSequence)
+                                     .SetProteinName(string.Join("\r\n", names.Keys.ToArray()))
+                                     .SetProteinDescription(string.Join("\r\n---\r\n", names.Values.ToArray()));
+                    peptides[i] = new KeyValuePair<long, PeptideData>(peptides[i].Key, peptide);
+                }
+                bool success = Workspace.RunOnEventQueue(() =>
+                    {
+                        if (!Equals(originalPeptides, Workspace.Data.Peptides))
+                        {
+                            return false;
+                        }
+                        Workspace.Data = Workspace.Data.SetPeptides(ImmutableSortedList.FromValues(peptides));
+                        return true;
+                    });
+                if (success)
                 {
                     return;
                 }
-                var peptide = peptides[i];
-                var proteinSequences = FindPeptides(peptide.Sequence, peptideIndex);
-                if (proteinSequences.Count == 0)
-                {
-                    continue;
-                }
-                var names = new SortedDictionary<String, String>();
-                foreach (var proteinSequence in proteinSequences)
-                {
-                    var proteinData = allProteins[proteinSequence];
-                    names[proteinData.GetName()] = proteinData.GetDescription();
-                }
-                peptide.UpdateProtein(string.Join("\r\n", names.Keys.ToArray()), string.Join("\r\n---\r\n", names.Values.ToArray()));
             }
-
         }
 
         class ProteinData
@@ -188,9 +270,9 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 var proteinSequence = proteinsArray[proteinIndex];
                 var peptides = new HashSet<string>();
-                for (int i = 0; i < proteinSequence.Length - PEPTIDE_INDEX_LENGTH; i++)
+                for (int i = 0; i < proteinSequence.Length - PeptideIndexLength; i++)
                 {
-                    var peptide = proteinSequence.Substring(i, PEPTIDE_INDEX_LENGTH);
+                    var peptide = proteinSequence.Substring(i, PeptideIndexLength);
                     if (peptides.Contains(peptide))
                     {
                         continue;
@@ -209,19 +291,19 @@ namespace pwiz.Topograph.ui.Forms
         }
         IList<string> FindPeptides(string peptide, IDictionary<string, IList<string>> index)
         {
-            if (peptide.Length < PEPTIDE_INDEX_LENGTH)
+            if (peptide.Length < PeptideIndexLength)
             {
                 return new string[0];
             }
             IList<string> candidates;
-            if (!index.TryGetValue(peptide.Substring(0, PEPTIDE_INDEX_LENGTH), out candidates))
+            if (!index.TryGetValue(peptide.Substring(0, PeptideIndexLength), out candidates))
             {
                 return new string[0];
             }
             var result = new List<string>();
             foreach (var protein in candidates)
             {
-                if (protein.IndexOf(peptide) >= 0)
+                if (protein.IndexOf(peptide, StringComparison.Ordinal) >= 0)
                 {
                     result.Add(protein);
                 }

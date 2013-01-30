@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Util;
@@ -55,19 +56,19 @@ namespace pwiz.Topograph.ui.Forms
                                                bindingSource1.DataSource = ErrorHandler.GetErrors();
                                            }));
             }
-            catch
+            catch (Exception exception)
             {
-                
+                Trace.TraceError("Exception:{0}", exception);
             }
         }
 
-        private void btnClear_Click(object sender, EventArgs e)
+        private void BtnClearOnClick(object sender, EventArgs e)
         {
             bindingSource1.DataSource = new Error[0];
             ErrorHandler.ClearErrors();
         }
 
-        private void btnCopy_Click(object sender, EventArgs e)
+        private void BtnCopyOnClick(object sender, EventArgs e)
         {
             var str = new StringBuilder();
             foreach (Error error in (IEnumerable)bindingSource1.DataSource)
@@ -82,7 +83,7 @@ namespace pwiz.Topograph.ui.Forms
             Clipboard.SetText(str.ToString());
         }
 
-        private void bindingSource1_CurrentChanged(object sender, EventArgs e)
+        private void BindingSource1OnCurrentChanged(object sender, EventArgs e)
         {
             var error = bindingSource1.Current as Error;
             if (error == null)

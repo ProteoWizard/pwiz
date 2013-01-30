@@ -62,7 +62,7 @@
             this.btnEditModifications.TabIndex = 2;
             this.btnEditModifications.Text = "Edit Modifications...";
             this.btnEditModifications.UseVisualStyleBackColor = true;
-            this.btnEditModifications.Click += new System.EventHandler(this.btnEditModifications_Click);
+            this.btnEditModifications.Click += new System.EventHandler(this.BtnEditModificationsOnClick);
             // 
             // lblLabels
             // 
@@ -84,7 +84,7 @@
             this.btnDefineLabels.TabIndex = 4;
             this.btnDefineLabels.Text = "Define New Label...";
             this.btnDefineLabels.UseVisualStyleBackColor = true;
-            this.btnDefineLabels.Click += new System.EventHandler(this.btnDefineLabels_Click);
+            this.btnDefineLabels.Click += new System.EventHandler(this.BtnDefineLabelsOnClick);
             // 
             // label2
             // 
@@ -107,7 +107,7 @@
             this.btnEditMisc.TabIndex = 6;
             this.btnEditMisc.Text = "Edit Miscellaneous Settings...";
             this.btnEditMisc.UseVisualStyleBackColor = true;
-            this.btnEditMisc.Click += new System.EventHandler(this.btnEditMisc_Click);
+            this.btnEditMisc.Click += new System.EventHandler(this.BtnEditMiscOnClick);
             // 
             // panel1
             // 

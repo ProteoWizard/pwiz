@@ -136,7 +136,7 @@
             this.btnRefresh.TabIndex = 1;
             this.btnRefresh.Text = "Requery";
             this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            this.btnRefresh.Click += new System.EventHandler(this.BtnRefreshOnClick);
             // 
             // colTableName
             // 

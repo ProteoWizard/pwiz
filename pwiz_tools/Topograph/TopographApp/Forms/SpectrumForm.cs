@@ -38,14 +38,13 @@ namespace pwiz.Topograph.ui.Forms
         private int _maxCharge = 10;
         private string _peptideSequence;
         private double _massAccuracy;
-        private ChromatogramData[] _chromatograms;
+        private ChromatogramData[] _chromatogramDatas;
         private SpectrumData _spectrumData;
         public SpectrumForm(MsDataFile msDataFile) : base(msDataFile.Workspace)
         {
             InitializeComponent();
             MsDataFile = msDataFile;
             tbxScanIndex.Leave += (o, e) => ScanIndex = int.Parse(tbxScanIndex.Text);
-            
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -165,34 +164,28 @@ namespace pwiz.Topograph.ui.Forms
                     turnoverCalculator = new TurnoverCalculator(Workspace, PeptideSequence);
                 }
                 
-            msGraphControlEx1.GraphPane.GraphObjList.Clear();
-            msGraphControlEx1.GraphPane.CurveList.Clear();
-            if (_spectrumData == null || _chromatograms == null)
-            {
-                using (var msDataFileImpl = new MsDataFileImpl(Workspace.GetDataFilePath(MsDataFile.Name)))
+                msGraphControlEx1.GraphPane.GraphObjList.Clear();
+                msGraphControlEx1.GraphPane.CurveList.Clear();
+                if (_spectrumData == null || comboChromatogram.SelectedIndex >= 0 && null == _chromatogramDatas[comboChromatogram.SelectedIndex])
                 {
-                    if (_chromatograms == null)
+                    using (var msDataFileImpl = new MsDataFileImpl(Workspace.GetDataFilePath(MsDataFile.Name)))
                     {
-                        _chromatograms = new ChromatogramData[msDataFileImpl.ChromatogramCount];
-                        for (int i = 0; i < _chromatograms.Length; i++)
+                        if (comboChromatogram.SelectedIndex >= 0 && null == _chromatogramDatas[comboChromatogram.SelectedIndex])
                         {
                             string chromatogramName;
                             float[] timeArray;
                             float[] intensityArray;
-                            msDataFileImpl.GetChromatogram(i, out chromatogramName, out timeArray, out intensityArray);
-                            _chromatograms[i] = new ChromatogramData(chromatogramName, timeArray, intensityArray);
+                            msDataFileImpl.GetChromatogram(comboChromatogram.SelectedIndex, out chromatogramName, out timeArray, out intensityArray);
+                            _chromatogramDatas[comboChromatogram.SelectedIndex] = new ChromatogramData(chromatogramName, timeArray, intensityArray);
                         }
-                        comboChromatogram.Items.Clear();
-                        if (_chromatograms.Length > 0)
-                        {
-                            comboChromatogram.Items.AddRange(_chromatograms);
-                            comboChromatogram.SelectedIndex = 0;
-                        }
+                        _spectrumData = _spectrumData ?? new SpectrumData(msDataFileImpl, ScanIndex);
                     }
-                    _spectrumData = new SpectrumData(msDataFileImpl, ScanIndex);
                 }
-            }
-                var chromatogram = comboChromatogram.SelectedItem as ChromatogramData;
+                ChromatogramData chromatogram = null;
+                if (comboChromatogram.SelectedIndex >= 0)
+                {
+                    chromatogram = _chromatogramDatas[comboChromatogram.SelectedIndex];
+                }
                 tbxMsLevel.Text = _spectrumData.MsLevel.ToString();
                 tbxTime.Text = _spectrumData.Time.ToString();
                 if (chromatogram != null && ScanIndex < chromatogram.TimeArray.Length)
@@ -303,27 +296,27 @@ namespace pwiz.Topograph.ui.Forms
             msGraphControlEx1.Invalidate();
         }
 
-        private void cbxShowPeptideMzs_CheckedChanged(object sender, EventArgs e)
+        private void CbxShowPeptideMzsOnCheckedChanged(object sender, EventArgs e)
         {
             Redisplay();
         }
 
-        private void btnPrevPrevScan_Click(object sender, EventArgs e)
+        private void BtnPrevPrevScanOnClick(object sender, EventArgs e)
         {
             MoveToNextScan(-1, true);
         }
 
-        private void btnPrevScan_Click(object sender, EventArgs e)
+        private void BtnPrevScanOnClick(object sender, EventArgs e)
         {
             MoveToNextScan(-1, false);
         }
 
-        private void btnNextScan_Click(object sender, EventArgs e)
+        private void BtnNextScanOnClick(object sender, EventArgs e)
         {
             MoveToNextScan(1, false);
         }
 
-        private void btnNextNextScan_Click(object sender, EventArgs e)
+        private void BtnNextNextScanOnClick(object sender, EventArgs e)
         {
             MoveToNextScan(1, true);
         }
@@ -354,17 +347,17 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void cbxShowCentroids_CheckedChanged(object sender, EventArgs e)
+        private void CbxShowCentroidsOnCheckedChanged(object sender, EventArgs e)
         {
             Redisplay();
         }
 
-        private void tbxPeptideSequence_TextChanged(object sender, EventArgs e)
+        private void TbxPeptideSequenceOnTextChanged(object sender, EventArgs e)
         {
             PeptideSequence = tbxPeptideSequence.Text;
         }
 
-        private void comboChromatogram_SelectedIndexChanged(object sender, EventArgs e)
+        private void ComboChromatogramOnSelectedIndexChanged(object sender, EventArgs e)
         {
             Redisplay();
         }
@@ -490,29 +483,47 @@ namespace pwiz.Topograph.ui.Forms
             public double[] CentroidIntensities { get; private set; }
         }
 
-        private void cbxShowProfile_CheckedChanged(object sender, EventArgs e)
+        private void CbxShowProfileOnCheckedChanged(object sender, EventArgs e)
         {
             Redisplay();
         }
 
-        private void tbxMassAccuracy_Leave(object sender, EventArgs e)
+        private void TbxMassAccuracyOnLeave(object sender, EventArgs e)
         {
             MassAccuracy = double.Parse(tbxMassAccuracy.Text);
         }
 
-        private void tbxPeptideSequence_Leave(object sender, EventArgs e)
+        private void TbxPeptideSequenceOnLeave(object sender, EventArgs e)
         {
             PeptideSequence = tbxPeptideSequence.Text;
         }
 
-        private void tbxMinCharge_Leave(object sender, EventArgs e)
+        private void TbxMinChargeOnLeave(object sender, EventArgs e)
         {
             MinCharge = int.Parse(tbxMinCharge.Text);
         }
 
-        private void tbxMaxCharge_Leave(object sender, EventArgs e)
+        private void TbxMaxChargeOnLeave(object sender, EventArgs e)
         {
             MaxCharge = int.Parse(tbxMaxCharge.Text);
+        }
+
+        private void ComboChromatogramOnDropDown(object sender, EventArgs e)
+        {
+            if (_chromatogramDatas != null)
+            {
+                return;
+            }
+            comboChromatogram.Items.Clear();
+            using (var msDataFileImpl = new MsDataFileImpl(Workspace.GetDataFilePath(MsDataFile.Name)))
+            {
+                _chromatogramDatas = new ChromatogramData[msDataFileImpl.ChromatogramCount];
+                for (int i = 0; i < _chromatogramDatas.Length; i++)
+                {
+                    int indexId;
+                    comboChromatogram.Items.Add(msDataFileImpl.GetChromatogramId(i, out indexId));
+                }
+            }
         }
     }
 

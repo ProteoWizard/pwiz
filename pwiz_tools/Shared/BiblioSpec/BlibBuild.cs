@@ -86,6 +86,7 @@ namespace pwiz.BiblioSpec
         public string Id { get;set; }
         public double? CutOffScore { get; set; }
         public string Authority { get; set; }
+        public int? CompressLevel { get; set; }
 
         public IList<string> InputFiles
         {
@@ -103,6 +104,11 @@ namespace pwiz.BiblioSpec
             {
                 argv.Add("-c");
                 argv.Add(CutOffScore.Value.ToString(CultureInfo.InvariantCulture));
+            }
+            if (CompressLevel.HasValue)
+            {
+                argv.Add("-l");
+                argv.Add(CompressLevel.Value.ToString(CultureInfo.InvariantCulture));
             }
             if (!string.IsNullOrEmpty(Authority))
             {

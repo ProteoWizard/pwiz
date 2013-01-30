@@ -2,7 +2,7 @@
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2012 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,115 +20,29 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using NHibernate;
+using System.Diagnostics;
 using pwiz.Common.DataBinding;
-using pwiz.Topograph.Data;
-using pwiz.Topograph.Util;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class EntityModel : IEntity, IComparable
+    public abstract class EntityModel : PropertyChangedSupport, IComparable
     {
-        private EntityModel _parent;
-        protected EntityModel(Workspace workspace, long? id)
+        protected EntityModel(Workspace workspace)
         {
             Workspace = workspace;
-            Id = id;
         }
-
-        [Browsable(false)]
         public Workspace Workspace { get; private set; }
-        [Browsable(false)]
-        public long? Id { get; private set; }
-        [Browsable(false)]
-        public string EntityName {get { return ModelType.Name;}}
-        [Browsable(false)]
-        public virtual Type ModelType { get { return GetType(); } }
-        public virtual void SetId(long? id)
-        {
-            Id = id;
-        }
-        
-        public override bool Equals(Object o)
-        {
-            if (Id == null)
-            {
-                return base.Equals(o);
-            }
-            if (o == this)
-            {
-                return true;
-            }
-            var that = o as EntityModel;
-            if (that == null)
-            {
-                return false;
-            }
-            return Equals(Workspace, that.Workspace) && Equals(ModelType, that.ModelType) && Equals(Id, that.Id);
-        }
-
-        public override int GetHashCode()
-        {
-            if (Id == null)
-            {
-                return base.GetHashCode();
-            }
-            int result = Workspace.GetHashCode();
-            result = result*31 + ModelType.GetHashCode();
-            result = result*31 + Id.GetHashCode();
-            return result;
-        }
-
-        protected void SetIfChanged<T>(ref T currentValue, T newValue)
-        {
-            using(GetWriteLock())
-            {
-                lock (this)
-                {
-                    if (Equals(currentValue, newValue))
-                    {
-                        return;
-                    }
-                    currentValue = newValue;
-                    OnChange();
-                }
-            }
-        }
-
-        public virtual void Save(ISession session)
-        {
-        }
-
         protected virtual void OnChange()
         {
-            if (Parent != null)
-            {
-                Workspace.EntityChanged(this);
-            }
+            FirePropertyChanged(new PropertyChangedEventArgs(null));
         }
-
-        [Browsable(false)]
-        public virtual EntityModel Parent
+        public override void FirePropertyChanged(PropertyChangedEventArgs args)
         {
-            get
+            if (RaisePropertyChangedEvents)
             {
-                return _parent;
+                base.FirePropertyChanged(args);
             }
-            set
-            {
-                _parent = value;
-            }
-        }
-        public AutoLock GetReadLock()
-        {
-            return Workspace.GetReadLock();
-        }
-        public AutoLock GetWriteLock()
-        {
-            return Workspace.GetWriteLock();
         }
 
         public virtual int CompareTo(object obj)
@@ -139,136 +53,89 @@ namespace pwiz.Topograph.Model
             }
             return CaseInsensitiveComparer.DefaultInvariant.Compare(ToString(), obj.ToString());
         }
-    }
-    
-    public abstract class EntityModel<T> : EntityModel where T : DbEntity<T>
-    {
-        protected EntityModel(Workspace workspace, T entity) : base(workspace, entity.Id)
+
+        public static T MergeValue<T>(T myValue, T savedValue, T theirValue)
         {
-            Load(entity);
+            if (Equals(myValue, savedValue))
+            {
+                return theirValue;
+            }
+            return myValue;
         }
 
-        protected EntityModel(Workspace workspace) : base(workspace, null)
+        public bool RaisePropertyChangedEvents { get; set; }
+        public IDisposable DisablePropertyChangedEvents()
         {
-        }
-
-        protected virtual void Load(T entity)
-        {
-            foreach (var modelProperty in GetModelProperties())
-            {
-                if (modelProperty.IsDirty(this, SavedEntity))
-                {
-                    continue;
-                }
-                modelProperty.ModelSetter.Invoke(this, modelProperty.EntityGetter.Invoke(entity));
-            }
-            SavedEntity = entity;
-        }
-
-        public virtual void Merge(T entity)
-        {
-            Load(entity);
-        }
-
-        public virtual bool IsDirty()
-        {
-            if (SavedEntity == null)
-            {
-                return true;
-            }
-            foreach (var modelProperty in GetModelProperties())
-            {
-                if (modelProperty.IsDirty(this, SavedEntity))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        public bool IsNew()
-        {
-            return SavedEntity == null;
-        }
-        [Browsable(false)]
-        public T SavedEntity { get; set; }
-        public virtual bool IsPropDirty(ModelProperty property)
-        {
-            return SavedEntity == null || property.IsDirty(this, SavedEntity);
-        }
-        protected virtual T ConstructEntity(ISession session)
-        {
-            throw new InvalidOperationException();
-        }
-
-        public override void Save(ISession session)
-        {
-            T entity = UpdateDbEntity(session);
-            if (Id == null)
-            {
-                session.Save(entity);
-                SetId(entity.Id.Value);
-            }
-            else
-            {
-                session.Update(entity);
-            }
-            base.Save(session);
-        }
-
-        protected virtual T UpdateDbEntity(ISession session)
-        {
-            T result = null;
-            if (Id.HasValue)
-            {
-                result = session.Get<T>(Id);
-            }
-            if (result == null)
-            {
-                result = ConstructEntity(session);
-                SetId(null);
-            }
-            foreach (var modelProperty in GetModelProperties())
-            {
-                modelProperty.EntitySetter.Invoke(result, modelProperty.ModelGetter.Invoke(this)); 
-            }
+            var result = new RestorePropertyChangedEvents(this, RaisePropertyChangedEvents);
+            RaisePropertyChangedEvents = false;
             return result;
         }
-        protected static ModelProperty Property<M,V>(Func<M,V> getter, Action<M,V> setter, Func<T,V> entityGetter, Action<T,V> entitySetter)
+
+        private class RestorePropertyChangedEvents : IDisposable
         {
-            return ModelProperty.Property(getter, setter, entityGetter, entitySetter);
-        }
-        protected void LoadValue<V>(ref V value, T entity, Func<T,V> func)
-        {
-            value = NewValueUnlessCurrentChanged(value, entity, func);
-        }
-        protected V NewValueUnlessCurrentChanged<V>(V currentValue, T newEntity, Func<T,V> func)
-        {
-            if (SavedEntity == null || AreEqual(currentValue, func(SavedEntity)))
+            private readonly EntityModel _entityModel;
+            private bool _restore;
+            public RestorePropertyChangedEvents(EntityModel entityModel, bool restore)
             {
-                return func(newEntity);
+                _entityModel = entityModel;
+                _restore = restore;
             }
-            return currentValue;
-        }
-        protected bool AreEqual<V>(V value1, V value2)
-        {
-            if (typeof(V).IsArray)
+            public void Dispose()
             {
-                return Lists.EqualsDeep((IList) value1, (IList) value2);
+                if (_restore)
+                {
+                    _restore = false;
+                    _entityModel.RaisePropertyChangedEvents = true;
+                    _entityModel.FirePropertyChanged(new PropertyChangedEventArgs(null));
+                }
             }
-            return Equals(value1, value2);
         }
-        protected virtual IEnumerable<ModelProperty> GetModelProperties()
-        {
-            yield break;
-        }
+
+        public abstract KeyValuePair<Type, object> GetKey();
     }
 
-    public class EntityModelChangeEventArgs
+    public abstract class EntityModel<TKey, TData> : EntityModel
     {
-        public EntityModelChangeEventArgs(EntityModel entityModel)
+        private TData _data;
+
+        protected EntityModel(Workspace workspace, TKey key) : this(workspace, key, default(TData))
         {
-            EntityModel = entityModel;
+            _data = GetData(workspace.Data);
         }
-        public EntityModel EntityModel { get;private set;}
+        protected EntityModel(Workspace workspace, TKey key, TData data) : base(workspace)
+        {
+            Key = key;
+            _data = data;
+        }
+
+        protected TKey Key { get; private set; }
+        public TData Data
+        {
+            get { return _data; }
+            set
+            {
+                if (Equals(_data, value))
+                {
+                    return;
+                }
+                Workspace.Data = SetData(Workspace.Data, value);
+            }
+        }
+        public virtual void Update(WorkspaceChangeArgs workspaceChange, TData newData)
+        {
+            var oldData = _data;
+            _data = newData;
+            if (!Equals(oldData, _data))
+            {
+                OnChange();
+            }
+        }
+
+        public abstract TData GetData(WorkspaceData workspaceData);
+        public abstract WorkspaceData SetData(WorkspaceData workspaceData, TData value);
+        public override KeyValuePair<Type, object> GetKey()
+        {
+            return new KeyValuePair<Type, object>(GetType(), Key);
+        }
     }
 }

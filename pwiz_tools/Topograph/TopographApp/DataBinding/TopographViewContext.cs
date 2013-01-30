@@ -16,27 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Topograph.ui.DataBinding;
 using pwiz.Topograph.ui.Forms;
 using pwiz.Topograph.ui.Properties;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
+using pwiz.Topograph.ui.Util;
 
-namespace pwiz.Topograph.ui
+namespace pwiz.Topograph.ui.DataBinding
 {
     public class TopographViewContext : AbstractViewContext
     {
-        public TopographViewContext(Workspace workspace, Type rowType, IEnumerable<ViewSpec> builtInViews) : this(workspace, rowType)
+        public TopographViewContext(Workspace workspace, Type rowType, params ViewSpec[] builtInViews) : this(workspace, rowType)
         {
             Workspace = workspace;
             BuiltInViewSpecs = builtInViews;
@@ -44,23 +43,13 @@ namespace pwiz.Topograph.ui
 
         public TopographViewContext(Workspace workspace, Type rowType) : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType))
         {
-            var childColumns = ParentColumn.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.ROOT, c.Name)));
-            BuiltInViewSpecs = Array.AsReadOnly(new[] { new ViewSpec().SetName("default").SetColumns(childColumns)});
+            var childColumns = ParentColumn.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name)));
+            BuiltInViewSpecs = new[] {new ViewSpec().SetName("default").SetColumns(childColumns)};
         }
 
         public Type RowType { get { return ParentColumn.PropertyType; } }
         public Workspace Workspace { get; private set; }
-        public new IEnumerable<ViewSpec> BuiltInViewSpecs 
-        {
-            get
-            {
-                return base.BuiltInViewSpecs;
-            }
-            set
-            {
-                base.BuiltInViewSpecs = value;
-            }
-        }
+        public DeleteHandler DeleteHandler { get; set; }
 
         public override string GetExportDirectory()
         {
@@ -172,6 +161,22 @@ namespace pwiz.Topograph.ui
         public override IViewContext GetViewContext(ColumnDescriptor column)
         {
             return new TopographViewContext(Workspace, column.PropertyType);
+        }
+
+        public override bool DeleteEnabled
+        {
+            get
+            {
+                return null != DeleteHandler && DeleteHandler.DeleteEnabled;
+            }
+        }
+
+        public override void Delete()
+        {
+            if (null != DeleteHandler)
+            {
+                DeleteHandler.Delete();
+            }
         }
     }
 }

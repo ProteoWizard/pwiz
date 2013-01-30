@@ -18,75 +18,95 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NHibernate;
+using NHibernate.Criterion;
+using pwiz.Common.Collections;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class WorkspaceSettings : SettingCollection<DbWorkspace, String, DbSetting, WorkspaceSetting>
+    public class WorkspaceSettings : AbstractSettings<string, string>
     {
-        public WorkspaceSettings(Workspace workspace, DbWorkspace dbWorkspace) : base(workspace, dbWorkspace)
+        public WorkspaceSettings(Workspace workspace) : base(workspace)
         {
         }
-        protected override IEnumerable<KeyValuePair<String, DbSetting>> GetChildren(DbWorkspace parent)
-        {
-            foreach (var setting in parent.Settings)
-            {
-                yield return new KeyValuePair<String, DbSetting>(setting.Name, setting);
-            }
-        }
-
-        public override WorkspaceSetting WrapChild(DbSetting entity)
-        {
-            return new WorkspaceSetting(Workspace, entity);
-        }
-
         public T GetSetting<T>(SettingEnum settingEnum, T defaultValue)
         {
-            WorkspaceSetting setting = GetChild(settingEnum.ToString());
-            if (setting == null)
+            string stringValue;
+            if (!Data.TryGetValue(settingEnum.ToString(), out stringValue))
             {
                 return defaultValue;
             }
-            if (setting.Value == null)
+            if (null == stringValue)
             {
                 return default(T);
             }
             if (typeof(T).IsEnum)
             {
-                return (T) Enum.Parse(typeof (T), setting.Value);
+                return (T)Enum.Parse(typeof(T), stringValue);
             }
-            return (T)Convert.ChangeType(setting.Value, typeof(T));
+            return (T)Convert.ChangeType(stringValue, typeof(T));
         }
 
         public void SetSetting<T>(SettingEnum settingEnum, T value)
         {
             var strName = settingEnum.ToString();
-            var child = GetChild(strName);
             var strValue = Equals(value, default(T)) ? null : value.ToString();
-            if (child == null)
-            {
-                AddChild(strName, child = new WorkspaceSetting(Workspace)
-                                              {
-                                                  Name = strName,
-                                                  Value = strValue,
-                                              });
-            }
-            else
-            {
-                child.Value = strValue;
-            }
-            Workspace.EntityChanged(child);
+            var newValues = Data.Where(pair=>!Equals(pair.Key, strName)).ToList();
+            newValues.Add(new KeyValuePair<string, string>(strName, strValue));
+            Data = ImmutableSortedList.FromValues(newValues);
         }
 
-        protected override int GetChildCount(DbWorkspace parent)
+        protected override void Diff(WorkspaceChangeArgs workspaceChange, ImmutableSortedList<string, string> newValues, ImmutableSortedList<string, string> oldValues)
         {
-            return parent.SettingCount;
+            var differences = new HashSet<KeyValuePair<string, string>>(newValues);
+            differences.SymmetricExceptWith(oldValues);
+            var diffKeys = new HashSet<string>(differences.Select(pair => pair.Key));
+            if (diffKeys.Contains(SettingEnum.mass_accuracy.ToString()))
+            {
+                workspaceChange.AddPeakPickingChange();
+            }
+            if (diffKeys.Contains(SettingEnum.max_isotope_retention_time_shift.ToString()))
+            {
+                workspaceChange.AddTurnoverChange();
+            }
+            if (diffKeys.Contains(SettingEnum.err_on_side_of_lower_abundance.ToString()))
+            {
+                workspaceChange.AddTurnoverChange();
+            }
+            if (diffKeys.Any())
+            {
+                workspaceChange.AddSettingChange();
+            }
         }
 
-        protected override void SetChildCount(DbWorkspace parent, int childCount)
+        public override bool Save(ISession session, DbWorkspace dbWorkspace)
         {
-            parent.SettingCount = childCount;
+            var existingSettings = session.CreateCriteria<DbSetting>()
+                                  .Add(Restrictions.Eq("Workspace", dbWorkspace))
+                                  .List<DbSetting>()
+                                  .ToDictionary(dbSetting => dbSetting.Name);
+            return SaveChangedEntities(session, existingSettings, 
+                dbSetting=>dbSetting.Value,
+                (dbSetting, value)=>dbSetting.Value = value,
+                key=>new DbSetting
+                         {
+                             Name = key,
+                             Workspace = dbWorkspace,
+                         });
+        }
+
+        public const string QueryPrefix = "query:";
+        protected override ImmutableSortedList<string, string> GetData(WorkspaceData workspaceData)
+        {
+            return workspaceData.Settings;
+        }
+
+        protected override WorkspaceData SetData(WorkspaceData workspaceData, ImmutableSortedList<string, string> value)
+        {
+            return workspaceData.SetSettings(value);
         }
     }
 }

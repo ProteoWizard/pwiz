@@ -16,25 +16,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 
 namespace pwiz.Topograph.Data
 {
     public class IntegrationNote
     {
-        private static readonly Dictionary<string, IntegrationNote> _integrationNotes 
+        private static readonly Dictionary<string, IntegrationNote> IntegrationNotes 
             = new Dictionary<string, IntegrationNote>();
-        private static List<IntegrationNote> _lstIntegrationNotes = new List<IntegrationNote>();
+        private static readonly List<IntegrationNote> LstIntegrationNotes = new List<IntegrationNote>();
         private IntegrationNote(string label)
         {
             Label = label;
-            Ordinal = _lstIntegrationNotes.Count;
-            _lstIntegrationNotes.Add(this);
-            _integrationNotes.Add(label, this);
+            Ordinal = LstIntegrationNotes.Count;
+            LstIntegrationNotes.Add(this);
+            IntegrationNotes.Add(label, this);
         }
 
         public string Label { get; private set;}
@@ -50,9 +48,9 @@ namespace pwiz.Topograph.Data
                 return null;
             }
             IntegrationNote result;
-            if (!_integrationNotes.TryGetValue(integrationNote, out result))
+            if (!IntegrationNotes.TryGetValue(integrationNote, out result))
             {
-                return IntegrationNote.Error;
+                return Error;
             }
             return result;
         }
@@ -62,7 +60,7 @@ namespace pwiz.Topograph.Data
             foreach (var s in integrationNotes.Split('|'))
             {
                 IntegrationNote value;
-                if (_integrationNotes.TryGetValue(s, out value))
+                if (IntegrationNotes.TryGetValue(s, out value))
                 {
                     result.Add(value);
                 }
@@ -71,7 +69,7 @@ namespace pwiz.Topograph.Data
         }
         public static IList<IntegrationNote> Values()
         {
-            return new ReadOnlyCollection<IntegrationNote>(_lstIntegrationNotes);
+            return new ReadOnlyCollection<IntegrationNote>(LstIntegrationNotes);
         }
         public static string ToString(IntegrationNote integrationNote)
         {

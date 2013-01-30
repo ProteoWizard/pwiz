@@ -78,7 +78,7 @@
             this.btnChooseDirectory.TabIndex = 0;
             this.btnChooseDirectory.Text = "Browse for data files directory...";
             this.btnChooseDirectory.UseVisualStyleBackColor = true;
-            this.btnChooseDirectory.Click += new System.EventHandler(this.btnChooseDirectory_Click);
+            this.btnChooseDirectory.Click += new System.EventHandler(this.BtnChooseDirectoryOnClick);
             // 
             // RawFilesStep
             // 

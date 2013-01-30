@@ -19,8 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
@@ -32,9 +30,9 @@ using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.MsData
 {
-    public class ChromatogramGenerator
+    public class ChromatogramGenerator : IDisposable
     {
-        private int maxConcurrentAnalyses = 100;
+        private int _maxConcurrentAnalyses;
         private readonly Workspace _workspace;
         private Thread _chromatogramGeneratorThread;
         private readonly EventWaitHandle _eventWaitHandle = new EventWaitHandle(true, EventResetMode.ManualReset);
@@ -42,14 +40,21 @@ namespace pwiz.Topograph.MsData
         private bool _isSuspended;
         private int _progress;
         private String _statusMessage;
-        private readonly PendingIdQueue _pendingIdQueue = new PendingIdQueue();
         private ISession _session;
+        private int _missingChromatograms;
 
         public ChromatogramGenerator(Workspace workspace)
         {
             _workspace = workspace;
-            _workspace.WorkspaceDirty += WorkspaceSave;
-            _workspace.EntitiesChange += WorkspaceEntitiesChanged;
+            _workspace.Change += WorkspaceOnChange;
+            if (Environment.Is64BitProcess)
+            {
+                _maxConcurrentAnalyses = 1000;
+            }
+            else
+            {
+                _maxConcurrentAnalyses = 100;
+            }
         }
 
         public void Start()
@@ -87,6 +92,7 @@ namespace pwiz.Topograph.MsData
                 if (session != null)
                 {
                     session.CancelQuery();
+                    session.Close();
                 }
             }
             catch
@@ -122,130 +128,101 @@ namespace pwiz.Topograph.MsData
 
         private ChromatogramTask GetTaskList()
         {
-            WorkspaceVersion workspaceVersion;
-            var initedMsDataFileIds = ListInitedMsDataFileIds();
             long? msDataFileId = null;
             var analysisChromatograms = new List<AnalysisChromatograms>();
             bool openAnalyses = false;
             string dataFilePath = null;
             
-            using (_workspace.GetReadLock())
+            if (string.IsNullOrEmpty(_workspace.GetDataDirectory()))
             {
-                if (string.IsNullOrEmpty(_workspace.GetDataDirectory()))
+                return null;
+            }
+            var workspaceCopy = _workspace.Clone();
+            foreach (var peptideAnalysis in workspaceCopy.PeptideAnalyses)
+            {
+                if (0 == peptideAnalysis.GetChromatogramRefCount() || !peptideAnalysis.ChromatogramsWereLoaded)
                 {
-                    return null;
+                    continue;
                 }
-                workspaceVersion = _workspace.WorkspaceVersion;
-                foreach (var peptideAnalysis in _workspace.PeptideAnalyses.ListOpenPeptideAnalyses())
+                foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses)
                 {
-                    foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses.ListChildren())
+                    if (_workspace.IsRejected(peptideFileAnalysis.MsDataFile))
                     {
-                        if (!initedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
+                        continue;
+                    }
+                    if (!peptideFileAnalysis.PeptideAnalysis.ChromatogramsWereLoaded)
+                    {
+                        continue;
+                    }
+                    if (peptideFileAnalysis.ChromatogramSet == null || !peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.ChromatogramSet.Chromatograms.Keys))
+                    {
+                        if (msDataFileId == null)
                         {
-                            continue;
-                        }
-                        if (_workspace.IsRejected(peptideFileAnalysis.MsDataFile))
-                        {
-                            continue;
-                        }
-                        if (!peptideFileAnalysis.PeptideAnalysis.ChromatogramsWereLoaded)
-                        {
-                            continue;
-                        }
-                        if (peptideFileAnalysis.Chromatograms == null || !peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys()))
-                        {
-                            if (msDataFileId == null)
+                            dataFilePath = _workspace.GetDataFilePath(peptideFileAnalysis.MsDataFile.Name);
+                            if (dataFilePath == null)
                             {
-                                dataFilePath = _workspace.GetDataFilePath(peptideFileAnalysis.MsDataFile.Name);
-                                if (dataFilePath == null)
-                                {
-                                    initedMsDataFileIds.Remove(peptideFileAnalysis.MsDataFile.Id.Value);
-                                    continue;
-                                }
-                                msDataFileId = peptideFileAnalysis.MsDataFile.Id;
-                                openAnalyses = true;
+                                continue;
+                            }
+                            msDataFileId = peptideFileAnalysis.MsDataFile.Id;
+                            openAnalyses = true;
+                        }
+                        else
+                        {
+                            if (!Equals(msDataFileId, peptideFileAnalysis.MsDataFile.Id))
+                            {
+                                continue;
+                            }
+                        }
+                        analysisChromatograms.Add(new AnalysisChromatograms(peptideFileAnalysis));
+                    }
+                }
+            }
+            int missingChromatograms = 0;
+            if (!openAnalyses)
+            {
+                if (!_workspace.SavedWorkspaceChange.HasChromatogramMassChange)
+                {
+                    ICollection<long> lockedMsDataFileIds;
+                    using (_session = _workspace.OpenSession())
+                    {
+                        lockedMsDataFileIds = ListLockedMsDataFileIds(_session);
+                    }
+                    foreach (var peptideAnalysis in workspaceCopy.PeptideAnalyses)
+                    {
+                        foreach (var fileAnalysis in peptideAnalysis.FileAnalyses)
+                        {
+                            if (fileAnalysis.ChromatogramSetId != null)
+                            {
+                                continue;
+                            }
+                            missingChromatograms++;
+                            if (lockedMsDataFileIds.Contains(fileAnalysis.MsDataFile.Id))
+                            {
+                                continue;
+                            }
+                            if (null == msDataFileId)
+                            {
+                                msDataFileId = fileAnalysis.MsDataFile.Id;
                             }
                             else
                             {
-                                if (!Equals(msDataFileId, peptideFileAnalysis.MsDataFile.Id))
+                                if (msDataFileId != fileAnalysis.MsDataFile.Id)
                                 {
                                     continue;
                                 }
                             }
-                            analysisChromatograms.Add(new AnalysisChromatograms(peptideFileAnalysis));
+                            analysisChromatograms.Add(new AnalysisChromatograms(fileAnalysis));
                         }
                     }
                 }
             }
-            if (!openAnalyses)
-            {
-                if (workspaceVersion.MassVersion == _workspace.SavedWorkspaceVersion.MassVersion)
-                {
-                    using (_session = _workspace.OpenSession())
-                    {
-                        var lockedMsDataFileIds = ListLockedMsDataFileIds(_session);
-                        while (msDataFileId == null && _pendingIdQueue.PendingIdCount() > 0 || _pendingIdQueue.IsRequeryPending())
-                        {
-                            foreach (var id in _pendingIdQueue.EnumerateIds())
-                            {
-                                var peptideFileAnalysis = _session.Get<DbPeptideFileAnalysis>(id);
-                                if (peptideFileAnalysis.ChromatogramSet != null)
-                                {
-                                    continue;
-                                }
-                                if (!initedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
-                                {
-                                    continue;
-                                }
-                                if (lockedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
-                                {
-                                    continue;
-                                }
-                                if (_workspace.IsRejected(peptideFileAnalysis.MsDataFile))
-                                {
-                                    continue;
-                                }
-                                dataFilePath = _workspace.GetDataFilePath(peptideFileAnalysis.MsDataFile.Name);
-                                if (dataFilePath == null)
-                                {
-                                    initedMsDataFileIds.Remove(peptideFileAnalysis.MsDataFile.Id.Value);
-                                    continue;
-                                }
-                                msDataFileId = peptideFileAnalysis.MsDataFile.Id;
-                                break;
-                            }
-                            if (_pendingIdQueue.IsRequeryPending())
-                            {
-                                var ids = new List<long>();
-                                var query =
-                                    _session.CreateQuery("SELECT T.Id FROM " + typeof(DbPeptideFileAnalysis) +
-                                                        " T WHERE T.ChromatogramSet IS NULL");
-                                query.List(ids);
-                                _pendingIdQueue.SetQueriedIds(ids);
-                            }
-                        }
-                        if (msDataFileId != null)
-                        {
-                            var query = _session.CreateQuery("SELECT T, T.PeptideAnalysis, T.PeptideAnalysis.Peptide FROM " + typeof(DbPeptideFileAnalysis) + " T "
-                                + "\nWHERE T.ChromatogramSet IS NULL AND T.MsDataFile.Id = :msDataFileId")
-                                .SetParameter("msDataFileId", msDataFileId);
-                            foreach (object[] row in query.List())
-                            {
-                                var peptideFileAnalysis = (DbPeptideFileAnalysis) row[0];
-                                var peptideAnalysis = (DbPeptideAnalysis) row[1];
-                                var peptide = (DbPeptide) row[2];
-                                analysisChromatograms.Add(new AnalysisChromatograms(peptideFileAnalysis));
-                            }
-                        }
-                    }
-                }
-            }
+            _missingChromatograms = missingChromatograms;
             if (!msDataFileId.HasValue)
             {
                 return null;
             }
             DbLock dbLock = null;
-            var msDataFile = _workspace.MsDataFiles.GetChild(msDataFileId.Value);
+            var msDataFile = _workspace.MsDataFiles.FindByKey(msDataFileId.Value);
             if (!openAnalyses)
             {
                 dbLock = new DbLock
@@ -255,7 +232,7 @@ namespace pwiz.Topograph.MsData
                                  LockType = LockType.chromatograms
                              };
             }
-            return new ChromatogramTask(_workspace, dbLock)
+            return new ChromatogramTask(workspaceCopy, dbLock)
                        {
                            AnalysisChromatograms = analysisChromatograms,
                            MsDataFile = msDataFile,
@@ -359,11 +336,11 @@ namespace pwiz.Topograph.MsData
                     {
                         if (_workspace.SessionFactory != null)
                         {
-                            if (exception is OutOfMemoryException && maxConcurrentAnalyses > 1)
+                            if (exception is OutOfMemoryException && _maxConcurrentAnalyses > 1)
                             {
-                                ErrorHandler.LogException("Chromatogram Generator", string.Format("Ran out of memory trying to generate {0} chromatograms at once, reducing that number by half.", maxConcurrentAnalyses), exception);
-                                maxConcurrentAnalyses /= 2;
-                                maxConcurrentAnalyses = Math.Max(maxConcurrentAnalyses, 1);
+                                ErrorHandler.LogException("Chromatogram Generator", string.Format("Ran out of memory trying to generate {0} chromatograms at once, reducing that number by half.", _maxConcurrentAnalyses), exception);
+                                _maxConcurrentAnalyses /= 2;
+                                _maxConcurrentAnalyses = Math.Max(_maxConcurrentAnalyses, 1);
                             }
                             else
                             {
@@ -373,19 +350,6 @@ namespace pwiz.Topograph.MsData
                     }
                 }
             }
-        }
-
-        private ICollection<long> ListInitedMsDataFileIds()
-        {
-            var result = new HashSet<long>();
-            foreach (var msDataFile in _workspace.MsDataFiles.ListChildren())
-            {
-                if (msDataFile.HasTimes())
-                {
-                    result.Add(msDataFile.Id.Value);
-                }
-            }
-            return result;
         }
 
         private ICollection<long> ListLockedMsDataFileIds(ISession session)
@@ -398,10 +362,11 @@ namespace pwiz.Topograph.MsData
 
         private bool UpdateProgress(ChromatogramTask chromatogramTask, int progress)
         {
-            if (chromatogramTask.WorkspaceVersion.MassVersion != _workspace.WorkspaceVersion.MassVersion)
-            {
-                return false;
-            }
+            // TODO(nicksh)
+//            if (chromatogramTask.WorkspaceChange.MassVersion != _workspace.WorkspaceChange.MassVersion)
+//            {
+//                return false;
+//            }
             lock(this)
             {
                 _progress = progress;
@@ -421,6 +386,7 @@ namespace pwiz.Topograph.MsData
                 return;
             }
             var msDataFile = chromatogramTask.MsDataFile;
+            MsDataFileUtil.InitMsDataFile(chromatogramTask.Workspace, msDataFile);
             var analyses = new List<AnalysisChromatograms>(chromatogramTask.AnalysisChromatograms);
             MsDataFileImpl pwizMsDataFileImpl;
             var path = _workspace.GetDataFilePath(msDataFile.Name);
@@ -480,7 +446,7 @@ namespace pwiz.Topograph.MsData
                     // If we have exceeded the number of analyses we should be working on at once,
                     // throw out any that we haven't started.
                     for (int iAnalysis = activeAnalyses.Count - 1; iAnalysis >= 0 
-                        && (activeAnalyses.Count > maxConcurrentAnalyses || lowMemory); iAnalysis--)
+                        && (activeAnalyses.Count > _maxConcurrentAnalyses || lowMemory); iAnalysis--)
                     {
                         var analysis = activeAnalyses[iAnalysis];
                         if (analysis.Times.Count > 0)
@@ -533,41 +499,56 @@ namespace pwiz.Topograph.MsData
             {
                 return;
             }
-            using (_workspace.GetWriteLock())
+            if (!IsRunning())
             {
-                if (!chromatogramTask.WorkspaceVersion.Equals(_workspace.WorkspaceVersion))
-                {
-                    return;
-                }
-                foreach (var analysisChromatograms in analyses)
-                {
-                    var peptideAnalysis = _workspace.PeptideAnalyses.GetChild(analysisChromatograms.PeptideAnalysisId);
-                    if (peptideAnalysis == null)
-                    {
-                        continue;
-                    }
-                    var peptideFileAnalysis =
-                        peptideAnalysis.GetFileAnalysis(analysisChromatograms.PeptideFileAnalysisId);
-                    if (peptideFileAnalysis == null)
-                    {
-                        continue;
-                    }
-                    peptideFileAnalysis.SetChromatograms(chromatogramTask.WorkspaceVersion, analysisChromatograms);
-                }
+                return;
             }
+            _workspace.RunOnEventQueue(() =>
+                                    {
+                                        if (
+                                            chromatogramTask.Workspace.CompareSettings(_workspace)
+                                                            .HasChromatogramMassChange)
+                                        {
+                                            return;
+                                        }
+                                        foreach (var analysisChromatograms in analyses)
+                                        {
+                                            PeptideAnalysis peptideAnalysis;
+                                            _workspace.PeptideAnalyses.TryGetValue(
+                                                analysisChromatograms.PeptideAnalysisId, out peptideAnalysis);
+                                            if (peptideAnalysis == null ||
+                                                0 == peptideAnalysis.GetChromatogramRefCount())
+                                            {
+                                                continue;
+                                            }
+                                            var peptideFileAnalysis =
+                                                peptideAnalysis.GetFileAnalysis(
+                                                    analysisChromatograms.PeptideFileAnalysisId);
+                                            if (peptideFileAnalysis == null)
+                                            {
+                                                continue;
+                                            }
+                                            peptideFileAnalysis.SetChromatograms(analysisChromatograms);
+                                        }
+                                    });
             if (!chromatogramTask.CanSave())
             {
                 return;
             }
             using (_session = _workspace.OpenWriteSession())
             {
-                if (chromatogramTask.WorkspaceVersion.MassVersion != _workspace.SavedWorkspaceVersion.MassVersion)
-                {
-                    return;
-                }
+                // TODO(nicksh)
+//                if (chromatogramTask.WorkspaceChange.MassVersion != _workspace.SavedWorkspaceChange.MassVersion)
+//                {
+//                    return;
+//                }
                 _session.BeginTransaction();
                 foreach (AnalysisChromatograms analysis in analyses)
                 {
+                    if (!IsRunning())
+                    {
+                        return;
+                    }
                     var dbPeptideFileAnalysis = _session.Get<DbPeptideFileAnalysis>(analysis.PeptideFileAnalysisId);
                     if (dbPeptideFileAnalysis == null)
                     {
@@ -592,6 +573,8 @@ namespace pwiz.Topograph.MsData
                         }
                         _session.Delete(dbChromatogramSet);
                     }
+                    dbPeptideFileAnalysis.ChromatogramSet = null;
+                    _session.Update(dbPeptideFileAnalysis);
                     _session.Flush();
                     dbPeptideFileAnalysis.ChromatogramSet = new DbChromatogramSet
                                           {
@@ -615,18 +598,16 @@ namespace pwiz.Topograph.MsData
                     _session.Update(dbPeptideFileAnalysis);
                     _session.Save(new DbChangeLog(_workspace, dbPeptideFileAnalysis.PeptideAnalysis));
                 }
-                chromatogramTask.MsDataFile.MsDataFileData.Save(_session);
+                if (chromatogramTask.MsDataFile.IsBinaryDirty)
+                {
+                    chromatogramTask.MsDataFile.SaveBinary(_session);
+                }
                 chromatogramTask.UpdateLock(_session);
                 _session.Transaction.Commit();
             }
         }
 
-        public void WorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
-        {
-            _eventWaitHandle.Set();
-        }
-
-        public void WorkspaceSave(Workspace workspace)
+        public void WorkspaceOnChange(object sender, WorkspaceChangeArgs args)
         {
             _eventWaitHandle.Set();
         }
@@ -643,19 +624,18 @@ namespace pwiz.Topograph.MsData
             public MzRange MzRange { get; private set; }
             public List<ChromatogramPoint> Points { get; private set; }
         }
-        public int PendingAnalysisCount { get { return _pendingIdQueue.PendingIdCount(); } }
+        public int PendingAnalysisCount { get { return _missingChromatograms; } }
         public void SetRequeryPending()
         {
-            _pendingIdQueue.SetRequeryPending();
             _eventWaitHandle.Set();
         }
         public void AddPeptideFileAnalysisIds(IEnumerable<long> ids)
         {
-            _pendingIdQueue.AddIds(ids);
+            _eventWaitHandle.Set();
         }
         public bool IsRequeryPending()
         {
-            return _pendingIdQueue.IsRequeryPending();
+            return true;
         }
 
         public bool IsSuspended
@@ -685,7 +665,7 @@ namespace pwiz.Topograph.MsData
             }
         }
 
-        private class ChromatogramTask : Task
+        private class ChromatogramTask : TaskItem
         {
             public ChromatogramTask(Workspace workspace, DbLock dbLock)
                 : base(workspace, dbLock)
@@ -696,16 +676,28 @@ namespace pwiz.Topograph.MsData
             public MsDataFile MsDataFile;
             public String DataFilePath;
         }
+
+        public void Dispose()
+        {
+            Stop();
+            var session = _session;
+            _session = null;
+
+            if (session != null)
+            {
+                session.Dispose();
+            }
+        }
     }
 
     public class AnalysisChromatograms
     {
         public AnalysisChromatograms(PeptideFileAnalysis peptideFileAnalysis)
         {
-            PeptideFileAnalysisId = peptideFileAnalysis.Id.Value;
-            PeptideAnalysisId = peptideFileAnalysis.PeptideAnalysis.Id.Value;
-            FirstTime = peptideFileAnalysis.FirstTime;
-            LastTime = peptideFileAnalysis.LastTime;
+            PeptideFileAnalysisId = peptideFileAnalysis.Id;
+            PeptideAnalysisId = peptideFileAnalysis.PeptideAnalysis.Id;
+            FirstTime = peptideFileAnalysis.ChromatogramStartTime;
+            LastTime = peptideFileAnalysis.ChromatogramEndTime;
             MinCharge = peptideFileAnalysis.PeptideAnalysis.MinCharge;
             MaxCharge = peptideFileAnalysis.PeptideAnalysis.MaxCharge;
             Sequence = peptideFileAnalysis.PeptideAnalysis.Peptide.Sequence;

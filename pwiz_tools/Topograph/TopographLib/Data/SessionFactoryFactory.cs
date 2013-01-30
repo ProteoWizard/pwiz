@@ -23,6 +23,7 @@ using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using NHibernate.Driver;
+using NHibernate.Tool.hbm2ddl;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.Data
@@ -63,9 +64,12 @@ namespace pwiz.Topograph.Data
                 .SetProperty("connection.driver_class", GetDriverClass(databaseTypeEnum).AssemblyQualifiedName)
                 .SetProperty("connection.provider",
                              typeof (NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
-                .SetProperty("command_timeout", "1800")
-                //.SetProperty("cache.provider_class", "NHibernate.Caches.Prevalence.PrevalenceCacheProvider, NHibernate.Caches.Prevalence")
-                .AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
+                .SetProperty("command_timeout", "1800");
+            if (databaseTypeEnum == DatabaseTypeEnum.mysql)
+            {
+                configuration.SetProperty("sessionVariables", "storage_engine=InnoDB");
+            }
+            configuration.AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
 
             return configuration;
         }
@@ -78,7 +82,7 @@ namespace pwiz.Topograph.Data
                                                                  {
                                                                      DataSource = path
                                                                  }.ToString());
-            if (0 != (flags & SessionFactoryFlags.create_schema))
+            if (0 != (flags & SessionFactoryFlags.CreateSchema))
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }
@@ -89,11 +93,20 @@ namespace pwiz.Topograph.Data
         {
             var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum, flags)
                 .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
-            if (0 != (flags & SessionFactoryFlags.create_schema))
+            var sessionFactory = configuration.BuildSessionFactory();
+            if (0 != (flags & SessionFactoryFlags.CreateSchema))
             {
-                configuration.SetProperty("hbm2ddl.auto", "create");
+                using (var session = sessionFactory.OpenSession())
+                {
+                    var schemaExport = new SchemaExport(configuration);
+                    if (DatabaseTypeEnum.mysql == tpgLinkDef.DatabaseTypeEnum)
+                    {
+                        session.CreateSQLQuery("SET storage_engine = 'InnoDB'").ExecuteUpdate();
+                    }
+                    schemaExport.Execute(false, true, false, session.Connection, null);
+                }
             }
-            return configuration.BuildSessionFactory();
+            return sessionFactory;
         }
     }
 }

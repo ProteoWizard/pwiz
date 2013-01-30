@@ -51,7 +51,7 @@ namespace pwiz.Common.SystemUtil
             StringBuilder sbError = new StringBuilder();
             int percentLast = 0;
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine(progress)) != null)
             {
                 if (progress == null || line.ToLower().StartsWith("error"))
                 {

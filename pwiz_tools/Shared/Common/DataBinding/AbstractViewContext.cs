@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 
@@ -35,10 +36,16 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public abstract class AbstractViewContext : IViewContext
     {
+        private IList<ViewSpec> _builtInViewSpecs;
         protected AbstractViewContext(ColumnDescriptor parentColumn)
         {
             ParentColumn = parentColumn;
-            BuiltInViewSpecs = new ViewSpec[0];
+            BuiltInViewSpecs = new[] {GetDefaultViewSpec(parentColumn)};
+        }
+        protected AbstractViewContext(ColumnDescriptor parentColumn, IEnumerable<ViewSpec> builtInViewSpecs)
+        {
+            ParentColumn = parentColumn;
+            BuiltInViewSpecs = builtInViewSpecs;
         }
 
         public abstract string GetExportDirectory();
@@ -53,7 +60,8 @@ namespace pwiz.Common.DataBinding
         public ColumnDescriptor ParentColumn { get; protected set; }
         public IEnumerable<ViewSpec> BuiltInViewSpecs
         {
-            get; protected set;
+            get { return _builtInViewSpecs; }
+            set { _builtInViewSpecs = ImmutableList.ValueOf(value); }
         }
         public abstract IEnumerable<ViewSpec> CustomViewSpecs { get;}
         protected abstract void SetCustomViewSpecs(IEnumerable<ViewSpec> values);
@@ -254,6 +262,49 @@ namespace pwiz.Common.DataBinding
                 return new object[] {null}.Concat(Enum.GetValues(propertyDescriptor.PropertyType).Cast<object>());
             }
             return null;
+        }
+
+        public virtual void OnDataError(object sender, DataGridViewDataErrorEventArgs dataGridViewDataErrorEventArgs)
+        {
+            if (0 != (dataGridViewDataErrorEventArgs.Context & DataGridViewDataErrorContexts.Commit))
+            {
+                var dataGridView = sender as DataGridView;
+                string message;
+                if (dataGridViewDataErrorEventArgs.Exception == null)
+                {
+                    message = "An unknown error occurred updating the value.";
+                }
+                else
+                {
+                    message = string.Format("There was an error updating the value:\r\n{0}",
+                                            dataGridViewDataErrorEventArgs.Exception.Message);
+                }
+                if (dataGridView != null && dataGridView.IsCurrentCellInEditMode)
+                {
+                    if (ShowMessageBox(dataGridView, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    {
+                        dataGridView.CancelEdit();
+                    }
+                }
+                else
+                {
+                    ShowMessageBox(sender as Control, message, MessageBoxButtons.OK);
+                }
+            }
+        }
+
+        public virtual bool DeleteEnabled
+        {
+            get { return false; }
+            
+        }
+        public virtual void Delete()
+        {
+        }
+
+        public static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
+        {
+            return new ViewSpec().SetName("default").SetColumns(parentColumn.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name))));
         }
     }
 }

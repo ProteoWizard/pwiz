@@ -25,7 +25,7 @@ namespace pwiz.Common.DataBinding
 {
     public class RowItem
     {
-        public RowItem(object key, object value) : this(null, IdentifierPath.ROOT, key, value)
+        public RowItem(object key, object value) : this(null, IdentifierPath.Root, key, value)
         {
         }
         public RowItem(RowItem parent, IdentifierPath sublistId, object key, object value)
@@ -71,6 +71,14 @@ namespace pwiz.Common.DataBinding
         public RowItem SetParent(RowItem newParent)
         {
             return new RowItem(this){Parent=newParent};
+        }
+        public RowItem ChangeParentAndValue(RowItem newParent, object newValue)
+        {
+            return new RowItem(this)
+                {
+                    Parent = newParent,
+                    Value = newValue
+                };
         }
 
         public RowItem Parent { get; private set; }

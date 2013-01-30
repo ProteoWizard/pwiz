@@ -37,12 +37,12 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         public override bool IsCurrent
         {
-            get { return Workspace != null && string.IsNullOrEmpty(Workspace.GetDataDirectory()) && 0 != Workspace.MsDataFiles.ChildCount; }
+            get { return Workspace != null && string.IsNullOrEmpty(Workspace.GetDataDirectory()) && 0 != Workspace.MsDataFiles.Count; }
         }
 
-        private void btnChooseDirectory_Click(object sender, EventArgs e)
+        private void BtnChooseDirectoryOnClick(object sender, EventArgs e)
         {
-            TurnoverForm.BrowseForDataDirectory();
+            TopographForm.BrowseForDataDirectory();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -130,7 +130,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 {
                     return new string[0];
                 }
-                return workspace.MsDataFiles.ListChildren().Select(dataFile => dataFile.Name).ToArray();
+                return workspace.MsDataFiles.Select(dataFile => dataFile.Name).ToArray();
             }
 
             public bool AppliesTo(Workspace workspaceCompare)

@@ -1,7 +1,23 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using pwiz.Crawdad;
 
 namespace pwiz.Topograph.Enrichment
@@ -9,12 +25,15 @@ namespace pwiz.Topograph.Enrichment
     public class CrawPeakFinderWrapper
     {
         private readonly CrawdadPeakFinder _crawdadPeakFinder;
-        private const int MIN_TOLERANCE_LEN = 4;
-        private const int MIN_TOLERANCE_SMOOTH_FWHM = 3;
-        private const float FRACTION_FWHM_LEN = 0.5F;
-        private const float DESCENT_TOL = 0.005f;
-        private const float ASCENT_TOL = 0.50f;
+        private const int MinToleranceLen = 4;
+        private const int MinToleranceSmoothFwhm = 3;
+        private const float FractionFwhmLen = 0.5F;
+        private const float DescentTol = 0.005f;
+        private const float AscentTol = 0.50f;
+// ReSharper disable NotAccessedField.Local
+        // TODO(nicksh): Use these times.
         private IList<double> _times;
+// ReSharper restore NotAccessedField.Local
         private IList<double> _intensities;
 
         public CrawPeakFinderWrapper()
@@ -44,7 +63,7 @@ namespace pwiz.Topograph.Enrichment
         {
             // Look a number of steps dependent on the width of the peak, since interval width
             // may vary.
-            int toleranceLen = Math.Max(MIN_TOLERANCE_LEN, (int)Math.Round(crawdadPeak.Fwhm * FRACTION_FWHM_LEN));
+            int toleranceLen = Math.Max(MinToleranceLen, (int)Math.Round(crawdadPeak.Fwhm * FractionFwhmLen));
 
             crawdadPeak.StartIndex = ExtendBoundary(crawdadPeak, crawdadPeak.StartIndex, -1, toleranceLen);
             crawdadPeak.EndIndex = ExtendBoundary(crawdadPeak, crawdadPeak.EndIndex, 1, toleranceLen);
@@ -52,7 +71,7 @@ namespace pwiz.Topograph.Enrichment
 
         private int ExtendBoundary(CrawdadPeak peakPrimary, int indexBoundary, int increment, int toleranceLen)
         {
-            if (peakPrimary.Fwhm >= MIN_TOLERANCE_SMOOTH_FWHM)
+            if (peakPrimary.Fwhm >= MinToleranceSmoothFwhm)
             {
                 indexBoundary = ExtendBoundary(peakPrimary, false, indexBoundary, increment, toleranceLen);
             }
@@ -75,9 +94,9 @@ namespace pwiz.Topograph.Enrichment
             // so low noise, just looking for any descent can lead to boundaries very far away from
             // the peak.
             float height = peakPrimary.Height;
-            double minDescent = height * DESCENT_TOL;
+            double minDescent = height * DescentTol;
             // Put a limit on how high intensity can go before the search is terminated
-            double maxHeight = ((height - boundaryIntensity) * ASCENT_TOL) + boundaryIntensity;
+            double maxHeight = ((height - boundaryIntensity) * AscentTol) + boundaryIntensity;
 
             // Extend the index in the direction of the increment
             for (int i = indexBoundary + increment;

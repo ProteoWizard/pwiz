@@ -16,10 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace pwiz.Topograph.Data
 {
@@ -30,6 +26,7 @@ namespace pwiz.Topograph.Data
         public virtual string Value { get; set; }
     }
 
+    // ReSharper disable InconsistentNaming
     public enum SettingEnum
     {
         min_tracer_count,
@@ -50,4 +47,6 @@ namespace pwiz.Topograph.Data
         chrom_time_around_ms2_id,
         extra_chrom_time_without_ms2_id,
     }
+    // ReSharper restore InconsistentNaming
+
 }

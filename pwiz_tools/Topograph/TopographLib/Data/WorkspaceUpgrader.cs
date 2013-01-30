@@ -1,20 +1,35 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using MySql.Data.MySqlClient;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Data
 {
-    public class WorkspaceUpgrader : ILongOperationJob
+    public class WorkspaceUpgrader
     {
-        public const int CurrentVersion = 11;
-        public const int MinUpgradeableVersion = 1;
+        public const int CurrentVersion = 15;
+        public const int MinUpgradeableVersion = 12;
         private IDbCommand _currentCommand;
         private LongOperationBroker _longOperationBroker;
 
@@ -41,7 +56,7 @@ namespace pwiz.Topograph.Data
             {
                 return TpgLinkDef.OpenConnection();
             }
-            var connectionString = new SQLiteConnectionStringBuilder()
+            var connectionString = new SQLiteConnectionStringBuilder
                                        {
                                            DataSource = WorkspacePath
                                        }.ToString();
@@ -61,10 +76,7 @@ namespace pwiz.Topograph.Data
         {
             lock(this)
             {
-                if (_longOperationBroker.WasCancelled)
-                {
-                    throw new JobCancelledException();
-                }
+                _longOperationBroker.CancellationToken.ThrowIfCancellationRequested();
                 _currentCommand = connection.CreateCommand();
                 _currentCommand.CommandTimeout = 180000;
                 _currentCommand.CommandText = commandText;
@@ -83,6 +95,7 @@ namespace pwiz.Topograph.Data
         public void Run(LongOperationBroker broker)
         {
             _longOperationBroker = broker;
+            _longOperationBroker.CancellationToken.Register(Cancel);
             broker.UpdateStatusMessage("Opening file");
             using (var connection = OpenConnection())
             {
@@ -161,7 +174,9 @@ namespace pwiz.Topograph.Data
                             CreateCommand(connection, "DROP INDEX PeptideFileAnalysis ON DbPeak")
                                 .ExecuteNonQuery();
                         }
-                        catch
+// ReSharper disable EmptyGeneralCatchClause
+                        catch 
+// ReSharper restore EmptyGeneralCatchClause
                         {
                             // ignore
                         }
@@ -224,7 +239,7 @@ namespace pwiz.Topograph.Data
                 }
                 if (dbVersion < 10)
                 {
-                    broker.UpdateStatusMessage("Upgrading from version 10 to 11");
+                    broker.UpdateStatusMessage("Upgrading from version 9 to 10");
                     if (IsSqlite)
                     {
                         CreateCommand(connection,
@@ -283,7 +298,7 @@ namespace pwiz.Topograph.Data
                 }
                 if (dbVersion < 11)
                 {
-                    broker.UpdateStatusMessage("Upgrading from version 9 to 10");
+                    broker.UpdateStatusMessage("Upgrading from version 10 to 11");
                     CreateCommand(connection, "ALTER TABLE DbPeptideSearchResult ADD COLUMN PsmCount INT")
                         .ExecuteNonQuery();
                     CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN PsmCount INT")
@@ -308,13 +323,108 @@ namespace pwiz.Topograph.Data
 
                             
                     }
+                }
+                if (dbVersion < 12)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 11 to 12");
+                    CreateCommand(connection, "CREATE TABLE DbPeptideSpectrumMatch ("
+                                              + "\nId bigint NOT NULL AUTO_INCREMENT,"
+                                              + "\nVersion int NOT NULL,"
+                                              + "\nMsDataFile bigint NOT NULL,"
+                                              + "\nPeptide bigint NOT NULL,"
+                                              + "\nPrecursorMz double ,"
+                                              + "\nPrecursorCharge int,"
+                                              + "\nModifiedSequence varchar(255),"
+                                              + "\nRetentionTime double,"
+                                              + "\nSpectrumId varchar(255),"
+                                              + "\nPRIMARY KEY (Id),"
+                                              + "\nKEY MsDataFile (MsDataFile),"
+                                              + "\nKEY Peptide (Peptide)"
+                                              + "\n)").ExecuteNonQuery();
+                    if (!IsSqlite)
+                    {
+                        foreach (string table in new[] { "DbChangeLog", "DbChromatogram", "DbChromatogramSet", "DbLock", "DbModification", "DbMsDataFile", "DbPeak", "DbPeptide", "DbPeptideAnalysis", "DbPeptideFileAnalysis", "DbPeptideSearchResult", "DbPeptideSpectrumMatch", "DbSetting", "DbTracerDef", "DbWorkspace" })
+                        {
+                            try
+                            {
+                                CreateCommand(connection, string.Format("ALTER TABLE {0} ENGINE=INNODB", table)).ExecuteNonQuery();
+                            }
+                            catch(Exception exception)
+                            {
+                                Trace.TraceWarning("Exception changing storage engine on table {0}:{1}", table, exception);
+                            }
+                        }
+                    }
 
-
+                    CreateCommand(connection, "INSERT INTO DbPeptideSpectrumMatch(MsDataFile, Peptide, SpectrumId, PrecursorCharge, ModifiedSequence)"
+                                  +"\nSELECT S.MsDataFile,"
+                                  + "\nS.Peptide,"
+                                  + "\nS.FirstDetectedScan," 
+                                  + "\nS.MinCharge," 
+                                  + "\nP.Sequence"
+                                  + "\nFROM DbPeptideSearchResult S INNER JOIN DbPeptide P ON S.Peptide = P.Id")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "INSERT INTO DbPeptideSpectrumMatch(MsDataFile, Peptide, SpectrumId, PrecursorCharge, ModifiedSequence)"
+                                  + "\nSELECT S.MsDataFile,"
+                                  + "\nS.Peptide,"
+                                  + "\nS.FirstDetectedScan,"
+                                  + "\nS.MinCharge,"
+                                  + "\nP.Sequence"
+                                  + "\nFROM DbPeptideSearchResult S INNER JOIN DbPeptide P ON S.Peptide = P.Id"
+                                  + "\nWHERE S.FirstDetectedScan <> S.LastDetectedScan")
+                        .ExecuteNonQuery();
+                }
+                if (dbVersion < 13)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 12 to 13");
+                    CreateCommand(connection, "ALTER TABLE DbPeptide MODIFY COLUMN Workspace BIGINT")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbMsDataFile MODIFY COLUMN Workspace BIGINT")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbPeptideAnalysis MODIFY COLUMN Workspace BIGINT")
+                        .ExecuteNonQuery();
+                }
+                if (dbVersion < 14)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 13 to 14");
+                    string strCreateDbPeak2 = @"CREATE TABLE DbPeak2
+(Id bigint(20) NOT NULL AUTO_INCREMENT,
+PeptideFileAnalysis bigint(20) NOT NULL,
+PeakIndex int NOT NULL,
+StartTime double DEFAULT NULL,
+EndTime double DEFAULT NULL,
+Area double DEFAULT NULL,
+PRIMARY KEY (Id),
+UNIQUE KEY PeptideFileAnalysis (PeptideFileAnalysis,PeakIndex))";
+                    if (!IsSqlite)
+                    {
+                        strCreateDbPeak2 += " ENGINE=InnoDb";
+                    }
+                    CreateCommand(connection, strCreateDbPeak2)
+                        .ExecuteNonQuery();
+                    CreateCommand(connection,
+                                  @"INSERT INTO DbPeak2 (Id, PeptideFileAnalysis, PeakIndex, StartTime, EndTime, Area)
+SELECT Id, PeptideFileAnalysis,
+(SELECT COUNT(Id) FROM DbPeak P2 WHERE P2.PeptideFileAnalysis = P1.PeptideFileAnalysis AND P2.Name < P1.Name),
+StartTime,EndTime,TotalArea
+FROM DbPeak P1")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "DROP TABLE DbPeak")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbPeak2 RENAME TO DbPeak")
+                        .ExecuteNonQuery();
+                }
+                if (dbVersion < 15)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 14 to 15");
+                    CreateCommand(connection, "ALTER TABLE DbMsDataFile ADD COLUMN PrecursorPool VARCHAR(255)")
+                        .ExecuteNonQuery();
                 }
                 if (dbVersion < CurrentVersion)
                 {
                     broker.UpdateStatusMessage("Upgrading");
-                    CreateCommand(connection, "UPDATE DbWorkspace SET SchemaVersion = " + CurrentVersion).ExecuteNonQuery();
+                    CreateCommand(connection, "UPDATE DbWorkspace SET SchemaVersion = " + CurrentVersion)
+                        .ExecuteNonQuery();
                 }
                 broker.UpdateStatusMessage("Committing transaction");
                 broker.SetIsCancelleable(false);
@@ -322,7 +432,7 @@ namespace pwiz.Topograph.Data
             }
         }
 
-        public bool Cancel()
+        public void Cancel()
         {
             lock(this)
             {
@@ -330,8 +440,8 @@ namespace pwiz.Topograph.Data
                 {
                     _currentCommand.Cancel();
                 }
-                return true;
             }
         }
+
     }
 }

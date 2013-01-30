@@ -1,8 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
@@ -11,26 +27,28 @@ namespace pwiz.Topograph.Test
 {
     public class BaseTest
     {
-        private TestContext testContextInstance;
+        private TestContext _testContextInstance;
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
+// ReSharper disable ConvertToAutoProperty
         public TestContext TestContext
         {
             get
             {
-                return testContextInstance;
+                return _testContextInstance;
             }
             set
             {
-                testContextInstance = value;
+                _testContextInstance = value;
             }
         }
+        // ReSharper restore ConvertToAutoProperty
 
         public String FindDirectory(String name)
         {
-            for (String directory = TestContext.TestDir; directory.Length > 10; directory = Path.GetDirectoryName(directory))
+            for (String directory = TestContext.TestDir; null != directory && directory.Length > 10; directory = Path.GetDirectoryName(directory))
             {
                 String testDataDirectory = Path.Combine(directory, name);
                 if (Directory.Exists(testDataDirectory))
@@ -47,6 +65,7 @@ namespace pwiz.Topograph.Test
         }
         public void CopyDirectory(String sourceDirectory, String destPath)
         {
+            // ReSharper disable AssignNullToNotNullAttribute
             String destDirectory = Path.Combine(destPath, Path.GetFileName(sourceDirectory));
             Directory.CreateDirectory(destDirectory);
             foreach (var file in Directory.GetFiles(sourceDirectory))
@@ -57,6 +76,7 @@ namespace pwiz.Topograph.Test
             {
                 CopyDirectory(directory, destDirectory);
             }
+            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         public void FreshenDirectory(String sourceDirectory, String destDirectory)
@@ -88,7 +108,7 @@ namespace pwiz.Topograph.Test
 
         protected Workspace CreateWorkspace(string path, DbTracerDef dbTracerDef)
         {
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, SessionFactoryFlags.create_schema))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, SessionFactoryFlags.CreateSchema))
             {
                 using (var session = sessionFactory.OpenSession())
                 {
@@ -119,7 +139,8 @@ namespace pwiz.Topograph.Test
 
             }
             var workspace = new Workspace(path);
-            workspace.Reconciler.ReconcileNow();
+            workspace.SetTaskScheduler(TaskScheduler.Default);
+            workspace.DatabasePoller.LoadAndMergeChanges(null);
             return workspace;
         }
     }

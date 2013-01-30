@@ -1,10 +1,29 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Forms;
+using NHibernate.Criterion;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.MsData;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
@@ -20,7 +39,7 @@ namespace pwiz.Topograph.ui.Forms
         public void UpdateListbox()
         {
             var existing = new HashSet<MsDataFile>();
-            foreach (var peptideFileAnalysis in PeptideAnalysis.FileAnalyses.ListChildren())
+            foreach (var peptideFileAnalysis in PeptideAnalysis.FileAnalyses)
             {
                 existing.Add(peptideFileAnalysis.MsDataFile);
             }
@@ -29,13 +48,12 @@ namespace pwiz.Topograph.ui.Forms
             var dataFiles = new List<MsDataFile>();
             using (var session = Workspace.OpenSession())
             {
-                var peptide = session.Get<DbPeptide>(PeptideAnalysis.Peptide.Id);
-                foreach (var searchResult in peptide.SearchResults)
-                {
-                    selected.Add(searchResult.MsDataFile.Id.Value);
-                }
+                var spectrumMatches = session.CreateCriteria<DbPeptideSpectrumMatch>()
+                    .Add(Restrictions.Eq("Peptide", session.Load<DbPeptide>(PeptideAnalysis.Peptide.Id)))
+                    .List<DbPeptideSpectrumMatch>();
+                selected.UnionWith(spectrumMatches.Select(psm => psm.MsDataFile.Id.GetValueOrDefault()));
             }
-            foreach (var dataFile in Workspace.MsDataFiles.ListChildren())
+            foreach (var dataFile in Workspace.MsDataFiles)
             {
                 if (existing.Contains(dataFile))
                 {
@@ -43,13 +61,13 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 dataFiles.Add(dataFile);
             }
-            dataFiles.Sort((a, b) => a.Label.CompareTo(b.Label));
+            dataFiles.Sort((a, b) => string.Compare(a.Label, b.Label, StringComparison.CurrentCultureIgnoreCase));
             checkedListBox1.Items.Clear();
             foreach (var dataFile in dataFiles)
             {
                 int index = checkedListBox1.Items.Count;
                 checkedListBox1.Items.Add(dataFile.Label);
-                checkedListBox1.SetItemChecked(index, selected.Contains(dataFile.Id.Value));
+                checkedListBox1.SetItemChecked(index, selected.Contains(dataFile.Id));
             }
             MsDataFiles = new ReadOnlyCollection<MsDataFile>(dataFiles.ToArray());
         }
@@ -57,11 +75,11 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysis PeptideAnalysis { get { return (PeptideAnalysis) EntityModel; } }
         public IList<MsDataFile> MsDataFiles { get; private set; }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOkOnClick(object sender, EventArgs e)
         {
             int unreadableFiles = 0;
             int checkedItems = 0;
-            TurnoverForm.Instance.EnsureDataDirectory(Workspace);
+            TopographForm.Instance.EnsureDataDirectory(Workspace);
             var msDataFiles = new List<MsDataFile>();
             for (int i = 0; i < MsDataFiles.Count; i++)
             {
@@ -71,7 +89,8 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 checkedItems++;
                 var msDataFile = MsDataFiles[i];
-                if (MsDataFileUtil.InitMsDataFile(Workspace, msDataFile))
+                string errorMessage;
+                if (TopographForm.TryInitMsDataFile(this, msDataFile, out errorMessage)) 
                 {
                     msDataFiles.Add(msDataFile);
                 }
@@ -117,19 +136,19 @@ namespace pwiz.Topograph.ui.Forms
                 var job = new Task(PeptideAnalysis, msDataFiles);
                 using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Creating file analyses"))
                 {
-                    new LongOperationBroker(job, longWaitDialog).LaunchJob();
+                    new LongOperationBroker(job.Run, longWaitDialog).LaunchJob();
                 }
-                Workspace.Reconciler.Wake();
+                Workspace.DatabasePoller.Wake();
             }
             Close();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void BtnCancelOnClick(object sender, EventArgs e)
         {
             Close();
         }
 
-        private class Task : ILongOperationJob
+        private class Task
         {
             public Task(PeptideAnalysis peptideAnalysis, ICollection<MsDataFile> msDataFiles)
             {
@@ -141,22 +160,16 @@ namespace pwiz.Topograph.ui.Forms
             public ICollection<MsDataFile> MsDataFiles { get; private set; }
             public void Run(LongOperationBroker longOperationBroker)
             {
-                var searchResults = new Dictionary<long, DbPeptideSearchResult>();
                 using (var session = PeptideAnalysis.Workspace.OpenSession())
                 {
                     var peptideAnalysis = session.Get<DbPeptideAnalysis>(PeptideAnalysis.Id);
                     var peptide = peptideAnalysis.Peptide;
-                    foreach (var searchResult in peptide.SearchResults)
-                    {
-                        searchResults[searchResult.MsDataFile.Id.Value] = searchResult;
-                    }
+                    var psmTimesByDataFileId = peptide.PsmTimesByDataFileId(session);
                     session.BeginTransaction();
                     foreach (var msDataFile in MsDataFiles)
                     {
-                        DbPeptideSearchResult searchResult;
-                        searchResults.TryGetValue(msDataFile.Id.Value, out searchResult);
                         var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(
-                            session, msDataFile, peptideAnalysis, searchResult, true);
+                            session, msDataFile, peptideAnalysis, psmTimesByDataFileId);
                         session.Save(dbPeptideFileAnalysis);
                         peptideAnalysis.FileAnalysisCount++;
                     }
@@ -164,16 +177,11 @@ namespace pwiz.Topograph.ui.Forms
                     session.Save(new DbChangeLog(PeptideAnalysis));
                     session.Transaction.Commit();
                 }
-                PeptideAnalysis.Workspace.Reconciler.ReconcileNow();
-            }
-
-            public bool Cancel()
-            {
-                return true;
+                PeptideAnalysis.Workspace.DatabasePoller.MergeChangesNow();
             }
         }
 
-        private void btnSelectAll_Click(object sender, EventArgs e)
+        private void BtnSelectAllOnClick(object sender, EventArgs e)
         {
             for (int i = 0; i < checkedListBox1.Items.Count; i++)
             {
@@ -181,7 +189,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnDeselectAll_Click(object sender, EventArgs e)
+        private void BtnDeselectAllOnClick(object sender, EventArgs e)
         {
             for (int i = 0; i < checkedListBox1.Items.Count; i++)
             {

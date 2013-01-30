@@ -1,4 +1,6 @@
-﻿namespace pwiz.Topograph.ui.Forms
+﻿using pwiz.Common.DataBinding.Controls;
+
+namespace pwiz.Topograph.ui.Forms
 {
     partial class HalfLifeRowDataForm
     {
@@ -28,10 +30,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.boundDataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.bindingSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tbxPeptide = new System.Windows.Forms.TextBox();
             this.tbxProtein = new System.Windows.Forms.TextBox();
@@ -48,20 +49,19 @@
             this.boundDataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.boundDataGridView1.Location = new System.Drawing.Point(0, 125);
             this.boundDataGridView1.Name = "boundDataGridView1";
-            this.boundDataGridView1.RowSource = null;
             this.boundDataGridView1.Size = new System.Drawing.Size(710, 337);
             this.boundDataGridView1.TabIndex = 0;
             // 
             // navBar1
             // 
             this.navBar1.AutoSize = true;
-            this.navBar1.BindingSource = this.bindingSource1;
+            this.navBar1.BindingListSource = this.bindingSource1;
             this.navBar1.Dock = System.Windows.Forms.DockStyle.Top;
             this.navBar1.Location = new System.Drawing.Point(0, 100);
             this.navBar1.Name = "navBar1";
             this.navBar1.Size = new System.Drawing.Size(710, 25);
             this.navBar1.TabIndex = 1;
-            this.navBar1.ViewContext = null;
+            this.navBar1.WaitingMessage = "Waiting for data...";
             // 
             // tableLayoutPanel1
             // 
@@ -133,7 +133,7 @@
 
         private pwiz.Common.DataBinding.BoundDataGridView boundDataGridView1;
         private pwiz.Common.DataBinding.Controls.NavBar navBar1;
-        private System.Windows.Forms.BindingSource bindingSource1;
+        private BindingListSource bindingSource1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TextBox tbxPeptide;
         private System.Windows.Forms.TextBox tbxProtein;

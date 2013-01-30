@@ -19,8 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Topograph.Model;
 using ZedGraph;
 
@@ -40,11 +42,11 @@ namespace pwiz.Topograph.ui.Forms
         {
             base.OnHandleCreated(e);
             UpdateAll();
-            comboTarget.SelectedIndexChanged += comboDataFile_SelectedIndexChanged;
+            comboTarget.SelectedIndexChanged += ComboTargetOnSelectedIndexChanged;
             new Action(LoadRetentionTimesBackground).BeginInvoke(null, null);
         }
 
-        void comboDataFile_SelectedIndexChanged(object sender, EventArgs e)
+        void ComboTargetOnSelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateRows();
         }
@@ -73,11 +75,8 @@ namespace pwiz.Topograph.ui.Forms
 
         private void LoadRetentionTimesBackground()
         {
-            IList<MsDataFile> msDataFiles;
-            using (Workspace.GetReadLock())
-            {
-                msDataFiles = Workspace.MsDataFiles.ListChildren();
-            }
+            var clonedWorkspace = Workspace.Clone();
+            IList<MsDataFile> msDataFiles = clonedWorkspace.MsDataFiles.ToArray();
             for (int i = 0; i < msDataFiles.Count; i++)
             {
                 if (IsDisposed)
@@ -87,12 +86,12 @@ namespace pwiz.Topograph.ui.Forms
                 try
                 {
                     UpdateStatus(100 * i / msDataFiles.Count, "Loading MS2 IDs");
-                    IList<Peptide> regressedPeptides;
+                    IList<string> regressedPeptides;
                     msDataFiles[i].RegressTimes(msDataFiles[i], out regressedPeptides);
                 }
-                catch
+                catch (Exception exception)
                 {
-                    // ignore
+                    Trace.TraceWarning("Exception regressing times:{0}", exception);
                 }
             }
             UpdateStatus(100, "Finished loading MS2 IDs");
@@ -111,9 +110,9 @@ namespace pwiz.Topograph.ui.Forms
                                                UpdateRows();
                                            }));
             }
-            catch
+            catch(Exception exception)
             {
-                // ignore
+                Trace.TraceWarning("Exception updating status:{0}", exception);
             }
         }
 
@@ -128,14 +127,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            _dataRows.RaiseListChangedEvents = false;
-            _dataRows.Clear();
-            foreach (var row in rows)
-            {
-                _dataRows.Add(row);
-            }
-            _dataRows.RaiseListChangedEvents = true;
-            _dataRows.ResetBindings();
+            BindingLists.ReplaceItems(_dataRows, rows);
             UpdateGraph();
         }
 
@@ -150,12 +142,12 @@ namespace pwiz.Topograph.ui.Forms
                 var refinedPoints = new PointPairList();
                 var outliers = new PointPairList();
                 var regression = currentRow.Refined ?? currentRow.Unrefined;
-                if (regression != null)
+                if (regression != null && regression.OriginalTimes.Count > 0)
                 {
                     var outlierIndexes = regression.OutlierIndexes;
                     for (int i = 0; i < regression.TotalCount; i++)
                     {
-                        var point = new PointPair(regression.OriginalTimes[i], regression.TargetTimes[i], currentRow.RegressedPeptides[i].FullSequence);
+                        var point = new PointPair(regression.OriginalTimes[i], regression.TargetTimes[i], currentRow.RegressedPeptides[i]);
                         if (outlierIndexes.Contains(i))
                         {
                             outliers.Add(point);
@@ -201,7 +193,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private MsDataFile[] ListDataFiles()
         {
-            var dataFiles = Workspace.MsDataFiles.ListChildren().ToArray();
+            var dataFiles = Workspace.MsDataFiles.ToArray();
             Array.Sort(dataFiles);
             return dataFiles;
         }
@@ -220,7 +212,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     continue;
                 }
-                IList<Peptide> regressedPeptides;
+                IList<string> regressedPeptides;
                 var rawRegression = msDataFile.RegressTimes(target, out regressedPeptides);
                 var dataRow = new DataRow(msDataFile, rawRegression, regressedPeptides);
                 list.Add(dataRow);
@@ -230,7 +222,7 @@ namespace pwiz.Topograph.ui.Forms
 
         internal class DataRow
         {
-            public DataRow(MsDataFile dataFile, RegressionWithOutliers unrefined, IList<Peptide> regressedPeptides)
+            public DataRow(MsDataFile dataFile, RegressionWithOutliers unrefined, IList<string> regressedPeptides)
             {
                 MsDataFile = dataFile;
                 Unrefined = unrefined;
@@ -243,7 +235,7 @@ namespace pwiz.Topograph.ui.Forms
 
             public MsDataFile MsDataFile { get; private set; }
             public string DataFile { get { return MsDataFile.Label; } }
-            public IList<Peptide> RegressedPeptides { get; private set; }
+            public IList<string> RegressedPeptides { get; private set; }
             public RegressionWithOutliers Unrefined { get; private set; }
             public RegressionWithOutliers Refined { get; private set; }
             public double? RefinedSlope { get { return Refined == null ? (double?) null : Refined.Slope; } }
@@ -255,12 +247,7 @@ namespace pwiz.Topograph.ui.Forms
             public int TotalPointCount { get { return Unrefined.TotalCount; } }
         }
 
-        private void comboTarget_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateRows();
-        }
-
-        private void bindingSource_CurrentChanged(object sender, EventArgs e)
+        private void BindingSourceOnCurrentChanged(object sender, EventArgs e)
         {
             UpdateGraph();
         }

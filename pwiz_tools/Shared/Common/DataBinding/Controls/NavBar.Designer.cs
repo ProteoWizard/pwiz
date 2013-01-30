@@ -33,7 +33,6 @@
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
             this.bindingNavigatorAddNewItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorCountItem = new System.Windows.Forms.ToolStripLabel();
-            this.bindingNavigatorDeleteItem = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonViews = new System.Windows.Forms.ToolStripDropDownButton();
             this.bindingNavigatorMoveFirstItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorMovePreviousItem = new System.Windows.Forms.ToolStripButton();
@@ -46,8 +45,9 @@
             this.navBarButtonExport = new System.Windows.Forms.ToolStripButton();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.tbxFind = new System.Windows.Forms.ToolStripTextBox();
-            this.lblFilterApplied = new System.Windows.Forms.ToolStripLabel();
             this.navBarButtonMatchCase = new System.Windows.Forms.ToolStripButton();
+            this.lblFilterApplied = new System.Windows.Forms.ToolStripLabel();
+            this.navBarDeleteItem = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -56,7 +56,7 @@
             // 
             this.bindingNavigator1.AddNewItem = this.bindingNavigatorAddNewItem;
             this.bindingNavigator1.CountItem = this.bindingNavigatorCountItem;
-            this.bindingNavigator1.DeleteItem = this.bindingNavigatorDeleteItem;
+            this.bindingNavigator1.DeleteItem = null;
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonViews,
             this.bindingNavigatorMoveFirstItem,
@@ -69,7 +69,7 @@
             this.bindingNavigatorMoveLastItem,
             this.bindingNavigatorSeparator2,
             this.bindingNavigatorAddNewItem,
-            this.bindingNavigatorDeleteItem,
+            this.navBarDeleteItem,
             this.navBarButtonExport,
             this.toolStripLabel1,
             this.tbxFind,
@@ -102,15 +102,6 @@
             this.bindingNavigatorCountItem.Text = "of {0}";
             this.bindingNavigatorCountItem.ToolTipText = "Total number of items";
             // 
-            // bindingNavigatorDeleteItem
-            // 
-            this.bindingNavigatorDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorDeleteItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorDeleteItem.Image")));
-            this.bindingNavigatorDeleteItem.Name = "bindingNavigatorDeleteItem";
-            this.bindingNavigatorDeleteItem.RightToLeftAutoMirrorImage = true;
-            this.bindingNavigatorDeleteItem.Size = new System.Drawing.Size(23, 22);
-            this.bindingNavigatorDeleteItem.Text = "Delete";
-            // 
             // navBarButtonViews
             // 
             this.navBarButtonViews.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -119,7 +110,7 @@
             this.navBarButtonViews.Name = "navBarButtonViews";
             this.navBarButtonViews.Size = new System.Drawing.Size(50, 22);
             this.navBarButtonViews.Text = "Views";
-            this.navBarButtonViews.DropDownOpening += new System.EventHandler(this.navBarButtonViews_DropDownOpening);
+            this.navBarButtonViews.DropDownOpening += new System.EventHandler(this.NavBarButtonViewsOnDropDownOpening);
             // 
             // bindingNavigatorMoveFirstItem
             // 
@@ -189,7 +180,7 @@
             this.navBarButtonExport.Name = "navBarButtonExport";
             this.navBarButtonExport.Size = new System.Drawing.Size(53, 22);
             this.navBarButtonExport.Text = "Export...";
-            this.navBarButtonExport.Click += new System.EventHandler(this.navBarButtonExport_Click);
+            this.navBarButtonExport.Click += new System.EventHandler(this.NavBarButtonExportOnClick);
             // 
             // toolStripLabel1
             // 
@@ -201,14 +192,7 @@
             // 
             this.tbxFind.Name = "tbxFind";
             this.tbxFind.Size = new System.Drawing.Size(100, 25);
-            this.tbxFind.TextChanged += new System.EventHandler(this.findBox_TextChanged);
-            // 
-            // lblFilterApplied
-            // 
-            this.lblFilterApplied.Name = "lblFilterApplied";
-            this.lblFilterApplied.Size = new System.Drawing.Size(135, 15);
-            this.lblFilterApplied.Text = "(Filtered from XXXXXXX)";
-            this.lblFilterApplied.Visible = false;
+            this.tbxFind.TextChanged += new System.EventHandler(this.FindBoxOnTextChanged);
             // 
             // navBarButtonMatchCase
             // 
@@ -221,7 +205,24 @@
             this.navBarButtonMatchCase.Name = "navBarButtonMatchCase";
             this.navBarButtonMatchCase.Size = new System.Drawing.Size(23, 22);
             this.navBarButtonMatchCase.Text = "Match Case";
-            this.navBarButtonMatchCase.CheckedChanged += new System.EventHandler(this.navBarButtonMatchCase_CheckedChanged);
+            this.navBarButtonMatchCase.CheckedChanged += new System.EventHandler(this.NavBarButtonMatchCaseOnCheckedChanged);
+            // 
+            // lblFilterApplied
+            // 
+            this.lblFilterApplied.Name = "lblFilterApplied";
+            this.lblFilterApplied.Size = new System.Drawing.Size(135, 22);
+            this.lblFilterApplied.Text = "(Filtered from XXXXXXX)";
+            this.lblFilterApplied.Visible = false;
+            // 
+            // navBarDeleteItem
+            // 
+            this.navBarDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.navBarDeleteItem.Image = ((System.Drawing.Image)(resources.GetObject("navBarDeleteItem.Image")));
+            this.navBarDeleteItem.Name = "navBarDeleteItem";
+            this.navBarDeleteItem.RightToLeftAutoMirrorImage = true;
+            this.navBarDeleteItem.Size = new System.Drawing.Size(23, 22);
+            this.navBarDeleteItem.Text = "Delete";
+            this.navBarDeleteItem.Click += new System.EventHandler(this.NavBarDeleteItemOnClick);
             // 
             // NavBar
             // 
@@ -244,7 +245,6 @@
         private System.Windows.Forms.BindingNavigator bindingNavigator1;
         private System.Windows.Forms.ToolStripButton bindingNavigatorAddNewItem;
         private System.Windows.Forms.ToolStripLabel bindingNavigatorCountItem;
-        private System.Windows.Forms.ToolStripButton bindingNavigatorDeleteItem;
         private System.Windows.Forms.ToolStripButton bindingNavigatorMoveFirstItem;
         private System.Windows.Forms.ToolStripButton bindingNavigatorMovePreviousItem;
         private System.Windows.Forms.ToolStripSeparator bindingNavigatorSeparator;
@@ -259,6 +259,7 @@
         private System.Windows.Forms.ToolStripTextBox tbxFind;
         private System.Windows.Forms.ToolStripLabel lblFilterApplied;
         private System.Windows.Forms.ToolStripButton navBarButtonMatchCase;
+        private System.Windows.Forms.ToolStripButton navBarDeleteItem;
 
     }
 }

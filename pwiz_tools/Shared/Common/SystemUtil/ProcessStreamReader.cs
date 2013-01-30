@@ -57,12 +57,17 @@ namespace pwiz.Common.SystemUtil
         /// Public access to read the next line from the interleaved output
         /// of both standard out and standard error.
         /// </summary>
-        public string ReadLine()
+        public string ReadLine(IProgressMonitor progressMonitor)
         {
+            int timeout = progressMonitor == null ? Timeout.Infinite : 10000;
             lock (_readLines)
             {
                 for (;;)
                 {
+                    if (progressMonitor != null && progressMonitor.IsCanceled)
+                    {
+                        return "";
+                    }
                     if (_readLines.Count > 0)
                     {
                         string line = _readLines[0];
@@ -73,10 +78,14 @@ namespace pwiz.Common.SystemUtil
                         throw _readException;
                     if (_isOutComplete && _isErrComplete)
                         return null;
-
-                    Monitor.Wait(_readLines);
+                    Monitor.Wait(_readLines, timeout);
                 }
             }
+        }
+
+        public string ReadLine()
+        {
+            return ReadLine(null);
         }
 
         /// <summary>

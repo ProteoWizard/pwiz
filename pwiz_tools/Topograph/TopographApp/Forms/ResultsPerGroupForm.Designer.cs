@@ -1,4 +1,5 @@
 ﻿using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -51,7 +52,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label5 = new System.Windows.Forms.Label();
             this.tbxMinTurnoverScore = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
+            this.bindingSource1 = new BindingListSource(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
             this.dataGridViewSummary = new System.Windows.Forms.DataGridView();
@@ -298,7 +299,6 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.dataGridView1.RowSource = null;
             this.dataGridView1.Size = new System.Drawing.Size(892, 199);
             this.dataGridView1.TabIndex = 1;
             // 
@@ -325,13 +325,12 @@ namespace pwiz.Topograph.ui.Forms
             // navBar1
             // 
             this.navBar1.AutoSize = true;
-            this.navBar1.BindingSource = this.bindingSource1;
+            this.navBar1.BindingListSource = this.bindingSource1;
             this.navBar1.Dock = System.Windows.Forms.DockStyle.Top;
             this.navBar1.Location = new System.Drawing.Point(0, 0);
             this.navBar1.Name = "navBar1";
             this.navBar1.Size = new System.Drawing.Size(892, 25);
             this.navBar1.TabIndex = 2;
-            this.navBar1.ViewContext = null;
             this.navBar1.WaitingMessage = "Press \"Run Query\" button to see data";
             // 
             // dataGridViewSummary
@@ -438,7 +437,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridView dataGridViewSummary;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox comboEvviesFilter;
-        private System.Windows.Forms.BindingSource bindingSource1;
+        private BindingListSource bindingSource1;
         private pwiz.Common.DataBinding.Controls.NavBar navBar1;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryQuantity;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryAvgValue;

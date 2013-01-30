@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MySql.Data.MySqlClient;
 using NHibernate;
+using NHibernate.Tool.hbm2ddl;
 using Npgsql;
 using pwiz.Topograph.Data;
 
@@ -172,7 +173,19 @@ namespace pwiz.Topograph.Model
                 cmd.CommandText = "CREATE DATABASE " + Database;
                 cmd.ExecuteNonQuery();
             }
-            return SessionFactoryFactory.CreateSessionFactory(this, SessionFactoryFlags.create_schema);
+            using (var connection = OpenConnection(GetConnectionString())) 
+            {
+                if (DatabaseTypeEnum == DatabaseTypeEnum.mysql)
+                {
+                    var cmd = connection.CreateCommand();
+                    cmd.CommandText = "SET storage_engine=INNODB";
+                    cmd.ExecuteNonQuery();
+                }
+                var configuration = SessionFactoryFactory.GetConfiguration(DatabaseTypeEnum, 0);
+                var schemaExport = new SchemaExport(configuration);
+                schemaExport.Execute(false, true, false, connection, null);
+            }
+            return SessionFactoryFactory.CreateSessionFactory(this, SessionFactoryFlags.CreateSchema);
         }
 
         public ISessionFactory OpenSessionFactory()
@@ -208,7 +221,7 @@ namespace pwiz.Topograph.Model
                 return result;
             }
         }
-        private static readonly Regex regexDatabasePrefix = new Regex("ON `([^`%]*)%`");
+        private static readonly Regex RegexDatabasePrefix = new Regex("ON `([^`%]*)%`");
         /// <summary>
         /// Checks whether the user has permissions on databases with a wildcard name
         /// beginning with a particular prefix.  If so, returns that prefix, otherwise null.
@@ -231,7 +244,7 @@ namespace pwiz.Topograph.Model
                     {
                         continue;
                     }
-                    var match = regexDatabasePrefix.Match(value);
+                    var match = RegexDatabasePrefix.Match(value);
                     if (!match.Success)
                     {
                         continue;
@@ -242,18 +255,20 @@ namespace pwiz.Topograph.Model
             return null;
         }
     }
+    // These enum values are saved in .tpglnk files, so don't change them
+    // ReSharper disable InconsistentNaming
     public enum DatabaseTypeEnum
     {
         mysql,
         postgresql,
         sqlite,
     }
+    // ReSharper restore InconsistentNaming
 
     [Flags]
     public enum SessionFactoryFlags
     {
-        show_sql = 0x1,
-        remove_binary_columns = 0x2,
-        create_schema = 0x4,
+        ShowSql = 0x1,
+        CreateSchema = 0x2,
     }
 }

@@ -19,9 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using NHibernate;
-using NHibernate.Criterion;
 using pwiz.Common.SystemUtil;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
@@ -31,8 +31,16 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 {
     public partial class WaitForResultsStep : DashboardStep
     {
+        private const int NewForeignLockStaleTimeMinutes = 20;
+        private const int ExistingForeignLockStaleTimeMinutes = 5;
+        private int _totalChromatograms;
+        private int _completedChromatograms;
+        private int _totalResults;
+        private int _completedResults;
         private BackgroundQuery _completedBackgroundQuery;
         private BackgroundQuery _runningBackgroundQuery;
+        private readonly IDictionary<long, DateTime> _firstSeenLockTime = new Dictionary<long, DateTime>();
+        private DateTime? _workspaceOpenTime;
         public WaitForResultsStep()
         {
             InitializeComponent();
@@ -42,7 +50,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         {
             get
             {
-                if (Workspace == null || Workspace.PeptideAnalyses.ChildCount == 0)
+                if (Workspace == null || Workspace.PeptideAnalyses.Count == 0)
                 {
                     return false;
                 }
@@ -50,7 +58,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 {
                     return true;
                 }
-                if (_completedBackgroundQuery.ChromatogramsMissing > 0 || _completedBackgroundQuery.ResultsMissing > 0)
+                if (_completedChromatograms < _totalChromatograms || _completedResults < _totalResults)
                 {
                     return true;
                 }
@@ -60,6 +68,31 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         protected override void UpdateStepStatus()
         {
+            if (null == Workspace)
+            {
+                _totalResults = _totalChromatograms = 0;
+                _completedResults = _completedChromatograms = 0;
+            }
+            else
+            {
+                _totalChromatograms = Workspace.PeptideAnalyses.Select(peptideAnalysis => peptideAnalysis.FileAnalyses.Count).Sum();
+                _completedChromatograms = Workspace.PeptideAnalyses
+                    .Select(peptideAnalysis => peptideAnalysis.FileAnalyses.Count(
+                        fileAnalysis => fileAnalysis.ChromatogramSetId.HasValue))
+                    .Sum();
+                _totalResults = _totalChromatograms;
+                _completedResults = Workspace.PeptideAnalyses
+                                         .Select(peptideAnalysis => peptideAnalysis.FileAnalyses.Count(
+                                             fileAnalysis => fileAnalysis.PeakData.IsCalculated))
+                                         .Sum();
+            }
+
+            if (null != _completedBackgroundQuery && !_completedBackgroundQuery.IsWorkspace(Workspace))
+            {
+                _workspaceOpenTime = null;
+                _completedBackgroundQuery.Dispose();
+                _completedBackgroundQuery = null;
+            }
             if (null != _runningBackgroundQuery)
             {
                 if (!_runningBackgroundQuery.IsWorkspace(Workspace))
@@ -73,37 +106,74 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                     _runningBackgroundQuery = null;
                 }
             }
+            if (null == Workspace || !Workspace.IsLoaded)
+            {
+                if (null == Workspace)
+                {
+                    lblResultsStatus.Text = lblChromatogramStatus.Text = "No workspace is open";
+                }
+                else
+                {
+                    lblResultsStatus.Text = lblChromatogramStatus.Text = "Waiting for workspace to load";
+                }
+                SetProgressBarValue(progressBarChromatograms, 0);
+                SetProgressBarValue(progressBarResults, 0);
+            }
+            if (0 == _totalChromatograms)
+            {
+                lblChromatogramStatus.Text =
+                    "No chromatograms need to be calculated in this workspace.  Choose some peptides to analyze.";
+                SetProgressBarValue(progressBarChromatograms, 0);
+            }
+            else
+            {
+                lblChromatogramStatus.Text = string.Format("{0} of {1} chromatograms generated.",
+                                                            _completedChromatograms,
+                                                            _totalChromatograms);
+                SetProgressBarValue(progressBarChromatograms, 100 * _completedChromatograms /
+                                                    _totalChromatograms);
+            }
+            if (0 == _totalResults || 0 == _totalChromatograms)
+            {
+                lblResultsStatus.Text =
+                    "No results need to be calculated in this workspace.  Choose some peptides to analyze.";
+                SetProgressBarValue(progressBarResults, 0);
+            }
+            else
+            {
+                lblResultsStatus.Text = string.Format("{0} of {1} results calculated.",
+                                                      _completedResults,
+                                                      _totalResults);
+                SetProgressBarValue(progressBarResults, 100 * _completedResults /
+                                           _totalResults);
+            }
+
             if (null != _completedBackgroundQuery)
             {
-                if (0 == _completedBackgroundQuery.TotalChromatograms)
+                if (_workspaceOpenTime == null)
                 {
-                    lblChromatogramStatus.Text =
-                        "No chromatograms need to be generated in this workspace.  Choose some peptides to analyze.";
-                    SetProgressBarValue(progressBarChromatograms, 0);
+                    _firstSeenLockTime.Clear();
                 }
-                else
+                foreach (var lockId in _completedBackgroundQuery.ForeignLockIds)
                 {
-                    lblChromatogramStatus.Text = string.Format("{0} of {1} chromatograms generated.",
-                                                               _completedBackgroundQuery.ChromatogramsPresent,
-                                                               _completedBackgroundQuery.TotalChromatograms);
-                    SetProgressBarValue(progressBarChromatograms, 100*_completedBackgroundQuery.ChromatogramsPresent/
-                                                     _completedBackgroundQuery.TotalChromatograms);
+                    if (!_firstSeenLockTime.ContainsKey(lockId))
+                    {
+                        _firstSeenLockTime.Add(lockId, DateTime.Now);
+                    }
                 }
-                if (0 == _completedBackgroundQuery.TotalResults)
+                foreach (var lockId in _firstSeenLockTime.Keys.ToArray().Except(_completedBackgroundQuery.ForeignLockIds))
                 {
-                    lblResultsStatus.Text =
-                        "No results need to be calculated in this workspace.  Choose some peptides to analyze.";
-                    SetProgressBarValue(progressBarResults, 0);
+                    _firstSeenLockTime.Remove(lockId);
                 }
-                else
+                if (_workspaceOpenTime == null)
                 {
-                    lblResultsStatus.Text = string.Format("{0} of {1} results calculated.",
-                                                          _completedBackgroundQuery.ResultsPresent,
-                                                          _completedBackgroundQuery.TotalResults);
-                    SetProgressBarValue(progressBarResults, 100*_completedBackgroundQuery.ResultsPresent/
-                                               _completedBackgroundQuery.TotalResults);
+                    _workspaceOpenTime = DateTime.Now;
                 }
-                if (0 == _completedBackgroundQuery.ForeignLockCount)
+                DateTime staleTime = new DateTime(Math.Min(DateTime.Now.AddMinutes(-ExistingForeignLockStaleTimeMinutes).Ticks, 
+                    Math.Max(_workspaceOpenTime.Value.Ticks, DateTime.Now.AddMinutes(-NewForeignLockStaleTimeMinutes).Ticks)));
+
+                int staleForeignLockCount = _firstSeenLockTime.Values.Count(time => staleTime.CompareTo(time) > 0);
+                if (0 == staleForeignLockCount)
                 {
                     panelForeignLocks.Visible = false;
                 }
@@ -112,16 +182,9 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                     lblForeignLocks.Text =
                         string.Format(
                             "The database says that there are {0} tasks being performed by other instances of Topograph",
-                            _completedBackgroundQuery.ForeignLockCount);
+                            staleForeignLockCount);
                     panelForeignLocks.Visible = true;
                 }
-            }
-            else
-            {
-                lblChromatogramStatus.Text = "No information yet";
-                lblResultsStatus.Text = "No information yet";
-                SetProgressBarValue(progressBarChromatograms, 0);
-                SetProgressBarValue(progressBarResults, 0);
             }
             if (Workspace != null && _runningBackgroundQuery == null)
             {
@@ -163,7 +226,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         class BackgroundQuery : MustDispose
         {
             private readonly WaitForResultsStep _waitForResultsStep;
-            private long _lastChangeId;
+            private long? _lastChangeId;
             private ISession _session;
             private readonly WeakReference _workspaceRef = new WeakReference(null);
 
@@ -182,7 +245,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 }
                 _session = workspace.OpenSession();
                 IsRunning = true;
-                _lastChangeId = workspace.Reconciler.LastChangeId;
+                _lastChangeId = workspace.Data.LastChangeLogId;
                 new Action<Workspace>(RunQueryBackground).BeginInvoke(workspace, null, null);
             }
 
@@ -195,26 +258,9 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             {
                 try
                 {
-                    var queryResultsPresent =
-                    _session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof(DbPeptideFileAnalysis) +
-                        " F WHERE F.PeakCount <> 0 AND F.TracerPercent IS NOT NULL");
-                    var queryResultsMissing =
-                        _session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof(DbPeptideFileAnalysis) +
-                                            " F WHERE F.PeakCount = 0 OR F.TracerPercent IS NULL");
-                    var queryChromatogramsPresent =
-                        _session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof(DbPeptideFileAnalysis) +
-                                            " F WHERE F.ChromatogramSet IS NOT NULL");
-                    var queryChromatogramsMissing =
-                        _session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof(DbPeptideFileAnalysis) +
-                                            " F WHERE F.ChromatogramSet IS NULL");
-                    var queryForeignLock = _session.CreateQuery("SELECT COUNT(L.Id) FROM " + typeof (DbLock) + " L WHERE L.InstanceIdBytes <> :instanceIdBytes")
+                    var queryForeignLock = _session.CreateQuery("SELECT L.Id FROM " + typeof (DbLock) + " L WHERE L.InstanceIdBytes <> :instanceIdBytes")
                         .SetParameter("instanceIdBytes", workspace.InstanceId.ToByteArray());
-
-                    ResultsPresent = Convert.ToInt32(queryResultsPresent.UniqueResult());
-                    ResultsMissing = Convert.ToInt32(queryResultsMissing.UniqueResult());
-                    ChromatogramsPresent = Convert.ToInt32(queryChromatogramsPresent.UniqueResult());
-                    ChromatogramsMissing = Convert.ToInt32(queryChromatogramsMissing.UniqueResult());
-                    ForeignLockCount = Convert.ToInt32(queryForeignLock.UniqueResult());
+                    ForeignLockIds = new HashSet<long>(queryForeignLock.List<long>());
                     CheckDisposed();
                     _waitForResultsStep.BeginInvoke(new Action(_waitForResultsStep.UpdateStepStatus));
                 }
@@ -234,7 +280,12 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
             public override void Dispose()
             {
-                _session.Dispose();
+                var session = _session;
+                _session = null;
+                if (session != null)
+                {
+                    session.Dispose();
+                }
                 base.Dispose();
             }
 
@@ -243,27 +294,21 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 get; private set;
             }
 
-            public int ChromatogramsPresent { get; private set; }
-            public int ChromatogramsMissing { get; private set; }
-            public int TotalChromatograms { get { return ChromatogramsPresent + ChromatogramsMissing; } }
-            public int ResultsPresent { get; private set; }
-            public int ResultsMissing { get; private set; }
-            public int TotalResults { get { return ResultsPresent + ResultsMissing; } }
-            public int ForeignLockCount { get; private set; }
+            public HashSet<long> ForeignLockIds { get; private set; }
             public bool IsStale()
             {
                 return !IsRunning && !IsWorkspace(_waitForResultsStep.Workspace)
-                       || _waitForResultsStep.Workspace != null && _lastChangeId != _waitForResultsStep.Workspace.Reconciler.LastChangeId
-                       || ForeignLockCount > 0;
+                       || _waitForResultsStep.Workspace != null && _lastChangeId != _waitForResultsStep.Workspace.Data.LastChangeLogId
+                       || ForeignLockIds.Count > 0;
             }
         }
 
-        private void timer_Tick(object sender, EventArgs e)
+        private void TimerOnTick(object sender, EventArgs e)
         {
             UpdateStepStatus();
         }
 
-        private void btnCancelTasks_Click(object sender, EventArgs e)
+        private void BtnCancelTasksOnClick(object sender, EventArgs e)
         {
             IList<long> idsToDelete;
             using (var session = Workspace.OpenSession())

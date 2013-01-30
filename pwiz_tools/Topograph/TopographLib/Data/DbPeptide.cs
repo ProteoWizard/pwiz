@@ -17,19 +17,14 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using NHibernate;
+using NHibernate.Criterion;
 
 namespace pwiz.Topograph.Data
 {
     public class DbPeptide : DbAnnotatedEntity<DbPeptide>
     {
-        public DbPeptide()
-        {
-            SearchResults = new List<DbPeptideSearchResult>();
-        }
-        public virtual DbWorkspace Workspace { get; set; }
         public virtual String Sequence
         {
             get; set;
@@ -47,11 +42,17 @@ namespace pwiz.Topograph.Data
         {
             get; set;
         }
-        public virtual ICollection<DbPeptideSearchResult> SearchResults { get; set; }
-        public virtual int SearchResultCount { get; set; }
         public override string ToString()
         {
             return FullSequence;
+        }
+
+        public virtual ILookup<long, double> PsmTimesByDataFileId(ISession session)
+        {
+            return session.CreateCriteria<DbPeptideSpectrumMatch>()
+                .Add(Restrictions.Eq("Peptide", this))
+                .List<DbPeptideSpectrumMatch>()
+                .ToLookup(psm=>psm.MsDataFile.Id.Value, psm=>psm.RetentionTime);
         }
     }
 }

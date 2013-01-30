@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             System.Windows.Forms.ColumnHeader colHdrName;
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -120,7 +120,7 @@
             this.btnCancel.Location = new System.Drawing.Point(817, 382);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 1;
+            this.btnCancel.TabIndex = 4;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -131,7 +131,7 @@
             this.btnOK.Location = new System.Drawing.Point(736, 382);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 2;
+            this.btnOK.TabIndex = 3;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
@@ -149,7 +149,7 @@
             this.tbxViewName.Location = new System.Drawing.Point(82, 6);
             this.tbxViewName.Name = "tbxViewName";
             this.tbxViewName.Size = new System.Drawing.Size(214, 20);
-            this.tbxViewName.TabIndex = 4;
+            this.tbxViewName.TabIndex = 0;
             // 
             // btnAdvanced
             // 
@@ -158,10 +158,10 @@
             this.btnAdvanced.Location = new System.Drawing.Point(510, 6);
             this.btnAdvanced.Name = "btnAdvanced";
             this.btnAdvanced.Size = new System.Drawing.Size(106, 23);
-            this.btnAdvanced.TabIndex = 5;
+            this.btnAdvanced.TabIndex = 1;
             this.btnAdvanced.Text = "<< Hide &Advanced";
             this.btnAdvanced.UseVisualStyleBackColor = true;
-            this.btnAdvanced.Click += new System.EventHandler(this.btnAdvanced_Click);
+            this.btnAdvanced.Click += new System.EventHandler(this.BtnAdvancedOnClick);
             // 
             // tabPageFilter
             // 
@@ -204,8 +204,8 @@
             this.availableFieldsTreeFilter.ShowAdvancedFields = false;
             this.availableFieldsTreeFilter.Size = new System.Drawing.Size(314, 307);
             this.availableFieldsTreeFilter.TabIndex = 0;
-            this.availableFieldsTreeFilter.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTreeFilter_AfterSelect);
-            this.availableFieldsTreeFilter.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.availableFieldsTreeFilter_NodeMouseDoubleClick);
+            this.availableFieldsTreeFilter.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.AvailableFieldsTreeFilterOnAfterSelect);
+            this.availableFieldsTreeFilter.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.AvailableFieldsTreeFilterOnNodeMouseDoubleClick);
             // 
             // panel1
             // 
@@ -226,54 +226,54 @@
             this.btnAddFilter.TabIndex = 0;
             this.btnAddFilter.Text = "Add >>";
             this.btnAddFilter.UseVisualStyleBackColor = true;
-            this.btnAddFilter.Click += new System.EventHandler(this.btnAddFilter_Click);
+            this.btnAddFilter.Click += new System.EventHandler(this.BtnAddFilterOnClick);
             // 
             // dataGridViewFilter
             // 
             this.dataGridViewFilter.AllowUserToAddRows = false;
             this.dataGridViewFilter.AllowUserToDeleteRows = false;
             this.dataGridViewFilter.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewFilter.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewFilter.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
             this.dataGridViewFilter.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewFilter.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colFilterColumn,
             this.colFilterOperation,
             this.colFilterOperand});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewFilter.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewFilter.DefaultCellStyle = dataGridViewCellStyle8;
             this.dataGridViewFilter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewFilter.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewFilter.Name = "dataGridViewFilter";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewFilter.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewFilter.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
             this.dataGridViewFilter.RowHeadersVisible = false;
             this.dataGridViewFilter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridViewFilter.Size = new System.Drawing.Size(507, 307);
-            this.dataGridViewFilter.TabIndex = 2;
-            this.dataGridViewFilter.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewFilter_CellDoubleClick);
-            this.dataGridViewFilter.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewFilter_CellEndEdit);
-            this.dataGridViewFilter.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewFilter_CellEnter);
-            this.dataGridViewFilter.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewFilter_CurrentCellDirtyStateChanged);
-            this.dataGridViewFilter.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewFilter_EditingControlShowing);
+            this.dataGridViewFilter.Size = new System.Drawing.Size(483, 307);
+            this.dataGridViewFilter.TabIndex = 0;
+            this.dataGridViewFilter.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellDoubleClick);
+            this.dataGridViewFilter.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellEndEdit);
+            this.dataGridViewFilter.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellEnter);
+            this.dataGridViewFilter.CurrentCellDirtyStateChanged += new System.EventHandler(this.DataGridViewFilterOnCurrentCellDirtyStateChanged);
+            this.dataGridViewFilter.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.DataGridViewFilterOnEditingControlShowing);
             // 
             // colFilterColumn
             // 
@@ -299,9 +299,9 @@
             this.toolStripFilter.Dock = System.Windows.Forms.DockStyle.Right;
             this.toolStripFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnDeleteFilter});
-            this.toolStripFilter.Location = new System.Drawing.Point(475, 0);
+            this.toolStripFilter.Location = new System.Drawing.Point(483, 0);
             this.toolStripFilter.Name = "toolStripFilter";
-            this.toolStripFilter.Size = new System.Drawing.Size(32, 307);
+            this.toolStripFilter.Size = new System.Drawing.Size(24, 307);
             this.toolStripFilter.TabIndex = 1;
             this.toolStripFilter.Text = "toolStrip1";
             // 
@@ -313,7 +313,7 @@
             this.btnDeleteFilter.Name = "btnDeleteFilter";
             this.btnDeleteFilter.Size = new System.Drawing.Size(21, 20);
             this.btnDeleteFilter.Text = "Delete";
-            this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
+            this.btnDeleteFilter.Click += new System.EventHandler(this.BtnDeleteFilterOnClick);
             // 
             // tabPageColumns
             // 
@@ -364,9 +364,9 @@
             // 
             // availableFieldsTreeColumns
             // 
-            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.availableFieldsTreeColumns.CheckBoxes = true;
             this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.IdentifierPath[0];
             this.availableFieldsTreeColumns.HideSelection = false;
@@ -376,8 +376,8 @@
             this.availableFieldsTreeColumns.ShowAdvancedFields = false;
             this.availableFieldsTreeColumns.Size = new System.Drawing.Size(303, 301);
             this.availableFieldsTreeColumns.TabIndex = 0;
-            this.availableFieldsTreeColumns.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTreeColumns_AfterCheck);
-            this.availableFieldsTreeColumns.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.availableFieldsTreeColumns_NodeMouseDoubleClick);
+            this.availableFieldsTreeColumns.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.AvailableFieldsTreeColumnsOnAfterCheck);
+            this.availableFieldsTreeColumns.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.AvailableFieldsTreeColumnsOnNodeMouseDoubleClick);
             // 
             // listViewColumns
             // 
@@ -389,13 +389,13 @@
             this.listViewColumns.HideSelection = false;
             this.listViewColumns.Location = new System.Drawing.Point(0, 0);
             this.listViewColumns.Name = "listViewColumns";
-            this.listViewColumns.Size = new System.Drawing.Size(264, 307);
-            this.listViewColumns.TabIndex = 2;
+            this.listViewColumns.Size = new System.Drawing.Size(272, 307);
+            this.listViewColumns.TabIndex = 0;
             this.listViewColumns.UseCompatibleStateImageBehavior = false;
             this.listViewColumns.View = System.Windows.Forms.View.Details;
-            this.listViewColumns.ItemActivate += new System.EventHandler(this.listViewColumns_ItemActivate);
-            this.listViewColumns.SelectedIndexChanged += new System.EventHandler(this.listViewColumns_SelectedIndexChanged);
-            this.listViewColumns.SizeChanged += new System.EventHandler(this.listViewColumns_SizeChanged);
+            this.listViewColumns.ItemActivate += new System.EventHandler(this.ListViewColumnsOnItemActivate);
+            this.listViewColumns.SelectedIndexChanged += new System.EventHandler(this.ListViewColumnsOnSelectedIndexChanged);
+            this.listViewColumns.SizeChanged += new System.EventHandler(this.ListViewColumnsOnSizeChanged);
             // 
             // toolStripColumns
             // 
@@ -405,9 +405,9 @@
             this.btnUp,
             this.btnDown});
             this.toolStripColumns.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStripColumns.Location = new System.Drawing.Point(264, 0);
+            this.toolStripColumns.Location = new System.Drawing.Point(272, 0);
             this.toolStripColumns.Name = "toolStripColumns";
-            this.toolStripColumns.Size = new System.Drawing.Size(32, 307);
+            this.toolStripColumns.Size = new System.Drawing.Size(24, 307);
             this.toolStripColumns.TabIndex = 1;
             this.toolStripColumns.Text = "toolStrip1";
             // 
@@ -417,9 +417,9 @@
             this.btnRemove.Image = global::pwiz.Common.Properties.Resources.Delete;
             this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(29, 20);
+            this.btnRemove.Size = new System.Drawing.Size(21, 20);
             this.btnRemove.Text = "Remove";
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            this.btnRemove.Click += new System.EventHandler(this.BtnRemoveOnClick);
             // 
             // btnUp
             // 
@@ -427,9 +427,9 @@
             this.btnUp.Image = global::pwiz.Common.Properties.Resources.up_pro32;
             this.btnUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnUp.Name = "btnUp";
-            this.btnUp.Size = new System.Drawing.Size(29, 20);
+            this.btnUp.Size = new System.Drawing.Size(21, 20);
             this.btnUp.Text = "Up";
-            this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
+            this.btnUp.Click += new System.EventHandler(this.BtnUpOnClick);
             // 
             // btnDown
             // 
@@ -437,47 +437,47 @@
             this.btnDown.Image = global::pwiz.Common.Properties.Resources.down_pro32;
             this.btnDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDown.Name = "btnDown";
-            this.btnDown.Size = new System.Drawing.Size(29, 20);
+            this.btnDown.Size = new System.Drawing.Size(21, 20);
             this.btnDown.Text = "Down";
-            this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
+            this.btnDown.Click += new System.EventHandler(this.BtnDownOnClick);
             // 
             // groupBoxSublist
             // 
-            this.groupBoxSublist.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxSublist.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxSublist.Controls.Add(this.comboSublist);
             this.groupBoxSublist.Location = new System.Drawing.Point(2, 261);
             this.groupBoxSublist.Name = "groupBoxSublist";
             this.groupBoxSublist.Size = new System.Drawing.Size(267, 46);
-            this.groupBoxSublist.TabIndex = 5;
+            this.groupBoxSublist.TabIndex = 1;
             this.groupBoxSublist.TabStop = false;
             this.groupBoxSublist.Text = "Sublist";
             // 
             // comboSublist
             // 
-            this.comboSublist.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboSublist.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.comboSublist.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSublist.FormattingEnabled = true;
             this.comboSublist.Location = new System.Drawing.Point(6, 19);
             this.comboSublist.Name = "comboSublist";
             this.comboSublist.Size = new System.Drawing.Size(255, 21);
             this.comboSublist.TabIndex = 0;
-            this.comboSublist.SelectedIndexChanged += new System.EventHandler(this.comboSublist_SelectedIndexChanged);
+            this.comboSublist.SelectedIndexChanged += new System.EventHandler(this.ComboSublistOnSelectedIndexChanged);
             // 
             // groupBoxProperties
             // 
-            this.groupBoxProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxProperties.Controls.Add(this.groupBoxSortOrder);
             this.groupBoxProperties.Controls.Add(this.groupBoxCaption);
             this.groupBoxProperties.Controls.Add(this.cbxHidden);
             this.groupBoxProperties.Location = new System.Drawing.Point(2, 0);
             this.groupBoxProperties.Name = "groupBoxProperties";
             this.groupBoxProperties.Size = new System.Drawing.Size(267, 249);
-            this.groupBoxProperties.TabIndex = 6;
+            this.groupBoxProperties.TabIndex = 0;
             this.groupBoxProperties.TabStop = false;
             this.groupBoxProperties.Text = "Column Properties";
             // 
@@ -487,14 +487,14 @@
             this.groupBoxSortOrder.Location = new System.Drawing.Point(11, 125);
             this.groupBoxSortOrder.Name = "groupBoxSortOrder";
             this.groupBoxSortOrder.Size = new System.Drawing.Size(250, 51);
-            this.groupBoxSortOrder.TabIndex = 6;
+            this.groupBoxSortOrder.TabIndex = 1;
             this.groupBoxSortOrder.TabStop = false;
             this.groupBoxSortOrder.Text = "Sort Order";
             // 
             // comboSortOrder
             // 
-            this.comboSortOrder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboSortOrder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.comboSortOrder.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSortOrder.FormattingEnabled = true;
             this.comboSortOrder.Items.AddRange(new object[] {
@@ -505,29 +505,29 @@
             this.comboSortOrder.Name = "comboSortOrder";
             this.comboSortOrder.Size = new System.Drawing.Size(232, 21);
             this.comboSortOrder.TabIndex = 0;
-            this.comboSortOrder.SelectedIndexChanged += new System.EventHandler(this.comboSortOrder_SelectedIndexChanged);
+            this.comboSortOrder.SelectedIndexChanged += new System.EventHandler(this.ComboSortOrderOnSelectedIndexChanged);
             // 
             // groupBoxCaption
             // 
-            this.groupBoxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxCaption.Controls.Add(this.tbxCaption);
             this.groupBoxCaption.Location = new System.Drawing.Point(11, 18);
             this.groupBoxCaption.Name = "groupBoxCaption";
             this.groupBoxCaption.Size = new System.Drawing.Size(250, 46);
-            this.groupBoxCaption.TabIndex = 2;
+            this.groupBoxCaption.TabIndex = 0;
             this.groupBoxCaption.TabStop = false;
             this.groupBoxCaption.Text = "Caption";
             // 
             // tbxCaption
             // 
-            this.tbxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxCaption.Location = new System.Drawing.Point(6, 19);
             this.tbxCaption.Name = "tbxCaption";
             this.tbxCaption.Size = new System.Drawing.Size(232, 20);
-            this.tbxCaption.TabIndex = 1;
-            this.tbxCaption.Leave += new System.EventHandler(this.tbxCaption_Leave);
+            this.tbxCaption.TabIndex = 0;
+            this.tbxCaption.Leave += new System.EventHandler(this.TbxCaptionOnLeave);
             // 
             // cbxHidden
             // 
@@ -535,16 +535,16 @@
             this.cbxHidden.Location = new System.Drawing.Point(6, 194);
             this.cbxHidden.Name = "cbxHidden";
             this.cbxHidden.Size = new System.Drawing.Size(152, 17);
-            this.cbxHidden.TabIndex = 5;
+            this.cbxHidden.TabIndex = 2;
             this.cbxHidden.Text = "Do not display in Grid View";
             this.cbxHidden.UseVisualStyleBackColor = true;
-            this.cbxHidden.CheckedChanged += new System.EventHandler(this.cbxHidden_CheckedChanged);
+            this.cbxHidden.CheckedChanged += new System.EventHandler(this.CbxHiddenOnCheckedChanged);
             // 
             // tabControl1
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabPageColumns);
             this.tabControl1.Controls.Add(this.tabPageFilter);
             this.tabControl1.Controls.Add(this.tabPageSort);
@@ -552,7 +552,7 @@
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(895, 339);
-            this.tabControl1.TabIndex = 0;
+            this.tabControl1.TabIndex = 2;
             // 
             // tabPageSort
             // 
@@ -592,7 +592,7 @@
             this.clbAvailableSortColumns.Name = "clbAvailableSortColumns";
             this.clbAvailableSortColumns.Size = new System.Drawing.Size(458, 307);
             this.clbAvailableSortColumns.TabIndex = 0;
-            this.clbAvailableSortColumns.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbAvailableSortColumns_ItemCheck);
+            this.clbAvailableSortColumns.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.ClbAvailableSortColumnsOnItemCheck);
             // 
             // dataGridViewSort
             // 
@@ -608,10 +608,10 @@
             this.dataGridViewSort.Name = "dataGridViewSort";
             this.dataGridViewSort.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewSort.Size = new System.Drawing.Size(395, 307);
-            this.dataGridViewSort.TabIndex = 3;
-            this.dataGridViewSort.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewSort_CellEndEdit);
-            this.dataGridViewSort.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewSort_CurrentCellDirtyStateChanged);
-            this.dataGridViewSort.SelectionChanged += new System.EventHandler(this.dataGridViewSort_SelectionChanged);
+            this.dataGridViewSort.TabIndex = 0;
+            this.dataGridViewSort.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewSortOnCellEndEdit);
+            this.dataGridViewSort.CurrentCellDirtyStateChanged += new System.EventHandler(this.DataGridViewSortOnCurrentCellDirtyStateChanged);
+            this.dataGridViewSort.SelectionChanged += new System.EventHandler(this.DataGridViewSortOnSelectionChanged);
             // 
             // colSortColumn
             // 
@@ -635,7 +635,7 @@
             this.toolStripSort.Location = new System.Drawing.Point(395, 0);
             this.toolStripSort.Name = "toolStripSort";
             this.toolStripSort.Size = new System.Drawing.Size(24, 307);
-            this.toolStripSort.TabIndex = 2;
+            this.toolStripSort.TabIndex = 1;
             this.toolStripSort.Text = "toolStrip1";
             // 
             // btnSortRemove
@@ -646,7 +646,7 @@
             this.btnSortRemove.Name = "btnSortRemove";
             this.btnSortRemove.Size = new System.Drawing.Size(21, 20);
             this.btnSortRemove.Text = "Remove";
-            this.btnSortRemove.Click += new System.EventHandler(this.btnSortRemove_Click);
+            this.btnSortRemove.Click += new System.EventHandler(this.BtnSortRemoveOnClick);
             // 
             // btnSortMoveUp
             // 
@@ -656,7 +656,7 @@
             this.btnSortMoveUp.Name = "btnSortMoveUp";
             this.btnSortMoveUp.Size = new System.Drawing.Size(21, 20);
             this.btnSortMoveUp.Text = "toolStripButton1";
-            this.btnSortMoveUp.Click += new System.EventHandler(this.btnSortMoveUp_Click);
+            this.btnSortMoveUp.Click += new System.EventHandler(this.BtnSortMoveUpOnClick);
             // 
             // btnSortMoveDown
             // 
@@ -666,7 +666,7 @@
             this.btnSortMoveDown.Name = "btnSortMoveDown";
             this.btnSortMoveDown.Size = new System.Drawing.Size(21, 20);
             this.btnSortMoveDown.Text = "Move Down";
-            this.btnSortMoveDown.Click += new System.EventHandler(this.btnSortMoveDown_Click);
+            this.btnSortMoveDown.Click += new System.EventHandler(this.BtnSortMoveDownOnClick);
             // 
             // CustomizeViewForm
             // 

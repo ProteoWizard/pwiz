@@ -91,7 +91,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnCloseWorkspace.TabIndex = 1;
             this.btnCloseWorkspace.Text = "Close Workspace";
             this.btnCloseWorkspace.UseVisualStyleBackColor = true;
-            this.btnCloseWorkspace.Click += new System.EventHandler(this.btnCloseWorkspace_Click);
+            this.btnCloseWorkspace.Click += new System.EventHandler(this.BtnCloseWorkspaceOnClick);
             // 
             // btnOpenDifferentWorkspace
             // 
@@ -102,7 +102,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnOpenDifferentWorkspace.TabIndex = 2;
             this.btnOpenDifferentWorkspace.Text = "Open a different workspace...";
             this.btnOpenDifferentWorkspace.UseVisualStyleBackColor = true;
-            this.btnOpenDifferentWorkspace.Click += new System.EventHandler(this.btnOpenDifferentWorkspace_Click);
+            this.btnOpenDifferentWorkspace.Click += new System.EventHandler(this.BtnOpenDifferentWorkspaceOnClick);
             // 
             // label1
             // 
@@ -139,7 +139,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.listBoxRecentWorkspaces.Name = "listBoxRecentWorkspaces";
             this.listBoxRecentWorkspaces.Size = new System.Drawing.Size(1150, 52);
             this.listBoxRecentWorkspaces.TabIndex = 1;
-            this.listBoxRecentWorkspaces.SelectedIndexChanged += new System.EventHandler(this.listBoxRecentWorkspaces_SelectedIndexChanged);
+            this.listBoxRecentWorkspaces.SelectedIndexChanged += new System.EventHandler(this.ListBoxRecentWorkspacesOnSelectedIndexChanged);
             // 
             // label2
             // 
@@ -161,7 +161,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnCreateLocalWorkspace.TabIndex = 2;
             this.btnCreateLocalWorkspace.Text = "Create Workspace File...";
             this.btnCreateLocalWorkspace.UseVisualStyleBackColor = true;
-            this.btnCreateLocalWorkspace.Click += new System.EventHandler(this.btnCreateLocalWorkspace_Click);
+            this.btnCreateLocalWorkspace.Click += new System.EventHandler(this.BtnCreateLocalWorkspaceOnClick);
             // 
             // label3
             // 
@@ -183,7 +183,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnCreateOnlineWorkspace.TabIndex = 4;
             this.btnCreateOnlineWorkspace.Text = "Create Online Workspace...";
             this.btnCreateOnlineWorkspace.UseVisualStyleBackColor = true;
-            this.btnCreateOnlineWorkspace.Click += new System.EventHandler(this.btnCreateOnlineWorkspace_Click);
+            this.btnCreateOnlineWorkspace.Click += new System.EventHandler(this.BtnCreateOnlineWorkspaceOnClick);
             // 
             // panelNoWorkspace
             // 
@@ -222,7 +222,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnConnectToOnlineWorkspace.TabIndex = 4;
             this.btnConnectToOnlineWorkspace.Text = "Connect to an existing Online Workspace...";
             this.btnConnectToOnlineWorkspace.UseVisualStyleBackColor = true;
-            this.btnConnectToOnlineWorkspace.Click += new System.EventHandler(this.btnConnectToOnlineWorkspace_Click);
+            this.btnConnectToOnlineWorkspace.Click += new System.EventHandler(this.BtnConnectToOnlineWorkspaceOnClick);
             // 
             // label4
             // 
@@ -287,7 +287,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnBrowse.TabIndex = 2;
             this.btnBrowse.Text = "Browse...";
             this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            this.btnBrowse.Click += new System.EventHandler(this.BtnBrowseOnClick);
             // 
             // CreateWorkspaceStep
             // 

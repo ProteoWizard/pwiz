@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using NHibernate;
 
@@ -10,28 +7,23 @@ namespace pwiz.Topograph.Util
     public class LongOperationBroker
     {
         private bool _isCancellable = true;
-        private bool _wasCancelled;
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly EventWaitHandle _event = new EventWaitHandle(false, EventResetMode.ManualReset);
         private Exception _exception;
         private String _statusMessage;
 
-        public LongOperationBroker(ILongOperationJob job, ILongOperationUi ui)
+        public LongOperationBroker(Action<LongOperationBroker> job, ILongOperationUi ui)
         {
             UiDelayMilliseconds = 2000;
             Job = job;
             Ui = ui;
         }
 
-        public LongOperationBroker(Action<LongOperationBroker> job, ILongOperationUi ui) : this(new DefaultJob(job), ui)
+        public LongOperationBroker(Action<LongOperationBroker> job, ILongOperationUi ui, ISession session) : this(new DefaultJob(job, session).Run, ui)
         {
         }
 
-        public LongOperationBroker(Action<LongOperationBroker> job, ILongOperationUi ui, ISession session) : this(new DefaultJob(job, session), ui)
-        {
-            
-        }
-
-        public ILongOperationJob Job { get; private set; }
+        public Action<LongOperationBroker> Job { get; private set; }
         public ILongOperationUi Ui { get; private set; }
         public bool LaunchJob()
         {
@@ -53,7 +45,7 @@ namespace pwiz.Topograph.Util
         {
             try
             {
-                Job.Run(this);
+                Job(this);
             }
             catch (Exception e)
             {
@@ -100,13 +92,12 @@ namespace pwiz.Topograph.Util
 
         public bool WasCancelled
         {
-            get
-            {
-                lock(this)
-                {
-                    return _wasCancelled;
-                }
-            }
+            get { return CancellationToken.IsCancellationRequested; }
+        }
+
+        public CancellationToken CancellationToken
+        {
+            get { return _cancellationTokenSource.Token; }
         }
 
         public bool IsComplete
@@ -129,7 +120,7 @@ namespace pwiz.Topograph.Util
         {
             lock (this)
             {
-                if (_wasCancelled)
+                if (WasCancelled)
                 {
                     throw new JobCancelledException();
                 }
@@ -141,7 +132,7 @@ namespace pwiz.Topograph.Util
         {
             lock(this)
             {
-                if (IsComplete || _wasCancelled)
+                if (IsComplete || WasCancelled)
                 {
                     return true;
                 }
@@ -149,7 +140,8 @@ namespace pwiz.Topograph.Util
                 {
                     return false;
                 }
-                return _wasCancelled = Job.Cancel();
+                _cancellationTokenSource.Cancel();
+                return true;
             }
         }
 
@@ -157,7 +149,7 @@ namespace pwiz.Topograph.Util
         {
             lock(this)
             {
-                if (_wasCancelled)
+                if (WasCancelled)
                 {
                     throw new JobCancelledException();
                 }
@@ -171,14 +163,10 @@ namespace pwiz.Topograph.Util
             _event.WaitOne();
         }
 
-        private class DefaultJob : ILongOperationJob
+        private class DefaultJob
         {
-            private Action<LongOperationBroker> _job;
-            private ISession _session;
-            public DefaultJob(Action<LongOperationBroker> job) : this(job, null)
-            {
-            }
-
+            private readonly Action<LongOperationBroker> _job;
+            private readonly ISession _session;
             public DefaultJob(Action<LongOperationBroker> job, ISession session)
             {
                 _job = job;
@@ -187,16 +175,16 @@ namespace pwiz.Topograph.Util
 
             public void Run(LongOperationBroker longOperationBroker)
             {
+                longOperationBroker.CancellationToken.Register(Cancel);
                 _job.Invoke(longOperationBroker);
             }
 
-            public bool Cancel()
+            private void Cancel()
             {
                 if (_session != null)
                 {
                     _session.CancelQuery();
                 }
-                return true;
             }
         }
     }
@@ -216,6 +204,5 @@ namespace pwiz.Topograph.Util
     public interface ILongOperationJob
     {
         void Run(LongOperationBroker longOperationBroker);
-        bool Cancel();
     }
 }

@@ -1,37 +1,61 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using pwiz.Crawdad;
-using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
+using pwiz.Topograph.Model.Data;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
 {
     public class TracerChromatograms
     {
-        private const int MAX_PEAKS = 20;
-        public TracerChromatograms(Chromatograms chromatograms, bool smoothed)
+        private const int MaxPeaks = 20;
+        public TracerChromatograms(PeptideFileAnalysis peptideFileAnalysis, ChromatogramSetData chromatogramSet, bool smoothed)
         {
             Smoothed = smoothed;
-            Chromatograms = chromatograms;
-            PeptideFileAnalysis = chromatograms.PeptideFileAnalysis;
+            ChromatogramSet = chromatogramSet;
+            PeptideFileAnalysis = peptideFileAnalysis;
             var pointDict = new Dictionary<TracerFormula, IList<double>>();
             var chromatogramsDict = new Dictionary<MzKey, IList<double>>();
-            foreach (var chromatogram in chromatograms.GetFilteredChromatograms())
+            var turnoverCalculator = PeptideAnalysis.GetTurnoverCalculator();
+            double massAccuracy = PeptideAnalysis.GetMassAccuracy();
+            foreach (var chromatogramEntry in ChromatogramSet.Chromatograms)
             {
-                var intensities = chromatogram.GetIntensities();
+                if (PeptideAnalysis.ExcludedMasses.Contains(chromatogramEntry.Key.MassIndex))
+                {
+                    continue;
+                }
+                var chromatogram = chromatogramEntry.Value;
+                var mzRange = turnoverCalculator.GetMzs(chromatogramEntry.Key.Charge)[chromatogramEntry.Key.MassIndex];
+                var intensities = chromatogram.ChromatogramPoints.Select(point=>point.GetIntensity(mzRange, massAccuracy)).ToArray();
                 if (smoothed)
                 {
-                    intensities = ChromatogramData.SavitzkyGolaySmooth(intensities);
+                    intensities = SavitzkyGolaySmooth(intensities);
                 }
-                chromatogramsDict.Add(chromatogram.MzKey, intensities);
+                chromatogramsDict.Add(chromatogramEntry.Key, intensities);
             }
             int massCount = PeptideFileAnalysis.PeptideAnalysis.GetMassCount();
-            var times = chromatograms.Times.ToArray();
+            var times = chromatogramSet.Times.ToArray();
             var scores = new List<double>();
-            var turnoverCalculator = PeptideAnalysis.GetTurnoverCalculator();
             var tracerFormulas = turnoverCalculator.ListTracerFormulas();
             var theoreticalIntensities = turnoverCalculator.GetTheoreticalIntensities(tracerFormulas);
             for (int i = 0; i < times.Length; i++)
@@ -76,15 +100,15 @@ namespace pwiz.Topograph.Model
                 points.Add(entry.Key, entry.Value);
                 CrawPeakFinderWrapper peakFinder = new CrawPeakFinderWrapper();
                 peakFinder.SetChromatogram(times, entry.Value);
-                peaks.Add(entry.Key, peakFinder.CalcPeaks(MAX_PEAKS));
+                peaks.Add(entry.Key, peakFinder.CalcPeaks(MaxPeaks));
             }
             Points = points;
             Scores = scores;
-            Times = chromatograms.Times;
+            Times = chromatogramSet.Times;
             RawPeaks = peaks;
         }
 
-        public Chromatograms Chromatograms { get; private set; }
+        public ChromatogramSetData ChromatogramSet { get; private set; }
 
         public IList<TracerFormula> ListTracerFormulas()
         {
@@ -184,8 +208,8 @@ namespace pwiz.Topograph.Model
         public double GetArea(TracerFormula tracerFormula, double startTime, double endTime)
         {
             double result = 0;
-            int startIndex = Chromatograms.IndexFromTime(startTime);
-            int endIndex = Chromatograms.IndexFromTime(endTime);
+            int startIndex = ChromatogramSet.IndexFromTime(startTime);
+            int endIndex = ChromatogramSet.IndexFromTime(endTime);
             for (int i = startIndex; i<= endIndex; i++)
             {
                 int binStartIndex = Math.Max(i - 1, 0);
@@ -199,5 +223,32 @@ namespace pwiz.Topograph.Model
             }
             return result;
         }
+        public static double[] SavitzkyGolaySmooth(IList<double> intRaw)
+        {
+            if (intRaw.Count < 9)
+            {
+                return intRaw.ToArray();
+            }
+            double[] intSmooth = new double[intRaw.Count];
+            for (int i = 0; i < 4; i++)
+            {
+                intSmooth[i] = intRaw[i];
+            }
+            for (int i = 4; i < intSmooth.Length - 4; i++)
+            {
+                double sum = 59 * intRaw[i] +
+                    54 * (intRaw[i - 1] + intRaw[i + 1]) +
+                    39 * (intRaw[i - 2] + intRaw[i + 2]) +
+                    14 * (intRaw[i - 3] + intRaw[i + 3]) -
+                    21 * (intRaw[i - 4] + intRaw[i + 4]);
+                intSmooth[i] = (float)(sum / 231);
+            }
+            for (int i = intSmooth.Length - 4; i < intSmooth.Length; i++)
+            {
+                intSmooth[i] = intRaw[i];
+            }
+            return intSmooth;
+        }
+
     }
 }

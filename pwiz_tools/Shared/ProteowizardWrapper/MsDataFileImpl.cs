@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
@@ -28,7 +29,7 @@ namespace pwiz.ProteowizardWrapper
 {
     public class MsDataFileImpl : IDisposable
     {
-        private static readonly ReaderList FULL_READER_LIST = ReaderList.FullReaderList;
+        private static readonly ReaderList FullReaderList = ReaderList.FullReaderList;
 
         // Cached disposable objects
         private MSData _msDataFile;
@@ -60,13 +61,13 @@ namespace pwiz.ProteowizardWrapper
 
         public static string[] ReadIds(string path)
         {
-            return FULL_READER_LIST.readIds(path);
+            return FullReaderList.readIds(path);
         }
 
         public static MsDataFileImpl[] ReadAll(string path)
         {
             var listAll = new MSDataList();
-            FULL_READER_LIST.read(path, listAll);
+            FullReaderList.read(path, listAll);
             var listAllImpl = new List<MsDataFileImpl>();
             foreach (var msData in listAll)
                 listAllImpl.Add(new MsDataFileImpl(msData));
@@ -93,7 +94,7 @@ namespace pwiz.ProteowizardWrapper
             FilePath = path;
             _msDataFile = new MSData();
             _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra};
-            FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
+            FullReaderList.read(path, _msDataFile, sampleIndex, _config);
             _isMsx = CheckMsx();
         }
 
@@ -441,7 +442,7 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public double[] GetScanTimes()
         {
-            if (ChromatogramList == null)
+            if (ChromatogramList == null || ChromatogramList.empty())
             {
                 return null;
             }
@@ -489,12 +490,13 @@ namespace pwiz.ProteowizardWrapper
         /// Some data files do not have any chromatograms in them, so GetScanTimes
         /// cannot be used.
         /// </summary>
-        public void GetScanTimesAndMsLevels(out double[] times, out byte[] msLevels)
+        public void GetScanTimesAndMsLevels(CancellationToken cancellationToken, out double[] times, out byte[] msLevels)
         {
             times = new double[SpectrumCount];
             msLevels = new byte[times.Length];
             for (int i = 0; i < times.Length; i++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 using (var spectrum = SpectrumList.spectrum(i))
                 {
                     times[i] = spectrum.scanList.scans[0].cvParam(CVID.MS_scan_start_time).timeInSeconds();

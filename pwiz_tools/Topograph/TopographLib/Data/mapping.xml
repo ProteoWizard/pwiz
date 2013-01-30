@@ -22,15 +22,13 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <property name="ValidationStatus" not-null="true"/>
-    <property name="Note" />
 
-    <many-to-one name="Workspace" not-null="true" unique-key="WorkspaceName"/>
     <property name="Name" not-null="true" unique-key="WorkspaceName"/>
     <property name="Label" />
     <property name="Cohort" />
     <property name="TimePoint" />
     <property name="Sample" />
+    <property name="PrecursorPool" />
     <property name="TimesBytes" length="1000000" type="BinaryBlob" />
     <property name="MsLevels" length="1000000" type="BinaryBlob"/>
     <property name="TotalIonCurrentBytes" length="1000000" type="BinaryBlob" />
@@ -43,36 +41,10 @@
     <version name="Version" generated="never"/>
     <property name="ValidationStatus" not-null="true"/>
     <property name="Note" />
-
-    <many-to-one name="Workspace" not-null="true" unique-key="PeptideSequence"/>
-    <bag name="SearchResults">
-      <key column="Peptide" />
-      <one-to-many class="DbPeptideSearchResult"/>
-    </bag>
-    <property name="SearchResultCount" />
     <property name="Sequence" not-null="true" unique-key="PeptideSequence"/>
     <property name="FullSequence" />
     <property name="Protein" length="10000"/>
     <property name="ProteinDescription" length="100000" />
-  </class>
-  <class name="DbPeptideSearchResult">
-    <id name="Id">
-      <column name="Id" not-null="true"/>
-      <generator class="native" />
-    </id>
-    <version name="Version" generated="never"/>
-    <property name="ValidationStatus" not-null="true"/>
-    <property name="Note" />
-
-    <many-to-one name="MsDataFile" unique-key="MsDataFilePeptide" not-null="true"/>
-    <many-to-one name="Peptide" fetch="join" unique-key="MsDataFilePeptide" not-null="true" index="Peptide"/>
-    <property name="MinCharge" />
-    <property name="MaxCharge" />
-    <property name="FirstDetectedScan" />
-    <property name="LastDetectedScan" />
-    <property name="FirstTracerCount" />
-    <property name="LastTracerCount" />
-    <property name="PsmCount" />
   </class>
   <class name="DbTracerDef">
     <id name="Id">
@@ -97,25 +69,6 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    
-    <bag name="MsDataFiles" inverse="true">
-      <key column="Workspace" />
-      <one-to-many class="DbMsDataFile"/>
-    </bag>
-    <property name="MsDataFileCount" />
-    
-    <bag name="Peptides" inverse="true" lazy="true">
-      <key column="Workspace"/>
-      <one-to-many class="DbPeptide"/>
-    </bag>
-    <property name="PeptideCount" />
-    
-    <bag name="PeptideAnalyses" inverse="true">
-      <key column="Workspace" />
-      <one-to-many class="DbPeptideAnalysis"/>
-    </bag>
-    <property name="PeptideAnalysisCount" />
-    
     <bag name="Modifications" inverse="true">
       <key column="Workspace"/>
       <one-to-many class="DbModification"/>
@@ -161,20 +114,20 @@
       <column name="Id" not-null="true"/>
       <generator class="native" />
     </id>
-    <version name="Version" generated="never"/>
 
-    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysisName" not-null="true"/>
-    <property name="Name" unique-key="PeptideFileAnalysisName" not-null="true"/>
+    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysisPeakIndex" not-null="true"/>
+    <property name="PeakIndex" unique-key="PeptideFileAnalysisPeakIndex" not-null="true"/>
+    <!--<property name="Name" unique-key="PeptideFileAnalysisName" not-null="true"/>-->
     <property name="StartTime" />
     <property name="EndTime" />
-    <property name="TotalArea" />
-    <property name="Background" />
+    <property name="Area" />
+<!--    <property name="Background" />
     <property name="RatioToBase" />
     <property name="RatioToBaseError" />
     <property name="Correlation" />
     <property name="Intercept" />
     <property name="TracerPercent" />
-    <property name="RelativeAmount" />
+    <property name="RelativeAmount" />-->
   </class>
   <class name="DbPeptideFileAnalysis" lazy="true">
     <id name="Id">
@@ -197,8 +150,6 @@
     <property name="OverrideExcludedMasses" />
     <property name="ChromatogramStartTime" />
     <property name="ChromatogramEndTime" />
-    <property name="FirstDetectedScan" />
-    <property name="LastDetectedScan" />
     <property name="BasePeakName" />
     <property name="TracerPercent" />
     <property name="DeconvolutionScore" />
@@ -218,7 +169,7 @@
     <version name="Version" generated="never"/>
     <property name="TimesBytes" length="1000000" type="BinaryBlob" />
     <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>
-    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysis" not-null="true"/>
+    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysis" not-null="true" />
     <bag name="Chromatograms" cascade="delete" inverse="true">
       <key column="ChromatogramSet" />
       <one-to-many class="DbChromatogram" />
@@ -233,8 +184,6 @@
     <version name="Version" generated="never"/>
     <property name="ValidationStatus" not-null="true"/>
     <property name="Note" />
-
-    <many-to-one name="Workspace" not-null="true" unique-key="PeptideAnalysis" />
     <many-to-one name="Peptide" not-null="true" unique-key="PeptideAnalysis" />
     <property name="MinCharge" />
     
@@ -265,11 +214,24 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-
     <property name="InstanceIdBytes" length="16" />
     <property name="LockType" />
     <property name="WorkspaceId" unique="true"/>
     <property name="PeptideAnalysisId" unique="true"/>
     <property name="MsDataFileId" unique="true"/>
+  </class>
+  <class name="DbPeptideSpectrumMatch">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+
+    <many-to-one name="MsDataFile" not-null="true" index="MsDataFile"/>
+    <many-to-one name="Peptide" not-null="true" index="Peptide"/>
+    <property name="RetentionTime" />
+    <property name="PrecursorMz" />
+    <property name="PrecursorCharge" />
+    <property name="ModifiedSequence" />
   </class>
 </hibernate-mapping>

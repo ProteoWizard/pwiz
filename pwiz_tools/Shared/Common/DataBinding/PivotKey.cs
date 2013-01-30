@@ -28,8 +28,8 @@ namespace pwiz.Common.DataBinding
     {
         private readonly KeyValuePair<IdentifierPath, object>[] _valuePairs;
 
-        public static readonly PivotKey ROOT = 
-            new PivotKey(null, IdentifierPath.ROOT, new KeyValuePair<IdentifierPath, object>[0]);
+        public static readonly PivotKey Root = 
+            new PivotKey(null, IdentifierPath.Root, new KeyValuePair<IdentifierPath, object>[0]);
         public static PivotKey OfValues(PivotKey parent, IdentifierPath collectionId, IEnumerable<KeyValuePair<IdentifierPath, object>> valuePairs)
         {
             var valuePairList = new List<KeyValuePair<IdentifierPath, object>>();
@@ -49,7 +49,7 @@ namespace pwiz.Common.DataBinding
             {
                 return parent;
             }
-            valuePairList.Sort(COMPARER);
+            valuePairList.Sort(Comparer);
             return new PivotKey(parent, collectionId, valuePairList.ToArray());
         }
         private PivotKey(PivotKey parent, IdentifierPath collectionId, KeyValuePair<IdentifierPath, object>[] valuePairs)
@@ -69,7 +69,7 @@ namespace pwiz.Common.DataBinding
                 return CompareValuePairs(x, y);
             }
         }
-        private static readonly ValuePairComparer COMPARER = new ValuePairComparer();
+        private static readonly ValuePairComparer Comparer = new ValuePairComparer();
         public PivotKey(IdentifierPath collectionId)
         {
             CollectionId = collectionId;
@@ -77,7 +77,7 @@ namespace pwiz.Common.DataBinding
         }
         public PivotKey(IdentifierPath identifierPath, object value)
         {
-            CollectionId = IdentifierPath.ROOT;
+            CollectionId = IdentifierPath.Root;
             _valuePairs = new[]{new KeyValuePair<IdentifierPath, object>(identifierPath, value)};
         }
         public PivotKey RemoveSublist(IdentifierPath sublistId)
@@ -101,7 +101,7 @@ namespace pwiz.Common.DataBinding
             if (identifierPath.StartsWith(CollectionId))
             {
                 int index = Array.BinarySearch(
-                    _valuePairs, new KeyValuePair<IdentifierPath, object>(identifierPath, null), COMPARER);
+                    _valuePairs, new KeyValuePair<IdentifierPath, object>(identifierPath, null), Comparer);
                 if (index < 0)
                 {
                     return null;

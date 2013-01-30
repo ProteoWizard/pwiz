@@ -17,10 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using zlib;
 
 namespace pwiz.Topograph.Data
@@ -40,6 +37,10 @@ namespace pwiz.Topograph.Data
 
         public static byte[] ToBytes<T>(T[] array)
         {
+            if (null == array)
+            {
+                return null;
+            }
             byte[] result = new byte[Buffer.ByteLength(array)];
             Buffer.BlockCopy(array, 0, result, 0, result.Length);
             return result;

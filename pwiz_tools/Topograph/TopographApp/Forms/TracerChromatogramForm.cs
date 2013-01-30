@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.ui.Properties;
@@ -39,7 +38,7 @@ namespace pwiz.Topograph.ui.Forms
             : base(peptideFileAnalysis)
         {
             InitializeComponent();
-            splitContainer1.Panel2.Controls.Add(msGraphControl);
+            splitContainer1.Panel2.Controls.Add(MsGraphControl);
             colAreaPct.DefaultCellStyle.Format = "0.##%";
             colSlopePct.DefaultCellStyle.Format = "0.##%";
             colTracerPercent.DefaultCellStyle.Format = "0.##%";
@@ -49,10 +48,10 @@ namespace pwiz.Topograph.ui.Forms
             cbxShowScore.Checked = Settings.Default.ShowChromatogramScore;
         }
 
-        protected override bool msGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        protected override bool MsGraphControlOnMouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             _peakResize = null;
-            if (base.msGraphControl_MouseDownEvent(sender, e))
+            if (base.MsGraphControlOnMouseDownEvent(sender, e))
             {
                 return true;
             }
@@ -64,33 +63,31 @@ namespace pwiz.Topograph.ui.Forms
             return false;
         }
 
-        protected override bool msGraphControl_DoubleClickEvent(ZedGraphControl sender, MouseEventArgs e)
+        protected override bool MsGraphControlOnDoubleClickEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-//            var peakResize = PeakResizeFromPoint(e.Location);
-//            if (peakResize != null)
-//            {
-//                var peaks = PeptideFileAnalysis.Peaks;
-//                var newPeaks = peaks.AutoSizePeak(peakResize.Peak.TracerFormula,
-//                                                  peakResize.IsStartIndex
-//                                                      ? peakResize.Peak.StartTime
-//                                                      : peakResize.Peak.EndTime);
-//                if (newPeaks != null)
-//                {
-//                    PeptideFileAnalysis.SetDistributions(newPeaks);
-//                }
-//                return true;
-//            }
-            return base.msGraphControl_DoubleClickEvent(sender, e);
+            var peakResize = PeakResizeFromPoint(e.Location);
+            if (peakResize != null)
+            {
+                var peaks = PeptideFileAnalysis.CalculatedPeaks;
+
+                var newPeaks = peaks.AutoSizePeak(peakResize.TracerFormula, (AdjustPeaksMode)comboAdjustPeaks.SelectedIndex);
+                if (newPeaks != null)
+                {
+                    PeptideFileAnalysis.SetCalculatedPeaks(newPeaks);
+                }
+                return true;
+            }
+            return base.MsGraphControlOnDoubleClickEvent(sender, e);
         }
 
-        protected override bool msGraphControl_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
+        protected override bool MsGraphControlOnMouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (_peakResize != null)
             {
                 var point = new PointF(e.X - _peakResize.MousePt.X + _peakResize.CoordPt.X, e.Y);
                 double x, y;
-                msGraphControl.GraphPane.ReverseTransform(point, out x, out y);
-                var peaks = PeptideFileAnalysis.Peaks;
+                MsGraphControl.GraphPane.ReverseTransform(point, out x, out y);
+                var peaks = PeptideFileAnalysis.CalculatedPeaks;
                 double newStart, newEnd;
                 switch (_peakResize.LineSegment)
                 {
@@ -103,19 +100,18 @@ namespace pwiz.Topograph.ui.Forms
                         newEnd = x;
                         break;
                     default:
-                    case LineSegment.Middle:
                         newStart = x;
                         newEnd = x - _peakResize.Peak.StartTime + _peakResize.Peak.EndTime;
                         break;
                 }
-                var newPeaks = peaks.ChangeTime(_peakResize.Peak.TracerFormula, Math.Min(newStart, newEnd), Math.Max(newStart, newEnd));
+                var newPeaks = peaks.ChangeTime(_peakResize.TracerFormula, Math.Min(newStart, newEnd), Math.Max(newStart, newEnd));
                 _peakResize = null;
-                PeptideFileAnalysis.SetDistributions(newPeaks);
+                PeptideFileAnalysis.SetCalculatedPeaks(newPeaks);
             }
-            return base.msGraphControl_MouseUpEvent(sender, e);
+            return base.MsGraphControlOnMouseUpEvent(sender, e);
         }
 
-        protected override bool msGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        protected override bool MsGraphControlOnMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (_peakResize != null)
             {
@@ -127,7 +123,7 @@ namespace pwiz.Topograph.ui.Forms
                                          };
                 var screenPt = new PointF(e.Location.X - _peakResize.MousePt.X + _peakResize.CoordPt.X, _peakResize.CoordPt.Y);
                 double x, y;
-                msGraphControl.GraphPane.ReverseTransform(screenPt, out x, out y);
+                MsGraphControl.GraphPane.ReverseTransform(screenPt, out x, out y);
                 switch (_peakResize.LineSegment)
                 {
                     case LineSegment.Start:
@@ -166,11 +162,11 @@ namespace pwiz.Topograph.ui.Forms
                     lineItemPt.Key.AddPoint(new PointPair(lineItemPt.Value.X, peakDisplay.Height));
                     lineItemPt.Key.AddPoint(new PointPair(lineItemPt.Value.X, 0));
                 }
-                msGraphControl.Invalidate();
+                MsGraphControl.Invalidate();
                 sender.Cursor = _peakResize.GetCursor();
                 return true;
             }
-            if (base.msGraphControl_MouseMoveEvent(sender, e))
+            if (base.MsGraphControlOnMouseMoveEvent(sender, e))
             {
                 return true;
             }
@@ -189,7 +185,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return null;
             }
-            var peaks = PeptideFileAnalysis.Peaks;
+            var peaks = PeptideFileAnalysis.CalculatedPeaks;
             foreach (var entry in _peakLines)
             {
                 var peak = peaks.GetPeak(entry.Key);
@@ -200,14 +196,15 @@ namespace pwiz.Topograph.ui.Forms
                 var peakDisplay = entry.Value;
                 var peakResize = new PeakResize
                 {
-                    Peak = peak,
+                    TracerFormula = entry.Key,
+                    Peak = peak.Value,
                     MousePt = pointF,
                     PeakDisplay = peakDisplay,
                 };
                 if (peakDisplay.HorizontalLine != null)
                 {
-                    PointF startPt = msGraphControl.GraphPane.GeneralTransform(peakDisplay.HorizontalLine.Points[0], CoordType.AxisXYScale);
-                    PointF endPt = msGraphControl.GraphPane.GeneralTransform(peakDisplay.HorizontalLine.Points[1],
+                    PointF startPt = MsGraphControl.GraphPane.GeneralTransform(peakDisplay.HorizontalLine.Points[0], CoordType.AxisXYScale);
+                    PointF endPt = MsGraphControl.GraphPane.GeneralTransform(peakDisplay.HorizontalLine.Points[1],
                                                                              CoordType.AxisXYScale);
                     if (Math.Abs(pointF.Y - startPt.Y) <= 2)
                     {
@@ -238,9 +235,9 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         continue;
                     }
-                    PointF firstPt = msGraphControl.GraphPane.GeneralTransform(lineItemSeg.Key.Points[0],
+                    PointF firstPt = MsGraphControl.GraphPane.GeneralTransform(lineItemSeg.Key.Points[0],
                                                                                CoordType.AxisXYScale);
-                    PointF lastPt = msGraphControl.GraphPane.GeneralTransform(lineItemSeg.Key.Points[1],
+                    PointF lastPt = MsGraphControl.GraphPane.GeneralTransform(lineItemSeg.Key.Points[1],
                                                                               CoordType.AxisXYScale);
                     if (Math.Abs(pointF.X - firstPt.X) <= 1
                         && pointF.Y >= Math.Min(firstPt.Y, lastPt.Y)
@@ -277,10 +274,10 @@ namespace pwiz.Topograph.ui.Forms
         {
             cbxAutoFindPeak.Checked = PeptideFileAnalysis.AutoFindPeak;
             cbxSmooth.Checked = Smooth;
-            msGraphControl.GraphPane.GraphObjList.Clear();
-            msGraphControl.GraphPane.CurveList.Clear();
+            MsGraphControl.GraphPane.GraphObjList.Clear();
+            MsGraphControl.GraphPane.CurveList.Clear();
             _peakLines = null;
-            if (!PeptideFileAnalysis.IsMzKeySetComplete(PeptideFileAnalysis.Chromatograms.GetKeys()))
+            if (!PeptideFileAnalysis.IsMzKeySetComplete(PeptideFileAnalysis.ChromatogramSet.Chromatograms.Keys))
             {
                 return;
             }
@@ -297,7 +294,7 @@ namespace pwiz.Topograph.ui.Forms
                 mappedTimes =
                     overlayTracerChromatograms.Times.Select(t => retentionTimeAlignment.GetTargetTime(t)).ToArray();
             }
-            var peaks = PeptideFileAnalysis.Peaks;
+            var peaks = PeptideFileAnalysis.CalculatedPeaks;
             var entries = tracerChromatograms.Points.ToArray();
             if (dataGridView1.Rows.Count != entries.Length)
             {
@@ -306,28 +303,27 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (cbxShowScore.Checked)
             {
-                var scoreLine = msGraphControl.GraphPane.AddCurve("Score", tracerChromatograms.Times.ToArray(), tracerChromatograms.Scores.ToArray(), Color.Black, SymbolType.None);
+                var scoreLine = MsGraphControl.GraphPane.AddCurve("Score", tracerChromatograms.Times.ToArray(), tracerChromatograms.Scores.ToArray(), Color.Black, SymbolType.None);
                 scoreLine.IsY2Axis = true;
                 scoreLine.Line.Width = Settings.Default.ChromatogramLineWidth;
             }
-            double totalAmount = peaks.ListChildren().Sum(p => p.Area);
-            double totalSlope = peaks.ListChildren().Sum(p => p.RatioToBase);
+            double totalAmount = peaks.Peaks.Values.Sum(p => p.Area);
+            double totalSlope = peaks.Peaks.Values.Sum(p => p.RatioToBase);
             for (int iCandidate = 0; iCandidate < entries.Count(); iCandidate++)
             {
                 var entry = entries[iCandidate];
                 var label = entry.Key.ToDisplayString();
                 var row = dataGridView1.Rows[iCandidate];
                 row.Cells[colFormula.Index].Value = label;
-                double amount;
                 var peak = peaks.GetPeak(entry.Key);
                 if (peak != null)
                 {
-                    row.Cells[colAreaPct.Index].Value = peak.Area/totalAmount;
-                    row.Cells[colSlopePct.Index].Value = peak.RatioToBase/totalSlope;
-                    row.Cells[colStartTime.Index].Value = peak.StartTime;
-                    row.Cells[colEndTime.Index].Value = peak.EndTime;
-                    row.Cells[colArea.Index].Value = peak.Area;
-                    row.Cells[colCorr.Index].Value = peak.Correlation;
+                    row.Cells[colAreaPct.Index].Value = peak.Value.Area/totalAmount;
+                    row.Cells[colSlopePct.Index].Value = peak.Value.RatioToBase/totalSlope;
+                    row.Cells[colStartTime.Index].Value = peak.Value.StartTime;
+                    row.Cells[colEndTime.Index].Value = peak.Value.EndTime;
+                    row.Cells[colArea.Index].Value = peak.Value.Area;
+                    row.Cells[colCorr.Index].Value = peak.Value.Correlation;
                 }
                 else
                 {
@@ -348,7 +344,7 @@ namespace pwiz.Topograph.ui.Forms
                         Color = GetColor(iCandidate, entries.Length),
                         Points = new PointPairList(tracerChromatograms.Times, entry.Value),
                     };
-                    var chromCurveItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
+                    var chromCurveItem = (LineItem) MsGraphControl.AddGraphItem(MsGraphControl.GraphPane, curve);
                     chromCurveItem.Label.IsVisible = false;
                     chromCurveItem.Line.Width = Settings.Default.ChromatogramLineWidth;
                     if (overlayTracerChromatograms != null)
@@ -361,7 +357,7 @@ namespace pwiz.Topograph.ui.Forms
                                                        new PointPairList(mappedTimes,
                                                                          overlayTracerChromatograms.Points[entry.Key])
                                                };
-                        var overlayCurveItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, overlayCurve);
+                        var overlayCurveItem = (LineItem) MsGraphControl.AddGraphItem(MsGraphControl.GraphPane, overlayCurve);
                         overlayCurveItem.Label.IsVisible = false;
                         overlayCurveItem.Line.Style = DashStyle.Dash;
                         overlayCurveItem.Line.Width = Settings.Default.ChromatogramLineWidth;
@@ -370,25 +366,25 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         var peakDisplay = new PeakDisplay();
                         var color = GetColor(iCandidate, entries.Length);
-                        var max = MaxInRange(entry.Value, tracerChromatograms.Chromatograms.IndexFromTime(peak.StartTime), 
-                            tracerChromatograms.Chromatograms.IndexFromTime(peak.EndTime));
-                        peakDisplay.Start = peak.StartTime;
-                        peakDisplay.End = peak.EndTime;
+                        var max = MaxInRange(entry.Value, tracerChromatograms.ChromatogramSet.IndexFromTime(peak.Value.StartTime), 
+                            tracerChromatograms.ChromatogramSet.IndexFromTime(peak.Value.EndTime));
+                        peakDisplay.Start = peak.Value.StartTime;
+                        peakDisplay.End = peak.Value.EndTime;
                         peakDisplay.Height = max;
                         if (PeaksAsHorizontalLines)
                         {
-                            peakDisplay.HorizontalLine = msGraphControl.GraphPane.AddCurve(null, new[] { peakDisplay.Start, peakDisplay.End }, new[] { max, max }, color);
+                            peakDisplay.HorizontalLine = MsGraphControl.GraphPane.AddCurve(null, new[] { peakDisplay.Start, peakDisplay.End }, new[] { max, max }, color);
                             peakDisplay.HorizontalLine.Line.Width = Settings.Default.ChromatogramLineWidth;
                         }
                         if (PeaksAsVerticalLines)
                         {
-                            peakDisplay.StartVerticalLine = msGraphControl.GraphPane.AddCurve(
+                            peakDisplay.StartVerticalLine = MsGraphControl.GraphPane.AddCurve(
                                 null,
                                 new[] { peakDisplay.Start, peakDisplay.Start },
                                 new[] {max, 0}, color, SymbolType.None
                             );
                             peakDisplay.StartVerticalLine.Line.Width = Settings.Default.ChromatogramLineWidth;
-                            peakDisplay.EndVerticalLine = msGraphControl.GraphPane.AddCurve(
+                            peakDisplay.EndVerticalLine = MsGraphControl.GraphPane.AddCurve(
                                 null,
                                 new[] { peakDisplay.End, peakDisplay.End }, 
                                 new[] { max, 0 }, color, SymbolType.None
@@ -422,36 +418,27 @@ namespace pwiz.Topograph.ui.Forms
 //                                  };
 //                msGraphControl.GraphPane.GraphObjList.Add(textObj);
 //            }
-            if (PeptideFileAnalysis.FirstDetectedScan.HasValue)
+            if (PeptideFileAnalysis.PsmTimes != null)
             {
-                double time = TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan.Value);
-                msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, 0, time,
-                                                                      1)
-                                                              {
-                                                                  Line = {Style = DashStyle.DashDot},
-                                                                  ZOrder = ZOrder.E_BehindCurves,
-                                                                  IsClippedToChartRect = true,
-                                                                  Location = {CoordinateFrame = CoordType.XScaleYChartFraction}
-
-                });
-                if (PeptideFileAnalysis.LastDetectedScan != PeptideFileAnalysis.FirstDetectedScan)
+                foreach (var time in PeptideFileAnalysis.PsmTimes.SelectMany(entry=>entry.Value))
                 {
-                    time = TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan.Value);
-                    msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, 0, time, 1)
-                                                                  {
-                                                                      Line = {Style = DashStyle.DashDot},
-                                                                      ZOrder = ZOrder.E_BehindCurves,
-                                                                      IsClippedToChartRect = true,
-                                                                      Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
-                                                                  });
+                    MsGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.LightBlue, time, 0, time,
+                                                                          1)
+                    {
+                        Line = { Style = DashStyle.DashDot },
+                        ZOrder = ZOrder.E_BehindCurves,
+                        IsClippedToChartRect = true,
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
+                    });
+                    
                 }
             }
             else
             {
-                var otherPeaks = PeptideAnalysis.FileAnalyses.ListChildren().Select(f => f.Peaks);
+                var otherPeaks = PeptideAnalysis.FileAnalyses.Select(f => f.CalculatedPeaks);
                 double firstDetectedTime, lastDetectedTime;
-                PeptideFileAnalysis.Peaks.GetFirstLastTimes(otherPeaks, out firstDetectedTime, out lastDetectedTime);
-                msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, firstDetectedTime, 0,
+                PeptideFileAnalysis.CalculatedPeaks.GetFirstLastTimes(otherPeaks, out firstDetectedTime, out lastDetectedTime);
+                MsGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, firstDetectedTime, 0,
                                                                       firstDetectedTime, 1)
                                                               {
                                                                   Line = {Style = DashStyle.DashDotDot},
@@ -459,7 +446,7 @@ namespace pwiz.Topograph.ui.Forms
                                                                   IsClippedToChartRect = true,
                                                                   Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
                                                               });
-                msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, lastDetectedTime, 0,
+                MsGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, lastDetectedTime, 0,
                                                                       lastDetectedTime, 1)
                     {
                         Line = { Style = DashStyle.DashDotDot },
@@ -469,8 +456,8 @@ namespace pwiz.Topograph.ui.Forms
                     });
             }
 
-            msGraphControl.AxisChange();
-            msGraphControl.Invalidate();
+            MsGraphControl.AxisChange();
+            MsGraphControl.Invalidate();
             _peakLines = peakLines;
             tbxTracerPercentByAreas.Text = peaks.CalcTracerPercentByAreas().ToString();
             tbxTracerPercentBySlopes.Text = peaks.CalcTracerPercentByRatios().ToString();
@@ -616,7 +603,8 @@ namespace pwiz.Topograph.ui.Forms
         }
         class PeakResize
         {
-            public DbPeak Peak;
+            public TracerFormula TracerFormula;
+            public CalculatedPeaks.Peak Peak;
             public LineSegment LineSegment;
             public PeakDisplay PeakDisplay;
             public PointF MousePt;
@@ -651,15 +639,15 @@ namespace pwiz.Topograph.ui.Forms
         private void btnAdjustPeaks_Click(object sender, EventArgs e)
         {
             var adjustPeaksMode = (AdjustPeaksMode) comboAdjustPeaks.SelectedIndex;
-            var peaks = PeptideFileAnalysis.Peaks;
-            foreach (var tracerFormula in peaks.ListChildren().Select(p=>p.TracerFormula))
+            var peaks = PeptideFileAnalysis.CalculatedPeaks;
+            foreach (var tracerFormula in peaks.Peaks.Keys)
             {
                 if (!IsDisplayed(tracerFormula))
                 {
                     continue;
                 }
                 var newPeaks = peaks.AutoSizePeak(tracerFormula, adjustPeaksMode);
-                if (newPeaks.GetChildCount() == peaks.GetChildCount())
+                if (newPeaks.Peaks.Count == peaks.Peaks.Count)
                 {
                     peaks = newPeaks;
                 }
@@ -668,7 +656,7 @@ namespace pwiz.Topograph.ui.Forms
                     newPeaks = newPeaks;
                 }
             }
-            PeptideFileAnalysis.SetDistributions(peaks);
+            PeptideFileAnalysis.SetCalculatedPeaks(peaks);
         }
 
         private void cbxPeaksAsVerticalLines_CheckedChanged(object sender, EventArgs e)

@@ -19,10 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
@@ -45,20 +43,20 @@ namespace pwiz.Topograph.ui.Forms
         public AnalyzePeptidesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            _timer.Tick += _timer_Tick;
+            _timer.Tick += TimerOnTick;
             if (workspace.GetTracerDefs().Count == 0)
             {
-                tbxMinTracers.Text = 0.ToString();
+                tbxMinTracers.Text = 0.ToString(CultureInfo.CurrentCulture);
             }
             else
             {
-                tbxMinTracers.Text = 1.ToString();
+                tbxMinTracers.Text = 1.ToString(CultureInfo.CurrentCulture);
             }
-            tbxChromTimeAroundMs2.Text = workspace.GetChromTimeAroundMs2Id().ToString();
-            tbxExtraChromTimeWithoutMs2Id.Text = workspace.GetExtraChromTimeWithoutMs2Id().ToString();
+            tbxChromTimeAroundMs2.Text = workspace.GetChromTimeAroundMs2Id().ToString(CultureInfo.CurrentCulture);
+            tbxExtraChromTimeWithoutMs2Id.Text = workspace.GetExtraChromTimeWithoutMs2Id().ToString(CultureInfo.CurrentCulture);
         }
 
-        void _timer_Tick(object sender, EventArgs e)
+        void TimerOnTick(object sender, EventArgs e)
         {
             lock (this)
             {
@@ -67,13 +65,10 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnCreateAnalyses_Click(object sender, EventArgs e)
+        private void BtnCreateAnalysesOnClick(object sender, EventArgs e)
         {
-            using (Workspace.GetWriteLock())
-            {
-                Workspace.SetChromTimeAroundMs2Id(double.Parse(tbxChromTimeAroundMs2.Text));
-                Workspace.SetExtraChromTimeWithoutMs2Id(double.Parse(tbxExtraChromTimeWithoutMs2Id.Text));
-            }
+            Workspace.SetChromTimeAroundMs2Id(double.Parse(tbxChromTimeAroundMs2.Text));
+            Workspace.SetExtraChromTimeWithoutMs2Id(double.Parse(tbxExtraChromTimeWithoutMs2Id.Text));
             btnCreateAnalyses.Enabled = false;
             tbxStatus.Visible = true;
             _statusMessage = "Creating Analyses";
@@ -113,25 +108,8 @@ namespace pwiz.Topograph.ui.Forms
 
         private void DoCreateAnalyses(char[] excludeAas, int minTracerCount)
         {
-            double chromTimeAroundMs2Id = Workspace.GetChromTimeAroundMs2Id();
-            double extraChromTimeWithoutMs2Id = Workspace.GetExtraChromTimeWithoutMs2Id();
             var peptides = new List<DbPeptide>();
             bool includeMissingMs2 = cbxIncludeMissingMS2.Checked;
-            if (includeMissingMs2)
-            {
-                _statusMessage = "Initializing Data Files";
-                foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
-                {
-                    if (_cancelled)
-                    {
-                        return;
-                    }
-                    if (!msDataFile.HasTimes())
-                    {
-                        Invoke(new Func<MsDataFile, bool>(TurnoverForm.Instance.EnsureMsDataFile), msDataFile);
-                    }
-                }
-            }
             _statusMessage = "Listing peptides";
             using (var session = Workspace.OpenWriteSession())
             {
@@ -144,8 +122,6 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         break;
                     }
-                    double minStartTime = double.MaxValue;
-                    double maxEndTime = -double.MaxValue;
                     var peptide = peptides[i];
                     if (peptide.Sequence.IndexOfAny(excludeAas) >= 0)
                     {
@@ -161,21 +137,6 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         dbPeptideAnalysis = Peptide.CreateDbPeptideAnalysis(session, peptide);
                     }
-                    else
-                    {
-                        if (includeMissingMs2)
-                        {
-                            var query = session.CreateQuery("SELECT MIN(T.ChromatogramStartTime),MAX(T.ChromatogramEndTime) FROM " +
-                                typeof(DbPeptideFileAnalysis) + " T WHERE T.PeptideAnalysis = :peptideAnalysis AND T.FirstDetectedScan IS NOT NULL AND T.LastDetectedScan IS NOT NULL")
-                                .SetParameter("peptideAnalysis", dbPeptideAnalysis);
-                            var result = (object[])query.UniqueResult();
-                            if (result != null)
-                            {
-                                minStartTime = Convert.ToDouble(result[0]);
-                                maxEndTime = Convert.ToDouble(result[1]);
-                            }
-                        }
-                    }
                     var idList = new List<long>();
                     if (dbPeptideAnalysis.Id.HasValue)
                     {
@@ -184,40 +145,9 @@ namespace pwiz.Topograph.ui.Forms
                             .SetParameter("peptideAnalysisId", dbPeptideAnalysis.Id);
                         dataFileIdQuery.List(idList);
                     }
-                    var dataFileIds = new HashSet<long>(idList);
-                    var searchResults = peptide.SearchResults
-                        .Where(peptideSearchResult => !dataFileIds.Contains(peptideSearchResult.MsDataFile.Id.Value))
-                        .ToDictionary(peptideSearchResult => Workspace.MsDataFiles.GetChild(peptideSearchResult.MsDataFile.Id.Value));
-                    if (includeMissingMs2)
-                    {
-                        foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
-                        {
-                            if (searchResults.ContainsKey(msDataFile)
-                                || dataFileIds.Contains(msDataFile.Id.Value))
-                            {
-                                continue;
-                            }
-                            searchResults.Add(msDataFile, null);
-                        }
-                    }
-                    foreach (var entry in searchResults)
-                    {
-                        if (_cancelled)
-                        {
-                            return;
-                        }
-                        var msDataFile = entry.Key;
-                        if (!msDataFile.HasTimes())
-                        {
-                            var fileInited = (bool)Invoke(new Func<MsDataFile, bool>(
-                                                               TurnoverForm.Instance.EnsureMsDataFile), msDataFile);
-                            if (!fileInited)
-                            {
-                                continue;
-                            }
-                        }
-                    }
-                    if (searchResults.Count == 0)
+                    var existingDataFileIds = new HashSet<long>(idList);
+                    var psmTimesByDataFileId = peptide.PsmTimesByDataFileId(session);
+                    if (psmTimesByDataFileId.Count == 0)
                     {
                         continue;
                     }
@@ -234,39 +164,34 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     var sqlStatementBuilder = new SqlStatementBuilder(session.GetSessionImplementation().Factory.Dialect);
                     var insertStatements = new List<string>();
-                    var entries = searchResults.ToArray();
-                    Array.Sort(entries, (e1,e2)=>(e1.Value == null).CompareTo(e2.Value == null));
-                    // If no entries at all have a PeptideSearchResult, skip this peptide.
-                    if (entries.Length == 0 || (entries[0].Value == null && minStartTime > maxEndTime))
+                    IList<MsDataFile> dataFiles;
+                    if (includeMissingMs2)
                     {
-                        continue;
+                        dataFiles = Workspace.MsDataFiles
+                            .Where(msDataFile => !existingDataFileIds.Contains(msDataFile.Id))
+                            .ToArray();
                     }
-                    foreach (var entry in entries)
+                    else
                     {
-                        var msDataFile = entry.Key;
-                        if (!msDataFile.HasTimes())
+                        dataFiles = new List<MsDataFile>();
+                        foreach (var grouping in psmTimesByDataFileId)
                         {
-                            continue;
+                            MsDataFile dataFile;
+                            if (existingDataFileIds.Contains(grouping.Key) || !Workspace.MsDataFiles.TryGetValue(grouping.Key, out dataFile))
+                            {
+                                continue;
+                            }
+                            dataFiles.Add(dataFile);
                         }
-                        var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(
-                            session, msDataFile, dbPeptideAnalysis, entry.Value, false);
-                        if (entry.Value == null)
-                        {
-                            dbPeptideFileAnalysis.ChromatogramStartTime = minStartTime - extraChromTimeWithoutMs2Id;
-                            dbPeptideFileAnalysis.ChromatogramEndTime = maxEndTime + extraChromTimeWithoutMs2Id;
-                        }
-                        else
-                        {
-                            minStartTime = Math.Min(minStartTime, dbPeptideFileAnalysis.ChromatogramStartTime);
-                            maxEndTime = Math.Max(maxEndTime, dbPeptideFileAnalysis.ChromatogramEndTime);
-                        }
+                    }
+                    foreach (var msDataFile in dataFiles)
+                    {
+                        var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(session, msDataFile, dbPeptideAnalysis, psmTimesByDataFileId);
                         insertStatements.Add(sqlStatementBuilder.GetInsertStatement("DbPeptideFileAnalysis",
                             new Dictionary<string, object>
                                 {
                                     {"ChromatogramEndTime", dbPeptideFileAnalysis.ChromatogramEndTime},
                                     {"ChromatogramStartTime", dbPeptideFileAnalysis.ChromatogramStartTime},
-                                    {"FirstDetectedScan", dbPeptideFileAnalysis.FirstDetectedScan},
-                                    {"LastDetectedScan", dbPeptideFileAnalysis.LastDetectedScan},
                                     {"MsDataFile", msDataFile.Id},
                                     {"PeptideAnalysis", dbPeptideAnalysis.Id},
                                     {"AutoFindPeak", 1},
@@ -277,7 +202,7 @@ namespace pwiz.Topograph.ui.Forms
                                 }
                             ));
                         dbPeptideAnalysis.FileAnalysisCount++;
-                        dataFileIds.Add(msDataFile.Id.Value);
+                        existingDataFileIds.Add(msDataFile.Id);
                     }
                     sqlStatementBuilder.ExecuteStatements(session, insertStatements);
                     session.Update(dbPeptideAnalysis);
@@ -288,7 +213,6 @@ namespace pwiz.Topograph.ui.Forms
                     else
                     {
                         var dbWorkspace = Workspace.LoadDbWorkspace(session);
-                        dbWorkspace.PeptideAnalysisCount++;
                         session.Update(dbWorkspace);
                     }
                     session.Transaction.Commit();
@@ -296,7 +220,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void BtnCancelOnClick(object sender, EventArgs e)
         {
             Close();
         }

@@ -48,7 +48,7 @@ namespace pwiz.Topograph.Test.DataBinding
         [TestMethod]
         public void TestDictionary()
         {
-            var dict = new Dictionary<string, double>()
+            var dict = new Dictionary<string, double>
                            {
                                {"zero", 3},
                                {"one", 3.1},

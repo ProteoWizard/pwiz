@@ -73,17 +73,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\Antlr3.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="Bamboo.Prevalence, Version=1.4.4.4, Culture=neutral, PublicKeyToken=0edf2245780ab2d7">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\caches\Bamboo.Prevalence.dll</HintPath>
-    </Reference>
-    <Reference Include="Bamboo.Prevalence.Util, Version=1.4.4.4, Culture=neutral, PublicKeyToken=0edf2245780ab2d7">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\caches\Bamboo.Prevalence.Util.dll</HintPath>
-    </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.2.0.0, Culture=neutral, PublicKeyToken=83b2c390cd515404, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -105,10 +100,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\NHibernate.dll</HintPath>
     </Reference>
-    <Reference Include="NHibernate.Caches.Prevalence, Version=3.1.0.4000, Culture=neutral, PublicKeyToken=6876f2ea66c9f443, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\caches\NHibernate.Caches.Prevalence.dll</HintPath>
-    </Reference>
     <Reference Include="Npgsql, Version=2.0.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\npgsql\Npgsql.dll</HintPath>
@@ -126,6 +117,7 @@
       <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -143,52 +135,48 @@
     <Compile Include="Data\DatabaseDumper.cs" />
     <Compile Include="Data\DbChangeLog.cs" />
     <Compile Include="Data\DbChromatogramSet.cs" />
-    <Compile Include="Data\DbInstanceStatus.cs" />
+    <Compile Include="Data\DbLock.cs" />
     <Compile Include="Data\DbPeptideSpectrumMatch.cs" />
-    <Compile Include="Data\DbProtein.cs" />
-    <Compile Include="Data\DbProteinName.cs" />
-    <Compile Include="Data\DbProteinSet.cs" />
-    <Compile Include="Data\DbProteinSetMember.cs" />
     <Compile Include="Data\IntegrationNote.cs" />
     <Compile Include="Data\QueryExecuter.cs" />
+    <Compile Include="Data\Snapshot\IdPredicate.cs" />
     <Compile Include="Data\Snapshot\LoadPeptideAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\PeptideAnalysisSnapshot.cs" />
-    <Compile Include="Data\Snapshot\PeptideFileAnalysisSnapshot.cs" />
-    <Compile Include="Data\Snapshot\Snapshot.cs" />
     <Compile Include="Data\SqlStatementBuilder.cs" />
     <Compile Include="Data\WorkspaceUpgrader.cs" />
-    <Compile Include="Enrichment\BlindPeakFinder.cs" />
     <Compile Include="Enrichment\CrawPeakFinderWrapper.cs" />
     <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
     <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
+    <Compile Include="Model\AbstractSettings.cs" />
+    <Compile Include="Model\DataProperty.cs" />
+    <Compile Include="Model\Data\ChromatogramSetData.cs" />
+    <Compile Include="Model\Data\MsDataFileData.cs" />
+    <Compile Include="Model\Data\PeptideAnalysisData.cs" />
+    <Compile Include="Model\Data\PeptideData.cs" />
+    <Compile Include="Model\Data\PeptideFileAnalysisData.cs" />
+    <Compile Include="Model\Data\PsmKey.cs" />
+    <Compile Include="Model\Data\PsmTimes.cs" />
+    <Compile Include="Model\Data\TracerDefData.cs" />
+    <Compile Include="Model\Data\WorkspaceData.cs" />
+    <Compile Include="Model\EntityModel.cs" />
+    <Compile Include="Model\EntityModelList.cs" />
+    <Compile Include="Model\MsDataFiles.cs" />
+    <Compile Include="Model\PeptideFileAnalyses.cs" />
+    <Compile Include="Model\Peptides.cs" />
     <Compile Include="Model\RegressionWithOutliers.cs" />
-    <Compile Include="Model\Chromatograms.cs" />
     <Compile Include="Model\ConnectionSettings.cs" />
-    <Compile Include="Model\DbLock.cs" />
-    <Compile Include="Model\EntityModelCollection.cs" />
-    <Compile Include="Model\ModelProperty.cs" />
-    <Compile Include="Model\Modification.cs" />
     <Compile Include="Model\Modifications.cs" />
     <Compile Include="Model\MzRange.cs" />
-    <Compile Include="Model\PeakData.cs" />
-    <Compile Include="Model\Peaks.cs" />
-    <Compile Include="Model\AbstractSetting.cs" />
+    <Compile Include="Model\CalculatedPeaks.cs" />
     <Compile Include="Model\RetentionTimeAlignment.cs" />
-    <Compile Include="Model\SettingCollection.cs" />
-    <Compile Include="Model\SimpleChildCollection.cs" />
+    <Compile Include="Model\RetentionTimeAlignments.cs" />
     <Compile Include="Model\TpgLinkDef.cs" />
     <Compile Include="Model\TracerChromatograms.cs" />
-    <Compile Include="Model\TracerDefModel.cs" />
     <Compile Include="Model\TracerDefs.cs" />
-    <Compile Include="Model\WeakEntityModelCollection.cs" />
-    <Compile Include="Model\WorkspaceSetting.cs" />
     <Compile Include="Model\WorkspaceSettings.cs" />
-    <Compile Include="Model\WorkspaceVersion.cs" />
-    <Compile Include="MsData\BackgroundJob.cs" />
+    <Compile Include="Model\WorkspaceChangeArgs.cs" />
     <Compile Include="MsData\ChromatogramGenerator.cs" />
     <Compile Include="Data\ArrayConverter.cs" />
-    <Compile Include="Data\DbPeptideDistribution.cs" />
-    <Compile Include="Data\DbPeptideAmount.cs" />
     <Compile Include="Data\DbAnnotatedEntity.cs" />
     <Compile Include="Data\DbChromatogram.cs" />
     <Compile Include="Data\DbTracerDef.cs" />
@@ -198,52 +186,30 @@
     <Compile Include="Data\DbPeptide.cs" />
     <Compile Include="Data\DbPeptideFileAnalysis.cs" />
     <Compile Include="Data\DbPeptideAnalysis.cs" />
-    <Compile Include="Data\DbPeptideSearchResult.cs" />
     <Compile Include="Data\DbPeak.cs" />
     <Compile Include="Data\DbSetting.cs" />
     <Compile Include="Data\DbWorkspace.cs" />
     <Compile Include="Data\SessionFactoryFactory.cs" />
     <Compile Include="Data\ValidationStatus.cs" />
-    <Compile Include="Model\AnnotatedEntityModel.cs" />
-    <Compile Include="Model\ChromatogramData.cs" />
-    <Compile Include="Model\ChildCollection.cs" />
-    <Compile Include="Model\EntitiesChangedEventArgs.cs" />
-    <Compile Include="Model\EntityModel.cs" />
-    <Compile Include="Model\ExcludedMzs.cs" />
+    <Compile Include="Model\ExcludedMasses.cs" />
     <Compile Include="Model\MsDataFile.cs" />
-    <Compile Include="Model\MsDataFileData.cs" />
-    <Compile Include="Model\MsDataFiles.cs" />
     <Compile Include="Model\MzKey.cs" />
     <Compile Include="Model\Peptide.cs" />
     <Compile Include="Model\PeptideAnalyses.cs" />
-    <Compile Include="Model\PeptideFileAnalyses.cs" />
     <Compile Include="Model\PeptideFileAnalysis.cs" />
     <Compile Include="Model\PeptideAnalysis.cs" />
-    <Compile Include="Model\Peptides.cs" />
-    <Compile Include="Model\PeptideSearchResults.cs" />
     <Compile Include="Model\Workspace.cs" />
     <Compile Include="Enrichment\TracerDef.cs" />
     <Compile Include="Enrichment\ChargedPeptide.cs" />
-    <Compile Include="Enrichment\PeakFinder.cs" />
     <Compile Include="Enrichment\TurnoverCalculator.cs" />
     <Compile Include="MsData\HalfLifeSettings.cs" />
     <Compile Include="MsData\MsDataFiles.cs" />
     <Compile Include="MsData\HalfLifeCalculator.cs" />
-    <Compile Include="MsData\Reconciler.cs" />
-    <Compile Include="MsData\Task.cs" />
+    <Compile Include="MsData\DatabasePoller.cs" />
+    <Compile Include="MsData\TaskItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Query\BuiltInQuery.cs" />
-    <Compile Include="Query\ColumnInfo.cs" />
-    <Compile Include="Query\Identifier.cs" />
-    <Compile Include="Query\ParsedQuery.cs" />
-    <Compile Include="Query\QueryColumn.cs" />
-    <Compile Include="Query\QueryDef.cs" />
-    <Compile Include="Query\Schema.cs" />
     <Compile Include="MsData\ResultCalculator.cs" />
-    <Compile Include="Search\DTASelect.cs" />
     <Compile Include="Search\SearchResults.cs" />
-    <Compile Include="Util\AutoLock.cs" />
-    <Compile Include="Util\ConvertHelper.cs" />
     <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\Error.cs" />
     <Compile Include="Util\ErrorHandler.cs" />
@@ -251,11 +217,8 @@
     <Compile Include="Util\Lists.cs" />
     <Compile Include="Util\LongOperation.cs" />
     <Compile Include="Util\NameComparer.cs" />
-    <Compile Include="Util\PeakDivider.cs" />
-    <Compile Include="Util\PendingIdQueue.cs" />
     <Compile Include="Util\ProgressMonitorImpl.cs" />
     <Compile Include="Util\Statistics.cs" />
-    <Compile Include="Util\WeakDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
@@ -284,12 +247,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Data\mapping.xml" />
+    <EmbeddedResource Include="Data\mapping.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataBinding\" />
+    <Folder Include="Dto\" />
     <Folder Include="Fasta\" />
-    <Folder Include="Model\Data\" />
+    <Folder Include="Query\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

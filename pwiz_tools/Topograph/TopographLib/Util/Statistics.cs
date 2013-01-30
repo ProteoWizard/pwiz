@@ -40,111 +40,6 @@ namespace pwiz.Topograph.Util
         }
 
         /// <summary>
-        /// Calculates the mode (most frequently occurring number) in the set.
-        /// </summary>
-        /// <returns>Mode of the set of numbers</returns>
-        public double Mode()
-        {
-            try
-            {
-                var i = new double[_list.Length];
-                _list.CopyTo(i, 0);
-                Array.Sort(i);
-                double val_mode = i[0], help_val_mode = i[0];
-                int old_counter = 0, new_counter = 0;
-                int j = 0;
-                for (; j <= i.Length - 1; j++)
-                {
-                    if (i[j] == help_val_mode)
-                        new_counter++;
-                    else if (new_counter > old_counter)
-                    {
-                        val_mode = help_val_mode;
-                        old_counter = new_counter;
-                        new_counter = 1;
-                        help_val_mode = i[j];
-                    }
-                    else if (new_counter == old_counter)
-                    {
-                        val_mode = double.NaN;
-                        help_val_mode = i[j];
-                        new_counter = 1;
-                    }
-                    else
-                    {
-                        help_val_mode = i[j];
-                        new_counter = 1;
-                    }
-                }
-                if (new_counter > old_counter)
-                    val_mode = help_val_mode;
-                else if (new_counter == old_counter)
-                    val_mode = double.NaN;
-                return val_mode;
-            }
-            catch (Exception)
-            {
-                return double.NaN;
-            }
-        }
-
-        /// <summary>
-        /// Calculates the mode or modes (most frequently occurring number(s)) in the set.
-        /// </summary>
-        /// <returns>List of the modes the set of numbers</returns>
-        public double[] Modes()
-        {
-            try
-            {
-                var i = new double[_list.Length];
-                _list.CopyTo(i, 0);
-                Array.Sort(i);
-                List<double> listModes = new List<double>();
-                double help_val_mode = i[0];
-                int old_counter = 0, new_counter = 0;
-                int j = 0;
-                for (; j <= i.Length - 1; j++)
-                {
-                    if (i[j] == help_val_mode)
-                        new_counter++;
-                    else if (new_counter > old_counter)
-                    {
-                        listModes.Clear();
-                        listModes.Add(help_val_mode);
-
-                        old_counter = new_counter;
-                        new_counter = 1;
-                        help_val_mode = i[j];
-                    }
-                    else if (new_counter == old_counter)
-                    {
-                        listModes.Add(help_val_mode);
-
-                        help_val_mode = i[j];
-                        new_counter = 1;
-                    }
-                    else
-                    {
-                        help_val_mode = i[j];
-                        new_counter = 1;
-                    }
-                }
-                if (new_counter > old_counter)
-                {
-                    listModes.Clear();
-                    listModes.Add(help_val_mode);
-                }
-                else if (new_counter == old_counter)
-                    listModes.Add(help_val_mode);
-                return listModes.ToArray();
-            }
-            catch (Exception)
-            {
-                return new double[0];
-            }
-        }
-
-        /// <summary>
         /// Determines the minimum value in the set of numbers.
         /// </summary>
         /// <returns>Minimum value</returns>
@@ -289,7 +184,7 @@ namespace pwiz.Topograph.Util
         /// Calculates the inter-quartile range (Q3 - Q1) of the set of numbers.
         /// </summary>
         /// <returns>Inter-quartile range</returns>
-        public double IQ()
+        public double InterQuartileRange()
         {
             return Q3() - Q1();
         }
@@ -411,22 +306,6 @@ namespace pwiz.Topograph.Util
         }
 
         /// <summary>
-        /// Calculate the YULE index for the set of numbers.
-        /// </summary>
-        /// <returns>YULE index</returns>
-        public double YULE()
-        {
-            try
-            {
-                return ((Q3() - Median()) - (Median() - Q1())) / (Q3() - Q1());
-            }
-            catch (Exception)
-            {
-                return double.NaN;
-            }
-        }
-
-        /// <summary>
         /// Computes the index standard of a given member of the set of numbers.
         /// </summary>
         /// <param name="member">A member of the set</param>
@@ -470,10 +349,10 @@ namespace pwiz.Topograph.Util
                     return double.NaN;
 
                 int len = s1.Length;
-                double sum_mul = 0;
+                double sumMul = 0;
                 for (int i = 0; i < len; i++)
-                    sum_mul += (s1._list[i] * s2._list[i]);
-                return (sum_mul - len * s1.Mean() * s2.Mean()) / (len - 1);
+                    sumMul += (s1._list[i] * s2._list[i]);
+                return (sumMul - len * s1.Mean() * s2.Mean()) / (len - 1);
             }
             catch (Exception)
             {
@@ -737,6 +616,14 @@ namespace pwiz.Topograph.Util
         /// <returns>Data value such that p percent are below the value</returns>
         public double PercentileExcel(double p)
         {
+            if (_list.Length == 0)
+            {
+                return double.NaN;
+            }
+            if (_list.Length == 1)
+            {
+                return _list[0];
+            }
             try
             {
                 int n = _list.Length;
@@ -749,32 +636,6 @@ namespace pwiz.Topograph.Util
                 double g = pos - j;
 
                 return (1 - g) * ordered[j] + g * ordered[j + 1];
-            }
-            catch (Exception)
-            {
-                return double.NaN;
-            }
-        }
-
-        /// <summary>
-        /// Calculates a percentile based on the SAS Method 5 (default in SAS).
-        /// (See http://www.haiweb.org/medicineprices/manual/quartiles_iTSS.pdf)
-        /// </summary>
-        /// <param name="p">Percentile in decimal form (e.g. 0.25)</param>
-        /// <returns>Data value such that p percent are below the value</returns>
-        public double PercentileSAS5(double p)
-        {
-            try
-            {
-                int n = _list.Length;
-                var ordered = new double[n];
-                _list.CopyTo(ordered, 0);
-                Array.Sort(ordered);
-
-                if (Math.Ceiling(n * p) == n * p)
-                    return (ordered[(int)(n * p - 1)] + ordered[(int)(n * p)]) / 2;
-                else
-                    return ordered[((int)(Math.Ceiling(n * p))) - 1];
             }
             catch (Exception)
             {
@@ -954,7 +815,7 @@ namespace pwiz.Topograph.Util
             double meanB = b.Mean();
             double sA2 = 0;
             double sB2 = 0;
-            double sAB = 0;
+            double sAb = 0;
 
             for (int i = 0; i < a.Length; i++)
             {
@@ -963,14 +824,14 @@ namespace pwiz.Topograph.Util
 
                 sA2 += dA * dA;
                 sB2 += dB * dB;
-                sAB += dA * dB;
+                sAb += dA * dB;
             }
             LinearRegression result = new LinearRegression();
-            if (sA2 > 0 && sB2 > 0 && sAB > 0)
+            if (sA2 > 0 && sB2 > 0 && sAb > 0)
             {
-                result.Correlation = sAB / Math.Sqrt(sA2 * sB2);
+                result.Correlation = sAb / Math.Sqrt(sA2 * sB2);
                 result.Slope = (sB2 - sA2 + Math.Sqrt((sB2 - sA2) * (sB2 - sA2)
-                                               + 4 * (sAB * sAB))) / 2 / sAB;
+                                               + 4 * (sAb * sAb))) / 2 / sAb;
                 result.Intercept = meanB - result.Slope * meanA;
                 if (result.Correlation < 1)
                 {

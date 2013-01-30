@@ -30,7 +30,7 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public partial class CustomizeViewForm : Form
     {
-        private static readonly IList<ListSortDirection?> SORT_DIRECTIONS =
+        private static readonly IList<ListSortDirection?> SortDirections =
             Array.AsReadOnly(new ListSortDirection?[] {null, ListSortDirection.Ascending, ListSortDirection.Descending});
         private ViewSpec _viewSpec = new ViewSpec();
         private readonly Font _strikeThroughFont;
@@ -51,7 +51,6 @@ namespace pwiz.Common.DataBinding.Controls
             tbxViewName.Text = viewSpec.Name;
             ExistingCustomViewSpec =
                 viewContext.CustomViewSpecs.FirstOrDefault(customViewSpec => viewSpec.Name == customViewSpec.Name);
-            listViewColumns.SmallImageList = AggregateFunctions.GetSmallIcons();
             AdvancedShowing = false;
             Icon = ViewContext.ApplicationIcon;
             colSortDirection.Items.Add(ListSortDirection.Ascending);
@@ -83,6 +82,7 @@ namespace pwiz.Common.DataBinding.Controls
                     }
                     _viewSpec = value;
                     ViewInfo = new ViewInfo(ParentColumn, _viewSpec);
+                    availableFieldsTreeColumns.SublistId = ViewInfo.SublistId;
                     availableFieldsTreeColumns.CheckedColumns = ListColumnsInView();
                     ListViewHelper.ReplaceItems(listViewColumns, ViewInfo.DisplayColumns.Select(MakeListViewColumnItem).ToArray());
                     if (dataGridViewFilter.Rows.Count != ViewInfo.Filters.Count)
@@ -164,7 +164,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void availableFieldsTreeColumns_AfterCheck(object sender, TreeViewEventArgs e)
+        private void AvailableFieldsTreeColumnsOnAfterCheck(object sender, TreeViewEventArgs e)
         {
             if (_inChangeView)
             {
@@ -357,7 +357,7 @@ namespace pwiz.Common.DataBinding.Controls
                         tbxCaption.Text = "";
                     }
                 }
-                comboSortOrder.SelectedIndex = SORT_DIRECTIONS.IndexOf(selectedColumn.ColumnSpec.SortDirection);
+                comboSortOrder.SelectedIndex = SortDirections.IndexOf(selectedColumn.ColumnSpec.SortDirection);
                 cbxHidden.Checked = selectedColumn.ColumnSpec.Hidden;
 
                 groupBoxCaption.Visible = true;
@@ -374,7 +374,7 @@ namespace pwiz.Common.DataBinding.Controls
             btnRemove.Enabled = selectedColumns.Length > 0;
             btnUp.Enabled = ListViewHelper.IsMoveUpEnabled(listViewColumns);
             btnDown.Enabled = ListViewHelper.IsMoveDownEnabled(listViewColumns);
-            listViewColumns_SizeChanged(listViewColumns, new EventArgs());
+            ListViewColumnsOnSizeChanged(listViewColumns, new EventArgs());
             UpdateSublistCombo();
         }
 
@@ -463,7 +463,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void UpdateSublistCombo()
         {
-            var availableSublists = new HashSet<IdentifierPath> {IdentifierPath.ROOT};
+            var availableSublists = new HashSet<IdentifierPath> {IdentifierPath.Root};
             foreach (var columnSpec in ViewSpec.Columns)
             {
                 for (IdentifierPath idPath = columnSpec.IdentifierPath; !idPath.IsRoot; idPath = idPath.Parent)
@@ -523,7 +523,7 @@ namespace pwiz.Common.DataBinding.Controls
             return string.Join(":", parts.ToArray());
         }
 
-        private void tbxCaption_Leave(object sender, EventArgs e)
+        private void TbxCaptionOnLeave(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -554,13 +554,13 @@ namespace pwiz.Common.DataBinding.Controls
             ViewSpec = ViewSpec.SetColumns(newColumns);
         }
 
-        private void btnRemove_Click(object sender, EventArgs e)
+        private void BtnRemoveOnClick(object sender, EventArgs e)
         {
             ViewSpec = ViewSpec.SetColumns(
                 ViewSpec.Columns.Where((columnSpec, index) => !listViewColumns.Items[index].Selected));
         }
 
-        private void listViewColumns_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListViewColumnsOnSelectedIndexChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -580,17 +580,17 @@ namespace pwiz.Common.DataBinding.Controls
             ListViewHelper.SelectIndexes(listViewColumns, newSelection);
         }
 
-        private void btnUp_Click(object sender, EventArgs e)
+        private void BtnUpOnClick(object sender, EventArgs e)
         {
             MoveColumns(true);
         }
 
-        private void btnDown_Click(object sender, EventArgs e)
+        private void BtnDownOnClick(object sender, EventArgs e)
         {
             MoveColumns(false);
         }
 
-        private void listViewColumns_SizeChanged(object sender, EventArgs e)
+        private void ListViewColumnsOnSizeChanged(object sender, EventArgs e)
         {
             if (IsHandleCreated)
             {
@@ -602,19 +602,6 @@ namespace pwiz.Common.DataBinding.Controls
         {
             listViewColumns.Columns[0].Width = listViewColumns.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 1;
         }
-/*
-        class AggregateItem
-        {
-            public AggregateItem(string displayName, IAggregateFunction function)
-            {
-                DisplayName = displayName;
-                Function = function;
-            }
-            public string DisplayName { get; set; }
-            public IAggregateFunction Function { get; set; }
-            public override string ToString() { return DisplayName; }
-        }
-*/
         class FilterOperationItem
         {
             public FilterOperationItem(IFilterOperation filterOperation)
@@ -623,10 +610,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
 
             public IFilterOperation Operation { get; private set; }
-
-            private string DisplayName { get { return Operation.DisplayName; } }
-
-            public override string ToString() { return DisplayName; }
+            public override string ToString() { return Operation.DisplayName; }
         }
         class SublistItem
         {
@@ -644,7 +628,7 @@ namespace pwiz.Common.DataBinding.Controls
             public IdentifierPath IdentifierPath { get; private set; }
         }
 
-        private void comboSublist_SelectedIndexChanged(object sender, EventArgs e)
+        private void ComboSublistOnSelectedIndexChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -657,19 +641,22 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void btnAdvanced_Click(object sender, EventArgs e)
+        private void BtnAdvancedOnClick(object sender, EventArgs e)
         {
             AdvancedShowing = !AdvancedShowing;
         }
 
-        private void availableFieldsTreeColumns_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        /// <summary>
+        /// When the user double clicks in the tree, selects the column in the ListView.
+        /// </summary>
+        private void AvailableFieldsTreeColumnsOnNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             var columnDescriptor = availableFieldsTreeColumns.GetValueColumn(e.Node);
             if (columnDescriptor == null)
             {
                 return;
             }
-            foreach (ListViewItem item in listViewColumns.SelectedItems)
+            foreach (ListViewItem item in listViewColumns.Items)
             {
                 var displayColumn = ViewInfo.DisplayColumns[item.Index];
                 if (Equals(columnDescriptor.IdPath, displayColumn.IdentifierPath) && IsCanonical(displayColumn))
@@ -686,12 +673,12 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void listViewColumns_ItemActivate(object sender, EventArgs e)
+        private void ListViewColumnsOnItemActivate(object sender, EventArgs e)
         {
             availableFieldsTreeColumns.SelectColumn(ViewSpec.Columns[listViewColumns.FocusedItem.Index].IdentifierPath);
         }
 
-        private void cbxHidden_CheckedChanged(object sender, EventArgs e)
+        private void CbxHiddenOnCheckedChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -707,7 +694,7 @@ namespace pwiz.Common.DataBinding.Controls
             ViewSpec = ViewSpec.SetColumns(columns);
         }
 
-        private void availableFieldsTreeFilter_AfterSelect(object sender, TreeViewEventArgs e)
+        private void AvailableFieldsTreeFilterOnAfterSelect(object sender, TreeViewEventArgs e)
         {
             btnAddFilter.Enabled = availableFieldsTreeFilter.SelectedNode != null;
         }
@@ -719,15 +706,16 @@ namespace pwiz.Common.DataBinding.Controls
                     new FilterSpec(columnDescriptor.IdPath, FilterOperations.OP_HAS_ANY_VALUE, null)
                 };
             ViewSpec = ViewSpec.SetFilters(newFilters);
+            dataGridViewFilter.CurrentCell = dataGridViewFilter.Rows[dataGridViewFilter.Rows.Count - 1].Cells[colFilterOperation.Index];
         }
 
-        private void btnDeleteFilter_Click(object sender, EventArgs e)
+        private void BtnDeleteFilterOnClick(object sender, EventArgs e)
         {
             var newFilters = ViewSpec.Filters.Where((filterSpec, index) => !dataGridViewFilter.Rows[index].Selected);
             ViewSpec = ViewSpec.SetFilters(newFilters);
         }
 
-        private void btnAddFilter_Click(object sender, EventArgs e)
+        private void BtnAddFilterOnClick(object sender, EventArgs e)
         {
             if (availableFieldsTreeFilter.SelectedNode == null)
             {
@@ -737,7 +725,7 @@ namespace pwiz.Common.DataBinding.Controls
             AddFilter(columnDescriptor);
         }
 
-        private void dataGridViewFilter_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewFilterOnCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             if (_inChangeView)
             {
@@ -749,9 +737,8 @@ namespace pwiz.Common.DataBinding.Controls
                 var cell = dataGridViewFilter.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 newFilters[e.RowIndex] = newFilters[e.RowIndex].SetOperation(cell.Value as IFilterOperation);
                 ViewSpec = ViewSpec.SetFilters(newFilters);
-                return;
-            }
-            if (e.ColumnIndex == colFilterOperand.Index)
+            } 
+            else if (e.ColumnIndex == colFilterOperand.Index)
             {
                 var newFilters = ViewSpec.Filters.ToArray();
                 var cell = dataGridViewFilter.Rows[e.RowIndex].Cells[e.ColumnIndex];
@@ -760,7 +747,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void dataGridViewFilter_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewFilterOnCellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
@@ -768,12 +755,12 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void availableFieldsTreeFilter_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void AvailableFieldsTreeFilterOnNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             AddFilter(availableFieldsTreeFilter.GetValueColumn(e.Node));
         }
 
-        private void dataGridViewFilter_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        private void DataGridViewFilterOnCurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -788,7 +775,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void dataGridViewFilter_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        private void DataGridViewFilterOnEditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             if (_editingControlListenerAdded)
             {
@@ -797,12 +784,12 @@ namespace pwiz.Common.DataBinding.Controls
             var dataGridViewComboBoxEditingControl = e.Control as DataGridViewComboBoxEditingControl;
             if (dataGridViewComboBoxEditingControl != null)
             {
-                dataGridViewComboBoxEditingControl.SelectedIndexChanged += dataGridViewComboBoxEditingControl_SelectedIndexChanged;
+                dataGridViewComboBoxEditingControl.SelectedIndexChanged += DataGridViewComboBoxEditingControlOnSelectedIndexChanged;
                 _editingControlListenerAdded = true;
             }
         }
 
-        void dataGridViewComboBoxEditingControl_SelectedIndexChanged(object sender, EventArgs e)
+        void DataGridViewComboBoxEditingControlOnSelectedIndexChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -833,7 +820,7 @@ namespace pwiz.Common.DataBinding.Controls
             ViewSpec = ViewSpec.SetFilters(newFilters);
         }
 
-        private void comboSortOrder_SelectedIndexChanged(object sender, EventArgs e)
+        private void ComboSortOrderOnSelectedIndexChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -846,12 +833,12 @@ namespace pwiz.Common.DataBinding.Controls
             var columns = ViewSpec.Columns.ToArray();
             foreach (var index in listViewColumns.SelectedIndices.Cast<int>())
             {
-                columns[index] = columns[index].SetSortDirection(SORT_DIRECTIONS[comboSortOrder.SelectedIndex]);
+                columns[index] = columns[index].SetSortDirection(SortDirections[comboSortOrder.SelectedIndex]);
             }
             ViewSpec = ViewSpec.SetColumns(columns);
         }
 
-        private void dataGridViewSort_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        private void DataGridViewSortOnCurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -866,7 +853,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void dataGridViewSort_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewSortOnCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             if (_inChangeView)
             {
@@ -882,7 +869,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void btnSortRemove_Click(object sender, EventArgs e)
+        private void BtnSortRemoveOnClick(object sender, EventArgs e)
         {
             var newColumns = ViewSpec.Columns.ToArray();
             foreach (var index in GetSelectedSortRowIndexes())
@@ -897,8 +884,8 @@ namespace pwiz.Common.DataBinding.Controls
             var selectedIndexes = GetSelectedSortRowIndexes();
             var newIndexes = ListViewHelper.MoveItems(Enumerable.Range(0, ViewInfo.SortColumns.Count), selectedIndexes,
                                                       upwards);
-            var newSelectedIndexes = ListViewHelper.MoveSelectedIndexes(ViewInfo.SortColumns.Count, selectedIndexes,
-                                                                        upwards);
+            var newSelectedIndexes = new HashSet<int>(ListViewHelper.MoveSelectedIndexes(ViewInfo.SortColumns.Count, selectedIndexes,
+                                                                        upwards));
             var newColumns = ViewSpec.Columns.ToArray();
             for (int i = 0; i < newIndexes.Count(); i++)
             {
@@ -907,24 +894,23 @@ namespace pwiz.Common.DataBinding.Controls
                 newColumns[displayColumnIndex] = newColumns[displayColumnIndex].SetSortIndex(i);
             }
             ViewSpec = ViewSpec.SetColumns(newColumns);
-            var enumerable = newSelectedIndexes as int[] ?? newSelectedIndexes.ToArray();
             for (int i = 0; i < dataGridViewSort.Rows.Count; i++)
             {
-                dataGridViewSort.Rows[i].Selected = enumerable.Contains(i);
+                dataGridViewSort.Rows[i].Selected = newSelectedIndexes.Contains(i);
             }
         }
 
-        private void btnSortMoveUp_Click(object sender, EventArgs e)
+        private void BtnSortMoveUpOnClick(object sender, EventArgs e)
         {
             MoveSort(true);
         }
 
-        private void btnSortMoveDown_Click(object sender, EventArgs e)
+        private void BtnSortMoveDownOnClick(object sender, EventArgs e)
         {
             MoveSort(false);
         }
 
-        private void dataGridViewSort_SelectionChanged(object sender, EventArgs e)
+        private void DataGridViewSortOnSelectionChanged(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
@@ -933,7 +919,7 @@ namespace pwiz.Common.DataBinding.Controls
             UpdateSortButtons();
         }
 
-        private void clbAvailableSortColumns_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void ClbAvailableSortColumnsOnItemCheck(object sender, ItemCheckEventArgs e)
         {
             if (_inChangeView)
             {
@@ -953,7 +939,7 @@ namespace pwiz.Common.DataBinding.Controls
             ViewSpec = ViewSpec.SetColumns(newColumns);
         }
 
-        private void dataGridViewFilter_CellEnter(object sender, DataGridViewCellEventArgs e)
+        private void DataGridViewFilterOnCellEnter(object sender, DataGridViewCellEventArgs e)
         {
             if (_inChangeView)
             {

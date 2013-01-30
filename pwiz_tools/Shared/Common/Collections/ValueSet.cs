@@ -146,6 +146,20 @@ namespace pwiz.Common.Collections
             return OfValues(_array.Concat(elements));
         }
         /// <summary>
+        /// Returns a set which is this with the specified elements removed
+        /// </summary>
+        public TSet Except(IEnumerable<TElement> elements)
+        {
+            return OfValues(_array.Except(elements));
+        }
+        /// <summary>
+        /// Returns a set which is this with the specified elements removed
+        /// </summary>
+        public TSet Except(params TElement[] elements)
+        {
+            return OfValues(_array.Except(elements));
+        }
+        /// <summary>
         /// Returns true if this set contains only the specified element.
         /// </summary>
         public bool IsSingleton(TElement element)

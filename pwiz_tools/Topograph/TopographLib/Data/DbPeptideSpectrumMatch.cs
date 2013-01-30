@@ -16,21 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace pwiz.Topograph.Data
 {
     public class DbPeptideSpectrumMatch : DbEntity<DbPeptideSpectrumMatch>
     {
-        public DbMsDataFile MsDataFile { get; set; }
-        public DbPeptide Peptide { get; set; }
-        public double? PrecursorMz { get; set; }
-        public int? PrecursorCharge { get; set; }
-        public string ModifiedSequence { get; set; }
-        public double? RetentionTime { get; set; }
-        public string SpectrumId { get; set; }
+        public virtual DbMsDataFile MsDataFile { get; set; }
+        public virtual DbPeptide Peptide { get; set; }
+        public virtual double RetentionTime { get; set; }
+        public virtual int? PrecursorCharge { get; set; }
+        public virtual double? PrecursorMz { get; set; }
+        public virtual string ModifiedSequence { get; set; }
     }
 }

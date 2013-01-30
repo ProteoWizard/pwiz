@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2012 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,8 +25,8 @@ namespace pwiz.Common.DataBinding
 {
     public class ViewProperties : PropertyDescriptorCollection
     {
-        public const string COLUMN_NAME_PREFIX = "COLUMN_";
-        private const string DISPLAY_COLUMN_PREFIX = "DISPLAYCOLUMN_";
+        public const string ColumnNamePrefix = "COLUMN_";
+        private const string DisplayColumnPrefix = "DISPLAYCOLUMN_";
         public ViewProperties(ViewInfo viewInfo, IDictionary<IdentifierPath, ICollection<PivotKey>> pivotKeys) 
             : this(viewInfo, new DisplayColumnProperties(viewInfo, pivotKeys))
         {
@@ -28,11 +46,11 @@ namespace pwiz.Common.DataBinding
 
         public override PropertyDescriptor Find(string name, bool ignoreCase)
         {
-            if (!name.StartsWith(COLUMN_NAME_PREFIX))
+            if (!name.StartsWith(ColumnNamePrefix))
             {
                 return base.Find(name, ignoreCase);
             }
-            var identifierPath = IdentifierPath.Parse(name.Substring(COLUMN_NAME_PREFIX.Length));
+            var identifierPath = IdentifierPath.Parse(name.Substring(ColumnNamePrefix.Length));
             PivotKey pivotKey;
             var columnDescriptor = FindColumn(identifierPath, out pivotKey);
             if (columnDescriptor == null)
@@ -63,7 +81,7 @@ namespace pwiz.Common.DataBinding
             column = parentColumn.ResolveChild(null);
             if (column != null)
             {
-                pivotKey = PivotKey.OfValues(pivotKey, IdentifierPath.ROOT, new[] {
+                pivotKey = PivotKey.OfValues(pivotKey, IdentifierPath.Root, new[] {
                     new KeyValuePair<IdentifierPath, object>(column.IdPath, 
                         Convert.ChangeType(identifierPath.Name, column.CollectionInfo.KeyType))});
                 return column;
@@ -100,7 +118,7 @@ namespace pwiz.Common.DataBinding
                     }
                     else
                     {
-                        string propertyName = MakeUniqueName(columnNames, null,
+                        string propertyName = MakeUniqueName(columnNames, 
                                                              displayColumn.IdentifierPath);
                         propertyDescriptors.Add(new ColumnPropertyDescriptor(displayColumn, propertyName, displayColumn.IdentifierPath, null));
                     }
@@ -112,7 +130,7 @@ namespace pwiz.Common.DataBinding
                     foreach (var displayColumn in displayColumnsByKey[pivotKey])
                     {
                         var identifierPath = PivotKey.QualifyIdentifierPath(pivotKey, displayColumn.IdentifierPath);
-                        var columnName = MakeUniqueName(columnNames, null, identifierPath);
+                        var columnName = MakeUniqueName(columnNames, identifierPath);
                         propertyDescriptors.Add(new ColumnPropertyDescriptor(displayColumn, columnName, identifierPath, pivotKey));
                     }
                 }
@@ -139,14 +157,10 @@ namespace pwiz.Common.DataBinding
             }
             public PropertyDescriptor[] PropertyDescriptorArray { get; private set; }
         }
-        static string MakeUniqueName(HashSet<string> columnNames, IAggregateFunction aggregateFunction, IdentifierPath identifierPath)
+        static string MakeUniqueName(HashSet<string> columnNames, IdentifierPath identifierPath)
         {
-            string baseName = DISPLAY_COLUMN_PREFIX + identifierPath;
+            string baseName = DisplayColumnPrefix + identifierPath;
 
-            if (aggregateFunction != null && AggregateFunctions.GROUP_BY != aggregateFunction)
-            {
-                baseName = aggregateFunction.Name + "_" + baseName;
-            }
             var columnName = baseName;
             for (int index = 1; columnNames.Contains(columnName); index++)
             {

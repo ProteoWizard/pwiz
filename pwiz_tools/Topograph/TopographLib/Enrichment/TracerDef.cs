@@ -18,12 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.Util;
+using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Enrichment
 {
@@ -57,37 +55,25 @@ namespace pwiz.Topograph.Enrichment
             }
         }
 
-        public TracerDef(Workspace workspace, TracerDefModel dbTracerDef)
+        public TracerDef(Workspace workspace, TracerDefData tracerDefData)
         {
             Workspace = workspace;
-            Name = dbTracerDef.Name;
-            TraceeSymbol = dbTracerDef.TracerSymbol;
+            Name = tracerDefData.Name;
+            TraceeSymbol = tracerDefData.TracerSymbol;
             char aminoAcidSymbol;
             if (AminoAcidFormulas.LongNames.TryGetValue(TraceeSymbol, out aminoAcidSymbol))
             {
                 AminoAcidSymbol = aminoAcidSymbol;
             }
-            DeltaMass = dbTracerDef.DeltaMass;
-            AtomCount = dbTracerDef.AtomCount;
-            AtomPercentEnrichment = dbTracerDef.AtomPercentEnrichment;
-            InitialApe = dbTracerDef.InitialEnrichment;
-            FinalApe = dbTracerDef.FinalEnrichment;
-            IsotopesEluteEarlier = dbTracerDef.IsotopesEluteEarlier;
-            IsotopesEluteLater = dbTracerDef.IsotopesEluteLater;
+            DeltaMass = tracerDefData.DeltaMass;
+            AtomCount = tracerDefData.AtomCount;
+            AtomPercentEnrichment = tracerDefData.AtomPercentEnrichment;
+            InitialApe = tracerDefData.InitialEnrichment;
+            FinalApe = tracerDefData.FinalEnrichment;
+            IsotopesEluteEarlier = tracerDefData.IsotopesEluteEarlier;
+            IsotopesEluteLater = tracerDefData.IsotopesEluteLater;
             
             ComputeMasses();
-        }
-
-        public void Update(DbTracerDef dbTracerDef)
-        {
-            dbTracerDef.AtomCount = AtomCount;
-            dbTracerDef.AtomPercentEnrichment = AtomPercentEnrichment;
-            dbTracerDef.DeltaMass = DeltaMass;
-            dbTracerDef.FinalEnrichment = FinalApe;
-            dbTracerDef.InitialEnrichment = InitialApe;
-            dbTracerDef.IsotopesEluteEarlier = IsotopesEluteEarlier;
-            dbTracerDef.IsotopesEluteLater = IsotopesEluteLater;
-            dbTracerDef.TracerSymbol = TraceeSymbol;
         }
 
         public Workspace Workspace { get; private set; }

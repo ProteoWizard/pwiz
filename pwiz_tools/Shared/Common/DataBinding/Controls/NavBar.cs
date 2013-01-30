@@ -30,56 +30,47 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public partial class NavBar : UserControl
     {
-        private IViewContext _viewContext;
-        private BindingSource _bindingSource;
-        private string _waitingMsg = "Waiting for data...";
+        private const string DefaultWaitingMessage = "Waiting for data...";
+        private BindingListSource _bindingListSource;
+        private string _waitingMsg = DefaultWaitingMessage;
         public NavBar()
         {
             InitializeComponent();
         }
         [TypeConverter(typeof(ReferenceConverter))]
-        public BindingSource BindingSource
+        public BindingListSource BindingListSource
         {
             get
             {
-                return _bindingSource;
+                return _bindingListSource;
             }
             set
             {
-                if (BindingSource == value)
+                if (BindingListSource == value)
                 {
                     return;
                 }
-                if (BindingSource != null)
+                if (BindingListSource != null)
                 {
-                    BindingSource.ListChanged -= BindingSource_ListChanged;
+                    BindingListSource.ListChanged -= BindingSourceOnListChanged;
+                    BindingListSource.CurrentChanged -= BindingSourceOnCurrentChanged;
                 }
-                _bindingSource = value;
-                bindingNavigator1.BindingSource = BindingSource;
-                if (BindingSource != null)
+                _bindingListSource = value;
+                bindingNavigator1.BindingSource = BindingListSource;
+                if (BindingListSource != null)
                 {
-                    BindingSource.ListChanged += BindingSource_ListChanged;
+                    BindingListSource.ListChanged += BindingSourceOnListChanged;
+                    BindingListSource.CurrentChanged += BindingSourceOnCurrentChanged;
                 }
             }
         }
 
         public IViewContext ViewContext
         {
-            get
-            {
-                return _viewContext;
-            } 
-            set
-            {
-                if (ReferenceEquals(_viewContext, value))
-                {
-                    return;
-                }
-                _viewContext = value;
-                RefreshUi();
-            }
+            get { return BindingListSource == null ? null : BindingListSource.ViewContext; } 
         }
 
+        [DefaultValue(DefaultWaitingMessage)]
         public string WaitingMessage
         {
             get { return _waitingMsg; }
@@ -94,7 +85,7 @@ namespace pwiz.Common.DataBinding.Controls
         { 
             get
             {
-                return BindingSource == null ? null : BindingSource.DataSource as BindingListView;
+                return BindingListSource == null ? null : BindingListSource.DataSource as BindingListView;
             } 
         }
 
@@ -104,9 +95,14 @@ namespace pwiz.Common.DataBinding.Controls
             return viewInfo == null ? null : viewInfo.Name;
         }
 
-        void BindingSource_ListChanged(object sender, EventArgs e)
+        void BindingSourceOnListChanged(object sender, EventArgs e)
         {
             RefreshUi();
+        }
+
+        void BindingSourceOnCurrentChanged(object sender, EventArgs e)
+        {
+            navBarDeleteItem.Enabled = ViewContext.DeleteEnabled;
         }
 
         void RefreshUi()
@@ -118,7 +114,7 @@ namespace pwiz.Common.DataBinding.Controls
                 tbxFind.Enabled = true;
                 if (queryResults.ResultRows != null)
                 {
-                    if (queryResults.Parameters.Rows == null)
+                    if (queryResults.SourceRows == null)
                     {
                         lblFilterApplied.Text = string.Format("({0})", WaitingMessage);
                         lblFilterApplied.Visible = true;
@@ -150,10 +146,10 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void navBarButtonViews_DropDownOpening(object sender, EventArgs e)
+        private void NavBarButtonViewsOnDropDownOpening(object sender, EventArgs e)
         {
             var contextMenu = new ContextMenuStrip();
-            var bindingSource = BindingSource;
+            var bindingSource = BindingListSource;
             if (bindingSource != null)
             {
                 var builtInViewItems = ViewContext.BuiltInViewSpecs.Select(viewSpec => NewChooseViewItem(viewSpec, FontStyle.Regular)).ToArray();
@@ -196,7 +192,7 @@ namespace pwiz.Common.DataBinding.Controls
         }
 
 
-        private void navBarButtonExport_Click(object sender, EventArgs e)
+        private void NavBarButtonExportOnClick(object sender, EventArgs e)
         {
             OnExport(this, e);
         }
@@ -221,11 +217,11 @@ namespace pwiz.Common.DataBinding.Controls
             ViewContext.Export(this, BindingListView);
         }
 
-        private void findBox_TextChanged(object sender, EventArgs e)
+        private void FindBoxOnTextChanged(object sender, EventArgs e)
         {
             UpdateFilter();
         }
-        private void navBarButtonMatchCase_CheckedChanged(object sender, EventArgs e)
+        private void NavBarButtonMatchCaseOnCheckedChanged(object sender, EventArgs e)
         {
             UpdateFilter();
         }
@@ -233,6 +229,11 @@ namespace pwiz.Common.DataBinding.Controls
         private void UpdateFilter()
         {
             BindingListView.RowFilter = new RowFilter(tbxFind.Text, navBarButtonMatchCase.Checked);
+        }
+
+        private void NavBarDeleteItemOnClick(object sender, EventArgs e)
+        {
+            ViewContext.Delete();
         }
     }
 }

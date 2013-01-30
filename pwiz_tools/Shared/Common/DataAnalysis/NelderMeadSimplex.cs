@@ -33,7 +33,7 @@ namespace pwiz.Common.DataAnalysis
     /// </summary>
     public sealed class NelderMeadSimplex
     {
-        private const double JITTER = 1e-10d; // a small value used to protect against floating point noise
+        private const double Jitter = 1e-10d; // a small value used to protect against floating point noise
 
         public static RegressionResult Regress(SimplexConstant[] simplexConstants, double convergenceTolerance, int maxEvaluations, 
                                         ObjectiveFunctionDelegate objectiveFunction)
@@ -48,33 +48,33 @@ namespace pwiz.Common.DataAnalysis
             // create the initial simplex
             int numDimensions = simplexConstants.Length;
             int numVertices = numDimensions + 1;
-            Vector[] vertices = _initializeVertices(simplexConstants);
+            Vector[] vertices = InitializeVertices(simplexConstants);
 
             int evaluationCount = 0;
             TerminationReason terminationReason;
             ErrorProfile errorProfile;
 
-            double[] errorValues = _initializeErrorValues(vertices, objectiveFunction);
+            double[] errorValues = InitializeErrorValues(vertices, objectiveFunction);
 
             // iterate until we converge, or complete our permitted number of iterations
             while (true)
             {
-               errorProfile = _evaluateSimplex(errorValues);
+               errorProfile = EvaluateSimplex(errorValues);
 
                 // see if the range in point heights is small enough to exit
-                if (_hasConverged(convergenceTolerance, errorProfile, errorValues))
+                if (HasConverged(convergenceTolerance, errorProfile, errorValues))
                 {
                     terminationReason = TerminationReason.Converged;
                     break;
                 }
 
                 // attempt a reflection of the simplex
-                double reflectionPointValue = _tryToScaleSimplex(-1.0, ref errorProfile, vertices, errorValues, objectiveFunction);
+                double reflectionPointValue = TryToScaleSimplex(-1.0, ref errorProfile, vertices, errorValues, objectiveFunction);
                 ++evaluationCount;
                 if (reflectionPointValue <= errorValues[errorProfile.LowestIndex])
                 {
                     // it's better than the best point, so attempt an expansion of the simplex
-                    _tryToScaleSimplex(2.0, ref errorProfile, vertices, errorValues, objectiveFunction);
+                    TryToScaleSimplex(2.0, ref errorProfile, vertices, errorValues, objectiveFunction);
                     ++evaluationCount;
                 }
                 else if (reflectionPointValue >= errorValues[errorProfile.NextHighestIndex])
@@ -82,14 +82,14 @@ namespace pwiz.Common.DataAnalysis
                     // it would be worse than the second best point, so attempt a contraction to look
                     // for an intermediate point
                     double currentWorst = errorValues[errorProfile.HighestIndex];
-                    double contractionPointValue = _tryToScaleSimplex(0.5, ref errorProfile, vertices, errorValues, objectiveFunction);
+                    double contractionPointValue = TryToScaleSimplex(0.5, ref errorProfile, vertices, errorValues, objectiveFunction);
                     ++evaluationCount;
                     if (contractionPointValue >= currentWorst)
                     {
                         // that would be even worse, so let's try to contract uniformly towards the low point; 
                         // don't bother to update the error profile, we'll do it at the start of the
                         // next iteration
-                        _shrinkSimplex(errorProfile, vertices, errorValues, objectiveFunction);
+                        ShrinkSimplex(errorProfile, vertices, errorValues, objectiveFunction);
                         evaluationCount += numVertices; // that required one function evaluation for each vertex; keep track
                     }
                 }
@@ -109,7 +109,7 @@ namespace pwiz.Common.DataAnalysis
         /// Evaluate the objective function at each vertex to create a corresponding
         /// list of error values for each vertex
         /// </summary>
-        private static double[] _initializeErrorValues(Vector[] vertices, ObjectiveFunctionDelegate objectiveFunction)
+        private static double[] InitializeErrorValues(Vector[] vertices, ObjectiveFunctionDelegate objectiveFunction)
         {
             double[] errorValues = new double[vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
@@ -123,10 +123,10 @@ namespace pwiz.Common.DataAnalysis
         /// Check whether the points in the error profile have so little range that we
         /// consider ourselves to have converged
         /// </summary>
-        private static bool _hasConverged(double convergenceTolerance, ErrorProfile errorProfile, double[] errorValues)
+        private static bool HasConverged(double convergenceTolerance, ErrorProfile errorProfile, double[] errorValues)
         {
             double range = 2 * Math.Abs(errorValues[errorProfile.HighestIndex] - errorValues[errorProfile.LowestIndex]) /
-                (Math.Abs(errorValues[errorProfile.HighestIndex]) + Math.Abs(errorValues[errorProfile.LowestIndex]) + JITTER);
+                (Math.Abs(errorValues[errorProfile.HighestIndex]) + Math.Abs(errorValues[errorProfile.LowestIndex]) + Jitter);
 
             if (range < convergenceTolerance)
             {
@@ -141,7 +141,7 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Examine all error values to determine the ErrorProfile
         /// </summary>
-        private static ErrorProfile _evaluateSimplex(double[] errorValues)
+        private static ErrorProfile EvaluateSimplex(double[] errorValues)
         {
             ErrorProfile errorProfile = new ErrorProfile();
             if (errorValues[0] > errorValues[1])
@@ -180,7 +180,7 @@ namespace pwiz.Common.DataAnalysis
         /// Construct an initial simplex, given starting guesses for the constants, and
         /// initial step sizes for each dimension
         /// </summary>
-        private static Vector[] _initializeVertices(SimplexConstant[] simplexConstants)
+        private static Vector[] InitializeVertices(SimplexConstant[] simplexConstants)
         {
             int numDimensions = simplexConstants.Length;
             Vector[] vertices = new Vector[numDimensions + 1];
@@ -208,11 +208,11 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Test a scaling operation of the high point, and replace it if it is an improvement
         /// </summary>
-        private static double _tryToScaleSimplex(double scaleFactor, ref ErrorProfile errorProfile, Vector[] vertices, 
+        private static double TryToScaleSimplex(double scaleFactor, ref ErrorProfile errorProfile, Vector[] vertices, 
                                           double[] errorValues, ObjectiveFunctionDelegate objectiveFunction)
         {
             // find the centroid through which we will reflect
-            Vector centroid = _computeCentroid(vertices, errorProfile);
+            Vector centroid = ComputeCentroid(vertices, errorProfile);
 
             // define the vector from the centroid to the high point
             Vector centroidToHighPoint = vertices[errorProfile.HighestIndex].Subtract(centroid);
@@ -236,7 +236,7 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Contract the simplex uniformly around the lowest point
         /// </summary>
-        private static void _shrinkSimplex(ErrorProfile errorProfile, Vector[] vertices, double[] errorValues, 
+        private static void ShrinkSimplex(ErrorProfile errorProfile, Vector[] vertices, double[] errorValues, 
                                       ObjectiveFunctionDelegate objectiveFunction)
         {
             Vector lowestVertex = vertices[errorProfile.LowestIndex];
@@ -256,7 +256,7 @@ namespace pwiz.Common.DataAnalysis
         /// <param name="vertices"></param>
         /// <param name="errorProfile"></param>
         /// <returns></returns>
-        private static Vector _computeCentroid(Vector[] vertices, ErrorProfile errorProfile)
+        private static Vector ComputeCentroid(Vector[] vertices, ErrorProfile errorProfile)
         {
             int numVertices = vertices.Length;
             // find the centroid of all points except the worst one

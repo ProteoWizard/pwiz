@@ -77,7 +77,7 @@
             this.panelTitle.Name = "panelTitle";
             this.panelTitle.Size = new System.Drawing.Size(873, 20);
             this.panelTitle.TabIndex = 0;
-            this.panelTitle.Click += new System.EventHandler(this.imgExpandCollapse_Click);
+            this.panelTitle.Click += new System.EventHandler(this.ImgExpandCollapseOnClick);
             // 
             // imgExpandCollapse
             // 
@@ -89,7 +89,7 @@
             this.imgExpandCollapse.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.imgExpandCollapse.TabIndex = 1;
             this.imgExpandCollapse.TabStop = false;
-            this.imgExpandCollapse.Click += new System.EventHandler(this.imgExpandCollapse_Click);
+            this.imgExpandCollapse.Click += new System.EventHandler(this.ImgExpandCollapseOnClick);
             // 
             // lblTitle
             // 
@@ -101,7 +101,7 @@
             this.lblTitle.Size = new System.Drawing.Size(172, 13);
             this.lblTitle.TabIndex = 0;
             this.lblTitle.Text = "Half Life Calculation Settings";
-            this.lblTitle.Click += new System.EventHandler(this.imgExpandCollapse_Click);
+            this.lblTitle.Click += new System.EventHandler(this.ImgExpandCollapseOnClick);
             // 
             // panelContent
             // 

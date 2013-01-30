@@ -25,6 +25,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Util;
+using pwiz.Topograph.ui.DataBinding;
 using pwiz.Topograph.ui.Properties;
 
 namespace pwiz.Topograph.ui.Forms
@@ -40,8 +41,7 @@ namespace pwiz.Topograph.ui.Forms
                 comboEvviesFilter.Items.Add(evviesFilter);
             }
             comboEvviesFilter.SelectedIndex = 0;
-            _viewContext = new TopographViewContext(Workspace, typeof(DisplayRow), new[]{GetDefaultViewSpec(cbxByProtein.Checked)});
-            navBar1.ViewContext = _viewContext;
+            bindingSource1.SetViewContext(_viewContext = new TopographViewContext(Workspace, typeof(DisplayRow), new[]{GetDefaultViewSpec(cbxByProtein.Checked)}));
             HalfLifeSettings = Settings.Default.HalfLifeSettings;
         }
 
@@ -280,7 +280,7 @@ namespace pwiz.Topograph.ui.Forms
                                          };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
-                var longOperationBroker = new LongOperationBroker(halfLifeCalculator, longWaitDialog);
+                var longOperationBroker = new LongOperationBroker(halfLifeCalculator.Run, longWaitDialog);
                 if (!longOperationBroker.LaunchJob())
                 {
                     return;
