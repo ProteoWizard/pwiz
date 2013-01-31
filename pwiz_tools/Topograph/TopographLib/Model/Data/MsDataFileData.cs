@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using pwiz.Common.Collections;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Model.Data
 {
@@ -33,10 +34,7 @@ namespace pwiz.Topograph.Model.Data
             Cohort = dbMsDataFile.Cohort;
             Sample = dbMsDataFile.Sample;
             double precursorPool;
-            if (null != dbMsDataFile.PrecursorPool && double.TryParse(dbMsDataFile.PrecursorPool, out precursorPool))
-            {
-                PrecursorPool = precursorPool;
-            }
+            PrecursorPool = PrecursorPoolValue.ParsePersistedString(dbMsDataFile.PrecursorPool);
             TimePoint = dbMsDataFile.TimePoint;
             Times = ImmutableList.ValueOf(dbMsDataFile.Times);
             TotalIonCurrent = ImmutableList.ValueOf(dbMsDataFile.TotalIonCurrent);
@@ -119,8 +117,8 @@ namespace pwiz.Topograph.Model.Data
         {
             return new MsDataFileData(this){Sample = value};
         }
-        public double? PrecursorPool { get; private set; }
-        public MsDataFileData SetPrecursorPool(double? value)
+        public PrecursorPoolValue? PrecursorPool { get; private set; }
+        public MsDataFileData SetPrecursorPool(PrecursorPoolValue? value)
         {
             return new MsDataFileData(this) {PrecursorPool = value};
         }

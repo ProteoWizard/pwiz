@@ -24,6 +24,8 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using pwiz.Common.DataBinding;
+using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
 using pwiz.Topograph.ui.DataBinding;
@@ -145,7 +147,7 @@ namespace pwiz.Topograph.ui.Forms
             [UsedImplicitly]
             public string Sample { get { return _dataFile.Sample; } set { _dataFile.Sample = value; } }
             [UsedImplicitly]
-            public double? PrecursorPool { get { return _dataFile.PrecursorPool; } set { _dataFile.PrecursorPool = value; } }
+            public PrecursorPoolValue? PrecursorPool { get { return _dataFile.PrecursorPool; } set { _dataFile.PrecursorPool = value; } }
             private void NameClickHandler(object sender, EventArgs args)
             {
                 DataFileSummary dataFileSummaryForm = null;

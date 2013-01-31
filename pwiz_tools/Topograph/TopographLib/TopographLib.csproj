@@ -145,6 +145,7 @@
     <Compile Include="Data\SqlStatementBuilder.cs" />
     <Compile Include="Data\WorkspaceUpgrader.cs" />
     <Compile Include="Enrichment\CrawPeakFinderWrapper.cs" />
+    <Compile Include="Enrichment\PrecursorPoolValue.cs" />
     <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
     <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
     <Compile Include="Model\AbstractSettings.cs" />

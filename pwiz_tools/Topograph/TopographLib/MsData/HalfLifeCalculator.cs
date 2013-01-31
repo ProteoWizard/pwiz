@@ -220,7 +220,10 @@ namespace pwiz.Topograph.MsData
                                  RejectReason = IsAcceptable(rowData),
                              };
             result.InitialPrecursorPool = HalfLifeSettings.InitialPrecursorPool;
-            result.CurrentPrecursorPool = rowData.MsDataFile.PrecursorPool;
+            if (rowData.MsDataFile.PrecursorPool.HasValue)
+            {
+                result.CurrentPrecursorPool = rowData.MsDataFile.PrecursorPool.Value.DoubleValue;
+            }
             if (!result.CurrentPrecursorPool.HasValue)
             {
                 switch (HalfLifeSettings.PrecursorPoolCalculation)

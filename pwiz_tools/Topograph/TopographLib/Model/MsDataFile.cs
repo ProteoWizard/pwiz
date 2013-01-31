@@ -25,6 +25,7 @@ using NHibernate.Criterion;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model.Data;
 using pwiz.Topograph.Util;
 
@@ -112,7 +113,7 @@ namespace pwiz.Topograph.Model
             get { return Data.Sample; }
             set { Data = Data.SetSample(value); }
         }
-        public double? PrecursorPool
+        public PrecursorPoolValue? PrecursorPool
         {
             get { return Data.PrecursorPool; } 
             set { Data = Data.SetPrecursorPool(value); }
@@ -283,6 +284,7 @@ namespace pwiz.Topograph.Model
             dbMsDataFile.Sample = Sample;
             dbMsDataFile.TimePoint = TimePoint;
             dbMsDataFile.Cohort = Cohort;
+            dbMsDataFile.PrecursorPool = PrecursorPool.HasValue ? PrecursorPool.Value.ToPersistedString() : null;
             session.Update(dbMsDataFile);
         }
 
