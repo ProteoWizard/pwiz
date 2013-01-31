@@ -40,12 +40,12 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_DAT = ".dat";
         public const string EXT_SSL = ".ssl";
         public const string EXT_XTAN_XML = ".xtan.xml";
-        public const string EXT_PRIDE_XML = ".pride.xml";
-        public const string EXT_MAX_QUANT = ".msms.txt";
         public const string EXT_PILOT = ".group";
         public const string EXT_PILOT_XML = ".group.xml";
         public const string EXT_PERCOLATOR = ".perc.xml";
         public const string EXT_PERCOLATOR_XML = "results.xml";
+        public const string EXT_PRIDE_XML = "pride.xml";
+        public const string EXT_MAX_QUANT = "msms.txt";
         public const string EXT_WATERS_MSE = "final_fragment.csv";
 
         private ReadOnlyCollection<string> _inputFiles;
