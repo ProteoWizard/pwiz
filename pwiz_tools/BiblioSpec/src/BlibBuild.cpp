@@ -122,11 +122,11 @@ int main(int argc, char* argv[])
                                                progress_cptr);
                 success = pilotReader.parseFile();
                 
-            } else if (has_extension(result_file, ".pride.xml")) {
+            } else if (has_extension(result_file, "pride.xml")) {
                 PrideXmlReader prideXmlReader(builder, result_file, progress_cptr);
 
                 success = prideXmlReader.parseFile();
-            } else if (has_extension(result_file, ".msms.txt")) {
+            } else if (has_extension(result_file, "msms.txt")) {
                 MaxQuantReader maxQuantReader(builder, result_file, progress_cptr);
                 
                 success = maxQuantReader.parseFile();

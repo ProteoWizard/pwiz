@@ -340,6 +340,18 @@ void PrideXmlReader::endData()
         vector<double> decoded;
         encoder.decode(charBuf_, decoded);
 
+        if (decoded.size() != numMzs_)
+        {
+            // check if the length attribute was the number of bytes
+            int decodedBytes = getDecodedNumBytes(charBuf_);
+            if (decodedBytes != numMzs_)
+            {
+                Verbosity::warn("Length attribute (%d) did not match number of m/zs (%d) or bytes (%d)",
+                                numMzs_, decoded.size(), decodedBytes);
+            }
+            numMzs_ = decoded.size();
+        }
+
         curSpec_->mzs = new double[decoded.size()];
         copy(decoded.begin(), decoded.end(), curSpec_->mzs);
 
@@ -352,6 +364,18 @@ void PrideXmlReader::endData()
         vector<double> decoded;
         encoder.decode(charBuf_, decoded);
 
+        if (decoded.size() != numIntensities_)
+        {
+            // check if the length attribute was the number of bytes
+            int decodedBytes = getDecodedNumBytes(charBuf_);
+            if (decodedBytes != numIntensities_)
+            {
+                Verbosity::warn("Length attribute (%d) did not match number of intensities (%d) or bytes (%d)",
+                                numIntensities_, decoded.size(), decodedBytes);
+            }
+            numIntensities_ = decoded.size();
+        }
+
         vector<float> decodedToFloats(decoded.begin(), decoded.end());
 
         curSpec_->intensities = new float[decodedToFloats.size()];
@@ -359,6 +383,24 @@ void PrideXmlReader::endData()
 
         lastState();
     }
+}
+
+int PrideXmlReader::getDecodedNumBytes(string base64)
+{
+    // base 64 string length must be multiple of 4
+    if (base64.length() % 4 != 0)
+    {
+        return -1;
+    }
+    // count number of padding bytes
+    int padding = 0;
+    for (size_t i = base64.length() - 1; base64[i] == '=' && i >= 0; --i)
+    {
+        ++padding;
+    }
+
+    // every 4 base 64 bytes decodes to 3 bytes
+    return base64.length() / 4 * 3 - padding;
 }
 
 void PrideXmlReader::parsePeptideItem()

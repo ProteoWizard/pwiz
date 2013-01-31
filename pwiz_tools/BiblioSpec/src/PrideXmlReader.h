@@ -73,6 +73,7 @@ private:
   void parseCvParam(const XML_Char** attr);
   void parseData(const XML_Char** attr);
   void endData();
+  int getDecodedNumBytes(string base64);
   void parsePeptideItem();
   void endPeptideItem();
   void endSequence();
