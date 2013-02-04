@@ -207,16 +207,19 @@ void PrideXmlReader::parseCvParam(const XML_Char** attr)
             int chargeState = getIntRequiredAttrValue("value", attr);
             spectraChargeStates_[curSpec_->id] = chargeState;
         }
-        else if (nameAttr == "parent ion retention time" || // PRIDE:0000203
-                 nameAttr == "retention time"               // PSI:RETENTION TIME
-                 )
+        else if (nameAttr == "parent ion retention time")   // PRIDE:0000203
+        {
+            double rt = getDoubleRequiredAttrValue("value", attr);
+            curSpec_->retentionTime = rt;
+        }
+        else if (nameAttr == "retention time")  // PSI:RETENTION TIME ; MS:1000894
         {
             const char* rtStr = getRequiredAttrValue("value", attr);
             double rt;
             if (sscanf(rtStr, "PT%lfS", &rt) > 0) // in seconds
                 curSpec_->retentionTime = rt / 60; // to minutes
-            else if (sscanf(rtStr, "%lf", &rt) > 0) // in minutes
-                curSpec_->retentionTime = rt;
+            else
+                curSpec_->retentionTime = atof(rtStr) / 60;
         }
     }
     // get score info
