@@ -309,6 +309,19 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-pride-xcorr
   : check-pride-xcorr ;
 
+make output/pride.xcorr.bytes.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/test.bytes.pride.xml output/pride.xcorr.bytes.blib
+  : 
+  : build-pride-bytes ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/pride.xcorr.bytes.blib reference/pride.xcorr.bytes.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-pride-bytes
+  : check-pride-bytes ;
+
 make output/pride.xcorr.nocharges.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
