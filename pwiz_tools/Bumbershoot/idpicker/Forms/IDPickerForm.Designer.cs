@@ -71,6 +71,7 @@ namespace IDPicker
             this.toExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.subsetFASTAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toQuasitelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.spectralLibraryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.embedSpectraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -206,7 +207,8 @@ namespace IDPicker
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exportAllViewsToolStripMenuItem,
             this.subsetFASTAToolStripMenuItem,
-            this.toQuasitelToolStripMenuItem});
+            this.toQuasitelToolStripMenuItem,
+            this.spectralLibraryToolStripMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             this.exportToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
             this.exportToolStripMenuItem.Text = "Export";
@@ -255,6 +257,13 @@ namespace IDPicker
             this.toQuasitelToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.toQuasitelToolStripMenuItem.Text = "To Quasitel...";
             this.toQuasitelToolStripMenuItem.Click += new System.EventHandler(this.toQuasitelToolStripMenuItem_Click);
+            // 
+            // spectralLibraryToolStripMenuItem
+            // 
+            this.spectralLibraryToolStripMenuItem.Name = "spectralLibraryToolStripMenuItem";
+            this.spectralLibraryToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.spectralLibraryToolStripMenuItem.Text = "Spectral Library";
+            this.spectralLibraryToolStripMenuItem.Click += new System.EventHandler(this.spectralLibraryToolStripMenuItem_Click);
             // 
             // embedSpectraToolStripMenuItem
             // 
@@ -399,7 +408,7 @@ namespace IDPicker
             // showLogToolStripMenuItem
             // 
             this.showLogToolStripMenuItem.Name = "showLogToolStripMenuItem";
-            this.showLogToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.showLogToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.showLogToolStripMenuItem.Text = "Show Log";
             this.showLogToolStripMenuItem.Click += new System.EventHandler(this.showLogToolStripMenuItem_Click);
             // 
@@ -482,6 +491,7 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem proteinViewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem developerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showLogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem spectralLibraryToolStripMenuItem;
 
     }
 }
