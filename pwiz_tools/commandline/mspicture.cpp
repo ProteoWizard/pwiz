@@ -41,13 +41,6 @@ using namespace pwiz::analysis;
 using namespace pwiz::peptideid;
 using namespace boost::filesystem;
 
-// String constants
-const char* WARNING_SINGLE_FILE_PROCESSED = "Warning: Only the first "
-    "input file will be processed: ";
-
-const char* WARNING_SKIPPING_FILE = "Input file (or just a bad commandline "
-     "option?) will not be processed: ";
-
 struct Config
 {
     vector<string> filenames;
@@ -81,8 +74,11 @@ string usage(const Config& config)
 {
     ostringstream oss;
     
-    oss << "Usage: mspicture [options] [input_filename]\n"
+    oss << "Usage: mspicture [options] [input_filenames]\n"
         << "Mass Spec Picture - command line accessgeneration of pseudo2D gels from mass spec data files with optional peptide annotation\n"
+        << "\n"
+        << "Returns:\n"
+        << "0 on success, or the number of input files that generated processing errors.\n"
         << "\n"
         << "Options:\n" 
         << "\n"
@@ -338,55 +334,76 @@ struct testOut
 int main(int argc, const char* argv[])
 {
     size_t tick1 = clock();
-
     namespace bfs = boost::filesystem;
     try
     {
+        int returncode = 0;
         Config config = parseCommandArgs(argc, argv);
 
         if (config.filenames.empty())
             throw runtime_error(usage(config).c_str());
-        else if (config.filenames.size() > 1)
+        // handle multiple filenames, in code written for single filename
+        std::vector<std::string> filenames = config.filenames;
+        if (filenames.size() > 1)
         {
-            cerr << WARNING_SINGLE_FILE_PROCESSED
-                 << config.filenames.at(0)
-                 << endl;
-            for (int n=1;n<(int)config.filenames.size();n++)
-                cerr << WARNING_SKIPPING_FILE
-                 << config.filenames.at(n)
-                 << endl;
+            config.filenames.resize(1);
+            if (config.verbose)
+            {
+                cout << "Multiple files selected for processing: \n";
+                for (int n=0;n<(int)filenames.size();n++)
+                    cout << filenames.at(n) << "\n";
+            }
         }
+        for (int n=0;n<(int)filenames.size();n++)
+        {
+            try
+            {
+                // code below is set up to deal with a single
+                // file at a time, so just make our current file
+                // name be the 0th one
+                config.filenames[0] = filenames[n];
 
-        if (config.verbose)
-            cout << "Processing " 
-                 << config.filenames.at(0)
-                 << " for pictures.\n";
+                if (config.verbose)
+                    cout << "Processing " 
+                         << config.filenames.at(0)
+                         << " for pictures.\n";
         
-        if (!config.filenames.empty())
-            bfs::create_directories(config.outputDirectory);
+                if (!config.filenames.empty())
+                    bfs::create_directories(config.outputDirectory);
         
-        // Construct the Pseudo2DGel object with an MSDataCache object
+                // Construct the Pseudo2DGel object with an MSDataCache object
 
-        MSDataAnalyzerContainer analyzers;
-        initializeAnalyzers(analyzers, config);
+                MSDataAnalyzerContainer analyzers;
+                initializeAnalyzers(analyzers, config);
         
-        // Only take the first file for now.
-        ExtendedReaderList readers;
+                // take one file at a time - we manage list so the 0th one is the current one.
+                ExtendedReaderList readers;
 
-        MSDataFile msd(config.filenames.at(0), &readers);
-        MSDataAnalyzer::DataInfo dataInfo(msd);
+                MSDataFile msd(config.filenames.at(0), &readers);
+                MSDataAnalyzer::DataInfo dataInfo(msd);
         
-        dataInfo.sourceFilename = BFS_STRING(path(config.filenames.at(0)).leaf());
-        dataInfo.outputDirectory = config.outputDirectory;
-        if (config.verbose)
-            dataInfo.log = &cout;
-        else
-            dataInfo.log = NULL;
+                dataInfo.sourceFilename = BFS_STRING(path(config.filenames.at(0)).leaf());
+                dataInfo.outputDirectory = config.outputDirectory;
+                if (config.verbose)
+                    dataInfo.log = &cout;
+                else
+                    dataInfo.log = NULL;
 
-        MSDataAnalyzerDriver driver(analyzers);
+                MSDataAnalyzerDriver driver(analyzers);
         
-        driver.analyze(dataInfo);
-        
+                driver.analyze(dataInfo);
+            }        
+            catch (exception& e)
+            {
+                cerr << e.what() << endl;
+                returncode++;
+            }
+            catch (...)
+            {
+                cerr << "Caught unknown exception.\n";
+                returncode++;
+            }
+        }
         size_t tick2 = clock();
 
         if (config.verbose)
@@ -396,7 +413,7 @@ int main(int argc, const char* argv[])
                  << 1.*(tick2 - tick1)/CLOCKS_PER_SEC << endl;
         }
         
-        return 0;
+        return returncode;
     }
     catch (exception& e)
     {
