@@ -103,6 +103,17 @@ lib pwiz_reader_agilent
     ;
 
 
+# TODO: make this a generic function that works with a "once-flag" argument (not possible with pass-by-value)
+rule warn-once ( message )
+{
+    if ! $(.warn-once-test)
+    {
+        .warn-once-test = true ;
+        echo $(message) ;
+    }
+}
+
+
 rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
@@ -115,31 +126,27 @@ rule test-requirements ( properties * )
     
     local result ;
 
-    if ! $(.warn-once-test)
+    if ! [ path.exists $(TEST_DATA_PATH) ]
     {
-        .warn-once-test = true ;
-        if ! [ path.exists $(TEST_DATA_PATH) ]
-        {
-            echo "[$(READER_PATH)] Missing test data." ;
-            result += <build>no ;
-        }
-        else if  [ without-binary-msdata ] 
-        {
-            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
-        else if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) )
-        {
-            echo "[$(READER_PATH)] MSVC 9.0: $(READER_NAME)_Test is not running due to a small mismatch between VC9 and VC10 behavior." ;
-            result += <build>no ;
-        }
-        else if ! [ project-exists $(API_PATH) ]
-        {
-            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
-        else if ! [ mhdac-dll-location $(API_PATH) : $(properties) ]
-        {
-            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
+        warn-once "[$(READER_PATH)] Missing test data." ;
+        result += <build>no ;
+    }
+    else if  [ without-binary-msdata ] 
+    {
+        warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) )
+    {
+        warn-once "[$(READER_PATH)] MSVC 9.0: $(READER_NAME)_Test is not running due to a small mismatch between VC9 and VC10 behavior." ;
+        result += <build>no ;
+    }
+    else if ! [ project-exists $(API_PATH) ]
+    {
+        warn-once "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if ! [ mhdac-dll-location $(API_PATH) : $(properties) ]
+    {
+        warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
 
     return $(result) ;
@@ -147,7 +154,7 @@ rule test-requirements ( properties * )
 
 local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
 
-# special ru target for Reader_Agilent_Test, which needs external data 
+# special run target for Reader_Agilent_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
 run-if-exists Reader_Agilent_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_vendor_reader_test_harness
     : # args
