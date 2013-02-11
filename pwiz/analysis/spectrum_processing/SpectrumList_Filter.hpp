@@ -149,6 +149,18 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet : public SpectrumLis
 };
 
 
+class PWIZ_API_DECL SpectrumList_FilterPredicate_ChargeStateSet : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_ChargeStateSet(const util::IntegerSet& chargeStateSet);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+
+    private:
+    util::IntegerSet chargeStateSet_;
+};
+
+
 class PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet : public SpectrumList_Filter::Predicate
 {
     public:

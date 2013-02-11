@@ -359,6 +359,16 @@ SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
                             SpectrumList_FilterPredicate_MSLevelSet(msLevelSet)));
 }
 
+SpectrumListPtr filterCreator_chargeState(const MSData& msd, const string& arg)
+{
+    IntegerSet chargeStateSet;
+    chargeStateSet.parse(arg);
+
+    return SpectrumListPtr(new 
+        SpectrumList_Filter(msd.run.spectrumListPtr, 
+                            SpectrumList_FilterPredicate_ChargeStateSet(chargeStateSet)));
+}
+
 
 SpectrumListPtr filterCreator_defaultArrayLength(const MSData& msd, const string& arg)
 {
@@ -581,6 +591,7 @@ JumpTableEntry jumpTable_[] =
 {
     {"index", "int_set", filterCreator_index},
     {"msLevel", "int_set", filterCreator_msLevel},
+    {"chargeState", "int_set (includes both known/single and possible/multiple charge states; use 0 to include spectra with no charge state at all)", filterCreator_chargeState},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
     {"precursorRefine", " (based on ms1 data)", filterCreator_precursorRefine},
     {"peakPicking", "prefer_vendor:<true|false>  int_set(MS levels)", filterCreator_nativeCentroid},

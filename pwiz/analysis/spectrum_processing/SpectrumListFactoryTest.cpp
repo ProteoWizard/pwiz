@@ -154,13 +154,38 @@ void testWrapMSLevel()
 
     SpectrumListPtr& sl = msd.run.spectrumListPtr;
     unit_assert(sl.get());
-    unit_assert(sl->size() == 5);
+    unit_assert_operator_equal(5, sl->size());
 
-    ostringstream oss;
-    oss << "msLevel 2";
-    SpectrumListFactory::wrap(msd, oss.str());
-    unit_assert(sl->size() == 2);
-    unit_assert(sl->spectrumIdentity(0).id == "scan=20");
+    SpectrumListFactory::wrap(msd, "msLevel 2");
+    unit_assert_operator_equal(2, sl->size());
+    unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+}
+
+
+void testWrapChargeState()
+{
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+        SpectrumListFactory::wrap(msd, "chargeState 2");
+        unit_assert_operator_equal(2, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+
+        SpectrumListFactory::wrap(msd, "chargeState 1");
+        unit_assert_operator_equal(0, sl->size());
+    }
+
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+        SpectrumListFactory::wrap(msd, "chargeState 0-2");
+        unit_assert_operator_equal(2, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
 }
 
 
@@ -414,6 +439,7 @@ void test()
     testWrapSortScanTime();
     testWrapMZWindow();
     testWrapMSLevel();
+    testWrapChargeState();
     testWrapDefaultArrayLength();
     testWrapActivation();
     testWrapMassAnalyzer();

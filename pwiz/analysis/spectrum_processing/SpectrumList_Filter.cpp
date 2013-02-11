@@ -273,6 +273,57 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_MSLevelSet::acc
 
 
 //
+// SpectrumList_FilterPredicate_ChargeStateSet 
+//
+
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_ChargeStateSet::SpectrumList_FilterPredicate_ChargeStateSet(const IntegerSet& chargeStateSet)
+:   chargeStateSet_(chargeStateSet)
+{}
+
+
+PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ChargeStateSet::accept(const msdata::Spectrum& spectrum) const
+{
+    CVParam param = spectrum.cvParamChild(MS_spectrum_type);
+    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+    if (!cvIsA(param.cvid, MS_mass_spectrum))
+        return true; // charge state filter doesn't affect non-MS spectra
+    param = spectrum.cvParam(MS_ms_level);
+    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+    int msLevel = param.valueAs<int>();
+    if (msLevel == 1 || // MS1s don't have charge state
+        spectrum.precursors.empty()) // can't do much without a precursor
+        return false;
+
+    BOOST_FOREACH(const Precursor& precursor, spectrum.precursors)
+    {
+        if (precursor.selectedIons.empty())
+            continue;
+
+        BOOST_FOREACH(const SelectedIon& si, precursor.selectedIons)
+        BOOST_FOREACH(const CVParam& cvParam, si.cvParams)
+        {
+            switch (cvParam.cvid)
+            {
+                case MS_charge_state:
+                case MS_possible_charge_state:
+                    if (chargeStateSet_.contains(cvParam.valueAs<int>()))
+                        return true;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    // at this point the charge state could not be determined;
+    // these spectra can be included/excluded by including 0 in the chargeStateSet
+    return chargeStateSet_.contains(0);
+}
+
+
+//
 // SpectrumList_FilterPredicate_PrecursorMzSet 
 //
 
