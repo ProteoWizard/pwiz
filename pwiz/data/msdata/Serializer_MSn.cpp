@@ -171,15 +171,27 @@ namespace
         if( !(s->scanList.empty()) && s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() )
           os << "I\tRTime\t" << s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60 << "\n";
 
-        // Write the base peak intensity and base peak m/z
-        double bpi = s->cvParam(MS_base_peak_intensity).valueAs<double>();
-        double bpm = s->cvParam(MS_base_peak_m_z).valueAs<double>();
-        os << "I\tBPI\t" << bpi << "\n";
-        os << "I\tBPM\t" << bpm << "\n";
+        if (s->defaultArrayLength > 0)
+        {
+            // Write the base peak intensity and base peak m/z
+            if (s->hasCVParam(MS_base_peak_intensity))
+            {
+                double bpi = s->cvParam(MS_base_peak_intensity).valueAs<double>();
+                os << "I\tBPI\t" << bpi << "\n";
+            }
+            if (s->hasCVParam(MS_base_peak_m_z))
+            {
+                double bpm = s->cvParam(MS_base_peak_m_z).valueAs<double>();
+                os << "I\tBPM\t" << bpm << "\n";
+            }
 
-        // Write the total ion current
-        double tic = s->cvParam(MS_total_ion_current).valueAs<double>();
-        os << "I\tTIC\t" << tic << "\n";
+            // Write the total ion current
+            if (s->hasCVParam(MS_total_ion_current))
+            {
+                double tic = s->cvParam(MS_total_ion_current).valueAs<double>();
+                os << "I\tTIC\t" << tic << "\n";
+            }
+        }
 
         //TODO 
         // Write ConvA/ConvB information
