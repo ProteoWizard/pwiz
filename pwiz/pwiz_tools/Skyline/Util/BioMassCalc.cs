@@ -61,8 +61,8 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// Calculates molecular masses based on atomic masses.
     /// Atomic masses come from http://www.unimod.org/unimod_help.html.
-    /// Only supports the atoms H, O, N, C, S and P, and at most
-    /// 2-digit atomic counts.
+    /// Some heavy isotopes come from pwiz/utility/chemistry/isotopes.text, which
+    /// comes from http://physics.nist.gov/PhysRefData/Compositions/index.html
     /// The average mass of Carbon comes from Michael MacCoss, which he claims
     /// was derived by Dwight Matthews and John Hayes in the 70s.  It takes into
     /// account carbon 12 enrichment in living organisms:
@@ -208,37 +208,36 @@ namespace pwiz.Skyline.Util
         public BioMassCalc(MassType type)
         {
             MassType = type;
-            AddMass(H, 1.007825035, 1.00794);
-            AddMass(H2, 2.01355321270, 2.01355321270);
-            AddMass(O, 15.99491463, 15.9994);
-            AddMass(O17, 16.9991322, 16.9991322);
-            AddMass(O18, 17.9991604, 17.9991604);
-            AddMass(N, 14.003074, 14.0067);
-            AddMass(N15, 15.0001088984, 15.0001088984);
-            AddMass(C, 12.0, 12.01085);
-            AddMass(C13, 13.0033548378, 13.0033548378);
-            AddMass(S, 31.9720707, 32.065);
-            AddMass(P, 30.97376151, 30.973761);
+            AddMass(H, 1.007825035, 1.00794); //Unimod
+            AddMass(H2, 2.014101779, 2.014101779); //Unimod
+            AddMass(O, 15.99491463, 15.9994); //Unimod
+            AddMass(O17, 16.9991315, 16.9991315); //NIST
+            AddMass(O18, 17.9991604, 17.9991604); //NIST, Unimod=17.9991603
+            AddMass(N, 14.003074, 14.0067); //Unimod
+            AddMass(N15, 15.0001088984, 15.0001088984); //NIST, Unimod=15.00010897
+            AddMass(C, 12.0, 12.01085); //MacCoss average
+            AddMass(C13, 13.0033548378, 13.0033548378); //NIST, Unimod=13.00335483
+            AddMass(S, 31.9720707, 32.065); //Unimod
+            AddMass(P, 30.973762, 30.973761); //Unimod
 
-            AddMass(Se, 79.9165213, 78.96); // Most abundant Se isotope is 80
-            AddMass(Li, 7.016003, 6.941);
-            AddMass(F, 18.99840322, 18.9984032);
-            AddMass(Na, 22.9897677, 22.98977);
-            AddMass(P, 30.973762, 30.973761);
-            AddMass(S, 31.9720707, 32.065);
-            AddMass(Cl, 34.96885272, 35.453);
-            AddMass(K, 38.9637074, 39.0983);
-            AddMass(Ca, 39.9625906, 40.078);
-            AddMass(Fe, 55.9349393, 55.845);
-            AddMass(Ni, 57.9353462, 58.6934);
-            AddMass(Cu, 62.9295989, 63.546);
-            AddMass(Zn, 63.9291448, 65.409);
-            AddMass(Br, 78.9183361, 79.904);
-            AddMass(Mo, 97.9054073, 95.94);
-            AddMass(Ag, 106.905092, 107.8682);
-            AddMass(I, 126.904473, 126.90447);
-            AddMass(Au, 196.966543, 196.96655);
-            AddMass(Hg, 201.970617, 200.59);
+            AddMass(Se, 79.9165196, 78.96); //Unimod, Most abundant Se isotope is 80
+            AddMass(Li, 7.016003, 6.941); //Unimod
+            AddMass(F, 18.99840322, 18.9984032); //Unimod
+            AddMass(Na, 22.9897677, 22.98977); //Unimod
+            AddMass(S, 31.9720707, 32.065); //Unimod
+            AddMass(Cl, 34.96885272, 35.453); //Unimod
+            AddMass(K, 38.9637074, 39.0983); //Unimod
+            AddMass(Ca, 39.9625906, 40.078); //Unimod
+            AddMass(Fe, 55.9349393, 55.845); //Unimod
+            AddMass(Ni, 57.9353462, 58.6934); //Unimod
+            AddMass(Cu, 62.9295989, 63.546); //Unimod
+            AddMass(Zn, 63.9291448, 65.409); //Unimod
+            AddMass(Br, 78.9183361, 79.904); //Unimod
+            AddMass(Mo, 97.9054073, 95.94); //Unimod
+            AddMass(Ag, 106.905092, 107.8682); //Unimod
+            AddMass(I, 126.904473, 126.90447); //Unimod
+            AddMass(Au, 196.966543, 196.96655); //Unimod
+            AddMass(Hg, 201.970617, 200.59); //Unimod
             AddMass(B, 11.0093055, 10.811);
             AddMass(As, 74.9215942, 74.9215942);
             AddMass(Cd, 113.903357, 112.411);
