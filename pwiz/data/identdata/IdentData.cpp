@@ -1146,8 +1146,18 @@ PWIZ_API_DECL proteome::Modification modification(const Modification& mod)
     if (firstUnimodAnnotation.empty())
         return proteome::Modification(mod.monoisotopicMassDelta, mod.avgMassDelta);
 
-    // return mod with formula
-    return proteome::Modification(unimod::modification(firstUnimodAnnotation.cvid).deltaComposition);
+    // HACK: allow Unimod CVParams that aren't yet supported by pwiz::unimod to be manually added by the caller
+    try
+    {
+        unimod::Modification umod = unimod::modification(firstUnimodAnnotation.cvid);
+
+        // return mod with formula
+        return proteome::Modification(umod.deltaComposition);
+    }
+    catch (runtime_error&)
+    {
+        return proteome::Modification(mod.monoisotopicMassDelta, mod.avgMassDelta);
+    }
 }
 
 PWIZ_API_DECL CVID cleavageAgent(const Enzyme& ez)

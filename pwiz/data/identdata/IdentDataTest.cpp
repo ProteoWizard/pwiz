@@ -354,6 +354,29 @@ void testConversion()
     unit_assert_operator_equal(1, pep5.modifications().count(ModificationMap::CTerminus()));
     unit_assert_operator_equal(unimod::modification(UNIMOD_Amidated).deltaMonoisotopicMass(),
                                pep5.modifications().find(ModificationMap::CTerminus())->second.monoisotopicDeltaMass());
+
+    // test an isotope labelled peptide with a UNIMOD cvParam but no supported formula
+    Modification* nMod = new Modification();
+    Modification* cMod = new Modification();
+    nMod->location = 0;
+    cMod->location = 11; cMod->residues.push_back('K'); 
+    nMod->monoisotopicMassDelta = cMod->monoisotopicMassDelta = 229.1629;
+    nMod->avgMassDelta = cMod->avgMassDelta = 229.2634;
+    nMod->set(UNIMOD_TMT6plex);
+    cMod->set(UNIMOD_TMT6plex);
+
+    Peptide tmtPeptide;
+    tmtPeptide.peptideSequence = "ELVISLIVESK";
+    tmtPeptide.modification.push_back(ModificationPtr(nMod));
+    tmtPeptide.modification.push_back(ModificationPtr(cMod));
+    
+    proteome::Peptide tmtProteomePeptide = peptide(tmtPeptide);
+    unit_assert_operator_equal("ELVISLIVESK", tmtProteomePeptide.sequence());
+    unit_assert_operator_equal(2, tmtProteomePeptide.modifications().size());
+    unit_assert_operator_equal(1, tmtProteomePeptide.modifications().count(ModificationMap::NTerminus()));
+    unit_assert_operator_equal(229.1629, tmtProteomePeptide.modifications().find(ModificationMap::NTerminus())->second.monoisotopicDeltaMass());
+    unit_assert_operator_equal(1, tmtProteomePeptide.modifications().count(10));
+    unit_assert_operator_equal(229.1629, tmtProteomePeptide.modifications().find(10)->second.monoisotopicDeltaMass());
 }
 
 void testCleavageAgent()
