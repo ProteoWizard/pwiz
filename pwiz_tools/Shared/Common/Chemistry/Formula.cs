@@ -127,7 +127,7 @@ namespace pwiz.Common.Chemistry
     {
         public static T Parse(String formula)
         {
-            var result = new SortedDictionary<string, int>();
+            var result = new Dictionary<string, int>();
             string currentElement = null;
             int currentQuantity = 0;
             foreach (char ch in formula)
@@ -144,13 +144,14 @@ namespace pwiz.Common.Chemistry
                         {
                             currentQuantity = 1;
                         }
-                        if (result.ContainsKey(currentElement))
+                        int previous;
+                        if (result.TryGetValue(currentElement, out previous))
                         {
-                            result[currentElement] = result[currentElement] + currentQuantity;
+                            result[currentElement] = previous + currentQuantity;
                         }
                         else
                         {
-                            result[currentElement] = currentQuantity;
+                            result.Add(currentElement, previous + currentQuantity);
                         }
                     }
                     currentQuantity = 0;
@@ -168,16 +169,18 @@ namespace pwiz.Common.Chemistry
                 {
                     currentQuantity = 1;
                 }
-                if (result.ContainsKey(currentElement))
+
+                int previous;
+                if (result.TryGetValue(currentElement, out previous))
                 {
-                    result[currentElement] = result[currentElement] + currentQuantity;
+                    result[currentElement] = previous + currentQuantity;
                 }
                 else
                 {
-                    result[currentElement] = currentQuantity;
+                    result.Add(currentElement, previous + currentQuantity);
                 }
             }
-            return new T {Dictionary = result};
+            return new T {Dictionary = new SortedDictionary<string, int>(result)};
         }
 
         public override string ToString()

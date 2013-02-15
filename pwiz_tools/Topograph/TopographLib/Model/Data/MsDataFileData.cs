@@ -33,7 +33,6 @@ namespace pwiz.Topograph.Model.Data
             Label = dbMsDataFile.Label;
             Cohort = dbMsDataFile.Cohort;
             Sample = dbMsDataFile.Sample;
-            double precursorPool;
             PrecursorPool = PrecursorPoolValue.ParsePersistedString(dbMsDataFile.PrecursorPool);
             TimePoint = dbMsDataFile.TimePoint;
             Times = ImmutableList.ValueOf(dbMsDataFile.Times);

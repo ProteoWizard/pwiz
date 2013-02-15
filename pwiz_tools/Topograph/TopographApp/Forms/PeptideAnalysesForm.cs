@@ -23,7 +23,6 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using NHibernate;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
@@ -37,7 +36,7 @@ namespace pwiz.Topograph.ui.Forms
     public partial class PeptideAnalysesForm : BasePeptideAnalysesForm
     {
         private const string Title = "Peptide Analyses";
-        private readonly BindingList<PeptideAnalysisRow> _peptideAnalyses = new BindingList<PeptideAnalysisRow>();
+        private readonly PeptideAnalysisRows _peptideAnalyses;
 
         public PeptideAnalysesForm(Workspace workspace) : base(workspace)
         {
@@ -65,20 +64,8 @@ namespace pwiz.Topograph.ui.Forms
                     });
             viewContext.BuiltInViewSpecs = new[] {viewSpec};
             bindingListSource1.SetViewContext(viewContext);
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            Repopulate();
+            _peptideAnalyses = new PeptideAnalysisRows(Workspace.PeptideAnalyses);
             bindingListSource1.RowSource = _peptideAnalyses;
-        }
-
-        private void Repopulate()
-        {
-            var newItems = Workspace.PeptideAnalyses
-                .Select(peptideAnalysis => new PeptideAnalysisRow(peptideAnalysis));
-            BindingLists.ReplaceItems(_peptideAnalyses, newItems);
         }
 
         private void DeleteAnalysesMenuItemOnClick(object sender, EventArgs e)
@@ -392,15 +379,6 @@ namespace pwiz.Topograph.ui.Forms
 //            }
         }
 
-        protected override void WorkspaceOnChange(object sender, WorkspaceChangeArgs args)
-        {
-            base.WorkspaceOnChange(sender, args);
-            if (!Equals(args.OriginalData.PeptideAnalyses, Workspace.Data.PeptideAnalyses))
-            {
-                Repopulate();
-            }
-        }
-
         public class PeptideAnalysisRow : PropertyChangedSupport
         {
             public PeptideAnalysisRow(PeptideAnalysis peptideAnalysis)
@@ -581,6 +559,23 @@ namespace pwiz.Topograph.ui.Forms
                     session.Save(changeLog);
                 }
                 session.Transaction.Commit();
+            }
+        }
+
+        class PeptideAnalysisRows : ConvertedCloneableBindingList<long, PeptideAnalysis, PeptideAnalysisRow>
+        {
+            public PeptideAnalysisRows(PeptideAnalyses peptideAnalyses) : base(peptideAnalyses)
+            {
+            }
+
+            public override long GetKey(PeptideAnalysisRow value)
+            {
+                return value.PeptideAnalysis.Id;
+            }
+
+            protected override PeptideAnalysisRow Convert(PeptideAnalysis source)
+            {
+                return new PeptideAnalysisRow(source);
             }
         }
     }

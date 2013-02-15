@@ -107,8 +107,8 @@ namespace pwiz.Topograph.Model
             }
         }
         public int TracerCount { get { return Peptide.MaxTracerCount; } }
-        public double? PeakStartTime { get { return CalculatedPeaks.StartTime; } }
-        public double? PeakEndTime { get { return CalculatedPeaks.EndTime; } }
+        public double? PeakStartTime { get { return CalculatedPeaks == null ? null : CalculatedPeaks.StartTime; } }
+        public double? PeakEndTime { get { return CalculatedPeaks == null ? null : CalculatedPeaks.EndTime; } }
 
         public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, ILookup<long, double> psmTimesByDataFileId)
         {

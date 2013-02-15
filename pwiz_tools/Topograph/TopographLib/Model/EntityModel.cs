@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Model.Data;
 
@@ -32,6 +31,7 @@ namespace pwiz.Topograph.Model
         {
             Workspace = workspace;
         }
+        [Browsable(false)]
         public Workspace Workspace { get; private set; }
         protected virtual void OnChange()
         {
@@ -63,6 +63,7 @@ namespace pwiz.Topograph.Model
             return myValue;
         }
 
+        [Browsable(false)]
         public bool RaisePropertyChangedEvents { get; set; }
         public IDisposable DisablePropertyChangedEvents()
         {
@@ -109,6 +110,7 @@ namespace pwiz.Topograph.Model
         }
 
         protected TKey Key { get; private set; }
+        [Browsable(false)]
         public TData Data
         {
             get { return _data; }

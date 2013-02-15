@@ -222,7 +222,7 @@ namespace pwiz.Topograph.MsData
             result.InitialPrecursorPool = HalfLifeSettings.InitialPrecursorPool;
             if (rowData.MsDataFile.PrecursorPool.HasValue)
             {
-                result.CurrentPrecursorPool = rowData.MsDataFile.PrecursorPool.Value.DoubleValue;
+                result.CurrentPrecursorPool = 100 * rowData.MsDataFile.PrecursorPool.Value.DoubleValue;
             }
             if (!result.CurrentPrecursorPool.HasValue)
             {
@@ -317,11 +317,12 @@ namespace pwiz.Topograph.MsData
             var minScore = Workspace.GetMinDeconvolutionScoreForAvgPrecursorPool();
             var valueLists = Workspace.PeptideAnalyses
                 .SelectMany(peptideAnalysis => peptideAnalysis.FileAnalyses)
-                .Where(peptideFileAnalysis => null != peptideFileAnalysis.CalculatedPeaks
+                .Where(peptideFileAnalysis => null != peptideFileAnalysis.PeakData.Peaks
+                                              && peptideFileAnalysis.PeakData.PrecursorEnrichment.HasValue
                                               && ValidationStatus.reject != peptideFileAnalysis.ValidationStatus
-                                              && peptideFileAnalysis.CalculatedPeaks.DeconvolutionScore >= minScore)
+                                              && peptideFileAnalysis.PeakData.DeconvolutionScore >= minScore)
                 .ToLookup(peptideFileAnalysis => peptideFileAnalysis.MsDataFile.Id,
-                          peptideFileAnalysis => peptideFileAnalysis.CalculatedPeaks.PrecursorEnrichment);
+                          peptideFileAnalysis => peptideFileAnalysis.PeakData.PrecursorEnrichment.GetValueOrDefault());
             return valueLists.ToDictionary(grouping => grouping.Key, grouping => new Statistics(grouping.ToArray()).Median());
         }
 

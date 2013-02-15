@@ -89,7 +89,7 @@ namespace pwiz.Topograph.Model
         }
         public double TracerPercent { get; private set; }
         public double DeconvolutionScore { get; private set; }
-        public double PrecursorEnrichment { get; private set; }
+        public double? PrecursorEnrichment { get; private set; }
         public TracerPercentFormula PrecursorEnrichmentFormula { get; private set; }
         public double? Turnover { get; private set; }
         public double? TurnoverScore { get; private set; }

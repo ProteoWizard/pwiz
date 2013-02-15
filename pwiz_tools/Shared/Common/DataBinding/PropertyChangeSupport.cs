@@ -40,6 +40,7 @@ namespace pwiz.Common.DataBinding
             _sender = this;
         }
 
+        [Browsable(false)]
         public event PropertyChangedEventHandler PropertyChanged
         {
             add

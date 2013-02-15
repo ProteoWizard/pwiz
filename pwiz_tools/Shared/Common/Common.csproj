@@ -152,6 +152,8 @@
     </Compile>
     <Compile Include="DataBinding\Controls\ViewCell.cs" />
     <Compile Include="DataBinding\Controls\ViewColumn.cs" />
+    <Compile Include="DataBinding\ConvertedCloneableBindingList.cs" />
+    <Compile Include="DataBinding\ConvertedCloneableList.cs" />
     <Compile Include="DataBinding\DataColumnAttribute.cs" />
     <Compile Include="DataBinding\DataFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
