@@ -20,6 +20,7 @@ namespace pwiz.Topograph.Model
 {
     public class RetentionTimeAlignment
     {
+        public static readonly RetentionTimeAlignment Invalid = new RetentionTimeAlignment(double.NaN, double.NaN);
         public RetentionTimeAlignment(double slope, double intercept)
         {
             Slope = slope;
@@ -53,6 +54,10 @@ namespace pwiz.Topograph.Model
             {
                 return (Slope.GetHashCode()*397) ^ Intercept.GetHashCode();
             }
+        }
+        public bool IsInvalid
+        {
+            get { return Equals(Slope, double.NaN); }
         }
     }
 }

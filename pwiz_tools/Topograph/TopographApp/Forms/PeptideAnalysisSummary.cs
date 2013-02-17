@@ -228,7 +228,7 @@ namespace pwiz.Topograph.ui.Forms
                         else
                         {
                             var alignment = fileAnalysis.MsDataFile.GetRetentionTimeAlignment(normalizeTo);
-                            if (alignment == null)
+                            if (alignment.IsInvalid)
                             {
                                 pointPairList.Add(new PointPair(iFileAnalysis + 1, PointPairBase.Missing, PointPairBase.Missing));
                             }

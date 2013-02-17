@@ -255,7 +255,7 @@ namespace pwiz.Topograph.Model
             }
             else
             {
-                result = new RetentionTimeAlignment(double.NaN, double.NaN);
+                result = RetentionTimeAlignment.Invalid;
             }
             Workspace.RetentionTimeAlignments.AddAlignment(key, result);
             return result;

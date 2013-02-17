@@ -144,7 +144,7 @@ namespace pwiz.Topograph.Model
                     continue;
                 }
                 var alignment = otherFile.GetRetentionTimeAlignment(msDataFile);
-                if (alignment == null)
+                if (alignment.IsInvalid)
                 {
                     continue;
                 }

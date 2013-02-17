@@ -482,7 +482,7 @@ namespace pwiz.Topograph.Model
                     continue;
                 }
                 var retentionTimeAlignment = peptideFileAnalysis.MsDataFile.GetRetentionTimeAlignment(PeptideFileAnalysis.MsDataFile);
-                if (retentionTimeAlignment != null)
+                if (!retentionTimeAlignment.IsInvalid)
                 {
                     firstDetectedTime = Math.Min(firstDetectedTime,
                         retentionTimeAlignment.GetTargetTime(startTime.Value));

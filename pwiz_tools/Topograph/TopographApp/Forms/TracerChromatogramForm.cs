@@ -292,7 +292,7 @@ namespace pwiz.Topograph.ui.Forms
                 var retentionTimeAlignment =
                     overlayFileAnalysis.MsDataFile.GetRetentionTimeAlignment(PeptideFileAnalysis.MsDataFile);
                 mappedTimes =
-                    overlayTracerChromatograms.Times.Select(t => retentionTimeAlignment.GetTargetTime(t)).ToArray();
+                    overlayTracerChromatograms.Times.Select(retentionTimeAlignment.GetTargetTime).ToArray();
             }
             var peaks = PeptideFileAnalysis.CalculatedPeaks;
             var entries = tracerChromatograms.Points.ToArray();
