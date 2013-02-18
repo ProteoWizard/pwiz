@@ -68,6 +68,7 @@ lib Parser
     ;
 
 exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
+exe idpQuery : idpQuery.cpp ../freicore/libraries/SQLite//sqlite3pp /ext/boost//filesystem /ext/boost//regex /ext/boost//date_time ;
 
 import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;

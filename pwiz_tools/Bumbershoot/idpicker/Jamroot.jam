@@ -676,6 +676,7 @@ rule dotNET-dependencies ( properties * )
 install install
     : # sources
         Qonverter//idpQonvert
+        Qonverter//idpQuery
     : # requirements
         <conditional>@dotNET-dependencies
         <conditional>@install-location

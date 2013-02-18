@@ -1139,13 +1139,16 @@ namespace IDPicker.DataModel
             var spectrumSetByProteinGroup = new Map<int, Set<long>>();
             var proteinGroupSetBySpectrumId = new Map<long, Set<int>>();
 
-            var query = session.CreateQuery("SELECT pro.ProteinGroup, psm.Spectrum.id " +
-                                            GetFilteredQueryString(FromProtein, ProteinToPeptideSpectrumMatch));
+            var query = session.CreateSQLQuery(@"SELECT pro.ProteinGroup, psm.Spectrum
+                                                 FROM PeptideSpectrumMatch psm
+                                                 JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide
+                                                 JOIN Protein pro on pi.Protein=pro.Id
+                                                ");
 
             foreach (var queryRow in query.List<object[]>())
             {
                 int proteinGroup = Convert.ToInt32(queryRow[0]);
-                long spectrumId = (long)queryRow[1];
+                long spectrumId = Convert.ToInt64(queryRow[1]);
 
                 spectrumSetByProteinGroup[proteinGroup].Add(spectrumId);
                 proteinGroupSetBySpectrumId[spectrumId].Add(proteinGroup);

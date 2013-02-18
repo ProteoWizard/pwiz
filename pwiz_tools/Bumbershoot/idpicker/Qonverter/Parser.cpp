@@ -214,6 +214,11 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
         if (!analysis.parameters.insert(make_pair(key, value)).second)
             analysis.parameters[key] += ", " + value;
     }
+    
+    // TODO: change from decoy prefix notation to a more generic regex notation
+    CVParam decoyRegexp = sd.cvParam(MS_decoy_DB_accession_regexp);
+    if (!decoyRegexp.empty())
+        analysis.parameters["DecoyPrefix"] = bal::trim_left_copy_if(decoyRegexp.value, bal::is_any_of("^"));
 
     // userParams are assumed to be uniquely keyed on name
     BOOST_FOREACH(const UserParam& userParam, userParams)

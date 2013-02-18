@@ -331,9 +331,10 @@ struct SpectrumList_Quantifier
         for (int i=1; i < 5; ++i) itraq4plexIons.push_back(iTRAQ_masses[i]);
         for (int i=0; i < 8; ++i) itraq8plexIons.push_back(iTRAQ_masses[i]);
 
-        double TMT_masses[6] = { 126.1283, 127.1316, 128.135, 129.1383, 130.1417, 131.1387 };
+        // the 127 and 129 ions come in two flavors
+        double TMT_masses[8] = { 126.1277, 127.1248, 127.1316, 128.1344, 129.1314, 129.1383, 130.1411, 131.1382 };
         for (int i=0; i < 2; ++i) tmt2plexIons.push_back(TMT_masses[i]);
-        for (int i=0; i < 6; ++i) tmt6plexIons.push_back(TMT_masses[i]);
+        for (int i=0; i < 8; ++i) tmt6plexIons.push_back(TMT_masses[i]);
 
         itraqReporterIonIntensities.resize(8);
         itraqTotalReporterIonIntensities.resize(8, 0);
@@ -479,6 +480,11 @@ struct SpectrumList_Quantifier
                 ++itr;
                 if (itr == end)
                     break;
+
+                // if the next reporter ion is less than half a dalton away from the last one, re-use the same intensity bin
+                if (*itr - *(itr-1) < 0.5)
+                    --offset;
+
                 --i;
             }
             else
