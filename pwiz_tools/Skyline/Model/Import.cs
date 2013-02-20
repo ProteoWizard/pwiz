@@ -745,7 +745,7 @@ namespace pwiz.Skyline.Model
 
             private static string RemoveSequenceNotes(string seq)
             {
-                if (seq.IndexOf('[') == -1) // Not L10N
+                if (seq.IndexOf('[') == -1 && seq.IndexOf('.') == -1) // Not L10N
                     return seq;
                 StringBuilder seqBuild = new StringBuilder(seq.Length);
                 bool inNote = false;
@@ -763,7 +763,11 @@ namespace pwiz.Skyline.Model
                         inNote = false;                        
                     }
                 }
-                return seqBuild.ToString();
+                string seqClean = seqBuild.ToString();
+                int dotIndex = seqClean.IndexOf('.'); // Not L10N
+                if (dotIndex != -1)
+                    seqClean = seqClean.Substring(0, dotIndex);
+                return seqClean;
             }
 
             private static readonly string[] EXCLUDE_PROTEIN_VALUES = new[] { "true", "false", "heavy", "light", "unit" }; // Not L10N

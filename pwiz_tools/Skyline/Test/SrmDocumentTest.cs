@@ -195,10 +195,27 @@ namespace pwiz.SkylineTest
             count = EqualCsvs(DOC_0_1_BOVINE, 4, ThermoExporters, ExportStrategy.Single, 1, null,
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
+                                  ExportMethodType.Standard);
+            Assert.AreEqual(1, count);
             count = EqualCsvs(DOC_0_1_PEPTIDES_NO_EMPTY, 0, CreateAbiExporters, ExportStrategy.Buckets, 1, 6,
                               ExportMethodType.Standard);
             // TODO: Test scheduled runs
             Assert.AreEqual(3, count);
+        }
+
+        /// <summary>
+        /// Test export and reimport of Waters and Agilent transition list formats
+        /// </summary>
+        [TestMethod]
+        public void DocumentExportImportTest()
+        {
+            int count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
+                                  ExportMethodType.Standard);
+            Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateAgilentExporter, ExportStrategy.Single, 2, null,
+                                  ExportMethodType.Standard);
+            Assert.AreEqual(1, count);
         }
 
         private static int EqualCsvs(string xml, int countFields, CreateExporters exporters,
@@ -210,7 +227,7 @@ namespace pwiz.SkylineTest
             return EqualCsvs(target, actual, countFields, exporters, strategy, minTransition, maxTransition, methodType);
         }
 
-        private static int EqualCsvs(XmlSrmDocument target, SrmDocument actual, int coundFields, CreateExporters exporters,
+        private static int EqualCsvs(XmlSrmDocument target, SrmDocument actual, int countFields, CreateExporters exporters,
                                      ExportStrategy strategy, int minTransition, int? maxTransition, ExportMethodType methodType)
         {
             XmlMassListExporter exporterTarget;
@@ -240,8 +257,8 @@ namespace pwiz.SkylineTest
                 string actualList = exportedActual[key].ToString();
 
                 Assert.AreNotEqual(0, targetList.Length);
-                if (coundFields > 0)
-                    AssertEx.FieldsEqual(targetList, actualList, coundFields);
+                if (countFields > 0)
+                    AssertEx.FieldsEqual(targetList, actualList, countFields);
                 else
                     AssertEx.NoDiff(targetList, actualList);
 
@@ -260,6 +277,41 @@ namespace pwiz.SkylineTest
             return exportedTarget.Count;
         }
 
+        private static int ExportAll(string xml, int countFields, CreateExporter exporters,
+                                     ExportStrategy strategy, int minTransition, int? maxTransition,
+                                     ExportMethodType methodType)
+        {
+            SrmDocument actual = AssertEx.Deserialize<SrmDocument>(xml);
+
+            return ExportAll(actual, countFields, exporters, strategy, minTransition, maxTransition, methodType);
+        }
+
+        private static int ExportAll(SrmDocument actual, int countFields, CreateExporter exporter,
+                                     ExportStrategy strategy, int minTransition, int? maxTransition,
+                                     ExportMethodType methodType)
+        {
+            AbstractMassListExporter exporterActual;
+            exporter(actual, out exporterActual);
+            exporterActual.Export(null);
+            var exportedActual = exporterActual.MemoryOutput;
+            
+            // Make sure the resulting output can be imported
+            SrmDocument docImport = new SrmDocument(actual.Settings);
+            foreach (string key in exportedActual.Keys)
+            {
+                string actualList = exportedActual[key].ToString();
+
+                // Import the exported list
+                using (var readerImport = new StringReader(actualList))
+                {
+                    IdentityPath pathAdded;
+                    IFormatProvider provider = CultureInfo.InvariantCulture;
+                    docImport = docImport.ImportMassList(readerImport, provider, ',', IdentityPath.ROOT, out pathAdded);
+                }
+            }
+            return exportedActual.Count;
+        }
+
         private delegate void CreateExporters(XmlSrmDocument target, out XmlMassListExporter exporterTarget,
                                               SrmDocument actual, out AbstractMassListExporter exporterActual);
 
@@ -275,6 +327,18 @@ namespace pwiz.SkylineTest
         {
             exporterTarget = new XmlAbiMassListExporter(target);
             exporterActual = new AbiMassListExporter(actual);
+        }
+
+        private delegate void CreateExporter(SrmDocument actual, out AbstractMassListExporter exporterActual);
+
+        private static void CreateWatersExporter(SrmDocument actual, out AbstractMassListExporter exporterActual)
+        {
+            exporterActual = new WatersMassListExporter(actual);
+        }
+
+        private static void CreateAgilentExporter(SrmDocument actual, out AbstractMassListExporter exporterActual)
+        {
+            exporterActual = new AgilentMassListExporter(actual);
         }
 
         private static void CheckImportSimilarity(SrmDocument document, SrmDocument docImport)

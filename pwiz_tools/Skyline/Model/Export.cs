@@ -1114,8 +1114,11 @@ namespace pwiz.Skyline.Model
             writer.Write(nodePepGroup.Name);
             writer.Write(FieldSeparator);
             // Write modified sequence for the light peptide molecule
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
-                IsotopeLabelType.light, nodePep.ExplicitMods));
+            string modifiedSequence = Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                IsotopeLabelType.light, nodePep.ExplicitMods);
+            string compoundName = string.Format("{0}.{1}", modifiedSequence, nodeTranGroup.TransitionGroup.LabelType);
+            writer.Write(compoundName);
+
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)    // ISTD?
@@ -1145,7 +1148,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
                 bool trigger = false;
-                if (nodeTranGroup.TransitionGroup.LabelType.IsLight && rank.HasValue && rank.Value == 1)
+                if (IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
                 {
                     int minCharge = nodePep.TransitionGroups.Select(g => g.TransitionGroup.PrecursorCharge).Min();
                     if (nodeTranGroup.TransitionGroup.PrecursorCharge == minCharge)
@@ -1190,6 +1193,31 @@ namespace pwiz.Skyline.Model
             if (nodeTran.HasLibInfo)
                 writer.Write(nodeTran.LibInfo.Rank);
             writer.WriteLine();
+        }
+
+        private static bool IsTriggerType(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, IList<IsotopeLabelType> istdTypes)
+        {
+            // If there is a light precursor, then it is always the trigger
+            if (nodeTranGroup.TransitionGroup.LabelType.IsLight)
+                return true;
+            // Get all precursors with the same charge state and at least 1 transition, including this one
+            var arrayTranGroups = nodePep.TransitionGroups
+                .Where(g => g.TransitionGroup.PrecursorCharge == nodeTranGroup.TransitionGroup.PrecursorCharge &&
+                            g.TransitionCount > 0).ToArray();
+            // If it is the only precursor of this charge state, then it must be the trigger
+            if (arrayTranGroups.Length == 1)
+                return true;
+            // If there is no light precursor
+            var firstGroup = arrayTranGroups.First();
+            if (!firstGroup.TransitionGroup.LabelType.IsLight)
+            {
+                // See if there is a precursor not of an internal standard type, and use the first such precursor
+                var analyteGroup = arrayTranGroups.FirstOrDefault(g => !istdTypes.Contains(g.TransitionGroup.LabelType));
+                if (analyteGroup != null)
+                    return ReferenceEquals(analyteGroup, nodeTranGroup);
+            }
+            // Otherwise, the first precursor in the list is the trigger.
+            return ReferenceEquals(firstGroup, nodeTranGroup);
         }
     }
 
@@ -1397,7 +1425,7 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
-            // TODO: L1ON?
+            // Not L10N
             writer.Write("protein.name");
             writer.Write(FieldSeparator);
             writer.Write("peptide.seq");    // modified sequence to support 1:1 requirement with precursor m/z

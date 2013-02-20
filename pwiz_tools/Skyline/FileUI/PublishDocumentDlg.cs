@@ -156,30 +156,7 @@ namespace pwiz.Skyline.FileUI
         {
             try
             {
-                JEnumerable<JToken> subFolders = folder["children"].Children(); // Not L10N
-                foreach (var subFolder in subFolders)
-                {
-                    string folderName = (string) subFolder["name"]; // Not L10N
-                    int userPermissions = (int) subFolder["userPermissions"]; // Not L10N
-
-                    // Do not show folders user doesn't have read permissions for
-                    if (!Equals(userPermissions & 1, 1))
-                        return;
-
-                    TreeNode folderNode = new TreeNode(folderName);
-                    node.Nodes.Add(folderNode);
-
-                    // User can only upload to folders where TargetedMS is an active module.
-                    JToken modules = subFolder["activeModules"]; // Not L10N
-                    bool canUpload = ContainsTargetedMSModule(modules) && Equals(userPermissions & 2, 2);
-
-                    // User cannot upload files to folder
-                    if (!canUpload)
-                        folderNode.ForeColor = Color.Gray;
-
-                    folderNode.Tag = new FolderInformation(server, canUpload);
-                    AddSubFolders(server, folderNode, subFolder);
-                }
+                AddChildContainers(server, node, folder);
             }
             catch (Exception x)
             {
@@ -188,7 +165,40 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
+        public static void AddChildContainers(Server server, TreeNode node, JToken folder)
+        {
+            JEnumerable<JToken> subFolders = folder["children"].Children(); // Not L10N
+            foreach (var subFolder in subFolders)
+            {
+                string folderName = (string)subFolder["name"]; // Not L10N
+
+                TreeNode folderNode = new TreeNode(folderName);
+                AddChildContainers(server, folderNode, subFolder);
+
+                int userPermissions = (int)subFolder["userPermissions"]; // Not L10N
+
+                // User can only upload to folders where TargetedMS is an active module.
+                JToken modules = subFolder["activeModules"]; // Not L10N
+                bool canUpload = ContainsTargetedMSModule(modules) && Equals(userPermissions & 2, 2);
+
+                // If the user does not have write permissions in this folder or any
+                // of its subfolders, do not add it to the tree.
+                if (folderNode.Nodes.Count == 0 && !canUpload)
+                {
+                    continue;
+                }
+
+                node.Nodes.Add(folderNode);
+
+                // User cannot upload files to folder
+                if (!canUpload)
+                    folderNode.ForeColor = Color.Gray;
+
+                folderNode.Tag = new FolderInformation(server, canUpload);
+            } 
+        }
+
+        private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
         {
             foreach (var module in modules)
             {

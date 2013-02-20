@@ -2281,7 +2281,7 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 RetentionTimeFilterType = reader.GetEnumAttribute(ATTR.retention_time_filter_type, RetentionTimeFilterType.none);
-                RetentionTimeFilterLength = reader.GetIntAttribute(ATTR.retention_time_filter_length);
+                RetentionTimeFilterLength = reader.GetDoubleAttribute(ATTR.retention_time_filter_length);
             }
 
             // Create isolation scheme for backward compatibility.
