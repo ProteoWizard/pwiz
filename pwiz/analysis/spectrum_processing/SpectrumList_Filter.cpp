@@ -504,6 +504,39 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_Polarity::accep
 }
 
 
+//
+// SpectrumList_FilterPredicate_MzPresent
+//
+
+SpectrumList_FilterPredicate_MzPresent::SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, std::set<double> mzSet, ThresholdFilter tf, bool inverse) : mzt_(mzt), mzSet_(mzSet), tf_(tf), inverse_(inverse) {}
+
+boost::logic::tribool SpectrumList_FilterPredicate_MzPresent::accept(const msdata::Spectrum& spectrum) const
+{
+    if (spectrum.getMZArray().get() == NULL || spectrum.getIntensityArray().get() == NULL)
+        return boost::logic::indeterminate;
+
+    // threshold spectrum
+    SpectrumPtr sptr(new Spectrum(spectrum));
+    tf_(sptr);
+
+    for (std::vector<double>::iterator iterMZ = sptr->getMZArray()->data.begin(); iterMZ != sptr->getMZArray()->data.end(); ++iterMZ)
+    {
+        for (std::set<double>::const_iterator mzSetIter = mzSet_.begin(); mzSetIter != mzSet_.end(); ++mzSetIter) {
+            if (isWithinTolerance(*mzSetIter, *iterMZ, mzt_))
+            {
+                if (inverse_)
+                    return false;
+                else
+                    return true;
+            }
+        }
+    }
+
+    if (inverse_)
+        return true;
+    return false;
+}
+
 } // namespace analysis
 } // namespace pwiz
 

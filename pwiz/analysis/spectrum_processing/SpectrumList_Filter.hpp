@@ -28,6 +28,8 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
+#include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "boost/logic/tribool.hpp"
 
 #include <set>
@@ -222,6 +224,22 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_Polarity : public SpectrumList_
     private:
     pwiz::cv::CVID polarity;
 
+};
+
+
+class PWIZ_API_DECL SpectrumList_FilterPredicate_MzPresent : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, std::set<double> mzSet, ThresholdFilter tf, bool inverse);
+    virtual msdata::DetailLevel suggestedDetailLevel() const {return msdata::DetailLevel_FullData;}
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+
+    private:
+    chemistry::MZTolerance mzt_;
+    std::set<double> mzSet_;
+    ThresholdFilter tf_;
+    bool inverse_;
 };
 
 } // namespace analysis

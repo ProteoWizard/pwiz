@@ -68,6 +68,14 @@ SpectrumListPtr createSpectrumList()
         spectrum->id = "scan=" + lexical_cast<string>(100+i);
         spectrum->setMZIntensityPairs(vector<MZIntensityPair>(i), MS_number_of_counts);
 
+        // add mz/intensity to the spectra for mzPresent filter
+        vector<MZIntensityPair> mzint(i*2);
+        for (size_t j=1.0; j<i*2; ++j)
+        {
+            mzint.insert(mzint.end(), MZIntensityPair(j*100, j*j));
+        }
+        spectrum->setMZIntensityPairs(mzint, MS_number_of_counts);
+
         bool isMS1 = i%3==0;
         spectrum->set(MS_ms_level, isMS1 ? 1 : 2);
         spectrum->set(isMS1 ? MS_MS1_spectrum : MS_MSn_spectrum);
@@ -570,6 +578,54 @@ void testMassAnalyzerFilter(SpectrumListPtr sl)
     unit_assert(filter1.spectrumIdentity(0).id == "scan=102");
 }
 
+void testMZPresentFilter(SpectrumListPtr sl)
+{
+    if (os_) *os_ << "testMZPresentFilter:\n";
+
+    // test mzpresent on MS level 2 (include test)
+    SpectrumListPtr ms2filter(new SpectrumList_Filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(2))));
+    chemistry::MZTolerance mzt(3.0);
+    std::set<double> mzSet;
+    mzSet.insert(200.0);
+    mzSet.insert(300.0);
+    mzSet.insert(400.0);
+    double threshold = 10;
+    IntegerSet msLevels(1, INT_MAX);
+    ThresholdFilter tf(ThresholdFilter::ThresholdingBy_Count, threshold, ThresholdFilter::Orientation_MostIntense, msLevels);
+    SpectrumList_Filter filter(ms2filter, SpectrumList_FilterPredicate_MzPresent(mzt, mzSet, tf, false));
+
+    if (os_)
+    {
+        printSpectrumList(filter, *os_);
+        *os_ << endl;
+    }
+    unit_assert(filter.size() == 4);
+    unit_assert(filter.spectrumIdentity(0).id == "scan=102");
+    unit_assert(filter.spectrumIdentity(1).id == "scan=104");
+    unit_assert(filter.spectrumIdentity(2).id == "scan=105");
+    unit_assert(filter.spectrumIdentity(3).id == "scan=107");
+
+    // test mz present on MS level 1 (exclude test)
+    SpectrumListPtr ms1filter(new SpectrumList_Filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(1))));
+    chemistry::MZTolerance mzt1(3.0);
+    std::set<double> mzSet1;
+    mzSet1.insert(200.0);
+    mzSet1.insert(300.0);
+    double threshold1 = 5;
+    ThresholdFilter tf1(ThresholdFilter::ThresholdingBy_Count, threshold1, ThresholdFilter::Orientation_MostIntense, msLevels);
+    SpectrumList_Filter filter1(ms1filter, SpectrumList_FilterPredicate_MzPresent(mzt1, mzSet1, tf1, true));
+
+    if (os_)
+    {
+        printSpectrumList(filter1, *os_);
+        *os_ << endl;
+    }
+    unit_assert(filter1.size() == 3);
+    unit_assert(filter1.spectrumIdentity(0).id == "scan=100");
+    unit_assert(filter1.spectrumIdentity(1).id == "scan=106");
+    unit_assert(filter1.spectrumIdentity(2).id == "scan=109");
+}
+
 void test()
 {
     SpectrumListPtr sl = createSpectrumList();
@@ -584,6 +640,7 @@ void test()
     testMSLevelSet(sl);
     testMS2Activation(sl);
     testMassAnalyzerFilter(sl);
+    testMZPresentFilter(sl);
 }
 
 

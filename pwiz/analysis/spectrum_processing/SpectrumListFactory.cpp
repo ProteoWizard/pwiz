@@ -359,6 +359,76 @@ SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
                             SpectrumList_FilterPredicate_MSLevelSet(msLevelSet)));
 }
 
+SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+
+    MZTolerance mzt;
+    parser >> mzt;
+
+    string byTypeArg, orientationArg;
+    double threshold;
+    IntegerSet msLevels(1, INT_MAX);
+
+    parser >> byTypeArg >> threshold >> orientationArg;
+
+    ThresholdFilter::ThresholdingBy_Type byType;
+    if (byTypeArg == "count")
+        byType = ThresholdFilter::ThresholdingBy_Count;
+    else if (byTypeArg == "count-after-ties")
+        byType = ThresholdFilter::ThresholdingBy_CountAfterTies;
+    else if (byTypeArg == "absolute")
+        byType = ThresholdFilter::ThresholdingBy_AbsoluteIntensity;
+    else if (byTypeArg == "bpi-relative")
+        byType = ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity;
+    else if (byTypeArg == "tic-relative")
+        byType = ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity;
+    else if (byTypeArg == "tic-cutoff")
+        byType = ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff;
+    else
+        return SpectrumListPtr();
+
+    ThresholdFilter::ThresholdingOrientation orientation;
+    if (orientationArg == "most-intense")
+        orientation = ThresholdFilter::Orientation_MostIntense;
+    else if (orientationArg == "least-intense")
+        orientation = ThresholdFilter::Orientation_LeastIntense;
+    else
+        return SpectrumListPtr();
+
+
+    char open='\0', comma='\0', close='\0';
+    std::set<double> setMz;
+
+    parser >> open;
+    while (isdigit(parser.peek()))
+    {
+        double mz = 0;
+        parser >> mz;
+        setMz.insert(mz);
+        if (parser.peek() == ',')
+            parser >> comma;
+    }
+    parser >> close;
+
+    std::string inex = "include";
+    bool inverse = false;
+    if (parser.good())
+        parser >> inex;
+    if (inex != "include" && inex != "exclude")
+        throw user_error("[SpectrumListFactory::filterCreator_mzPresent()] invalid parameter (expected \"include\" or \"exclude\")");
+
+    if (inex == "exclude")
+        inverse = true;
+
+    if (open!='[' || close!=']')
+       return SpectrumListPtr();
+
+    return SpectrumListPtr(new
+        SpectrumList_Filter(msd.run.spectrumListPtr,
+                        SpectrumList_FilterPredicate_MzPresent(mzt, setMz, ThresholdFilter(byType, threshold, orientation, msLevels), inverse)));
+}
+
 SpectrumListPtr filterCreator_chargeState(const MSData& msd, const string& arg)
 {
     IntegerSet chargeStateSet;
@@ -607,6 +677,7 @@ JumpTableEntry jumpTable_[] =
 	{"mzPrecursors", "[mz1,mz2, ... mzn] zero for no precursor m/z", filterCreator_mzPrecursors},
     {"defaultArrayLength", "int_set", filterCreator_defaultArrayLength},
     {"zeroSamples", "<removeExtra|addMissing[=flankingZeroCount]> <MS levels> (remove extra, or add missing, zeros)", filterCreator_ZeroSamples},
+    {"mzPresent", "<tolerance> <PPM|MZ> <count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense> [mz1,mz2, ... mzn] <include|exclude>", filterCreator_mzPresent},
 
     // MSn Spectrum Processing/Filtering
     {"MS2Denoise", "moving window filter for MS2: num peaks to select in window:int_val(default 6) window width (Da):val (default 30) multicharge fragment relaxation: <true|false> (default true)", filterCreator_MS2Denoise},
