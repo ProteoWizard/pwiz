@@ -927,20 +927,11 @@ Are you sure you want to continue?</value>
   <data name="OpenDataSourceDialog_sourcePathTextBox_KeyUp_Some_source_paths_are_invalid" xml:space="preserve">
     <value>Some source paths are invalid</value>
   </data>
-  <data name="OpenDataSourceDialog_listView_ItemActivate_File_Folder" xml:space="preserve">
-    <value>File Folder</value>
-  </data>
-  <data name="OpenDataSourceDialog_Open_File_Folder" xml:space="preserve">
-    <value>File Folder</value>
-  </data>
   <data name="OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources" xml:space="preserve">
     <value>Please select one or more data sources.</value>
   </data>
   <data name="OpenDataSourceDialog_Open_Error" xml:space="preserve">
     <value>Error</value>
-  </data>
-  <data name="OpenDataSourceDialog_listView_ItemSelectionChanged_File_Folder" xml:space="preserve">
-    <value>File Folder</value>
   </data>
   <data name="PivotReportDlg_OkDialog_A_report_must_have_at_least_one_column" xml:space="preserve">
     <value>A report must have at least one column.</value>

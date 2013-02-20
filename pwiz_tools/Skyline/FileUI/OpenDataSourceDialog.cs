@@ -542,18 +542,24 @@ namespace pwiz.Skyline.FileUI
                 return;
 
             ListViewItem item = listView.SelectedItems[0];
-            if( item.SubItems[1].Text == Resources.OpenDataSourceDialog_listView_ItemActivate_File_Folder )
+            if( DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
             {
-                if( _currentDirectory != null )
-                    _previousDirectories.Push( _currentDirectory ); 
-                CurrentDirectory = Path.Combine( CurrentDirectory, GetItemPath(item) );
-                _abortPopulateList = true;
-            }  else
+                OpenFolderItem(item);
+            }
+            else
             {
                 DataSources = new[] { Path.Combine( CurrentDirectory, item.SubItems[0].Text ) };
                 DialogResult = DialogResult.OK;
                 Close();
             }
+        }
+
+        private void OpenFolderItem(ListViewItem listViewItem)
+        {
+            if (_currentDirectory != null)
+                _previousDirectories.Push(_currentDirectory);
+            CurrentDirectory = Path.Combine(CurrentDirectory, GetItemPath(listViewItem));
+            _abortPopulateList = true;
         }
 
         private void listView_ColumnClick( object sender, ColumnClickEventArgs e )
@@ -584,23 +590,35 @@ namespace pwiz.Skyline.FileUI
 
         public void Open()
         {
-            if (listView.SelectedItems.Count > 0)
+            List<string> dataSourceList = new List<string>();
+            foreach (ListViewItem item in listView.SelectedItems)
             {
-                List<string> dataSourceList = new List<string>();
-                foreach (ListViewItem item in listView.SelectedItems)
+                if (!DataSourceUtil.IsFolderType(item.SubItems[1].Text))
                 {
-                    if (item.SubItems[1].Text != Resources.OpenDataSourceDialog_Open_File_Folder)
-                        dataSourceList.Add(Path.Combine(CurrentDirectory, item.SubItems[0].Text));
+                    dataSourceList.Add(Path.Combine(CurrentDirectory, item.SubItems[0].Text));
                 }
+            }
+            if (dataSourceList.Count > 0)
+            {
                 DataSources = dataSourceList.ToArray();
                 _abortPopulateList = true;
                 DialogResult = DialogResult.OK;
+                return;
             }
-            else
+
+            // No files selected: see if there is a folder selected that we
+            // should navigate to
+            foreach (ListViewItem item in listView.SelectedItems)
             {
-                MessageBox.Show(this, Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources,
-                    Resources.OpenDataSourceDialog_Open_Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                {
+                    OpenFolderItem(item);
+                    return;
+                }
             }
+            // No files or folders selected: Show an error message.
+            MessageBox.Show(this, Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources,
+                Resources.OpenDataSourceDialog_Open_Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void cancelButton_Click( object sender, EventArgs e )
@@ -671,7 +689,7 @@ namespace pwiz.Skyline.FileUI
                 List<string> dataSourceList = new List<string>();
                 foreach( ListViewItem item in listView.SelectedItems )
                 {
-                    if( item.SubItems[1].Text != Resources.OpenDataSourceDialog_listView_ItemSelectionChanged_File_Folder )
+                    if( !DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
                         dataSourceList.Add(string.Format("\"{0}\"", GetItemPath(item))); // Not L10N
                 }
                 sourcePathTextBox.Text = string.Join(" ", dataSourceList.ToArray()); // Not L10N
