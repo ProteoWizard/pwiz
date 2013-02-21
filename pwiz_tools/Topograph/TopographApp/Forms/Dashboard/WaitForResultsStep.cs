@@ -186,14 +186,6 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                     panelForeignLocks.Visible = true;
                 }
             }
-            if (Workspace != null && _runningBackgroundQuery == null)
-            {
-                if (_completedBackgroundQuery == null || _completedBackgroundQuery.IsStale())
-                {
-                    _runningBackgroundQuery = new BackgroundQuery(this);
-                    _runningBackgroundQuery.RunQuery();
-                }
-            }
             base.UpdateStepStatus();
         }
 
@@ -306,6 +298,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         private void TimerOnTick(object sender, EventArgs e)
         {
             UpdateStepStatus();
+            if (Workspace != null && _runningBackgroundQuery == null)
+            {
+                if (_completedBackgroundQuery == null || _completedBackgroundQuery.IsStale())
+                {
+                    _runningBackgroundQuery = new BackgroundQuery(this);
+                    _runningBackgroundQuery.RunQuery();
+                }
+            }
         }
 
         private void BtnCancelTasksOnClick(object sender, EventArgs e)

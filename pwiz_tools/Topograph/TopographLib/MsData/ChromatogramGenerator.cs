@@ -404,7 +404,9 @@ namespace pwiz.Topograph.MsData
             {
                 var completeAnalyses = new List<AnalysisChromatograms>();
                 int totalScanCount = pwizMsDataFileImpl.SpectrumCount;
-                double minTime = chromatogramTask.MsDataFile.GetTime(chromatogramTask.MsDataFile.GetSpectrumCount() - 1);
+                var lastTimeInDataFile =
+                    chromatogramTask.MsDataFile.GetTime(chromatogramTask.MsDataFile.GetSpectrumCount() - 1);
+                double minTime = lastTimeInDataFile;
                 double maxTime = msDataFile.GetTime(0);
                 foreach (var analysis in analyses)
                 {
@@ -559,10 +561,6 @@ namespace pwiz.Topograph.MsData
                     {
                         continue;
                     }
-                    if (analysis.Times.Count == 0)
-                    {
-                        continue;
-                    }
                     foreach (DbChromatogramSet dbChromatogramSet in _session.CreateCriteria(typeof(DbChromatogramSet))
                         .Add(Restrictions.Eq("PeptideFileAnalysis", dbPeptideFileAnalysis)).List())
                     {
@@ -583,6 +581,13 @@ namespace pwiz.Topograph.MsData
                                               ScanIndexes = analysis.ScanIndexes.ToArray(),
                                               ChromatogramCount = analysis.Chromatograms.Count,
                                           };
+                    bool noPoints = false;
+                    if (dbPeptideFileAnalysis.ChromatogramSet.Times.Length == 0)
+                    {
+                        noPoints = true;
+                        dbPeptideFileAnalysis.ChromatogramSet.Times = new double[]{0};
+                        dbPeptideFileAnalysis.ChromatogramSet.ScanIndexes = new int[]{0};
+                    }
                     _session.Save(dbPeptideFileAnalysis.ChromatogramSet);
                     foreach (Chromatogram chromatogram in analysis.Chromatograms)
                     {
@@ -593,6 +598,10 @@ namespace pwiz.Topograph.MsData
                                                      ChromatogramPoints = chromatogram.Points,
                                                      MzRange = chromatogram.MzRange,
                                                  };
+                        if (noPoints)
+                        {
+                            dbChromatogram.ChromatogramPoints = new []{new ChromatogramPoint(), };
+                        }
                         _session.Save(dbChromatogram);
                     }
                     _session.Update(dbPeptideFileAnalysis);
