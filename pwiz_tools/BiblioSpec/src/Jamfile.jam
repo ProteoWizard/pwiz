@@ -96,6 +96,8 @@ lib blibbuild
     PrideXmlReader.cpp
     MaxQuantModReader.cpp
     MaxQuantReader.cpp
+    MSFReader.cpp
+    MSFSpecReader.cpp
     ProteinPilotReader.cpp
     saxhandler.cpp
     SQTreader.cpp

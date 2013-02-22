@@ -255,7 +255,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-bad-index
   : check-bad-index ;
 
-# Test other xml formats (idpicker, xtandem, pride)
+# Test other xml formats (idpicker, xtandem, pride, msf)
 
 make output/idpicker.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
@@ -347,6 +347,19 @@ run-if-exists CompareLibraryContents.cpp compare-src
   : $(compare-reqs)
     <dependency>build-pride-mill
   : check-pride-mill ;
+
+make output/tiny.msf.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/tiny.msf output/tiny.msf.blib
+  : 
+  : build-tiny-msf ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/tiny.msf.blib reference/tiny.msf.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-tiny-msf
+  : check-tiny-msf ;
 
 make output/pilot.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp

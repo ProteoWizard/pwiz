@@ -81,6 +81,15 @@ public:
     inline void setFileName(const char* fileName)
     {
         m_strFileName_ = fileName;
+        m_bytes_ = NULL;
+        m_bytesLen_ = 0;
+    }
+
+    inline void setXmlData(string& xmlData)
+    {
+        m_strFileName_.clear();
+        m_bytes_ = xmlData.c_str();
+        m_bytesLen_ = xmlData.length();
     }
 
     // Helper functions
@@ -198,6 +207,8 @@ public:
 protected:
     XML_Parser m_parser_;
     string  m_strFileName_;
+    const char* m_bytes_;
+    size_t m_bytesLen_;
 
     /**
      * Sax parsers can throw this error to be caught in parse() where

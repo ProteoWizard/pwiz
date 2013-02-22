@@ -312,8 +312,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
             continue;
         }
 
-        Verbosity::debug("Adding spectrum %d (%s), charge %d.", 
-                         psm->specKey, psm->specName.c_str(), psm->charge);
+        Verbosity::comment(V_DETAIL, "Adding spectrum %d (%s), charge %d.", 
+                           psm->specKey, psm->specName.c_str(), psm->charge);
 
         try{
             insertSpectrum(psm, curSpectrum, fileId, scoreType);

@@ -56,7 +56,7 @@ BlibBuilder::~BlibBuilder()
 void BlibBuilder::usage()
 {
     const char* usage =
-        "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.msms.txt|*.mzid|*.perc.xml|*final_fragment.csv>+ <library_name>\n"
+        "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.msms.txt|*.msf|*.mzid|*.perc.xml|*final_fragment.csv>+ <library_name>\n"
         "   -o                Overwrite existing library. Default append.\n"
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
         "   -q  <max score>   Maximum FDR for accepting results from Percolator (.sqt or .perc.xml) files. Default 0.01.\n"
@@ -143,6 +143,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                has_extension(file_name, ".group.xml") ||
                has_extension(file_name, ".pride.xml") ||
                has_extension(file_name, ".msms.txt") ||
+               has_extension(file_name, ".msf") ||
                has_extension(file_name, ".mzid") ||
                has_extension(file_name, "final_fragment.csv") ||
                has_extension(file_name, ".ssl") ) {
@@ -152,7 +153,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                 Verbosity::error("Unsupported file type '%s'.  Must be .sqt, "
                                  ".pep.xml/.pep.XML/.pepXML, .idpXML, .dat, "
                                  ".xtan.xml, .ssl, .group.xml, .pride.xml, .msms.txt, "
-                                 ".mzid, perc.xml, final_fragment.csv or .blib.",
+                                 ".msf, .mzid, perc.xml, final_fragment.csv or .blib.",
                                  file_name);
             }
         }

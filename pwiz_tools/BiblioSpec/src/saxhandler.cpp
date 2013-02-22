@@ -45,6 +45,9 @@ static void charactersCallback(void *data, const XML_Char *s, int len)
 SAXHandler::SAXHandler()
 {
     m_parser_ = XML_ParserCreate(NULL);
+    m_strFileName_.clear();
+    m_bytes_ = NULL;
+    m_bytesLen_ = 0;
     XML_SetUserData(m_parser_, this);
     XML_SetElementHandler(m_parser_, startElementCallback, endElementCallback);
     XML_SetCharacterDataHandler(m_parser_, charactersCallback);
@@ -72,16 +75,25 @@ void SAXHandler::characters(const XML_Char *s, int len)
 
 bool SAXHandler::parse()
 {
-    FILE* pfIn = fopen(m_strFileName_.data(), "r");
-    if (pfIn == NULL) {
-        throw BlibException(true, "Failed to open input file '%s'.", 
-                            m_strFileName_.c_str());
+    FILE* pfIn = NULL;
+    if (!m_strFileName_.empty()) {
+        pfIn = fopen(m_strFileName_.data(), "r");
+        if (pfIn == NULL) {
+            throw BlibException(true, "Failed to open input file '%s'.", 
+                                m_strFileName_.c_str());
+        }
+    }
+    else if (m_bytes_ == NULL) {
+        throw BlibException(false, "Must set filename or XML data before parsing XML.");
     }
     
     bool success = true;
     string message;
     
     try {
+        if (pfIn == NULL) {
+            success = (XML_Parse(m_parser_, m_bytes_, m_bytesLen_, true) != 0);
+        } else {
         // HACK!! I have no idea why this is, but without this string
         // declaration, the MSVC optimizer removes the catch block below.
         // Very mysterious.
@@ -94,6 +106,7 @@ bool SAXHandler::parse()
             success = (XML_Parse(m_parser_, buffer, readBytes, false) != 0);
         }
         success = success && (XML_Parse(m_parser_, buffer, 0, true) != 0);
+        }
     }
     catch(string thrown_msg) { // from parsers
         message = thrown_msg;
@@ -101,6 +114,9 @@ bool SAXHandler::parse()
     }
     catch(BlibException e) { // probably from BuildParser
         if( e.hasFilename() ){
+            if (pfIn != NULL) {
+                fclose(pfIn);
+            }
             throw e;
         } else {
             message = e.what();
@@ -112,7 +128,9 @@ bool SAXHandler::parse()
         success = false;
     }
     
-    fclose(pfIn);
+    if (pfIn != NULL) {
+        fclose(pfIn);
+    }
     
     if (!success) {
         XML_Error error = XML_GetErrorCode(m_parser_);

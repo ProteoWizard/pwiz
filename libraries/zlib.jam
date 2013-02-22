@@ -35,6 +35,8 @@ rule init ( version ? : location : options * )
         local sources = 
             adler32.c
             compress.c
+            contrib/minizip/ioapi.c
+            contrib/minizip/unzip.c
             crc32.c
             deflate.c
             gzio.c
