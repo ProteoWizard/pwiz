@@ -22,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -1070,8 +1071,15 @@ namespace pwiz.Skyline.Model.Results
                     _loader.UpdateProgress(_status.ChangeErrorException(x));
                 else
                 {
+//                    var sb = new StringBuilder(x.Message);
+//                    sb.AppendLine(x.StackTrace);
+//                    for (var xInner = x.InnerException; xInner != null; xInner = xInner.InnerException)
+//                        sb.AppendLine("------Inner------").AppendLine(xInner.StackTrace);
+//                    string xMessage = sb.ToString();
+                    string xMessage = x.Message;
+
                     var message = TextUtil.LineSeparate(string.Format(Resources.Loader_Fail_Failed_to_build_a_cache_for__0__, _documentPath),
-                                                        x.Message);
+                                                        xMessage);
                     x = new Exception(message, x);
                     _loader.UpdateProgress(_status.ChangeErrorException(x));
                 }

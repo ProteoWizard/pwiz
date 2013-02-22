@@ -174,7 +174,11 @@ CVParam::CVParam()
 : base_(new boost::shared_ptr<b::CVParam>(new b::CVParam()))
 {value_ = gcnew CVParamValue(base_);}
 
-double CVParam::timeInSeconds() {return (*base_)->timeInSeconds();}
+double CVParam::timeInSeconds()
+{
+    try { return (*base_)->timeInSeconds(); }
+    CATCH_AND_FORWARD_CAST(value, "double")
+}
 bool CVParam::operator==(CVParam^ that) {return **base_ == **that->base_;}
 bool CVParam::operator!=(CVParam^ that) {return **base_ != **that->base_;}
 bool CVParam::operator==(CVID that) {return cvid == that;}

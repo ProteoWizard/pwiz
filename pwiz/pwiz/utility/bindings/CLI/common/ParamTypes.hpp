@@ -130,6 +130,10 @@ namespace data {
 
 using namespace cv;
 
+#undef CATCH_AND_FORWARD_CAST
+#define CATCH_AND_FORWARD_CAST(value, typeName) \
+    catch (boost::bad_lexical_cast &) { throw gcnew System::InvalidCastException( \
+    System::String::Format("Failed to cast CVParam value '{0}' to " + typeName + ".", value->ToString())); } \
 
 /// <summary>
 /// A convenient variant type for casting to non-string types
@@ -145,10 +149,26 @@ public ref class CVParamValue
     public:
     virtual System::String^ ToString() override {return (System::String^) this;}
     static operator System::String^(CVParamValue^ value) {return gcnew System::String((*value->base_)->value.c_str());};
-    static explicit operator float(CVParamValue^ value) {return (*value->base_)->valueAs<float>();}
-    static operator double(CVParamValue^ value) {return (*value->base_)->valueAs<double>();}
-    static explicit operator int(CVParamValue^ value) {return (*value->base_)->valueAs<int>();}
-    static explicit operator System::UInt64(CVParamValue^ value) {return (System::UInt64) (*value->base_)->valueAs<size_t>();}
+    static explicit operator float(CVParamValue^ value)
+    {
+        try { return (*value->base_)->valueAs<float>(); }
+        CATCH_AND_FORWARD_CAST(value, "float")
+    }
+    static operator double(CVParamValue^ value)
+    {
+        try { return (*value->base_)->valueAs<double>(); }
+        CATCH_AND_FORWARD_CAST(value, "double")
+    }
+    static explicit operator int(CVParamValue^ value)
+    {
+        try { return (*value->base_)->valueAs<int>(); }
+        CATCH_AND_FORWARD_CAST(value, "int")
+    }
+    static explicit operator System::UInt64(CVParamValue^ value)
+    {
+        try { return (System::UInt64) (*value->base_)->valueAs<size_t>(); }
+        CATCH_AND_FORWARD_CAST(value, "uint-64")
+    }
     static explicit operator bool(CVParamValue^ value) {return (*value->base_)->value == "true";}
     CVParamValue^ operator=(System::String^ value) {(*base_)->value = ToStdString(value); return this;} 
 };
