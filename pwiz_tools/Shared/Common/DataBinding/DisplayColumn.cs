@@ -74,7 +74,7 @@ namespace pwiz.Common.DataBinding
             return prefix + " " + ColumnCaption;
 
         }
-        public object GetValue(RowItem rowItem, PivotKey pivotKey)
+        public object GetValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
         {
             if (rowItem == null)
             {
@@ -84,7 +84,7 @@ namespace pwiz.Common.DataBinding
             {
                 return "#COLUMN " + IdentifierPath + " NOT FOUND#";
             }
-            return ColumnDescriptor.GetPropertyValue(rowItem, pivotKey);
+            return ColumnDescriptor.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
         }
         public bool IsReadOnly
         {

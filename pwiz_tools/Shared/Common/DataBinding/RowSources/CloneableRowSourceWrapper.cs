@@ -101,7 +101,7 @@ namespace pwiz.Common.DataBinding.RowSources
                 // Should not happen
                 return newParent;
             }
-            return rowItem.ChangeParentAndValue(newParent, sublistColumn.GetPropertyValue(newParent, new PivotKey(rowItem.SublistId, rowItem.Key)));
+            return rowItem.ChangeParentAndValue(newParent, sublistColumn.GetPropertyValue(newParent, new PivotKey(rowItem.SublistId, rowItem.Key), false));
         }
     }
 }

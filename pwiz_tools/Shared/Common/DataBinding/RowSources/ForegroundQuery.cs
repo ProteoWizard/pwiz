@@ -52,7 +52,7 @@ namespace pwiz.Common.DataBinding.RowSources
         {
             try
             {
-                var tickCounter = new Pivoter.TickCounter(_cancellationToken, 1000000);
+                var tickCounter = new Pivoter.TickCounter(_cancellationToken, 10000000);
                 var queryResults = QueryResults.Empty
                                                .SetParameters(QueryRequest.QueryParameters)
                                                .SetSourceRows(RowSource.ListRowItems());

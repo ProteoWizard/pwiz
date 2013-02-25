@@ -65,7 +65,7 @@ namespace pwiz.Common.DataBinding
 
         public override object GetValue(object component)
         {
-            return DisplayColumn.GetValue(component as RowItem, PivotKey);
+            return DisplayColumn.GetValue(component as RowItem, PivotKey, true);
         }
 
         public override void ResetValue(object component)

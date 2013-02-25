@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 
 namespace pwiz.Topograph.Enrichment
 {
@@ -23,7 +24,7 @@ namespace pwiz.Topograph.Enrichment
     {
         public static TracerPercentFormula Parse(string formula)
         {
-            var result = new SortedDictionary<string, double>();
+            var result = new Dictionary<string, double>();
             string currentElement = null;
             StringBuilder currentQuantity = new StringBuilder();
             for (int ich = 0; ich < formula.Length; ich++)
@@ -72,7 +73,7 @@ namespace pwiz.Topograph.Enrichment
                     result[currentElement] = quantity;
                 }
             }
-            return new TracerPercentFormula { Dictionary = result };
+            return new TracerPercentFormula { Dictionary = ImmutableSortedList.FromValues(result) };
         }
         public override String ToString()
         {

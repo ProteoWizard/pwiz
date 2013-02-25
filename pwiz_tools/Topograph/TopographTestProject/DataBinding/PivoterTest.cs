@@ -130,7 +130,7 @@ namespace pwiz.Topograph.Test.DataBinding
                 new Pivoter.TickCounter(), 
                 new[] { new RowItem(null, alaAcid), new RowItem(null, argAcid) }).ToArray();
             Assert.AreEqual(1, rowItems.Length);
-            Assert.AreEqual("Arg", viewInfo.DisplayColumns[0].GetValue(rowItems[0], null));
+            Assert.AreEqual("Arg", viewInfo.DisplayColumns[0].GetValue(rowItems[0], null, false));
         }
     }
 }

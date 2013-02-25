@@ -115,7 +115,7 @@ namespace pwiz.Common.DataBinding
         private Predicate<RowNode> MakePredicate(ColumnDescriptor columnDescriptor, IEnumerable<Predicate<object>> predicates)
         {
             var predicate = Conjunction(predicates.Where(p=>null != p).ToArray());
-            return rowNode=>predicate(columnDescriptor.DataSchema.UnwrapValue(columnDescriptor.GetPropertyValue(rowNode)));
+            return rowNode=>predicate(columnDescriptor.DataSchema.UnwrapValue(columnDescriptor.GetPropertyValue(rowNode, false)));
         }
 
         private object GetValue(RowNode rowNode, ColumnDescriptor columnDescriptor)
@@ -129,7 +129,7 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
-            return columnDescriptor.GetPropertyValueFromParent(parentValue, null);
+            return columnDescriptor.GetPropertyValueFromParent(parentValue, null, false);
         }
         private int Expand(TickCounter tickCounter, RowNode rowNode, int columnIndex)
         {

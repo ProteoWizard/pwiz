@@ -54,7 +54,7 @@ namespace pwiz.Common.DataBinding
         public virtual string GetDefaultExportFilename(ViewSpec viewSpec)
         {
             string currentViewName = viewSpec.Name;
-            return ParentColumn.PropertyType.Name + currentViewName == GetDefaultViewName() ? "" : currentViewName;
+            return ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? "" : currentViewName);
         }
         public abstract void RunLongJob(Control owner, Action<IProgressMonitor> job);
         public ColumnDescriptor ParentColumn { get; protected set; }
@@ -105,7 +105,15 @@ namespace pwiz.Common.DataBinding
                 progressMonitor.UpdateProgress(status);
                 var row = rows[rowIndex];
                 // TODO(nicksh): Format the column values.
-                dataFormat.WriteRow(writer, properties.Select(pd => pd.GetValue(row)));
+                dataFormat.WriteRow(writer, properties.Select(pd =>
+                    {
+                        var columnPropertyDescriptor = pd as ColumnPropertyDescriptor;
+                        if (null == columnPropertyDescriptor)
+                        {
+                            return pd.GetValue(row);
+                        }
+                        return columnPropertyDescriptor.DisplayColumn.GetValue(row, columnPropertyDescriptor.PivotKey, false);
+                    }));
             }
         }
 

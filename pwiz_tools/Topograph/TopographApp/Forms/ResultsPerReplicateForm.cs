@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using pwiz.Common.DataBinding;
@@ -87,7 +88,7 @@ namespace pwiz.Topograph.ui.Forms
             var defaultViewSpec = new ViewSpec()
                 .SetName("default")
                 .SetColumns(defaultColumns);
-            bindingSourceResults.SetViewContext(new TopographViewContext(workspace, typeof (ResultRow), new[] {defaultViewSpec}));
+            bindingSourceResults.SetViewContext(new TopographViewContext(workspace, typeof (PerReplicateResult), new[] {defaultViewSpec}));
         }
 
         private void BtnRequeryOnClick(object sender, EventArgs e)
@@ -110,13 +111,8 @@ namespace pwiz.Topograph.ui.Forms
      
         private void UpdateRows(HalfLifeCalculator halfLifeCalculator)
         {
-            var resultRows = halfLifeCalculator.RowDatas.Select(rd => new ResultRow(halfLifeCalculator.ComputeAvgTurnover(rd))).ToArray();
+            var resultRows = halfLifeCalculator.RowDatas.Select(rd => new PerReplicateResult(halfLifeCalculator.ComputeAvgTurnover(rd))).ToArray();
             bindingSourceResults.RowSource = resultRows;
-        }
-
-        private void btnSave_Click(object sender, EventArgs e)
-        {
-            GridUtil.ExportResults(dataGridViewResults, Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + "ResultsPerReplicate");
         }
 
         public int? MaxResults
@@ -149,10 +145,10 @@ namespace pwiz.Topograph.ui.Forms
             public double Score { get; set; }
 
         }
-        public class ResultRow
+        public class PerReplicateResult
         {
             readonly HalfLifeCalculator.ProcessedRowData _rowData;
-            public ResultRow(HalfLifeCalculator.ProcessedRowData rowData)
+            public PerReplicateResult(HalfLifeCalculator.ProcessedRowData rowData)
             {
                 _rowData = rowData;
             }

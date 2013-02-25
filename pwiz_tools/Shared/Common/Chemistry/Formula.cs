@@ -17,59 +17,54 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.Chemistry
 {
-    public abstract class AbstractFormula<T,TKey> : ImmutableDictionary<String, TKey>, IComparable<T>
-        where T : AbstractFormula<T, TKey>, new()
-        where TKey : IComparable<TKey>
+    public abstract class AbstractFormula<T,TValue> : IDictionary<string, TValue>, IComparable<T>
+        where T : AbstractFormula<T, TValue>, new()
+        where TValue : IComparable<TValue>
     {
 // ReSharper disable InconsistentNaming
-        public static readonly T Empty = new T { Dictionary = new SortedDictionary<string, TKey>() };
+        public static readonly T Empty = new T { Dictionary = ImmutableSortedList<string, TValue>.Empty };
 // ReSharper restore InconsistentNaming
         public override abstract string ToString();
+        private int _hashCode;
+        private ImmutableSortedList<string, TValue> _dict;
         public virtual String ToDisplayString()
         {
             return ToString();
         }
 
-        public T SetElementCount(String element, TKey count)
+        public T SetElementCount(String element, TValue count)
         {
-            var dict = new SortedDictionary<String, TKey>(this);
-            if (count.Equals(default(TKey)))
+            if (count.Equals(default(TValue)))
             {
-                dict.Remove(element);
+                return new T {Dictionary = Dictionary.RemoveKey(element)};
             }
-            else
-            {
-                dict[element] = count;
-            }
-            return new T { Dictionary = dict };
+            return new T {Dictionary = Dictionary.Replace(element, count)};
         }
 
-        public TKey GetElementCount(String element)
+        public TValue GetElementCount(String element)
         {
-            TKey atomCount;
+            TValue atomCount;
             TryGetValue(element, out atomCount);
             return atomCount;
         }
 
         public override int GetHashCode()
         {
-            int result = 0;
-            foreach (var entry in this)
-            {
-                result += entry.Key.GetHashCode() * entry.Value.GetHashCode();
-            }
-            return result;
+// ReSharper disable NonReadonlyFieldInGetHashCode
+            return _hashCode;
+// ReSharper restore NonReadonlyFieldInGetHashCode
         }
 
         public override bool Equals(Object o)
         {
-            if (o == this)
+            if (ReferenceEquals(o, this))
             {
                 return true;
             }
@@ -78,23 +73,7 @@ namespace pwiz.Common.Chemistry
             {
                 return false;
             }
-            if (Count != that.Count)
-            {
-                return false;
-            }
-            foreach (var entry in this)
-            {
-                TKey thatValue;
-                if (!that.TryGetValue(entry.Key, out thatValue))
-                {
-                    return false;
-                }
-                if (!Equals(entry.Value, thatValue))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return Dictionary.Equals(that.Dictionary);
         }
 
         public int CompareTo(T that)
@@ -119,6 +98,90 @@ namespace pwiz.Common.Chemistry
                 }
             }
             return thatEnumerator.MoveNext() ? -1 : 0;
+        }
+        public ImmutableSortedList<string, TValue> Dictionary
+        {
+            get { return _dict; }
+            protected set 
+            { 
+                _dict = value;
+                _hashCode = value.GetHashCode();
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator()
+        {
+            return Dictionary.GetEnumerator();
+        }
+        public int Count { get { return Dictionary.Count; } }
+        public bool TryGetValue(string key, out TValue value)
+        {
+            return Dictionary.TryGetValue(key, out value);
+        }
+        public ICollection<string> Keys { get { return Dictionary.Keys; } }
+        public ICollection<TValue> Values { get { return Dictionary.Values; } }
+        public TValue this[string key]
+        {
+            get 
+            { 
+                TValue value;
+                TryGetValue(key, out value);
+                return value;
+            }
+            set
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public void Add(KeyValuePair<string, TValue> item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public void Clear()
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool Contains(KeyValuePair<string, TValue> item)
+        {
+            return Dictionary.Contains(item);
+        }
+
+        public bool Remove(KeyValuePair<string, TValue> item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public void CopyTo(KeyValuePair<string, TValue>[] array, int arrayIndex)
+        {
+            Dictionary.CopyTo(array, arrayIndex);
+        }
+
+        public bool IsReadOnly
+        {
+            get { return true; }
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return Dictionary.ContainsKey(key);
+        }
+
+        public void Add(string key, TValue value)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool Remove(string key)
+        {
+            throw new InvalidOperationException();
         }
     }
 
@@ -180,7 +243,7 @@ namespace pwiz.Common.Chemistry
                     result.Add(currentElement, previous + currentQuantity);
                 }
             }
-            return new T {Dictionary = new SortedDictionary<string, int>(result)};
+            return new T {Dictionary = ImmutableSortedList.FromValues(result)};
         }
 
         public override string ToString()

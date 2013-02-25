@@ -91,7 +91,7 @@ namespace pwiz.Common.DataBinding
                 return PropertyType == null ? null : DataSchema.GetWrappedValueType(PropertyType);
             }
         }
-        public object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
+        public object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
         {
             while (!IdPath.StartsWith(rowItem.SublistId))
             {
@@ -101,34 +101,33 @@ namespace pwiz.Common.DataBinding
             {
                 return rowItem.Value;
             }
-            var parentValue = Parent.GetPropertyValue(rowItem, pivotKey);
+            var parentValue = Parent.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
             if (parentValue == null)
             {
                 return null;
             }
-            rowItem.HookPropertyChange(parentValue, ReflectedPropertyDescriptor);
-            return GetPropertyValueFromParent(parentValue, pivotKey);
+            if (notifyFutureChanges)
+            {
+                rowItem.HookPropertyChange(parentValue, ReflectedPropertyDescriptor);
+            }
+            return GetPropertyValueFromParent(parentValue, pivotKey, notifyFutureChanges);
         }
-        public object GetUnwrappedPropertyValue(RowItem rowItem, PivotKey pivotKey)
-        {
-            return DataSchema.UnwrapValue(GetPropertyValue(rowItem, pivotKey));
-        }
-        public object GetPropertyValue(RowNode rowNode)
+        public object GetPropertyValue(RowNode rowNode, bool notifyFutureChanges)
         {
             if (IdPath.Length == rowNode.IdentifierPath.Length)
             {
                 return rowNode.RowItem.Value;
             }
-            var parentValue = Parent.GetPropertyValue(rowNode);
+            var parentValue = Parent.GetPropertyValue(rowNode, notifyFutureChanges);
             if (parentValue == null)
             {
                 return null;
             }
             
-            return GetPropertyValueFromParent(parentValue, null);
+            return GetPropertyValueFromParent(parentValue, null, notifyFutureChanges);
         }
 
-        public object GetPropertyValueFromParent(object parentComponent, PivotKey pivotKey)
+        public object GetPropertyValueFromParent(object parentComponent, PivotKey pivotKey, bool notifyFutureChanges)
         {
             if (parentComponent == null)
             {
@@ -204,7 +203,7 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
-            var parentComponent = Parent.GetPropertyValue(rowItem, pivotKey);
+            var parentComponent = Parent.GetPropertyValue(rowItem, pivotKey, true);
             if (parentComponent == null)
             {
                 return;
@@ -218,7 +217,7 @@ namespace pwiz.Common.DataBinding
             {
                 return true;
             }
-            return Parent.GetPropertyValue(rowItem, pivotKey) == null;
+            return Parent.GetPropertyValue(rowItem, pivotKey, true) == null;
         }
 
         public string Caption { get; private set; } 
