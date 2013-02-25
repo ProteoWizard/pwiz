@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Util;

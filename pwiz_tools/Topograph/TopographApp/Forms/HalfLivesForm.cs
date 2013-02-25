@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using NHibernate.Criterion;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
