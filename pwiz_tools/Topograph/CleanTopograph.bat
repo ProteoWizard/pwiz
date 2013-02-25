@@ -35,6 +35,8 @@ IF EXIST turnover_lib\bin rmdir /s /q turnover_lib\bin
 IF EXIST turnover_lib\obj rmdir /s /q turnover_lib\obj
 IF EXIST TopographApp\bin rmdir /s /q TopographApp\bin
 IF EXIST TopographApp\obj rmdir /s /q TopographApp\obj
+IF EXIST TopographApp\publish rmdir /s /q TopographApp\publish
+IF EXIST TopographApp\publish64 rmdir /s /q TopographApp\publish64
 IF EXIST TopographLib\bin rmdir /s /q TopographLib\bin
 IF EXIST TopographLib\obj rmdir /s /q TopographLib\obj
 IF EXIST ..\Shared\Common\bin rmdir /s /q ..\Shared\Common\bin
