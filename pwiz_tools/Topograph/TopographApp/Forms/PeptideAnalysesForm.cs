@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
@@ -402,7 +403,7 @@ namespace pwiz.Topograph.ui.Forms
 
             public PeptideAnalysis PeptideAnalysis { get; private set; }
 
-            [DataColumn(DataGridViewColumnType = typeof (ValidationStatusColumn))]
+            [DataGridViewColumnType(typeof (ValidationStatusColumn))]
             public ValidationStatus? ValidationStatus
             {
                 get { return PeptideAnalysis.GetValidationStatus(); }

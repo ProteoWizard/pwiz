@@ -16,9 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
-namespace pwiz.Common.DataBinding
+namespace pwiz.Common.DataBinding.Attributes
 {
     /// <summary>
     /// Provides extra information about how to display one-to-many

@@ -1,8 +1,8 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2011 University of Washington - Seattle, WA
+ * Copyright 2013 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,18 @@
  */
 using System;
 
-namespace pwiz.Common.DataBinding
+namespace pwiz.Common.DataBinding.Attributes
 {
-    public class DataColumnAttribute : Attribute
+    /// <summary>
+    /// Specifies the format string to use for property values.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    public class FormatAttribute : Attribute
     {
-        public bool Advanced { get; set; }
-        public string Format { get; set; }
-        public string ColumnDisplayName { get; set; }
-        public Type DataGridViewColumnType { get; set; }
+        public FormatAttribute(string format)
+        {
+            Format = format;
+        }
+        public string Format { get; private set; }
     }
 }

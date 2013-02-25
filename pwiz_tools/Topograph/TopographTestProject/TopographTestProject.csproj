@@ -98,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
+    <Compile Include="DataBinding\AttributeTest.cs" />
     <Compile Include="DataBinding\BoundListTest.cs" />
     <Compile Include="DataBinding\CollectionInfoTest.cs" />
     <Compile Include="DataBinding\Controls\AvailableFieldsTreeTest.cs" />
