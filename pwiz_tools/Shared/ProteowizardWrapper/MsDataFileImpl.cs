@@ -560,24 +560,10 @@ namespace pwiz.ProteowizardWrapper
                                    Intensities = ToArray(spectrum.getIntensityArray())
                                };
 
-                    if (msDataSpectrum.Level == 1 && _config.simAsSpectra)
+                    if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
+                            spectrum.scanList.scans[0].scanWindows.Count > 0)
                     {
-                        var scanWindow = spectrum.scanList.scans[0].scanWindows.FirstOrDefault();
-                        if (scanWindow != null)
-                        {
-                            double windowStart = scanWindow.cvParam(CVID.MS_scan_window_lower_limit).value;
-                            double windowEnd = scanWindow.cvParam(CVID.MS_scan_window_upper_limit).value;
-                            double isolationWidth = (windowEnd - windowStart) / 2;
-                            msDataSpectrum.Precursors = new[]
-                                                        {
-                                                            new MsPrecursor
-                                                                {
-                                                                    IsolationWindowTargetMz = windowStart + isolationWidth,
-                                                                    IsolationWindowLower = isolationWidth,
-                                                                    IsolationWindowUpper = isolationWidth
-                                                                }
-                                                        };
-                        }
+                        msDataSpectrum.Precursors = GetMs1Precursors(spectrum);
                     }
 
                     return msDataSpectrum;
@@ -782,6 +768,22 @@ namespace pwiz.ProteowizardWrapper
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                         IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
                     }).ToArray();
+        }
+
+        private static MsPrecursor[] GetMs1Precursors(Spectrum spectrum)
+        {
+            return spectrum.scanList.scans[0].scanWindows.Select(s =>
+                {
+                    double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
+                    double windowEnd = s.cvParam(CVID.MS_scan_window_upper_limit).value;
+                    double isolationWidth = (windowEnd - windowStart) / 2;
+                    return new MsPrecursor
+                        {
+                            IsolationWindowTargetMz = windowStart + isolationWidth,
+                            IsolationWindowLower = isolationWidth,
+                            IsolationWindowUpper = isolationWidth
+                        };
+                }).ToArray();
         }
 
         private static double? GetPrecursorMz(Precursor precursor)

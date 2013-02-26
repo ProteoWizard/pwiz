@@ -867,25 +867,27 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public IEnumerable<FilteredSrmSpectrum> SrmSpectraFromMs1Scan(double? time,
-            IEnumerable<MsPrecursor> precursors, double[] mzArray, double[] intensityArray)
+            IList<MsPrecursor> precursors, double[] mzArray, double[] intensityArray)
         {
             if (!EnabledMs || !time.HasValue || mzArray == null || intensityArray == null)
                 yield break;
 
             // All filter pairs have a shot at filtering the MS1 scans
-            var isoWin = GetIsolationWindows(precursors).FirstOrDefault();
-            foreach (var filterPair in FindMs1FilterPairs(isoWin))
+            foreach (var isoWin in GetIsolationWindows(precursors))
             {
-                if (!filterPair.ContainsTime(time.Value))
-                    continue;
-                var filteredSrmSpectrum = filterPair.FilterQ1Spectrum(mzArray, intensityArray);
-                if (filteredSrmSpectrum != null)
-                    yield return filteredSrmSpectrum;
+                foreach (var filterPair in FindMs1FilterPairs(isoWin))
+                {
+                    if (!filterPair.ContainsTime(time.Value))
+                        continue;
+                    var filteredSrmSpectrum = filterPair.FilterQ1Spectrum(mzArray, intensityArray);
+                    if (filteredSrmSpectrum != null)
+                        yield return filteredSrmSpectrum;
+                }
             }
         }
 
         public IEnumerable<FilteredSrmSpectrum> SrmSpectraFromFullScan(double? time,
-            IEnumerable<MsPrecursor> precursors, double[] mzArray, double[] intensityArray)
+            IList<MsPrecursor> precursors, double[] mzArray, double[] intensityArray)
         {
             if (!EnabledMsMs || !time.HasValue || mzArray == null || intensityArray == null)
                 yield break;
@@ -903,7 +905,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private IEnumerable<IsolationWindowFilter> GetIsolationWindows(IEnumerable<MsPrecursor> precursors)
+        private IEnumerable<IsolationWindowFilter> GetIsolationWindows(IList<MsPrecursor> precursors)
         {
             // Waters MSe high-energy scans actually appear to be MS1 scans without
             // any isolation m/z.  So, use the instrument range.
@@ -913,10 +915,14 @@ namespace pwiz.Skyline.Model.Results
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
                 yield return new IsolationWindowFilter(isolationMz, isolationWidth);
             }
-            else
+            else if (precursors.Count > 0)
             {
                 foreach (var precursor in precursors)
                     yield return new IsolationWindowFilter(precursor.IsolationMz, precursor.IsolationWidth);
+            }
+            else
+            {
+                yield return default(IsolationWindowFilter);
             }
         }
 
