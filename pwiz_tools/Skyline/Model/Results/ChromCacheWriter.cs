@@ -30,8 +30,10 @@ namespace pwiz.Skyline.Model.Results
 
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
         protected readonly List<ChromPeak> _listPeaks = new List<ChromPeak>();
-        protected readonly List<ChromTransition> _listTransitions = new List<ChromTransition>();
-        protected readonly List<ChromGroupHeaderInfo> _listGroups = new List<ChromGroupHeaderInfo>();
+        protected readonly List<ChromTransition5> _listTransitions = new List<ChromTransition5>();
+        protected readonly List<ChromGroupHeaderInfo5> _listGroups = new List<ChromGroupHeaderInfo5>();
+        protected readonly List<Type> _listScoreTypes = new List<Type>();
+        protected readonly List<float> _listScores = new List<float>();
         protected readonly FileSaver _fs;
         protected readonly ILoadMonitor _loader;
         protected ProgressStatus _status;
@@ -61,7 +63,13 @@ namespace pwiz.Skyline.Model.Results
                     {
                         if (_outStream != null)
                         {
-                            ChromatogramCache.WriteStructs(_outStream, _listCachedFiles, _listGroups, _listTransitions, _listPeaks);
+                            ChromatogramCache.WriteStructs(_outStream,
+                                                           _listCachedFiles,
+                                                           _listGroups,
+                                                           _listTransitions,
+                                                           _listPeaks,
+                                                           _listScoreTypes,
+                                                           _listScores.ToArray());
 
                             _loader.StreamManager.Finish(_outStream);
                             _outStream = null;
@@ -72,13 +80,18 @@ namespace pwiz.Skyline.Model.Results
                         // the first time the document uses it.
                         var readStream = _loader.StreamManager.CreatePooledStream(CachePath, false);
 
-                        result = new ChromatogramCache(CachePath,
-                                                       ChromatogramCache.FORMAT_VERSION_CACHE,
-                                                       _listCachedFiles.ToArray(),
-                                                       _listGroups.ToArray(),
-                                                       _listTransitions.ToArray(),
-                                                       _listPeaks.ToArray(),
-                                                       readStream);
+                        var rawData = new ChromatogramCache.RawData
+                            {
+                                FormatVersion = ChromatogramCache.FORMAT_VERSION_CACHE,
+                                ChromCacheFiles = _listCachedFiles.ToArray(),
+                                ChromatogramEntries = _listGroups.ToArray(),
+                                ChromTransitions = _listTransitions.ToArray(),
+                                ChromatogramPeaks = _listPeaks.ToArray(),
+                                ScoreTypes = _listScoreTypes.ToArray(),
+                                Scores = _listScores.ToArray(),
+
+                            };
+                        result = new ChromatogramCache(CachePath, rawData, readStream);
                         _loader.UpdateProgress(_status.Complete());
                     }
                 }
@@ -91,7 +104,14 @@ namespace pwiz.Skyline.Model.Results
                     Dispose();
                 }
 
-                _completed(result, x);
+                try
+                {
+                    _completed(result, x);
+                }
+                catch (Exception x2)
+                {
+                    _completed(null, x2);
+                }
             }
         }
 

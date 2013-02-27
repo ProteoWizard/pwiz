@@ -45,8 +45,7 @@ namespace pwiz.SkylineTestFunctional
         /// Test import document functionality with results importing
         /// </summary>
         protected override void DoTest()
-        {
-            
+        {            
             string[] documentPaths = new[]
                                          {
                                              TestFilesDir.GetTestPath("document1.sky"), // subject1, subject2, buffer (waters calcurv - annotations, manual integration, removed peak)
@@ -109,12 +108,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(File.Exists(cachePersistPath));
 
             // The cache version of the original test file is 3.
-			// The cache file just created is version 4 or higher.
-            // Cache version 4 stores instrument information, and is bigger in size.
-            // Cache version 5 adds an int for flags for each file
-            // Allow for a difference in sizes due to the extra information.
-            int instrumentInfoSize = (sizeof(int) + sizeof(int)) * docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
-            Assert.AreEqual(cacheSizes[1], new FileInfo(cachePersistPath).Length, instrumentInfoSize);
+            // The cache file just created is version 4 or higher.
+            long startCacheLen = GetCacheSize(cacheSizes[1], docInitial, 48);
+            Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
 
             RunUI(() =>
                       {
@@ -135,9 +131,6 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreSame(docInitial, SkylineWindow.Document);
 
-            long startCacheLen = new FileInfo(cachePersistPath).Length;
-            long expectCacheLen = startCacheLen + cacheSizes[0];
-
             // Import a document adding all replicates
             RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[0]), dlg =>
             {
@@ -146,6 +139,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var docAdd = WaitForDocumentChangeLoaded(docInitial);
             var docAdded = ResultsUtil.DeserializeDocument(documentPaths[0]);
+            long expectCacheLen = startCacheLen + GetCacheSize(cacheSizes[0], docAdded, 60);
 
             // No peptide merging should have happened
             AssertEx.IsDocumentState(docAdd, null,
@@ -360,12 +354,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(stateMerged.AnnotationCount, stateAdd.AnnotationCount + stateAdded2.AnnotationCount);
             Assert.AreEqual(stateMerged.UserSetCount, stateAdd.UserSetCount + stateAdded2.UserSetCount);
 
-            int iPeptide = 0;
             var setColors = new HashSet<int>();
-            foreach (var nodePep in docMerged.Peptides)
+            foreach (var nodePep in docMerged.Peptides.Take(4))
             {
-                if (iPeptide++ < 4)
-                    setColors.Add(nodePep.Annotations.ColorIndex);
+                setColors.Add(nodePep.Annotations.ColorIndex);
             }
             Assert.AreEqual(4, setColors.Count);
             Assert.IsFalse(setColors.Contains(-1));
@@ -375,7 +367,7 @@ namespace pwiz.SkylineTestFunctional
             // Check cache sizes
             // At this point, the main cache should be about the size of the sum of
             // the caches it has incorporated.
-            Assert.AreEqual(cacheSizes[0] + cacheSizes[1] + cacheSizes[2] + cacheSizes[3],
+            Assert.AreEqual(newCacheLen + cacheSizes[2] + cacheSizes[3],
                             new FileInfo(cachePersistPath).Length, 200);
             // Undo and save should have set the main cache back to the initial state
             RunUI(SkylineWindow.Undo);
@@ -396,6 +388,27 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(File.Exists(cachePersistPath));
         }
 
+        private static long GetCacheSize(long format3Size, SrmDocument docInitial, int dataTranCount)
+        {
+            long cacheSize = format3Size;
+            int fileCachedCount = docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_3)
+            {
+                // Cache version 4 stores instrument information, and is bigger in size.
+                cacheSize += sizeof(int) * fileCachedCount;
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
+            {
+                // Cache version 5 adds an int for flags for each file
+                // Allow for a difference in sizes due to the extra information.
+                int fileFlagsSize = sizeof(int) * fileCachedCount;
+                int transitionFlagsSize = sizeof(int) * dataTranCount;
+                // And num score types, num scores and score location
+                const int headerScoreSize = sizeof(int) + sizeof(int) + sizeof(long);
+                cacheSize += fileFlagsSize + transitionFlagsSize + headerScoreSize;
+            }
+            return cacheSize;
+        }
 
         private class DocResultsState
         {

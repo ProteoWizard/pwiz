@@ -25,6 +25,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -33,7 +34,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class TransitionSettingsUI : FormEx
     {
 // ReSharper disable InconsistentNaming
-        public enum TABS { Prediction, Filter, Library, Instrument, FullScan } // Not L10N       
+        public enum TABS { Prediction, Filter, Library, Instrument, FullScan, Peaks } // Not L10N       
 // ReSharper restore InconsistentNaming
 
         private readonly SkylineWindow _parent;
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         private readonly SettingsListComboDriver<IsotopeEnrichments> _driverEnrichments;
         private readonly SettingsListComboDriver<IsolationScheme> _driverIsolationScheme;
+        private readonly SettingsListComboDriver<PeakScoringModelSpec> _driverPeakScoringModel;
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
 
         public TransitionSettingsUI(SkylineWindow parent)
@@ -173,6 +175,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 radioKeepAllTime.Checked = true;
             }
+
+            // Initialize peak scoring settings.
+            tabControl1.TabPages.Remove(tabPeaks);  // TODO: Remove this line when the Peaks tab is ready
+            _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
+            _driverPeakScoringModel.LoadList(null);
         }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }
@@ -670,6 +677,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverIsolationScheme.SelectedIndexChangedEvent(sender, e);
         }
 
+        private void comboPeakScoringModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
+        }
+
         private void cbUseOptimized_CheckedChanged(object sender, EventArgs e)
         {
             labelOptimizeType.Visible = comboOptimizeType.Visible = cbUseOptimized.Checked;
@@ -1120,6 +1132,16 @@ namespace pwiz.Skyline.SettingsUI
         public void EditIsolationScheme()
         {
             _driverIsolationScheme.EditList();
+        }
+
+        public void AddPeakScoringModel()
+        {
+            _driverPeakScoringModel.AddItem();
+        }
+
+        public void EditPeakScoringModel()
+        {
+            _driverPeakScoringModel.EditList();
         }
 
         #endregion

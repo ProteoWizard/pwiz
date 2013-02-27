@@ -85,8 +85,11 @@ namespace pwiz.Skyline.Model.Proteome
             writer.WriteAttributeString(Attr.database_path, DatabasePath);
         }
 
-        private static readonly IXmlElementHelper<BackgroundProteomeSpec>[] BACKGROUND_PROTEOME_HELPERS
-            = new IXmlElementHelper<BackgroundProteomeSpec>[] { new XmlElementHelper<BackgroundProteomeSpec>() };
+        private static readonly IXmlElementHelper<BackgroundProteomeSpec>[] BACKGROUND_PROTEOME_HELPERS =
+            {
+                new XmlElementHelper<BackgroundProteomeSpec>(), 
+                new XmlElementHelperSuper<BackgroundProteome, BackgroundProteomeSpec>()
+            };
 
         public static IXmlElementHelper<BackgroundProteomeSpec>[] BackgroundProteomeHelpers
         {

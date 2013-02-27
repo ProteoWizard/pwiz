@@ -28,11 +28,26 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
+    /// <summary>
+    /// Chromatogram data and peak lists for all transitions in a transition group
+    /// </summary>
     internal sealed class ChromDataSet
     {
+        /// <summary>
+        /// List of chromatogram data, one for each transition
+        /// </summary>
         private readonly List<ChromData> _listChromData = new List<ChromData>();
+
+        /// <summary>
+        /// True if area is time normalized, as it has been since v0.7.  Before that
+        /// area was simply based on the number of points across the peak, which could
+        /// yield higher areas for for higher sampling rates.
+        /// </summary>
         private readonly bool _isTimeNormalArea;
 
+        /// <summary>
+        /// List of peak groups, one peak per transition
+        /// </summary>
         private List<ChromDataPeakList> _listPeakSets = new List<ChromDataPeakList>();
 
         public ChromDataSet(bool isTimeNormalArea, params ChromData[] arrayChromData)
@@ -41,8 +56,18 @@ namespace pwiz.Skyline.Model.Results
             _listChromData.AddRange(arrayChromData);
         }
 
+        public void ClearDataDocNodes()
+        {
+            foreach (var chromData in Chromatograms)
+                chromData.DocNode = null;
+        }
+
+        public ChromData BestChromatogram { get { return _listChromData[0]; } }
         public IEnumerable<ChromData> Chromatograms { get { return _listChromData; } }
 
+        /// <summary>
+        /// The number of transitions or chromatograms associated with this transition group
+        /// </summary>
         public int Count { get { return _listChromData.Count; } }
 
         public void Add(ChromData chromData)
@@ -50,34 +75,61 @@ namespace pwiz.Skyline.Model.Results
             _listChromData.Add(chromData);
         }
 
-        public int Offset { get; set; }
+        /// <summary>
+        /// Offset applied to transform StartIndex, EndIndex and TimeIndex to peptide
+        /// coordinate system shared by all transition groups of a peptide.
+        /// </summary>
+        public int PeptideIndexOffset { get; set; }
 
+        /// <summary>
+        /// True if area is time normalized, as it has been since v0.7.  Before that
+        /// area was simply based on the number of points across the peak, which could
+        /// yield higher areas for for higher sampling rates.
+        /// </summary>
         public bool IsTimeNormalArea { get { return _isTimeNormalArea; } }
 
+        /// <summary>
+        /// Enumerates the peak groups associated with this transiton group
+        /// </summary>
         public IEnumerable<ChromDataPeakList> PeakSets { get { return _listPeakSets; } }
 
-        public TransitionGroupDocNode DocNode { get; set; }
+        /// <summary>
+        /// Removes all but the first count peaks.  For use when the peak groups
+        /// are sorted by a score.  If fewer there are fewer than the number of peaks
+        /// specified, then the peaks are left unchanged.
+        /// </summary>
+        /// <param name="count">Maximum number of peaks to retain</param>
+        public void TruncatePeakSets(int count)
+        {
+            if (count < _listPeakSets.Count)
+                _listPeakSets.RemoveRange(count, _listPeakSets.Count - count);
+        }
 
-        public bool IsStandardType { get; set; }
+        public TransitionGroupDocNode NodeGroup { get; set; }
+
+        /// <summary>
+        /// True if the transition group is an isotope labeled internal standard
+        /// </summary>
+        public bool IsStandard { get; set; }
 
         public float PrecursorMz
         {
-            get { return _listChromData.Count > 0 ? _listChromData[0].Key.Precursor : 0; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : 0; }
         }
 
         public int CountPeaks
         {
-            get { return _listChromData.Count > 0 ? _listChromData[0].Peaks.Count : 0; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Peaks.Count : 0; }
         }
 
         public int MaxPeakIndex
         {
-            get { return _listChromData.Count > 0 ? _listChromData[0].MaxPeakIndex : 0; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.MaxPeakIndex : 0; }
         }
 
         public float[] Times
         {
-            get { return _listChromData.Count > 0 ? _listChromData[0].Times : new float[0]; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Times : new float[0]; }
         }
 
         public float[][] Intensities
@@ -295,7 +347,7 @@ namespace pwiz.Skyline.Model.Results
                 // If peptide ID retention times are present, allow
                 // peaks greater than 20, but only if they contain
                 // an ID retention time.
-                if (i >= 20 && !peak.IsIdentified(retentionTimes))
+                if (i >= 20 && !peak.IsIdentifiedTime(retentionTimes))
                     continue;
 
                 ChromDataPeakList peakSet = FindCoelutingPeaks(peak, allPeaks);
@@ -834,86 +886,116 @@ namespace pwiz.Skyline.Model.Results
             return listPeaks;
         }
 
-        public void SetBestPeak(ChromDataPeakList peakSet, PeptideChromDataPeak bestPeptidePeak)
+        public ChromDataPeakList SetBestPeak(ChromDataPeakList peakSet, PeptideChromDataPeak bestPeptidePeak, int indexSet)
         {
+            ChromDataPeakList peakSetAdd = null;
+            int startIndex, endIndex;
+            // TODO: Need to do something reasonable for Deuterium elution time shifts
+            bool matchBounds = GetLocalPeakBounds(bestPeptidePeak, out startIndex, out endIndex);
+
             if (peakSet != null)
             {
-                // If the best peak by peptide matching is not already at the
-                // head of the list, then move it there
-                if (peakSet != _listPeakSets[0])
+                // If the peak ranked by peptide matching is not in its proper position,
+                // then move it there
+                if (!ReferenceEquals(peakSet, _listPeakSets[indexSet]))
                 {
                     _listPeakSets.Remove(peakSet);
-                    _listPeakSets.Insert(0, peakSet);
+                    _listPeakSets.Insert(indexSet, peakSet);
                 }
                 // If there is a different best peptide peak, and it should have
                 // the same retention time charachteristics, then reset the integration
                 // boundaries of this peak set
-                if (bestPeptidePeak != null && IsSameRT(bestPeptidePeak.Data))
+                if (matchBounds)
                 {
                     var peak = peakSet[0].Peak;
-                    var peakBest = bestPeptidePeak.PeakGroup[0].Peak;
-                    int offsetBest = bestPeptidePeak.Data.Offset;
-                    int startIndex = Math.Max(0, GetIndex(peakBest.StartIndex + offsetBest));
-                    int endIndex = Math.Min(Times.Length - 1, GetIndex(peakBest.EndIndex + offsetBest));
 
+                    // Reset the range of the best peak, if the chromatograms for this peak group
+                    // overlap with the best peptide peak at all.  Resetting the range of the best
+                    // peak for this peak group will cause it and all other peaks in the peak group
+                    // to be reintegrated to this range
+                    if (startIndex < endIndex)
+                    {
+                        peak.ResetBoundaries(startIndex, endIndex);
+                    }
                     // In a peak set with mutiple charge states and light-heavy pairs, it is
                     // possible that a peak may not overlap with the best peak in its
                     // charge group.  If this is the case, and the best peak is completely
                     // outside the bounds of the current chromatogram, then insert an
                     // empty peak.
-                    if (startIndex > endIndex)
-                    {
-                        var peakAdd = new ChromDataPeak(_listChromData[0], null);
-                        _listPeakSets.Insert(0,
-                            new ChromDataPeakList(peakAdd, _listChromData) { IsForcedIntegration = true });
-                    }
-                    // Otherwise, reset the best peak
                     else
                     {
-                        peak.StartIndex = startIndex;
-                        peak.EndIndex = endIndex;
+                        var peakAdd = new ChromDataPeak(BestChromatogram, null);
+                        peakSetAdd = new ChromDataPeakList(peakAdd, _listChromData) { IsForcedIntegration = true };
                     }
                 }
             }
             // If no peak was found at the peptide level for this data set,
             // but there is a best peak for the peptide
-            else if (bestPeptidePeak != null && bestPeptidePeak.PeakGroup != null)
+            else if (bestPeptidePeak != null && matchBounds)
             {
-                ChromDataPeak peakAdd = null;
-
-                // If no overlapping peak was found for this precursor, then create
-                // a peak with the same extents as the best peak.  This peak will
+                // And the chromatograms for this transition group overlap with the best peptide
+                // peak, then create a peak with the same extents as the best peak.  This peak will
                 // appear as missing, if Integrate All is not selected.
-                var peakBest = bestPeptidePeak.PeakGroup[0].Peak;
-                int offsetBest = bestPeptidePeak.Data.Offset;
-                int startIndex = Math.Max(0, GetIndex(peakBest.StartIndex + offsetBest));
-                int endIndex = Math.Min(Times.Length - 1, GetIndex(peakBest.EndIndex + offsetBest));
+                ChromDataPeak peakAdd;
                 if (startIndex < endIndex)
                 {
-                    var chromData = _listChromData[0];
+                    var chromData = BestChromatogram;
                     peakAdd = new ChromDataPeak(chromData, chromData.CalcPeak(startIndex, endIndex));
                 }
-
-                // If there is still no peak to add, create an empty one
-                if (peakAdd == null)
+                // Otherwise, create an empty peak
+                else
                 {
-                    peakAdd = new ChromDataPeak(_listChromData[0], null);
+                    peakAdd = new ChromDataPeak(BestChromatogram, null);
                 }
 
-                _listPeakSets.Insert(0,
-                    new ChromDataPeakList(peakAdd, _listChromData) { IsForcedIntegration = true });
+                peakSetAdd = new ChromDataPeakList(peakAdd, _listChromData) {IsForcedIntegration = true};
+            }
+
+            if (peakSetAdd != null)
+            {
+                if (indexSet < _listPeakSets.Count)
+                    _listPeakSets.Insert(indexSet, peakSetAdd);
+                else
+                    _listPeakSets.Add(peakSetAdd);
+                peakSet = peakSetAdd;
+            }
+            return peakSet;
+        }
+
+        public void NarrowPeak(ChromDataPeakList peakSet, PeptideChromDataPeak narrowestPeptidePeak, int indexSet)
+        {
+            var peak = peakSet[0].Peak;
+            if (peak != null)
+            {
+                int len = narrowestPeptidePeak.Length;
+                if (narrowestPeptidePeak.IsRightBound)
+                    peak.ResetBoundaries(peak.EndIndex - len + 1, peak.EndIndex);
+                else // if (narrowestPeptidePeak.IsLeftBound)  Need to make sure they are the same length
+                    peak.ResetBoundaries(peak.StartIndex, peak.StartIndex + len - 1);
             }
         }
 
-        private int GetIndex(int indexPeptide)
+        private bool GetLocalPeakBounds(PeptideChromDataPeak bestPeptidePeak, out int startIndex, out int endIndex)
         {
-            return indexPeptide - Offset;
+            if (bestPeptidePeak == null)
+            {
+                startIndex = endIndex = -1;
+                return false;
+            }
+            startIndex = Math.Max(0, GetLocalIndex(bestPeptidePeak.StartIndex));
+            endIndex = Math.Min(Times.Length - 1, GetLocalIndex(bestPeptidePeak.EndIndex));
+            return IsSameRT(bestPeptidePeak.Data);
+        }
+
+        private int GetLocalIndex(int indexPeptide)
+        {
+            return indexPeptide - PeptideIndexOffset;
         }
 
         private bool IsSameRT(ChromDataSet chromDataSet)
         {
-            return DocNode.RelativeRT == RelativeRT.Matching &&
-                chromDataSet.DocNode.RelativeRT == RelativeRT.Matching;
+            return NodeGroup.RelativeRT == RelativeRT.Matching &&
+                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Matching;
         }
 
         public override string ToString()

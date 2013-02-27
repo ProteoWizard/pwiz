@@ -26,6 +26,7 @@ using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -64,9 +65,18 @@ namespace pwiz.Skyline.Model.Results
             _document = document;
             _cacheRecalc = cacheRecalc;
             MSDataFilePaths = msDataFilePaths;
+
+            // Get peak scoring calculators
+            DetailedPeakFeatureCalculators = PeakFeatureCalculator.Calculators
+                .Where(c => c is DetailedPeakFeatureCalculator)
+                .Cast<DetailedPeakFeatureCalculator>()
+                .ToArray();
+            _listScoreTypes.AddRange(DetailedPeakFeatureCalculators.Select(c => c.GetType()));
         }
 
         private IList<string> MSDataFilePaths { get; set; }
+
+        private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
 
         private bool IsTimeNormalArea
         {
@@ -192,8 +202,7 @@ namespace pwiz.Skyline.Model.Results
                 //
                 // This does not actually start the loop, but calling the function once,
                 // seems to reserve a thread somehow, so that the next call works.
-                Action<int, bool> writer = WriteLoop;
-                writer.BeginInvoke(_currentFileIndex, true, null, null);
+                ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, true));
 
                 // Read the instrument data indexes
                 int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
@@ -230,13 +239,8 @@ namespace pwiz.Skyline.Model.Results
                         provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
                     {                            
-                        if (_document.Settings.TransitionSettings.FullScan.IsEnabled)
-                        {
-                            if (_libraryRetentionTimes == null)
-                            {
-                                _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePathPart);
-                            }
-                        }
+                        if (_document.Settings.TransitionSettings.FullScan.IsEnabled && _libraryRetentionTimes == null)
+                            _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePathPart);
 
                         provider = CreateSpectraChromProvider(inFile);
                     }
@@ -368,13 +372,13 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors, singleMatch))
                 {
                     var peptidePercursor = matchingGroup.Key;
-                    bool isStandard = peptidePercursor != null &&
+                    var chromDataSetMatch = matchingGroup.Value;
+                    chromDataSetMatch.IsStandard = peptidePercursor != null &&
                         setInternalStandards.Contains(peptidePercursor.NodeGroup.TransitionGroup.LabelType);
 
                     AddChromDataSet(provider.IsProcessedScans,
-                                    matchingGroup.Value,
+                                    chromDataSetMatch,
                                     peptidePercursor,
-                                    isStandard,
                                     dictPeptideChromData,
                                     listChromData);
                 }
@@ -433,7 +437,7 @@ namespace pwiz.Skyline.Model.Results
             var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
             listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
 
-            ChromKey lastKey = new ChromKey(0, 0);
+            ChromKey lastKey = new ChromKey(0, 0, ChromSource.unknown);
             ChromDataSet chromDataSet = null;
             foreach (var keyIndex in listKeyIndex)
             {
@@ -458,14 +462,13 @@ namespace pwiz.Skyline.Model.Results
         private void AddChromDataSet(bool isProcessedScans,
                                             ChromDataSet chromDataSet,
                                             PeptidePrecursorMz peptidePrecursorMz,
-                                            bool isStandardType,
                                             IDictionary<int, PeptideChromDataSets> dictPeptideChromData,
                                             ICollection<PeptideChromDataSets> listChromData)
         {
             // If there was no matching precursor, just add this as a stand-alone set
             if (peptidePrecursorMz == null)
             {
-                listChromData.Add(new PeptideChromDataSets(new double[0], false, isProcessedScans, chromDataSet));
+                listChromData.Add(new PeptideChromDataSets(chromDataSet, DetailedPeakFeatureCalculators, isProcessedScans));
                 return;
             }
 
@@ -486,11 +489,11 @@ namespace pwiz.Skyline.Model.Results
                         nodePep.Peptide.Sequence, nodePep.ExplicitMods);
                 }
 
-                pepDataSets = new PeptideChromDataSets(retentionTimes, isAlignedTimes, isProcessedScans);
+                pepDataSets = new PeptideChromDataSets(nodePep, DetailedPeakFeatureCalculators,
+                                                       retentionTimes, isAlignedTimes, isProcessedScans);
                 dictPeptideChromData.Add(id, pepDataSets);
             }
-            chromDataSet.DocNode = peptidePrecursorMz.NodeGroup;
-            chromDataSet.IsStandardType = isStandardType;
+            chromDataSet.NodeGroup = peptidePrecursorMz.NodeGroup;
             pepDataSets.DataSets.Add(chromDataSet);
         }
 
@@ -617,6 +620,7 @@ namespace pwiz.Skyline.Model.Results
 // ReSharper restore SuggestBaseTypeForParameter
         {
             // Look for potential product ion matches
+            chromDataSet.ClearDataDocNodes();
             var listMatchingData = new List<ChromData>();
             const float tolerance = (float) TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             foreach (var chromData in chromDataSet.Chromatograms)
@@ -626,6 +630,7 @@ namespace pwiz.Skyline.Model.Results
                     if (ChromKey.CompareTolerant(chromData.Key.Product,
                             (float) nodeTran.Mz, tolerance) == 0)
                     {
+                        chromData.DocNode = nodeTran;
                         listMatchingData.Add(chromData);
                         break;
                     }
@@ -715,8 +720,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // Start the writer thread
                         _writerStarted = true;
-                        Action<int, bool> writer = WriteLoop;
-                        writer.BeginInvoke(_currentFileIndex, false, null, null);
+                        ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, false));
                     }
 
                     // If this is the last read, then wait for the
@@ -777,7 +781,9 @@ namespace pwiz.Skyline.Model.Results
                         try
                         {
                             if (WRITE_THREADS.Count > 0 && !_readCompleted)
+// ReSharper disable LocalizableElement
                                 Console.WriteLine("Existing write threads: {0}", string.Join(", ", WRITE_THREADS.Select(t => t.ManagedThreadId))); // Not L10N: Debugging purposes
+// ReSharper restore LocalizableElement
                             WRITE_THREADS.Add(Thread.CurrentThread);
                             while (_writerStarted && !_readCompleted && _chromDataSets.Count == 0)
                                 Monitor.Wait(_chromDataSets);
@@ -807,8 +813,7 @@ namespace pwiz.Skyline.Model.Results
                                 // Allow the reader thread to exit
                                 Monitor.Pulse(_chromDataSets);
 
-                                Action build = BuildNextFile;
-                                build.BeginInvoke(null, null);
+                                ActionUtil.RunAsync(BuildNextFile);
                                 return;
                             }
 
@@ -823,6 +828,7 @@ namespace pwiz.Skyline.Model.Results
 
                     chromDataSetNext.PickChromatogramPeaks();
 
+                    var dictScoresToIndex = new Dictionary<IList<float>, int>();
                     foreach (var chromDataSet in chromDataSetNext.DataSets)
                     {
                         if (_outStream == null)
@@ -839,15 +845,32 @@ namespace pwiz.Skyline.Model.Results
                         int lenCompressed = pointsCompressed.Length;
                         _outStream.Write(pointsCompressed, 0, lenCompressed);
 
-                        // Add to header list
-//                        Debug.Assert(headData.MaxPeakIndex != -1);
+                        // Use existing scores, if they have already been added
+                        int scoresIndex;
+                        var startPeak = chromDataSet.PeakSets.FirstOrDefault();
+                        if (startPeak == null || startPeak.DetailScores == null)
+                        {
+                            // CONSIDER: Should unscored peak sets be kept?
+                            scoresIndex = -1;
+                        }
+                        else if (!dictScoresToIndex.TryGetValue(startPeak.DetailScores, out scoresIndex))
+                        {
+                            scoresIndex = _listScores.Count;
+                            dictScoresToIndex.Add(startPeak.DetailScores, scoresIndex);
+                            
+                            // Add scores to the scores list
+                            foreach (var peakSet in chromDataSet.PeakSets)
+                                _listScores.AddRange(peakSet.DetailScores);
+                        }
 
-                        var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
+                        // Add to header list
+                        var header = new ChromGroupHeaderInfo5(chromDataSet.PrecursorMz,
                                                               currentFileIndex,
                                                               chromDataSet.Count,
                                                               _listTransitions.Count,
                                                               chromDataSet.CountPeaks,
                                                               _listPeaks.Count,
+                                                              scoresIndex,
                                                               chromDataSet.MaxPeakIndex,
                                                               times.Length,
                                                               lenCompressed,
@@ -856,7 +879,7 @@ namespace pwiz.Skyline.Model.Results
                         int? transitionPeakCount = null;
                         foreach (var chromData in chromDataSet.Chromatograms)
                         {
-                            _listTransitions.Add(new ChromTransition(chromData.Key.Product));
+                            _listTransitions.Add(new ChromTransition5(chromData.Key.Product, chromData.Key.Source));
 
                             // Make sure all transitions have the same number of peaks, as this is a cache requirement
                             if (!transitionPeakCount.HasValue)

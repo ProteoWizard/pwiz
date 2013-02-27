@@ -282,7 +282,16 @@ namespace pwiz.SkylineTestFunctional
             var docRescore = SkylineWindow.Document;
             // Roundtrip to get rid of different revision indexes
             AssertEx.DocumentCloned(AssertEx.RoundTrip(docRemoved), AssertEx.RoundTrip(docRescore));
-            Assert.AreEqual(cacheLen, new FileInfo(cachePath).Length);
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
+            {
+                // Rescoring may cause new calculator scores to be stored in the cache
+                Assert.IsTrue(cacheLen < new FileInfo(cachePath).Length);
+            }
+            else
+            {
+                // Older cache versions do not store scores
+                Assert.AreEqual(cacheLen, new FileInfo(cachePath).Length);                
+            }
 
             // Remove the last replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>

@@ -33,14 +33,8 @@ namespace pwiz.SkylineTestA
     /// Summary description for ModificationMatcherTest
     /// </summary>
     [TestClass]
-    public class ModificationMatcherTest
+    public class ModificationMatcherTest : SkylineUnitTest
     {
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
-
         [TestMethod]
         public void TestModificationMatcher()
         {

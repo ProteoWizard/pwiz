@@ -29,14 +29,8 @@ namespace pwiz.SkylineTestA.Results
     /// Test SIM scan results.
     /// </summary>
     [TestClass]
-    public class ImportSimTest
+    public class ImportSimTest : SkylineUnitTest
     {
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
-
         private const string ZIP_FILE = @"TestA\Results\ImportSim.zip";
         private const string DOCUMENT_NAME = "ImportSimTest.sky";
         private const string RESULTS_NAME = "ImportSimTest.mzML";

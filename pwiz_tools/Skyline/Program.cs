@@ -30,6 +30,9 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
+// Once-per-assembly initialization to perform logging with log4net.
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
+
 namespace pwiz.Skyline
 {
     /// <summary>

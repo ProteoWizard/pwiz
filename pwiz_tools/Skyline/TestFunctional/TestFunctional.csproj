@@ -98,6 +98,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip-v1.8\Release\Ionic.Zip.dll</HintPath>
     </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -157,6 +161,7 @@
     <Compile Include="MultiSelectTest.cs" />
     <Compile Include="NeutralLossLibraryTest.cs" />
     <Compile Include="NeutralLossTest.cs" />
+    <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />

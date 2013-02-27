@@ -50,14 +50,14 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public delegate void ProgressCallback(MinStatistics minStatistics);
 
-        private int CompareLocation(ChromGroupHeaderInfo chromGroupHeaderInfo1, ChromGroupHeaderInfo chromGroupHeaderInfo2)
+        private int CompareLocation(ChromGroupHeaderInfo5 chromGroupHeaderInfo1, ChromGroupHeaderInfo5 chromGroupHeaderInfo2)
         {
             return chromGroupHeaderInfo1.LocationPoints.CompareTo(chromGroupHeaderInfo2.LocationPoints);
         }
 
         public SrmDocument Document { get; private set; }
         public ChromatogramCache ChromatogramCache { get; private set; }
-        public IList<ChromGroupHeaderInfo> ChromGroupHeaderInfos
+        public IList<ChromGroupHeaderInfo5> ChromGroupHeaderInfos
         {
             get; private set;
         }
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
 
             var chromGroupHeaderToIndex =
                 ChromGroupHeaderInfos
-                    .Select((cghi, index) => new KeyValuePair<ChromGroupHeaderInfo, int>(cghi, index))
+                    .Select((cghi, index) => new KeyValuePair<ChromGroupHeaderInfo5, int>(cghi, index))
                     .ToDictionary(kvp => kvp.Key, kvp=>kvp.Value);
             var chromGroups = new ChromatogramGroupInfo[ChromGroupHeaderInfos.Count];
             var transitionGroups = new List<TransitionGroupDocNode>[ChromGroupHeaderInfos.Count];
@@ -205,16 +205,14 @@ namespace pwiz.Skyline.Model.Results
 
         internal class MinimizedChromGroup
         {
-            public MinimizedChromGroup(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            public MinimizedChromGroup(ChromGroupHeaderInfo5 chromGroupHeaderInfo)
             {
                 ChromGroupHeaderInfo = chromGroupHeaderInfo;
                 OptimizedFirstScan = 0;
                 OptimizedLastScan = chromGroupHeaderInfo.NumPoints - 1;
             }
-            public ChromGroupHeaderInfo ChromGroupHeaderInfo
-            {
-                get; private set;
-            }
+
+            public ChromGroupHeaderInfo5 ChromGroupHeaderInfo { get; private set; }
 
             public ICollection<int> RetainedTransitionIndexes { get; set; }
             public float? OptimizedStartTime { get; private set; }
@@ -242,7 +240,7 @@ namespace pwiz.Skyline.Model.Results
                 OptimizedEndTime = times[lastIndex];
             }
 
-            public static MinimizedChromGroup Discard(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            public static MinimizedChromGroup Discard(ChromGroupHeaderInfo5 chromGroupHeaderInfo)
             {
                 return new MinimizedChromGroup(chromGroupHeaderInfo)
                            {
@@ -329,7 +327,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly int[] _fileIndexToReplicateIndex;
             private int _processedGroupCount;
 
-            private static long GetFileSize(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            private static long GetFileSize(ChromGroupHeaderInfo5 chromGroupHeaderInfo)
             {
                 return CHROM_GROUP_HEADER_INFO_SIZE + chromGroupHeaderInfo.CompressedSize
                        + chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions * PEAK_SIZE
@@ -423,16 +421,19 @@ namespace pwiz.Skyline.Model.Results
         {
             private readonly ChromatogramCache _originalCache;
             private readonly Stream _outputStream;
-            private readonly List<ChromGroupHeaderInfo> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo>();
-            private readonly List<ChromTransition> _transitions = new List<ChromTransition>();
+            private readonly List<ChromGroupHeaderInfo5> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo5>();
+            private readonly List<ChromTransition5> _transitions = new List<ChromTransition5>();
             private readonly List<ChromPeak> _peaks = new List<ChromPeak>();
             private readonly List<ChromCachedFile> _files = new List<ChromCachedFile>();
+            private readonly List<Type> _scoreTypes;
+            private readonly List<float> _scores = new List<float>();
             private readonly int[] _fileIndexMap;
 
             public Writer(ChromatogramCache chromatogramCache, Stream outputStream)
             {
                 _originalCache = chromatogramCache;
                 _outputStream = outputStream;
+                _scoreTypes = chromatogramCache.ScoreTypes.ToList();
                 _fileIndexMap = Enumerable.Repeat(-1, chromatogramCache.CachedFiles.Count).ToArray();
             }
 
@@ -452,6 +453,12 @@ namespace pwiz.Skyline.Model.Results
                 }
                 int startTransitionIndex = _transitions.Count;
                 int startPeakIndex = _peaks.Count;
+                int startScoreIndex = _scores.Count;
+                for (int iPeak = 0; iPeak < originalHeader.NumPeaks; iPeak++)
+                {
+                    int iScores = originalHeader.StartScoreIndex + iPeak*_scoreTypes.Count;
+                    _scores.AddRange(_originalCache.GetCachedScores(iScores));
+                }
                 int numPoints = minimizedChromGroup.OptimizedLastScan - minimizedChromGroup.OptimizedFirstScan + 1;
                 var retainedPeakIndexes = new HashSet<int>();
                 if (minimizedChromGroup.OptimizedStartTime.HasValue && minimizedChromGroup.OptimizedEndTime.HasValue)
@@ -462,13 +469,12 @@ namespace pwiz.Skyline.Model.Results
                         for (var transitionIndex = 0; transitionIndex < originalHeader.NumTransitions; transitionIndex++)
                         {
                             if (!minimizedChromGroup.RetainedTransitionIndexes.Contains(transitionIndex))
-                            {
                                 continue;
-                            }
-                            var peak =
-                                _originalCache.GetPeak(originalHeader.StartPeakIndex +
+
+                            var peak = _originalCache.GetPeak(originalHeader.StartPeakIndex +
                                                        transitionIndex*originalHeader.NumPeaks + iPeak);
-                            if (peak.StartTime < minimizedChromGroup.OptimizedStartTime.Value || peak.EndTime > minimizedChromGroup.OptimizedEndTime.Value)
+                            if (peak.StartTime < minimizedChromGroup.OptimizedStartTime.Value ||
+                                peak.EndTime > minimizedChromGroup.OptimizedEndTime.Value)
                             {
                                 outsideRange = true;
                                 break;
@@ -502,7 +508,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var originalIndex in minimizedChromGroup.RetainedTransitionIndexes)
                 {
                     _transitions.Add(_originalCache.GetTransition(originalIndex + originalHeader.StartTransitionIndex));
-                    for (int originalPeakIndex = 0; originalPeakIndex < originalHeader.NumPeaks; originalPeakIndex ++)
+                    for (int originalPeakIndex = 0; originalPeakIndex < originalHeader.NumPeaks; originalPeakIndex++)
                     {
                         if (!retainedPeakIndexes.Contains(originalPeakIndex))
                             continue;
@@ -521,9 +527,12 @@ namespace pwiz.Skyline.Model.Results
                 byte[] pointsCompressed = points.Compress(3);
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
-                var header = new ChromGroupHeaderInfo(originalHeader.Precursor, fileIndex,
-                                                      _transitions.Count - startTransitionIndex, startTransitionIndex,
-                                                      numPeaks, startPeakIndex,
+                var header = new ChromGroupHeaderInfo5(originalHeader.Precursor, fileIndex,
+                                                      _transitions.Count - startTransitionIndex,
+                                                      startTransitionIndex,
+                                                      numPeaks,
+                                                      startPeakIndex,
+                                                      startScoreIndex,
                                                       maxPeakIndex,
                                                       numPoints,
                                                       pointsCompressed.Length,
@@ -533,7 +542,13 @@ namespace pwiz.Skyline.Model.Results
 
             public void WriteEndOfFile()
             {
-                ChromatogramCache.WriteStructs(_outputStream, _files, _chromGroupHeaderInfos, _transitions, _peaks);
+                ChromatogramCache.WriteStructs(_outputStream,
+                                               _files,
+                                               _chromGroupHeaderInfos,
+                                               _transitions,
+                                               _peaks,
+                                               _scoreTypes,
+                                               _scores.ToArray());
             }
         }
     }

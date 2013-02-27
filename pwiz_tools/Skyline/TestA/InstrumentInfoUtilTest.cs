@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for InstrumentInfoUtilTest
     /// </summary>
     [TestClass]
-    public class InstrumentInfoUtilTest
+    public class InstrumentInfoUtilTest : SkylineUnitTest
     {
 
         [TestMethod]

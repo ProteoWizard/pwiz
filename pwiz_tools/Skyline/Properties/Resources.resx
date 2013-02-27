@@ -3682,9 +3682,6 @@ Are you sure you want to continue?</value>
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element" xml:space="preserve">
     <value>Attempt to serialize list missing an element.</value>
   </data>
-  <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type" xml:space="preserve">
-    <value>Attempt to serialize list containing invalid type.</value>
-  </data>
   <data name="XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__" xml:space="preserve">
     <value>The value '{0}' is not valid for the attribute {1}.</value>
   </data>
@@ -4951,6 +4948,69 @@ Are you sure you want to continue?</value>
   </data>
   <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_">
     <value xml:space="preserve">To extract chromatograms from {0} full-scan settings must be enabled.</value>
+  </data>
+  <data name="MProphetPeakScoringModel_DoValidate_MProphetScoringModel_has_a_peak_feature_calculator_of_type__0__which_does_not_implement_IPeakFeatureCalculator" xml:space="preserve">
+    <value>MProphetScoringModel has a peak feature calculator of type {0} which does not implement IPeakFeatureCalculator</value>
+  </data>
+  <data name="MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value" xml:space="preserve">
+    <value>MProphetPeakScoringModel requires at least one peak feature calculator with a weight value</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators" xml:space="preserve">
+    <value>MProphetScoringModel was given a peak with {0} features, but it has {1} peak feature calculators</value>
+  </data>
+  <data name="PeakScoringModelList_Title_Edit_Peak_Scoring_Models" xml:space="preserve">
+    <value>Edit Peak Scoring Models</value>
+  </data>
+  <data name="PeakScoringModelList_Label_Peak_Scoring_Models" xml:space="preserve">
+    <value>Peak Scoring Models</value>
+  </data>
+  <data name="LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area" xml:space="preserve">
+    <value>Legacy log unforced area</value>
+  </data>
+  <data name="LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count" xml:space="preserve">
+    <value>Legacy unforced count</value>
+  </data>
+  <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
+    <value>Legacy unforced count standard</value>
+  </data>
+  <data name="LegacyIdentifiedCountStandardCalc_LegacyIdentifiedCountStandardCalc_Legacy_identified_count_standard" xml:space="preserve">
+    <value>Legacy identified count standard</value>
+  </data>
+  <data name="LegacyScoringModel_LegacyScoringModel_Skyline_Legacy" xml:space="preserve">
+    <value>Skyline Legacy</value>
+  </data>
+  <data name="MQuestLightAreaCalc_MQuestLightAreaCalc_mQuest_light_area" xml:space="preserve">
+    <value>mQuest light area</value>
+  </data>
+  <data name="MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation" xml:space="preserve">
+    <value>mQuest intensity correlation</value>
+  </data>
+  <data name="MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation" xml:space="preserve">
+    <value>mQuest reference correlation</value>
+  </data>
+  <data name="MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape" xml:space="preserve">
+    <value>mQuest weighted shape</value>
+  </data>
+  <data name="MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution" xml:space="preserve">
+    <value>mQuest weighted coelution</value>
+  </data>
+  <data name="MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference" xml:space="preserve">
+    <value>mQuest weighted reference</value>
+  </data>
+  <data name="MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution" xml:space="preserve">
+    <value>mQuest weighted reference coelution</value>
+  </data>
+  <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__" xml:space="preserve">
+    <value>Attempt to serialize list containing invalid type {0}.</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists" xml:space="preserve">
+    <value>The peak scoring model {0} already exists</value>
+  </data>
+  <data name="PeakCalculatorWeight_Validate___0___is_not_a_known_name_for_a_peak_feature_calculator" xml:space="preserve">
+    <value>'{0}' is not a known name for a peak feature calculator</value>
+  </data>
+  <data name="PeakCalculatorGridViewDriver_ValidateRow_On_line__0____1_" xml:space="preserve">
+    <value>On line {0}, {1}</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_" xml:space="preserve">
     <value>Failure updating peptides in the iRT database.  The database may be out of synch.</value>

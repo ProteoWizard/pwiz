@@ -26,7 +26,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA.Results
 {
     [TestClass]
-    public class NumericsLsSolverTest
+    public class NumericsLsSolverTest : SkylineUnitTest
     {
         [TestMethod]
         public void TestNumericsLsSolver()

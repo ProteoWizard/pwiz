@@ -22,6 +22,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
@@ -29,7 +30,7 @@ namespace pwiz.SkylineTest
     /// Tests for the BookmarkEnumerator class.
     /// </summary>
     [TestClass]
-    public class BookmarkEnumeratorTest
+    public class BookmarkEnumeratorTest : SkylineUnitTest
     {
         [TestMethod]
         public void TestForwardBackward()

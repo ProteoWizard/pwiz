@@ -3447,6 +3447,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The peak scoring model {0} already exists.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to comboHeavy.
         /// </summary>
         public static string EditPepModsDlg_GetHeavyName_Prefix_Heavy_Name {
@@ -6558,6 +6567,53 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Legacy identified count standard.
+        /// </summary>
+        public static string LegacyIdentifiedCountStandardCalc_LegacyIdentifiedCountStandardCalc_Legacy_identified_count_standard {
+            get {
+                return ResourceManager.GetString("LegacyIdentifiedCountStandardCalc_LegacyIdentifiedCountStandardCalc_Legacy_identi" +
+                        "fied_count_standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy log unforced area.
+        /// </summary>
+        public static string LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area {
+            get {
+                return ResourceManager.GetString("LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline Legacy.
+        /// </summary>
+        public static string LegacyScoringModel_LegacyScoringModel_Skyline_Legacy {
+            get {
+                return ResourceManager.GetString("LegacyScoringModel_LegacyScoringModel_Skyline_Legacy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy unforced count.
+        /// </summary>
+        public static string LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count {
+            get {
+                return ResourceManager.GetString("LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy unforced count standard.
+        /// </summary>
+        public static string LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard {
+            get {
+                return ResourceManager.GetString("LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_" +
+                        "unforced_count_standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data truncation in library header. File may be corrupted..
         /// </summary>
         public static string Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted {
@@ -7311,6 +7367,104 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLook" +
                         "up", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MProphetScoringModel was given a peak with {0} features, but it has {1} peak feature calculators.
+        /// </summary>
+        public static string MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators {
+            get {
+                return ResourceManager.GetString("MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_" +
+                        "peak_with__0__features__but_it_has__1__peak_feature_calculators", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MProphetPeakScoringModel requires at least one peak feature calculator with a weight value.
+        /// </summary>
+        public static string MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value {
+            get {
+                return ResourceManager.GetString("MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_on" +
+                        "e_peak_feature_calculator_with_a_weight_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MProphetScoringModel has a peak feature calculator of type {0} which does not implement IPeakFeatureCalculator.
+        /// </summary>
+        public static string MProphetPeakScoringModel_DoValidate_MProphetScoringModel_has_a_peak_feature_calculator_of_type__0__which_does_not_implement_IPeakFeatureCalculator {
+            get {
+                return ResourceManager.GetString("MProphetPeakScoringModel_DoValidate_MProphetScoringModel_has_a_peak_feature_calcu" +
+                        "lator_of_type__0__which_does_not_implement_IPeakFeatureCalculator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mQuest intensity correlation.
+        /// </summary>
+        public static string MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation {
+            get {
+                return ResourceManager.GetString("MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_co" +
+                        "rrelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mQuest light area.
+        /// </summary>
+        public static string MQuestLightAreaCalc_MQuestLightAreaCalc_mQuest_light_area {
+            get {
+                return ResourceManager.GetString("MQuestLightAreaCalc_MQuestLightAreaCalc_mQuest_light_area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mQuest reference correlation.
+        /// </summary>
+        public static string MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation {
+            get {
+                return ResourceManager.GetString("MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_co" +
+                        "rrelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mQuest weighted coelution.
+        /// </summary>
+        public static string MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution {
+            get {
+                return ResourceManager.GetString("MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mQuest weighted reference coelution.
+        /// </summary>
+        public static string MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution {
+            get {
+                return ResourceManager.GetString("MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_" +
+                        "weighted_reference_coelution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mQuest weighted reference.
+        /// </summary>
+        public static string MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference {
+            get {
+                return ResourceManager.GetString("MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted" +
+                        "_reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mQuest weighted shape.
+        /// </summary>
+        public static string MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape {
+            get {
+                return ResourceManager.GetString("MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape", resourceCulture);
             }
         }
         
@@ -8166,6 +8320,43 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        /// <summary>
+        ///   Looks up a localized string similar to On line {0}, {1}.
+        /// </summary>
+        public static string PeakCalculatorGridViewDriver_ValidateRow_On_line__0____1_ {
+            get {
+                return ResourceManager.GetString("PeakCalculatorGridViewDriver_ValidateRow_On_line__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a known name for a peak feature calculator.
+        /// </summary>
+        public static string PeakCalculatorWeight_Validate___0___is_not_a_known_name_for_a_peak_feature_calculator {
+            get {
+                return ResourceManager.GetString("PeakCalculatorWeight_Validate___0___is_not_a_known_name_for_a_peak_feature_calcul" +
+                        "ator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Scoring Models.
+        /// </summary>
+        public static string PeakScoringModelList_Label_Peak_Scoring_Models {
+            get {
+                return ResourceManager.GetString("PeakScoringModelList_Label_Peak_Scoring_Models", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Peak Scoring Models.
+        /// </summary>
+        public static string PeakScoringModelList_Title_Edit_Peak_Scoring_Models {
+            get {
+                return ResourceManager.GetString("PeakScoringModelList_Title_Edit_Peak_Scoring_Models", resourceCulture);
+            }
+        }
+        
         public static System.Drawing.Bitmap Peptide {
             get {
                 object obj = ResourceManager.GetObject("Peptide", resourceCulture);
@@ -15033,11 +15224,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempt to serialize list containing invalid type..
+        ///   Looks up a localized string similar to Attempt to serialize list containing invalid type {0}..
         /// </summary>
-        public static string XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type {
+        public static string XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__ {
             get {
-                return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type", resourceCulture);
+                return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__", resourceCulture);
             }
         }
         

@@ -122,15 +122,27 @@ namespace pwiz.Skyline.Util
 
         public void WriteXml(XmlWriter writer)
         {
-            // Write non-zero revision index
-            if (RevisionIndex != 0)
+            try
             {
-                writer.WriteStartElement(EL.revision);
-                writer.WriteAttribute(ATTR.index, RevisionIndex);
-                writer.WriteEndElement();
+                // Write non-zero revision index
+                if (RevisionIndex != 0)
+                {
+                    writer.WriteStartElement(EL.revision);
+                    writer.WriteAttribute(ATTR.index, RevisionIndex);
+                    writer.WriteEndElement();
+                }
+                // Write child elements directly into the property tag.
+                writer.WriteElements(this, GetXmlElementHelpers());
             }
-            // Write child elements directly into the property tag.
-            writer.WriteElements(this, GetXmlElementHelpers());
+            catch (Exception ex)
+            {
+                // System.Xml will unfortunately swallow this exception when we rethrow it,
+                // in the context of saving a settings list to user.config.
+                // So we have to save it and throw it again after Settings.Default.Save is
+                // complete - see SkylineWindow.OnClosing.
+                Settings.Default.SaveException = ex;
+                throw;
+            }
         }
 
         protected virtual IXmlElementHelper<TValue>[] GetXmlElementHelpers()
@@ -420,8 +432,7 @@ namespace pwiz.Skyline.Util
                     throw new InvalidDataException(Resources.XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element);
                 IXmlElementHelper<TItem> helper = FindHelper(item, helpers);
                 if (helper == null)
-                    throw new InvalidOperationException(
-                        Resources.XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type);
+                    throw new InvalidOperationException(string.Format(Resources.XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__, typeof(TItem)));
                 writer.WriteElement(helper.ElementNames[0], item);
             }
         }
@@ -674,6 +685,14 @@ namespace pwiz.Skyline.Util
                 default:
                     return value;
             }
+        }
+
+        public static Type GetTypeAttribute(this XmlReader reader, Enum name)
+        {
+            var type = reader.GetAttribute(name);
+            if (type == null)
+                throw new InvalidDataException();
+            return Type.GetType(type);
         }
 
         public static bool IsStartElement(this XmlReader reader, string[] names)

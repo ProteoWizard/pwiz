@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.DocSettings;
@@ -38,33 +37,56 @@ namespace pwiz.Skyline.Model.Results
 //        private const int MINIMUM_DELTAS_PER_CHROM = 4;
 
         private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
+        private readonly List<List<PeptideChromDataPeakList>> _listListPeakSets = new List<List<PeptideChromDataPeakList>>();
         private readonly double[] _retentionTimes;
         private readonly bool _isAlignedTimes;
         private readonly bool _isProcessedScans;
 
-        public PeptideChromDataSets(double[] retentionTimes, bool isAlignedTimes, bool isProcessedScans)
+        public PeptideChromDataSets(PeptideDocNode nodePep,
+                                    IList<DetailedPeakFeatureCalculator> detailedPeakFeatureCalculators,
+                                    double[] retentionTimes,
+                                    bool isAlignedTimes,
+                                    bool isProcessedScans)
         {
+            NodePep = nodePep;
+            DetailedPeakFeatureCalculators = detailedPeakFeatureCalculators;
             _retentionTimes = retentionTimes;
             _isAlignedTimes = isAlignedTimes;
             _isProcessedScans = isProcessedScans;
         }
 
-        public PeptideChromDataSets(double[] retentionTimes, bool isAlignedTimes, bool isProcessedScans, ChromDataSet chromDataSet)
-            : this(retentionTimes, isAlignedTimes, isProcessedScans)
+        public PeptideChromDataSets(ChromDataSet chromDataSet,
+                                    IList<DetailedPeakFeatureCalculator> detailedPeakFeatureCalculators,
+                                    bool isProcessedScans)
+            : this(null, detailedPeakFeatureCalculators, new double[0], false, isProcessedScans)
         {
             DataSets.Add(chromDataSet);
         }
 
+        public PeptideDocNode NodePep { get; private set; }
+
         public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
-        private IEnumerable<ChromDataSet> ComparableDataSets
+        private IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
         {
             get
             {
-                return from dataSet in DataSets
-                       where dataSet.DocNode != null && dataSet.DocNode.RelativeRT != RelativeRT.Unknown
+                yield return from dataSet in DataSets
+                       where IsComparable(dataSet)
                        select dataSet;
+
+                foreach (var chromDataSets in from dataSet in DataSets
+                                             where !IsComparable(dataSet)
+                                             group dataSet by dataSet.NodeGroup)
+                {
+                    yield return chromDataSets;
+                }
             }
+        }
+
+        private bool IsComparable(ChromDataSet dataSet)
+        {
+            return dataSet.NodeGroup != null && dataSet.NodeGroup.RelativeRT != RelativeRT.Unknown;
         }
 
         private IEnumerable<ChromData> ChromDatas
@@ -79,6 +101,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; } 
+
         public void Load(ChromDataProvider provider)
         {
             foreach (var set in _dataSets)
@@ -90,13 +114,20 @@ namespace pwiz.Skyline.Model.Results
             // Make sure times are evenly spaced before doing any peak detection.
             EvenlySpaceTimes();
 
+            // Pick peak groups at the precursor level
             foreach (var chromDataSet in _dataSets)
                 chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
 
-            PickPeptidePeaks();
+            // Merge where possible and pick peak groups at the peptide level
+            foreach (var dataSets in ComparableDataSets)
+                _listListPeakSets.Add(PickPeptidePeaks(dataSets.ToArray()));
 
+            // Adjust peak dimensions based on peak picking
             foreach (var chromDataSet in _dataSets)
                 chromDataSet.StorePeaks();
+
+            // Produce all detailed peak scores based on adjusted peak sets
+            ScorePeptidePeaks();
         }
 
         private bool ThermoZerosFix()
@@ -255,7 +286,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromData.Interpolate(timesNewPrecursor, intervalDelta, inferZeros);
                 }
-                chromDataSet.Offset = startSet;
+                chromDataSet.PeptideIndexOffset = startSet;
             }
         }
 
@@ -324,47 +355,88 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        private void PickPeptidePeaks()
+        private const int MAX_PEAK_GROUPS = 10;
+
+        private List<PeptideChromDataPeakList> PickPeptidePeaks(ICollection<ChromDataSet> dataSets)
         {
+            var listPeakSets = new List<PeptideChromDataPeakList>();
+
             // Only possible to improve upon individual precursor peak picking,
             // if there are more than one precursor
-            if (ComparableDataSets.Count() < 2)
-                return;
+            if (dataSets.Count == 0)
+                return listPeakSets;
+            if (dataSets.Count == 1)
+            {
+                // Create peptide peak group data structures for scoring only
+                var dataSet = dataSets.First();
+                dataSet.TruncatePeakSets(MAX_PEAK_GROUPS);
+                listPeakSets.AddRange(dataSet.PeakSets.Select(p =>
+                    new PeptideChromDataPeakList(NodePep, new PeptideChromDataPeak(dataSet, p))));
+                return listPeakSets;
+            }
 
             // Merge all the peaks into a single set
-            var allPeakGroups = MergePeakGroups();
+            var allPeakGroups = MergePeakGroups(dataSets);
             if (allPeakGroups.Count == 0)
-                return;
+                return listPeakSets;
 
             // Create coeluting groups
-            var listPeakSets = new List<PeptideChromDataPeakList>();
-            while (allPeakGroups.Count > 0)
+            while (allPeakGroups.Count > 0 && listPeakSets.Count < MAX_PEAK_GROUPS)
             {
-                PeptideChromDataPeak peak = allPeakGroups[0];
+                var peakNext = allPeakGroups[0];
                 allPeakGroups.RemoveAt(0);
 
-                PeptideChromDataPeakList peakSet = FindCoelutingPeptidePeaks(peak, allPeakGroups);
-
-                listPeakSets.Add(peakSet);
+                var peakSetNext = FindCoelutingPeptidePeaks(peakNext, allPeakGroups);
+                listPeakSets.Add(peakSetNext);
             }
 
             // Sort descending by the peak picking score
             listPeakSets.Sort(ComparePeakLists);
 
             // Reset best picked peaks and reintegrate if necessary
-            var peakSetBest = listPeakSets[0];
-            PeptideChromDataPeak peakBest = null;
-            foreach (var peak in peakSetBest.OrderedPeaks)
+            for (int i = 0; i < listPeakSets.Count; i++)
             {
-                // Ignore precursors with unknown relative RT. They do not participate
-                // in peptide peak matching.
-                if (peak.Data.DocNode.RelativeRT == RelativeRT.Unknown)
-                    continue;
+                var peakSet = listPeakSets[i];
+                PeptideChromDataPeak peakBest = null, peakNarrowest = null;
+                int minLength = int.MaxValue;
 
-                peak.Data.SetBestPeak(peak.PeakGroup, peakBest);
-                if (peakBest == null)
-                    peakBest = peak;
+                foreach (var peak in peakSet.OrderedPeaks)
+                {
+                    // Ignore precursors with unknown relative RT. They do not participate
+                    // in peptide peak matching.
+                    if (peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown)
+                        continue;
+
+                    peak.SetBestPeak(peakBest, i);
+
+                    // The first peak seen is the best peak
+                    if (peakBest == null)
+                        peakBest = peak;
+                    int lenPeak = peak.Length;
+                    if (0 < lenPeak && lenPeak < minLength)
+                    {
+                        peakNarrowest = peak;
+                        minLength = lenPeak;
+                    }
+                }
+
+                // If any peak trunctation occurred in peaks that should be matching
+                if (peakNarrowest != null && !ReferenceEquals(peakBest, peakNarrowest))
+                {
+                    foreach (var peak in peakSet)
+                    {
+                        if (peak.Length == peakNarrowest.Length || peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown)
+                            continue;
+                        peak.Data.NarrowPeak(peak.PeakGroup, peakNarrowest, i);
+                    }
+                }
             }
+
+            // Discard peaks not included in a peptide peak list
+            foreach (var chromDataSet in dataSets)
+                chromDataSet.TruncatePeakSets(MAX_PEAK_GROUPS);
+
+            return listPeakSets;
         }
 
         public int ComparePeakLists(PeptideChromDataPeakList p1, PeptideChromDataPeakList p2)
@@ -377,18 +449,27 @@ namespace pwiz.Skyline.Model.Results
             return Comparer<double>.Default.Compare(p2.CombinedScore, p1.CombinedScore);
         }
 
+        /// <summary>
+        /// Given a high scoring peak precursor peak group, find other lower scoring precursor peak
+        /// groups from different precursors for the same peptide, which overlap in time with the
+        /// high scoring peak.
+        /// </summary>
+        /// <param name="dataPeakMax">High scoring precursor peak group</param>
+        /// <param name="allPeakGroups">List of all lower scoring precursor peak groups for the same peptide</param>
+        /// <returns>A list of coeluting precursor peak groups for this peptide</returns>
         private PeptideChromDataPeakList FindCoelutingPeptidePeaks(PeptideChromDataPeak dataPeakMax, IList<PeptideChromDataPeak> allPeakGroups)
         {
-            TransitionGroupDocNode nodeGroupMax = dataPeakMax.Data.DocNode;
-            CrawdadPeak peakMax = dataPeakMax.PeakGroup[0].Peak;
-            int offset = dataPeakMax.Data.Offset;
-            int startMax = peakMax.StartIndex + offset;
-            int endMax = peakMax.EndIndex + offset;
-            int timeMax = peakMax.TimeIndex + offset;
+            TransitionGroupDocNode nodeGroupMax = dataPeakMax.Data.NodeGroup;
+            int startMax = dataPeakMax.StartIndex;
+            int endMax = dataPeakMax.EndIndex;
+            int timeMax = dataPeakMax.TimeIndex;
 
-            var listPeaks = new PeptideChromDataPeakList(dataPeakMax);
+            // Initialize the collection of peaks with this peak
+            var listPeaks = new PeptideChromDataPeakList(NodePep, dataPeakMax);
+            // Enumerate the precursors for this peptide
             foreach (var chromData in _dataSets)
             {
+                // Skip the precursor for the max peak itself
                 if (ReferenceEquals(chromData, dataPeakMax.Data))
                     continue;
 
@@ -400,19 +481,18 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0, len = allPeakGroups.Count; i < len; i++)
                 {
                     var peakGroup = allPeakGroups[i];
+                    // Consider only peaks for the current precursor
                     if (!ReferenceEquals(peakGroup.Data, chromData))
                         continue;
 
                     // Exclude peaks that do not overlap with the maximum peak
-                    TransitionGroupDocNode nodeGroup = peakGroup.Data.DocNode;
-                    var peak = peakGroup.PeakGroup[0];
-                    offset = peakGroup.Data.Offset;
-                    int startPeak = peak.Peak.StartIndex + offset;
-                    int endPeak = peak.Peak.EndIndex + offset;
+                    TransitionGroupDocNode nodeGroup = peakGroup.Data.NodeGroup;
+                    int startPeak = peakGroup.StartIndex;
+                    int endPeak = peakGroup.EndIndex;
                     if (Math.Min(endPeak, endMax) - Math.Max(startPeak, startMax) <= 0)
                         continue;
 
-                    int timeIndex = peak.Peak.TimeIndex + offset;
+                    int timeIndex = peakGroup.TimeIndex;
                     if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching)
                     {
                         // If the peaks are supposed to have the same elution time,
@@ -445,8 +525,10 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
+                // If no coeluting peaks found, add an empty peak group
                 if (iPeakBest == -1)
                     listPeaks.Add(new PeptideChromDataPeak(chromData, null));
+                // Otherwise, add the found coeluting peak group, and remove it from the full list
                 else
                 {
                     listPeaks.Add(new PeptideChromDataPeak(chromData, allPeakGroups[iPeakBest].PeakGroup));
@@ -456,15 +538,16 @@ namespace pwiz.Skyline.Model.Results
             return listPeaks;
         }
 
-        private IList<PeptideChromDataPeak> MergePeakGroups()
+        /// <summary>
+        /// Merge the sorted lists of precursor peak groups into a single sorted list
+        /// </summary>
+        /// <param name="dataSets"></param>
+        private IList<PeptideChromDataPeak> MergePeakGroups(IEnumerable<ChromDataSet> dataSets)
         {
-            List<PeptideChromDataPeak> allPeaks = new List<PeptideChromDataPeak>();
-            var listEnumerators = ComparableDataSets.ToList().ConvertAll(
-                dataSet => dataSet.PeakSets.GetEnumerator());
+            var allPeaks = new List<PeptideChromDataPeak>();
+            var listUnmerged = new List<ChromDataSet>(dataSets);
+            var listEnumerators = listUnmerged.Select(dataSet => dataSet.PeakSets.GetEnumerator()).ToList();
 
-            // Merge with list of chrom data that will match the enumerators
-            // list, as completed enumerators are removed.
-            var listUnmerged = new List<ChromDataSet>(_dataSets);
             // Initialize an enumerator for each set of raw peaks, or remove
             // the set, if the list is found to be empty
             for (int i = listEnumerators.Count - 1; i >= 0; i--)
@@ -478,18 +561,19 @@ namespace pwiz.Skyline.Model.Results
 
             while (listEnumerators.Count > 0)
             {
-                double maxIntensity = 0;
+                double maxScore = 0;
                 int iMaxEnumerator = -1;
 
+                // Check each enumerator for the next highest peak score
                 for (int i = 0; i < listEnumerators.Count; i++)
                 {
                     var dataPeakList = listEnumerators[i].Current;
                     if (dataPeakList == null)
                         throw new InvalidOperationException(Resources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
-                    double intensity = dataPeakList.CombinedScore;
-                    if (intensity > maxIntensity)
+                    double score = dataPeakList.CombinedScore;
+                    if (score > maxScore)
                     {
-                        maxIntensity = intensity;
+                        maxScore = score;
                         iMaxEnumerator = i;
                     }
                 }
@@ -501,7 +585,7 @@ namespace pwiz.Skyline.Model.Results
                 var maxData = listUnmerged[iMaxEnumerator];
                 var maxEnumerator = listEnumerators[iMaxEnumerator];
                 var maxPeak = maxEnumerator.Current;
-                Debug.Assert(maxPeak != null);
+                Helpers.Assume(maxPeak != null);
 
                 allPeaks.Add(new PeptideChromDataPeak(maxData, maxPeak));
                 if (!maxEnumerator.MoveNext())
@@ -512,26 +596,121 @@ namespace pwiz.Skyline.Model.Results
             }
             return allPeaks;
         }
+
+        private void ScorePeptidePeaks()
+        {
+            foreach (var listPeakSets in _listListPeakSets)
+            {
+                foreach (var peakSet in listPeakSets)
+                {
+                    // Calculate scores to be saved in the cache
+                    var scores = new List<float>();
+                    // Use a single context for all scores for a peak group to allow information sharing
+                    var context = new PeakScoringContext();
+                    foreach (var calc in DetailedPeakFeatureCalculators)
+                    {
+                        scores.Add(calc.Calculate(context, peakSet));
+                    }
+                    // Assign the calculated scores to all transition group peak data objects
+                    // so they can be written out to the chromatogram cache.  The writer will
+                    // take care of this duplication before writing.
+                    foreach (var tranGroupPeakData in peakSet)
+                    {
+                        tranGroupPeakData.PeakGroup.DetailScores = scores;
+                    }
+                }            
+            }
+        }
     }
 
-    internal sealed class PeptideChromDataPeak
+    /// <summary>
+    /// A single set of peaks for all transitions in a transition group, and
+    /// a pointer to its entire peak set.
+    /// </summary>
+    internal sealed class PeptideChromDataPeak : ITransitionGroupPeakData<IDetailedPeakData>
     {
         public PeptideChromDataPeak(ChromDataSet data, ChromDataPeakList peakGroup)
         {
             Data = data;
             PeakGroup = peakGroup;
+            TranstionPeakData = peakGroup != null
+                ? peakGroup.Cast<ITransitionPeakData<IDetailedPeakData>>().ToArray()
+                : new ITransitionPeakData<IDetailedPeakData>[0];
         }
 
+        public TransitionGroupDocNode NodeGroup { get { return Data.NodeGroup; } }
+
+        public bool IsStandard { get { return Data.IsStandard; } }
+
+        public IList<ITransitionPeakData<IDetailedPeakData>> TranstionPeakData { get; private set; }
+
+        /// <summary>
+        /// Entire peak set
+        /// </summary>
         public ChromDataSet Data { get; private set; }
+
+        /// <summary>
+        /// Single peak group
+        /// </summary>
         public ChromDataPeakList PeakGroup { get; private set; }
+
+        /// <summary>
+        /// Set this peak based on another best peak for a peak group
+        /// </summary>
+        public void SetBestPeak(PeptideChromDataPeak peakBest, int indexSet)
+        {
+            PeakGroup = Data.SetBestPeak(PeakGroup, peakBest, indexSet);
+        }
+
+        private CrawdadPeak BestCrawPeak { get { return PeakGroup != null ? PeakGroup[0].Peak : null; }}
+
+        /// <summary>
+        /// Peptide normalized start index of best peak
+        /// </summary>
+        public int StartIndex { get { return BestCrawPeak != null ? BestCrawPeak.StartIndex + Data.PeptideIndexOffset : -1; } }
+
+        /// <summary>
+        /// Peptide normalized end index of best peak
+        /// </summary>
+        public int EndIndex { get { return BestCrawPeak != null ? BestCrawPeak.EndIndex + Data.PeptideIndexOffset : -1; } }
+
+        /// <summary>
+        /// Peptide normalized peak apex index of best peak
+        /// </summary>
+        public int TimeIndex { get { return BestCrawPeak != null ? BestCrawPeak.TimeIndex + Data.PeptideIndexOffset : -1; } }
+
+        /// <summary>
+        /// Length of the peptide peak (EndIndex - StartIndex + 1)
+        /// </summary>
+        public int Length { get { return BestCrawPeak != null ? BestCrawPeak.Length : 0; } }
+
+        /// <summary>
+        /// True if the peak begins at the first available time in the chromatogram
+        /// </summary>
+        public bool IsLeftBound { get { return PeakGroup != null && PeakGroup[0].IsLeftBound; } }
+
+        /// <summary>
+        /// True if the peak ends at the last available time in the chromatogram
+        /// </summary>
+        public bool IsRightBound { get { return PeakGroup != null && PeakGroup[0].IsRightBound; } }
     }
 
-    internal sealed class PeptideChromDataPeakList : Collection<PeptideChromDataPeak>
+    /// <summary>
+    /// A single set of peaks for all transition groups in a peptide
+    /// </summary>
+    internal sealed class PeptideChromDataPeakList : Collection<PeptideChromDataPeak>, IPeptidePeakData<IDetailedPeakData>
     {
-        public PeptideChromDataPeakList(PeptideChromDataPeak peak)
+        public PeptideChromDataPeakList(PeptideDocNode nodePep, PeptideChromDataPeak peak)
         {
+            NodePep = nodePep;
+            TransitionGroupPeakData = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
+
             Add(peak);
         }
+
+        public PeptideDocNode NodePep { get; private set; }
+
+        public IList<ITransitionGroupPeakData<IDetailedPeakData>> TransitionGroupPeakData { get; private set; }
 
         private double PeakCount { get; set; }
         private double TotalArea { get; set; }
@@ -557,7 +736,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (dataPeak.PeakGroup != null)
             {
-                if (dataPeak.Data.IsStandardType)
+                if (dataPeak.IsStandard)
                 {
                     PeakCountStandard += dataPeak.PeakGroup.PeakCountScore;
                     TotalAreaStandard += dataPeak.PeakGroup.TotalArea;
@@ -588,7 +767,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (dataPeak.PeakGroup != null)
             {
-                if (dataPeak.Data.IsStandardType)
+                if (dataPeak.IsStandard)
                 {
                     PeakCountStandard--;
                     TotalAreaStandard -= dataPeak.PeakGroup.TotalArea;
@@ -611,18 +790,23 @@ namespace pwiz.Skyline.Model.Results
             TotalArea = 0;
             CombinedScore = 0;
 
+            TransitionGroupPeakData.Clear();
             base.ClearItems();
         }
 
         protected override void InsertItem(int index, PeptideChromDataPeak item)
         {
             AddPeak(item);
+
+            TransitionGroupPeakData.Insert(index, item);
             base.InsertItem(index, item);
         }
 
         protected override void RemoveItem(int index)
         {
             SubtractPeak(this[index]);
+
+            TransitionGroupPeakData.RemoveAt(index);
             base.RemoveItem(index);
         }
 
@@ -630,6 +814,8 @@ namespace pwiz.Skyline.Model.Results
         {
             SubtractPeak(this[index]);
             AddPeak(item);
+
+            TransitionGroupPeakData[index] = item;
             base.SetItem(index, item);
         }
     }

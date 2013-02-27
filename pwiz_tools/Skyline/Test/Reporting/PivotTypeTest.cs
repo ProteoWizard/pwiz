@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Reporting
 {
@@ -29,7 +30,7 @@ namespace pwiz.SkylineTest.Reporting
     /// Summary description for PivotTypeTest
     /// </summary>
     [TestClass]
-    public class PivotTypeTest
+    public class PivotTypeTest : SkylineUnitTest
     {
         [TestMethod]
         public void TestCrosstabValues()

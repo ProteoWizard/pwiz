@@ -41,16 +41,11 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    public abstract class AbstractFunctionalTest
+    public abstract class AbstractFunctionalTest : SkylineUnitTest
     {
         private const int SLEEP_INTERVAL = 100;
         private const int WAIT_TIME = 60*1000;    // 1 minute
 
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
         private string[] _testFilesZips;
         public string TestFilesZip
         {
@@ -736,7 +731,7 @@ namespace pwiz.SkylineTestUtil
 
         #region Results helpers
 
-        public void ImportResultsFile(string fileName)
+        public void ImportResultsFile(string fileName, int waitForLoadSeconds = 420)
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
@@ -747,7 +742,7 @@ namespace pwiz.SkylineTestUtil
                });
             WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
             RunUI(importResultsDlg.OkDialog);
-            WaitForCondition(420 * 1000,
+            WaitForCondition(waitForLoadSeconds * 1000,
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
         }
 

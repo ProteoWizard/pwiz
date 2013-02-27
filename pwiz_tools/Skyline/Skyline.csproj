@@ -98,6 +98,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DotNetZip-v1.8\Release\Ionic.Zip.dll</HintPath>
     </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -224,6 +228,15 @@
     <Compile Include="Alerts\UpgradeDlg.designer.cs">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="AlgLib\alglibinternal.cs" />
+    <Compile Include="AlgLib\alglibmisc.cs" />
+    <Compile Include="AlgLib\ap.cs" />
+    <Compile Include="AlgLib\dataanalysis.cs" />
+    <Compile Include="AlgLib\linalg.cs" />
+    <Compile Include="AlgLib\optimization.cs" />
+    <Compile Include="AlgLib\solvers.cs" />
+    <Compile Include="AlgLib\specialfunctions.cs" />
+    <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="Controls\FindResultsForm.cs">
       <SubType>Form</SubType>
@@ -701,6 +714,7 @@
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\LegacyFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\LegacyScoringModel.cs" />
+    <Compile Include="Model\Results\Scoring\MProphetScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\MQuestFeatureCalc.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
@@ -725,6 +739,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditPeakScoringModelDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditPeakScoringModelDlg.Designer.cs">
+      <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\EditIsolationWindow.cs" />
     <Compile Include="SettingsUI\CalculateIsolationSchemeDlg.cs">
@@ -997,6 +1017,10 @@
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.resx">
+      <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1133,6 +1157,7 @@
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
+    <Compile Include="Util\Extensions\ActionUtil.cs" />
     <Compile Include="Util\FileSize.cs" />
     <Compile Include="Util\Install.cs" />
     <Compile Include="Util\JetBrainsAnnotations.cs" />
@@ -1728,6 +1753,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\add-pro32.bmp" />
+    <None Include="SkylineLog4Net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Skyline_TemporaryKey.pfx" />
     <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
     <EmbeddedResource Include="Resources\PeptideLibStandard.bmp" />

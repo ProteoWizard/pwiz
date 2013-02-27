@@ -35,16 +35,10 @@ namespace pwiz.SkylineTestA
     /// Summary description for XmlValidationTest
     /// </summary>
     [TestClass]
-    public class XmlValidationTest
+    public class XmlValidationTest : SkylineUnitTest
     {
         private const string ZIP_FILE = @"TestA\XmlValidationTest.zip";
         private int _errorCount;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void TestCurrentXmlFormat()

@@ -133,7 +133,10 @@
             this.labelIsolationScheme = new System.Windows.Forms.Label();
             this.comboAcquisitionMethod = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
+            this.tabPeaks = new System.Windows.Forms.TabPage();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.label36 = new System.Windows.Forms.Label();
+            this.comboPeakScoringModel = new System.Windows.Forms.ComboBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -146,6 +149,7 @@
             this.flowLayoutPanel1.SuspendLayout();
             this.groupBoxMS1.SuspendLayout();
             this.groupBoxMS2.SuspendLayout();
+            this.tabPeaks.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -170,6 +174,7 @@
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
             this.tabControl1.Controls.Add(this.tabFullScan);
+            this.tabControl1.Controls.Add(this.tabPeaks);
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
@@ -886,11 +891,33 @@
             resources.ApplyResources(this.label20, "label20");
             this.label20.Name = "label20";
             // 
+            // tabPeaks
+            // 
+            this.tabPeaks.Controls.Add(this.comboPeakScoringModel);
+            this.tabPeaks.Controls.Add(this.label36);
+            resources.ApplyResources(this.tabPeaks, "tabPeaks");
+            this.tabPeaks.Name = "tabPeaks";
+            this.tabPeaks.UseVisualStyleBackColor = true;
+            // 
             // helpTip
             // 
             this.helpTip.AutoPopDelay = 15000;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
+            // 
+            // label36
+            // 
+            resources.ApplyResources(this.label36, "label36");
+            this.label36.Name = "label36";
+            // 
+            // comboPeakScoringModel
+            // 
+            this.comboPeakScoringModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPeakScoringModel.FormattingEnabled = true;
+            resources.ApplyResources(this.comboPeakScoringModel, "comboPeakScoringModel");
+            this.comboPeakScoringModel.Name = "comboPeakScoringModel";
+            this.helpTip.SetToolTip(this.comboPeakScoringModel, resources.GetString("comboPeakScoringModel.ToolTip"));
+            this.comboPeakScoringModel.SelectedIndexChanged += new System.EventHandler(this.comboPeakScoringModel_SelectedIndexChanged);
             // 
             // TransitionSettingsUI
             // 
@@ -928,6 +955,8 @@
             this.groupBoxMS1.PerformLayout();
             this.groupBoxMS2.ResumeLayout(false);
             this.groupBoxMS2.PerformLayout();
+            this.tabPeaks.ResumeLayout(false);
+            this.tabPeaks.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1038,5 +1067,8 @@
         private System.Windows.Forms.TextBox textMaxInclusions;
         private System.Windows.Forms.Label label35;
         private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.TabPage tabPeaks;
+        private System.Windows.Forms.Label label36;
+        private System.Windows.Forms.ComboBox comboPeakScoringModel;
     }
 }

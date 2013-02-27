@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -95,6 +96,8 @@ namespace pwiz.Skyline
         private List<ProgressStatus> _listProgress;
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
+
+        private static readonly log4net.ILog LOG = log4net.LogManager.GetLogger("SkylineWindow");
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -694,11 +697,23 @@ namespace pwiz.Skyline
             {
                 try
                 {
+                    Settings.Default.SaveException = null;
                     Settings.Default.Save();
                 }
                 catch (Exception)
                 {
                     MessageDlg.Show(this, Resources.SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved);
+                }
+
+                // System.Xml swallows too many exceptions, so we can't catch them in the usual way.
+                // Instead we save exceptions thrown at a lower level, then rethrow them here.  These
+                // will generate reportable errors so we can see what might be going wrong in the field.
+                if (Settings.Default.SaveException != null)
+                {
+                    e.Cancel = true;
+                    Program.NoSaveSettings = true;  // let the user close the window without errors next time
+                    var x = Settings.Default.SaveException;
+                    throw new TargetInvocationException(x.Message, x);
                 }
             }
 
@@ -712,6 +727,9 @@ namespace pwiz.Skyline
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
 
+            if (!Program.FunctionalTest)
+                LOG.Info("Skyline closed.\r\n-----------------------");
+            
             base.OnClosed(e);
         }
 

@@ -25,6 +25,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA.Results
 {
@@ -32,7 +33,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for RetentionTimeAlignmentsTest
     /// </summary>
     [TestClass]
-    public class DocumentRetentionTimesTest
+    public class DocumentRetentionTimesTest : SkylineUnitTest
     {
         [TestMethod]
         public void TestXmlSerialize()

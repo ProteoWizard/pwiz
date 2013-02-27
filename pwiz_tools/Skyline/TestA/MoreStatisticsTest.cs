@@ -21,11 +21,12 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
 {
     [TestClass]
-    public class MoreStatisticsTest
+    public class MoreStatisticsTest : SkylineUnitTest
     {
         /// <summary>
         /// A test for dot-product scores

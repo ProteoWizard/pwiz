@@ -42,18 +42,13 @@ namespace pwiz.SkylineTestA
     /// Summary description for CommandLineTest
     /// </summary>
     [TestClass]
-    public class CommandLineTest
+    public class CommandLineTest : SkylineUnitTest
     {
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
-
         [TestCleanup]
-        public void MyTestCleanup()
+        public new void MyTestCleanup()
         {
             Settings.Default.ToolList.Clear();
+            base.MyTestCleanup();
         }        
 
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";

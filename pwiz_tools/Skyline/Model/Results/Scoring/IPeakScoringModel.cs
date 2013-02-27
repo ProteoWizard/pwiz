@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -53,9 +54,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
         double Score(double[] features);
     }
 
+    public abstract class PeakScoringModelSpec : XmlNamedElement, IPeakScoringModel, IValidating
+    {
+        protected PeakScoringModelSpec()
+        {
+        }
+
+        protected PeakScoringModelSpec(string name) : base(name)
+        {
+        }
+
+        public abstract IList<Type> PeakFeatureCalculators { get; }
+        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys);
+        public abstract double Score(double[] features);
+
+        public virtual void Validate()
+        {
+        }
+    }
+
     public interface IPeakFeatureCalculator
     {
-        double Calculate(PeakScoringContext context, object peakGroupData);
+        float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData);
+        string Name { get; }
     }
 
     /// <summary>
@@ -63,12 +84,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class SummaryPeakFeatureCalculator : IPeakFeatureCalculator
     {
-        public double Calculate(PeakScoringContext context, object peakGroupData)
+        protected SummaryPeakFeatureCalculator(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; private set; }
+
+        public float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData)
         {
             return Calculate(context, (IPeptidePeakData<ISummaryPeakData>) peakGroupData);
         }
 
-        protected abstract double Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData);
+        protected abstract float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData);
     }
 
     /// <summary>
@@ -76,18 +104,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class DetailedPeakFeatureCalculator : IPeakFeatureCalculator
     {
-        public double Calculate(PeakScoringContext context, object peakGroupData)
+        protected DetailedPeakFeatureCalculator(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; private set; }
+
+        public float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData)
         {
             return Calculate(context, (IPeptidePeakData<IDetailedPeakData>)peakGroupData);
         }
 
-        protected abstract double Calculate(PeakScoringContext context, IPeptidePeakData<IDetailedPeakData> summaryPeakData);
+        protected abstract float Calculate(PeakScoringContext context, IPeptidePeakData<IDetailedPeakData> summaryPeakData);
     }
 
-    public interface IPeptidePeakData<TData>
+    public interface IPeptidePeakData
     {
         PeptideDocNode NodePep { get; }
+    }
 
+    public interface IPeptidePeakData<TData> : IPeptidePeakData
+    {
         IList<ITransitionGroupPeakData<TData>> TransitionGroupPeakData { get; }
     }
 
@@ -104,7 +142,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         TransitionDocNode NodeTran { get; }
 
-        TData Peak { get; }
+        TData PeakData { get; }
     }
 
     public interface IDetailedPeakData : ISummaryPeakData
@@ -112,6 +150,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         int TimeIndex { get; }
         int EndIndex { get; }
         int StartIndex { get; }
+        int Length { get; }
 
         /// <summary>
         /// Time array shared by all transitions of a precursor, and on the
@@ -160,7 +199,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 new LegacyLogUnforcedAreaCalc(),
                 new LegacyUnforcedCountScoreCalc(),
-                new LegacyUnforcedCountScoreStandardCalc()
+                new LegacyUnforcedCountScoreStandardCalc(),
+                new MQuestLightAreaCalc(),
+                new MQuestIntensityCorrelationCalc(), 
+                new MQuestReferenceCorrelationCalc(), 
+
+                // Detail feature calculators
+                new MQuestWeightedShapeCalc(), 
+//                new MQuestShapeCalc(), 
+                new MQuestWeightedCoElutionCalc(), 
+//                new MQuestCoElutionCalc(), 
+                new MQuestWeightedReferenceShapeCalc(), 
+//                new MQuestReferenceShapeCalc(), 
+                new MQuestWeightedReferenceCoElutionCalc(),
+//                new MQuestReferenceCoElutionCalc(), 
             };
 
         public static IEnumerable<IPeakFeatureCalculator> Calculators

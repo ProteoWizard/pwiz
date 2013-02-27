@@ -35,15 +35,9 @@ namespace pwiz.SkylineTestA.Results
     /// Tests for the <see cref="ChromCacheMinimizer"/> class.
     /// </summary>
     [TestClass]
-    public class ChromCacheMinimizerTest
+    public class ChromCacheMinimizerTest : SkylineUnitTest
     {
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
 
         /// <summary>
         /// Tests that calling <see cref="ChromCacheMinimizer.Minimize"/> statistics that are approximately correct.

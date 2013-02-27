@@ -19,6 +19,7 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
@@ -26,15 +27,9 @@ namespace pwiz.SkylineTest
     /// Randomly failing tests to check failure reporting in SkylineStress.
     /// </summary>
     //[TestClass]
-    public class RandomTest
+    public class RandomTest : SkylineUnitTest
     {
         private static readonly Random RANDOM = new Random();
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
 
         //[TestMethod]
         public void Fail5Percent()

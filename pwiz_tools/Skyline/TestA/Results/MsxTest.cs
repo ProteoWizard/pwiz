@@ -30,9 +30,8 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA.Results
 {
     [TestClass]
-    public class MsxTest
+    public class MsxTest : SkylineUnitTest
     {
-        public TestContext TestContext { get; set; }
         private const string ZIP_FILE = @"TestA\Results\MsxTest.zip";
 
         private const int TEST_SPECTRUM = 105;

@@ -175,6 +175,7 @@ namespace pwiz.Skyline.Model
                               cycleCount)));
         }
 
+// ReSharper disable LocalizableElement
         // For debugging...
         private void WriteTotalScore(double totalScore)
         {
@@ -195,6 +196,7 @@ namespace pwiz.Skyline.Model
                 Console.WriteLine("Cycle {0}: score {1:0.00}, at iteration {2}, {3:0.00} seconds", // Not L10N
                     cycleNumber, cycle.CycleScore, cyclesGenerated, (DateTime.Now - startTime).TotalSeconds);
         }
+// ReSharper restore LocalizableElement
 
         private void WriteCycle(TextWriter writer, Cycle cycle, int cycleNumber)
         {

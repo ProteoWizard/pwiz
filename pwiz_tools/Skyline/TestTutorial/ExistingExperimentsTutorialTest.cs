@@ -358,20 +358,25 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettingsUI.OkDialog();
             });
             RunUI(() =>
+                {
+                    Assert.AreEqual((int)SequenceTree.StateImageId.peak, selNodeGroup.StateImageIndex);
+                    SkylineWindow.IntegrateAll();
+                });
+            RunUI(() =>
             {
-                Assert.AreEqual(selNodeGroup.StateImageIndex, (int)SequenceTree.StateImageId.peak);
-                SkylineWindow.IntegrateAll();
                 foreach (PeptideDocNode nodePep in SkylineWindow.Document.Peptides)
                 {
-                    if (nodePep.Peptide.Sequence.StartsWith("YLA")) // Not L10N
+                    string sequence = nodePep.Peptide.Sequence;
+                    int imageIndex = PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree);
+                    if (sequence.StartsWith("YLA")) // Not L10N
                     {
-                        Assert.AreEqual(PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree),
-                           (int)SequenceTree.StateImageId.keep);
+                        Assert.AreEqual((int)SequenceTree.StateImageId.keep, imageIndex,
+                            string.Format("Expected keep icon for the peptide {0}, found {1}", sequence, imageIndex));
                     }
                     else
                     {
-                        Assert.AreEqual(PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree),
-                           (int)SequenceTree.StateImageId.peak);
+                        Assert.AreEqual((int)SequenceTree.StateImageId.peak, imageIndex,
+                            string.Format("Expected peak icon for the peptide {0}, found {1}", sequence, imageIndex));
                     }
                 }
             });

@@ -18,7 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Model.Results
     internal sealed class ChromCacheJoiner : ChromCacheWriter
     {
         private int _currentPartIndex = -1;
+        private int _scoreCount = -1;
         private long _copyBytes;
         private Stream _inStream;
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
@@ -88,35 +89,45 @@ namespace pwiz.Skyline.Model.Results
                     if (_outStream == null)
                         _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
-                    int formatVersion;
-                    ChromCachedFile[] chromCacheFiles;
-                    ChromGroupHeaderInfo[] chromatogramEntries;
-                    ChromTransition[] chromTransitions;
-                    ChromPeak[] chromatogramPeaks;
-
-                    long bytesData = ChromatogramCache.LoadStructs(_inStream,
-                                                                   out formatVersion,
-                                                                   out chromCacheFiles,
-                                                                   out chromatogramEntries,
-                                                                   out chromTransitions,
-                                                                   out chromatogramPeaks);
+                    ChromatogramCache.RawData rawData;
+                    long bytesData = ChromatogramCache.LoadStructs(_inStream, out rawData);
 
                     // If joining, then format version should have already been checked.
-                    Debug.Assert(ChromatogramCache.IsVersionCurrent(formatVersion) ||
+                    Helpers.Assume(ChromatogramCache.IsVersionCurrent(rawData.FormatVersion) ||
                         // WatersCacheTest uses older format partial caches
-                        formatVersion == ChromatogramCache.FORMAT_VERSION_CACHE_2);
+                        rawData.FormatVersion == ChromatogramCache.FORMAT_VERSION_CACHE_2);
 
                     int offsetFiles = _listCachedFiles.Count;
                     int offsetTransitions = _listTransitions.Count;
                     int offsetPeaks = _listPeaks.Count;
+                    int offsetScores = _listScores.Count;
                     long offsetPoints = _outStream.Position;
 
-                    _listCachedFiles.AddRange(chromCacheFiles);
-                    _listPeaks.AddRange(chromatogramPeaks);
-                    _listTransitions.AddRange(chromTransitions);
-                    for (int i = 0; i < chromatogramEntries.Length; i++)
-                        chromatogramEntries[i].Offset(offsetFiles, offsetTransitions, offsetPeaks, offsetPoints);
-                    _listGroups.AddRange(chromatogramEntries);
+                    _listCachedFiles.AddRange(rawData.ChromCacheFiles);
+                    _listPeaks.AddRange(rawData.ChromatogramPeaks);
+                    _listTransitions.AddRange(rawData.ChromTransitions);
+                    // Initialize the score types the first time through
+                    if (_scoreCount == -1)
+                    {
+                        _listScoreTypes.AddRange(rawData.ScoreTypes);
+                        _scoreCount = _listScoreTypes.Count;
+                    }
+                    else if (!ArrayUtil.EqualsDeep(_listScoreTypes, rawData.ScoreTypes))
+                    {
+                        // If the existing caches contain score types not in this new cache, throw an exception
+                        if (_listScoreTypes.Any(t => !rawData.ScoreTypes.Contains(t)))
+                            throw new InvalidDataException("Data cache files with different score types cannot be joined.");    // Not L10N
+
+                        IntersectScores(rawData);
+                    }
+                    _listScores.AddRange(rawData.Scores);
+
+                    for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
+                    {
+                        rawData.ChromatogramEntries[i].Offset(offsetFiles, offsetTransitions, offsetPeaks,
+                                                              offsetScores, offsetPoints);
+                    }
+                    _listGroups.AddRange(rawData.ChromatogramEntries);
 
                     _copyBytes = bytesData;
                     _inStream.Seek(0, SeekOrigin.Begin);
@@ -135,6 +146,26 @@ namespace pwiz.Skyline.Model.Results
                 {
                     Complete(new Exception(String.Format(Resources.ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__, CachePath), x));
                 }
+            }
+        }
+
+        private void IntersectScores(ChromatogramCache.RawData rawData)
+        {
+            if (_listScoreTypes.Count == 0)
+            {
+                rawData.ScoreTypes = new Type[0];
+                rawData.Scores = new float[0];
+                for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
+                {
+                    rawData.ChromatogramEntries[i].ClearScores();
+                }
+            }
+            else
+            {
+                // TODO: Implement this when new scores are added.
+                //       Currently it is only possible to have scores or no scores.
+                //       So, this case is never hit, and therefor would be difficult to test.
+                throw new NotImplementedException();
             }
         }
 

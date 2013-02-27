@@ -56,13 +56,18 @@ namespace pwiz.Skyline.SettingsUI
             grid.Rows.Clear();
 
             bool result = DoPasteText(parent, textClip, grid, validate,
-                values => grid.Rows.Add(values.Cast<object>().ToArray()));
+                (values, lineNum) => grid.Rows.Add(values.Cast<object>().ToArray()));
 
             grid.ResumeLayout();
             return result;
         }
 
         public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[]> addRow)
+        {
+            return grid.DoPaste(parent, validate, (s, i) => addRow(s));
+        }
+
+        public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[], int> addRow)
         {
             string textClip = GetClipBoardText(parent);
             if (string.IsNullOrEmpty(textClip) || !grid.EndEdit())
@@ -85,7 +90,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private static bool DoPasteText(IWin32Window parent, string textClip, DataGridView grid, ValidateCellValues validate, Action<string[]> addRow)
+        private static bool DoPasteText(IWin32Window parent, string textClip, DataGridView grid, ValidateCellValues validate, Action<string[], int> addRow)
         {
             TextReader reader = new StringReader(textClip);
 
@@ -113,7 +118,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!validate(columns, lineNum))
                     return false;
 
-                addRow(columns);
+                addRow(columns, lineNum);
             }
 
             return true;

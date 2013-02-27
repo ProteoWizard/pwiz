@@ -21,11 +21,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Xml;
-using System.Xml.Schema;
+using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    public class LegacyScoringModel : Immutable, IPeakScoringModel
+    [XmlRoot("legacy_peak_scoring_model")] // Not L10N
+    public class LegacyScoringModel : PeakScoringModelSpec
     {
         private static readonly double LOG10 = Math.Log(10.0);
 
@@ -37,22 +40,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return logUnforcedArea + LOG10*unforcedCountScore + LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER*LOG10*unforcedCountScoreStandard + 1000*identifiedCount;
         }
 
-        private ReadOnlyCollection<Type> _calculators;
+        private readonly ReadOnlyCollection<Type> _calculators;
 
-        public LegacyScoringModel()
+        public LegacyScoringModel() : base(Resources.LegacyScoringModel_LegacyScoringModel_Skyline_Legacy)
         {
-            PeakFeatureCalculators = new[]
+            _calculators = new ReadOnlyCollection<Type>(new[]
                              {
                                  typeof(LegacyLogUnforcedAreaCalc),
                                  typeof(LegacyUnforcedCountScoreCalc),
                                  typeof(LegacyUnforcedCountScoreStandardCalc),
                                  typeof(LegacyIdentifiedCountStandardCalc)
-                             };
-        }
-
-        public string Name
-        {
-            get { return "Skyline Legacy"; }
+                             });
         }
 
         private enum FeatureOrder
@@ -63,19 +61,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
             identified_count
         };
 
-        public IList<Type> PeakFeatureCalculators
+        public override IList<Type> PeakFeatureCalculators
         {
             get { return _calculators; }
-            private set { _calculators = MakeReadOnly(value); }
         }
         
-        public IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys)
         {
             // No training needed, since legacy scoring was fixed
             return this;
         }
 
-        public double Score(double[] features)
+        public override double Score(double[] features)
         {
             return Score(features[(int) FeatureOrder.log_unforced_area],
                          features[(int) FeatureOrder.unforced_count_score],
@@ -83,23 +80,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
                          features[(int) FeatureOrder.identified_count]);
         }
 
-        #region IXmlSerializable
-
-        public XmlSchema GetSchema()
+        public static LegacyScoringModel Deserialize(XmlReader reader)
         {
-            return null;
+            return reader.Deserialize(new LegacyScoringModel());
         }
 
-        public void ReadXml(XmlReader reader)
+        public override void ReadXml(XmlReader reader)
         {
-            throw new NotImplementedException();
+            // Consume the tag.  There is nothing else to do, because there is only
+            // a single type of this object that can be instantiated, and its name
+            // is known.  Do not call the base class ReadXml() method, as that will
+            // attempt to overwrite the name and fail.
+            reader.Read();
         }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
     }
 }

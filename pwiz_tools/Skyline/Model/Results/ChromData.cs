@@ -100,6 +100,7 @@ namespace pwiz.Skyline.Model.Results
         private CrawdadPeakFinder Finder { get; set; }
 
         public ChromKey Key { get; private set; }
+        public TransitionDocNode DocNode { get; set; }
         private int ProviderId { get; set; }
         public float[] RawTimes { get; private set; }
         private float[] RawIntensities { get; set; }
@@ -137,14 +138,17 @@ namespace pwiz.Skyline.Model.Results
             return Finder.GetPeak(startIndex, endIndex);
         }
 
-        public ChromPeak CalcChromPeak(CrawdadPeak peakMax, ChromPeak.FlagValues flags)
+        public ChromPeak CalcChromPeak(CrawdadPeak peakMax, ChromPeak.FlagValues flags, out CrawdadPeak peak)
         {
             // Reintegrate all peaks to the max peak, even the max peak itself, since its boundaries may
             // have been extended from the Crawdad originals.
             if (peakMax == null)
+            {
+                peak = null;
                 return ChromPeak.EMPTY;
+            }
 
-            var peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
+            peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
             return new ChromPeak(peak, flags, Times, Intensities);
         }
 
@@ -238,16 +242,22 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    internal sealed class ChromDataPeak
+    internal sealed class ChromDataPeak : ITransitionPeakData<IDetailedPeakData>, IDetailedPeakData
     {
+        private ChromPeak _chromPeak;
+        private CrawdadPeak _crawPeak;
+
         public ChromDataPeak(ChromData data, CrawdadPeak peak)
         {
             Data = data;
-            Peak = peak;
+            _crawPeak = peak;
         }
 
         public ChromData Data { get; private set; }
-        public CrawdadPeak Peak { get; private set; }
+        public CrawdadPeak Peak { get { return _crawPeak; } }
+
+        public TransitionDocNode NodeTran { get { return Data.DocNode; } }
+        public IDetailedPeakData PeakData { get { return this; } }
 
         public override string ToString()
         {
@@ -259,18 +269,122 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromPeak CalcChromPeak(CrawdadPeak peakMax, ChromPeak.FlagValues flags)
         {
-            return Data.CalcChromPeak(peakMax, flags);
+            _chromPeak = Data.CalcChromPeak(peakMax, flags, out _crawPeak);
+            return _chromPeak;
         }
 
-        public bool IsIdentified(double[] retentionTimes)
+        public bool IsIdentifiedTime(double[] retentionTimes)
         {
             double startTime = Data.Times[Peak.StartIndex];
             double endTime = Data.Times[Peak.EndIndex];
 
             return retentionTimes.Any(time => startTime <= time && time <= endTime);
         }
+
+        public float RetentionTime
+        {
+            get { return _chromPeak.RetentionTime; }
+        }
+
+        public float StartTime
+        {
+            get { return _chromPeak.StartTime; }
+        }
+
+        public float EndTime
+        {
+            get { return _chromPeak.EndTime; }
+        }
+
+        public float Area
+        {
+            get { return _chromPeak.Area; }
+        }
+
+        public float BackgroundArea
+        {
+            get { return _chromPeak.BackgroundArea; }
+        }
+
+        public float Height
+        {
+            get { return _chromPeak.Height; }
+        }
+
+        public float Fwhm
+        {
+            get { return _chromPeak.Fwhm; }
+        }
+
+        public bool IsFwhmDegenerate
+        {
+            get { return _chromPeak.IsFwhmDegenerate; }
+        }
+
+        public bool IsEmpty
+        {
+            get { return _chromPeak.IsEmpty; }
+        }
+
+        public bool IsForcedIntegration
+        {
+            get { return _chromPeak.IsForcedIntegration; }
+        }
+
+        public bool IsIdentified
+        {
+            get { return _chromPeak.IsForcedIntegration; }
+        }
+
+        public bool? IsTruncated
+        {
+            get { return _chromPeak.IsTruncated; }
+        }
+
+        public int TimeIndex
+        {
+            get { return Peak != null ? Peak.TimeIndex : -1; }
+        }
+
+        public int EndIndex
+        {
+            get { return Peak != null ? Peak.EndIndex : -1; }
+        }
+
+        public int StartIndex
+        {
+            get { return Peak != null ? Peak.StartIndex : -1; }
+        }
+
+        public int Length
+        {
+            get { return Peak != null ? Peak.Length : 0; }
+        }
+
+        public bool IsLeftBound
+        {
+            get { return StartIndex == 0; }
+        }
+
+        public bool IsRightBound
+        {
+            get { return EndIndex == Times.Length - 1; }
+        }
+
+        public float[] Times
+        {
+            get { return Data.Times; }
+        }
+
+        public float[] Intensities
+        {
+            get { return Data.Intensities; }
+        }
     }
 
+    /// <summary>
+    /// A single set of peaks for all transitions in a transition group
+    /// </summary>
     internal sealed class ChromDataPeakList : Collection<ChromDataPeak>
     {
         public ChromDataPeakList(ChromDataPeak peak)
@@ -300,10 +414,24 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsIdentified { get; set; }
 
+        /// <summary>
+        /// True if the peak contains a time derived from retention time alignment
+        /// of a scan that has been identified as the peptide of interest by a
+        /// peptide search engine.
+        /// </summary>
         public bool IsAlignedIdentified { get; set; }
 
+        /// <summary>
+        /// A count of peaks included in this peak group
+        /// </summary>
         public int PeakCount { get; set; }
 
+        /// <summary>
+        /// Scores computed using available <see cref="DetailedPeakFeatureCalculator"/>
+        /// implementations
+        /// </summary>
+        public IList<float> DetailScores { get; set; }
+        
         /// <summary>
         /// Use proportion of total peaks found to avoid picking super small peaks
         /// in unrefined data
@@ -321,7 +449,7 @@ namespace pwiz.Skyline.Model.Results
 
         public void SetIdentified(double[] retentionTimes, bool isAlignedTimes)
         {
-            IsIdentified = Count > 0 && this[0].IsIdentified(retentionTimes);
+            IsIdentified = Count > 0 && this[0].IsIdentifiedTime(retentionTimes);
             IsAlignedIdentified = IsIdentified && isAlignedTimes;
             UpdateCombinedScore();
         }
@@ -337,23 +465,31 @@ namespace pwiz.Skyline.Model.Results
             // Look a number of steps dependent on the width of the peak, since interval width
             // may vary.
             int toleranceLen = Math.Max(MIN_TOLERANCE_LEN, (int)Math.Round(peakPrimary.Peak.Fwhm * FRACTION_FWHM_LEN));
-
-            peakPrimary.Peak.StartIndex = ExtendBoundary(peakPrimary, peakPrimary.Peak.StartIndex, -1, toleranceLen);
-            peakPrimary.Peak.EndIndex = ExtendBoundary(peakPrimary, peakPrimary.Peak.EndIndex, 1, toleranceLen);
+            int startIndex = peakPrimary.Peak.StartIndex;
+            int endIndex = peakPrimary.Peak.EndIndex;
+            peakPrimary.Peak.ResetBoundaries(ExtendBoundary(peakPrimary, startIndex, endIndex, -1, toleranceLen),
+                                             ExtendBoundary(peakPrimary, endIndex, startIndex, 1, toleranceLen));
         }
 
-        private int ExtendBoundary(ChromDataPeak peakPrimary, int indexBoundary, int increment, int toleranceLen)
+        private int ExtendBoundary(ChromDataPeak peakPrimary, int indexBoundary, int indexOpposite,
+                                   int increment, int toleranceLen)
         {
+            int indexAdjusted = indexBoundary;
             if (peakPrimary.Peak.Fwhm >= MIN_TOLERANCE_SMOOTH_FWHM)
             {
-                indexBoundary = ExtendBoundary(peakPrimary, false, indexBoundary, increment, toleranceLen);
+                indexAdjusted = ExtendBoundary(peakPrimary, false, indexBoundary, increment, toleranceLen);
             }
             // Because smoothed data can have a tendency to reach baseline one
             // interval sooner than the raw data, do a final check to choose the
             // boundary correctly for the raw data.
-            indexBoundary = RetractBoundary(peakPrimary, true, indexBoundary, -increment);
-            indexBoundary = ExtendBoundary(peakPrimary, true, indexBoundary, increment, toleranceLen);
-            return indexBoundary;
+            indexAdjusted = RetractBoundary(peakPrimary, true, indexAdjusted, -increment);
+            indexAdjusted = ExtendBoundary(peakPrimary, true, indexAdjusted, increment, toleranceLen);
+            // Avoid backing up over the original boundary
+            int indexLimit = (indexBoundary + indexOpposite) / 2;
+            indexAdjusted = increment > 0
+                                ? Math.Max(indexLimit, indexAdjusted)
+                                : Math.Min(indexLimit, indexAdjusted);
+            return indexAdjusted;
         }
 
         private int ExtendBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)

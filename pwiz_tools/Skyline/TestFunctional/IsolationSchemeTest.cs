@@ -61,11 +61,11 @@ namespace pwiz.SkylineTestFunctional
                 // Create a scheme with default values.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, string.Empty);
+                        Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 2);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        Assert.AreEqual(2, editDlg.PrecursorFilter);
+                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
                         editDlg.IsolationSchemeName = "test1"; // Not L10N
                         editDlg.OkDialog();
                     });
@@ -81,11 +81,11 @@ namespace pwiz.SkylineTestFunctional
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.AddItem);
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "");
+                        Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 2);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        Assert.AreEqual(2, editDlg.PrecursorFilter);
+                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
                         editDlg.IsolationSchemeName = "test1"; // Not L10N
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -104,11 +104,11 @@ namespace pwiz.SkylineTestFunctional
                 // Edit scheme, change name and isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test1"); // Not L10N
+                        Assert.AreEqual("test1", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 2);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        Assert.AreEqual(2, editDlg.PrecursorFilter);
+                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
                         editDlg.IsolationSchemeName = "test2"; // Not L10N
                         editDlg.PrecursorFilter = 50;
                         editDlg.OkDialog();
@@ -123,14 +123,14 @@ namespace pwiz.SkylineTestFunctional
                 // Test asymmetric isolation width (automatic split).
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 50);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        Assert.AreEqual(50, editDlg.PrecursorFilter);
+                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
                         editDlg.AsymmetricFilter = true;
-                        Assert.AreEqual(editDlg.PrecursorFilter, 25);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, 25);
+                        Assert.AreEqual(25, editDlg.PrecursorFilter);
+                        Assert.AreEqual(25, editDlg.PrecursorRightFilter);
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -143,11 +143,11 @@ namespace pwiz.SkylineTestFunctional
                 // Test asymmetric isolation width (manually set).
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 25);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, 25);
+                        Assert.AreEqual(25, editDlg.PrecursorFilter);
+                        Assert.AreEqual(25, editDlg.PrecursorRightFilter);
                         editDlg.PrecursorFilter = 1;
                         editDlg.PrecursorRightFilter = 2;
                         editDlg.OkDialog();
@@ -162,14 +162,14 @@ namespace pwiz.SkylineTestFunctional
                 // Test return to symmetric isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 1);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, 2);
+                        Assert.AreEqual(1, editDlg.PrecursorFilter);
+                        Assert.AreEqual(2, editDlg.PrecursorRightFilter);
                         editDlg.AsymmetricFilter = false;
-                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        Assert.AreEqual(3, editDlg.PrecursorFilter);
+                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -182,17 +182,17 @@ namespace pwiz.SkylineTestFunctional
                 // Test return to symmetric isolation width with only left width specified.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        Assert.AreEqual(3, editDlg.PrecursorFilter);
+                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
                         editDlg.AsymmetricFilter = true;
-                        Assert.AreEqual(editDlg.PrecursorFilter, 1.5);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, 1.5);
+                        Assert.AreEqual(1.5, editDlg.PrecursorFilter);
+                        Assert.AreEqual(1.5, editDlg.PrecursorRightFilter);
                         editDlg.PrecursorRightFilter = null;
                         editDlg.AsymmetricFilter = false;
-                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
+                        Assert.AreEqual(3, editDlg.PrecursorFilter);
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -205,11 +205,11 @@ namespace pwiz.SkylineTestFunctional
                 // Test non-numeric isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        Assert.AreEqual(3, editDlg.PrecursorFilter);
+                        Assert.AreEqual(null, editDlg.PrecursorRightFilter);
                         editDlg.PrecursorFilter = null;
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -382,7 +382,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify simple isolation window, test windows per scan.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -400,7 +400,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -443,7 +443,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults); 
                         VerifyCellValues(editDlg, new[]
                             {
@@ -451,8 +451,8 @@ namespace pwiz.SkylineTestFunctional
                                 new double?[] {500.0, 1000.0},
                                 new double?[] {1000.0, 1500.0}
                             });
-                        Assert.AreEqual(editDlg.WindowsPerScan, 3);
-                        Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED);
+                        Assert.AreEqual(3, editDlg.WindowsPerScan);
+                        Assert.AreEqual(IsolationScheme.SpecialHandlingType.MULTIPLEXED, editDlg.SpecialHandling);
                     });
 
                 // Test windows per scan without special handling.
@@ -471,7 +471,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty target.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -479,8 +479,8 @@ namespace pwiz.SkylineTestFunctional
                                 new double?[] {500.0, 1000.0},
                                 new double?[] {1000.0, 1500.0}
                             });
-                        Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, null);
+                        Assert.AreEqual(IsolationScheme.SpecialHandlingType.NONE, editDlg.SpecialHandling);
+                        Assert.AreEqual(null, editDlg.WindowsPerScan);
                         editDlg.SpecifyTarget = true;
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -509,7 +509,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -517,10 +517,10 @@ namespace pwiz.SkylineTestFunctional
                                 new double?[] { 500.0, 1000.0,  700.0},
                                 new double?[] {1000.0, 1500.0, 1200.0}
                             });
-                        Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, null);
+                        Assert.AreEqual(IsolationScheme.SpecialHandlingType.NONE, editDlg.SpecialHandling);
+                        Assert.AreEqual(null, editDlg.WindowsPerScan);
                         Assert.IsTrue(editDlg.SpecifyTarget);
-                        Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.NONE);
+                        Assert.AreEqual(EditIsolationSchemeDlg.WindowMargin.NONE, editDlg.MarginType);
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.target, 0);
                         editDlg.IsolationWindowGrid.SetCellValue(550); // Outside window
                     });
@@ -595,7 +595,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify margin.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -603,10 +603,10 @@ namespace pwiz.SkylineTestFunctional
                                 new double?[] { 500.0, 1000.0, 2.0},
                                 new double?[] {1000.0, 1500.0, 3.0}
                             });
-                        Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, null);
+                        Assert.AreEqual(IsolationScheme.SpecialHandlingType.NONE, editDlg.SpecialHandling);
+                        Assert.AreEqual(null, editDlg.WindowsPerScan);
                         Assert.IsFalse(editDlg.SpecifyTarget);
-                        Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.SYMMETRIC);
+                        Assert.AreEqual(EditIsolationSchemeDlg.WindowMargin.SYMMETRIC, editDlg.MarginType);
                     });
                 OkDialog(editDlg, editDlg.OkDialog);
             }
@@ -618,7 +618,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty end margin.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -626,10 +626,10 @@ namespace pwiz.SkylineTestFunctional
                                 new double?[] { 500.0, 1000.0, 2.0},
                                 new double?[] {1000.0, 1500.0, 3.0}
                             });
-                        Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, null);
+                        Assert.AreEqual(IsolationScheme.SpecialHandlingType.NONE, editDlg.SpecialHandling);
+                        Assert.AreEqual(null, editDlg.WindowsPerScan);
                         Assert.IsFalse(editDlg.SpecifyTarget);
-                        Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.SYMMETRIC);
+                        Assert.AreEqual(EditIsolationSchemeDlg.WindowMargin.SYMMETRIC, editDlg.MarginType);
                         editDlg.MarginType = EditIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -682,7 +682,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify margin.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -691,10 +691,10 @@ namespace pwiz.SkylineTestFunctional
                                 new double?[] {1000.0, 1500.0, 3.0, 6.0}
                             });
 
-                        Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, null);
+                        Assert.AreEqual(IsolationScheme.SpecialHandlingType.NONE, editDlg.SpecialHandling);
+                        Assert.AreEqual(null, editDlg.WindowsPerScan);
                         Assert.IsFalse(editDlg.SpecifyTarget);
-                        Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.ASYMMETRIC);
+                        Assert.AreEqual(EditIsolationSchemeDlg.WindowMargin.ASYMMETRIC, editDlg.MarginType);
                     });
 
                 // Paste one number.
@@ -835,14 +835,14 @@ namespace pwiz.SkylineTestFunctional
         private static void VerifyCellValues(EditIsolationSchemeDlg editDlg, double?[][] expectedValues)
         {
             // Verify expected number of rows.
-            Assert.AreEqual(editDlg.IsolationWindowGrid.RowCount, expectedValues.Length+1); // Grid always shows an extra row.
+            Assert.AreEqual(expectedValues.Length+1, editDlg.IsolationWindowGrid.RowCount); // Grid always shows an extra row.
             
             var visibleColumns = editDlg.IsolationWindowGrid.VisibleColumnCount;
 
             for (int row = 0; row < expectedValues.Length; row++)
             {
                 // Verify expected number of columns.
-                Assert.AreEqual(visibleColumns, expectedValues[row].Length);
+                Assert.AreEqual(expectedValues[row].Length, visibleColumns);
 
                 for (int col = 0; col < expectedValues[row].Length; col++)
                 {
@@ -855,11 +855,11 @@ namespace pwiz.SkylineTestFunctional
                     var actualValue = editDlg.IsolationWindowGrid.GetCellValue(adjustedCol, row);
                     if (expectedValue.HasValue)
                     {
-                        Assert.AreEqual(double.Parse(actualValue), expectedValue);
+                        Assert.AreEqual(expectedValue, double.Parse(actualValue));
                     }
                     else
                     {
-                        Assert.AreEqual(actualValue, string.Empty);
+                        Assert.AreEqual(string.Empty, actualValue);
                     }
                 }
             }

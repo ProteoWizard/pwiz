@@ -29,8 +29,10 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -62,7 +64,13 @@ namespace pwiz.Skyline.Properties
             // Add code to handle the SettingChangingEvent event here.
         }        
         */
-        
+
+        // This holds any exception that is generated during Settings.Default.Save.  Unfortunately,
+        // System.Xml silently catches these exceptions, leaving us to wonder why settings were
+        // not saved.  Now we catch the exception ourselves, and save it here, where it can be
+        // rethrown after the Save call completes.
+        public Exception SaveException { get; set; }
+
         private void SettingsSavingEventHandler(object sender, System.ComponentModel.CancelEventArgs e)
         {
             SpectralLibraryList.RemoveDocumentLocalLibraries();
@@ -439,6 +447,39 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this[typeof(RTScoreCalculatorList).Name] = value;
+            }
+        }
+        
+        public PeakScoringModelSpec GetScoringModelByName(string name)
+        {
+            PeakScoringModelSpec model;
+            if (!PeakScoringModelList.TryGetValue(name, out model))
+                return null;
+            return model;
+        }
+        
+        [System.Configuration.UserScopedSettingAttribute]
+        public PeakScoringModelList PeakScoringModelList
+        {
+            get
+            {
+                PeakScoringModelList list = (PeakScoringModelList)this[typeof(PeakScoringModelList).Name];
+
+                if (list == null)
+                {
+                    list = new PeakScoringModelList();
+                    list.AddDefaults();
+                    PeakScoringModelList = list;
+                }
+                else
+                {
+                    list.EnsureDefault();
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(PeakScoringModelList).Name] = value;
             }
         }
         
@@ -1208,11 +1249,15 @@ namespace pwiz.Skyline.Properties
         public override RetentionScoreCalculatorSpec EditItem(Control owner, RetentionScoreCalculatorSpec item,
             IEnumerable<RetentionScoreCalculatorSpec> existing, object tag)
         {
-            using (EditIrtCalcDlg editStandardDlg = new EditIrtCalcDlg(item, existing))
+            var calc = item as RCalcIrt;
+            if (item == null || calc != null)
             {
-                if (editStandardDlg.ShowDialog(owner) == DialogResult.OK)
+                using (EditIrtCalcDlg editStandardDlg = new EditIrtCalcDlg(calc, existing))
                 {
-                    return editStandardDlg.Calculator;
+                    if (editStandardDlg.ShowDialog(owner) == DialogResult.OK)
+                    {
+                        return editStandardDlg.Calculator;
+                    }
                 }
             }
 
@@ -1283,6 +1328,74 @@ namespace pwiz.Skyline.Properties
         {
             return item != null && !GetDefaults().Contains(item);
         }
+    }
+    
+    public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>
+    {
+        private static readonly PeakScoringModelSpec[] DEFAULTS =
+            new[]
+                {
+                    (PeakScoringModelSpec) new LegacyScoringModel()
+                };
+
+        public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
+            IEnumerable<PeakScoringModelSpec> existing, object tag)
+        {
+            var model = item as MProphetPeakScoringModel;
+            if (item == null || model != null)
+            {
+                using (var editStandardDlg = new EditPeakScoringModelDlg(model, existing))
+                {
+                    if (editStandardDlg.ShowDialog(owner) == DialogResult.OK)
+                    {
+                        return editStandardDlg.PeakScoringModel;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public void EnsureDefault()
+        {
+            // Make sure the default scoring models are present.
+            var defaultScoringModels = GetDefaults().ToArray();
+            int len = defaultScoringModels.Length;
+            if (Count < len || !ArrayUtil.ReferencesEqual(defaultScoringModels, this.Take(len).ToArray()))
+            {
+                foreach (var scoringModel in defaultScoringModels)
+                    Remove(scoringModel);
+                foreach (var scoringModel in defaultScoringModels.Reverse())
+                    Insert(0, scoringModel);
+            }
+        }
+
+        private static readonly IXmlElementHelper<PeakScoringModelSpec>[] MODEL_HELPERS =
+        {
+            new XmlElementHelperSuper<LegacyScoringModel, PeakScoringModelSpec>(),
+            new XmlElementHelperSuper<MProphetPeakScoringModel, PeakScoringModelSpec>(),
+        };
+
+        protected override IXmlElementHelper<PeakScoringModelSpec>[] GetXmlElementHelpers()
+        {
+            return MODEL_HELPERS;
+        }
+
+        public override PeakScoringModelSpec CopyItem(PeakScoringModelSpec item)
+        {
+            return (PeakScoringModelSpec)item.ChangeName(string.Empty);
+        }
+
+        public override IEnumerable<PeakScoringModelSpec> GetDefaults(int revisionIndex)
+        {
+            return DEFAULTS;
+        }
+
+        public override string Title { get { return Resources.PeakScoringModelList_Title_Edit_Peak_Scoring_Models; } }
+
+        public override string Label { get { return Resources.PeakScoringModelList_Label_Peak_Scoring_Models; } }
+
+        public override int ExcludeDefaults { get { return DEFAULTS.Length; } }
     }
     
     public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>

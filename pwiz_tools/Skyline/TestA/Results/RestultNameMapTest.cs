@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA.Results
 {
@@ -28,7 +29,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for RestultNameMapTest
     /// </summary>
     [TestClass]
-    public class RestultNameMapTest
+    public class RestultNameMapTest : SkylineUnitTest
     {
         [TestMethod]
         public void TestSearchForDotOrUnderscore()

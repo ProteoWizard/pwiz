@@ -1068,7 +1068,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// To support using iRT values, which can be negative, in place of measured retention times
         /// </summary>
-        private bool _allowNegative;
+        private readonly bool _allowNegative;
 
         public MeasuredRetentionTime(string peptideSequence, double retentionTime, bool allowNegative = false)
         {
