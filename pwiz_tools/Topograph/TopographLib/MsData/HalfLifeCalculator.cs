@@ -281,6 +281,7 @@ namespace pwiz.Topograph.MsData
                 }
                 cohorts.Add(GetCohort(rowData));
                 var key = ByProtein ? rowData.ProteinName : rowData.Peptide.Sequence;
+                key = key ?? "";
                 List<RawRowData> list;
                 if (!groupedRowDatas.TryGetValue(key, out list))
                 {

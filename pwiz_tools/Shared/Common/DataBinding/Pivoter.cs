@@ -248,9 +248,12 @@ namespace pwiz.Common.DataBinding
             {
                 return result;
             }
-            if (sublistColumnIndex == 0)
+            for (int icolFilter = sublistColumnIndex; icolFilter < Filters.Count; icolFilter++)
             {
-                return new RowItem[0];
+                if (!Filters[icolFilter](rowNode))
+                {
+                    return new RowItem[0];
+                }
             }
             return new[] {rowItem};
         }

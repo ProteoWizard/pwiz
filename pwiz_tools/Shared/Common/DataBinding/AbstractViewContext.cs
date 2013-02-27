@@ -36,6 +36,7 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public abstract class AbstractViewContext : IViewContext
     {
+        public const string DefaultViewName = "default";
         private IList<ViewSpec> _builtInViewSpecs;
         protected AbstractViewContext(ColumnDescriptor parentColumn)
         {
@@ -82,7 +83,7 @@ namespace pwiz.Common.DataBinding
 
         protected virtual string GetDefaultViewName()
         {
-            return "default";
+            return DefaultViewName;
         }
 
         public Icon ApplicationIcon { get; protected set; }
@@ -135,7 +136,9 @@ namespace pwiz.Common.DataBinding
                 var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
                 RunLongJob(owner, progressMonitor =>
                 {
+// ReSharper disable AccessToDisposedClosure
                     using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName), new UTF8Encoding(false)))
+// ReSharper restore AccessToDisposedClosure
                     {
                         WriteData(progressMonitor, writer, bindingListView, dataFormat);
                     }
@@ -312,7 +315,8 @@ namespace pwiz.Common.DataBinding
 
         public static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
         {
-            return new ViewSpec().SetName("default").SetColumns(parentColumn.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name))));
+            return new ViewSpec().SetName(DefaultViewName).SetColumns(parentColumn.GetChildColumns()
+                .Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name))));
         }
     }
 }

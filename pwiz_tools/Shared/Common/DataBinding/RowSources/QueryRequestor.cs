@@ -38,8 +38,8 @@ namespace pwiz.Common.DataBinding.RowSources
             _rowSourceWrapper = RowSourceWrapper.Empty;
         }
         public TaskScheduler EventTaskScheduler { get { return _bindingListView.EventTaskScheduler; } }
-        public QueryParameters QueryParameters 
-        { 
+        public QueryParameters QueryParameters
+        {
             get { return _queryParameters; }
             set
             {
@@ -60,7 +60,7 @@ namespace pwiz.Common.DataBinding.RowSources
                 {
                     return;
                 }
-                _rowSourceWrapper = RowSourceWrappers.Wrap(value);
+                _rowSourceWrapper = WrapRowSource(value);
                 Requery();
             }
         }
@@ -89,6 +89,15 @@ namespace pwiz.Common.DataBinding.RowSources
             }
             _request = new Request(this);
             _rowSourceWrapper.StartQuery(_request);
+        }
+
+        private IRowSourceWrapper WrapRowSource(IEnumerable items)
+        {
+            if (null == EventTaskScheduler)
+            {
+                return new RowSourceWrapper(items);
+            }
+            return RowSourceWrappers.Wrap(items);
         }
 
         class Request : IQueryRequest, IDisposable
@@ -130,7 +139,7 @@ namespace pwiz.Common.DataBinding.RowSources
                 }
             }
 
-            public QueryResults LiveQueryResults { get;private set; }
+            public QueryResults LiveQueryResults { get; private set; }
             public void Dispose()
             {
                 _cancellationTokenSource.Cancel();

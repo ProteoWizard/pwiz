@@ -103,6 +103,7 @@
     <Compile Include="DataBinding\CollectionInfoTest.cs" />
     <Compile Include="DataBinding\Controls\AvailableFieldsTreeTest.cs" />
     <Compile Include="DataBinding\Controls\BoundDataGridViewTest.cs" />
+    <Compile Include="DataBinding\FilterTest.cs" />
     <Compile Include="DataBinding\IdentifierPathTest.cs" />
     <Compile Include="DataBinding\PivoterTest.cs" />
     <Compile Include="DataBinding\SampleData\AminoAcid.cs" />
