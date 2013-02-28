@@ -85,7 +85,7 @@ namespace seems
             spectrumList = new Dictionary<int, MassSpectrum>();
 
             this.nativeIdFormat = nativeIdFormat;
-            if( nativeIdFormat != CVID.CVID_Unknown )
+            if ((nativeIdFormat != CVID.CVID_Unknown) && (nativeIdFormat != CVID.MS_no_nativeID_format))
             {
                 string nativeIdDefinition = new CVTermInfo( nativeIdFormat ).def;
                 string[] nameValuePairs = nativeIdDefinition.Split( " ".ToCharArray() );
