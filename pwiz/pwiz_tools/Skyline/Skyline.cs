@@ -378,7 +378,7 @@ namespace pwiz.Skyline
         {
             SrmSettings settingsNew = DocumentUI.Settings;
             SrmSettings settingsOld = SrmSettingsList.GetDefault();
-            bool docIdChanged = false;
+            bool docIdChanged = true;
             if (documentPrevious != null)
             {
                 settingsOld = documentPrevious.Settings;

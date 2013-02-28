@@ -254,7 +254,10 @@ namespace pwiz.Skyline
                 {
                     LibrarySpec spec;
                     if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
-                        return spec;
+                    {
+                        if (File.Exists(spec.FilePath))
+                            return spec;                        
+                    }
                     if (documentPath == null)
                         return null;
 
@@ -321,7 +324,11 @@ namespace pwiz.Skyline
 
             RetentionScoreCalculatorSpec result;
             if (Settings.Default.RTScoreCalculatorList.TryGetValue(irtCalc.Name, out result))
-                return result as RCalcIrt;
+            {
+                var calc = result as RCalcIrt;
+                if (calc != null && File.Exists(calc.DatabasePath))
+                    return calc;
+            }
             if (documentPath == null)
                 return null;
 
@@ -394,7 +401,10 @@ namespace pwiz.Skyline
         {
             var result = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(backgroundProteomeSpec.Name);
             if (result != null)
-                return result;
+            {
+                if (File.Exists(result.DatabasePath))
+                    return result;
+            }
             if (documentPath == null)
                 return null;
 
