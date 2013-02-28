@@ -1,5 +1,6 @@
 ﻿using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -51,7 +52,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label1 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.tbxMinTurnoverScore = new System.Windows.Forms.TextBox();
-            this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.dataGridView1 = new BoundDataGridView();
             this.bindingSource1 = new BindingListSource(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();

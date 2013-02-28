@@ -18,7 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 
 namespace pwiz.Topograph.Test
 {

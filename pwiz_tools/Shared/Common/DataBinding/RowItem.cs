@@ -25,10 +25,10 @@ namespace pwiz.Common.DataBinding
 {
     public class RowItem
     {
-        public RowItem(object key, object value) : this(null, IdentifierPath.Root, key, value)
+        public RowItem(object key, object value) : this(null, PropertyPath.Root, key, value)
         {
         }
-        public RowItem(RowItem parent, IdentifierPath sublistId, object key, object value)
+        public RowItem(RowItem parent, PropertyPath sublistId, object key, object value)
         {
             Parent = parent;
             SublistId = sublistId;
@@ -56,7 +56,7 @@ namespace pwiz.Common.DataBinding
             {
                 return new PivotKey(SublistId, Key);
             }
-            return PivotKey.OfValues(Parent.GetGroupKey(), Parent.SublistId, new[] {new KeyValuePair<IdentifierPath, object>(SublistId, Key)});
+            return PivotKey.OfValues(Parent.GetGroupKey(), Parent.SublistId, new[] {new KeyValuePair<PropertyPath, object>(SublistId, Key)});
         }
 
         public RowItem SetPivotKeys(HashSet<PivotKey> pivotKeys)
@@ -82,7 +82,7 @@ namespace pwiz.Common.DataBinding
         }
 
         public RowItem Parent { get; private set; }
-        public IdentifierPath SublistId { get; private set; }
+        public PropertyPath SublistId { get; private set; }
         public object Key { get; private set; }
         public object Value { get; private set; }
         public ICollection<PivotKey> PivotKeys { get; private set; }

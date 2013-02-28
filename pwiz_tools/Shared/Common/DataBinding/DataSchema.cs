@@ -25,6 +25,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding
 {
@@ -78,10 +80,6 @@ namespace pwiz.Common.DataBinding
         public virtual bool IsBrowsable(PropertyDescriptor propertyDescriptor)
         {
             if (!propertyDescriptor.IsBrowsable)
-            {
-                return false;
-            }
-            if (propertyDescriptor.PropertyType.IsGenericType && typeof(ICollection<>) == propertyDescriptor.PropertyType.GetGenericTypeDefinition())
             {
                 return false;
             }
@@ -326,9 +324,9 @@ namespace pwiz.Common.DataBinding
             return null != obsoleteAttribute;
         }
 
-        public virtual void UpdateGridColumns(BindingListView bindingListView, DataGridViewColumn[] columnArray)
+        public virtual void UpdateGridColumns(BindingListSource bindingListSource, DataGridViewColumn[] columnArray)
         {
-            var properties = bindingListView.GetItemProperties(new PropertyDescriptor[0])
+            var properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0])
                 .Cast<PropertyDescriptor>()
                 .ToDictionary(pd => pd.Name, pd => pd);
             for (int iCol = 0; iCol < columnArray.Length; iCol++)

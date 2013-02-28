@@ -21,6 +21,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -48,7 +49,7 @@ namespace pwiz.Common.DataBinding.Controls
             base.Dispose(disposing);
         }
 
-        public BindingListView BindingListView { get; private set; }
+        internal BindingListView BindingListView { get; private set; }
         public IEnumerable RowSource
         {
             get { return BindingListView.RowSource; }
@@ -80,6 +81,16 @@ namespace pwiz.Common.DataBinding.Controls
                 }
             }
             SetViewContext(viewContext, viewInfo);
+        }
+        public ViewInfo ViewInfo
+        {
+            get { return BindingListView.ViewInfo; }
+            set { BindingListView.ViewInfo = value; }
+        }
+
+        public ViewSpec ViewSpec
+        {
+            get { return ViewInfo.GetViewSpec(); }
         }
     }
 }

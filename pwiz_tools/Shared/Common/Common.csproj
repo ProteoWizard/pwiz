@@ -118,35 +118,31 @@
     <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
-    <Compile Include="DataBinding\BindingListSupport.cs" />
-    <Compile Include="DataBinding\BindingListView.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DataBinding\BoundDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnDescriptor.cs" />
     <Compile Include="DataBinding\ColumnPropertyDescriptor.cs" />
     <Compile Include="DataBinding\ColumnSpec.cs" />
-    <Compile Include="DataBinding\Controls\AvailableFieldsTree.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="DataBinding\Controls\BindingListSource.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DataBinding\Controls\CustomizeViewForm.cs">
+    <Compile Include="DataBinding\Controls\BoundDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\AvailableFieldsTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\CustomizeViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DataBinding\Controls\CustomizeViewForm.Designer.cs">
+    <Compile Include="DataBinding\Controls\Editor\CustomizeViewForm.Designer.cs">
       <DependentUpon>CustomizeViewForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\ListViewHelper.cs" />
-    <Compile Include="DataBinding\Controls\ManageViewsForm.cs">
+    <Compile Include="DataBinding\Controls\Editor\ListViewHelper.cs" />
+    <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DataBinding\Controls\ManageViewsForm.Designer.cs">
+    <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.Designer.cs">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\Controls\NavBar.cs">
@@ -157,40 +153,42 @@
     </Compile>
     <Compile Include="DataBinding\Controls\ViewCell.cs" />
     <Compile Include="DataBinding\Controls\ViewColumn.cs" />
-    <Compile Include="DataBinding\ConvertedCloneableBindingList.cs" />
-    <Compile Include="DataBinding\ConvertedCloneableList.cs" />
     <Compile Include="DataBinding\DataFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
-    <Compile Include="DataBinding\ICloneableList.cs" />
-    <Compile Include="DataBinding\IListChanged.cs" />
+    <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
+    <Compile Include="DataBinding\Internal\AbstractRowSourceWrapper.cs" />
+    <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
+    <Compile Include="DataBinding\Internal\BindingListView.cs" />
+    <Compile Include="DataBinding\Internal\CloneableRowSourceWrapper.cs" />
+    <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
+    <Compile Include="DataBinding\Internal\IQueryRequest.cs" />
+    <Compile Include="DataBinding\Internal\LongDecimal.cs" />
+    <Compile Include="DataBinding\Internal\Pivoter.cs" />
+    <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
+    <Compile Include="DataBinding\Internal\QueryResults.cs" />
+    <Compile Include="DataBinding\Internal\RowFilter.cs" />
+    <Compile Include="DataBinding\Internal\RowItemIndex.cs" />
+    <Compile Include="DataBinding\Internal\RowItemList.cs" />
+    <Compile Include="DataBinding\Internal\RowNode.cs" />
+    <Compile Include="DataBinding\Internal\RowSourceWrappers.cs" />
+    <Compile Include="DataBinding\Internal\TreeList.cs" />
+    <Compile Include="DataBinding\Internal\ViewProperties.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
-    <Compile Include="DataBinding\IdentifierPath.cs" />
+    <Compile Include="DataBinding\PropertyPath.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
-    <Compile Include="DataBinding\LongDecimal.cs" />
-    <Compile Include="DataBinding\Pivoter.cs" />
-    <Compile Include="DataBinding\PropertyChangeSupport.cs" />
-    <Compile Include="DataBinding\QueryResults.cs" />
-    <Compile Include="DataBinding\RowFilter.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
-    <Compile Include="DataBinding\RowItemList.cs" />
-    <Compile Include="DataBinding\RowNode.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
-    <Compile Include="DataBinding\RowSources\AbstractQuery.cs" />
-    <Compile Include="DataBinding\RowSources\AbstractRowSourceWrapper.cs" />
-    <Compile Include="DataBinding\RowSources\BackgroundQuery.cs" />
-    <Compile Include="DataBinding\RowSources\CloneableRowSourceWrapper.cs" />
-    <Compile Include="DataBinding\RowSources\ForegroundQuery.cs" />
-    <Compile Include="DataBinding\RowSources\QueryRequestor.cs" />
-    <Compile Include="DataBinding\RowSources\RowItemIndex.cs" />
-    <Compile Include="DataBinding\RowSources\RowSourceWrappers.cs" />
-    <Compile Include="DataBinding\RowSources\IQueryRequest.cs" />
+    <Compile Include="DataBinding\RowSources\BindingListSupport.cs" />
+    <Compile Include="DataBinding\RowSources\ConvertedCloneableBindingList.cs" />
+    <Compile Include="DataBinding\RowSources\ConvertedCloneableList.cs" />
+    <Compile Include="DataBinding\RowSources\ICloneableList.cs" />
+    <Compile Include="DataBinding\RowSources\IListChanged.cs" />
+    <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
-    <Compile Include="DataBinding\TreeList.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
-    <Compile Include="DataBinding\ViewProperties.cs" />
     <Compile Include="Graph\CurveDataHandler.cs" />
     <Compile Include="Graph\DataColumn.cs" />
     <Compile Include="Graph\DataFrame.cs" />
@@ -214,10 +212,10 @@
       <DependentUpon>RecordNavBar.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\CustomizeViewForm.resx">
+    <EmbeddedResource Include="DataBinding\Controls\Editor\CustomizeViewForm.resx">
       <DependentUpon>CustomizeViewForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ManageViewsForm.resx">
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.resx">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\NavBar.resx">
@@ -270,6 +268,7 @@
       <Name>CommonUtil</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

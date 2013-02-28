@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -214,7 +215,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         void OnExport(object sender, EventArgs eventArgs)
         {
-            ViewContext.Export(this, BindingListView);
+            ViewContext.Export(this, BindingListSource);
         }
 
         private void FindBoxOnTextChanged(object sender, EventArgs e)

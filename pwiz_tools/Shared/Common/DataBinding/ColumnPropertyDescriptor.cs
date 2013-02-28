@@ -26,10 +26,10 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class ColumnPropertyDescriptor : PropertyDescriptor
     {
-        public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name) : this(displayColumn, name, displayColumn.IdentifierPath, null)
+        public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name) : this(displayColumn, name, displayColumn.PropertyPath, null)
         {
         }
-        public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name, IdentifierPath identifierPath, PivotKey pivotKey)
+        public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name, PropertyPath propertyPath, PivotKey pivotKey)
             : base(name, new Attribute[0])
         {
 //            if (columnDescriptor.CollectionInfo != null && columnDescriptor.CollectionInfo.IsDictionary)
@@ -48,10 +48,10 @@ namespace pwiz.Common.DataBinding
 //                ColumnDescriptor = ColumnDescriptor.SetCaption(columnDescriptor.Caption);
 //            }
             DisplayColumn = displayColumn;
-            IdentifierPath = identifierPath;
+            PropertyPath = propertyPath;
             PivotKey = pivotKey;
         }
-        public IdentifierPath IdentifierPath
+        public PropertyPath PropertyPath
         {
             get; private set;
         }

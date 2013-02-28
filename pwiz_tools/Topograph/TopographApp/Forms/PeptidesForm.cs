@@ -39,7 +39,7 @@ namespace pwiz.Topograph.ui.Forms
             btnAnalyzePeptides.Enabled = Workspace.Peptides.Count > 0;
             var defaultColumns = new[]
                                      {
-                                         new ColumnSpec().SetIdentifierPath(IdentifierPath.Root),
+                                         new ColumnSpec().SetPropertyPath(PropertyPath.Root),
                                          new ColumnSpec().SetName("ProteinName").SetCaption("Protein"),
                                          new ColumnSpec().SetName("ProteinDescription"),
                                          new ColumnSpec().SetName("MaxTracerCount"),

@@ -324,12 +324,12 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 displayRows.Add(displayRow);
             }
-            var viewInfo = dataGridView1.BindingListView.ViewInfo;
+            var viewInfo = bindingSource1.ViewInfo;
             if (viewInfo == null || "default" == viewInfo.Name)
             {
-                dataGridView1.BindingListView.ViewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(halfLifeCalculator.ByProtein));
+                bindingSource1.ViewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(halfLifeCalculator.ByProtein));
             }
-            dataGridView1.BindingListView.RowSource = displayRows;
+            bindingSource1.RowSource = displayRows;
             dataGridViewSummary.Rows.Clear();
             SetSummary("Tracer %", displayRows.Select(dr=>dr.Results).SelectMany(r=>r.Values
                 .Select(cohortResult=>cohortResult.GetResultData().TracerPercentByArea)));
@@ -350,9 +350,9 @@ namespace pwiz.Topograph.ui.Forms
             }
             columnSpecs.Add(new ColumnSpec().SetName("ProteinName"));
             columnSpecs.Add(new ColumnSpec().SetName("ProteinDescription"));
-            columnSpecs.Add(new ColumnSpec().SetName("Results.[].Value.TracerPercent"));
-            columnSpecs.Add(new ColumnSpec().SetName("Results.[].Value.AvgTurnover"));
-            columnSpecs.Add(new ColumnSpec().SetName("Results.[].Value.AreaUnderCurve"));
+            columnSpecs.Add(new ColumnSpec().SetName("Results!*.Value.TracerPercent"));
+            columnSpecs.Add(new ColumnSpec().SetName("Results!*.Value.AvgTurnover"));
+            columnSpecs.Add(new ColumnSpec().SetName("Results!*.Value.AreaUnderCurve"));
             return new ViewSpec().SetName("default").SetColumns(columnSpecs);
         }
 

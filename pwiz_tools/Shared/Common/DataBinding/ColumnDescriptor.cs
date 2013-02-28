@@ -20,33 +20,40 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding
 {
     /// <summary>
     /// Provides a description of a property on a Type, or a descendent of a Type.
     /// </summary>
-    /// <seealso cref="IdentifierPath"/>
+    /// <seealso cref="DataBinding.PropertyPath"/>
     public class ColumnDescriptor
     {
-        public ColumnDescriptor(DataSchema dataSchema, Type propertyType)
+        private ColumnDescriptor(DataSchema dataSchema)
         {
             DataSchema = dataSchema;
-            PropertyType = propertyType;
-            IdPath = IdentifierPath.Root;
         }
-        public ColumnDescriptor(ColumnDescriptor parent, String name) : this(parent, name, parent.DataSchema.GetPropertyDescriptor(parent.PropertyType, name))
+        public ColumnDescriptor(DataSchema dataSchema, Type propertyType) : this(dataSchema)
+        {
+            PropertyType = propertyType;
+            PropertyPath = PropertyPath.Root;
+        }
+
+        public ColumnDescriptor(ColumnDescriptor parent, String name) 
+            : this(parent, name, parent.DataSchema.GetPropertyDescriptor(parent.PropertyType, name))
         {
         }
 
-        public ColumnDescriptor(ColumnDescriptor parent, PropertyDescriptor propertyDescriptor) : this(parent, propertyDescriptor.Name, propertyDescriptor)
+        public ColumnDescriptor(ColumnDescriptor parent, PropertyDescriptor propertyDescriptor) 
+            : this(parent, propertyDescriptor.Name, propertyDescriptor)
         {
         }
         public ColumnDescriptor(ColumnDescriptor parent, string name, PropertyDescriptor propertyDescriptor)
         {
             DataSchema = parent.DataSchema;
             Parent = parent;
-            IdPath = new IdentifierPath(parent.IdPath, name);
+            PropertyPath = parent.PropertyPath.Property(name);
             ReflectedPropertyDescriptor = propertyDescriptor;
             if (ReflectedPropertyDescriptor != null)
             {
@@ -55,32 +62,25 @@ namespace pwiz.Common.DataBinding
         }
 
 
-        public ColumnDescriptor(ColumnDescriptor parent, CollectionInfo collectionInfo) : this(parent, null, null)
+        public ColumnDescriptor(ColumnDescriptor parent, CollectionInfo collectionInfo) : this(parent.DataSchema)
         {
+            Parent = parent;
             CollectionInfo = collectionInfo;
             PropertyType = collectionInfo.ElementType;
+            PropertyPath = parent.PropertyPath.LookupAllItems();
         }
         public ColumnDescriptor(ColumnDescriptor columnDescriptor)
         {
             DataSchema = columnDescriptor.DataSchema;
             Parent = columnDescriptor.Parent;
-            IdPath = columnDescriptor.IdPath;
+            PropertyPath = columnDescriptor.PropertyPath;
             PropertyType = columnDescriptor.PropertyType;
             CollectionInfo = columnDescriptor.CollectionInfo;
             ReflectedPropertyDescriptor = columnDescriptor.ReflectedPropertyDescriptor;
         }
         public DataSchema DataSchema { get; private set; }
         public ColumnDescriptor Parent { get; private set; }
-        public ColumnDescriptor SetParent(ColumnDescriptor newParent)
-        {
-            if (newParent == Parent)
-            {
-                return this;
-            }
-            var newIdPath = newParent == null ? IdentifierPath.Root : new IdentifierPath(newParent.IdPath, Name);
-            return new ColumnDescriptor(this) {Parent = newParent, IdPath = newIdPath};
-        }
-        public String Name { get { return IdPath.Name;} }
+        public String Name { get { return PropertyPath.Name;} }
         public CollectionInfo CollectionInfo { get; private set; }
         public PropertyDescriptor ReflectedPropertyDescriptor { get; private set; }
         public Type PropertyType { get; private set; }
@@ -93,11 +93,11 @@ namespace pwiz.Common.DataBinding
         }
         public object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
         {
-            while (!IdPath.StartsWith(rowItem.SublistId))
+            while (!PropertyPath.StartsWith(rowItem.SublistId))
             {
                 rowItem = rowItem.Parent;
             }
-            if (IdPath.Equals(rowItem.SublistId))
+            if (PropertyPath.Equals(rowItem.SublistId))
             {
                 return rowItem.Value;
             }
@@ -112,9 +112,9 @@ namespace pwiz.Common.DataBinding
             }
             return GetPropertyValueFromParent(parentValue, pivotKey, notifyFutureChanges);
         }
-        public object GetPropertyValue(RowNode rowNode, bool notifyFutureChanges)
+        internal object GetPropertyValue(RowNode rowNode, bool notifyFutureChanges)
         {
-            if (IdPath.Length == rowNode.IdentifierPath.Length)
+            if (PropertyPath.Length == rowNode.PropertyPath.Length)
             {
                 return rowNode.RowItem.Value;
             }
@@ -144,7 +144,7 @@ namespace pwiz.Common.DataBinding
                 {
                     return null;
                 }
-                var key = pivotKey.FindValue(IdPath);
+                var key = pivotKey.FindValue(PropertyPath);
                 if (key == null)
                 {
                     return null;
@@ -297,7 +297,7 @@ namespace pwiz.Common.DataBinding
             return Parent.FirstUnboundParent();
         }
 
-        public IdentifierPath IdPath
+        public PropertyPath PropertyPath
         {
             get; private set;
         }
@@ -326,18 +326,18 @@ namespace pwiz.Common.DataBinding
         {
             return DataSchema.GetPropertyDescriptors(PropertyType).Select(pd => new ColumnDescriptor(this, pd));
         }
-        public ColumnDescriptor ResolveDescendant(IdentifierPath identifierPath)
+        public ColumnDescriptor ResolveDescendant(PropertyPath propertyPath)
         {
-            if (identifierPath.IsRoot)
+            if (propertyPath.IsRoot)
             {
                 return this;
             }
-            ColumnDescriptor parent = ResolveDescendant(identifierPath.Parent);
+            ColumnDescriptor parent = ResolveDescendant(propertyPath.Parent);
             if (parent == null)
             {
                 return null;
             }
-            return parent.ResolveChild(identifierPath.Name);
+            return parent.ResolveChild(propertyPath.Name);
         }
         public bool IsSelectable
         {

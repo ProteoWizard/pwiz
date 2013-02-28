@@ -1,5 +1,6 @@
 ﻿using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -40,16 +41,16 @@ namespace pwiz.Topograph.ui.Forms
             this.btnRequery = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.tbxMaxResults = new System.Windows.Forms.TextBox();
-            this.navBar21 = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.dataGridViewResults = new pwiz.Common.DataBinding.Controls.BoundDataGridView();
             this.bindingSourceResults = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
-            this.dataGridViewResults = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.navBar21 = new pwiz.Common.DataBinding.Controls.NavBar();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceResults)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResults)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceResults)).BeginInit();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -86,7 +87,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(736, 25);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
@@ -120,21 +121,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMaxResults.Name = "tbxMaxResults";
             this.tbxMaxResults.Size = new System.Drawing.Size(178, 20);
             this.tbxMaxResults.TabIndex = 9;
-            // 
-            // navBar21
-            // 
-            this.navBar21.AutoSize = true;
-            this.navBar21.BindingListSource = this.bindingSourceResults;
-            this.navBar21.Dock = System.Windows.Forms.DockStyle.Top;
-            this.navBar21.Location = new System.Drawing.Point(0, 0);
-            this.navBar21.Name = "navBar21";
-            this.navBar21.Size = new System.Drawing.Size(736, 25);
-            this.navBar21.TabIndex = 10;
-            this.navBar21.WaitingMessage = "Press \"Requery\" button to see data";
-            // 
-            // bindingSourceResults
-            // 
-            this.bindingSourceResults.RowSource = new object[0];
             // 
             // dataGridViewResults
             // 
@@ -173,6 +159,22 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridViewResults.Size = new System.Drawing.Size(736, 461);
             this.dataGridViewResults.TabIndex = 0;
             // 
+            // bindingSourceResults
+            // 
+            this.bindingSourceResults.RowSource = new object[0];
+            this.bindingSourceResults.ViewInfo = null;
+            // 
+            // navBar21
+            // 
+            this.navBar21.AutoSize = true;
+            this.navBar21.BindingListSource = this.bindingSourceResults;
+            this.navBar21.Dock = System.Windows.Forms.DockStyle.Top;
+            this.navBar21.Location = new System.Drawing.Point(0, 0);
+            this.navBar21.Name = "navBar21";
+            this.navBar21.Size = new System.Drawing.Size(736, 25);
+            this.navBar21.TabIndex = 10;
+            this.navBar21.WaitingMessage = "Press \"Requery\" button to see data";
+            // 
             // ResultsPerReplicateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -189,8 +191,8 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceResults)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResults)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceResults)).EndInit();
             this.ResumeLayout(false);
 
         }

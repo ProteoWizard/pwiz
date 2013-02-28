@@ -1,6 +1,7 @@
 ﻿using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -43,7 +44,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label7 = new System.Windows.Forms.Label();
             this.checkedListBoxTimePoints = new System.Windows.Forms.CheckedListBox();
             this.bindingSource1 = new BindingListSource(this.components);
-            this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.dataGridView1 = new BoundDataGridView();
             this.halfLifeSettingsControl = new pwiz.Topograph.ui.Controls.HalfLifeSettingsControl();
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
             this.tableLayoutPanel1.SuspendLayout();

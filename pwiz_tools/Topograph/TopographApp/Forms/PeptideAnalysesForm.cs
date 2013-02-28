@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.RowSources;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
@@ -47,22 +48,22 @@ namespace pwiz.Topograph.ui.Forms
                                   {
                                       DeleteHandler = new PeptideAnalysisDeleteHandler(this),
                                   };
-            var idPathPeptideAnalysis = new IdentifierPath(IdentifierPath.Root, "PeptideAnalysis");
-            var idPathPeptide = new IdentifierPath(idPathPeptideAnalysis, "Peptide");
+            var idPathPeptideAnalysis = PropertyPath.Root.Property("PeptideAnalysis");
+            var idPathPeptide = idPathPeptideAnalysis.Property("Peptide");
             var viewSpec = new ViewSpec()
                 .SetName(AbstractViewContext.DefaultViewName)
                 .SetColumns(
                 new[]
                     {
-                        new ColumnSpec(new IdentifierPath(IdentifierPath.Root, "Peptide")),
-                        new ColumnSpec(new IdentifierPath(IdentifierPath.Root, "ValidationStatus")),
-                        new ColumnSpec(new IdentifierPath(idPathPeptideAnalysis, "Note")),
-                        new ColumnSpec(new IdentifierPath(idPathPeptide, "ProteinName")), 
-                        new ColumnSpec(new IdentifierPath(idPathPeptide, "ProteinDescription")), 
-                        new ColumnSpec(new IdentifierPath(idPathPeptide, "MaxTracerCount")), 
-                        new ColumnSpec(new IdentifierPath(IdentifierPath.Root, "FileAnalysisCount")), 
-                        new ColumnSpec(new IdentifierPath(IdentifierPath.Root, "MinScore")), 
-                        new ColumnSpec(new IdentifierPath(IdentifierPath.Root, "MaxScore")),
+                        new ColumnSpec(PropertyPath.Root.Property("Peptide")),
+                        new ColumnSpec(PropertyPath.Root.Property("ValidationStatus")),
+                        new ColumnSpec(idPathPeptideAnalysis.Property("Note")),
+                        new ColumnSpec(idPathPeptide.Property("ProteinName")), 
+                        new ColumnSpec(idPathPeptide.Property("ProteinDescription")), 
+                        new ColumnSpec(idPathPeptide.Property("MaxTracerCount")), 
+                        new ColumnSpec(PropertyPath.Root.Property("FileAnalysisCount")), 
+                        new ColumnSpec(PropertyPath.Root.Property("MinScore")), 
+                        new ColumnSpec(PropertyPath.Root.Property("MaxScore")),
                     });
             viewContext.BuiltInViewSpecs = new[] {viewSpec};
             bindingListSource1.SetViewContext(viewContext);

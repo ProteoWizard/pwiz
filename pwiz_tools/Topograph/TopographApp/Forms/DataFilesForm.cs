@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.RowSources;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;

@@ -53,7 +53,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             columnSpecs.Add(new ColumnSpec().SetName("ProteinName"));
             columnSpecs.Add(new ColumnSpec().SetName("ProteinDescription"));
-            columnSpecs.Add(new ColumnSpec().SetName("HalfLives.[].Value"));
+            columnSpecs.Add(new ColumnSpec().SetName("HalfLives!*.Value"));
             return new ViewSpec().SetName("default").SetColumns(columnSpecs);
         }
 
@@ -92,14 +92,14 @@ namespace pwiz.Topograph.ui.Forms
                     return;
                 }
             }
-            var viewInfo = bindingSource1.BindingListView.ViewInfo;
+            var viewInfo = bindingSource1.ViewInfo;
             var rows = calculator.ResultRows.Select(row => new ResultRow(this, row)).ToArray();
             if (viewInfo == null || "default" == viewInfo.Name)
             {
                 viewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein));
             }
-            bindingSource1.BindingListView.ViewInfo = viewInfo;
-            bindingSource1.BindingListView.RowSource = rows;
+            bindingSource1.ViewInfo = viewInfo;
+            bindingSource1.RowSource = rows;
         }
 
         /// <summary>

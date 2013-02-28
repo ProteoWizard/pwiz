@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;

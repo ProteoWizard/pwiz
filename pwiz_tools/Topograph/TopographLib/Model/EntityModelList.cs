@@ -24,6 +24,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.RowSources;
 using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model

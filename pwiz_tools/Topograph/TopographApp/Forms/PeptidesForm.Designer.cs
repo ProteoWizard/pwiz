@@ -1,5 +1,6 @@
 ﻿using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -35,7 +36,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
             this.btnAddSearchResults = new System.Windows.Forms.Button();
-            this.dataGridView = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.dataGridView = new BoundDataGridView();
             this.peptidesBindingSource = new BindingListSource(this.components);
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
             this.tableLayoutPanel1.SuspendLayout();

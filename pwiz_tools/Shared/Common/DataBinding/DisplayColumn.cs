@@ -35,7 +35,7 @@ namespace pwiz.Common.DataBinding
         public ViewInfo ViewInfo { get; private set; }
         public DataSchema DataSchema { get { return ViewInfo.DataSchema; } }
         public ColumnSpec ColumnSpec { get; private set; }
-        public IdentifierPath IdentifierPath { get { return ColumnSpec.IdentifierPath; } }
+        public PropertyPath PropertyPath { get { return ColumnSpec.PropertyPath; } }
         public ColumnDescriptor ColumnDescriptor { get; private set; }
         public ColumnDescriptor CollectionColumn { get; private set; }
         public string DefaultDisplayName 
@@ -82,7 +82,7 @@ namespace pwiz.Common.DataBinding
             }
             if (ColumnDescriptor == null)
             {
-                return "#COLUMN " + IdentifierPath + " NOT FOUND#";
+                return "#COLUMN " + PropertyPath + " NOT FOUND#";
             }
             return ColumnDescriptor.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
         }

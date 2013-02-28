@@ -27,6 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
@@ -88,10 +89,10 @@ namespace pwiz.Common.DataBinding
 
         public Icon ApplicationIcon { get; protected set; }
 
-        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListView bindingListView, IDataFormat dataFormat)
+        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListSource bindingListSource, IDataFormat dataFormat)
         {
-            IList<RowItem> rows = Array.AsReadOnly(bindingListView.ToArray());
-            IList<PropertyDescriptor> properties = bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
+            IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
+            IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             var status = new ProgressStatus("Writing " + rows.Count + " rows");
             dataFormat.WriteRow(writer, properties.Select(pd=>pd.DisplayName));
             var rowCount = rows.Count;
@@ -118,7 +119,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public void Export(Control owner, BindingListView bindingListView)
+        public void Export(Control owner, BindingListSource bindingListSource)
         {
             var dataFormats = new[] { DataFormats.CSV, DataFormats.TSV };
             string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray());
@@ -126,7 +127,7 @@ namespace pwiz.Common.DataBinding
                 {
                 Filter = fileFilter,
                 InitialDirectory = GetExportDirectory(),
-                FileName = GetDefaultExportFilename(bindingListView.ViewSpec),
+                FileName = GetDefaultExportFilename(bindingListSource.ViewSpec),
             })
             {
                 if (saveFileDialog.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
@@ -140,7 +141,7 @@ namespace pwiz.Common.DataBinding
                     using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName), new UTF8Encoding(false)))
 // ReSharper restore AccessToDisposedClosure
                     {
-                        WriteData(progressMonitor, writer, bindingListView, dataFormat);
+                        WriteData(progressMonitor, writer, bindingListSource, dataFormat);
                     }
                 });
                 SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
@@ -316,7 +317,7 @@ namespace pwiz.Common.DataBinding
         public static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
         {
             return new ViewSpec().SetName(DefaultViewName).SetColumns(parentColumn.GetChildColumns()
-                .Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name))));
+                .Select(c => new ColumnSpec(PropertyPath.Root.Property(c.Name))));
         }
     }
 }

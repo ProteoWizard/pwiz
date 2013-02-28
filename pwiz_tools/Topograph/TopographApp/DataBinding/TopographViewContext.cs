@@ -43,7 +43,7 @@ namespace pwiz.Topograph.ui.DataBinding
 
         public TopographViewContext(Workspace workspace, Type rowType) : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType))
         {
-            var childColumns = ParentColumn.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name)));
+            var childColumns = ParentColumn.GetChildColumns().Select(c => new ColumnSpec(PropertyPath.Root.Property(c.Name)));
             BuiltInViewSpecs = new[] {new ViewSpec().SetName("default").SetColumns(childColumns)};
         }
 

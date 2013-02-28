@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Common.DataBinding
 {
@@ -32,7 +33,7 @@ namespace pwiz.Common.DataBinding
         ColumnDescriptor ParentColumn { get; }
         IEnumerable<ViewSpec> BuiltInViewSpecs { get; }
         IEnumerable<ViewSpec> CustomViewSpecs { get; }
-        void Export(Control owner, BindingListView bindingListView);
+        void Export(Control owner, BindingListSource bindingListSource);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec);
         void ManageViews(Control owner);
         ViewSpec SaveView(ViewSpec viewSpec);

@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Model.Data;
 

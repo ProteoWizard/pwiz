@@ -20,7 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.RowSources;
 using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model

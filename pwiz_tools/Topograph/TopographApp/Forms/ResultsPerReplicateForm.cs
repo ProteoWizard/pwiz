@@ -18,15 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.ui.DataBinding;
-using pwiz.Topograph.ui.Util;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms

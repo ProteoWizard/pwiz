@@ -34,9 +34,9 @@ namespace pwiz.Common.DataBinding
         public ColumnSpec()
         {
         }
-        public ColumnSpec(IdentifierPath identifierPath)
+        public ColumnSpec(PropertyPath propertyPath)
         {
-            Name = identifierPath.ToString();
+            Name = propertyPath.ToString();
         }
         public ColumnSpec(ColumnSpec that)
         {
@@ -79,11 +79,11 @@ namespace pwiz.Common.DataBinding
         }
 
         [XmlIgnore]
-        public IdentifierPath IdentifierPath
+        public PropertyPath PropertyPath
         {
-            get { return IdentifierPath.Parse(Name); }
+            get { return PropertyPath.Parse(Name); }
         }
-        public ColumnSpec SetIdentifierPath(IdentifierPath value)
+        public ColumnSpec SetPropertyPath(PropertyPath value)
         {
             return new ColumnSpec(this) {Name = value == null ? "" : value.ToString()};
         }
@@ -184,9 +184,9 @@ namespace pwiz.Common.DataBinding
         public FilterSpec()
         {
         }
-        public FilterSpec(IdentifierPath identifierPath, IFilterOperation filterOperation, string operand)
+        public FilterSpec(PropertyPath propertyPath, IFilterOperation filterOperation, string operand)
         {
-            Column = identifierPath.ToString();
+            Column = propertyPath.ToString();
             OpName = filterOperation == null ? null : filterOperation.OpName;
             Operand = operand;
         }
@@ -201,8 +201,8 @@ namespace pwiz.Common.DataBinding
         {
             return new FilterSpec(this){Column = column};
         }
-        public IdentifierPath ColumnId { get { return IdentifierPath.Parse(Column); } }
-        public FilterSpec SetColumnId(IdentifierPath columnId)
+        public PropertyPath ColumnId { get { return PropertyPath.Parse(Column); } }
+        public FilterSpec SetColumnId(PropertyPath columnId)
         {
             return SetColumn(columnId.ToString());
         }
@@ -313,12 +313,12 @@ namespace pwiz.Common.DataBinding
             return new ViewSpec(this){Filters = Array.AsReadOnly(value.ToArray())};
         }
         public string SublistName { get; private set; }
-        public IdentifierPath SublistId
+        public PropertyPath SublistId
         {
-            get { return IdentifierPath.Parse(SublistName); }
+            get { return PropertyPath.Parse(SublistName); }
             set { SublistName = value.ToString(); }
         }
-        public ViewSpec SetSublistId(IdentifierPath sublistId)
+        public ViewSpec SetSublistId(PropertyPath sublistId)
         {
             return new ViewSpec(this){SublistId = sublistId};
         }

@@ -29,7 +29,7 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class ViewInfo
     {
-        private readonly IDictionary<IdentifierPath, ColumnDescriptor> _columnDescriptors = new Dictionary<IdentifierPath, ColumnDescriptor>();
+        private readonly IDictionary<PropertyPath, ColumnDescriptor> _columnDescriptors = new Dictionary<PropertyPath, ColumnDescriptor>();
         
         public ViewInfo(DataSchema dataSchema, Type rootType, ViewSpec viewSpec) : this(new ColumnDescriptor(dataSchema, rootType), viewSpec)
         {
@@ -41,11 +41,11 @@ namespace pwiz.Common.DataBinding
             DataSchema = parentColumn.DataSchema;
             Name = viewSpec.Name;
 
-            _columnDescriptors.Add(parentColumn.IdPath, parentColumn);
+            _columnDescriptors.Add(parentColumn.PropertyPath, parentColumn);
             var displayColumns = new List<DisplayColumn>();
             foreach (var column in viewSpec.Columns)
             {
-                var columnDescriptor = GetColumnDescriptor(column.IdentifierPath, true);
+                var columnDescriptor = GetColumnDescriptor(column.PropertyPath, true);
                 displayColumns.Add(new DisplayColumn(this, column, columnDescriptor));
             }
             DisplayColumns = Array.AsReadOnly(displayColumns.ToArray());
@@ -94,7 +94,7 @@ namespace pwiz.Common.DataBinding
         public DataSchema DataSchema { get; private set; }
         public ColumnDescriptor ParentColumn { get; private set; }
         public string Name { get; private set; }
-        public IdentifierPath SublistId { get; private set; }
+        public PropertyPath SublistId { get; private set; }
         public IList<DisplayColumn> DisplayColumns { get; private set; }
         public IList<DisplayColumn> SortColumns { get; private set; }
         public IList<FilterInfo> Filters { get; private set; }
@@ -111,7 +111,7 @@ namespace pwiz.Common.DataBinding
             }
             return unboundColumnSet;
         }
-        private ColumnDescriptor GetColumnDescriptor(IdentifierPath idPath, bool followCollections)
+        private ColumnDescriptor GetColumnDescriptor(PropertyPath idPath, bool followCollections)
         {
             ColumnDescriptor columnDescriptor;
             if (_columnDescriptors.TryGetValue(idPath, out columnDescriptor))

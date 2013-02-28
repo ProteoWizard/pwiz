@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Topograph.ui.Util
@@ -37,7 +38,7 @@ namespace pwiz.Topograph.ui.Util
             var rowSet = new HashSet<TRow>();
             foreach (DataGridViewRow row in dataGridView.SelectedRows)
             {
-                var rowItem = bindingSource.BindingListView[row.Index];
+                var rowItem = (RowItem) bindingSource[row.Index];
                 while (null != rowItem.Parent && null != rowItem.Parent.Value)
                 {
                     rowItem = rowItem.Parent;

@@ -1,4 +1,5 @@
 ﻿using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -30,7 +31,7 @@ namespace pwiz.Topograph.ui.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.boundDataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.boundDataGridView1 = new BoundDataGridView();
             this.bindingSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -131,7 +132,7 @@ namespace pwiz.Topograph.ui.Forms
 
         #endregion
 
-        private pwiz.Common.DataBinding.BoundDataGridView boundDataGridView1;
+        private BoundDataGridView boundDataGridView1;
         private pwiz.Common.DataBinding.Controls.NavBar navBar1;
         private BindingListSource bindingSource1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;

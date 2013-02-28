@@ -71,7 +71,10 @@ namespace pwiz.Topograph.ui.Forms
                 row.Cells[colInstance.Index].Value = dbLock.InstanceIdGuid;
                 if (dbLock.InstanceIdGuid.Equals(Workspace.InstanceId))
                 {
-                    row.Cells[colInstance.Index].Style.BackColor = Color.LightGreen;
+                    foreach (DataGridViewColumn column in dataGridView1.Columns)
+                    {
+                        row.Cells[column.Index].Style.BackColor = Color.LightGreen;
+                    }
                 }
                 if (dbLock.MsDataFileId != null)
                 {

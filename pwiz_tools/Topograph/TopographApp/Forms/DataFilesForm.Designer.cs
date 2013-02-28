@@ -1,4 +1,5 @@
 ﻿using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 using pwiz.Topograph.ui.Controls;
 
 namespace pwiz.Topograph.ui.Forms
@@ -40,7 +41,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label2 = new System.Windows.Forms.Label();
             this.recordNavBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
             this.bindingSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
-            this.gridView = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.gridView = new BoundDataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -161,7 +162,7 @@ namespace pwiz.Topograph.ui.Forms
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private pwiz.Common.DataBinding.BoundDataGridView gridView;
+        private BoundDataGridView gridView;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label2;
         private pwiz.Common.DataBinding.Controls.NavBar recordNavBar1;

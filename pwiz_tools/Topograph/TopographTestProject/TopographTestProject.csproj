@@ -98,16 +98,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
-    <Compile Include="DataBinding\AttributeTest.cs" />
-    <Compile Include="DataBinding\BoundListTest.cs" />
-    <Compile Include="DataBinding\CollectionInfoTest.cs" />
-    <Compile Include="DataBinding\Controls\AvailableFieldsTreeTest.cs" />
-    <Compile Include="DataBinding\Controls\BoundDataGridViewTest.cs" />
-    <Compile Include="DataBinding\FilterTest.cs" />
-    <Compile Include="DataBinding\IdentifierPathTest.cs" />
-    <Compile Include="DataBinding\PivoterTest.cs" />
-    <Compile Include="DataBinding\SampleData\AminoAcid.cs" />
-    <Compile Include="DataBinding\SampleData\Peptide.cs" />
     <Compile Include="Graph\GraphDataTest.cs" />
     <Compile Include="ListViewHelperTest.cs" />
     <Compile Include="PeakFinderTest.cs" />
