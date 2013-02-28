@@ -202,6 +202,7 @@ private:
     void storeLine(MaxQuantLine& entry);
     void addDoublesToVector(vector<double>& v, string valueList);
     void addModsToVector(vector<SeqMod>& v, string modifications, string modSequence);
+    SeqMod searchForMod(vector<string>& modNames, string modSequence, int posOpenParen);
 
     const escaped_list_separator<char> separator_;
 };

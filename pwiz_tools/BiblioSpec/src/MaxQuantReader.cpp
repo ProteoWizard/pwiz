@@ -105,9 +105,16 @@ void MaxQuantReader::initModifications()
                        modFile.c_str());
     if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
     {
-        // Not there, use default
-        Verbosity::comment(V_DETAIL, "Loading default modifications");
-        modFile = getExeDirectory() + "modifications.xml";
+        // Check for modification.xml in the same folder as tsv file
+        modFile = (filesystem::path(tsvName_).parent_path() / "modification.xml").string();
+        Verbosity::comment(V_DETAIL, "Checking for modification file %s",
+                           modFile.c_str());
+        if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+        {
+            // Not there, use default
+            Verbosity::comment(V_DETAIL, "Loading default modifications");
+            modFile = getExeDirectory() + "modifications.xml";
+        }
     }
 
     Verbosity::comment(V_DETAIL, "Parsing modification file %s",
@@ -201,7 +208,7 @@ void MaxQuantReader::parseHeader(string& line)
         // check each column for a match
         for (size_t i = 0; i < numColumns; i++)
         {
-            if (*token == targetColumns_[i].name_)
+            if (iequals(*token, targetColumns_[i].name_))
             {
                 targetColumns_[i].position_ = colNumber;
             }
@@ -244,12 +251,6 @@ void MaxQuantReader::collectPsms()
     {
         getline(tsvFile_, line);
         lineNum_++;
-        
-        // progress increment every 100 lines
-        progress.increment();
-        //streampos curPos = tsvFile_.tellg()/1024;
-        //progress_->add(curPos - lastPos_);
-        //lastPos_ = curPos;
 
         size_t colListIdx = 0;  // go through all target columns
         int lineColNumber = 0;  // compare to all file columns
@@ -311,6 +312,8 @@ void MaxQuantReader::collectPsms()
         }
         // store this line's information in the curPSM
         storeLine(entry);
+        
+        progress.increment();
     }
 }
  
@@ -391,111 +394,30 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, st
     vector<string> modNames;
     split(modNames, modifications, is_any_of(","));
 
-    // check first and last characters
-    int lastIndex = modSequence.length() - 1;
-    if (modSequence[0] != '_' || modSequence[lastIndex] != '_')
+    // remove underscore from beginning and end if they exist
+    if (modSequence[0] == '_')
     {
-        throw BlibException(false, "Modified sequence %s must start and end with '_' (line %d)", 
-                            modSequence.c_str(), lineNum_);
+        modSequence = modSequence.substr(1);
+    }
+    int sequenceLength = modSequence.length();
+    if (modSequence[sequenceLength - 1] == '_')
+    {
+        modSequence = modSequence.substr(0, sequenceLength - 1);
+        --sequenceLength;
     }
 
     // iterate over sequence
-    bool matchedMod;
-    string modAbbreviation;
     unsigned int modsFound = 0;
-    for (int i = 1; i < lastIndex; i++)
+    for (int i = 0; i < sequenceLength; i++)
     {
         switch (modSequence[i])
         {
         case '(':
-            modAbbreviation.clear();
-            // found mod, get next 2 characters
-            // check that there are at least 3 more characters (2 + closing paren)
-            if (i > lastIndex - 3)
-            {
-                throw BlibException(false, "Opening parentheses found in sequence %s but not enough "
-                                    "characters following (line %d)", modSequence.c_str(), lineNum_);
-            }
-            for (int j = 0; j < 2; j++)
-            {
-                ++i;
-                if (modSequence[i] < 'a' || modSequence[i] > 'z')
-                {
-                    throw BlibException(false, "Illegal character %c found in sequence %s (line %d)", 
-                                        modSequence[i], modSequence.c_str(), lineNum_);
-                }
-                modAbbreviation += modSequence[i];
-            }
-            // check for closing parentheses
-            if (modSequence[++i] != ')')
-            {
-                throw BlibException(false, "Closing parentheses expected but %c found in sequence %s (line %d)",
-                                           modSequence[i], modSequence.c_str(), lineNum_);
-            }
+            ++modsFound;
             // which mod is it?
-            matchedMod = false;
-            for (vector<string>::iterator iter = modNames.begin(); iter != modNames.end(); ++iter)
-            {
-                string modCheck = "";
-                modCheck += tolower((*iter)[0]);
-                modCheck += tolower((*iter)[1]);
-                if (modAbbreviation == modCheck)
-                {
-                    map<string, double>::iterator lookup = modBank_.find(*iter);
-                    if (lookup == modBank_.end())
-                    {
-                        throw BlibException(false, "Unknown modification %s in sequence %s (line %d)",
-                                            modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
-                    }
-                    // subtract 4 from position because "(xx" is 3 + 1 since it comes after the AA modified
-                    // and 4 from position for each previous mod found (two parentheses and abbreviation)
-                    SeqMod curMod(max((unsigned int)1, i - (4 + 4*modsFound)), lookup->second);
-                    v.push_back(curMod);
-
-                    matchedMod = true;
-                    ++modsFound;
-                    break;
-                }
-                // Are we testing against the last modification name in the vector?
-                if (iter == modNames.end() - 1)
-                {
-                    /* Try stripping numbers off the beginning -
-                     * Modification string might be "2 Oxidation (M) to indicate
-                     * that there are 2 "Oxidation (M)", not that the name of the
-                     * mod is "2 Oxidation (M)" */
-                    for (vector<string>::iterator retryIter = modNames.begin();
-                         retryIter != modNames.end();
-                         ++retryIter)
-                    {
-                        // loop until we find a non numeric character or the end of the string
-                        unsigned int newStart;
-                        for (newStart = 0; newStart < retryIter->length(); ++newStart)
-                        {
-                            if (!isdigit((*retryIter)[newStart])) break;
-                        }
-                        // Make sure we found a space and that there are at least 2 chars after it
-                        if ((*retryIter)[newStart] == ' ' && newStart + 2 < retryIter->length())
-                        {
-                            string modRecheck = "";
-                            modRecheck += tolower((*retryIter)[++newStart]);
-                            modRecheck += tolower((*retryIter)[newStart + 1]);
-                            if (modAbbreviation == modRecheck)
-                            {
-                                // Change name in vector
-                                *retryIter = retryIter->substr(newStart);
-                                // Move iterator
-                                iter = retryIter - 1;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!matchedMod)
-            {
-                throw BlibException(false, "No matching mod for %s in sequence %s (line %d)",
-                                    modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
-            }
+            v.push_back(searchForMod(modNames, modSequence, i));
+            // advance iterator past modification
+            i += 3;
             break;
         case ')':
             throw BlibException(false, "Unexpected closing parentheses found in sequence %s (line %d)",
@@ -516,6 +438,111 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, st
         Verbosity::warn("Found %d exceptions but expected at least %d in sequence %s (%d)",
                         modsFound, modNames.size(), modSequence.c_str(), lineNum_);
     }
+}
+
+/**
+ * Given a vector of modification names, a modified sequence, and the position of
+ * the opening parentheses for the modification in the sequence, attempt to
+ * look up which modification it is and return a SeqMod.
+ */
+SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence, int posOpenParen)
+{
+    // check that there are at least 3 more characters (2 + closing paren)
+    if (posOpenParen >= (int)modSequence.length() - 3)
+    {
+        throw BlibException(false, "Opening parentheses found in sequence %s but not enough "
+                            "characters following (line %d)", modSequence.c_str(), lineNum_);
+    }
+
+    // get mod abbreviation
+    string modAbbreviation = "";
+    for (int i = posOpenParen + 1; i < posOpenParen + 3; i++)
+    {
+        if (modSequence[i] < 'a' || modSequence[i] > 'z')
+        {
+            throw BlibException(false, "Illegal character %c found in sequence %s (line %d)", 
+                                modSequence[i], modSequence.c_str(), lineNum_);
+        }
+        modAbbreviation += modSequence[i];
+    }
+    
+    // check for closing parentheses
+    if (modSequence[posOpenParen + 3] != ')')
+    {
+        throw BlibException(false, "Closing parentheses expected but %c found in sequence %s (line %d)",
+                                   modSequence[posOpenParen + 3], modSequence.c_str(), lineNum_);
+    }
+
+    // search list of mod names using abbreviation
+    for (vector<string>::iterator iter = modNames.begin(); iter != modNames.end(); ++iter)
+    {
+        if (iequals(modAbbreviation, iter->substr(0, 2)))
+        {
+            map<string, double>::iterator lookup = modBank_.find(*iter);
+            if (lookup == modBank_.end())
+            {
+                throw BlibException(false, "Unknown modification %s in sequence %s (line %d)",
+                                    modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
+            }
+            // count how many mods were before this one
+            int prevMods = 0;
+            for (int i = 0; i < posOpenParen; i++)
+            {
+                if (modSequence[i] == '(')
+                {
+                    ++prevMods;
+                }
+            }
+
+            // subtract 4 from position because "(xx" is 3 + 1 since it comes after the AA modified
+            // and 4 from position for each previous mod found (two parentheses and abbreviation)
+            SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->second);
+            return curMod;
+        }
+    }
+        
+    /* Retry loop but try stripping numbers off the beginning of modification names -
+     * Modification string might be "2 Oxidation (M) to indicate
+     * that there are 2 "Oxidation (M)", not that the name of the
+     * mod is "2 Oxidation (M)" */
+    for (vector<string>::iterator iter = modNames.begin();
+         iter != modNames.end();
+         ++iter)
+    {
+        // loop until we find a non numeric character or the end of the string
+        unsigned int newStart = 0;
+        while (newStart < iter->length() && isdigit((*iter)[newStart]))
+        {
+            ++newStart;
+        }
+        // Make sure we found a space and that there are at least 2 chars after it
+        if ((*iter)[newStart] == ' ' && newStart + 2 < iter->length() &&
+            iequals(modAbbreviation, iter->substr(++newStart, 2)))
+        {
+            map<string, double>::iterator lookup = modBank_.find(iter->substr(newStart));
+            if (lookup != modBank_.end())
+            {
+                // count how many mods were before this one
+                int prevMods = 0;
+                for (int i = 0; i < posOpenParen; i++)
+                {
+                    if (modSequence[i] == '(')
+                    {
+                        ++prevMods;
+                    }
+                }
+
+                // subtract 4 from position because "(xx" is 3 + 1 since it comes after the AA modified
+                // and 4 from position for each previous mod found (two parentheses and abbreviation)
+                SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->second);
+                return curMod;
+            }
+        }
+    }
+
+    throw BlibException(false, "No matching mod for %s in sequence %s (line %d)",
+                               modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
+
 }
 
 void MaxQuantReader::openFile(const char*, bool) {}
