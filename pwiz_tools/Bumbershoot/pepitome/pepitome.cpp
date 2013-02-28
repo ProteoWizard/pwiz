@@ -520,7 +520,7 @@ namespace pepitome
                 START_PROFILER(5)
                 spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex]->peakData);
                 if( result.mvh >= g_rtConfig->MinResultScore )
-                    BOOST_FOREACH(Protein protein, librarySpectra[libSpectrumIndex]->matchedProteins)
+                    BOOST_FOREACH(const Protein& protein, librarySpectra[libSpectrumIndex]->matchedProteins)
                         result.proteins.insert(protein.first);
                 STOP_PROFILER(5)
                     

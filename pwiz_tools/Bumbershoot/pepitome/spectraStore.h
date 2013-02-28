@@ -197,9 +197,9 @@ namespace pepitome
         string filename;
         bool isOpen;
         
-        NativeFileReader(string name) : buffer_(2048, ' ')
+        NativeFileReader(const string& name) : buffer_(4096, ' ')
         {
-           handle = fopen(name.c_str(), "rb");
+            handle = fopen(name.c_str(), "rb");
             isOpen = (handle == NULL) ? false : true;
             if(!isOpen)
                 throw runtime_error("[NativeFileReader] Failed to open file " + name);
@@ -221,7 +221,7 @@ namespace pepitome
 
             while(true)
             {
-                char* result = fgets(&buffer_[0], 2048, handle);
+                char* result = fgets(&buffer_[0], 4096, handle);
 
                 if (ferror(handle))
                     throw runtime_error("[NativeFileReader] error reading file");
@@ -236,7 +236,7 @@ namespace pepitome
                 size_t terminator = buffer_.find('\0');
                 if (terminator == string::npos)
                     throw runtime_error("[NativeFileReader] no null terminator from fgets");
-                out.insert(out.end(), buffer_.begin(), buffer_.begin()+terminator-1);
+                out.insert(out.end(), buffer_.begin(), buffer_.begin()+terminator);
 
                 // EOF or error
                 if (result == NULL)
