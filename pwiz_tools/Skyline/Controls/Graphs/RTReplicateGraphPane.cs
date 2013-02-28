@@ -367,7 +367,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private RetentionTimeValues? GetRetentionTimeValues(TransitionChromInfoData transitionChromInfoData)
             {
-                if (transitionChromInfoData.ChromInfo.StartRetentionTime == 0 || transitionChromInfoData.ChromInfo.EndRetentionTime == 0)
+                if (transitionChromInfoData.ChromInfo == null
+                    || transitionChromInfoData.ChromInfo.StartRetentionTime == 0
+                    || transitionChromInfoData.ChromInfo.EndRetentionTime == 0)
                 {
                     return null;
                 }
@@ -382,7 +384,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private RetentionTimeValues? GetRetentionTimeValues(TransitionGroupChromInfoData transitionGroupChromInfoData)
             {
-                if (!transitionGroupChromInfoData.ChromInfo.StartRetentionTime.HasValue
+                if (transitionGroupChromInfoData.ChromInfo == null
+                    || !transitionGroupChromInfoData.ChromInfo.StartRetentionTime.HasValue
                     || !transitionGroupChromInfoData.ChromInfo.EndRetentionTime.HasValue
                     || !transitionGroupChromInfoData.ChromInfo.RetentionTime.HasValue)
                 {
