@@ -968,11 +968,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private float? GetValue(TransitionGroupChromInfo chromInfo)
             {
+                if (chromInfo == null)
+                    return null;
                 return (_ratioIndex == -1 ? chromInfo.Area : chromInfo.Ratios[_ratioIndex]);
             }
 
             private float? GetValue(TransitionChromInfo chromInfo)
             {
+                if (chromInfo == null)
+                    return null;
                 return (_ratioIndex == -1 ? chromInfo.Area : chromInfo.Ratios[_ratioIndex]);
             }
         }

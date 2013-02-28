@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override int OptimizationStep
         {
-            get { return ChromInfo.OptimizationStep; }
+            get { return ChromInfo != null ? ChromInfo.OptimizationStep : 0; }
         }
 
         public static IList<ICollection<TransitionGroupChromInfoData>> GetTransitionGroupChromInfoDatas(MeasuredResults measuredResults, Results<TransitionGroupChromInfo> transitionGroupResults)
