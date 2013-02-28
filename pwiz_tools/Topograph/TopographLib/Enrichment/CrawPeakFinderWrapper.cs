@@ -65,8 +65,8 @@ namespace pwiz.Topograph.Enrichment
             // may vary.
             int toleranceLen = Math.Max(MinToleranceLen, (int)Math.Round(crawdadPeak.Fwhm * FractionFwhmLen));
 
-            crawdadPeak.StartIndex = ExtendBoundary(crawdadPeak, crawdadPeak.StartIndex, -1, toleranceLen);
-            crawdadPeak.EndIndex = ExtendBoundary(crawdadPeak, crawdadPeak.EndIndex, 1, toleranceLen);
+            crawdadPeak.ResetBoundaries(ExtendBoundary(crawdadPeak, crawdadPeak.StartIndex, -1, toleranceLen),
+                ExtendBoundary(crawdadPeak, crawdadPeak.EndIndex, 1, toleranceLen));
         }
 
         private int ExtendBoundary(CrawdadPeak peakPrimary, int indexBoundary, int increment, int toleranceLen)
