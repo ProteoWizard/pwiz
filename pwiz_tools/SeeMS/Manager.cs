@@ -71,8 +71,13 @@ namespace seems
             chromatogramListForm.ShowIcon = false;
 
             CVID nativeIdFormat = CVID.MS_scan_number_only_nativeID_format;
-            if (source.MSDataFile.fileDescription.sourceFiles.Any())
-                nativeIdFormat = source.MSDataFile.fileDescription.sourceFiles[0].cvParamChild(CVID.MS_native_spectrum_identifier_format).cvid;
+            foreach (SourceFile f in source.MSDataFile.fileDescription.sourceFiles)
+            {
+                // the first one in the list isn't necessarily useful - could be Agilent MSCalibration.bin or the like
+                nativeIdFormat = f.cvParamChild(CVID.MS_native_spectrum_identifier_format).cvid;
+                if (CVID.MS_no_nativeID_format != nativeIdFormat)
+                    break;
+            }
             spectrumListForm = new SpectrumListForm( nativeIdFormat );
             spectrumListForm.Text = source.Name + " spectra";
             spectrumListForm.TabText = source.Name + " spectra";
