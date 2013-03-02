@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Model
             if (matcher == null)
             {
                 nextAdded = null;
-                return ImportFasta(reader, false, to, out firstAdded);
+                return ImportFasta(reader, longWaitBroker, lines, false, to, out firstAdded);
             }
 
             FastaImporter importer = new FastaImporter(this, matcher);

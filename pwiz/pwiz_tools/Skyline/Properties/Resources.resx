@@ -4973,4 +4973,7 @@ Are you sure you want to continue?</value>
   <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
     <value>Unauthorized access attempting to read from library.</value>
   </data>
+  <data name="PopupPickList_PopupPickList_Choices_must_be_unique" xml:space="preserve">
+    <value>Choices must be unique</value>
+  </data>
 </root>
