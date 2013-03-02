@@ -423,7 +423,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             string fastaText = fastaSeq.FastaFileText;
             // If protein has been renamed in the UI
             if (!Equals(DocNode.Name, fastaSeq.Name))
-                fastaText = ">" + DocNode.Name + fastaText.Substring(fastaSeq.Name.Length + 1);
+            {
+                int oldNameLen = (fastaSeq.Name != null ? fastaSeq.Name.Length : 0);
+                fastaText = ">" + DocNode.Name + fastaText.Substring(oldNameLen + 1);
+            }
             data.SetData(DataFormats.Text, fastaText);
 
             var sb = new StringBuilder();

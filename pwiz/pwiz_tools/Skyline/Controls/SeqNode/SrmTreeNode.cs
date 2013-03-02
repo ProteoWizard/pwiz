@@ -421,11 +421,15 @@ namespace pwiz.Skyline.Controls.SeqNode
             // to be done carefully, because while auto-generated nodes will have
             // unique keys, manually created nodes may not.
             var dictChosen = new Dictionary<TKey, InsertNodeLocation>();
+            // And global indices of the chosen to avoid duplicating such manually created nodes
+            var dictChosenGlobalIndices = new Dictionary<int, InsertNodeLocation>();
             foreach (var node in listChosen)
             {
+                var nodeChosen = new InsertNodeLocation(node);
+                dictChosenGlobalIndices.Add(node.Id.GlobalIndex, nodeChosen);
                 var key = keySelector(node);
                 if (!dictChosen.ContainsKey(key))
-                    dictChosen.Add(key, new InsertNodeLocation(node));
+                    dictChosen.Add(key, nodeChosen);
             }
             
             // Replace nodes in the choices list with matching nodes in the
@@ -433,9 +437,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             int insertedNodeCount = 0;
             for (int i = 0; i < choices.Count; i++)
             {
+                var choice = choices[i];
+                var key = keySelector(choice);
                 InsertNodeLocation nodeChosen;
-                var key = keySelector(choices[i]);
-                if (dictChosen.TryGetValue(key, out nodeChosen))
+                if (dictChosenGlobalIndices.TryGetValue(choice.Id.GlobalIndex, out nodeChosen) ||
+                    dictChosen.TryGetValue(key, out nodeChosen))
                 {
                     choices[i] = nodeChosen.InsertNode;
                     nodeChosen.Location = i;

@@ -377,6 +377,11 @@ namespace pwiz.Skyline.Util
                 {
                     return !IsOpen && Math.Abs(FileTime.Ticks - File.GetLastWriteTime(FilePath).Ticks) > MILLISECOND_TICKS;
                 }
+                catch (UnauthorizedAccessException)
+                {
+                    // May have had access privileges changed, reporting IsModified better than throwing an unhandled exception
+                    return true;
+                }
                 catch (IOException)
                 {
                     // May have been removed, reporting IsModified better than throwing an unhandled exception

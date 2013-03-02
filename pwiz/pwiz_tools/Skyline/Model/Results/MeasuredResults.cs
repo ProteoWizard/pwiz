@@ -891,12 +891,9 @@ namespace pwiz.Skyline.Model.Results
                                 if (cache.IsSupportedVersion)
                                     listAddCaches.Add(cache);
                             }
-                            catch (IOException)
-                            {
-                            }
-                            catch (InvalidDataException)
-                            {                                
-                            }
+                            catch (UnauthorizedAccessException) {}
+                            catch (IOException) {}
+                            catch (InvalidDataException) {}
                         }
                     }
                     if (listAddCaches.Count > 0)

@@ -713,11 +713,16 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
             }
+            catch (UnauthorizedAccessException)
+            {
+                AddGraphItem(graphPane,
+                             new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_));
+                return;
+            }
             catch (IOException)
             {
                 AddGraphItem(graphPane,
-                             new NoDataMSGraphItem(
-                                 Resources.ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted));
+                             new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted));
                 return;
             }
 

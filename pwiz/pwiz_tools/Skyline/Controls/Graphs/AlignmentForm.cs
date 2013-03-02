@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (selectedIndex < 0)
                 {
-                    if (SkylineWindow.SelectedResultsIndex >= 0)
+                    if (SkylineWindow.SelectedResultsIndex >= 0 && Document.Settings.HasResults)
                     {
                         var chromatogramSet =
                             Document.Settings.MeasuredResults.Chromatograms[SkylineWindow.SelectedResultsIndex];

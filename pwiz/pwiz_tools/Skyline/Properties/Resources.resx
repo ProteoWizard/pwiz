@@ -4970,4 +4970,7 @@ Are you sure you want to continue?</value>
   <data name="EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_" xml:space="preserve">
     <value>{0} must contain a valid regular expression.</value>
   </data>
+  <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
+    <value>Unauthorized access attempting to read from library.</value>
+  </data>
 </root>

@@ -2049,7 +2049,7 @@ namespace pwiz.Skyline
             get { return ComboResults != null ? ComboResults.SelectedIndex : -1; }
             set
             {
-                if (0 <= value && value < ComboResults.Items.Count)
+                if (ComboResults != null && 0 <= value && value < ComboResults.Items.Count)
                 {
                     var focusStart = User32.GetFocusedControl();
                     ComboResults.SelectedIndex = value;

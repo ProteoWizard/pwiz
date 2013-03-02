@@ -673,6 +673,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 DisplayFailureGraph(graphPane, nodeGroups, x);
             }
+            catch (UnauthorizedAccessException x)
+            {
+                DisplayFailureGraph(graphPane, nodeGroups, x);
+            }
                 // Can happen in race condition where file is released before UI cleaned up
             catch (ObjectDisposedException x)
             {
