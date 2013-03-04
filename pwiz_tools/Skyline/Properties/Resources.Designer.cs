@@ -9055,6 +9055,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choices must be unique.
+        /// </summary>
+        public static string PopupPickList_PopupPickList_Choices_must_be_unique {
+            get {
+                return ResourceManager.GetString("PopupPickList_PopupPickList_Choices_must_be_unique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto-select filtered {0}.
         /// </summary>
         public static string PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_ {
@@ -14838,6 +14847,15 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_UpdateUI_RT__0__ {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_RT__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unauthorized access attempting to read from library..
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_", resourceCulture);
             }
         }
         

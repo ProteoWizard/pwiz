@@ -1241,9 +1241,8 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                catch (IOException)
-                {
-                }
+                catch (UnauthorizedAccessException) {}
+                catch (IOException) {}
             }
             return false;
         }

@@ -72,7 +72,10 @@ namespace pwiz.Skyline.Controls
             _okOnDeactivate = okOnDeactivate;
 
             bool filter = tbbFilter.Checked = _picker.Filtered;
-            var choices = picker.GetChoices(filter).ToArray();
+            var choices = picker.GetChoices(filter).ToArray();            
+            if (choices.Length != choices.Select(c => c.Id.GlobalIndex).Distinct().Count())
+                throw new ArgumentException(Resources.PopupPickList_PopupPickList_Choices_must_be_unique);
+
             if (filter)
             {
                 // If filtered choices do not contain a choice that

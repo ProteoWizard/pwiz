@@ -207,6 +207,11 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
+            catch (UnauthorizedAccessException)
+            {
+                ChecksumValue = 0;
+                return false;
+            }
             catch (IOException)
             {
                 ChecksumValue = 0;

@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model
             PeptideGroupBuilder seqBuilder = null;
 
             long linesRead = 0;
-            int progressPercent = 0;
+            int progressPercent = -1;
 
             string line;
             while ((line = reader.ReadLine()) != null)
