@@ -122,23 +122,108 @@ void MaxQuantReader::initModifications()
     MaxQuantModReader modReader(modFile.c_str(), &modBank_);
     try
     {
-        bool success = modReader.parse();
+        modReader.parse();
         Verbosity::comment(V_DETAIL, "Done parsing %s, %d modifications found",
                            modFile.c_str(), modBank_.size());
-        if (success)
-        {
-            return;
-        }
     }
     catch (BlibException& e)
     {
         Verbosity::error("Error parsing modifications file: %s", e.what());
         modBank_.clear();
+        return;
     }
     catch (...)
     {
         Verbosity::error("Unknown error while parsing modifications file");
         modBank_.clear();
+        return;
+    }
+    
+    initFixedModifications();
+}
+
+/**
+ * Read in the mqpar file.
+ */
+void MaxQuantReader::initFixedModifications()
+{
+    filesystem::path tsvDir = filesystem::path(tsvName_).parent_path();
+    
+    // Check for mqpar.xml two folders up from tsv file
+    filesystem::path tryPath = tsvDir / ".." / ".." / "mqpar.xml";
+    Verbosity::comment(V_DETAIL, "Checking for mqpar file two folders up from msms.txt file.");
+    if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+    {
+        // Not there, check same folder
+        tryPath = tsvDir / "mqpar.xml";
+        Verbosity::comment(V_DETAIL, "Checking for mqpar file in same folder as msms.txt file.");
+        if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+        {
+            // Not there, check parent folder folder
+            tryPath = tsvDir / ".." / "mqpar.xml";
+            Verbosity::comment(V_DETAIL, "Checking for mqpar file in parent folder of msms.txt file.");
+            if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+            {
+                // Not there, throw exception
+                throw BlibException(false, "mqpar.xml file not found.");
+            }
+        }
+    }
+    string mqparFile = tryPath.string();
+
+    Verbosity::comment(V_DETAIL, "Parsing mqpar file %s",
+                       mqparFile.c_str());
+    set<string> fixedMods;
+    MaxQuantModReader modReader(mqparFile.c_str(), &fixedMods);
+    try
+    {
+        modReader.parse();
+        Verbosity::comment(V_DETAIL, "Done parsing %s, %d fixed modifications found",
+                           mqparFile.c_str(), fixedMods.size());
+    }
+    catch (BlibException& e)
+    {
+        Verbosity::error("Error parsing mqpar file: %s", e.what());
+        return;
+    }
+    catch (...)
+    {
+        Verbosity::error("Unknown error while parsing mqpar file");
+        return;
+    }
+
+    // add all fixed mods to fixedModBank_
+    for (set<string>::iterator iter = fixedMods.begin();
+         iter != fixedMods.end();
+         ++iter)
+    {
+        // lookup in modbank
+        MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
+        if (lookup == NULL)
+        {
+            throw BlibException(false, "Unknown modification %s in mqpar file.",
+                                iter->c_str());
+        }
+
+        if (lookup->position != MaxQuantModification::ANYWHERE)
+        {
+            Verbosity::warn("Fixed mod '%s' will not be used (position is not 'anywhere').",
+                            iter->c_str());
+        }
+
+        map< MaxQuantModification::MAXQUANT_MOD_POSITION,
+            vector<MaxQuantModification*> >::iterator vectorSearch =
+            fixedModBank_.find(lookup->position);
+        if (vectorSearch == fixedModBank_.end())
+        {
+            vector<MaxQuantModification*> tmpMods;
+            tmpMods.push_back(lookup);
+            fixedModBank_[lookup->position] = tmpMods;
+        }
+        else
+        {
+            vectorSearch->second.push_back(lookup);
+        }
     }
 }
 
@@ -381,18 +466,16 @@ void MaxQuantReader::addDoublesToVector(vector<double>& v, string valueList)
 /**
  * Adds a SeqMod for each modification in the given modified sequence string of the form
  * "_I(ab)AMASEQ_". The modifications string contains the (comma separated) full names of
- * the modifications; the string "Unmodified" can mean no modifications are present.
+ * the modifications; the string "Unmodified" can mean no variable modifications are present.
  */
 void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, string modSequence)
 {
-    if (modifications == "Unmodified")
-    {
-        return;
-    }
-
     // split modifications whole names
     vector<string> modNames;
-    split(modNames, modifications, is_any_of(","));
+    if (!iequals(modifications, "Unmodified"))
+    {
+        split(modNames, modifications, is_any_of(","));
+    }
 
     // remove underscore from beginning and end if they exist
     if (modSequence[0] == '_')
@@ -406,8 +489,26 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, st
         --sequenceLength;
     }
 
+    // get fixed modifications by position
+    vector<MaxQuantModification*> modsAnywhere;
+    /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
+    vector<MaxQuantModification*> modsProteinNTerm;
+    vector<MaxQuantModification*> modsProteinCTerm;
+    vector<MaxQuantModification*> modsAnyNTerm;
+    vector<MaxQuantModification*> modsAnyCTerm;
+    vector<MaxQuantModification*> modsNotNTerm;
+    vector<MaxQuantModification*> modsNotCTerm;
+    */
+
+    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<MaxQuantModification*> >::iterator search;
+    search = fixedModBank_.find(MaxQuantModification::ANYWHERE);
+    if (search != fixedModBank_.end())
+    {
+        modsAnywhere = search->second;
+    }
+
     // iterate over sequence
-    unsigned int modsFound = 0;
+    int modsFound = 0;
     for (int i = 0; i < sequenceLength; i++)
     {
         switch (modSequence[i])
@@ -429,6 +530,10 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, st
                 throw BlibException(false, "Illegal character %c found in sequence %s (line %d)", 
                                     modSequence[i], modSequence.c_str(), lineNum_);
             }
+            // check for fixed mods
+            vector<SeqMod> fixedMods =
+                getFixedMods(modSequence[i], (i+1) - 4*modsFound, modsAnywhere);
+            v.insert(v.end(), fixedMods.begin(), fixedMods.end());
             break;
         }
     }
@@ -478,8 +583,8 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
     {
         if (iequals(modAbbreviation, iter->substr(0, 2)))
         {
-            map<string, double>::iterator lookup = modBank_.find(*iter);
-            if (lookup == modBank_.end())
+            MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
+            if (lookup == NULL)
             {
                 throw BlibException(false, "Unknown modification %s in sequence %s (line %d)",
                                     modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
@@ -494,9 +599,8 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
                 }
             }
 
-            // subtract 4 from position because "(xx" is 3 + 1 since it comes after the AA modified
-            // and 4 from position for each previous mod found (two parentheses and abbreviation)
-            SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->second);
+            // subtract 4 from position for each previous mod found (two parentheses and abbreviation)
+            SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->massDelta);
             return curMod;
         }
     }
@@ -519,8 +623,9 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
         if ((*iter)[newStart] == ' ' && newStart + 2 < iter->length() &&
             iequals(modAbbreviation, iter->substr(++newStart, 2)))
         {
-            map<string, double>::iterator lookup = modBank_.find(iter->substr(newStart));
-            if (lookup != modBank_.end())
+            string modToCheck(iter->substr(newStart));
+            MaxQuantModification* lookup = MaxQuantModification::find(modBank_, modToCheck);
+            if (lookup != NULL)
             {
                 // count how many mods were before this one
                 int prevMods = 0;
@@ -532,9 +637,8 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
                     }
                 }
 
-                // subtract 4 from position because "(xx" is 3 + 1 since it comes after the AA modified
-                // and 4 from position for each previous mod found (two parentheses and abbreviation)
-                SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->second);
+                // subtract 4 from position for each previous mod found (two parentheses and abbreviation)
+                SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->massDelta);
                 return curMod;
             }
         }
@@ -543,6 +647,28 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
     throw BlibException(false, "No matching mod for %s in sequence %s (line %d)",
                                modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
 
+}
+
+/**
+ * Given an amino acid, return a vector of all SeqMods that should apply to it.
+ */
+vector<SeqMod> MaxQuantReader::getFixedMods(char aa, int aaPosition, vector<MaxQuantModification*>& mods)
+{
+    vector<SeqMod> modsApplied;
+
+    for (vector<MaxQuantModification*>::iterator iter = mods.begin();
+         iter != mods.end();
+         ++iter)
+    {
+        MaxQuantModification* curMod = *iter;
+        if (curMod->sites.find(aa) != curMod->sites.end())
+        {
+            SeqMod newMod(aaPosition, curMod->massDelta);
+            modsApplied.push_back(newMod);
+        }
+    }
+
+    return modsApplied;
 }
 
 void MaxQuantReader::openFile(const char*, bool) {}

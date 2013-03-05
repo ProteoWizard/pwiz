@@ -26,7 +26,6 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 #include <cctype>
 #include <iterator>
 #include <map>
@@ -192,10 +191,12 @@ private:
     MaxQuantPSM* curMaxQuantPSM_; // use this instead of curPSM_
     int numColumns_;   // size of targetColumns_;
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
-    map<string, double> modBank_;   // full mod name -> delta mass
+    set<MaxQuantModification> modBank_;   // full mod name -> delta mass
+    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<MaxQuantModification*> > fixedModBank_;
 
     void initTargetColumns();
     void initModifications();
+    void initFixedModifications();
     bool openFile();
     void parseHeader(std::string& line);
     void collectPsms();
@@ -203,6 +204,7 @@ private:
     void addDoublesToVector(vector<double>& v, string valueList);
     void addModsToVector(vector<SeqMod>& v, string modifications, string modSequence);
     SeqMod searchForMod(vector<string>& modNames, string modSequence, int posOpenParen);
+    vector<SeqMod> getFixedMods(char aa, int aaPosition, vector<MaxQuantModification*>& mods);
 
     const escaped_list_separator<char> separator_;
 };

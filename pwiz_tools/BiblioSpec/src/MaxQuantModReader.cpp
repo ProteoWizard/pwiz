@@ -25,9 +25,12 @@ using namespace std;
 
 namespace BiblioSpec {
 
+/**
+ * Construct MaxQuantModReader for reading modifications.xml file.
+ */
 MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
-                                     map<string, double>* modBank) : SAXHandler(),
-    modBank_(modBank)
+                                     set<MaxQuantModification>* modBank) : SAXHandler(),
+    modBank_(modBank), fixedMods_(NULL), state_(ROOT_STATE)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
    
@@ -42,6 +45,16 @@ MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
     aaMasses_['N'] = 15.0001088984;
 }
 
+/**
+ * Construct MaxQuantModReader for reading fixed mods from mqpar.xml file.
+ */
+MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
+                                     set<string>* fixedMods) : SAXHandler(),
+    modBank_(NULL), fixedMods_(fixedMods), state_(ROOT_STATE)
+{
+    this->setFileName(xmlfilename);
+}
+
 MaxQuantModReader::~MaxQuantModReader()
 {
 }
@@ -53,15 +66,99 @@ MaxQuantModReader::~MaxQuantModReader()
 void MaxQuantModReader::startElement(const XML_Char* name, 
                                      const XML_Char** attr)
 {
-    if (isElement("modification", name))
+    // modifications.xml mode
+    if (modBank_ && !fixedMods_)
     {
-        string modName = getRequiredAttrValue("title", attr);
-        string modComposition = getRequiredAttrValue("composition", attr);
-        double modDelta = parseComposition(modComposition);
-        modBank_->insert(pair<string, double>(modName, modDelta));
+        if (isElement("modification", name))
+        {
+            curMod_.clear();
+            curMod_.name = getRequiredAttrValue("title", attr);
+            string modComposition = getRequiredAttrValue("composition", attr);
+            curMod_.massDelta = parseComposition(modComposition);
+            state_ = MODIFICATION_TAG;
+        }
+        else if (state_ == MODIFICATION_TAG)
+        {
+            if (isElement("position", name))
+            {
+                charBuf_.clear();
+                state_ = READING_POSITION;
+            }
+            else if (isElement("modification_site", name))
+            {
+                char modSite = (getRequiredAttrValue("site", attr))[0];
+                if (modSite >= 'A' && modSite <= 'Z')
+                {
+                    curMod_.sites.insert(modSite);
+                }
+            }
+        }
+    }
+    // mqpar.xml mode
+    else if (!modBank_ && fixedMods_)
+    {
+        if (isElement("fixedModifications", name))
+        {
+            state_ = FIXED_MODIFICATIONS_TAG;
+        }
+        else if (state_ == FIXED_MODIFICATIONS_TAG && isElement("string", name))
+        {
+            charBuf_.clear();
+            state_ = READING_FIXED_MODIFICATION;
+        }
     }
 }
 
+/**
+ * Called by saxhandler when the closing tag of an xml element is
+ * reached.  Change the state based on the tag and the current state.
+ */
+void MaxQuantModReader::endElement(const XML_Char* name)
+{
+    // modifications.xml mode
+    if (modBank_ && !fixedMods_)
+    {
+        if (isElement("modification", name))
+        {
+            modBank_->insert(curMod_);
+            state_ = ROOT_STATE;
+        }
+        else if (state_ == READING_POSITION)
+        {
+            curMod_.position = stringToPosition(charBuf_);
+            state_ = MODIFICATION_TAG;
+        }
+    }
+    // mqpar.xml mode
+    else if (!modBank_ && fixedMods_)
+    {
+        if (isElement("fixedModifications", name))
+        {
+            state_ = ROOT_STATE;
+        }
+        else if (state_ == READING_FIXED_MODIFICATION)
+        {
+            fixedMods_->insert(charBuf_);
+            state_ = FIXED_MODIFICATIONS_TAG;
+        }
+    }
+}
+
+/**
+ * Handler for all characters between tags.
+ */
+void MaxQuantModReader::characters(const XML_Char *s, int len)
+{
+    if (state_ == READING_POSITION ||
+        state_ == READING_FIXED_MODIFICATION)
+    {
+        charBuf_.append(s, len);
+    }
+}
+
+/**
+ * Return the mass of the given atomic composition.
+ */
 double MaxQuantModReader::parseComposition(string composition)
 {
     double deltaMass = 0.0;
@@ -84,7 +181,9 @@ double MaxQuantModReader::parseComposition(string composition)
             curAmount.clear();
             break;
         case 'x':
+            // heavy
             curElement = toupper(curElement);
+            break;
         case ' ':
             if (curElement != '\0')
             {
@@ -111,7 +210,7 @@ double MaxQuantModReader::parseComposition(string composition)
             try
             {
                 int convertedAmount = lexical_cast<int>(curAmount);
-                deltaMass += aaMasses_[tolower(curElement)] * convertedAmount;
+                deltaMass += aaMasses_[curElement] * convertedAmount;
             }
             catch (bad_lexical_cast e)
             {
@@ -133,6 +232,46 @@ double MaxQuantModReader::parseComposition(string composition)
     }
 
     return deltaMass;
+}
+
+/**
+ * Converts a position string from a mqpar file into a MAXQUANT_MOD_POSITION.
+ */
+MaxQuantModification::MAXQUANT_MOD_POSITION MaxQuantModReader::stringToPosition(string positionString)
+{
+    if (iequals(positionString, "anywhere"))
+    {
+        return MaxQuantModification::ANYWHERE;
+    }
+    else if (iequals(positionString, "proteinNterm"))
+    {
+        return MaxQuantModification::PROTEIN_N_TERM;
+    }
+    else if (iequals(positionString, "proteinCterm"))
+    {
+        return MaxQuantModification::PROTEIN_C_TERM;
+    }
+    else if (iequals(positionString, "anyNterm"))
+    {
+        return MaxQuantModification::PROTEIN_C_TERM;
+    }
+    else if (iequals(positionString, "anyCterm"))
+    {
+        return MaxQuantModification::PROTEIN_C_TERM;
+    }
+    else if (iequals(positionString, "notNterm"))
+    {
+        return MaxQuantModification::NOT_N_TERM;
+    }
+    else if (iequals(positionString, "notCterm"))
+    {
+        return MaxQuantModification::NOT_C_TERM;
+    }
+    else
+    {
+        throw BlibException(false, "Invalid position value: %s", 
+                                   positionString.c_str());
+    }
 }
 
 } // namespace
