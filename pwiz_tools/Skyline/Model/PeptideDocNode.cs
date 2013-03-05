@@ -794,7 +794,9 @@ namespace pwiz.Skyline.Model
             // If the matching node is auto-managed, and auto-select is on in the settings,
             // then returning no transitions should allow transitions to be chosen correctly
             // automatically.
-            if (nodeGroupMatching.AutoManageChildren && settings.TransitionSettings.Filter.AutoSelect)
+            if (nodeGroupMatching.AutoManageChildren && settings.TransitionSettings.Filter.AutoSelect &&
+                // Having disconnected libraries can mess up automatic picking
+                    settings.PeptideSettings.Libraries.DisconnectedLibraries == null)
                 return null;
             var listTrans = new List<TransitionDocNode>();
             foreach (TransitionDocNode nodeTran in nodeGroupMatching.Children)

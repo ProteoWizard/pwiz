@@ -434,7 +434,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Discard peaks not included in a peptide peak list
             foreach (var chromDataSet in dataSets)
-                chromDataSet.TruncatePeakSets(MAX_PEAK_GROUPS);
+                chromDataSet.TruncatePeakSets(listPeakSets.Count);
 
             return listPeakSets;
         }

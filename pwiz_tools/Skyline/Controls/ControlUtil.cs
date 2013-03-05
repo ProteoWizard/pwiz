@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Controls
             if(!_showMessages)
                 return;
             string messageException = XmlUtil.GetInvalidDataMessage(path, x);
-            MessageBox.Show(_parent, TextUtil.LineSeparate(firstLine, messageException), Program.Name);
+            MessageDlg.Show(_parent, TextUtil.LineSeparate(firstLine, messageException));
         }
 
     }

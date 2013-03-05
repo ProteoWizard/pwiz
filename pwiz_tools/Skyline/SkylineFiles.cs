@@ -268,7 +268,7 @@ namespace pwiz.Skyline
                         if (File.Exists(pathLibrary))
                             return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
                         // In the user's default library directory
-                        pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
+                        pathLibrary = Path.Combine(Settings.Default.LibraryDirectory ?? string.Empty, fileName);
                         if (File.Exists(pathLibrary))
                             return library.CreateSpec(pathLibrary);
                     }
@@ -285,6 +285,7 @@ namespace pwiz.Skyline
                     {
                         if (dlg.ShowDialog(this) == DialogResult.OK)
                         {
+                            Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FilePath);
                             return library.CreateSpec(dlg.FilePath);
                         }
                     }
@@ -413,7 +414,7 @@ namespace pwiz.Skyline
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
             // In the user's default library directory
-            pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? string.Empty);
+            pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory ?? string.Empty, fileName ?? string.Empty);
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
             using (var dlg = new MissingFileDlg
@@ -470,8 +471,10 @@ namespace pwiz.Skyline
                         string pathFile = SampleHelp.GetPathFilePart(pathFileSample);
                         if (missingFiles.Contains(pathFile))
                             continue;
+                        string pathPartCache = ChromatogramCache.PartPathForName(path, pathFileSample, null);
                         if (File.Exists(pathFile) ||
-                            File.Exists(Path.Combine(Path.GetDirectoryName(path) ?? "", Path.GetFileName(pathFile) ?? "")))
+                            File.Exists(pathPartCache) ||
+                            File.Exists(Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, Path.GetFileName(pathFile) ?? string.Empty)))
                         {
                             foundFiles.Add(pathFile);
                         }
