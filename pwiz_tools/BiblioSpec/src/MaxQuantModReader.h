@@ -74,7 +74,8 @@ public:
         {
             if (iter->name == name)
             {
-                return &*iter;
+                MaxQuantModification* found = &*iter;
+                return found;
             }
         }
         return NULL;
