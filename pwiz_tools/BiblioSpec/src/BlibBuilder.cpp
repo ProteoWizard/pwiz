@@ -142,9 +142,9 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                has_extension(file_name, ".idpXML") ||
                has_extension(file_name, ".group.xml") ||
                has_extension(file_name, ".pride.xml") ||
-               has_extension(file_name, ".msms.txt") ||
                has_extension(file_name, ".msf") ||
                has_extension(file_name, ".mzid") ||
+               has_extension(file_name, "msms.txt") ||
                has_extension(file_name, "final_fragment.csv") ||
                has_extension(file_name, ".ssl") ) {
 
