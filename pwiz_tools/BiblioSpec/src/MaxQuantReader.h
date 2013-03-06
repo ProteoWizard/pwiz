@@ -192,7 +192,7 @@ private:
     int numColumns_;   // size of targetColumns_;
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
     set<MaxQuantModification> modBank_;   // full mod name -> delta mass
-    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<MaxQuantModification*> > fixedModBank_;
+    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> > fixedModBank_;
 
     void initTargetColumns();
     void initModifications();
@@ -204,7 +204,7 @@ private:
     void addDoublesToVector(vector<double>& v, string valueList);
     void addModsToVector(vector<SeqMod>& v, string modifications, string modSequence);
     SeqMod searchForMod(vector<string>& modNames, string modSequence, int posOpenParen);
-    vector<SeqMod> getFixedMods(char aa, int aaPosition, vector<MaxQuantModification*>& mods);
+    vector<SeqMod> getFixedMods(char aa, int aaPosition, vector<const MaxQuantModification*>& mods);
 
     const escaped_list_separator<char> separator_;
 };

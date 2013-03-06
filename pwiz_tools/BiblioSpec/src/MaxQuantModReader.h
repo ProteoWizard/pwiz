@@ -66,7 +66,7 @@ public:
      * Given the modification's name, return a pointer to it.
      * Return NULL if not found.
      */
-    static MaxQuantModification* find(set<MaxQuantModification>& modBank, string& name)
+    static const MaxQuantModification* find(set<MaxQuantModification>& modBank, const string& name)
     {
         for (set<MaxQuantModification>::iterator iter = modBank.begin();
              iter != modBank.end();
@@ -74,8 +74,7 @@ public:
         {
             if (iter->name == name)
             {
-                MaxQuantModification* found = &*iter;
-                return found;
+                return &*iter;
             }
         }
         return NULL;

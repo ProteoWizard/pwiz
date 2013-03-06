@@ -198,7 +198,7 @@ void MaxQuantReader::initFixedModifications()
          ++iter)
     {
         // lookup in modbank
-        MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
+        const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
         if (lookup == NULL)
         {
             throw BlibException(false, "Unknown modification %s in mqpar file.",
@@ -212,11 +212,11 @@ void MaxQuantReader::initFixedModifications()
         }
 
         map< MaxQuantModification::MAXQUANT_MOD_POSITION,
-            vector<MaxQuantModification*> >::iterator vectorSearch =
+            vector<const MaxQuantModification*> >::iterator vectorSearch =
             fixedModBank_.find(lookup->position);
         if (vectorSearch == fixedModBank_.end())
         {
-            vector<MaxQuantModification*> tmpMods;
+            vector<const MaxQuantModification*> tmpMods;
             tmpMods.push_back(lookup);
             fixedModBank_[lookup->position] = tmpMods;
         }
@@ -490,17 +490,17 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, st
     }
 
     // get fixed modifications by position
-    vector<MaxQuantModification*> modsAnywhere;
+    vector<const MaxQuantModification*> modsAnywhere;
     /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
-    vector<MaxQuantModification*> modsProteinNTerm;
-    vector<MaxQuantModification*> modsProteinCTerm;
-    vector<MaxQuantModification*> modsAnyNTerm;
-    vector<MaxQuantModification*> modsAnyCTerm;
-    vector<MaxQuantModification*> modsNotNTerm;
-    vector<MaxQuantModification*> modsNotCTerm;
+    vector<const MaxQuantModification*> modsProteinNTerm;
+    vector<const MaxQuantModification*> modsProteinCTerm;
+    vector<const MaxQuantModification*> modsAnyNTerm;
+    vector<const MaxQuantModification*> modsAnyCTerm;
+    vector<const MaxQuantModification*> modsNotNTerm;
+    vector<const MaxQuantModification*> modsNotCTerm;
     */
 
-    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<MaxQuantModification*> >::iterator search;
+    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> >::iterator search;
     search = fixedModBank_.find(MaxQuantModification::ANYWHERE);
     if (search != fixedModBank_.end())
     {
@@ -538,7 +538,7 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, st
         }
     }
 
-    if (modsFound < modNames.size())
+    if (modsFound < (int)modNames.size())
     {
         Verbosity::warn("Found %d exceptions but expected at least %d in sequence %s (%d)",
                         modsFound, modNames.size(), modSequence.c_str(), lineNum_);
@@ -583,7 +583,7 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
     {
         if (iequals(modAbbreviation, iter->substr(0, 2)))
         {
-            MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
+            const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
             if (lookup == NULL)
             {
                 throw BlibException(false, "Unknown modification %s in sequence %s (line %d)",
@@ -624,7 +624,7 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
             iequals(modAbbreviation, iter->substr(++newStart, 2)))
         {
             string modToCheck(iter->substr(newStart));
-            MaxQuantModification* lookup = MaxQuantModification::find(modBank_, modToCheck);
+            const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, modToCheck);
             if (lookup != NULL)
             {
                 // count how many mods were before this one
@@ -652,18 +652,17 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
 /**
  * Given an amino acid, return a vector of all SeqMods that should apply to it.
  */
-vector<SeqMod> MaxQuantReader::getFixedMods(char aa, int aaPosition, vector<MaxQuantModification*>& mods)
+vector<SeqMod> MaxQuantReader::getFixedMods(char aa, int aaPosition, vector<const MaxQuantModification*>& mods)
 {
     vector<SeqMod> modsApplied;
 
-    for (vector<MaxQuantModification*>::iterator iter = mods.begin();
+    for (vector<const MaxQuantModification*>::iterator iter = mods.begin();
          iter != mods.end();
          ++iter)
     {
-        MaxQuantModification* curMod = *iter;
-        if (curMod->sites.find(aa) != curMod->sites.end())
+        if ((*iter)->sites.find(aa) != (*iter)->sites.end())
         {
-            SeqMod newMod(aaPosition, curMod->massDelta);
+            SeqMod newMod(aaPosition, (*iter)->massDelta);
             modsApplied.push_back(newMod);
         }
     }
