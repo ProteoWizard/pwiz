@@ -199,9 +199,15 @@ namespace pwiz.Skyline.Model
             string initDir = GetInitialDirectory(doc, toolMacroProvider, exceptionHandler); // If either of these fails an Exception is thrown.
             if (args != null && initDir != null)
             {
-                ProcessStartInfo startInfo = OutputToImmediateWindow
-                                          ? new ProcessStartInfo(Command, args) { WorkingDirectory = initDir, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true}
-                                          : new ProcessStartInfo(Command, args) { WorkingDirectory = initDir };
+                ProcessStartInfo startInfo = new ProcessStartInfo(Command, args) {WorkingDirectory = initDir};
+
+                if (OutputToImmediateWindow)
+                {
+                    startInfo.UseShellExecute = false;
+                    startInfo.CreateNoWindow = true;
+                    startInfo.RedirectStandardOutput = true;
+                    startInfo.RedirectStandardError = true;
+                }
 
                 // if it has a selected report title and its doesn't have a InputReportTempPath macro then the report needs to be piped to stdin.
                 string reportCsv = null;
@@ -211,11 +217,21 @@ namespace pwiz.Skyline.Model
                     startInfo.RedirectStandardInput = true;
                 }
 
-                Process p = new Process { StartInfo = startInfo };
+                Process p = new Process {StartInfo = startInfo};
+                if (OutputToImmediateWindow)
+                {
+                    p.OutputDataReceived += (sender, dataReceivedEventArgs) => textWriter.WriteLine(dataReceivedEventArgs.Data);
+                    p.ErrorDataReceived += (sender, dataReceivedEventArgs) => textWriter.WriteLine(dataReceivedEventArgs.Data);
+                }
 
                 try
                 {
                     p.Start();
+                    if (OutputToImmediateWindow)
+                    {
+                        p.BeginOutputReadLine();
+                        p.BeginErrorReadLine();
+                    }
 
                     // write the reportCsv string to stdin.
                     // need to only check one of these conditions.
@@ -225,12 +241,6 @@ namespace pwiz.Skyline.Model
                         streamWriter.Write(reportCsv);
                         streamWriter.Flush();
                         streamWriter.Close();
-                    }
-
-                    // Return the output to be written to the ImmediateWindow.
-                    if (OutputToImmediateWindow)
-                    {
-                        textWriter.Write(p.StandardOutput.ReadToEnd());
                     }
                 }
                 catch (Exception ex)

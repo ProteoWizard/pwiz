@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -50,6 +51,14 @@ namespace pwiz.Skyline.Properties
     //  The SettingsSaving event is raised before the setting values are saved.
     public sealed partial class Settings
     {
+        /// <devdoc>
+        /// Holds the original values of properties before they were modified by 
+        /// this instance of Skyline.  It uses the same IEqualityComparer as
+        /// <see cref="SettingsPropertyCollection"/>
+        /// </devdoc>
+        private readonly IDictionary<string, object> _originalSerializedValues
+            = new Dictionary<string, object>(StringComparer.CurrentCultureIgnoreCase);
+
         public Settings()
         {
             // this.SettingChanging += this.SettingChangingEventHandler;
@@ -74,6 +83,108 @@ namespace pwiz.Skyline.Properties
         private void SettingsSavingEventHandler(object sender, System.ComponentModel.CancelEventArgs e)
         {
             SpectralLibraryList.RemoveDocumentLocalLibraries();
+        }
+
+        
+        /// <summary>
+        /// Reload settings that may have been changed by other instances of Skyline, but preserve
+        /// the values of any settings that have been modified by this instance.
+        /// </summary>
+        public void ReloadAndMerge()
+        {
+            lock (this)
+            {
+                var modifiedValues = new List<KeyValuePair<string, object>>();
+                foreach (var propertyName in _originalSerializedValues.Keys)
+                {
+                    object currentValue = this[propertyName];
+                    if (IsModifiedFromOriginal(propertyName, currentValue))
+                    {
+                        modifiedValues.Add(new KeyValuePair<string, object>(propertyName, currentValue));
+                    }
+                }
+                _originalSerializedValues.Clear();
+                Reload();
+                foreach (var pair in modifiedValues)
+                {
+                    this[pair.Key] = pair.Value;
+                }
+            }
+        }
+
+        /// <devdoc>
+        /// Overridden so that the first time that a property is retrieved its original
+        /// value gets remembered in <see cref="_originalSerializedValues"/>.
+        /// </devdoc>
+        public override object this[string propertyName]
+        {
+            get
+            {
+                lock (this)
+                {
+                    object value = base[propertyName];
+                    RememberOriginalValue(propertyName, value);
+                    return value;
+                }
+            }
+            set
+            {
+                lock (this)
+                {
+                    if (!_originalSerializedValues.ContainsKey(propertyName))
+                    {
+                        RememberOriginalValue(propertyName, base[propertyName]);
+                    }
+                    base[propertyName] = value;
+                }
+            }
+        }
+
+        /// <devdoc>
+        /// If this is the first time we are accessing the property, remember its serialized value
+        /// in <see cref="_originalSerializedValues"/>
+        /// </devdoc>
+        private void RememberOriginalValue(string propertyName, object value)
+        {
+            if (!_originalSerializedValues.ContainsKey(propertyName))
+            {
+                _originalSerializedValues.Add(propertyName, GetSerializedValue(propertyName, value));
+            }
+        }
+
+        /// <devdoc>
+        /// Returns the serialized form (usually a string) of the given property value.
+        /// </devdoc>
+        private object GetSerializedValue(string propertyName, object value)
+        {
+            var settingsProperty = Properties[propertyName];
+            if (null == settingsProperty)
+            {
+                return null;
+            }
+            if (value is SpectralLibraryList)
+            {
+                // If it's a SpectralLibraryList, then remove DocumentLocal libraries before serializing.
+                var spectralLibraryList = (SpectralLibraryList)value;
+                var filteredSpectralLibraryList = new SpectralLibraryList();
+                filteredSpectralLibraryList.AddRange(spectralLibraryList.Where(librarySpec => !librarySpec.IsDocumentLocal));
+                value = filteredSpectralLibraryList;
+            }
+            var settingsPropertyValue = new SettingsPropertyValue(settingsProperty)
+            {
+                PropertyValue = value
+            };
+            return settingsPropertyValue.SerializedValue;
+        }
+
+        private bool IsModifiedFromOriginal(string propertyName, object currentValue)
+        {
+            object originalSerializedValue;
+            if (!_originalSerializedValues.TryGetValue(propertyName, out originalSerializedValue))
+            {
+                return true;
+            }
+            return !Equals(originalSerializedValue, GetSerializedValue(propertyName, currentValue));
         }
 
         [System.Configuration.UserScopedSettingAttribute]

@@ -697,6 +697,7 @@ namespace pwiz.Skyline
             {
                 try
                 {
+                    Settings.Default.ReloadAndMerge();
                     Settings.Default.SaveException = null;
                     Settings.Default.Save();
                 }
