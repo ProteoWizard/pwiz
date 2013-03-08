@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4386</ApplicationRevision>
-    <ApplicationVersion>1.4.1.4386</ApplicationVersion>
+    <ApplicationRevision>4400</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4400</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -101,6 +101,7 @@
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
