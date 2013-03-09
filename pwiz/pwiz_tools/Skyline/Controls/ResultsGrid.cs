@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
@@ -38,7 +39,9 @@ namespace pwiz.Skyline.Controls
     {
         private readonly Dictionary<RowIdentifier, DataGridViewRow> _chromInfoRows 
             = new Dictionary<RowIdentifier, DataGridViewRow>();
-        private readonly Stack<DataGridViewRow> _unassignedRows
+        private readonly IDictionary<RowIdentifier, DataGridViewRow> _unassignedRowsDict
+            = new Dictionary<RowIdentifier, DataGridViewRow>();
+        private readonly Stack<DataGridViewRow> _unassignedRowsStack
             = new Stack<DataGridViewRow>();
 
         private Dictionary<string, DataGridViewColumn> _annotationColumns 
@@ -516,7 +519,7 @@ namespace pwiz.Skyline.Controls
             var targets = SelectedPaths
                 .Select(path => GetAnnotationTargetForNode(annotationDef, path))
                 .ToArray();
-            if (targets.Contains(null))
+            if (Enumerable.Contains(targets, null))
             {
                 return AnnotationDef.AnnotationTargetSet.EMPTY;
             }
@@ -823,11 +826,10 @@ namespace pwiz.Skyline.Controls
             {
                 return row;
             }
-            if (_unassignedRows.Count == 0)
+            if (!TryGetUnassignedRow(rowIdentifier, out row))
                 row = Rows[Rows.Add(new DataGridViewRow {Tag = rowIdentifier})];
             else
             {
-                row = _unassignedRows.Pop();
                 row.Tag = rowIdentifier;
                 // To be extra safe, make sure the row is actually part of the grid.
                 if (!ReferenceEquals(this, row.DataGridView))
@@ -836,6 +838,22 @@ namespace pwiz.Skyline.Controls
             row.Cells[OptStepColumn.Index].Value = rowIdentifier.OptimizationStep;
             _chromInfoRows.Add(rowIdentifier, row);
             return row;
+        }
+
+        private bool TryGetUnassignedRow(RowIdentifier rowIdentifier, out DataGridViewRow row)
+        {
+            if (_unassignedRowsDict.Count > 0 && _unassignedRowsDict.TryGetValue(rowIdentifier, out row))
+            {
+                _unassignedRowsDict.Remove(rowIdentifier);
+                return true;
+            }
+            if (_unassignedRowsStack.Count > 0)
+            {
+                row = _unassignedRowsStack.Pop();
+                return true;
+            }
+            row = null;
+            return false;
         }
 
         DataGridViewRow EnsureRow(int iReplicate, int fileIndex, int step, ICollection<RowIdentifier> rowIds)
@@ -854,15 +872,31 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Clears row assignments leaving the actual rows in the grid for reassignment
         /// </summary>
-        private void ClearAllRows()
+        private void ClearAllRows(bool selChanged)
         {
             for (int i = Rows.Count - 1; i >= 0; i--)
             {
                 var row = Rows[i];
-
-                row.Tag = null;
-                _unassignedRows.Push(row);
+                var rowIdentifier = row.Tag as RowIdentifier;
+                if (rowIdentifier == null || _unassignedRowsDict.ContainsKey(rowIdentifier))
+                {
+                    Rows.RemoveAt(i);
+                }
+                else
+                {
+                    row.Tag = null;
+                    _unassignedRowsStack.Push(row);
+                    _unassignedRowsDict.Add(rowIdentifier, row);
+                }
             }
+
+            // If selection changed farm out rows in the order they are needed (stack),
+            // otherwise try to keep rows associated with the same row identifier (dict).
+            if (selChanged)
+                _unassignedRowsDict.Clear();
+            else
+                _unassignedRowsStack.Clear();
+
             _chromInfoRows.Clear();
         }
 
@@ -904,9 +938,8 @@ namespace pwiz.Skyline.Controls
             // nodes collected in different results files.
             if (_inCommitEdit)
                 return;
+            var oldSelectedPaths = SelectedPaths;
             SelectedPaths = new List<IdentityPath>();
-
-            ClearAllRows();
 
             var srmTreeNode = StateProvider.SelectedNodes.Count > 0 ?
                 StateProvider.SelectedNodes[0] as SrmTreeNode
@@ -930,6 +963,12 @@ namespace pwiz.Skyline.Controls
             {
                 SelectedPaths = new List<IdentityPath>(){IdentityPath.ROOT};
             }
+
+            bool selChanged = !ArrayUtil.EqualsDeep(SelectedPaths, oldSelectedPaths);
+            ClearAllRows(selChanged);
+            // TODO: If the selection changed then a column sort may no longer apply
+//            if (selChanged)
+//                ClearSortIndicator();
            
             // If we have more than one node selected, or if the selected node is not a tree node, 
             // all of these values should be null. We only want to walk the tree if we have a single-selected
@@ -1344,14 +1383,31 @@ namespace pwiz.Skyline.Controls
                 Rows.Remove(_chromInfoRows[rowId]);
                 _chromInfoRows.Remove(rowId);
             }
-            while (_unassignedRows.Count > 0)
-            {
-                var row = _unassignedRows.Pop();
-                // To be extra safe, make sure the row is actually part of the grid before removing it.
-                if (ReferenceEquals(this, row.DataGridView))
-                    Rows.Remove(row);
-            }
 
+            // There should only ever be rows in one of the unassigned rows collections at this point
+            Helpers.Assume(_unassignedRowsDict.Count == 0 || _unassignedRowsStack.Count == 0);
+            try
+            {
+                foreach (var row in _unassignedRowsDict.Values)
+                {
+                    // To be extra safe, make sure the row is actually part of the grid before removing it.
+                    if (ReferenceEquals(this, row.DataGridView))
+                        Rows.Remove(row);
+                }
+                while (_unassignedRowsStack.Count > 0)
+                {
+                    var row = _unassignedRowsStack.Pop();
+                    // To be extra safe, make sure the row is actually part of the grid before removing it.
+                    if (ReferenceEquals(this, row.DataGridView))
+                        Rows.Remove(row);
+                }
+            }
+            finally
+            {
+                _unassignedRowsDict.Clear();
+                _unassignedRowsStack.Clear();
+            }
+            
             // Update column visibility from the settings.  This has to be done
             // all in one step to avoid messing up scrolling of the grid.
             GridColumns gridColumns = null;
