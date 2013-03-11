@@ -340,6 +340,7 @@ namespace pwiz.ProteowizardWrapper
             int maxIndex = Math.Min(500, SpectrumCount);
             int precursorsPerScan = 0;
             int furthestPrecursorDistance = 0;
+            double? prevMax = null;
             for (i = 1; i < maxIndex; ++i )
             {
                 if (GetMsLevel(i) != 2)
@@ -357,6 +358,7 @@ namespace pwiz.ProteowizardWrapper
                 // above if statement, but it keeps ReSharper from complaining
                 furthestPrecursorDistance = (int)precursors.Max(prec => prec.PrecursorMz ?? 0) -
                                             (int)precursors.Min(prec => prec.PrecursorMz ?? 0);
+                prevMax = precursors.Select(p => p.PrecursorMz).Max();
                 break;
             }
             if (precursorsPerScan == 0)
@@ -369,6 +371,12 @@ namespace pwiz.ProteowizardWrapper
             // because MSX scans have randomly-chosen precursors 
             int msMsChecked = 1;
             bool distanceChange = false;
+            // rangeOverlap counts the number of times the lowest m/z precursor of Scan N is
+            // less than the maximum m/z precursor of Scan N-1
+            // if the precursors are selected randomly, this should happen a lot
+            // if the scans are just progressing sequentially through a sorted inclusion list
+            // this will happen rarely
+            int rangeOverlap = 0;
             for (; i < SpectrumCount && msMsChecked <=10; ++i )
             {
                 if (GetMsLevel(i) != 2)
@@ -378,6 +386,12 @@ namespace pwiz.ProteowizardWrapper
                     return false;
                 if (! precursors.All(prec=> prec.PrecursorMz.HasValue))
                     return false;
+                var precMzs = precursors.Select(p => p.PrecursorMz);
+                var currentPrecursorsMax = precMzs.Max();
+                var currentPrecursorsMin = precMzs.Min();
+                if (currentPrecursorsMin < prevMax)
+                    ++rangeOverlap;
+                prevMax = currentPrecursorsMax;
                 if (!distanceChange)
                 {
                     // The null condition for PrecursorMz below should never happen, due to the
@@ -389,7 +403,11 @@ namespace pwiz.ProteowizardWrapper
                 }
                 ++msMsChecked;
             }
-            return distanceChange;
+            // the file needs to have at least 11 ms/ms spectra to be multiplexed
+            // the distance between isolated precursors should change from scan to scan
+            // the windows isolated in one scan should be interspersed with those isolated
+            // in the previous scan
+            return msMsChecked == 11 && distanceChange && (rangeOverlap/10.0 > 0.79);
             // return false; // for testing -- import MSX data with out applying de-multiplexing
         }
 
