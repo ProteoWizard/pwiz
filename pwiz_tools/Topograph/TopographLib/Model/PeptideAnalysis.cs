@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using NHibernate;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model.Data;
@@ -44,6 +46,7 @@ namespace pwiz.Topograph.Model
             _chromatogramRefCount = 0;
         }
 
+        [Browsable(false)]
         public long Id { get { return Key; } }
 
         public void SetCalculatedPeaks(IList<CalculatedPeaks> calculatedPeaksList)
@@ -154,6 +157,7 @@ namespace pwiz.Topograph.Model
         private int _chromatogramRefCount;
 
         public Peptide Peptide { get { return Workspace.Peptides.FindByKey(Data.PeptideId); } }
+        [OneToMany(ForeignKey = "PeptideAnalysis")]
         public PeptideFileAnalyses FileAnalyses
         {
             get; private set;
@@ -294,6 +298,7 @@ namespace pwiz.Topograph.Model
             return GetTurnoverCalculator().MassCount;
         }
 
+        [Browsable(false)]
         public ExcludedMasses ExcludedMasses
         {
             get { return Data.ExcludedMasses; }
@@ -342,6 +347,7 @@ namespace pwiz.Topograph.Model
         {
             _chromatogramRefCount--;
         }
+        [Browsable(false)]
         public bool ChromatogramsWereLoaded { get { return Data.ChromatogramsWereLoaded; } }
         class RefCountHolder : IDisposable
         {

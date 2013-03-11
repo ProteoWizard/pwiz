@@ -209,13 +209,9 @@ namespace pwiz.Common.DataBinding.Internal
             return rowItem.GetGroupKey().RemoveSublist(ViewInfo.SublistId);
         }
 
-        private IEnumerable<RowItem> GetSublistItems(TickCounter tickCounter, RowNode rowNode, RowItem parentRowItem, int sublistColumnIndex)
+        private IEnumerable<RowItem> GetRowItems(TickCounter tickCounter, RowNode rowNode, RowItem parentRowItem, int sublistColumnIndex)
         {
             tickCounter.Tick();
-            if (sublistColumnIndex == SublistColumns.Count)
-            {
-                return new[] {rowNode.RowItem.SetParent(parentRowItem)};
-            }
             var sublistColumn = SublistColumns[sublistColumnIndex];
             var result = new List<RowItem>();
             HashSet<PivotKey> pivotKeySet = new HashSet<PivotKey>();
@@ -241,17 +237,16 @@ namespace pwiz.Common.DataBinding.Internal
             }
             var rowItem = rowNode.RowItem.SetParent(parentRowItem);
             rowItem = rowItem.SetPivotKeys(pivotKeySet);
-            foreach (var child in rowNode.GetChildren(sublistColumn.PropertyPath))
+            if (sublistColumnIndex < SublistColumns.Count - 1)
             {
-                result.AddRange(GetSublistItems(tickCounter, child, rowItem, sublistColumnIndex + 1));
+                foreach (var child in rowNode.GetChildren(SublistColumns[sublistColumnIndex + 1].PropertyPath))
+                {
+                    result.AddRange(GetRowItems(tickCounter, child, rowItem, sublistColumnIndex + 1));
+                }
             }
             if (result.Count > 0)
             {
                 return result;
-            }
-            if (sublistColumnIndex == 0)
-            {
-                return new RowItem[0];
             }
             for (int icolFilter = sublistColumnIndex; icolFilter < Filters.Count; icolFilter++)
             {
@@ -264,7 +259,12 @@ namespace pwiz.Common.DataBinding.Internal
         }
         public IEnumerable<RowItem> Pivot(TickCounter tickCounter, IEnumerable<RowNode> rowNodes)
         {
-            return GetSublistItems(tickCounter, new RowNode(rowNodes), null, 0);
+            var result = new List<RowItem>();
+            foreach (var rowNode in rowNodes)
+            {
+                result.AddRange(GetRowItems(tickCounter, rowNode, null, 0));
+            }
+            return result;
         }
         private static Predicate<T> Conjunction<T>(IEnumerable<Predicate<T>> predicates)
         {

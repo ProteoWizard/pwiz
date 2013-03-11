@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.RowSources
 {
@@ -89,18 +90,21 @@ namespace pwiz.Common.DataBinding.RowSources
             if (_eventHandlers == null)
             {
                 _eventHandlers = new HashSet<PropertyChangedEventHandler>();
-                if (null != _propertyChangers)
+                _propertyChangers = ImmutableList.ValueOf(GetProperyChangersToPropagate());
+                foreach (var notifyPropertyChanged in _propertyChangers)
                 {
-                    foreach (var notifyPropertyChanged in _propertyChangers)
-                    {
-                        notifyPropertyChanged.PropertyChanged += ListenedPropertyChanged;
-                    }
+                    notifyPropertyChanged.PropertyChanged += ListenedPropertyChanged;
                 }
                 BeforeFirstListenerAdded();
             }
         }
         protected virtual void BeforeFirstListenerAdded()
         {
+        }
+
+        protected virtual IEnumerable<INotifyPropertyChanged> GetProperyChangersToPropagate()
+        {
+            return new INotifyPropertyChanged[0];
         }
 
         protected void AfterListenerRemoved()
@@ -113,6 +117,7 @@ namespace pwiz.Common.DataBinding.RowSources
                     {
                         notifyPropertyChanged.PropertyChanged -= ListenedPropertyChanged;
                     }
+                    _propertyChangers = null;
                 }
                 _eventHandlers = null;
                 AfterLastListenerRemoved();
@@ -137,26 +142,6 @@ namespace pwiz.Common.DataBinding.RowSources
             foreach (var handler in handlers)
             {
                 handler(_sender, args);
-            }
-        }
-
-        public void ListenToChanges(INotifyPropertyChanged notifyPropertyChanged)
-        {
-            if (null == notifyPropertyChanged)
-            {
-                return;
-            }
-            lock (this)
-            {
-                if (null == _propertyChangers)
-                {
-                    _propertyChangers = new List<INotifyPropertyChanged>();
-                }
-                _propertyChangers.Add(notifyPropertyChanged);
-                if (_eventHandlers != null)
-                {
-                    notifyPropertyChanged.PropertyChanged += ListenedPropertyChanged;
-                }
             }
         }
 

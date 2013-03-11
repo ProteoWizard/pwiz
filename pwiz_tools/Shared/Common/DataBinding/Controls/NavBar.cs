@@ -122,7 +122,12 @@ namespace pwiz.Common.DataBinding.Controls
                     }
                     else
                     {
-                        if (queryResults.ResultRows.Count != queryResults.PivotedRows.Count)
+                        if (BindingListView.IsRequerying)
+                        {
+                            lblFilterApplied.Text = "Transforming data...";
+                            lblFilterApplied.Visible = true;
+                        }
+                        else if (queryResults.ResultRows.Count != queryResults.PivotedRows.Count)
                         {
                             lblFilterApplied.Text = string.Format("(Filtered from {0})", queryResults.PivotedRows.Count);
                             lblFilterApplied.Visible = true;
@@ -190,6 +195,7 @@ namespace pwiz.Common.DataBinding.Controls
         public void ApplyView(ViewSpec viewSpec)
         {
             BindingListView.ViewSpec = viewSpec;
+            RefreshUi();
         }
 
 

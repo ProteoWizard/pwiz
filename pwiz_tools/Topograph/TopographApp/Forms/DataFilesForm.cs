@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -25,7 +26,6 @@ using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.RowSources;
-using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
@@ -132,7 +132,11 @@ namespace pwiz.Topograph.ui.Forms
             {
                 _form = form;
                 _dataFile = dataFile;
-                ListenToChanges(dataFile);
+            }
+
+            protected override IEnumerable<INotifyPropertyChanged> GetProperyChangersToPropagate()
+            {
+                return new[] {_dataFile};
             }
 
             public MsDataFile MsDataFile { get { return _dataFile; } }

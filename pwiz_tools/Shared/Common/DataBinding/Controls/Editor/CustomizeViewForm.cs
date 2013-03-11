@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -248,18 +249,19 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 row.Cells[colFilterColumn.Index].ToolTipText = null;
             }
             var filterOpCell = (DataGridViewComboBoxCell) row.Cells[colFilterOperation.Index];
+            row.Cells[colFilterOperand.Index].Value = filterInfo.FilterSpec.Operand;
+            filterOpCell.Value = null;
             filterOpCell.Items.Clear();
-            filterOpCell.DisplayMember = "DisplayName";
-            filterOpCell.ValueMember = "Operation";
             foreach (var filterOperation in FilterOperations.ListOperations())
             {
                 bool selected = filterInfo.FilterSpec.Operation == filterOperation;
                 if (selected || filterInfo.ColumnDescriptor == null || filterOperation.IsValidFor(filterInfo.ColumnDescriptor))
                 {
-                    filterOpCell.Items.Add(new FilterOperationItem(filterOperation));
+                    var item = new FilterOperationItem(filterOperation);
+                    filterOpCell.Items.Add(item);
                     if (selected)
                     {
-                        filterOpCell.Value = filterOperation;
+                        filterOpCell.Value = item;
                     }
                 }
             }
@@ -273,7 +275,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 row.Cells[colFilterOperand.Index].ReadOnly = false;
                 row.Cells[colFilterOperand.Index].Style.BackColor = colFilterOperand.DefaultCellStyle.BackColor;
             }
-            row.Cells[colFilterOperand.Index].Value = filterInfo.FilterSpec.Operand;
         }
 
         public ColumnSpec[] GetSelectedColumns()
@@ -736,7 +737,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 var newFilters = ViewSpec.Filters.ToArray();
                 var cell = dataGridViewFilter.Rows[e.RowIndex].Cells[e.ColumnIndex];
-                newFilters[e.RowIndex] = newFilters[e.RowIndex].SetOperation(cell.Value as IFilterOperation);
+                newFilters[e.RowIndex] = newFilters[e.RowIndex].SetOperation(((FilterOperationItem) cell.Value).Operation);
                 ViewSpec = ViewSpec.SetFilters(newFilters);
             } 
             else if (e.ColumnIndex == colFilterOperand.Index)
@@ -950,6 +951,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 dataGridViewFilter.BeginEdit(true);
             }
+        }
+
+        private void dataGridViewFilter_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            Trace.TraceError("DataGridViewFilterOnDataError:{0}", e.Exception);
         }
     }
 }

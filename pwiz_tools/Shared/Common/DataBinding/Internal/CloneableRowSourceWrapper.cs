@@ -72,12 +72,33 @@ namespace pwiz.Common.DataBinding.Internal
         public override QueryResults MakeLive(QueryResults queryResults)
         {
             var sublistColumns = queryResults.Pivoter.SublistColumns.ToDictionary(cd => cd.PropertyPath);
-            return queryResults
-                .SetSourceRows(MakeLive(sublistColumns, queryResults.SourceRows))
-                .SetPivotedRows(queryResults.Pivoter, MakeLive(sublistColumns, queryResults.PivotedRows))
-                .SetFilteredRows(MakeLive(sublistColumns, queryResults.FilteredRows))
-                .SetSortedRows(MakeLive(sublistColumns, queryResults.SortedRows));
-
+            var liveResults = queryResults.SetSourceRows(MakeLive(sublistColumns, queryResults.SourceRows));
+            if (ReferenceEquals(queryResults.SourceRows, queryResults.PivotedRows))
+            {
+                liveResults = liveResults.SetPivotedRows(queryResults.Pivoter, liveResults.SourceRows);
+            }
+            else
+            {
+                liveResults = liveResults.SetPivotedRows(queryResults.Pivoter,
+                    MakeLive(sublistColumns, queryResults.PivotedRows));
+            }
+            if (ReferenceEquals(queryResults.PivotedRows, queryResults.FilteredRows))
+            {
+                liveResults = liveResults.SetFilteredRows(liveResults.PivotedRows);
+            }
+            else
+            {
+                liveResults = liveResults.SetFilteredRows(MakeLive(sublistColumns, queryResults.FilteredRows));
+            }
+            if (ReferenceEquals(queryResults.FilteredRows, queryResults.SortedRows))
+            {
+                liveResults = liveResults.SetSortedRows(liveResults.FilteredRows);
+            }
+            else
+            {
+                liveResults = liveResults.SetSortedRows(MakeLive(sublistColumns, queryResults.SortedRows));
+            }
+            return liveResults;
         }
         private IEnumerable<RowItem> MakeLive(IDictionary<PropertyPath, ColumnDescriptor> sublistColumns,
                               IEnumerable<RowItem> rowItems)

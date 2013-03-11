@@ -81,11 +81,11 @@ namespace pwiz.Topograph.ui.Forms
             public PeptideAnalysisRow(PeptideAnalysis peptideAnalysis)
             {
                 PeptideAnalysis = peptideAnalysis;
-                ListenToChanges(PeptideAnalysis);
-                foreach (var peptideFileAnalysis in PeptideAnalysis.FileAnalyses)
-                {
-                    ListenToChanges(peptideFileAnalysis);
-                }
+            }
+
+            protected override IEnumerable<INotifyPropertyChanged> GetProperyChangersToPropagate()
+            {
+                return new INotifyPropertyChanged[] {PeptideAnalysis}.Concat(PeptideAnalysis.FileAnalyses);
             }
 
             public LinkValue<string> Peptide

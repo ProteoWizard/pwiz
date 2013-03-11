@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using NHibernate;
 using NHibernate.Criterion;
@@ -48,6 +49,7 @@ namespace pwiz.Topograph.Model
         }
 
         public PeptideAnalysis PeptideAnalysis { get; private set; }
+        [Browsable(false)]
         public long Id { get { return Key; } }
         public void Save(ISession session)
         {
@@ -62,28 +64,35 @@ namespace pwiz.Topograph.Model
             }
         }
 
+        [Browsable(false)]
         public PeptideFileAnalysisData.PeakSet PeakData { get { return Data.Peaks; } }
 
+        [Browsable(false)]
         public CalculatedPeaks CalculatedPeaks
         {
             get { return PeptideAnalysis.GetCalculatePeaks(this); }
         }
 
+        [Browsable(false)]
         public ChromatogramSetData ChromatogramSet
         {
             get { return Data.ChromatogramSet; }
             set { Data = Data.SetChromatogramSet(value); }
         }
 
+        [Browsable(false)]
         public long? ChromatogramSetId { get { return Data.ChromatogramSetId; } }
 
-        public Peptide Peptide { get { return PeptideAnalysis.Peptide;  } }
+        [Browsable(false)]
+        public Peptide Peptide { get { return PeptideAnalysis.Peptide; } }
         public MsDataFile MsDataFile
         {
             get { return Workspace.MsDataFiles.FindByKey(Data.MsDataFileId); }
         }
+        [Browsable(false)]
         public String Protein { get { return Peptide.ProteinName; } }
-        public String Sequence { get { return Peptide.Sequence; }}
+        [Browsable(false)]
+        public String Sequence { get { return Peptide.Sequence; } }
         public double ChromatogramStartTime
         {
             get { return Data.ChromatogramStartTime; }
@@ -92,6 +101,7 @@ namespace pwiz.Topograph.Model
         {
             get { return Data.ChromatogramEndTime; }
         }
+        [Browsable(false)]
         public PsmTimes PsmTimes
         {
             get
@@ -99,6 +109,7 @@ namespace pwiz.Topograph.Model
                 return Data.PsmTimes;
             }
         }
+        [Browsable(false)]
         public int PsmCount
         {
             get
@@ -106,8 +117,11 @@ namespace pwiz.Topograph.Model
                 return null == PsmTimes ? 0 : PsmTimes.TotalCount;
             }
         }
+        [Browsable(false)]
         public int TracerCount { get { return Peptide.MaxTracerCount; } }
+        [Browsable(false)]
         public double? PeakStartTime { get { return CalculatedPeaks == null ? null : CalculatedPeaks.StartTime; } }
+        [Browsable(false)]
         public double? PeakEndTime { get { return CalculatedPeaks == null ? null : CalculatedPeaks.EndTime; } }
 
         public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, ILookup<long, double> psmTimesByDataFileId)
@@ -224,6 +238,7 @@ namespace pwiz.Topograph.Model
             }
         }
 
+        [Browsable(false)]
         public ExcludedMasses ExcludedMasses
         {
             get
@@ -236,6 +251,7 @@ namespace pwiz.Topograph.Model
             return PeptideAnalysis.GetLabel() + " " + MsDataFile.Label;
         }
 
+        [Browsable(false)]
         public TurnoverCalculator TurnoverCalculator
         {
             get
@@ -262,10 +278,12 @@ namespace pwiz.Topograph.Model
             return true;
         }
 
+        [Browsable(false)]
         public int MinCharge 
         {
             get { return PeptideAnalysis.MinCharge; }
         }
+        [Browsable(false)]
         public int MaxCharge
         {
             get { return PeptideAnalysis.MaxCharge; }

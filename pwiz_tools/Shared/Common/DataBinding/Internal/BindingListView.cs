@@ -105,6 +105,8 @@ namespace pwiz.Common.DataBinding.Internal
         public void ApplySort(ListSortDescriptionCollection sorts)
         {
             _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetSortDescriptions(sorts);
+            // Fire an event so that the NavBar updates to show that the DataGridView is sorting
+            OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
 
         public void RemoveFilter()
@@ -277,6 +279,12 @@ namespace pwiz.Common.DataBinding.Internal
         {
             get { return _queryResults; }
         }
+
+        public bool IsRequerying
+        {
+            get { return null == _queryRequestor.QueryResults; }
+        }
+
         /// <summary>
         /// Indicates that this IBindingList will send ListItemChange events 
         /// when properties on items in this list change.

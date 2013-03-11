@@ -28,10 +28,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.ColumnHeader colHdrName;
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -39,7 +40,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnAdvanced = new System.Windows.Forms.Button();
             this.tabPageFilter = new System.Windows.Forms.TabPage();
             this.splitContainerFilter = new System.Windows.Forms.SplitContainer();
-            this.availableFieldsTreeFilter = new AvailableFieldsTree();
+            this.availableFieldsTreeFilter = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnAddFilter = new System.Windows.Forms.Button();
             this.dataGridViewFilter = new System.Windows.Forms.DataGridView();
@@ -51,7 +52,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.tabPageColumns = new System.Windows.Forms.TabPage();
             this.splitContainerAdvanced = new System.Windows.Forms.SplitContainer();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.availableFieldsTreeColumns = new AvailableFieldsTree();
+            this.availableFieldsTreeColumns = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
             this.listViewColumns = new System.Windows.Forms.ListView();
             this.toolStripColumns = new System.Windows.Forms.ToolStrip();
             this.btnRemove = new System.Windows.Forms.ToolStripButton();
@@ -198,9 +199,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.availableFieldsTreeFilter.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
             this.availableFieldsTreeFilter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.availableFieldsTreeFilter.HideSelection = false;
+            this.availableFieldsTreeFilter.ImageIndex = 0;
             this.availableFieldsTreeFilter.Location = new System.Drawing.Point(0, 0);
             this.availableFieldsTreeFilter.Name = "availableFieldsTreeFilter";
             this.availableFieldsTreeFilter.RootColumn = null;
+            this.availableFieldsTreeFilter.SelectedImageIndex = 0;
             this.availableFieldsTreeFilter.ShowAdvancedFields = false;
             this.availableFieldsTreeFilter.Size = new System.Drawing.Size(314, 307);
             this.availableFieldsTreeFilter.TabIndex = 0;
@@ -233,38 +236,38 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.dataGridViewFilter.AllowUserToAddRows = false;
             this.dataGridViewFilter.AllowUserToDeleteRows = false;
             this.dataGridViewFilter.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewFilter.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewFilter.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridViewFilter.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewFilter.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colFilterColumn,
             this.colFilterOperation,
             this.colFilterOperand});
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewFilter.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewFilter.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridViewFilter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewFilter.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewFilter.Name = "dataGridViewFilter";
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewFilter.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewFilter.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridViewFilter.RowHeadersVisible = false;
             this.dataGridViewFilter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewFilter.Size = new System.Drawing.Size(483, 307);
@@ -273,6 +276,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.dataGridViewFilter.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellEndEdit);
             this.dataGridViewFilter.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellEnter);
             this.dataGridViewFilter.CurrentCellDirtyStateChanged += new System.EventHandler(this.DataGridViewFilterOnCurrentCellDirtyStateChanged);
+            this.dataGridViewFilter.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewFilter_DataError);
             this.dataGridViewFilter.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.DataGridViewFilterOnEditingControlShowing);
             // 
             // colFilterColumn
@@ -364,15 +368,17 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // availableFieldsTreeColumns
             // 
-            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.availableFieldsTreeColumns.CheckBoxes = true;
             this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
             this.availableFieldsTreeColumns.HideSelection = false;
+            this.availableFieldsTreeColumns.ImageIndex = 0;
             this.availableFieldsTreeColumns.Location = new System.Drawing.Point(3, 3);
             this.availableFieldsTreeColumns.Name = "availableFieldsTreeColumns";
             this.availableFieldsTreeColumns.RootColumn = null;
+            this.availableFieldsTreeColumns.SelectedImageIndex = 0;
             this.availableFieldsTreeColumns.ShowAdvancedFields = false;
             this.availableFieldsTreeColumns.Size = new System.Drawing.Size(303, 301);
             this.availableFieldsTreeColumns.TabIndex = 0;
@@ -443,8 +449,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // groupBoxSublist
             // 
-            this.groupBoxSublist.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxSublist.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxSublist.Controls.Add(this.comboSublist);
             this.groupBoxSublist.Location = new System.Drawing.Point(2, 261);
             this.groupBoxSublist.Name = "groupBoxSublist";
@@ -455,9 +461,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // comboSublist
             // 
-            this.comboSublist.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboSublist.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.comboSublist.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSublist.FormattingEnabled = true;
             this.comboSublist.Location = new System.Drawing.Point(6, 19);
@@ -468,9 +474,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // groupBoxProperties
             // 
-            this.groupBoxProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxProperties.Controls.Add(this.groupBoxSortOrder);
             this.groupBoxProperties.Controls.Add(this.groupBoxCaption);
             this.groupBoxProperties.Controls.Add(this.cbxHidden);
@@ -493,8 +499,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // comboSortOrder
             // 
-            this.comboSortOrder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboSortOrder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.comboSortOrder.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSortOrder.FormattingEnabled = true;
             this.comboSortOrder.Items.AddRange(new object[] {
@@ -509,8 +515,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // groupBoxCaption
             // 
-            this.groupBoxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxCaption.Controls.Add(this.tbxCaption);
             this.groupBoxCaption.Location = new System.Drawing.Point(11, 18);
             this.groupBoxCaption.Name = "groupBoxCaption";
@@ -521,8 +527,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // tbxCaption
             // 
-            this.tbxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxCaption.Location = new System.Drawing.Point(6, 19);
             this.tbxCaption.Name = "tbxCaption";
             this.tbxCaption.Size = new System.Drawing.Size(232, 20);
@@ -542,9 +548,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // tabControl1
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabPageColumns);
             this.tabControl1.Controls.Add(this.tabPageFilter);
             this.tabControl1.Controls.Add(this.tabPageSort);
