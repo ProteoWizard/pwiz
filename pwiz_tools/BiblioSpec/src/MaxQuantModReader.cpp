@@ -49,8 +49,10 @@ MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
  * Construct MaxQuantModReader for reading fixed mods from mqpar.xml file.
  */
 MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
-                                     set<string>* fixedMods) : SAXHandler(),
-    modBank_(NULL), fixedMods_(fixedMods), state_(ROOT_STATE)
+                                     set<string>* fixedMods,
+                                     vector<MaxQuantLabels>* labelBank) : SAXHandler(),
+    modBank_(NULL), fixedMods_(fixedMods), labelBank_(labelBank), groupParams_(0),
+    rawIndex_(-1), state_(ROOT_STATE)
 {
     this->setFileName(xmlfilename);
 }
@@ -97,14 +99,37 @@ void MaxQuantModReader::startElement(const XML_Char* name,
     // mqpar.xml mode
     else if (!modBank_ && fixedMods_)
     {
-        if (isElement("fixedModifications", name))
+        if (isIElement("fixedModifications", name))
         {
             state_ = FIXED_MODIFICATIONS_TAG;
         }
-        else if (state_ == FIXED_MODIFICATIONS_TAG && isElement("string", name))
+        else if (state_ == FIXED_MODIFICATIONS_TAG && isIElement("string", name))
         {
             charBuf_.clear();
             state_ = READING_FIXED_MODIFICATION;
+        }
+        else if (isIElement("Filenames", name))
+        {
+            state_ = FILENAMES_TAG;
+        }
+        else if (state_ == FILENAMES_TAG && isIElement("string", name))
+        {
+            charBuf_.clear();
+            state_ = READING_FILENAME;
+        }
+        else if (isIElement("GroupParams", name))
+        {
+            ++groupParams_;
+        }
+        else if (groupParams_ > 0 && isIElement("labels", name))
+        {
+            ++rawIndex_;
+            state_ = LABELS_TAG;
+        }
+        else if (state_ == LABELS_TAG && isIElement("string", name))
+        {
+            charBuf_.clear();
+            state_ = READING_LABEL;
         }
     }
 }
@@ -118,7 +143,7 @@ void MaxQuantModReader::endElement(const XML_Char* name)
     // modifications.xml mode
     if (modBank_ && !fixedMods_)
     {
-        if (isElement("modification", name))
+        if (isIElement("modification", name))
         {
             modBank_->insert(curMod_);
             state_ = ROOT_STATE;
@@ -132,7 +157,7 @@ void MaxQuantModReader::endElement(const XML_Char* name)
     // mqpar.xml mode
     else if (!modBank_ && fixedMods_)
     {
-        if (isElement("fixedModifications", name))
+        if (isIElement("fixedModifications", name))
         {
             state_ = ROOT_STATE;
         }
@@ -140,6 +165,44 @@ void MaxQuantModReader::endElement(const XML_Char* name)
         {
             fixedMods_->insert(charBuf_);
             state_ = FIXED_MODIFICATIONS_TAG;
+        }
+        else if (isIElement("Filenames", name))
+        {
+            state_ = ROOT_STATE;
+        }
+        else if (state_ == READING_FILENAME)
+        {
+            string rawBaseName = filesystem::basename(filesystem::path(charBuf_));
+            MaxQuantLabels newLabelingStates(rawBaseName);
+            labelBank_->push_back(newLabelingStates);
+            state_ = FILENAMES_TAG;
+        }
+        else if (isIElement("GroupParams", name))
+        {
+            // check that each raw file had a corresponding groupParam
+            if (--groupParams_ == 0 &&
+                (rawIndex_ + 1 != (int)labelBank_->size()))
+            {
+                throw BlibException(false, "Number of raw files (%d) did not match "
+                                           "number of label sets (%d).", labelBank_->size(), rawIndex_ + 1);
+            }
+        }
+        else if (isIElement("labels", name))
+        {
+            state_ = ROOT_STATE;
+        }
+        else if (state_ == READING_LABEL)
+        {
+            vector<string> newLabelSubset;
+            // split multiple labels (e.g. "Arg6; Lys4"
+            split(newLabelSubset, charBuf_, is_any_of(";"));
+            // trim whitespace
+            for_each(newLabelSubset.begin(), newLabelSubset.end(),
+                boost::bind(&boost::trim<string>, _1, std::locale()));
+
+            (*labelBank_)[rawIndex_].addModsStrings(newLabelSubset);
+
+            state_ = LABELS_TAG;
         }
     }
 }
@@ -150,7 +213,9 @@ void MaxQuantModReader::endElement(const XML_Char* name)
 void MaxQuantModReader::characters(const XML_Char *s, int len)
 {
     if (state_ == READING_POSITION ||
-        state_ == READING_FIXED_MODIFICATION)
+        state_ == READING_FIXED_MODIFICATION ||
+        state_ == READING_FILENAME ||
+        state_ == READING_LABEL)
     {
         charBuf_.append(s, len);
     }
@@ -239,38 +304,40 @@ double MaxQuantModReader::parseComposition(string composition)
  */
 MaxQuantModification::MAXQUANT_MOD_POSITION MaxQuantModReader::stringToPosition(string positionString)
 {
-    if (iequals(positionString, "anywhere"))
+    const char* positionStringChars = positionString.c_str();
+
+    if (isIElement(positionStringChars, "anywhere"))
     {
         return MaxQuantModification::ANYWHERE;
     }
-    else if (iequals(positionString, "proteinNterm"))
+    else if (isIElement(positionStringChars, "proteinNterm"))
     {
         return MaxQuantModification::PROTEIN_N_TERM;
     }
-    else if (iequals(positionString, "proteinCterm"))
+    else if (isIElement(positionStringChars, "proteinCterm"))
     {
         return MaxQuantModification::PROTEIN_C_TERM;
     }
-    else if (iequals(positionString, "anyNterm"))
+    else if (isIElement(positionStringChars, "anyNterm"))
     {
         return MaxQuantModification::PROTEIN_C_TERM;
     }
-    else if (iequals(positionString, "anyCterm"))
+    else if (isIElement(positionStringChars, "anyCterm"))
     {
         return MaxQuantModification::PROTEIN_C_TERM;
     }
-    else if (iequals(positionString, "notNterm"))
+    else if (isIElement(positionStringChars, "notNterm"))
     {
         return MaxQuantModification::NOT_N_TERM;
     }
-    else if (iequals(positionString, "notCterm"))
+    else if (isIElement(positionStringChars, "notCterm"))
     {
         return MaxQuantModification::NOT_C_TERM;
     }
     else
     {
         throw BlibException(false, "Invalid position value: %s", 
-                                   positionString.c_str());
+                                   positionStringChars);
     }
 }
 

@@ -28,6 +28,7 @@
 #include "expat.h"
 #include "Verbosity.h"
 #include "BlibUtils.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -95,6 +96,9 @@ public:
     // Helper functions
     inline bool isElement(const char *n1, const XML_Char *n2)
     {    return (strcmp(n1, n2) == 0); }
+
+    inline bool isIElement(const char *n1, const XML_Char *n2)
+    {    return boost::iequals(n1, n2); }
 
     inline bool isAttr(const char *n1, const XML_Char *n2)
     {    return (strcmp(n1, n2) == 0); }

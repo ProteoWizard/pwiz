@@ -34,7 +34,7 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
                                const ProgressIndicator* parentProgress)
   : BuildParser(maker, tsvName, parentProgress), 
     tsvName_(tsvName), scoreThreshold_(getScoreThreshold(MAXQUANT)), lineNum_(1), 
-    curMaxQuantPSM_(NULL), numColumns_(0), separator_('\\', '\t', '\"')
+    curMaxQuantPSM_(NULL), separator_('\\', '\t', '\"')
 {
     Verbosity::debug("Creating MaxQuantReader.");
     
@@ -90,7 +90,11 @@ void MaxQuantReader::initTargetColumns()
                                                       MaxQuantLine::insertMasses));
     targetColumns_.push_back(MaxQuantColumnTranslator("Intensities", -1,
                                                       MaxQuantLine::insertIntensities));
-    numColumns_ = targetColumns_.size();
+    targetColumns_.push_back(MaxQuantColumnTranslator("Labeling State", -1,
+                                                      MaxQuantLine::insertLabelingState));
+
+    // columns that can are useful but not required
+    optionalColumns_.push_back("Labeling State");
 }
 
 /**
@@ -174,7 +178,7 @@ void MaxQuantReader::initFixedModifications()
     Verbosity::comment(V_DETAIL, "Parsing mqpar file %s",
                        mqparFile.c_str());
     set<string> fixedMods;
-    MaxQuantModReader modReader(mqparFile.c_str(), &fixedMods);
+    MaxQuantModReader modReader(mqparFile.c_str(), &fixedMods, &labelBank_);
     try
     {
         modReader.parse();
@@ -223,6 +227,38 @@ void MaxQuantReader::initFixedModifications()
         else
         {
             vectorSearch->second.push_back(lookup);
+        }
+    }
+
+    // add all labels to labelBank_
+    // iterate over raw files
+    for (vector<MaxQuantLabels>::iterator iter = labelBank_.begin();
+         iter != labelBank_.end();
+         ++iter)
+    {
+        // iterate over labeling states
+        for (vector<MaxQuantLabelingState>::iterator stateIter = iter->labelingStates.begin();
+             stateIter != iter->labelingStates.end();
+             ++stateIter)
+        {
+            vector<const MaxQuantModification*> mods;
+            // iterate over individual mods
+            for (vector<string>::const_iterator labelIter = stateIter->modsStrings.begin();
+                 labelIter != stateIter->modsStrings.end();
+                 ++labelIter)
+            {
+                if (!labelIter->empty())
+                {
+                    const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *labelIter);
+                    if (lookup == NULL)
+                    {
+                        throw BlibException(false, "Unknown label %s in mqpar file.",
+                                            labelIter->c_str());
+                    }
+                    mods.push_back(lookup);
+                }
+            }
+            iter->addMods(stateIter, mods);
         }
     }
 }
@@ -296,6 +332,7 @@ void MaxQuantReader::parseHeader(string& line)
             if (iequals(*token, targetColumns_[i].name_))
             {
                 targetColumns_[i].position_ = colNumber;
+                break;
             }
         }
         colNumber++;
@@ -306,8 +343,25 @@ void MaxQuantReader::parseHeader(string& line)
     {
         if (targetColumns_[i].position_ < 0)
         {
-            throw BlibException(false, "Did not find required column '%s'.",
-                                targetColumns_[i].name_.c_str());
+            // check if it was optional
+            bool wasOptional = false;
+            for (vector<string>::iterator iter = optionalColumns_.begin();
+                 iter != optionalColumns_.end();
+                 ++iter)
+            {
+                if (targetColumns_[i].name_ == *iter)
+                {
+                    optionalColumns_.erase(iter);
+                    targetColumns_.erase(targetColumns_.begin() + i);
+                    wasOptional = true;
+                    break;
+                }
+            }
+            if (!wasOptional)
+            {
+                throw BlibException(false, "Did not find required column '%s'.",
+                                    targetColumns_[i].name_.c_str());
+            }
         }
     }
     
@@ -348,7 +402,7 @@ void MaxQuantReader::collectPsms()
                  token != lineParser.end();
                  ++token)
             {
-                if (lineColNumber++ == targetColumns_[colListIdx].position_ )
+                if (lineColNumber++ == targetColumns_[colListIdx].position_)
                 {
                     // insert the value in the proper field
                     targetColumns_[colListIdx++].inserter(entry, *token);
@@ -422,6 +476,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     curMaxQuantPSM_->mz = entry.mz;
     curMaxQuantPSM_->charge = entry.charge;
     addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence);
+    addLabelModsToVector(curMaxQuantPSM_->mods, entry.rawFile, entry.sequence, entry.labelingState);
     curMaxQuantPSM_->retentionTime = entry.retentionTime;
     curMaxQuantPSM_->score = entry.score;
     addDoublesToVector(curMaxQuantPSM_->mzs, entry.masses);
@@ -436,7 +491,6 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
         vector<MaxQuantPSM*> tmpPsms;
         tmpPsms.push_back(curMaxQuantPSM_);
         fileMap_[entry.rawFile] = tmpPsms;
-        mapAccess = fileMap_.find(entry.rawFile);
     }
     else
     {
@@ -447,7 +501,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
 /**
  * Take a string of semicolon separated doubles and add them to the vector.
  */
-void MaxQuantReader::addDoublesToVector(vector<double>& v, string valueList)
+void MaxQuantReader::addDoublesToVector(vector<double>& v, const string& valueList)
 {
     vector<string> doubles;
     split(doubles, valueList, is_any_of(";"));
@@ -468,7 +522,7 @@ void MaxQuantReader::addDoublesToVector(vector<double>& v, string valueList)
  * "_I(ab)AMASEQ_". The modifications string contains the (comma separated) full names of
  * the modifications; the string "Unmodified" can mean no variable modifications are present.
  */
-void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, string modSequence)
+void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence)
 {
     // split modifications whole names
     vector<string> modNames;
@@ -542,6 +596,40 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, string modifications, st
     {
         Verbosity::warn("Found %d exceptions but expected at least %d in sequence %s (%d)",
                         modsFound, modNames.size(), modSequence.c_str(), lineNum_);
+    }
+}
+
+/**
+ * Adds a SeqMod for each labeled AA in the given unmodified sequence string.
+ */
+void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFile,
+                                          const string& sequence, int labelingState)
+{
+    if (labelingState < 0)
+    {
+        return;
+    }
+
+    // get fixed modifications by position
+    const MaxQuantLabels* labels = MaxQuantLabels::findLabels(labelBank_, rawFile);
+    if (labels == NULL)
+    {
+        throw BlibException(false, "Required raw file '%s' was not found in mqpar file.", rawFile.c_str());
+    }
+    else if ((int)labels->labelingStates.size() <= labelingState)
+    {
+        throw BlibException(false, "Labeling state was %d but mqpar file only had %d labeling states for "
+                                   "raw file '%s'.",
+                                   labelingState, labels->labelingStates.size(), rawFile.c_str());
+    }
+    const vector<const MaxQuantModification*>& labelMods = labels->labelingStates[labelingState].mods;
+
+    // iterate over sequence
+    for (int i = 0; i < (int)sequence.length(); i++)
+    {
+        // check for label mods
+        vector<SeqMod> sequenceLabelMods = getFixedMods(sequence[i], i + 1, labelMods);
+        v.insert(v.end(), sequenceLabelMods.begin(), sequenceLabelMods.end());
     }
 }
 
@@ -652,11 +740,12 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
 /**
  * Given an amino acid, return a vector of all SeqMods that should apply to it.
  */
-vector<SeqMod> MaxQuantReader::getFixedMods(char aa, int aaPosition, vector<const MaxQuantModification*>& mods)
+vector<SeqMod> MaxQuantReader::getFixedMods(char aa, int aaPosition,
+                                            const vector<const MaxQuantModification*>& mods)
 {
     vector<SeqMod> modsApplied;
 
-    for (vector<const MaxQuantModification*>::iterator iter = mods.begin();
+    for (vector<const MaxQuantModification*>::const_iterator iter = mods.begin();
          iter != mods.end();
          ++iter)
     {

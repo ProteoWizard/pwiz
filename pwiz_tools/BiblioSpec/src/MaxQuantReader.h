@@ -24,13 +24,8 @@
 #include "BuildParser.h"
 #include "MaxQuantModReader.h"
 #include <algorithm>
-#include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
-#include <cctype>
 #include <iterator>
-#include <map>
-#include <set>
-#include <vector>
 
 using namespace std;
 using namespace boost;
@@ -75,10 +70,11 @@ public:
     double retentionTime;
     double pep;
     double score;
+    int labelingState;
     string masses;
     string intensities;
 
-    MaxQuantLine() : scanNumber(0), mz(0), charge(0), retentionTime(0), score(0) {}
+    MaxQuantLine() : scanNumber(0), mz(0), charge(0), retentionTime(0), score(0), labelingState(-1) {}
 
     static void insertRawFile(MaxQuantLine& le, const string& value)
     {
@@ -119,6 +115,10 @@ public:
     static void insertScore(MaxQuantLine& le, const string& value)
     {
         le.score = (value.empty()) ? 0 : lexical_cast<double>(value);
+    }
+    static void insertLabelingState(MaxQuantLine& le, const string& value)
+    {
+        le.labelingState = (value.empty()) ? -1 : lexical_cast<int>(value);
     }
     static void insertMasses(MaxQuantLine& le, const string& value)
     {
@@ -189,10 +189,11 @@ private:
     int lineNum_;
     map< string, vector<MaxQuantPSM*> > fileMap_; // store psms by filename
     MaxQuantPSM* curMaxQuantPSM_; // use this instead of curPSM_
-    int numColumns_;   // size of targetColumns_;
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
+    vector<string> optionalColumns_; // columns that are optional
     set<MaxQuantModification> modBank_;   // full mod name -> delta mass
     map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> > fixedModBank_;
+    vector<MaxQuantLabels> labelBank_;
 
     void initTargetColumns();
     void initModifications();
@@ -201,10 +202,11 @@ private:
     void parseHeader(std::string& line);
     void collectPsms();
     void storeLine(MaxQuantLine& entry);
-    void addDoublesToVector(vector<double>& v, string valueList);
-    void addModsToVector(vector<SeqMod>& v, string modifications, string modSequence);
+    void addDoublesToVector(vector<double>& v, const string& valueList);
+    void addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence);
+    void addLabelModsToVector(vector<SeqMod>& v, const string& rawFile, const string& sequence, int labelingState);
     SeqMod searchForMod(vector<string>& modNames, string modSequence, int posOpenParen);
-    vector<SeqMod> getFixedMods(char aa, int aaPosition, vector<const MaxQuantModification*>& mods);
+    vector<SeqMod> getFixedMods(char aa, int aaPosition, const vector<const MaxQuantModification*>& mods);
 
     const escaped_list_separator<char> separator_;
 };

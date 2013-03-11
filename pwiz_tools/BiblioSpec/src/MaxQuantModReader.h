@@ -28,9 +28,12 @@
 #include "AminoAcidMasses.h"
 #include "PSM.h"
 #include "saxhandler.h"
-#include <boost/algorithm/string.hpp>
+#include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
 #include <cctype>
+#include <map>
 #include <set>
+#include <vector>
 
 using namespace std;
 using namespace boost;
@@ -66,9 +69,9 @@ public:
      * Given the modification's name, return a pointer to it.
      * Return NULL if not found.
      */
-    static const MaxQuantModification* find(set<MaxQuantModification>& modBank, const string& name)
+    static const MaxQuantModification* find(const set<MaxQuantModification>& modBank, const string& name)
     {
-        for (set<MaxQuantModification>::iterator iter = modBank.begin();
+        for (set<MaxQuantModification>::const_iterator iter = modBank.begin();
              iter != modBank.end();
              ++iter)
         {
@@ -90,6 +93,68 @@ public:
 };
 
 /**
+ * Represents one labeling state for one raw file from a MaxQuant mqpar.xml file.
+ */
+struct MaxQuantLabelingState
+{
+public:
+    vector<string> modsStrings;
+    vector<const MaxQuantModification*> mods;
+};
+
+/**
+ * Represents a set of labeling states for one raw file from a MaxQuant mqpar.xml file.
+ */
+struct MaxQuantLabels
+{
+public:
+    string rawFile;
+    vector<MaxQuantLabelingState> labelingStates;
+
+    MaxQuantLabels(string filename)
+    {
+        rawFile = filename;
+    }
+
+    /**
+     * Adds a new labeling state with the given mod strings.
+     */
+    void addModsStrings(vector<string> modsToAdd)
+    {
+        MaxQuantLabelingState newLabelingState;
+        newLabelingState.modsStrings = modsToAdd;
+        labelingStates.push_back(newLabelingState);
+    }
+
+    /**
+     * Adds MaxQuantModifications to the given labeling state.
+     */
+    void addMods(vector<MaxQuantLabelingState>::iterator iter, vector<const MaxQuantModification*> modsToAdd)
+    {
+        iter->mods = modsToAdd;
+    }
+
+    /**
+     * Given the raw file's name, return a pointer to its labels.
+     * Return NULL if not found.
+     */
+    static const MaxQuantLabels* findLabels(const vector<MaxQuantLabels>& labelBank, const string& filename)
+    {
+        for (vector<MaxQuantLabels>::const_iterator iter = labelBank.begin();
+             iter != labelBank.end();
+             ++iter)
+        {
+            if (iter->rawFile == filename)
+            {
+                return &*iter;
+            }
+        }
+        return NULL;
+    }
+private:
+};
+
+/**
  * \class A class for reading MaxQuant modifications.xml files.
  * Uses the sax handler to read the XML file.
  */
@@ -97,7 +162,8 @@ class MaxQuantModReader : public SAXHandler
 {
 public:
     MaxQuantModReader(const char* xmlfilename, set<MaxQuantModification>* modBank);
-    MaxQuantModReader(const char* xmlfilename, set<string>* fixedMods);
+    MaxQuantModReader(const char* xmlfilename,
+                      set<string>* fixedMods, vector<MaxQuantLabels>* labelBank);
     ~MaxQuantModReader();
 
     //parser methods
@@ -108,15 +174,20 @@ public:
 private:
     enum STATE {
         ROOT_STATE,
-        MODIFICATION_TAG, READING_POSITION,                 // for modifications.xml reading
-        FIXED_MODIFICATIONS_TAG, READING_FIXED_MODIFICATION // for mqpar.xml reading
+        MODIFICATION_TAG, READING_POSITION,                  // for modifications.xml reading
+        FIXED_MODIFICATIONS_TAG, READING_FIXED_MODIFICATION, // for mqpar.xml reading
+        FILENAMES_TAG, READING_FILENAME,
+        LABELS_TAG, READING_LABEL
     };
 
     double aaMasses_[128];
     MaxQuantModification curMod_;
     set<MaxQuantModification>* modBank_;
     set<string>* fixedMods_;
+    vector<MaxQuantLabels>* labelBank_;
     STATE state_;
+    int groupParams_;
+    int rawIndex_;
     
     string charBuf_;
 
