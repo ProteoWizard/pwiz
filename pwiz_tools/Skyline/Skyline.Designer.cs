@@ -1309,7 +1309,6 @@ namespace pwiz.Skyline
             this.replicateOrderAcqTimeContextMenuItem});
             this.replicateOrderContextMenuItem.Name = "replicateOrderContextMenuItem";
             resources.ApplyResources(this.replicateOrderContextMenuItem, "replicateOrderContextMenuItem");
-            this.replicateOrderContextMenuItem.DropDownOpening += new System.EventHandler(this.replicateOrderContextMenuItem_DropDownOpening);
             // 
             // replicateOrderDocumentContextMenuItem
             // 

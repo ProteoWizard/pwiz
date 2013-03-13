@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -51,6 +51,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Settings.Default.GroupByReplicateAnnotation; }
             set { Settings.Default.GroupByReplicateAnnotation = value; }
+        }
+
+        public static string OrderByReplicateAnnotation
+        {
+            get { return Settings.Default.OrderByReplicateAnnotation; }
+            set { Settings.Default.OrderByReplicateAnnotation = value; }
         }
 
         protected DocNode _parentNode;
@@ -474,43 +480,45 @@ namespace pwiz.Skyline.Controls.Graphs
             private IEnumerable<int> GetReplicateIndices(Func<int, ChromFileInfoId> getFileId)
             {
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
-                var order = ReplicateOrder;
-                if (order == SummaryReplicateOrder.document)
+                if (ReplicateOrder == SummaryReplicateOrder.document && null == OrderByReplicateAnnotation)
                 {
                     for (int iResult = 0; iResult < chromatograms.Count; iResult++)
                         yield return iResult;
                 }
                 else
                 {
-                    var listIndexFile = new List<KeyValuePair<int, ChromFileInfo>>();
+                    // Create a list of tuple's that will sort according to user's options.
+                    // The sort is optionally by an annotation value, and then optionally acquired time, 
+                    // and finally document order.
+                    var listIndexFile = new List<Tuple<object, DateTime, int>>();
+                    AnnotationDef orderByReplicateAnnotationDef = null;
+                    if (null != OrderByReplicateAnnotation)
+                    {
+                        orderByReplicateAnnotationDef = _document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(
+                                annotationDef => annotationDef.Name == OrderByReplicateAnnotation);
+                    }
                     for (int iResult = 0; iResult < chromatograms.Count; iResult++)
                     {
                         var chromSet = _document.Settings.MeasuredResults.Chromatograms[iResult];
                         
                         ChromFileInfoId fileId = getFileId(iResult);
                         ChromFileInfo fileInfo = (fileId != null ? chromSet.GetFileInfo(fileId) : null);
-
-                        listIndexFile.Add(new KeyValuePair<int, ChromFileInfo>(iResult, fileInfo));
+                        object annotationValue = null;
+                        DateTime replicateTime = DateTime.MaxValue;
+                        if (null != orderByReplicateAnnotationDef)
+                        {
+                            annotationValue = chromSet.Annotations.GetAnnotation(orderByReplicateAnnotationDef);
+                        }
+                        if (null != fileInfo && ReplicateOrder == SummaryReplicateOrder.time)
+                        {
+                            replicateTime = fileInfo.RunStartTime ?? DateTime.MaxValue;
+                        }
+                        listIndexFile.Add(new Tuple<object, DateTime, int>(annotationValue, replicateTime, iResult));
                     }
 
-                    // Sort by acquisition time, followed by document order for entries with
-                    // an acquisition time
-                    listIndexFile.Sort((p1, p2) =>
-                                           {
-                                               var t1 = p1.Value != null ? p1.Value.RunStartTime : null;
-                                               var t2 = p2.Value != null ? p2.Value.RunStartTime : null;
-                                               if (t1 != null && t2 != null)
-                                                   return Comparer.Default.Compare(t1, t2);
-                                               // Put all null values at the end, in document order
-                                               if (t1 != null)
-                                                   return -1;
-                                               if (t2 != null)
-                                                   return 1;
-                                               return Comparer.Default.Compare(p1.Key, p2.Key);
-                                           });
-
-                    foreach (var pair in listIndexFile)
-                        yield return pair.Key;
+                    listIndexFile.Sort();
+                    foreach (var tuple in listIndexFile)
+                        yield return tuple.Item3;
                 }
             }
         }

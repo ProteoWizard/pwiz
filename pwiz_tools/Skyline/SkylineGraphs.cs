@@ -2921,14 +2921,25 @@ namespace pwiz.Skyline
             // If not grouped by an annotation, show the order-by menuitem
             if (string.IsNullOrEmpty(groupBy))
             {
+                var orderByReplicateAnnotationDef = replicateAnnotations.FirstOrDefault(
+                        annotationDef => SummaryReplicateGraphPane.OrderByReplicateAnnotation == annotationDef.Name);
                 menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-                if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
+                replicateOrderContextMenuItem.DropDownItems.Clear();
+                replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        replicateOrderDocumentContextMenuItem,
+                        replicateOrderAcqTimeContextMenuItem
+                    });
+                replicateOrderDocumentContextMenuItem.Checked
+                    = null == orderByReplicateAnnotationDef &&
+                      SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
+                replicateOrderAcqTimeContextMenuItem.Checked
+                    = null == orderByReplicateAnnotationDef &&
+                      SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
+                foreach (var annotationDef in replicateAnnotations)
                 {
-                    replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            replicateOrderDocumentContextMenuItem,
-                            replicateOrderAcqTimeContextMenuItem
-                        });
+                    replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
+                        annotationDef, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
                 }
             }
             
@@ -2953,6 +2964,15 @@ namespace pwiz.Skyline
                        {
                            Checked = (annotationDef.Name == groupBy),
                        };
+        }
+
+        private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(AnnotationDef annotationDef, string currentOrderBy)
+        {
+            return new ToolStripMenuItem(annotationDef.Name, null,
+                                         (sender, eventArgs) => OrderByReplicateAnnotation(annotationDef.Name))
+                {
+                    Checked = (annotationDef.Name == currentOrderBy)
+                };
         }
 
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -2986,13 +3006,6 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void replicateOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            SummaryReplicateOrder replicateOrder = SummaryReplicateGraphPane.ReplicateOrder;
-            replicateOrderDocumentContextMenuItem.Checked = (replicateOrder == SummaryReplicateOrder.document);
-            replicateOrderAcqTimeContextMenuItem.Checked = (replicateOrder == SummaryReplicateOrder.time);
-        }
-
         private void replicateOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowReplicateOrder(SummaryReplicateOrder.document);
@@ -3006,6 +3019,7 @@ namespace pwiz.Skyline
         public void ShowReplicateOrder(SummaryReplicateOrder order)
         {
             SummaryReplicateGraphPane.ReplicateOrder = order;
+            SummaryReplicateGraphPane.OrderByReplicateAnnotation = null;
             UpdateSummaryGraphs();
         }
 
@@ -3020,6 +3034,11 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
+        public void OrderByReplicateAnnotation(string annotationName)
+        {
+            SummaryReplicateGraphPane.OrderByReplicateAnnotation = annotationName;
+            UpdateSummaryGraphs();
+        }
 
         private void scopeContextMenuItem_DropDownOpening(object sender, EventArgs e)
         {

@@ -1602,6 +1602,23 @@ namespace pwiz.Skyline.Properties {
                 this["GroupByReplicateAnnotation"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OrderByReplicateAnnotation
+        {
+            get
+            {
+                return ((string)(this["OrderByReplicateAnnotation"]));
+            }
+            set
+            {
+                this["OrderByReplicateAnnotation"] = value;
+            }
+        }
+
+
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
