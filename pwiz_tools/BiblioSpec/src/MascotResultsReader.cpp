@@ -80,9 +80,12 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
     // register the name with BuildParser, but don't try to open it
     this->setSpecFileName(datFileName, false);
 
-    // get modifications information
     ms_params_ = new ms_searchparams(*ms_file_);
 
+    // get distiller rawfiles
+    getDistillerRawFiles(ms_params_, rawFiles_);
+
+    // get modifications information
     for(int i=1; 0 != ms_params_->getFixedModsDelta(i); i++){
         double deltaMass = ms_params_->getFixedModsDelta(i);
         string residues = ms_params_->getFixedModsResidues(i);
@@ -215,6 +218,7 @@ bool MascotResultsReader::parseFile(){
         if( fileIterator->first.empty() ){
             buildTables(MASCOT_IONS_SCORE);
         } else {
+            setSpecFileName(fileIterator->first.c_str(), false);
             buildTables(MASCOT_IONS_SCORE, fileIterator->first);
         }
     }
@@ -487,31 +491,144 @@ void MascotResultsReader::applyIsotopeDiffs(PSM* psm, string quantName){
 }
 
 /**
+ * Parses the distiller raw files from the ms_searchparams and adds them to
+ * the given vector.
+ */
+void MascotResultsReader::getDistillerRawFiles(const ms_searchparams* searchparams, vector<string>& v)
+{
+    const string rawFileHeader = "_DISTILLER_RAWFILE";
+    string paramsString = searchparams->getAllUSERParams();
+    vector<string> params;
+    boost::split(params, paramsString, boost::is_any_of("\r\n"));
+
+    // iterate over parameters
+    for (vector<string>::iterator iter = params.begin();
+         iter != params.end();
+         ++iter)
+    {
+        // check if the parameter is a distiller rawfile
+        if (iter->substr(0, rawFileHeader.length()) == rawFileHeader)
+        {
+            // find the start of the filename
+            size_t idx = iter->find('=') + 1;
+            string sampleStr(iter->substr(idx, 3));
+            idx = iter->find('}', idx);
+            if (idx != string::npos)
+            {
+                // add the filename to the vector
+                string rawFile(iter->substr(idx + 1));
+                Verbosity::debug("Found distiller raw file [%s]", rawFile.c_str());
+
+                if (sampleStr != "{1}")
+                {
+                    throw BlibException(false, "Distiller raw file '%s' had a sample number other than 1.",
+                                               rawFile.c_str());
+                }
+
+                v.push_back(rawFile);
+            }
+        }
+    }
+}
+
+/**
  * Look in the title string of the spectrum for the name of the file it
  * originally came from.  Return an empty string if no file found.
  */
 string MascotResultsReader::getFilename(ms_inputquery& spec){
 
+    // one distiller raw file, just return it
+    if (rawFiles_.size() == 1)
+    {
+        return rawFiles_[0];
+    }
+
     string idStr = spec.getStringTitle(true);
     string filename = getFilenameFromID(idStr);
 
-    if (filename.empty()){
-        // try looking for square braces
-        size_t start = idStr.find("[");
-        if( start != string::npos ){ // found it
-            start++; // move to next character
-            // look for a known file extension
-            size_t end = string::npos;
-            size_t extIdx = 0;
-            while(end == string::npos 
-                  && extIdx < specFileExtensions_.size()){
-                end = idStr.find(specFileExtensions_[extIdx++], start);
-            }
-            if( end != string::npos){
-                end += (specFileExtensions_[extIdx - 1].length() - 1);
-                filename = idStr.substr(start, end - start);
+    if (!filename.empty())
+    {
+        return filename;
+    }
+
+    // check for "from file" format
+    const string fromFileStr = "from file";
+
+    size_t idx = idStr.find(fromFileStr);
+    size_t idxEnd;
+
+    if (idx != string::npos)
+    {
+        idx += fromFileStr.length();
+        // check if from multiple files (fail)
+        // e.g. "from files [0,1,2]"
+        if (idStr.length() > idx && idStr[idx] == 's')
+        {
+            throw BlibException(false, "Spectra from multiple files. Use scan group aggregation method "
+                                       "'None' in Mascot Distiller MS/MS processing options. Title string "
+                                       "was: '%s'", idStr.c_str());
+        }
+        // we now expect string like "from file [0]"
+        // find file index
+        idx = idStr.find('[', idx);
+        if (idx != string::npos)
+        {
+            ++idx;
+            idxEnd = idStr.find(']', idx);
+            if (idxEnd != string::npos)
+            {
+                // get string between brackets
+                string fileIdxStr(idStr, idx, idxEnd - idx);
+                int fileIdx;
+                try
+                {
+                    fileIdx = boost::lexical_cast<int>(fileIdxStr);
+                }
+                catch (boost::bad_lexical_cast e)
+                {
+                    // rethrow
+                    throw BlibException(false, "Error reading file index from title '%s': %s",
+                                               idStr.c_str(), e.what());
+                }
+                // get filename
+                if (fileIdx < 0 || fileIdx >= (int)rawFiles_.size())
+                {
+                    throw BlibException(false, "File index %d out of range in title '%s'",
+                                               fileIdx, idStr.c_str());
+                }
+                return rawFiles_[fileIdx];
             }
         }
+    }
+    else
+    {
+        // check for filename in brackets
+        idx = idStr.find('[');
+        if (idx != string::npos)
+        {
+            // look for a known file extension
+            ++idx;
+            idxEnd = string::npos;
+            size_t extIdx = 0;
+            while (idxEnd == string::npos &&
+                   extIdx < specFileExtensions_.size())
+            {
+                idxEnd = idStr.find(specFileExtensions_[extIdx++], idx);
+            }
+            if (idxEnd != string::npos)
+            {
+                idxEnd += (specFileExtensions_[extIdx - 1].length() - 1);
+                return idStr.substr(idx, idxEnd - idx);
+            }
+        }
+    }
+
+    // fail on case where we have multiple files and couldn't get file information from title
+    if (rawFiles_.size() > 1)
+    {
+        throw BlibException(false, "When creating multi-file projects in Mascot Distiller, "
+                                   "uncheck the 'Memory efficient (Not compatible with "
+                                   "label-free)' checkbox. Title string was: '%s'", idStr.c_str());
     }
 
     return filename;

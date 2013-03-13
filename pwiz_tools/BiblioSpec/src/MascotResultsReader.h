@@ -33,6 +33,8 @@
 #endif
 #include "msparser.hpp"
 #include "MascotSpecReader.h"
+#include <iostream>
+#include <iomanip>
 
 using namespace matrix_science;
 typedef map<char, double> ModTable;
@@ -60,6 +62,7 @@ class MascotResultsReader : public BuildParser{
   map<string, vector<PSM*> > fileMap_; // PSMs stored by spec filename
   vector<string> specFileExtensions_;  // a list of possible extensions
   ProgressIndicator* readSpecProgress_; // each spec read from .dat file 
+  vector<string> rawFiles_; // a list of distiller rawfiles
 
   void getIsotopeMasses();
   void applyIsotopeDiffs(PSM* psm, string quantName);
@@ -68,6 +71,7 @@ class MascotResultsReader : public BuildParser{
   void addVarMod(PSM* psm, char varLookUpChar, int aaPosition);
   void addErrorTolerantMod(PSM* psm, string readableModStr, int aaPosition);
   int findMaxRankingPeptideToAdd(int specId);
+  void getDistillerRawFiles(const ms_searchparams* searchparams, vector<string>& v);
   string getFilename(ms_inputquery& spec);
   string getErrorMessage();
   string getErrorMessage(int errorCode);
