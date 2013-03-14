@@ -114,6 +114,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnnotationUnitTest.cs" />
+    <Compile Include="ChromCollectorTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="EspTest.cs" />

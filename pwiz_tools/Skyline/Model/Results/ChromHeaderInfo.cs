@@ -24,11 +24,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
+        /// Direct read of an entire array using p-invoke of Win32 WriteFile.  This seems
         /// to coexist with FileStream reading that the write version, but its use case
         /// is tightly limited.
         /// <para>
@@ -140,25 +140,12 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromGroupHeaderInfo[] ReadArray(SafeHandle file, int count)
+        private static unsafe ChromGroupHeaderInfo[] ReadArray(SafeHandle file, int count)
         {
             ChromGroupHeaderInfo[] results = new ChromGroupHeaderInfo[count];
-            fixed (ChromGroupHeaderInfo* p = &results[0])
+            fixed (ChromGroupHeaderInfo* p = results)
             {
-                byte* p2 = (byte*)p;
-
-                UInt32 cbReadDesired = (UInt32)(sizeof(ChromGroupHeaderInfo) * count);
-                UInt32 cbReadActual = 0;
-                bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
-                if (!ret || cbReadActual != cbReadDesired)
-                {
-                    // If nothing was read, it may be possible to recover by
-                    // reading the slow way.
-                    if (cbReadActual == 0)
-                        throw new BulkReadException();
-                    
-                    throw new InvalidDataException();
-                }
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromGroupHeaderInfo) * count);
             }
 
             return results;
@@ -173,15 +160,9 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="groupHeaders">The array to write</param>
         public static unsafe void WriteArray(SafeHandle file, ChromGroupHeaderInfo[] groupHeaders)
         {
-            fixed (ChromGroupHeaderInfo* p = &groupHeaders[0])
+            fixed (ChromGroupHeaderInfo* p = groupHeaders)
             {
-                byte* p2 = (byte*)p;
-
-                UInt32 cbWriteDesired = (UInt32)(sizeof(ChromGroupHeaderInfo) * groupHeaders.Length);
-                UInt32 cbWriteActual = 0;
-                bool ret = Kernel32.WriteFile(file, p2, cbWriteDesired, &cbWriteActual, null);
-                if (!ret || cbWriteActual != cbWriteDesired)
-                    throw new IOException();
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromGroupHeaderInfo) * groupHeaders.Length);
             }
         }
 
@@ -335,22 +316,9 @@ namespace pwiz.Skyline.Model.Results
         public static unsafe ChromGroupHeaderInfo5[] ReadArray(SafeHandle file, int count)
         {
             ChromGroupHeaderInfo5[] results = new ChromGroupHeaderInfo5[count];
-            fixed (ChromGroupHeaderInfo5* p = &results[0])
+            fixed (ChromGroupHeaderInfo5* p = results)
             {
-                byte* p2 = (byte*)p;
-
-                UInt32 cbReadDesired = (UInt32)(sizeof(ChromGroupHeaderInfo5) * count);
-                UInt32 cbReadActual = 0;
-                bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
-                if (!ret || cbReadActual != cbReadDesired)
-                {
-                    // If nothing was read, it may be possible to recover by
-                    // reading the slow way.
-                    if (cbReadActual == 0)
-                        throw new BulkReadException();
-
-                    throw new InvalidDataException();
-                }
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromGroupHeaderInfo5) * count);
             }
 
             return results;
@@ -365,20 +333,15 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="groupHeaders">The array to write</param>
         public static unsafe void WriteArray(SafeHandle file, ChromGroupHeaderInfo5[] groupHeaders)
         {
-            fixed (ChromGroupHeaderInfo5* p = &groupHeaders[0])
+            fixed (ChromGroupHeaderInfo5* p = groupHeaders)
             {
-                byte* p2 = (byte*)p;
-
-                UInt32 cbWriteDesired = (UInt32)(sizeof(ChromGroupHeaderInfo5) * groupHeaders.Length);
-                UInt32 cbWriteActual = 0;
-                bool ret = Kernel32.WriteFile(file, p2, cbWriteDesired, &cbWriteActual, null);
-                if (!ret || cbWriteActual != cbWriteDesired)
-                    throw new IOException();
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromGroupHeaderInfo5) * groupHeaders.Length);
             }
         }
 
         #endregion
     }
+
 
     public struct ChromTransition
     {
@@ -452,22 +415,9 @@ namespace pwiz.Skyline.Model.Results
         public static unsafe ChromTransition[] ReadArray(SafeHandle file, int count)
         {
             ChromTransition[] results = new ChromTransition[count];
-            fixed (ChromTransition* p = &results[0])
+            fixed (ChromTransition* p = results)
             {
-                byte* p2 = (byte*) p;
-
-                UInt32 cbReadDesired = (UInt32) (sizeof (ChromTransition)*count);
-                UInt32 cbReadActual = 0;
-                bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
-                if (!ret || cbReadActual != cbReadDesired)
-                {
-                    // If nothing was read, it may be possible to recover by
-                    // reading the slow way.
-                    if (cbReadActual == 0)
-                        throw new BulkReadException();
-                    
-                    throw new InvalidDataException();
-                }
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition) * count);
             }
 
             return results;
@@ -484,13 +434,7 @@ namespace pwiz.Skyline.Model.Results
         {
             fixed (ChromTransition* p = &setHeaders[0])
             {
-                byte* p2 = (byte*) p;
-
-                UInt32 cbWriteDesired = (UInt32) (sizeof (ChromTransition)*setHeaders.Length);
-                UInt32 cbWriteActual = 0;
-                bool ret = Kernel32.WriteFile(file, p2, cbWriteDesired, &cbWriteActual, null);
-                if (!ret || cbWriteActual != cbWriteDesired)
-                    throw new IOException();
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromTransition) * setHeaders.Length);
             }
         }
 
@@ -643,22 +587,9 @@ namespace pwiz.Skyline.Model.Results
         public static unsafe ChromTransition5[] ReadArray(SafeHandle file, int count)
         {
             ChromTransition5[] results = new ChromTransition5[count];
-            fixed (ChromTransition5* p = &results[0])
+            fixed (ChromTransition5* p = results)
             {
-                byte* p2 = (byte*) p;
-
-                UInt32 cbReadDesired = (UInt32) (sizeof (ChromTransition5)*count);
-                UInt32 cbReadActual = 0;
-                bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
-                if (!ret || cbReadActual != cbReadDesired)
-                {
-                    // If nothing was read, it may be possible to recover by
-                    // reading the slow way.
-                    if (cbReadActual == 0)
-                        throw new BulkReadException();
-                    
-                    throw new InvalidDataException();
-                }
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition5) * count);
             }
 
             return results;
@@ -675,13 +606,7 @@ namespace pwiz.Skyline.Model.Results
         {
             fixed (ChromTransition5* p = &setHeaders[0])
             {
-                byte* p2 = (byte*) p;
-
-                UInt32 cbWriteDesired = (UInt32) (sizeof (ChromTransition5)*setHeaders.Length);
-                UInt32 cbWriteActual = 0;
-                bool ret = Kernel32.WriteFile(file, p2, cbWriteDesired, &cbWriteActual, null);
-                if (!ret || cbWriteActual != cbWriteDesired)
-                    throw new IOException();
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromTransition5) * setHeaders.Length);
             }
         }
 
@@ -886,22 +811,9 @@ namespace pwiz.Skyline.Model.Results
             ChromPeak[] results = new ChromPeak[count];
             if (count > 0)
             {
-                fixed (ChromPeak* p = &results[0])
+                fixed (ChromPeak* p = results)
                 {
-                    byte* p2 = (byte*) p;
-
-                    UInt32 cbReadDesired = (UInt32) (sizeof (ChromPeak)*count);
-                    UInt32 cbReadActual = 0;
-                    bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
-                    if (!ret || cbReadActual != cbReadDesired)
-                    {
-                        // If nothing was read, it may be possible to recover by
-                        // reading the slow way.
-                        if (cbReadActual == 0)
-                            throw new BulkReadException();
-                        
-                        throw new InvalidDataException();
-                    }
+                    FastRead.ReadBytes(file, (byte*)p, sizeof(ChromPeak) * count);
                 }
             }
 
@@ -917,15 +829,9 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="headers">The array to write</param>
         public static unsafe void WriteArray(SafeHandle file, ChromPeak[] headers)
         {
-            fixed (ChromPeak* p = &headers[0])
+            fixed (ChromPeak* p = headers)
             {
-                byte* p2 = (byte*)p;
-
-                UInt32 cbWriteDesired = (UInt32)(sizeof(ChromPeak) * headers.Length);
-                UInt32 cbWriteActual = 0;
-                bool ret = Kernel32.WriteFile(file, p2, cbWriteDesired, &cbWriteActual, null);
-                if (!ret || cbWriteActual != cbWriteDesired)
-                    throw new IOException();
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromPeak) * headers.Length);
             }
         }
 
@@ -1126,7 +1032,7 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    public enum ChromSource { unknown, fragment, sim, ms1 }
+    public enum ChromSource { fragment, sim, ms1, unknown  }
 
     public struct ChromKey : IComparable<ChromKey>
     {
@@ -1671,25 +1577,6 @@ namespace pwiz.Skyline.Model.Results
             Array.Copy(intRaw, intRaw.Length - 4, intSmooth, intSmooth.Length - 4, 4);
             return intSmooth;
         }
-    }
-
-    internal static class Kernel32
-    {
-        [DllImport("kernel32", SetLastError = true)]
-        internal static extern unsafe bool ReadFile(
-            SafeHandle hFile,
-            byte* lpBuffer,
-            UInt32 numberOfBytesToRead,
-            UInt32* lpNumberOfBytesRead,
-            NativeOverlapped* lpOverlapped);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern unsafe bool WriteFile(
-            SafeHandle handle,
-            byte* lpBuffer,
-            UInt32 numBytesToWrite,
-            UInt32* numBytesWritten,
-            NativeOverlapped* lpOverlapped);        
     }
 
     public class BulkReadException : IOException

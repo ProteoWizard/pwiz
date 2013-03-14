@@ -877,6 +877,51 @@ namespace pwiz.Skyline.Util
                     values1[i] = values2[i];
             }
         }
+
+        /// <summary>
+        /// Sort an array and produce an output array that shows how the indexes of the
+        /// elements have been reordered.  The indexing array can then be applied to a
+        /// different array to follow the ordering of the initial array.
+        /// </summary>
+        /// <typeparam name="TItem">Type of array elements</typeparam>
+        /// <param name="array">Array to sort</param>
+        /// <param name="sortIndexes">Records how indexes were changed as a result of sorting</param>
+        public static void Sort<TItem>(TItem[] array, out int[] sortIndexes)
+        {
+            sortIndexes = new int[array.Length];
+            for (int i = 0; i < array.Length; i++)
+                sortIndexes[i] = i;
+            Array.Sort(array, sortIndexes);
+        }
+
+        /// <summary>
+        /// Apply the ordering gotten from the sorting of an array (see Sort method above)
+        /// to a new array.
+        /// </summary>
+        /// <typeparam name="TItem">Type of array elements</typeparam>
+        /// <param name="sortIndexes">Array of indexes that recorded sort operations</param>
+        /// <param name="array">Array to be reordered using the index array</param>
+        /// <returns></returns>
+        public static TItem[] ApplyOrder<TItem>(int[] sortIndexes, TItem[] array)
+        {
+            var ordered = new TItem[array.Length];
+            for (int i = 0; i < array.Length; i++)
+                ordered[i] = array[sortIndexes[i]];
+            return ordered;
+        }
+
+        /// <summary>
+        /// Returns true if the given array is not in sort order.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns>True if array needs to be sorted</returns>
+        public static bool NeedsSort(float[] array)
+        {
+            for (int i = 0; i < array.Length - 1; i++)
+                if (array[i] > array[i + 1])
+                    return true;
+            return false;
+        }
     }
 
     /// <summary>
@@ -998,6 +1043,14 @@ namespace pwiz.Skyline.Util
         {
             int i = localizedStrings.IndexOf(v => Equals(v, value));
             return (i == -1 ? defaultValue : (TEnum) (object) i);
+        }
+
+        /// <summary>
+        /// Enumerate all possible values of the given enum type.
+        /// </summary>
+        public static IEnumerable<TEnum> GetEnumValues<TEnum>()
+        {
+            return Enum.GetValues(typeof (TEnum)).Cast<TEnum>();
         }
 
         public static string MakeId(IEnumerable<char> name)

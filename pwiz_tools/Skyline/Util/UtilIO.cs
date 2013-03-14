@@ -22,10 +22,12 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -916,5 +918,123 @@ namespace pwiz.Skyline.Util
         {
             DirectoryEx.SafeDelete(DirPath);
         }
+    }
+
+    public static class FastRead
+    {
+        /// <summary>
+        /// Direct read of a byte array using p-invoke of Win32 ReadFile.  This seems
+        /// to coexist with FileStream reading that the write version, but its use case
+        /// is tightly limited.
+        /// <para>
+        /// Contributed by Randy Kern.  See:
+        /// http://randy.teamkern.net/2009/02/reading-arrays-from-files-in-c-without-extra-copy.html
+        /// </para>
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="bytes">Pointer to buffer for results</param>
+        /// <param name="byteCount">How many bytes to read</param>
+        public static unsafe void ReadBytes(SafeHandle file, byte* bytes, int byteCount)
+        {
+            uint bytesRead;
+            bool ret = Kernel32.ReadFile(file, bytes, (uint)byteCount, &bytesRead, null);
+            if (!ret || bytesRead != byteCount)
+            {
+                // If nothing was read, it may be possible to recover by
+                // reading the slow way.
+                if (bytesRead == 0)
+                    throw new BulkReadException();
+                throw new InvalidDataException();
+            }
+        }
+
+        /// <summary>
+        /// Read an array of floats from a file using p-invoke of Win32 ReadFile.
+        /// This might seem like a good candidate for a generic template, but C# can't
+        /// "fix" the address of a managed type.
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="data">Array of floats to be read</param>
+        /// <param name="itemCount">How many floats to read</param>
+        /// <param name="offset">Optional offset specifies where to put items in the array</param>
+        public static unsafe void ReadFloats(SafeHandle file, float[] data, int itemCount, int offset = 0)
+        {
+            fixed (float* p = &data[offset])
+            {
+                ReadBytes(file, (byte*)p, itemCount * sizeof(float));
+            }
+        }
+
+        /// <summary>
+        /// Set file pointer position.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="position"></param>
+        public static unsafe void SetFilePointer(SafeHandle file, long position)
+        {
+            Kernel32.SetFilePointerEx(file, position, null, 0);
+        }
+    }
+
+    public static class FastWrite
+    {
+        /// <summary>
+        /// Direct write of byte array using p-invoke of Win32 WriteFile.  This cannot
+        /// be mixed with standard writes to a FileStream, or .NET throws an exception
+        /// about the file location not being what it expected.
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="bytes">Pointer to buffer to be written</param>
+        /// <param name="byteCount">How many bytes to write</param>
+        public static unsafe void WriteBytes(SafeHandle file, byte* bytes, int byteCount)
+        {
+            uint bytesWritten;
+            bool ret = Kernel32.WriteFile(file, bytes, (uint)byteCount, &bytesWritten, null);
+            if (!ret || bytesWritten != byteCount)
+                throw new IOException();
+        }
+
+        /// <summary>
+        /// Write an array of floats to a file using p-invoke of Win32 WriteFile.
+        /// This might seem like a good candidate for a generic template, but C# can't
+        /// "fix" the address of a managed type.
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="data">Array of floats to be written</param>
+        /// <param name="index">Index in data array to write from</param>
+        /// <param name="itemCount">Number of elements to write</param>
+        public static unsafe void WriteFloats(SafeHandle file, float[] data, int index, int itemCount)
+        {
+            fixed (float* p = &data[index])
+            {
+                WriteBytes(file, (byte*)p, itemCount * sizeof(float));
+            }
+        }
+    }
+    
+    internal static class Kernel32
+    {
+        [DllImport("kernel32", SetLastError = true)]
+        internal static extern unsafe bool ReadFile(
+            SafeHandle hFile,
+            byte* lpBuffer,
+            UInt32 numberOfBytesToRead,
+            UInt32* lpNumberOfBytesRead,
+            NativeOverlapped* lpOverlapped);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern unsafe bool WriteFile(
+            SafeHandle handle,
+            byte* lpBuffer,
+            UInt32 numBytesToWrite,
+            UInt32* numBytesWritten,
+            NativeOverlapped* lpOverlapped);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern unsafe bool SetFilePointerEx(
+            SafeHandle handle,
+            Int64 liDistanceToMove,
+            Int64* lpNewFilePointer,
+            UInt32 dwMoveMethod);
     }
 }

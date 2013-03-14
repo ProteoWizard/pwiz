@@ -699,6 +699,7 @@
     <Compile Include="Model\Results\ChromCacheJoiner.cs" />
     <Compile Include="Model\Results\ChromCacheMinimizer.cs" />
     <Compile Include="Model\Results\ChromCacheWriter.cs" />
+    <Compile Include="Model\Results\ChromCollector.cs" />
     <Compile Include="Model\Results\ChromData.cs" />
     <Compile Include="Model\Results\ChromDataProvider.cs" />
     <Compile Include="Model\Results\ChromDataSet.cs" />

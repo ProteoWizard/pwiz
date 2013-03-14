@@ -249,19 +249,12 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(exportReportDlg);
 
             //p. 12 Import Full-Scan Data
-            ImportResultsDlg importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             const int prefixLen = 35;
             string lowRes20File = GetTestPath(@"Low Res\klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1" + ExtThermoRaw);
             string shortLowRes20FileName = (Path.GetFileNameWithoutExtension(lowRes20File) ?? "").Substring(prefixLen);
             string lowRes80File = GetTestPath(@"Low Res\klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1" + ExtThermoRaw);
             string shortLowRes80FileName = (Path.GetFileNameWithoutExtension(lowRes80File) ?? "").Substring(prefixLen);
-            RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(
-                    new[] {lowRes20File, lowRes80File}));
-
-            ImportResultsNameDlg importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-            RunUI(importResultsNameDlg.YesDialog);
-            // Give the Raw files some time to be processed.
-            WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes
+            ImportResultsFiles(new[] { lowRes20File, lowRes80File }, 15 * 60); // 15 minutes
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, 9, 10, 0, 87, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, 9, 10, 0, 87, 0);
 

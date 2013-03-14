@@ -746,6 +746,16 @@ namespace pwiz.SkylineTestUtil
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
         }
 
+        public void ImportResultsFiles(IEnumerable<string> fileNames, int waitForLoadSeconds = 420)
+        {
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
+
+            ImportResultsNameDlg importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
+            RunUI(importResultsNameDlg.YesDialog);
+            WaitForCondition(waitForLoadSeconds * 1000,
+                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+        }
         #endregion
     }
 }
