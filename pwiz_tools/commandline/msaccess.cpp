@@ -157,7 +157,10 @@ string usage(const MSDataAnalyzerApplication& app)
 
     oss << "\nExamples:\n\n"
         << "msaccess data.mzML -x \"tic "TIC_MZRANGE_ARG"=409-410\" --filter=\"msLevel 2\"\n"
-        << "(creates data.mzML.tic.409.00-410.00.txt with total ion current info for mass range 409-410 in ms2 scans)\n\n"
+        << "(creates data.mzML.tic.409.00-410.00.txt with total ion current info for mass range 409-410 in ms2 scans)\n"
+        << "This could also be achieved as \"msaccess data.mzML -c mycfg.txt\" where mycfg.txt is a file containing the lines\n"
+        << "   exec = tic "TIC_MZRANGE_ARG"=409-410\n"
+        << "   filter = msLevel 2\n\n"
         << "msaccess data.mzML -x spectrum_table\n"
         << "(creates data.mzML.spectrum_table.txt with summary information for all spectra as read from the scan headers)\n\n"
         << "msaccess data.mzML -x \"binary "BINARY_INDEX_ARG"=0-3\"\n"
