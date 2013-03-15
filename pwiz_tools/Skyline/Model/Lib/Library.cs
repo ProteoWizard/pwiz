@@ -439,7 +439,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if retention time information was retrieved successfully</returns>
         public abstract bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes);
 
-        public virtual IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int fileIndex)
+        public virtual IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int? fileIndex)
         {
             return new double[0];
         }

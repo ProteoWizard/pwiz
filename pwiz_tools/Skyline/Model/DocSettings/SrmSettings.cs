@@ -529,12 +529,12 @@ namespace pwiz.Skyline.Model.DocSettings
             var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
                 .Select(typedSequence => typedSequence.ModifiedSequence);
 
-            int index = (alignmentIndex != null ? alignmentIndex.Index : -1);
+            int? index = (alignmentIndex != null ? alignmentIndex.FileIndex : null);
 
             var times = library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index).ToArray();
 
             if (alignmentIndex != null)
-                alignmentIndex.Index = index;
+                alignmentIndex.FileIndex = index;
             return times;
         }
 
@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
                     .Select(typedSequence => typedSequence.ModifiedSequence);
-                int index = -1;
+                int? index = null;
                 times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index));
             }
             return times.ToArray();
