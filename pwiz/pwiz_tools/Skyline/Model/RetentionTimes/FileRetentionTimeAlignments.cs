@@ -187,10 +187,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public RetentionTimeAlignmentIndex(RetentionTimeAlignment alignment)
         {
             Alignment = alignment;
-            Index = -1;
         }
 
         public RetentionTimeAlignment Alignment { get; private set; }
-        public int Index { get; set; }
+        public int? FileIndex { get; set; }
     }
 }
