@@ -931,9 +931,10 @@ namespace pwiz.Skyline.Model.Lib
             return base.TryGetRetentionTimes(filePath, out retentionTimes);
         }
 
-        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences)
+        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int iFile)
         {
-            int iFile = FindSource(filePath);
+            if (iFile < 0)
+                iFile = FindSource(filePath);
             if (iFile < 0)
             {
                 return new double[0];

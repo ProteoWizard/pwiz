@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -66,6 +67,9 @@ namespace pwiz.Skyline.Model.Results
             _cacheRecalc = cacheRecalc;
             MSDataFilePaths = msDataFilePaths;
 
+            // Reserve an array for caching retention time alignment information, if needed
+            FileAlignmentIndices = new RetentionTimeAlignmentIndices[msDataFilePaths.Count];
+
             // Get peak scoring calculators
             DetailedPeakFeatureCalculators = PeakFeatureCalculator.Calculators
                 .Where(c => c is DetailedPeakFeatureCalculator)
@@ -75,6 +79,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private IList<string> MSDataFilePaths { get; set; }
+        private IList<RetentionTimeAlignmentIndices> FileAlignmentIndices { get; set; }
 
         private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
 
@@ -485,7 +490,17 @@ namespace pwiz.Skyline.Model.Results
                 bool isAlignedTimes = (retentionTimes.Length == 0);
                 if (isAlignedTimes)
                 {
-                    retentionTimes = _document.Settings.GetAlignedRetentionTimes(filePath,
+                    RetentionTimeAlignmentIndices alignmentIndices = FileAlignmentIndices[_currentFileIndex];
+                    if (alignmentIndices == null)
+                    {
+                        string basename = Path.GetFileNameWithoutExtension(filePath);
+                        var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
+                        alignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
+                        FileAlignmentIndices[_currentFileIndex] = alignmentIndices;
+
+                    }
+
+                    retentionTimes = _document.Settings.GetAlignedRetentionTimes(alignmentIndices,
                         nodePep.Peptide.Sequence, nodePep.ExplicitMods);
                 }
 

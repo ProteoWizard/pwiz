@@ -103,6 +103,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
         #endregion
     }
+
     [XmlRoot("rt_alignment")]
     public class RetentionTimeAlignment : XmlNamedElement
     {
@@ -167,5 +168,29 @@ namespace pwiz.Skyline.Model.RetentionTimes
             RegressionLine.WriteXmlAttributes(writer);
         }
         #endregion
+    }
+
+    public class RetentionTimeAlignmentIndices : List<RetentionTimeAlignmentIndex>
+    {
+        public RetentionTimeAlignmentIndices(FileRetentionTimeAlignments alignments)
+        {
+            if (alignments != null)
+            {
+                foreach (var alignment in alignments.RetentionTimeAlignments.Values)
+                    Add(new RetentionTimeAlignmentIndex(alignment));
+            }
+        }
+    }
+
+    public class RetentionTimeAlignmentIndex
+    {
+        public RetentionTimeAlignmentIndex(RetentionTimeAlignment alignment)
+        {
+            Alignment = alignment;
+            Index = -1;
+        }
+
+        public RetentionTimeAlignment Alignment { get; private set; }
+        public int Index { get; set; }
     }
 }

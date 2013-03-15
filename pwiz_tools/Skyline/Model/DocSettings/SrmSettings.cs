@@ -513,7 +513,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
+        public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods, RetentionTimeAlignmentIndex alignmentIndex = null)
         {
             string basename = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(filePath));
             var source = DocumentRetentionTimes.RetentionTimeSources.Find(basename);
@@ -528,22 +528,35 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
                 .Select(typedSequence => typedSequence.ModifiedSequence);
-            return library.GetRetentionTimesWithSequences(source.Name, modifiedSequences).ToArray();
+
+            int index = (alignmentIndex != null ? alignmentIndex.Index : -1);
+
+            var times = library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index).ToArray();
+
+            if (alignmentIndex != null)
+                alignmentIndex.Index = index;
+            return times;
         }
 
         public double[] GetAlignedRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
         {
-            var times = new List<double>();
             string basename = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(filePath));
             var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(basename);
-            if (fileAlignments != null)
+
+            return GetAlignedRetentionTimes(new RetentionTimeAlignmentIndices(fileAlignments), peptideSequence, explicitMods);
+        }
+
+        public double[] GetAlignedRetentionTimes(RetentionTimeAlignmentIndices alignmentIndices, string peptideSequence, ExplicitMods explicitMods)
+        {
+            var times = new List<double>();
+            if (alignmentIndices != null)
             {
-                foreach (var retentionTimeAlignment in fileAlignments.RetentionTimeAlignments.Values)
+                foreach (var alignmentIndex in alignmentIndices)
                 {
-                    var unalignedTimes = GetRetentionTimes(retentionTimeAlignment.Name, peptideSequence, explicitMods);
+                    var unalignedTimes = GetRetentionTimes(alignmentIndex.Alignment.Name, peptideSequence, explicitMods, alignmentIndex);
                     foreach (var unalignedTime in unalignedTimes)
                     {
-                        var alignedTime = retentionTimeAlignment.RegressionLine.GetY(unalignedTime);
+                        var alignedTime = alignmentIndex.Alignment.RegressionLine.GetY(unalignedTime);
                         times.Add(alignedTime);
                     }
                 }
@@ -563,7 +576,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
                     .Select(typedSequence => typedSequence.ModifiedSequence);
-                times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences));
+                int index = -1;
+                times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index));
             }
             return times.ToArray();
         }
