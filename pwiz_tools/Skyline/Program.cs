@@ -88,10 +88,10 @@ namespace pwiz.Skyline
             else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0] == "CMD") // Not L10N
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0].StartsWith("CMD")) // Not L10N
             {
                 CommandLineRunner clr = new CommandLineRunner();
-                clr.Start();
+                clr.Start(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0].Substring(3));
 
                 // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
                 Process.GetCurrentProcess().Kill();
@@ -287,10 +287,10 @@ namespace pwiz.Skyline
         /// the function will print each line received from the pipe
         /// out to the console and then wait for a newline from the user.
         /// </summary>
-        public void Start()
+        public void Start(string guidSuffix)
         {
             List<string> args = new List<string>();
-            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe")) // Not L10N
+            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe" + guidSuffix)) // Not L10N
             {
                 // The connect function will wait 5s for the pipe to become available
                 try
@@ -314,9 +314,10 @@ namespace pwiz.Skyline
                 }
             }
 
-            using (var serverStream = new NamedPipeServerStream("SkylineOutputPipe")) // Not L10N
+            string outPipeName = "SkylineOutputPipe" + guidSuffix;
+            using (var serverStream = new NamedPipeServerStream(outPipeName)) // Not L10N
             {
-                if (!WaitForConnection(serverStream))
+                if (!WaitForConnection(serverStream, outPipeName))
                 {
                     return;
                 }
@@ -327,7 +328,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool WaitForConnection(NamedPipeServerStream serverStream)
+        private bool WaitForConnection(NamedPipeServerStream serverStream, string outPipeName)
         {
             Thread connector = new Thread(() =>
             {

@@ -42,18 +42,20 @@ namespace SkylineRunner
             string skylinePath = "\"" + Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
             skylinePath += "\\Programs\\MacCoss Lab, UW\\" + skylineAppName + ".appref-ms" + "\"";
 
+            string guidSuffix = string.Format("-{0}", Guid.NewGuid());
             var psiExporter = new ProcessStartInfo(@"cmd.exe")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                Arguments = String.Format("/c {0} CMD", skylinePath)
+                Arguments = String.Format("/c {0} CMD{1}", skylinePath, guidSuffix)
             };
 
             Process.Start(psiExporter);
 
-            using (var serverStream = new NamedPipeServerStream("SkylineInputPipe"))
+            string inPipeName = "SkylineInputPipe" + guidSuffix;
+            using (var serverStream = new NamedPipeServerStream(inPipeName))
             {
-                if(!WaitForConnection(serverStream))
+                if(!WaitForConnection(serverStream, inPipeName))
                 {
                     Console.WriteLine("Error: Could not connect to Skyline.");
                     Console.WriteLine("Make sure you have a valid {0} installation.", skylineAppName);
@@ -72,7 +74,7 @@ namespace SkylineRunner
                 }
             }
 
-            using (var pipeStream = new NamedPipeClientStream("SkylineOutputPipe"))
+            using (var pipeStream = new NamedPipeClientStream("SkylineOutputPipe" + guidSuffix))
             {
                 // The connect function will wait 5s for the pipe to become available
                 // If that is not acceptable specify a maximum waiting time (in ms)
@@ -99,7 +101,7 @@ namespace SkylineRunner
             }
         }
 
-        private bool WaitForConnection(NamedPipeServerStream serverStream)
+        private bool WaitForConnection(NamedPipeServerStream serverStream, string inPipeName)
         {
             Thread connector = new Thread(() =>
             {
@@ -125,7 +127,7 @@ namespace SkylineRunner
                 // Clear the waiting thread.
                 try
                 {
-                    using (var pipeFake = new NamedPipeClientStream("SkylineInputPipe"))
+                    using (var pipeFake = new NamedPipeClientStream(inPipeName))
                     {
                         pipeFake.Connect(10);
                     }
