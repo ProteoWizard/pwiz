@@ -484,32 +484,41 @@ namespace pwiz.Skyline.Model.Results
             PeptideChromDataSets pepDataSets;
             if (!dictPeptideChromData.TryGetValue(id, out pepDataSets))
             {
-                string filePath = SampleHelp.GetPathFilePart(MSDataFilePaths[_currentFileIndex]);
-                double[] retentionTimes = _document.Settings.GetRetentionTimes(filePath,
-                        nodePep.Peptide.Sequence, nodePep.ExplicitMods);
-                bool isAlignedTimes = (retentionTimes.Length == 0);
-                if (isAlignedTimes)
-                {
-                    RetentionTimeAlignmentIndices alignmentIndices = FileAlignmentIndices[_currentFileIndex];
-                    if (alignmentIndices == null)
-                    {
-                        string basename = Path.GetFileNameWithoutExtension(filePath);
-                        var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
-                        alignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
-                        FileAlignmentIndices[_currentFileIndex] = alignmentIndices;
-
-                    }
-
-                    retentionTimes = _document.Settings.GetAlignedRetentionTimes(alignmentIndices,
-                        nodePep.Peptide.Sequence, nodePep.ExplicitMods);
-                }
-
-                pepDataSets = new PeptideChromDataSets(nodePep, DetailedPeakFeatureCalculators,
-                                                       retentionTimes, isAlignedTimes, isProcessedScans);
+                pepDataSets = new PeptideChromDataSets(nodePep, DetailedPeakFeatureCalculators, isProcessedScans);
                 dictPeptideChromData.Add(id, pepDataSets);
             }
             chromDataSet.NodeGroup = peptidePrecursorMz.NodeGroup;
             pepDataSets.DataSets.Add(chromDataSet);
+        }
+
+        private void GetPeptideRetentionTimes(PeptideChromDataSets peptideChromDataSets)
+        {
+            var nodePep = peptideChromDataSets.NodePep;
+            if (nodePep == null)
+                return;
+
+            string filePath = SampleHelp.GetPathFilePart(MSDataFilePaths[_currentFileIndex]);
+            double[] retentionTimes = _document.Settings.GetRetentionTimes(filePath,
+                                                                           nodePep.Peptide.Sequence,
+                                                                           nodePep.ExplicitMods);
+            bool isAlignedTimes = (retentionTimes.Length == 0);
+            if (isAlignedTimes)
+            {
+                RetentionTimeAlignmentIndices alignmentIndices = FileAlignmentIndices[_currentFileIndex];
+                if (alignmentIndices == null)
+                {
+                    string basename = Path.GetFileNameWithoutExtension(filePath);
+                    var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
+                    alignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
+                    FileAlignmentIndices[_currentFileIndex] = alignmentIndices;
+                }
+
+                retentionTimes = _document.Settings.GetAlignedRetentionTimes(alignmentIndices,
+                                                                             nodePep.Peptide.Sequence,
+                                                                             nodePep.ExplicitMods);
+            }
+            peptideChromDataSets.RetentionTimes = retentionTimes;
+            peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
         }
 
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
@@ -711,6 +720,8 @@ namespace pwiz.Skyline.Model.Results
             return new SpectraChromDataProvider(dataFile, _document, _status, startPercent, EndPercent, _loader);
         }
 
+        private const int MAX_CHROM_READ_AHEAD = 20;
+        
         private void PostChromDataSet(PeptideChromDataSets chromDataSet, bool complete)
         {
             lock (_chromDataSets)
@@ -730,7 +741,11 @@ namespace pwiz.Skyline.Model.Results
                 if (_readCompleted || _chromDataSets.Count > 0)
                 {
                     if (_writerStarted)
+                    {
                         Monitor.Pulse(_chromDataSets);
+                        while (_chromDataSets.Count >= MAX_CHROM_READ_AHEAD)
+                            Monitor.Wait(_chromDataSets);
+                    }
                     else
                     {
                         // Start the writer thread
@@ -834,12 +849,17 @@ namespace pwiz.Skyline.Model.Results
 
                             chromDataSetNext = _chromDataSets[0];
                             _chromDataSets.RemoveAt(0);
+
+                            // Wake up read thread, if it is waiting because it is too far ahead
+                            Monitor.Pulse(_chromDataSets);
                         }
                         finally
                         {
                             WRITE_THREADS.Remove(Thread.CurrentThread);
                         }
                     }
+
+                    GetPeptideRetentionTimes(chromDataSetNext);
 
                     chromDataSetNext.PickChromatogramPeaks();
 
@@ -884,7 +904,7 @@ namespace pwiz.Skyline.Model.Results
                                                               chromDataSet.Count,
                                                               _listTransitions.Count,
                                                               chromDataSet.CountPeaks,
-                                                              _listPeaks.Count,
+                                                              _peakCount,
                                                               scoresIndex,
                                                               chromDataSet.MaxPeakIndex,
                                                               times.Length,
@@ -907,8 +927,8 @@ namespace pwiz.Skyline.Model.Results
                             }
 
                             // Add to peaks list
-                            foreach (var peak in chromData.Peaks)
-                                _listPeaks.Add(peak);
+                            _peakCount += chromData.Peaks.Count;
+                            ChromPeak.WriteArray(_outStreamPeaks.SafeFileHandle, chromData.Peaks.ToArray());
                         }
 
                         _listGroups.Add(header);

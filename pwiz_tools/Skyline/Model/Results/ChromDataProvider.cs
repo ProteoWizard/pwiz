@@ -236,6 +236,15 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isSingleMzMatch;
         private readonly ChromCollector.Allocator _allocator;
 
+        /// <summary>
+        /// The number of chromatograms read so far.
+        /// </summary>
+        private int _readChromatograms;
+
+        private const int LOAD_PERCENT = 10;
+        private const int BUILD_PERCENT = 60;
+        private const int READ_PERCENT = 96 - LOAD_PERCENT - BUILD_PERCENT; // Leave 4% empty until the very end
+
         public SpectraChromDataProvider(MsDataFileImpl dataFile,
                                         SrmDocument document,
                                         ProgressStatus status,
@@ -249,9 +258,7 @@ namespace pwiz.Skyline.Model.Results
 
             using (dataFile)
             {
-                // 10% done with this file
-                const int loadPercent = 10;
-                SetPercentComplete(loadPercent);
+                SetPercentComplete(LOAD_PERCENT);
 
                 // If no SRM spectra, then full-scan filtering must be enabled
                 bool isSrm = dataFile.HasSrmSpectra;
@@ -278,11 +285,11 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < lenSpectra; i++)
                 {
                     // Update progress indicator
-                    int currentPercent = i*80/lenSpectra;
+                    int currentPercent = i*BUILD_PERCENT/lenSpectra;
                     if (currentPercent > statusPercent)
                     {
                         statusPercent = currentPercent;
-                        SetPercentComplete(statusPercent + loadPercent);
+                        SetPercentComplete(LOAD_PERCENT + statusPercent);
                     }
 
                     if (chromMap.IsSingleTime)
@@ -491,6 +498,13 @@ namespace pwiz.Skyline.Model.Results
         public override void GetChromatogram(int id, out float[] times, out float[] intensities)
         {
             _chromatograms[id].Value.ReleaseChromatogram(out times, out intensities);
+
+            // Assume that each chromatogram will be read once, though this may
+            // not always be completely true.
+            _readChromatograms++;
+
+            if (_readChromatograms < _chromatograms.Count)
+                SetPercentComplete(LOAD_PERCENT + BUILD_PERCENT + _readChromatograms * READ_PERCENT / _chromatograms.Count);
         }
 
         public override bool IsProcessedScans

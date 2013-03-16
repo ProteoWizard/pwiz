@@ -587,7 +587,9 @@ namespace pwiz.Skyline.Model.Results
             ICollection<ChromTransition5> chromTransitions,
             ICollection<ChromPeak> chromatogramPeaks,
             ICollection<Type> scoreTypes,
-            float[] scores)
+            float[] scores,
+            Stream outStreamPeaks = null,
+            int peakCount = 0)
         {
             long locationScores = outStream.Position;
             if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
@@ -611,16 +613,25 @@ namespace pwiz.Skyline.Model.Results
 
             // Write the picked peaks
             long locationPeaks = outStream.Position;
-            foreach (var peak in chromatogramPeaks)
+            if (outStreamPeaks == null)
             {
-                outStream.Write(BitConverter.GetBytes(peak.RetentionTime), 0, sizeof(float));
-                outStream.Write(BitConverter.GetBytes(peak.StartTime), 0, sizeof(float));
-                outStream.Write(BitConverter.GetBytes(peak.EndTime), 0, sizeof(float));
-                outStream.Write(BitConverter.GetBytes(peak.Area), 0, sizeof(float));
-                outStream.Write(BitConverter.GetBytes(peak.BackgroundArea), 0, sizeof(float));
-                outStream.Write(BitConverter.GetBytes(peak.Height), 0, sizeof(float));
-                outStream.Write(BitConverter.GetBytes(peak.Fwhm), 0, sizeof(float));
-                outStream.Write(BitConverter.GetBytes((int) peak.Flags), 0, sizeof(int));
+                peakCount = chromatogramPeaks.Count;
+                foreach (var peak in chromatogramPeaks)
+                {
+                    outStream.Write(BitConverter.GetBytes(peak.RetentionTime), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes(peak.StartTime), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes(peak.EndTime), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes(peak.Area), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes(peak.BackgroundArea), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes(peak.Height), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes(peak.Fwhm), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes((int) peak.Flags), 0, sizeof(int));
+                }
+            }
+            else
+            {
+                outStreamPeaks.Seek(0, SeekOrigin.Begin);
+                outStreamPeaks.CopyTo(outStream);
             }
 
             // Write the transitions
@@ -639,7 +650,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var info in chromatogramEntries)
             {
                 long lastPeak = info.StartPeakIndex + info.NumPeaks*info.NumTransitions;
-                if (lastPeak > chromatogramPeaks.Count)
+                if (lastPeak > peakCount)
                     throw new InvalidDataException(string.Format(Resources.ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_, lastPeak, chromatogramPeaks.Count));
                 outStream.Write(BitConverter.GetBytes(info.Precursor), 0, sizeof(float));
                 outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(int));
@@ -698,7 +709,7 @@ namespace pwiz.Skyline.Model.Results
             // original file.  Obviously, it should have been written as the last element,
             // and not the first above the other values.
             outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-            outStream.Write(BitConverter.GetBytes(chromatogramPeaks.Count), 0, sizeof(int));
+            outStream.Write(BitConverter.GetBytes(peakCount), 0, sizeof(int));
             outStream.Write(BitConverter.GetBytes(locationPeaks), 0, sizeof(long));
             outStream.Write(BitConverter.GetBytes(chromTransitions.Count), 0, sizeof(int));
             outStream.Write(BitConverter.GetBytes(locationTrans), 0, sizeof(long));

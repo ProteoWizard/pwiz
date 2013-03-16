@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Maximum memory size (in bytes) used by chromatogram buffers.
             /// </summary>
-            private const int CHROMATOGRAM_BUFFER_SIZE = 100 * MEGABYTES;
+            private const int CHROMATOGRAM_BUFFER_SIZE = 250 * MEGABYTES;
 
             /// <summary>
             /// Number of individual buffers allocated within CHROMATOGRAM_BUFFER_SIZE.

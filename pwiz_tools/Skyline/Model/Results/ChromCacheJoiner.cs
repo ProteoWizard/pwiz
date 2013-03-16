@@ -99,12 +99,13 @@ namespace pwiz.Skyline.Model.Results
 
                     int offsetFiles = _listCachedFiles.Count;
                     int offsetTransitions = _listTransitions.Count;
-                    int offsetPeaks = _listPeaks.Count;
+                    int offsetPeaks = _peakCount;
                     int offsetScores = _listScores.Count;
                     long offsetPoints = _outStream.Position;
 
                     _listCachedFiles.AddRange(rawData.ChromCacheFiles);
-                    _listPeaks.AddRange(rawData.ChromatogramPeaks);
+                    _peakCount += rawData.ChromatogramPeaks.Length;
+                    ChromPeak.WriteArray(_outStreamPeaks.SafeFileHandle, rawData.ChromatogramPeaks);
                     _listTransitions.AddRange(rawData.ChromTransitions);
                     // Initialize the score types the first time through
                     if (_scoreCount == -1)

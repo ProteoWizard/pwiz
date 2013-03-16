@@ -29,15 +29,17 @@ namespace pwiz.Skyline.Model.Results
         private readonly Action<ChromatogramCache, Exception> _completed;
 
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
-        protected readonly List<ChromPeak> _listPeaks = new List<ChromPeak>();
         protected readonly List<ChromTransition5> _listTransitions = new List<ChromTransition5>();
         protected readonly List<ChromGroupHeaderInfo5> _listGroups = new List<ChromGroupHeaderInfo5>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly List<float> _listScores = new List<float>();
         protected readonly FileSaver _fs;
+        protected readonly FileSaver _fsPeaks;
         protected readonly ILoadMonitor _loader;
         protected ProgressStatus _status;
         protected Stream _outStream;
+        protected FileStream _outStreamPeaks;
+        protected int _peakCount;
         protected IPooledStream _destinationStream;
 
         protected ChromCacheWriter(string cachePath, ILoadMonitor loader, ProgressStatus status,
@@ -45,6 +47,8 @@ namespace pwiz.Skyline.Model.Results
         {
             CachePath = cachePath;
             _fs = new FileSaver(CachePath);
+            _fsPeaks = new FileSaver(CachePath + ".peaks"); // Not L10N
+            _outStreamPeaks = new FileStream(_fsPeaks.SafeName, FileMode.Create, FileAccess.ReadWrite);
             _loader = loader;
             _status = status;
             _completed = completed;
@@ -67,9 +71,11 @@ namespace pwiz.Skyline.Model.Results
                                                            _listCachedFiles,
                                                            _listGroups,
                                                            _listTransitions,
-                                                           _listPeaks,
+                                                           null,
                                                            _listScoreTypes,
-                                                           _listScores.ToArray());
+                                                           _listScores.ToArray(),
+                                                           _outStreamPeaks,
+                                                           _peakCount);
 
                             _loader.StreamManager.Finish(_outStream);
                             _outStream = null;
@@ -80,17 +86,19 @@ namespace pwiz.Skyline.Model.Results
                         // the first time the document uses it.
                         var readStream = _loader.StreamManager.CreatePooledStream(CachePath, false);
 
+                        _outStreamPeaks.Seek(0, SeekOrigin.Begin);
                         var rawData = new ChromatogramCache.RawData
                             {
                                 FormatVersion = ChromatogramCache.FORMAT_VERSION_CACHE,
                                 ChromCacheFiles = _listCachedFiles.ToArray(),
                                 ChromatogramEntries = _listGroups.ToArray(),
                                 ChromTransitions = _listTransitions.ToArray(),
-                                ChromatogramPeaks = _listPeaks.ToArray(),
+                                ChromatogramPeaks = ChromPeak.ReadArray(_outStreamPeaks.SafeFileHandle, _peakCount),
                                 ScoreTypes = _listScoreTypes.ToArray(),
                                 Scores = _listScores.ToArray(),
-
                             };
+                        _outStreamPeaks.Dispose();
+                        _outStreamPeaks = null;
                         result = new ChromatogramCache(CachePath, rawData, readStream);
                         _loader.UpdateProgress(_status.Complete());
                     }
@@ -122,7 +130,10 @@ namespace pwiz.Skyline.Model.Results
                 try { _loader.StreamManager.Finish(_outStream); }
                 catch (IOException) { }
             }
+            if (_outStreamPeaks != null)
+                _outStreamPeaks.Dispose();
             _fs.Dispose();
+            _fsPeaks.Dispose();
         }
     }
 }

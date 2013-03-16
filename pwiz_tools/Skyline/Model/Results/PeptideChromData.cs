@@ -38,27 +38,24 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
         private readonly List<List<PeptideChromDataPeakList>> _listListPeakSets = new List<List<PeptideChromDataPeakList>>();
-        private readonly double[] _retentionTimes;
-        private readonly bool _isAlignedTimes;
+        private double[] _retentionTimes;
+        private bool _isAlignedTimes;
         private readonly bool _isProcessedScans;
 
         public PeptideChromDataSets(PeptideDocNode nodePep,
                                     IList<DetailedPeakFeatureCalculator> detailedPeakFeatureCalculators,
-                                    double[] retentionTimes,
-                                    bool isAlignedTimes,
                                     bool isProcessedScans)
         {
             NodePep = nodePep;
             DetailedPeakFeatureCalculators = detailedPeakFeatureCalculators;
-            _retentionTimes = retentionTimes;
-            _isAlignedTimes = isAlignedTimes;
+            _retentionTimes = new double[0];
             _isProcessedScans = isProcessedScans;
         }
 
         public PeptideChromDataSets(ChromDataSet chromDataSet,
                                     IList<DetailedPeakFeatureCalculator> detailedPeakFeatureCalculators,
                                     bool isProcessedScans)
-            : this(null, detailedPeakFeatureCalculators, new double[0], false, isProcessedScans)
+            : this((PeptideDocNode) null, detailedPeakFeatureCalculators, isProcessedScans)
         {
             DataSets.Add(chromDataSet);
         }
@@ -66,6 +63,10 @@ namespace pwiz.Skyline.Model.Results
         public PeptideDocNode NodePep { get; private set; }
 
         public IList<ChromDataSet> DataSets { get { return _dataSets; } }
+
+        public double[] RetentionTimes { set { _retentionTimes = value; } }
+
+        public bool IsAlignedTimes { set { _isAlignedTimes = value; } }
 
         private IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
         {
