@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Results
 
                     _listCachedFiles.AddRange(rawData.ChromCacheFiles);
                     _peakCount += rawData.ChromatogramPeaks.Length;
-                    ChromPeak.WriteArray(_outStreamPeaks.SafeFileHandle, rawData.ChromatogramPeaks);
+                    rawData.ChromatogramPeaks.WriteArray(block => ChromPeak.WriteArray(_outStreamPeaks.SafeFileHandle, block));
                     _listTransitions.AddRange(rawData.ChromTransitions);
                     // Initialize the score types the first time through
                     if (_scoreCount == -1)

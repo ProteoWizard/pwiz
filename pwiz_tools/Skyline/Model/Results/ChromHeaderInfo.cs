@@ -647,6 +647,15 @@ namespace pwiz.Skyline.Model.Results
         public static ChromPeak EMPTY;
 // ReSharper restore InconsistentNaming
 
+        // Set default block size for BlockedArray<ChromPeak>
+        public const int DEFAULT_BLOCK_SIZE = 100*1024*1024;  // 100 megabytes
+
+        // sizeof(ChromPeak)
+        public static int SizeOf
+        {
+            get { unsafe { return sizeof (ChromPeak); } }
+        }
+
         public ChromPeak(CrawdadPeak peak, FlagValues flags, IList<float> times, IList<float> intensities)
             : this()
         {
@@ -1172,14 +1181,14 @@ namespace pwiz.Skyline.Model.Results
         protected readonly IDictionary<Type, int> _scoreTypeIndices;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly ChromTransition5[] _allTransitions;
-        protected readonly ChromPeak[] _allPeaks;
+        protected readonly BlockedArray<ChromPeak> _allPeaks;
         protected readonly float[] _allScores;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo5 groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
                                      IList<ChromCachedFile> allFiles,
                                      ChromTransition5[] allTransitions,
-                                     ChromPeak[] allPeaks,
+                                     BlockedArray<ChromPeak> allPeaks,
                                      float[] allScores)
         {
             _groupHeaderInfo = groupHeaderInfo;
@@ -1405,7 +1414,7 @@ namespace pwiz.Skyline.Model.Results
                                 int transitionIndex,
                                 IList<ChromCachedFile> allFiles,
                                 ChromTransition5[] allTransitions,
-                                ChromPeak[] allPeaks,
+                                BlockedArray<ChromPeak> allPeaks,
                                 float[] allScores,
                                 float[] times,
                                 float[][] intensities)

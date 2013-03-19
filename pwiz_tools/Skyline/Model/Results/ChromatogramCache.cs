@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Results
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly ChromGroupHeaderInfo5[] _chromatogramEntries;
         private readonly ChromTransition5[] _chromTransitions;
-        private readonly ChromPeak[] _chromatogramPeaks;
+        private readonly BlockedArray<ChromPeak> _chromatogramPeaks;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
         private readonly float[] _scores;
 
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromCacheFiles = new ChromCachedFile[0],
                     ChromatogramEntries = new ChromGroupHeaderInfo5[0],
                     ChromTransitions = new ChromTransition5[0],
-                    ChromatogramPeaks = new ChromPeak[0],
+                    ChromatogramPeaks = new BlockedArray<ChromPeak>(),
                     ScoreTypes = new Type[0],
                     Scores = new float[0],
                 };
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Results
             public ChromCachedFile[] ChromCacheFiles { get; set; }
             public ChromGroupHeaderInfo5[] ChromatogramEntries { get; set; }
             public ChromTransition5[] ChromTransitions { get; set; }
-            public ChromPeak[] ChromatogramPeaks { get; set; }
+            public BlockedArray<ChromPeak> ChromatogramPeaks { get; set; }
             public Type[] ScoreTypes { get; set; }
             public float[] Scores { get; set; }
         }
@@ -521,7 +521,11 @@ namespace pwiz.Skyline.Model.Results
 
             // Read list of peaks
             stream.Seek(locationPeaks, SeekOrigin.Begin);
-            raw.ChromatogramPeaks = ChromPeak.ReadArray(stream, numPeaks);
+            raw.ChromatogramPeaks = new BlockedArray<ChromPeak>(
+                count => ChromPeak.ReadArray(stream, count), 
+                numPeaks, 
+                ChromPeak.SizeOf,
+                ChromPeak.DEFAULT_BLOCK_SIZE);
 
             // Read scores
             if (formatVersion > FORMAT_VERSION_CACHE_4 && numScoreTypes > 0)
@@ -907,7 +911,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromCacheFiles = listKeepCachedFiles.ToArray(),
                     ChromatogramEntries = listKeepEntries.ToArray(),
                     ChromTransitions =  listKeepTransitions.ToArray(),
-                    ChromatogramPeaks = listKeepPeaks.ToArray(),
+                    ChromatogramPeaks = new BlockedArray<ChromPeak>(listKeepPeaks, ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                     ScoreTypes = scoreTypes,
                     Scores = listKeepScores.ToArray(),
                 };

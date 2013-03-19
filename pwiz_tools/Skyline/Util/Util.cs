@@ -925,6 +925,102 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
+    /// Read a potentially large array into a list of arrays in order to avoid very large memory allocations.
+    /// We are trying to avoid not only memory fragmentation issues, but also the size limit of 2 gigabytes.
+    /// </summary>
+    public class BlockedArray<TItem>
+    {
+        private readonly List<TItem[]> _blocks;
+        private readonly int _itemCount;
+
+        /// <summary>
+        /// Empty array.
+        /// </summary>
+        public BlockedArray()
+        {
+        }
+
+        /// <summary>
+        /// Read an array into blocks.
+        /// </summary>
+        /// <param name="readItems">Function to read a number of items and return them in an array.</param>
+        /// <param name="itemCount">Total number of items to read.</param>
+        /// <param name="itemSize">Size of each item in bytes.</param>
+        /// <param name="bytesPerBlock">Maximum size of a block in bytes.</param>
+        public BlockedArray(Func<int, TItem[]> readItems, int itemCount, int itemSize, int bytesPerBlock)
+        {
+            _itemCount = itemCount;
+            _blocks = new List<TItem[]>();
+
+            var itemsPerBlock = bytesPerBlock/itemSize;
+            while (itemCount > 0)
+            {
+                _blocks.Add(readItems(Math.Min(itemCount, itemsPerBlock)));
+                itemCount -= itemsPerBlock;
+            }
+        }
+
+        /// <summary>
+        /// Copy a list into blocks.
+        /// </summary>
+        /// <param name="items">Items to copy.</param>
+        /// <param name="itemSize">Size of each item in bytes.</param>
+        /// <param name="bytesPerBlock">Maximum size of a block in bytes.</param>
+        public BlockedArray(IList<TItem> items, int itemSize, int bytesPerBlock)
+        {
+            _itemCount = items.Count;
+            _blocks = new List<TItem[]>();
+
+            var itemsPerBlock = bytesPerBlock/itemSize;
+            TItem[] block = null;
+            for (int index = 0; index < _itemCount; index++)
+            {
+                var inBlockIndex = index%itemsPerBlock;
+                if (inBlockIndex == 0)
+                {
+                    block = new TItem[Math.Min(_itemCount - index, itemsPerBlock)];
+                    _blocks.Add(block);
+                }
+// ReSharper disable PossibleNullReferenceException
+                block[inBlockIndex] = items[index];
+// ReSharper restore PossibleNullReferenceException
+            }
+        }
+
+        /// <summary>
+        /// Number of items in this array.
+        /// </summary>
+        public int Length { get { return _itemCount; } }
+
+        /// <summary>
+        /// Return the item corresponding to the given index.
+        /// </summary>
+        /// <param name="index">Array index.</param>
+        public TItem this[int index]
+        {
+            get
+            {
+                if (index >= _itemCount)
+                    throw new IndexOutOfRangeException();
+                var blockLength = _blocks[0].Length;
+                var blockIndex = index/blockLength;
+                var itemIndex = index%blockLength;
+                return _blocks[blockIndex][itemIndex];
+            }
+        }
+
+        /// <summary>
+        /// Write the array.
+        /// </summary>
+        /// <param name="writeAction">Action to write one array block.</param>
+        public void WriteArray(Action<TItem[]> writeAction)
+        {
+            foreach (var block in _blocks)
+                writeAction(block);
+        }
+    }
+
+    /// <summary>
     /// A set of generic, static helper functions.
     /// </summary>
     public static class Helpers

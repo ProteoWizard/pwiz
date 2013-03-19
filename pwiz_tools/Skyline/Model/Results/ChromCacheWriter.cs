@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly List<float> _listScores = new List<float>();
         protected readonly FileSaver _fs;
-        protected readonly FileSaver _fsPeaks;
+        private readonly FileSaver _fsPeaks;
         protected readonly ILoadMonitor _loader;
         protected ProgressStatus _status;
         protected Stream _outStream;
@@ -93,7 +93,8 @@ namespace pwiz.Skyline.Model.Results
                                 ChromCacheFiles = _listCachedFiles.ToArray(),
                                 ChromatogramEntries = _listGroups.ToArray(),
                                 ChromTransitions = _listTransitions.ToArray(),
-                                ChromatogramPeaks = ChromPeak.ReadArray(_outStreamPeaks.SafeFileHandle, _peakCount),
+                                ChromatogramPeaks = new BlockedArray<ChromPeak>(
+                                    count => ChromPeak.ReadArray(_outStreamPeaks.SafeFileHandle, count), _peakCount, ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                                 ScoreTypes = _listScoreTypes.ToArray(),
                                 Scores = _listScores.ToArray(),
                             };
