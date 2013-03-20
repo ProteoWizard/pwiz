@@ -205,7 +205,9 @@ void MaxQuantReader::initFixedModifications()
         const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
         if (lookup == NULL)
         {
-            throw BlibException(false, "Unknown modification %s in mqpar file.",
+            throw BlibException(false, "Unknown modification %s in mqpar file. Add a modifications.xml "
+                                       "file to the same directory as msms.txt which contains this "
+                                       "modification.",
                                 iter->c_str());
         }
 
@@ -252,7 +254,9 @@ void MaxQuantReader::initFixedModifications()
                     const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *labelIter);
                     if (lookup == NULL)
                     {
-                        throw BlibException(false, "Unknown label %s in mqpar file.",
+                        throw BlibException(false, "Unknown label %s in mqpar file. Add a modifications.xml "
+                                                   "file to the same directory as msms.txt which contains this "
+                                                   "modification.",
                                             labelIter->c_str());
                     }
                     mods.push_back(lookup);
@@ -674,7 +678,9 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
             const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
             if (lookup == NULL)
             {
-                throw BlibException(false, "Unknown modification %s in sequence %s (line %d)",
+                throw BlibException(false, "Unknown modification %s in sequence %s (line %d). Add a "
+                                           "modifications.xml file to the same directory as msms.txt which "
+                                           "contains this modification.",
                                     modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
             }
             // count how many mods were before this one
