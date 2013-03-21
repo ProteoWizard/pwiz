@@ -86,8 +86,8 @@ namespace pwiz.Skyline.Model.Results
                 {
                     _inStream = _loader.StreamManager.CreateStream(cacheFilePath, FileMode.Open, false);
 
-                    if (_outStream == null)
-                        _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
+                    if (_fs.Stream == null)
+                        _fs.Stream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
                     ChromatogramCache.RawData rawData;
                     long bytesData = ChromatogramCache.LoadStructs(_inStream, out rawData);
@@ -101,11 +101,11 @@ namespace pwiz.Skyline.Model.Results
                     int offsetTransitions = _listTransitions.Count;
                     int offsetPeaks = _peakCount;
                     int offsetScores = _listScores.Count;
-                    long offsetPoints = _outStream.Position;
+                    long offsetPoints = _fs.Stream.Position;
 
                     _listCachedFiles.AddRange(rawData.ChromCacheFiles);
                     _peakCount += rawData.ChromatogramPeaks.Length;
-                    rawData.ChromatogramPeaks.WriteArray(block => ChromPeak.WriteArray(_outStreamPeaks.SafeFileHandle, block));
+                    rawData.ChromatogramPeaks.WriteArray(block => ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, block));
                     _listTransitions.AddRange(rawData.ChromTransitions);
                     // Initialize the score types the first time through
                     if (_scoreCount == -1)
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Results
                 if (read == 0)
                     throw new IOException(String.Format(Resources.ChromCacheJoiner_FinishRead_Unexpected_end_of_file_in__0__, CacheFilePaths[_currentPartIndex]));
                 _copyBytes -= read;
-                _outStream.BeginWrite(_buffer, 0, read, FinishWrite, null);
+                _fs.Stream.BeginWrite(_buffer, 0, read, FinishWrite, null);
             }
             catch (Exception x)
             {
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Model.Results
         {
             try
             {
-                _outStream.EndWrite(ar);
+                _fs.Stream.EndWrite(ar);
                 CopyInToOut();
             }
             catch (Exception x)

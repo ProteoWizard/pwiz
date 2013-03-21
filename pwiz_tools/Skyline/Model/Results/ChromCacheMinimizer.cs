@@ -66,9 +66,9 @@ namespace pwiz.Skyline.Model.Results
         /// Collects statistics on how much space savings minimizing will achieve, and (if outStream
         /// is not null) writes out the minimized cache file.
         /// </summary>
-        public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream)
+        public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream, FileStream outStreamPeaks = null)
         {
-            var writer = outStream == null ? null : new Writer(ChromatogramCache, outStream);
+            var writer = outStream == null ? null : new Writer(ChromatogramCache, outStream, outStreamPeaks);
             var statisticsCollector = new MinStatisticsCollector(this);
             bool readChromatograms = settings.NoiseTimeRange.HasValue || writer != null;
 
@@ -421,18 +421,20 @@ namespace pwiz.Skyline.Model.Results
         {
             private readonly ChromatogramCache _originalCache;
             private readonly Stream _outputStream;
+            private readonly FileStream _outputStreamPeaks;
+            private int _peakCount;
             private readonly List<ChromGroupHeaderInfo5> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo5>();
             private readonly List<ChromTransition5> _transitions = new List<ChromTransition5>();
-            private readonly List<ChromPeak> _peaks = new List<ChromPeak>();
             private readonly List<ChromCachedFile> _files = new List<ChromCachedFile>();
             private readonly List<Type> _scoreTypes;
             private readonly List<float> _scores = new List<float>();
             private readonly int[] _fileIndexMap;
 
-            public Writer(ChromatogramCache chromatogramCache, Stream outputStream)
+            public Writer(ChromatogramCache chromatogramCache, Stream outputStream, FileStream outputStreamPeaks)
             {
                 _originalCache = chromatogramCache;
                 _outputStream = outputStream;
+                _outputStreamPeaks = outputStreamPeaks;
                 _scoreTypes = chromatogramCache.ScoreTypes.ToList();
                 _fileIndexMap = Enumerable.Repeat(-1, chromatogramCache.CachedFiles.Count).ToArray();
             }
@@ -452,7 +454,7 @@ namespace pwiz.Skyline.Model.Results
                     _files.Add(_originalCache.CachedFiles[originalHeader.FileIndex]);
                 }
                 int startTransitionIndex = _transitions.Count;
-                int startPeakIndex = _peaks.Count;
+                int startPeakIndex = _peakCount;
                 int startScoreIndex = _scores.Count;
                 for (int iPeak = 0; iPeak < originalHeader.NumPeaks; iPeak++)
                 {
@@ -516,7 +518,8 @@ namespace pwiz.Skyline.Model.Results
                         var originalPeak = _originalCache.GetPeak(originalHeader.StartPeakIndex +
                                                                   originalIndex*originalHeader.NumPeaks +
                                                                   originalPeakIndex);
-                        _peaks.Add(originalPeak);
+                        _peakCount++;
+                        ChromPeak.WriteArray(_outputStreamPeaks.SafeFileHandle, new[] {originalPeak});
                     }
                     intensities.Add(originalChromGroup.IntensityArray[originalIndex]
                         .Skip(minimizedChromGroup.OptimizedFirstScan)
@@ -543,12 +546,13 @@ namespace pwiz.Skyline.Model.Results
             public void WriteEndOfFile()
             {
                 ChromatogramCache.WriteStructs(_outputStream,
+                                               _outputStreamPeaks,
                                                _files,
                                                _chromGroupHeaderInfos,
                                                _transitions,
-                                               _peaks,
                                                _scoreTypes,
-                                               _scores.ToArray());
+                                               _scores.ToArray(),
+                                               _peakCount);
             }
         }
     }

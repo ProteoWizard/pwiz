@@ -799,15 +799,17 @@ namespace pwiz.Skyline.Util
         public const string TEMP_PREFIX = "~SK"; // Not L10N
 
         private readonly IStreamManager _streamManager;
+        private Stream _stream;
 
         /// <summary>
         /// Construct an instance of <see cref="FileSaver"/> to manage saving to a temporary
         /// file, and then renaming to the final destination.
         /// </summary>
         /// <param name="fileName">File path to the final destination</param>
+        /// <param name="createStream">If true, create a Stream for the temporary file</param>
         /// <throws>IOException</throws>
-		public FileSaver(string fileName)
-            : this(fileName, FileStreamManager.Default)
+		public FileSaver(string fileName, bool createStream = false)
+            : this(fileName, FileStreamManager.Default, createStream)
 		{
 		}
 
@@ -817,8 +819,9 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="fileName">File path to the final destination</param>
         /// <param name="streamManager">A stream manager for either disk or memory access</param>
+        /// <param name="createStream">If true, create a Stream for the temporary file</param>
         /// <throws>IOException</throws>
-        public FileSaver(string fileName, IStreamManager streamManager)
+        public FileSaver(string fileName, IStreamManager streamManager, bool createStream = false)
         {
             _streamManager = streamManager;
 
@@ -829,7 +832,26 @@ namespace pwiz.Skyline.Util
             // If the directory name is returned, then starting path was bogus.
             if (!Equals(dirName, tempName))
                 SafeName = tempName;
+            if (createStream)
+                CreateStream();
 		}
+
+        public void CreateStream()
+        {
+            if (_stream == null)
+                _stream = new FileStream(SafeName, FileMode.Create, FileAccess.ReadWrite);
+        }
+
+        public Stream Stream
+        {
+            get { return _stream; }
+            set { _stream = value; }
+        }
+
+        public FileStream FileStream
+        {
+            get { return _stream as FileStream; }
+        }
 
         public bool CanSave(bool showMessage)
         {
@@ -881,6 +903,12 @@ namespace pwiz.Skyline.Util
 	        if (string.IsNullOrEmpty(SafeName))
 		        return false;
 
+            if (_stream != null)
+            {
+                _stream.Close();
+                _stream = null;
+            }
+
             _streamManager.Commit(SafeName, RealName, streamDest);
 
         	Dispose();
@@ -890,6 +918,12 @@ namespace pwiz.Skyline.Util
 
         public void Dispose()
         {
+            if (_stream != null)
+            {
+                _stream.Close();
+                _stream = null;
+            }
+
             // Get rid of the temporary file, if it still exists.
 
             if (!string.IsNullOrEmpty(SafeName))

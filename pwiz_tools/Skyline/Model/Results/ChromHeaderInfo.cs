@@ -844,6 +844,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public static unsafe void WriteArray(SafeHandle file, ChromPeak[] headers, int startIndex, int count)
+        {
+            fixed (ChromPeak* p = &headers[startIndex])
+            {
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromPeak) * count);
+            }
+        }
+
         #endregion
     }
 

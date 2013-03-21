@@ -34,11 +34,9 @@ namespace pwiz.Skyline.Model.Results
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly List<float> _listScores = new List<float>();
         protected readonly FileSaver _fs;
-        private readonly FileSaver _fsPeaks;
+        protected readonly FileSaver _fsPeaks;
         protected readonly ILoadMonitor _loader;
         protected ProgressStatus _status;
-        protected Stream _outStream;
-        protected FileStream _outStreamPeaks;
         protected int _peakCount;
         protected IPooledStream _destinationStream;
 
@@ -47,8 +45,7 @@ namespace pwiz.Skyline.Model.Results
         {
             CachePath = cachePath;
             _fs = new FileSaver(CachePath);
-            _fsPeaks = new FileSaver(CachePath + ".peaks"); // Not L10N
-            _outStreamPeaks = new FileStream(_fsPeaks.SafeName, FileMode.Create, FileAccess.ReadWrite);
+            _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
             _loader = loader;
             _status = status;
             _completed = completed;
@@ -65,20 +62,19 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (x == null && !_status.IsFinal)
                     {
-                        if (_outStream != null)
+                        if (_fs.Stream != null)
                         {
-                            ChromatogramCache.WriteStructs(_outStream,
+                            ChromatogramCache.WriteStructs(_fs.Stream,
+                                                           _fsPeaks.Stream,
                                                            _listCachedFiles,
                                                            _listGroups,
                                                            _listTransitions,
-                                                           null,
                                                            _listScoreTypes,
                                                            _listScores.ToArray(),
-                                                           _outStreamPeaks,
                                                            _peakCount);
 
-                            _loader.StreamManager.Finish(_outStream);
-                            _outStream = null;
+                            _loader.StreamManager.Finish(_fs.Stream);
+                            _fs.Stream = null;
                             _fs.Commit(_destinationStream);
                         }
 
@@ -86,7 +82,7 @@ namespace pwiz.Skyline.Model.Results
                         // the first time the document uses it.
                         var readStream = _loader.StreamManager.CreatePooledStream(CachePath, false);
 
-                        _outStreamPeaks.Seek(0, SeekOrigin.Begin);
+                        _fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
                         var rawData = new ChromatogramCache.RawData
                             {
                                 FormatVersion = ChromatogramCache.FORMAT_VERSION_CACHE,
@@ -94,12 +90,10 @@ namespace pwiz.Skyline.Model.Results
                                 ChromatogramEntries = _listGroups.ToArray(),
                                 ChromTransitions = _listTransitions.ToArray(),
                                 ChromatogramPeaks = new BlockedArray<ChromPeak>(
-                                    count => ChromPeak.ReadArray(_outStreamPeaks.SafeFileHandle, count), _peakCount, ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
+                                    count => ChromPeak.ReadArray(_fsPeaks.FileStream.SafeFileHandle, count), _peakCount, ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                                 ScoreTypes = _listScoreTypes.ToArray(),
                                 Scores = _listScores.ToArray(),
                             };
-                        _outStreamPeaks.Dispose();
-                        _outStreamPeaks = null;
                         result = new ChromatogramCache(CachePath, rawData, readStream);
                         _loader.UpdateProgress(_status.Complete());
                     }
@@ -126,13 +120,12 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual void Dispose()
         {
-            if (_outStream != null)
+            if (_fs.Stream != null)
             {
-                try { _loader.StreamManager.Finish(_outStream); }
+                try { _loader.StreamManager.Finish(_fs.Stream); }
                 catch (IOException) { }
+                _fs.Stream = null;
             }
-            if (_outStreamPeaks != null)
-                _outStreamPeaks.Dispose();
             _fs.Dispose();
             _fsPeaks.Dispose();
         }

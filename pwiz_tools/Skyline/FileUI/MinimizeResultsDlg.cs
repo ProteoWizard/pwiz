@@ -273,8 +273,9 @@ namespace pwiz.Skyline.FileUI
         {
             var targetSkydFile = ChromatogramCache.FinalPathForName(targetFile, null);
             using (var skydSaver = new FileSaver(targetSkydFile))
+            using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
             {
-                using (var stream = File.OpenWrite(skydSaver.SafeName))
+                skydSaver.Stream = File.OpenWrite(skydSaver.SafeName);
                 using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
                 {
                     longWaitDlg.PerformWork(this, 1000,
@@ -286,7 +287,7 @@ namespace pwiz.Skyline.FileUI
                                                         using (var backgroundWorker =
                                                             new BackgroundWorker(this, longWaitBroker))
                                                         {
-                                                            backgroundWorker.RunBackground(stream);
+                                                            backgroundWorker.RunBackground(skydSaver.Stream, peaksSaver.FileStream);
                                                         }
                                                     }
                                                     catch (ObjectDisposedException)
@@ -400,16 +401,16 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            public void RunBackground(Stream outputStream)
+            public void RunBackground(Stream outputStream, FileStream outputStreamPeaks)
             {
-                _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream);
+                _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream, outputStreamPeaks);
             }
 
             public void CollectStatistics()
             {
                 try
                 {
-                    RunBackground(null);
+                    RunBackground(null, null);
                 }
                 catch (ObjectDisposedException)
                 {

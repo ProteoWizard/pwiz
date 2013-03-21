@@ -1018,6 +1018,28 @@ namespace pwiz.Skyline.Util
             foreach (var block in _blocks)
                 writeAction(block);
         }
+
+        /// <summary>
+        /// Write the array.
+        /// </summary>
+        /// <param name="writeAction">Action to write one array block.</param>
+        /// <param name="startIndex">First index to write.</param>
+        /// <param name="count">How many items to write.</param>
+        public void WriteArray(Action<TItem[], int, int> writeAction, int startIndex, int count)
+        {
+            if (startIndex + count > _itemCount)
+                throw new IndexOutOfRangeException();
+            var blockLength = _blocks[0].Length;
+            while (count > 0)
+            {
+                var blockIndex = startIndex/blockLength;
+                var itemIndex = startIndex%blockLength;
+                var writeCount = Math.Min(count, blockLength - itemIndex);
+                writeAction(_blocks[blockIndex], itemIndex, writeCount);
+                startIndex += writeCount;
+                count -= writeCount;
+            }
+        }
     }
 
     /// <summary>

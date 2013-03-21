@@ -200,11 +200,10 @@ namespace pwiz.SkylineTestA.Results
             string skydFilePath = Path.ChangeExtension(skyFilePath, "skyd");
             ChromCacheMinimizer chromCacheMinimizer = document.Settings.MeasuredResults.GetChromCacheMinimizer(document);
             using (var fs = new FileSaver(skydFilePath))
+            using (var fsPeaks = new FileSaver(skydFilePath + ChromatogramCache.PEAKS_EXT, true))
             {
-                using (FileStream stream = File.OpenWrite(fs.SafeName))
-                {
-                    chromCacheMinimizer.Minimize(settings, null, stream);
-                }
+                fs.Stream = File.OpenWrite(fs.SafeName);
+                chromCacheMinimizer.Minimize(settings, null, fs.Stream, fsPeaks.FileStream);
                 fs.Commit();
             }
             using (var writer = new XmlTextWriter(skyFilePath, Encoding.UTF8) {Formatting = Formatting.Indented})

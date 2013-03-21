@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Model.Results
         public const int FORMAT_VERSION_CACHE_2 = 2;
 
         public const string EXT = ".skyd"; // Not L10N
+        public const string PEAKS_EXT = ".peaks"; // Not L10N
 
         public static int FORMAT_VERSION_CACHE
         {
@@ -586,14 +587,13 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static void WriteStructs(Stream outStream,
+            Stream outStreamPeaks,
             ICollection<ChromCachedFile> chromCachedFiles,
             List<ChromGroupHeaderInfo5> chromatogramEntries,
             ICollection<ChromTransition5> chromTransitions,
-            ICollection<ChromPeak> chromatogramPeaks,
             ICollection<Type> scoreTypes,
             float[] scores,
-            Stream outStreamPeaks = null,
-            int peakCount = 0)
+            int peakCount)
         {
             long locationScores = outStream.Position;
             if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
@@ -617,26 +617,8 @@ namespace pwiz.Skyline.Model.Results
 
             // Write the picked peaks
             long locationPeaks = outStream.Position;
-            if (outStreamPeaks == null)
-            {
-                peakCount = chromatogramPeaks.Count;
-                foreach (var peak in chromatogramPeaks)
-                {
-                    outStream.Write(BitConverter.GetBytes(peak.RetentionTime), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes(peak.StartTime), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes(peak.EndTime), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes(peak.Area), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes(peak.BackgroundArea), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes(peak.Height), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes(peak.Fwhm), 0, sizeof(float));
-                    outStream.Write(BitConverter.GetBytes((int) peak.Flags), 0, sizeof(int));
-                }
-            }
-            else
-            {
-                outStreamPeaks.Seek(0, SeekOrigin.Begin);
-                outStreamPeaks.CopyTo(outStream);
-            }
+            outStreamPeaks.Seek(0, SeekOrigin.Begin);
+            outStreamPeaks.CopyTo(outStream);
 
             // Write the transitions
             long locationTrans = outStream.Position;
@@ -655,7 +637,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 long lastPeak = info.StartPeakIndex + info.NumPeaks*info.NumTransitions;
                 if (lastPeak > peakCount)
-                    throw new InvalidDataException(string.Format(Resources.ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_, lastPeak, chromatogramPeaks.Count));
+                    throw new InvalidDataException(string.Format(Resources.ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_, lastPeak, peakCount));
                 outStream.Write(BitConverter.GetBytes(info.Precursor), 0, sizeof(float));
                 outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(int));
@@ -816,15 +798,16 @@ namespace pwiz.Skyline.Model.Results
 
             var listKeepEntries = new List<ChromGroupHeaderInfo5>();
             var listKeepCachedFiles = new List<ChromCachedFile>();
-            var listKeepPeaks = new List<ChromPeak>();
             var listKeepTransitions = new List<ChromTransition5>();
             var listKeepScores = new List<float>();
             var scoreTypes = ScoreTypes.ToArray();
 
+            using (FileSaver fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
             using (FileSaver fs = new FileSaver(cachePathOpt))
             {
                 var inStream = ReadStream.Stream;
-                var outStream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true);
+                fs.Stream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true);
+                var peakCount = 0;
 
                 byte[] buffer = new byte[0x40000];  // 256K
 
@@ -835,7 +818,7 @@ namespace pwiz.Skyline.Model.Results
                     var lastEntry = firstEntry;
                     int fileIndex = firstEntry.FileIndex;
                     bool keepFile = cachedFilePaths.Contains(_cachedFiles[fileIndex].FilePath);
-                    long offsetPoints = outStream.Position - firstEntry.LocationPoints;
+                    long offsetPoints = fs.Stream.Position - firstEntry.LocationPoints;
 
                     int iNext = i;
                     // Enumerate until end of current file encountered
@@ -851,7 +834,7 @@ namespace pwiz.Skyline.Model.Results
                             lastEntry.NumTransitions,
                             listKeepTransitions.Count,
                             lastEntry.NumPeaks,
-                            listKeepPeaks.Count,
+                            peakCount,
                             listKeepScores.Count,
                             lastEntry.MaxPeakIndex,
                             lastEntry.NumPoints,
@@ -863,8 +846,12 @@ namespace pwiz.Skyline.Model.Results
                             listKeepTransitions.Add(_chromTransitions[j]);
                         start = lastEntry.StartPeakIndex;
                         end = start + lastEntry.NumPeaks*lastEntry.NumTransitions;
-                        for (int j = start; j < end; j++)
-                            listKeepPeaks.Add(_chromatogramPeaks[j]);
+                        peakCount += end - start;
+                        _chromatogramPeaks.WriteArray(
+                            (peaks, startIndex, count) =>
+                            ChromPeak.WriteArray(fsPeaks.FileStream.SafeFileHandle, peaks, startIndex, count),
+                            start,
+                            end - start);
 
                         start = lastEntry.StartScoreIndex;
                         end = start + lastEntry.NumPeaks*scoreTypes.Length;
@@ -882,7 +869,7 @@ namespace pwiz.Skyline.Model.Results
                         int len;
                         while (lenRead > 0 && (len = inStream.Read(buffer, 0, (int)Math.Min(lenRead, buffer.Length))) != 0)
                         {
-                            outStream.Write(buffer, 0, len);
+                            fs.Stream.Write(buffer, 0, len);
                             lenRead -= len;
                         }                        
                     }
@@ -892,33 +879,35 @@ namespace pwiz.Skyline.Model.Results
                 }
                 while (i < listEntries.Count);
 
-                WriteStructs(outStream,
+                WriteStructs(fs.Stream,
+                    fsPeaks.Stream,
                     listKeepCachedFiles,
                     listKeepEntries,
                     listKeepTransitions,
-                    listKeepPeaks,
                     scoreTypes,
-                    listKeepScores.ToArray());
-
-                outStream.Close();
+                    listKeepScores.ToArray(),
+                    peakCount);
 
                 CommitCache(fs);
-            }
 
-            var rawData = new RawData
-                {
-                    FormatVersion = FORMAT_VERSION_CACHE,
-                    ChromCacheFiles = listKeepCachedFiles.ToArray(),
-                    ChromatogramEntries = listKeepEntries.ToArray(),
-                    ChromTransitions =  listKeepTransitions.ToArray(),
-                    ChromatogramPeaks = new BlockedArray<ChromPeak>(listKeepPeaks, ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
-                    ScoreTypes = scoreTypes,
-                    Scores = listKeepScores.ToArray(),
-                };
-            return new ChromatogramCache(cachePathOpt,
-                                         rawData,
-                                         // Create a new read stream, for the newly created file
-                                         streamManager.CreatePooledStream(cachePathOpt, false));
+                fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
+                var rawData = new RawData
+                    {
+                        FormatVersion = FORMAT_VERSION_CACHE,
+                        ChromCacheFiles = listKeepCachedFiles.ToArray(),
+                        ChromatogramEntries = listKeepEntries.ToArray(),
+                        ChromTransitions = listKeepTransitions.ToArray(),
+                        ChromatogramPeaks = new BlockedArray<ChromPeak>(
+                            count => ChromPeak.ReadArray(fsPeaks.FileStream.SafeFileHandle, count), peakCount,
+                            ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
+                        ScoreTypes = scoreTypes,
+                        Scores = listKeepScores.ToArray(),
+                    };
+                return new ChromatogramCache(cachePathOpt,
+                                             rawData,
+                                             // Create a new read stream, for the newly created file
+                                             streamManager.CreatePooledStream(cachePathOpt, false));
+            }
         }
 
         public void CommitCache(FileSaver fs)

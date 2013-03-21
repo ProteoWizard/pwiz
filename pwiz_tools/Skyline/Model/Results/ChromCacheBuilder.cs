@@ -148,12 +148,12 @@ namespace pwiz.Skyline.Model.Results
             if (_tempFileWriteStarted)
             {
                 _listCachedFiles.RemoveAt(--_currentFileIndex);
-                if (_outStream != null)
+                if (_fs.Stream != null)
                 {
-                    try { _loader.StreamManager.Finish(_outStream); }
+                    try { _loader.StreamManager.Finish(_fs.Stream); }
                     catch (IOException) { }
 
-                    _outStream = null;
+                    _fs.Stream = null;
                 }
             }
 
@@ -232,8 +232,8 @@ namespace pwiz.Skyline.Model.Results
                         ExitRead(null);
                         return;
                     }
-                    if (_outStream == null)
-                        _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
+                    if (_fs.Stream == null)
+                        _fs.Stream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
                     _currentFileInfo = GetRecalcFileBuildInfo(dataFilePathRecalc) ?? new FileBuildInfo(inFile);
                     _libraryRetentionTimes = null;
@@ -866,10 +866,10 @@ namespace pwiz.Skyline.Model.Results
                     var dictScoresToIndex = new Dictionary<IList<float>, int>();
                     foreach (var chromDataSet in chromDataSetNext.DataSets)
                     {
-                        if (_outStream == null)
+                        if (_fs.Stream == null)
                             throw new InvalidDataException(Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
 
-                        long location = _outStream.Position;
+                        long location = _fs.Stream.Position;
 
                         float[] times = chromDataSet.Times;
                         float[][] intensities = chromDataSet.Intensities;
@@ -878,7 +878,7 @@ namespace pwiz.Skyline.Model.Results
                         // Compress the data (can be huge for AB data with lots of zeros)
                         byte[] pointsCompressed = points.Compress(3);
                         int lenCompressed = pointsCompressed.Length;
-                        _outStream.Write(pointsCompressed, 0, lenCompressed);
+                        _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
 
                         // Use existing scores, if they have already been added
                         int scoresIndex;
@@ -928,7 +928,7 @@ namespace pwiz.Skyline.Model.Results
 
                             // Add to peaks list
                             _peakCount += chromData.Peaks.Count;
-                            ChromPeak.WriteArray(_outStreamPeaks.SafeFileHandle, chromData.Peaks.ToArray());
+                            ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, chromData.Peaks.ToArray());
                         }
 
                         _listGroups.Add(header);
