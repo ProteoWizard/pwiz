@@ -342,7 +342,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     // ReSharper disable DoNotCallOverridableMethodsInConstructor
                     int? resultIndex = _resultIndex;
                     if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best && nodePep != null)
-                        resultIndex = nodePep.BestResult;
+                    {
+                        resultIndex = null;
+                        int iBest = nodePep.BestResult;
+                        if (iBest !=-1)
+                            resultIndex = iBest;
+                    }
                     if (displayTotals)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
