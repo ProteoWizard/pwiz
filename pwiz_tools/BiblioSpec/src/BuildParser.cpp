@@ -503,11 +503,15 @@ void BuildParser::removeDuplicates() {
         if( psm == NULL ){
             continue;
         }
+        // make sure sequence is all uppercase
+        psm->unmodSeq = boost::to_upper_copy(psm->unmodSeq);
         // create the modified sequence, if we don't have it already
         if( psm->modifiedSeq.empty() ){
             sortPsmMods(psm);
             psm->modifiedSeq = generateModifiedSeq(psm->unmodSeq.c_str(),
                                                    psm->mods);
+        } else {
+            psm->modifiedSeq = boost::to_upper_copy(psm->modifiedSeq);
         }
 
         // choose the correct id type

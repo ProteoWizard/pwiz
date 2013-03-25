@@ -471,6 +471,12 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
                            entry.scanNumber, entry.pep, lineNum_);
         return;
     }
+    else if (entry.masses.empty() || entry.intensities.empty())
+    {
+        Verbosity::warn("Not saving PSM %d with no spectrum (line %d)",
+                        entry.scanNumber, lineNum_);
+        return;
+    }
 
     // Set up new PSM
     curMaxQuantPSM_ = new MaxQuantPSM();
