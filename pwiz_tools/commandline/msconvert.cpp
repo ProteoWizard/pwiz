@@ -166,6 +166,7 @@ Config parseCommandLine(int argc, const char* argv[])
     bool noindex = false;
     bool zlib = false;
     bool gzip = false;
+    bool detailedHelp = false;
 
     po::options_description od_config("Options");
     od_config.add_options()
@@ -262,7 +263,32 @@ Config parseCommandLine(int argc, const char* argv[])
         ("srmAsSpectra",
             po::value<bool>(&config.srmAsSpectra)->zero_tokens(),
             ": write selected reaction monitoring as spectra, not chromatograms")
+        ("help",
+            po::value<bool>(&detailedHelp)->zero_tokens(),
+            ": show this message, with extra detail on filter options")
         ;
+
+    // handle positional arguments
+
+    const char* label_args = "args";
+
+    po::options_description od_args;
+    od_args.add_options()(label_args, po::value< vector<string> >(), "");
+
+    po::positional_options_description pod_args;
+    pod_args.add(label_args, -1);
+   
+    po::options_description od_parse;
+    od_parse.add(od_config).add(od_args);
+
+    // parse command line
+
+    po::variables_map vm;
+    po::store(po::command_line_parser(argc, (char**)argv).
+              options(od_parse).positional(pod_args).run(), vm);
+    po::notify(vm);
+
+
 
     // append options description to usage string
 
@@ -270,7 +296,7 @@ Config parseCommandLine(int argc, const char* argv[])
 
     // extra usage
 
-    usage << SpectrumListFactory::usage() << endl;
+    usage << SpectrumListFactory::usage(detailedHelp,"run this command with --help to see more detail") << endl;
 
     usage << "Examples:\n"
           << endl
@@ -342,28 +368,8 @@ Config parseCommandLine(int argc, const char* argv[])
           << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
-    if (argc <= 1)
+    if ((argc <= 1) || detailedHelp)
         throw usage_exception(usage.str().c_str());
-
-    // handle positional arguments
-
-    const char* label_args = "args";
-
-    po::options_description od_args;
-    od_args.add_options()(label_args, po::value< vector<string> >(), "");
-
-    po::positional_options_description pod_args;
-    pod_args.add(label_args, -1);
-   
-    po::options_description od_parse;
-    od_parse.add(od_config).add(od_args);
-
-    // parse command line
-
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, (char**)argv).
-              options(od_parse).positional(pod_args).run(), vm);
-    po::notify(vm);
 
     // parse config file if required
 

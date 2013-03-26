@@ -51,6 +51,7 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
 
     string filelistFilename;
     string configFilename;
+    bool detailedHelp = false;
 
     po::options_description od_config("");
     od_config.add_options()
@@ -68,17 +69,16 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
             ": execute command, e.g --exec \"tic mz=409-412\"")
         ("filter",
             po::value< vector<string> >(&filters),
-			(": add a spectrum list filter, e.g. --filter=\"msLevel [2,3]\"\n" + SpectrumListFactory::usage()).c_str())
+            ": add a spectrum list filter, e.g. --filter=\"msLevel [2,3]\"")
         ("verbose,v",
             po::value<bool>(&verbose)->zero_tokens(),
             ": print progress messages")
+        ("help",
+            po::value<bool>(&detailedHelp)->zero_tokens(),
+            ": show this message, with extra detail on filter options")
         ;
 
-    // save options description
 
-    ostringstream temp;
-    temp << od_config;
-    usageOptions = temp.str();
 
     // handle positional arguments
 
@@ -101,7 +101,16 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
               options(od_parse).positional(pod_args).run(), vm);
     po::notify(vm);
 
-    // parse config file if required
+    // save options description
+
+    ostringstream usage;
+    usage << od_config;
+    
+    // extra usage for filters
+    usage << SpectrumListFactory::usage(detailedHelp,"run this command with --help to see more detail") << endl;
+    usageOptions = usage.str();
+
+	// parse config file if required
 
     if (!configFilename.empty())
     {
