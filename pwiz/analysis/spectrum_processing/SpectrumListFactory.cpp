@@ -952,7 +952,7 @@ void SpectrumListFactory::wrap(msdata::MSData& msd, const vector<string>& wrappe
 
 
 PWIZ_API_DECL
-string SpectrumListFactory::usage(bool detailedHelp,const std::string &morehelp_prompt)
+string SpectrumListFactory::usage(bool detailedHelp,const char *morehelp_prompt)
 {
     ostringstream oss;
     MSData fakemsd;
@@ -962,7 +962,8 @@ string SpectrumListFactory::usage(bool detailedHelp,const std::string &morehelp_
     oss << "FILTER OPTIONS" << endl;
     if (!detailedHelp)
     {
-        oss << morehelp_prompt << endl;
+        if (morehelp_prompt)
+            oss << morehelp_prompt << endl;
     }
     else
     {

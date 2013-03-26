@@ -47,7 +47,7 @@ class PWIZ_API_DECL SpectrumListFactory
     static void wrap(msdata::MSData& msd, const std::vector<std::string>& wrappers);
 
     /// user-friendly documentation, with option of less or more detail
-    static std::string usage(bool detailedHelp,const std::string &morehelp_prompt);
+    static std::string usage(bool detailedHelp=true,const char *morehelp_prompt=NULL);
 };
 
 
