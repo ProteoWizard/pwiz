@@ -1466,7 +1466,7 @@ namespace pwiz.Skyline
             {
                 using (var saver = new FileSaver(reportFile))
                 {
-                    if (!saver.CanSave(false))
+                    if (!saver.CanSave())
                     {
                         _out.WriteLine("Error: The report {0} could not be saved to {1}.", reportName, reportFile);
                         _out.WriteLine("Check to make sure it is not read-only.");

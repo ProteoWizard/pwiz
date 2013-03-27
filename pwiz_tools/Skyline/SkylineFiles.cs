@@ -591,7 +591,7 @@ namespace pwiz.Skyline
             {
                 using (var saver = new FileSaver(fileName))
                 {
-                    if (!saver.CanSave(true))
+                    if (!saver.CanSave(this))
                         return false;
                     using (var writer = new XmlTextWriter(saver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
                     using (new LongOp(this))
@@ -713,7 +713,7 @@ namespace pwiz.Skyline
         private bool CopyFile(string source, FileSaver destSaver)
         {
             // Copy the specified file to the new name using a FileSaver
-            if (!destSaver.CanSave(true))
+            if (!destSaver.CanSave(this))
                 return false;
 
             File.Copy(source, destSaver.SafeName, true);
@@ -729,7 +729,7 @@ namespace pwiz.Skyline
             {
                 using (var saverUser = new FileSaver(GetViewFile(fileName)))
                 {
-                    if (saverUser.CanSave(false))
+                    if (saverUser.CanSave())
                     {
                         dockPanel.SaveAsXml(saverUser.SafeName);
                         saverUser.Commit();

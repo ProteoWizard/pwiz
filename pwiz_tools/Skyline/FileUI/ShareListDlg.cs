@@ -137,7 +137,7 @@ namespace pwiz.Skyline.FileUI
                 XmlSerializer xmlSerializer = new XmlSerializer(List.SerialType);
                 using (FileSaver fs = new FileSaver(fileName))
                 {
-                    if (!fs.CanSave(true))
+                    if (!fs.CanSave(this))
                         return;
 
                     using (FileStream stream = File.OpenWrite(fs.SafeName))

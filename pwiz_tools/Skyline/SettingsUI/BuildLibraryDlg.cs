@@ -142,6 +142,30 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (!outputPath.EndsWith(BiblioSpecLiteSpec.EXT))
                 outputPath += BiblioSpecLiteSpec.EXT;
+            try
+            {
+                using (var sfLib = new FileSaver(outputPath))
+                {
+                    if (!sfLib.CanSave(this))
+                    {
+                        textPath.Focus();
+                        textPath.SelectAll();
+                        return false;
+                    }
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _helper.ShowTextBoxError(textPath, TextUtil.LineSeparate(Resources.BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__,
+                                                                         Resources.BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_), outputDir);
+                return false;
+            }
+            catch (IOException)
+            {
+                _helper.ShowTextBoxError(textPath, TextUtil.LineSeparate(Resources.BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__,
+                                                                         Resources.BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_), outputDir);
+                return false;
+            }
 
             double cutOffScore;
             if (!_helper.ValidateDecimalTextBox(e, textCutoff, 0, 1.0, out cutOffScore))

@@ -182,7 +182,7 @@ namespace pwiz.Skyline.FileUI
             {
                 using (var saver = new FileSaver(fileName))
                 {
-                    if (!saver.CanSave(true))
+                    if (!saver.CanSave(this))
                         return false;
 
                     using (var writer = new StreamWriter(saver.SafeName))

@@ -26,6 +26,7 @@ using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -853,16 +854,15 @@ namespace pwiz.Skyline.Util
             get { return _stream as FileStream; }
         }
 
-        public bool CanSave(bool showMessage)
+        public bool CanSave(IWin32Window parent = null)
         {
             if (SafeName == null)
             {
-                if (showMessage)
-                    MessageBox.Show(
-                        string.Format(
-                            Resources.
-                                FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists,
-                            RealName), Program.Name);
+                if (parent != null)
+                {
+                    MessageDlg.Show(parent, string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists,
+                                                          RealName));
+                }
                 return false;
             }
             if (!_streamManager.Exists(RealName))
@@ -872,10 +872,11 @@ namespace pwiz.Skyline.Util
             {
                 if ((_streamManager.GetAttributes(RealName) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                 {
-                    if (showMessage)
-                        MessageBox.Show(
-                            string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only, RealName),
-                            Program.Name);
+                    if (parent != null)
+                    {
+                        MessageDlg.Show(parent, string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only,
+                                                              RealName));
+                    }
                     return false;
                 }
                 return true;

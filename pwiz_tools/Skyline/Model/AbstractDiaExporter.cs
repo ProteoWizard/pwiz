@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model
             if (fileName != null)
             {
                 var saver = new FileSaver(fileName);
-                if (!saver.CanSave(false))
+                if (!saver.CanSave())
                     throw new IOException(string.Format(Resources.AbstractDiaExporter_Export_Cannot_save_to__0__, fileName));
 
                 var writer = new StreamWriter(saver.SafeName);

@@ -802,7 +802,7 @@ namespace pwiz.Skyline.Model
                     if (FileName != null)
                     {
                         _saver = new FileSaver(FileName);
-                        if (!_saver.CanSave(false))
+                        if (!_saver.CanSave())
                             throw new IOException(string.Format(Resources.FileIterator_Init_Cannot_save_to__0__, FileName));
 
                         _writer = new StreamWriter(_saver.SafeName);

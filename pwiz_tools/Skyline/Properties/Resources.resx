@@ -5036,4 +5036,13 @@ Are you sure you want to continue?</value>
   <data name="Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_" xml:space="preserve">
     <value>Enzyme must have N-terminal cleavage to have N-terminal restrictions.</value>
   </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__" xml:space="preserve">
+    <value>Access violation attempting to write to {0}.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_" xml:space="preserve">
+    <value>Please check that you have write access to this folder.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__" xml:space="preserve">
+    <value>Failure attempting to create a file in {0}.</value>
+  </data>
 </root>

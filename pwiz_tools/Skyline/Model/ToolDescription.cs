@@ -472,7 +472,7 @@ namespace pwiz.Skyline.Model
                 {
                     using (var saver = new FileSaver(tempFilePath))
                     {
-                        if (!saver.CanSave(false))
+                        if (!saver.CanSave())
                         {
                             throw new IOException();
                         }
