@@ -26,215 +26,228 @@
 -->
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" namespace="IDPicker.DataModel" assembly="IDPicker.DataModel" auto-import="true">
 
-	<class name="SpectrumSourceGroup">
-		<id name="Id"><generator class="native"/></id>
-		<property name="Name"/>
-		<set name="Sources" inverse="true" batch-size="500" lazy="true">
-			<key column="Group_"/>
-			<one-to-many class="SpectrumSourceGroupLink"/>
-		</set>
-	</class>
+    <class name="SpectrumSourceGroup">
+        <id name="Id"><generator class="native"/></id>
+        <property name="Name"/>
+        <set name="Sources" inverse="true" batch-size="500" lazy="true">
+            <key column="Group_"/>
+            <one-to-many class="SpectrumSourceGroupLink"/>
+        </set>
+    </class>
 
-	<class name="SpectrumSource">
-		<id name="Id"><generator class="native"/></id>
-		<property name="Name"/>
-		<property name="URL"/>
-		<many-to-one name="Group" column="Group_" fetch="join"/>
-		<set name="Groups" inverse="true" batch-size="500">
-			<key column="Source" />
-			<one-to-many class="SpectrumSourceGroupLink"/>
-		</set>
-		<bag name="Spectra" inverse="true" batch-size="500">
-			<key column="Source"/>
-			<one-to-many class="Spectrum"/>
-		</bag>
+    <class name="SpectrumSource">
+        <id name="Id"><generator class="native"/></id>
+        <property name="Name"/>
+        <property name="URL"/>
+        <many-to-one name="Group" column="Group_" fetch="join"/>
+        <set name="Groups" inverse="true" batch-size="500">
+            <key column="Source" />
+            <one-to-many class="SpectrumSourceGroupLink"/>
+        </set>
+        <bag name="Spectra" inverse="true" batch-size="500">
+            <key column="Source"/>
+            <one-to-many class="Spectrum"/>
+        </bag>
         <property name="TotalSpectraMS1"/>
         <property name="TotalSpectraMS2"/>
         <property name="TotalIonCurrentMS1"/>
         <property name="TotalIonCurrentMS2"/>
         <property name="QuantitationMethod"/>
         <join optional="true" table="SpectrumSourceMetadata"><key column="Id"/><property name="Metadata" column="MsDataBytes" lazy="true" type="SpectrumSourceMetadataUserType"/></join>
-	</class>
+    </class>
 
-	<class name="SpectrumSourceGroupLink">
-		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Source" fetch="join"/>
-		<many-to-one name="Group" column="Group_" fetch="join"/>
-	</class>
-		   
-	<class name="Spectrum">
-		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Source" fetch="join"/>
-		<property name="Index" column="Index_"/>
-		<property name="NativeID"/>
-		<property name="PrecursorMZ"/>
+    <class name="SpectrumSourceGroupLink">
+        <id name="Id"><generator class="native"/></id>
+        <many-to-one name="Source" fetch="join"/>
+        <many-to-one name="Group" column="Group_" fetch="join"/>
+    </class>
+           
+    <class name="Spectrum">
+        <id name="Id"><generator class="native"/></id>
+        <many-to-one name="Source" fetch="join"/>
+        <property name="Index" column="Index_"/>
+        <property name="NativeID"/>
+        <property name="PrecursorMZ"/>
         <property name="ScanTimeInSeconds"/>
-		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
-			<key column="Spectrum"/>
-			<one-to-many class="PeptideSpectrumMatch"/>
-		</bag>
-		<join optional="true" table="SpectrumQuantitation"><key column="Id"/><property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/></join>
-        <join optional="true" table="SpectrumQuantitation"><key column="Id"/><property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/></join>
-        <join optional="true" table="SpectrumQuantitation"><key column="Id"/><property name="PrecursorIonIntensity" lazy="true"/></join>
-	</class>
+        <bag name="Matches" inverse="true" batch-size="500" lazy="true">
+            <key column="Spectrum"/>
+            <one-to-many class="PeptideSpectrumMatch"/>
+        </bag>
+        <join optional="true" table="SpectrumQuantitation">
+            <key column="Id"/>
+            <property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/>
+            <property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/>
+            <property name="PrecursorIonIntensity" lazy="true"/>
+        </join>
+    </class>
 
-	<class name="AnalysisParameter">
-		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Analysis" fetch="join"/>
-		<property name="Name"/>
-		<property name="Value"/>
-	</class>
+    <class name="AnalysisParameter">
+        <id name="Id"><generator class="native"/></id>
+        <many-to-one name="Analysis" fetch="join"/>
+        <property name="Name"/>
+        <property name="Value"/>
+    </class>
 
-	<class name="Analysis">
-		<id name="Id"><generator class="native"/></id>
-		<property name="Name"/>
-		<component name="Software">
-			<property name="Name" column="SoftwareName"/>
-			<property name="Version" column="SoftwareVersion"/>
-		</component>
-		<property name="Type"/>
-		<property name="StartTime"/>
-		<one-to-one name="QonverterSettings" fetch="join"/>
-		<set name="Parameters" inverse="true" batch-size="50">
-			<key column="Analysis"/>
-			<one-to-many class="AnalysisParameter"/>
-		</set>
-		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
-			<key column="Analysis"/>
-			<one-to-many class="PeptideSpectrumMatch"/>
-		</bag>
-	</class>
+    <class name="Analysis">
+        <id name="Id"><generator class="native"/></id>
+        <property name="Name"/>
+        <component name="Software">
+            <property name="Name" column="SoftwareName"/>
+            <property name="Version" column="SoftwareVersion"/>
+        </component>
+        <property name="Type"/>
+        <property name="StartTime"/>
+        <one-to-one name="QonverterSettings" fetch="join"/>
+        <set name="Parameters" inverse="true" batch-size="50">
+            <key column="Analysis"/>
+            <one-to-many class="AnalysisParameter"/>
+        </set>
+        <bag name="Matches" inverse="true" batch-size="500" lazy="true">
+            <key column="Analysis"/>
+            <one-to-many class="PeptideSpectrumMatch"/>
+        </bag>
+    </class>
 
-	<class name="Protein">
-		<id name="Id"><generator class="native"/></id>
-		<property name="Accession" />
+    <class name="Protein">
+        <id name="Id"><generator class="native"/></id>
+        <property name="Accession" />
 
-		<bag name="Peptides" inverse="true" batch-size="500" lazy="true">
-			<key column="Protein"/>
-			<one-to-many class="PeptideInstance"/>
-		</bag>
-		<property name="IsDecoy" access="nosetter.camelcase"/>
-		<property name="Cluster" access="nosetter.camelcase"/>
-		<property name="ProteinGroup" access="nosetter.camelcase"/>
-		<property name="Length" access="nosetter.camelcase"/>
+        <bag name="Peptides" inverse="true" batch-size="500" lazy="true">
+            <key column="Protein"/>
+            <one-to-many class="PeptideInstance"/>
+        </bag>
+        <property name="IsDecoy" access="nosetter.camelcase"/>
+        <property name="Cluster" access="nosetter.camelcase"/>
+        <property name="ProteinGroup" access="nosetter.camelcase"/>
+        <property name="Length" access="nosetter.camelcase"/>
 
-		<!-- We store these long text fields in separate tables so that joins against the Protein table are faster -->
-		<join optional="true" table="ProteinMetadata"><key column="Id"/><property name="Description"/></join>
-		<join optional="true" table="ProteinData"><key column="Id"/><property name="Sequence" lazy="true"/></join>
+        <!-- We store these long text fields in separate tables so that joins against the Protein table are faster -->
+        <join optional="true" table="ProteinMetadata"><key column="Id"/><property name="Description"/></join>
+        <join optional="true" table="ProteinData"><key column="Id"/><property name="Sequence" lazy="true"/></join>
 
-		<join optional="true" table="ProteinCoverage">
-			<key column="Id"/>
-			<property name="Coverage"/>
-			<property name="CoverageMask" type="ProteinCoverageMaskUserType"/>
-		</join>
+        <join optional="true" table="ProteinCoverage">
+            <key column="Id"/>
+            <property name="Coverage"/>
+            <property name="CoverageMask" type="ProteinCoverageMaskUserType"/>
+        </join>
 
-		<join optional="true" table="ProteinQuantitation"><key column="Id"/><property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/></join>
-        <join optional="true" table="ProteinQuantitation"><key column="Id"/><property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/></join>
-        <join optional="true" table="ProteinQuantitation"><key column="Id"/><property name="PrecursorIonIntensity" lazy="true"/></join>
-	</class>
+        <join optional="true" table="ProteinQuantitation">
+            <key column="Id"/>
+            <property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/>
+            <property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/>
+            <property name="PrecursorIonIntensity" lazy="true"/>
+        </join>
+    </class>
 
-	<class name="Peptide">
-		<id name="Id"><generator class="native"/></id>
-		<property name="Sequence" access="nosetter.camelcase" 
-				  formula="(SELECT IFNULL(SUBSTR(pro.Sequence, pi.Offset+1, pi.Length), DecoySequence)
-							FROM PeptideInstance pi
-							LEFT JOIN ProteinData pro ON pi.Protein=pro.Id
-							WHERE pi.Id=(SELECT pi2.Id FROM PeptideInstance pi2 WHERE Id=pi2.Peptide LIMIT 1))"/>
-		<property name="MonoisotopicMass"/>
-		<property name="MolecularWeight"/>
-		<property name="PeptideGroup" access="nosetter.camelcase"/>
-		<property name="DecoySequence"/>
-		<bag name="Instances" inverse="true" batch-size="500" lazy="true">
-			<key column="Peptide"/>
-			<one-to-many class="PeptideInstance"/>
-		</bag>
-		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
-			<key column="Peptide"/>
-			<one-to-many class="PeptideSpectrumMatch"/>
-		</bag>
+    <class name="Peptide">
+        <id name="Id"><generator class="native"/></id>
+        <property name="Sequence" access="nosetter.camelcase" 
+                  formula="(SELECT IFNULL(SUBSTR(pro.Sequence, pi.Offset+1, pi.Length), DecoySequence)
+                            FROM PeptideInstance pi
+                            LEFT JOIN ProteinData pro ON pi.Protein=pro.Id
+                            WHERE Id=pi.Peptide)"/>
+        <property name="MonoisotopicMass"/>
+        <property name="MolecularWeight"/>
+        <property name="PeptideGroup" access="nosetter.camelcase"/>
+        <property name="DecoySequence"/>
+        <bag name="Instances" inverse="true" batch-size="500" lazy="true">
+            <key column="Peptide"/>
+            <one-to-many class="PeptideInstance"/>
+        </bag>
+        <bag name="Matches" inverse="true" batch-size="500" lazy="true">
+            <key column="Peptide"/>
+            <one-to-many class="PeptideSpectrumMatch"/>
+        </bag>
 
-		<join optional="true" table="PeptideQuantitation"><key column="Id"/><property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/></join>
-        <join optional="true" table="PeptideQuantitation"><key column="Id"/><property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/></join>
-        <join optional="true" table="PeptideQuantitation"><key column="Id"/><property name="PrecursorIonIntensity" lazy="true"/></join>
-	</class>
+        <join optional="true" table="PeptideQuantitation">
+            <key column="Id"/>
+            <property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/>
+            <property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/>
+            <property name="PrecursorIonIntensity" lazy="true"/>
+        </join>
+    </class>
 
-	<class name="PeptideInstance">
-		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Protein" fetch="join"/>
-		<many-to-one name="Peptide" fetch="join"/>
-		<property name="Offset"/>
-		<property name="Length"/>
-		<property name="NTerminusIsSpecific"/>
-		<property name="CTerminusIsSpecific"/>
-		<property name="MissedCleavages"/>
-		<property name="SpecificTermini" access="nosetter.camelcase" formula="(SELECT NTerminusIsSpecific + CTerminusIsSpecific)"/>
-	</class>
+    <class name="PeptideInstance">
+        <id name="Id"><generator class="native"/></id>
+        <many-to-one name="Protein" fetch="join"/>
+        <many-to-one name="Peptide" fetch="join"/>
+        <property name="Offset"/>
+        <property name="Length"/>
+        <property name="NTerminusIsSpecific"/>
+        <property name="CTerminusIsSpecific"/>
+        <property name="MissedCleavages"/>
+        <property name="SpecificTermini" access="nosetter.camelcase" formula="(SELECT NTerminusIsSpecific + CTerminusIsSpecific)"/>
+    </class>
 
-	<class name="Modification">
-		<id name="Id"><generator class="native"/></id>
-		<property name="MonoMassDelta"/>
-		<property name="AvgMassDelta"/>
-		<property name="Formula"/>
-		<property name="Name"/>
-	</class>
+    <class name="Modification">
+        <id name="Id"><generator class="native"/></id>
+        <property name="MonoMassDelta"/>
+        <property name="AvgMassDelta"/>
+        <property name="Formula"/>
+        <property name="Name"/>
+    </class>
 
-	<class name="PeptideSpectrumMatch">
-		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Spectrum" fetch="join"/>
-		<many-to-one name="Analysis" fetch="join"/>
-		<many-to-one name="Peptide" fetch="join"/>
-		<bag name="Modifications" inverse="true" batch-size="500" lazy="true">
-			<key column="PeptideSpectrumMatch"/>
-			<one-to-many class="PeptideModification"/>
-		</bag>
-		<property name="QValue">
-			<column name="QValue" sql-type="DOUBLE"/>
-		</property>
-		<property name="ObservedNeutralMass"/>
-		<property name="MonoisotopicMassError"/>
-		<property name="MolecularWeightError"/>
-		<property name="Rank"/>
-		<property name="Charge"/>
-		<map name="Scores" table="PeptideSpectrumMatchScore">
-			<key column="Id">
-				<column name="PsmId"/>
-			</key>
-			<index column="Name" type="String">
-				<column name="ScoreNameId" sql-type="integer"/>
-			</index>
-			<element column="Value" type="Double"/>
-			<loader query-ref="PeptideSpectrumMatchScores_LoaderQuery"/>
-			<!--<sql-insert check="none">
-				CREATE TEMP TABLE PsmScore AS SELECT ? AS PsmId, ? AS Name, ? AS Value;
+    <class name="PeptideSpectrumMatch">
+        <id name="Id"><generator class="native"/></id>
+        <many-to-one name="Spectrum" fetch="join"/>
+        <many-to-one name="Analysis" fetch="join"/>
+        <many-to-one name="Peptide" fetch="join"/>
+        <bag name="Modifications" inverse="true" batch-size="500" lazy="true">
+            <key column="PeptideSpectrumMatch"/>
+            <one-to-many class="PeptideModification"/>
+        </bag>
+        <property name="QValue">
+            <column name="QValue" sql-type="DOUBLE"/>
+        </property>
+        <property name="ObservedNeutralMass"/>
+        <property name="MonoisotopicMassError"/>
+        <property name="MolecularWeightError"/>
+        <property name="Rank"/>
+        <property name="Charge"/>
+        <map name="Scores" table="PeptideSpectrumMatchScore">
+            <key column="Id">
+                <column name="PsmId"/>
+            </key>
+            <index column="Name" type="String">
+                <column name="ScoreNameId" sql-type="integer"/>
+            </index>
+            <element column="Value" type="Double"/>
+            <loader query-ref="PeptideSpectrumMatchScores_LoaderQuery"/>
+            <!--<sql-insert check="none">
+                CREATE TEMP TABLE PsmScore AS SELECT ? AS PsmId, ? AS Name, ? AS Value;
 
-				INSERT OR IGNORE INTO PeptideSpectrumMatchScoreNames (Id, Name)
-				VALUES ((SELECT IFNULL(MAX(Id)+1, 1) FROM PeptideSpectrumMatchScoreNames),
-						(SELECT Name FROM PsmScore LIMIT 1));
+                INSERT OR IGNORE INTO PeptideSpectrumMatchScoreNames (Id, Name)
+                VALUES ((SELECT IFNULL(MAX(Id)+1, 1) FROM PeptideSpectrumMatchScoreNames),
+                        (SELECT Name FROM PsmScore LIMIT 1));
 
-				INSERT INTO PeptideSpectrumMatchScores (PsmId, ScoreNameId, Value)
-				VALUES ((SELECT PsmId FROM PsmScore LIMIT 1),
-						(SELECT Id FROM PeptideSpectrumMatchScoreNames WHERE Name=(SELECT Name FROM PsmScore LIMIT 1)),
-						(SELECT Value FROM PsmScore LIMIT 1));
-				DROP TABLE PsmScore
-			</sql-insert>-->
-		</map>
-		<property name="DistinctMatchKey" lazy="false" access="nosetter.camelcase" formula="(SELECT dm.DistinctMatchKey FROM DistinctMatch dm WHERE Id=dm.PsmId)"/>
-        <property name="DistinctMatchId" lazy="false" access="nosetter.camelcase" formula="(SELECT dm.DistinctMatchId FROM DistinctMatch dm WHERE Id=dm.PsmId)"/>
-	</class>
+                INSERT INTO PeptideSpectrumMatchScores (PsmId, ScoreNameId, Value)
+                VALUES ((SELECT PsmId FROM PsmScore LIMIT 1),
+                        (SELECT Id FROM PeptideSpectrumMatchScoreNames WHERE Name=(SELECT Name FROM PsmScore LIMIT 1)),
+                        (SELECT Value FROM PsmScore LIMIT 1));
+                DROP TABLE PsmScore
+            </sql-insert>-->
+        </map>
 
-	<class name="PeptideModification">
-		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="PeptideSpectrumMatch" fetch="join"/>
-		<many-to-one name="Modification" fetch="join"/>
-		<property name="Offset" access="nosetter.camelcase"/>
-		<property name="Site" access="nosetter.camelcase"/>
-		<!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
-	</class>
+        <join optional="true" table="DistinctMatch">
+            <key column="PsmId"/>
+            <property name="DistinctMatchKey" access="nosetter.camelcase"/>
+            <property name="DistinctMatchId" access="nosetter.camelcase"/>
+        </join>
+    </class>
+
+    <class name="PeptideModification">
+        <id name="Id"><generator class="native"/></id>
+        <many-to-one name="PeptideSpectrumMatch" fetch="join"/>
+        <many-to-one name="Modification" fetch="join"/>
+        <property name="Offset" access="nosetter.camelcase"/>
+        <property name="Site" access="nosetter.camelcase"/>
+        <!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
+    </class>
 
   <sql-query read-only="true" name="PeptideSpectrumMatchScores_LoaderQuery">
-		<load-collection alias="scores" role="PeptideSpectrumMatch.Scores"/>
+        <load-collection alias="scores" role="PeptideSpectrumMatch.Scores"/>
     SELECT {scores.*}
-    FROM (	SELECT PsmId, Name AS ScoreNameId, case when Value like '%E%' then (case when Value like '%E-%' then 0 else 999999.9 end) else Value end as Value
+    FROM (    SELECT PsmId, Name AS ScoreNameId, case when Value like '%E%' then (case when Value like '%E-%' then 0 else 999999.9 end) else Value end as Value
     FROM PeptideSpectrumMatchScore
     JOIN PeptideSpectrumMatchScoreName ON ScoreNameId = Id
     WHERE PsmId = ?

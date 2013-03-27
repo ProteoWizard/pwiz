@@ -65,8 +65,10 @@ namespace IDPicker.Forms
                 if (text.IsNullOrEmpty())
                     return;
 
+                string delimiter = text.Contains("\r") ? "\r\n" : "\n";
+
                 // the paste operation will only take the first line, so override it by delimiting by ';'
-                var allLines = text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                var allLines = text.Split(new string[] { delimiter }, StringSplitOptions.RemoveEmptyEntries);
                 if (allLines.Count() > 1)
                     findTextBox.Text = String.Join(";", allLines);
                 findTextBox.SelectAll();

@@ -41,6 +41,8 @@ namespace IDPicker.Controls
         /// </summary>
         public event EventHandler BasicFilterChanged;
 
+        public event EventHandler ApplyFilterChanges;
+
         public event EventHandler ShowQonverterSettings;
 
         /// <summary>
@@ -123,7 +125,8 @@ namespace IDPicker.Controls
 
         private void CloseLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (Parent != null) Parent.Visible = false;
+            if (!settingDataFilter && ApplyFilterChanges != null)
+                ApplyFilterChanges(this, EventArgs.Empty);
         }
 
         private void QonverterLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

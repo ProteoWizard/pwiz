@@ -1048,21 +1048,24 @@ namespace IDPicker.Forms
 
         protected override bool filterRowsOnText(string text)
         {
+            // filter text is one or more keywords that ContainsOrIsContainedBy will check
+            var filterString = new FilterString(text);
+
             if (rows.First() is DistinctMatchRow)
                 rows = rows.OfType<DistinctMatchRow>()
-                           .Where(o => o.DistinctMatch.ToString().ContainsOrIsContainedBy(text) ||
-                                       o.Peptide.Sequence.ContainsOrIsContainedBy(text) ||
-                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(text)))
+                           .Where(o => o.DistinctMatch.ToString().ContainsOrIsContainedBy(filterString) ||
+                                       o.Peptide.Sequence.ContainsOrIsContainedBy(filterString) ||
+                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(filterString)))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is DistinctPeptideRow)
                 rows = rows.OfType<DistinctPeptideRow>()
-                           .Where(o => o.Peptide.Sequence.ContainsOrIsContainedBy(text) ||
-                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(text)))
+                           .Where(o => o.Peptide.Sequence.ContainsOrIsContainedBy(filterString) ||
+                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(filterString)))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is PeptideGroupRow)
                 rows = rows.OfType<PeptideGroupRow>()
                            .Where(o => o.PeptideGroup.ToString() == text ||
-                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(text)))
+                                       (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(filterString)))
                            .Select(o => o as Row).ToList();
             else
                 return false;

@@ -62,7 +62,7 @@ namespace IDPicker.Forms
                                              "COUNT(DISTINCT psm.Id), " +
                                              "COUNT(DISTINCT psm.Spectrum.Source.id), " +
                                              "COUNT(DISTINCT psm.Spectrum.id), " +
-                                             "COUNT(DISTINCT psm.DistinctMatchKey), " +
+                                             "COUNT(DISTINCT psm.DistinctMatchId), " +
                                              "COUNT(DISTINCT psm.Peptide.id), " +
                                              "COUNT(DISTINCT psm.Analysis.id), " +
                                              "COUNT(DISTINCT psm.Charge), " +
@@ -1737,11 +1737,14 @@ namespace IDPicker.Forms
 
         protected override bool filterRowsOnText(string text)
         {
+            // filter text is one or more keywords that ContainsOrIsContainedBy will check
+            var filterString = new FilterString(text);
+
             if (rows.First() is PeptideSpectrumMatchRow)
                 rows = rows.OfType<PeptideSpectrumMatchRow>()
-                           .Where(o => o.Key.ContainsOrIsContainedBy(text) ||
-                                       (sequenceColumn.Visible && o.ModifiedSequence.ContainsOrIsContainedBy(text)) ||
-                                       o.Spectrum.NativeID.ContainsOrIsContainedBy(text))
+                           .Where(o => o.Key.ContainsOrIsContainedBy(filterString) ||
+                                       (sequenceColumn.Visible && o.ModifiedSequence.ContainsOrIsContainedBy(filterString)) ||
+                                       o.Spectrum.NativeID.ContainsOrIsContainedBy(filterString))
                            .Select(o => o as Row).ToList();
             // filtering the hierarchy is problematic due to caching, not to mention
             // filtering on groups vs. sources vs. both
@@ -1749,12 +1752,12 @@ namespace IDPicker.Forms
             //    rows = getSpectrumSourceRows(dataFilter);
             else if (rows.First() is SpectrumRow)
                 rows = rows.OfType<SpectrumRow>()
-                           .Where(o => o.Key.ContainsOrIsContainedBy(text) ||
-                                       o.Spectrum.NativeID.ContainsOrIsContainedBy(text))
+                           .Where(o => o.Key.ContainsOrIsContainedBy(filterString) ||
+                                       o.Spectrum.NativeID.ContainsOrIsContainedBy(filterString))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is PeptideRow)
                 rows = rows.OfType<PeptideRow>()
-                           .Where(o => o.Peptide.Sequence.ContainsOrIsContainedBy(text))
+                           .Where(o => o.Peptide.Sequence.ContainsOrIsContainedBy(filterString))
                            .Select(o => o as Row).ToList();
             else
                 return false;

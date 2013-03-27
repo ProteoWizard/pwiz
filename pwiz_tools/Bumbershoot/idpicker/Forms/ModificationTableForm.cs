@@ -22,6 +22,7 @@
 // Contributor(s): Surendra Dasari
 //
 
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -568,7 +569,7 @@ namespace IDPicker.Forms
             {
                 if (dataFilter.IsBasicFilter || viewFilter.Modifications != null || viewFilter.ModifiedSite != null)
                 {
-                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum), COUNT(DISTINCT psm.DistinctMatchKey), COUNT(DISTINCT psm.Peptide) " +
+                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.DistinctMatchId), COUNT(DISTINCT psm.Peptide.id) " +
                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                                       DataFilter.PeptideSpectrumMatchToPeptideModification) +
                                                     "GROUP BY pm.Site, " + RoundedDeltaMassExpression);
@@ -591,7 +592,7 @@ namespace IDPicker.Forms
                 }
                 else
                 {
-                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum), COUNT(DISTINCT psm.DistinctMatchKey), COUNT(DISTINCT psm.Peptide) " +
+                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.DistinctMatchId), COUNT(DISTINCT psm.Peptide.id) " +
                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                                       DataFilter.PeptideSpectrumMatchToPeptideModification) +
                                                     "GROUP BY pm.Site, " + RoundedDeltaMassExpression);

@@ -33,23 +33,37 @@ using System.Windows.Forms;
 
 namespace IDPicker
 {
+    public class FilterString
+    {
+        public string[] Keywords { get; set; }
+
+        public FilterString(string text) { Keywords = text.Split(';'); }
+    }
+
     public static class SystemExtensionMethods
     {
-        public static bool ContainsOrIsContainedBy(this string str, string otherString)
+        public static bool ContainsOrIsContainedBy(this string str, FilterString filterString)
         {
-            if (str.Length == 0 || otherString.Length == 0)
+            if (str.Length == 0 || filterString.Keywords.Length == 0)
                 return false;
 
-            if (otherString.First() == '"' && otherString.Last() == '"')
-                return str == otherString.Substring(1, otherString.Length - 2);
+            foreach (var otherString in filterString.Keywords)
+            {
+                if (otherString.First() == '"' && otherString.Last() == '"')
+                {
+                    if (str == otherString.Substring(1, otherString.Length - 2))
+                        return true;
+                    else
+                        continue;
+                }
 
-            int compare = str.Length.CompareTo(otherString.Length);
-            if (compare == 0)
-                return str == otherString;
-            else if (compare < 0)
-                return otherString.Contains(str);
-            else
-                return str.Contains(otherString);
+                int compare = str.Length.CompareTo(otherString.Length);
+                if (compare == 0 && str == otherString || 
+                    compare < 0 && otherString.Contains(str) ||
+                    str.Contains(otherString))
+                    return true;
+            }
+            return false;
         }
     }
 
@@ -126,6 +140,13 @@ namespace IDPicker
             {
                 conn.BackupDatabase(diskConnection, diskFilepath, conn.GetDataSource(), -1, null, 100);
             }
+        }
+
+        public static NHibernate.IQuery SetQuerySource(this NHibernate.IQuery query, System.Reflection.MemberInfo memberInfo)
+        {
+            var time = DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime;
+            query.SetComment(String.Format("Source:{0}.{1}; Start:{2}", memberInfo.DeclaringType.Name, memberInfo.Name, time.TotalSeconds));
+            return query;
         }
     }
 

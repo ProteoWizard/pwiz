@@ -131,6 +131,7 @@ namespace IDPicker
 
             basicFilterControl = new BasicFilterControl();
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+            basicFilterControl.ApplyFilterChanges += basicFilterControl_ApplyFilterChanges;
             basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
             dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
             dataFilterPopup.Closed += dataFilterPopup_Closed;
@@ -387,6 +388,7 @@ namespace IDPicker
 
             basicFilterControl = new BasicFilterControl();
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+            basicFilterControl.ApplyFilterChanges += basicFilterControl_ApplyFilterChanges;
             basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
             dataFilterPopup = new Popup(basicFilterControl) {FocusOnOpen = true};
             dataFilterPopup.Closed += dataFilterPopup_Closed;
@@ -1479,8 +1481,22 @@ namespace IDPicker
             dirtyFilterControls = basicFilter != basicFilterControl.DataFilter;
         }
 
+        private void basicFilterControl_ApplyFilterChanges (object sender, EventArgs e)
+        {
+            dataFilterPopup.Close(ToolStripDropDownCloseReason.ItemClicked);
+        }
+
         void dataFilterPopup_Closed (object sender, ToolStripDropDownClosedEventArgs e)
         {
+            // if user pressed escape or changed focus to an application other than IDPicker, don't apply filters and reset
+            if (e.CloseReason == ToolStripDropDownCloseReason.Keyboard ||
+                e.CloseReason == ToolStripDropDownCloseReason.AppFocusChange)
+            {
+                dirtyFilterControls = false;
+                basicFilterControl.DataFilter = basicFilter;
+                return;
+            }
+
             if (dirtyFilterControls)
             {
                 dirtyFilterControls = false;

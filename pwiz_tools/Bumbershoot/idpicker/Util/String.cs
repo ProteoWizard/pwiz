@@ -81,7 +81,8 @@ namespace IDPicker
         {
             sequence = item;
             string substring;
-            if (LongestCommonSubstring(items.Concat(new string[] { item }), out substring) > 0)
+            if (LongestCommonPrefix(items.Concat(new string[] { item }), out substring) > 1 &&
+                substring != "-" && substring != "_" && substring != item)
                 sequence = sequence.Remove(sequence.IndexOf(substring), substring.Length);
             return sequence.Length;
         }

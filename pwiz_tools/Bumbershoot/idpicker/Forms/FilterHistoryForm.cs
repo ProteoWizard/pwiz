@@ -143,6 +143,10 @@ namespace IDPicker.Forms
             if (e.ColumnIndex < 0 || e.RowIndex < 0)
                 return;
 
+            // ignore clicks on the current filter
+            if (ReferenceEquals(dataGridView.Rows[e.RowIndex].Tag, viewFilter))
+                return;
+
             if (LoadPersistentDataFilter != null)
                 LoadPersistentDataFilter(this, new LoadPersistentDataFilterEventArgs
                 {

@@ -95,6 +95,60 @@ namespace Test
             StringAssert.StartsWith(Util.GetCommonFilename(input), "D:/idpicker-analysis-");
         }
 
+        [TestMethod]
+        public void TestUniqueSubstring()
+        {
+            string[] input;
+            string uniqueSubstring;
+
+            input = new string[] { "abc", "cde" };
+            Util.UniqueSubstring("a", input, out uniqueSubstring);
+            Assert.AreEqual("a", uniqueSubstring);
+            
+            Util.UniqueSubstring("c", input, out uniqueSubstring);
+            Assert.AreEqual("c", uniqueSubstring);
+
+            Util.UniqueSubstring("bc", input, out uniqueSubstring);
+            Assert.AreEqual("bc", uniqueSubstring);
+
+            input = new string[] { "abc", "bcde" };
+            Util.UniqueSubstring("a", input, out uniqueSubstring);
+            Assert.AreEqual("a", uniqueSubstring);
+
+            Util.UniqueSubstring("c", input, out uniqueSubstring);
+            Assert.AreEqual("c", uniqueSubstring);
+
+            Util.UniqueSubstring("bc", input, out uniqueSubstring);
+            Assert.AreEqual("bc", uniqueSubstring);
+
+            Util.UniqueSubstring("cd", input, out uniqueSubstring);
+            Assert.AreEqual("cd", uniqueSubstring);
+
+            input = new string[] { "a1b", "a1c", "a1d", "a1e" };
+            Util.UniqueSubstring("a1b", input, out uniqueSubstring);
+            Assert.AreEqual("b", uniqueSubstring);
+
+            Util.UniqueSubstring("a1c", input, out uniqueSubstring);
+            Assert.AreEqual("c", uniqueSubstring);
+
+            Util.UniqueSubstring("a1cd", input, out uniqueSubstring);
+            Assert.AreEqual("cd", uniqueSubstring);
+
+            input = new string[] { "201201-555", "201202-555", "201203-555", "201201-444", "201202-444", "201203-444" };
+            Util.UniqueSubstring("201201-555", input, out uniqueSubstring);
+            Assert.AreEqual("1-555", uniqueSubstring);
+
+            Util.UniqueSubstring("201202-555", input, out uniqueSubstring);
+            Assert.AreEqual("2-555", uniqueSubstring);
+
+            Util.UniqueSubstring("201202-444", input, out uniqueSubstring);
+            Assert.AreEqual("2-444", uniqueSubstring);
+
+            Util.UniqueSubstring("201203-444", input, out uniqueSubstring);
+            Assert.AreEqual("3-444", uniqueSubstring);
+        }
+
+
         void downgrade_7_to_4(SQLiteConnection connection)
         {
             // just rename table; the extra columns will be ignored

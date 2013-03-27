@@ -207,7 +207,9 @@ namespace IDPicker.Forms
                         Program.HandleException(ex);
 
                     bool multipleMissingFilepaths = ex.Message.Contains("\n");
-                    string missingFilepaths = ex.Message.Replace("[embed] no", "No").Replace("\n", "\r\n");
+                    string missingFilepaths = ex.Message.Replace("\n", "\r\n");
+                    missingFilepaths = missingFilepaths.Replace("[embed] no", "No");
+                    missingFilepaths = missingFilepaths.Replace("[embedScanTime] no", "No");
                     MessageBox.Show(missingFilepaths + "\r\n\r\nCheck that " +
                                     (multipleMissingFilepaths ? "these source files" : "this source file") +
                                     " can be found in the search path with one of the specified extensions.");
@@ -264,7 +266,13 @@ namespace IDPicker.Forms
         private void dataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == quantitationMethodColumn.Index)
+            {
                 embedAllButton.Enabled = true;
+
+                var selectedRows = dataGridView.SelectedCells.Cast<DataGridViewCell>().Select(o => o.OwningRow).ToList();
+                if (selectedRows.Count > 1)
+                    selectedRows.ForEach(o => o.Cells[e.ColumnIndex].Value = dataGridView[e.ColumnIndex, e.RowIndex].Value);
+            }
         }
     }
 }
