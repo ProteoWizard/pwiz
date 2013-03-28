@@ -30,7 +30,8 @@ namespace pwiz.Skyline.Util
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            SetLocation(this);
+            if (!DesignMode)
+                SetLocation(this);
         }
 
         public void CheckDisposed()
@@ -86,7 +87,7 @@ namespace pwiz.Skyline.Util
         protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);
-            if (ParentForm != null)
+            if (ParentForm != null && !DesignMode)
             {
                 FormEx.SetLocation(ParentForm);
             }
