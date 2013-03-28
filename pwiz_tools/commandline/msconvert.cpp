@@ -309,6 +309,9 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# put output file in my_output_dir\n"
           << "msconvert data.RAW -o my_output_dir\n"
           << endl
+          << "# combining options to create a smaller mzML file, much like the old ReAdW converter program\n"
+          << "msconvert data.RAW --32 --zlib --filter \"peakPicking true 1-\" --filter \"zeroSamples removeExtra\"\n"
+          << endl
           << "# extract scan indices 5...10 and 20...25\n"
           << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
           << endl
