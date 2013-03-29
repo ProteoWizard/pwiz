@@ -968,7 +968,11 @@ string SpectrumListFactory::usage(bool detailedHelp,const char *morehelp_prompt)
     else
     {
         oss << endl;
-        oss << "Note: \'int_set\' means that a set of integers must be specified, as a list of intervals of the form [a,b] or a[-][b].\n";
+        oss << "Note: Filters are applied sequentially in the order that you list them, and the sequence order\n";
+        oss << "can make a large difference in your output.  In particular, the peakPicking filter must be first\n";
+        oss << "in line if you wish to use the vendor-supplied centroiding algorithms since these use the vendor\n";
+        oss << "DLLs, which only operate on raw untransformed data.\n\n";
+        oss << "Many filters take 'int_set' arguments.  An \'int_set\' is a list of intervals of the form [a,b] or a[-][b].\n";
         oss << "For example \'[0,3]\' and \'0-3\' both mean \'the set of integers from 0 to 3 inclusive\'.\n";
         oss << "\'1-\' means \'the set of integers from 1 to the largest allowable number\'.  \n";
         oss << "\'9\' is also an integer set, equivalent to \'[9,9]\'.\n";
