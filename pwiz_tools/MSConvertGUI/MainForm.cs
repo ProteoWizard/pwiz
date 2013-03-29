@@ -688,7 +688,8 @@ namespace MSConvertGUI
             setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).");
             setToolTip(this.SubsetPanel, "Set values for one or more subset filters, then click Add.");
             setToolTip(this.FilterBox, "This chooses the type of filter that you want to add next.");
-            setToolTip(this.FilterGB, "Use these controls to add to the conversion filter list.");
+            setToolTip(this.AboutButton, "Provides information on using MSConvert.");
+            setToolTip(this.FilterGB, "Use these controls to add to the conversion filter list.  The order of the filter list is significant.  In particular, vendor-supplied peakPicking must be first since it only works on raw, untransformed data.");
             setToolTip(this.StartButton, "Click here to begin the conversion process.");
             setToolTip(this.RemoveFileButton, "Select a file to be removed from the conversion list, then click here.");
             setToolTip(this.FileListBox, "Add files to this conversion list by using the Browse button to select a file, then clicking the Add button.");
