@@ -36,6 +36,7 @@ exe ThermoRawMetaDump
     : ThermoRawMetaDump.cpp
       ../../pwiz/data/misc
       ../../pwiz_aux/msrc/utility/vendor_api/thermo//pwiz_vendor_api_thermo
+    : <conditional>@msvc-requirement
     ;
 
 # local install for testing

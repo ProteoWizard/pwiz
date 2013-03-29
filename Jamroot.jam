@@ -619,6 +619,7 @@ rule gcc-install-dll-path ( properties * )
 install executables
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
+      pwiz_tools/prototype//ThermoRawMetaDump
       pwiz_tools/examples//example_tools
     : <conditional>@install-type
       <conditional>@install-location

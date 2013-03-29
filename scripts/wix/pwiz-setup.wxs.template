@@ -250,6 +250,7 @@
 <Component Feature="MainFeature"><File Id="_pepcat.exe" Name="pepcat.exe" Source="msvc-release\pepcat.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_pepsum.exe" Name="pepsum.exe" Source="msvc-release\pepsum.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_sldout.exe" Name="sldout.exe" Source="msvc-release\sldout.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_ThermoRawMetaDump.exe" Name="ThermoRawMetaDump.exe" Source="msvc-release\ThermoRawMetaDump.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_txt2mzml.exe" Name="txt2mzml.exe" Source="msvc-release\txt2mzml.exe" KeyPath="yes"/></Component>                
                 </Directory>
             </Directory>
