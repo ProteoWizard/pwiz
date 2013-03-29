@@ -47,6 +47,7 @@ void verifyPrecursorMZ(const Spectrum& spectrum, double precursorMZ)
     const SelectedIon& selectedIon = precursor.selectedIons[0];
 
     double foo = selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>();
+    foo++; // quiet an "initalized but not used" warning
 
     const double epsilon = 1e-4;
     if (os_)
