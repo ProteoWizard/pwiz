@@ -143,6 +143,7 @@ namespace MSConvertGUI
             this.SetDefaultsButton = new System.Windows.Forms.Button();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AboutButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.ChargeStatePredictorPanel.SuspendLayout();
@@ -1145,11 +1146,22 @@ namespace MSConvertGUI
             this.dataGridViewTextBoxColumn2.HeaderText = "Parameters";
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             // 
+            // AboutButton
+            // 
+            this.AboutButton.Location = new System.Drawing.Point(495, 33);
+            this.AboutButton.Name = "AboutButton";
+            this.AboutButton.Size = new System.Drawing.Size(131, 23);
+            this.AboutButton.TabIndex = 33;
+            this.AboutButton.Text = "About MSConvert";
+            this.AboutButton.UseVisualStyleBackColor = true;
+            this.AboutButton.Click += new System.EventHandler(this.AboutButtonClick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(661, 464);
+            this.Controls.Add(this.AboutButton);
             this.Controls.Add(this.BrowseFileButton);
             this.Controls.Add(this.FileListRadio);
             this.Controls.Add(this.TextFileRadio);
@@ -1290,6 +1302,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.TextBox thresholdValueTextBox;
         private System.Windows.Forms.ComboBox thresholdTypeComboBox;
         private string lastFileboxText;
+        private System.Windows.Forms.Button AboutButton;
     }
 }
 

@@ -775,5 +775,22 @@ namespace MSConvertGUI
             setToolTip(this.ZeroSamplesAddMissingFlankCountBox, addZerosHelp);
             setToolTip(this.ZeroSamplesAddMissing, addZerosHelp);
         }
+
+        private void AboutButtonClick(object sender, EventArgs e)
+        {
+            MessageBox.Show("Let your cursor rest atop a control for a moment to see a help message for that control.   "+
+            "For more in depth help, the Help button in this window will open the ProteoWizard website in your browser.   "+
+            "The documentation there describing the command line version of msconvert will be useful for understanding this "+
+            "program, especially filters.  Actually, you will generally find the command line version to be more complete and "+
+            "flexible than this GUI version and may wish to treat this program as a learning tool for using the command line "+
+            "version.",
+            this.AboutButton.Text,
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information,
+            MessageBoxDefaultButton.Button1,
+            0,
+            "http://proteowizard.sourceforge.net/tools.shtml",
+            "");
+        }
     }
 }
