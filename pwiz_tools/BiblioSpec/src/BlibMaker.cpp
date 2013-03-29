@@ -132,8 +132,8 @@ void BlibMaker::init()
     if(libName.is_open())
         libName.close();
     
-    sqlite3_open(lib_name, &db);
-    if (db == 0) {
+    if (sqlite3_open(lib_name, &db) != SQLITE_OK)
+    {
         Verbosity::error("Failed to create '%s'. Make sure the directory "
                          "exists with write permissions.", lib_name);
     }

@@ -185,6 +185,7 @@ public:
 private:
     string tsvName_;
     ifstream tsvFile_;
+    string modsPath_;
     double scoreThreshold_;
     int lineNum_;
     map< string, vector<MaxQuantPSM*> > fileMap_; // store psms by filename

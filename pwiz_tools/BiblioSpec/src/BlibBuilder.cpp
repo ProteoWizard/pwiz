@@ -75,7 +75,8 @@ void BlibBuilder::usage()
         "   -m <size>         SQLite memory cache size in Megs. Default 250M.\n"
         "   -l <level>        ZLib compression level (0-?). Default 3.\n"
         "   -i <library_id>   LSID library ID. Default uses file name.\n"
-        "   -a <authority>    LSID authority. Default proteome.gs.washington.edu.\n";
+        "   -a <authority>    LSID authority. Default proteome.gs.washington.edu.\n"
+        "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n";
 
     cerr << usage << endl;
     exit(1);
@@ -91,6 +92,10 @@ int BlibBuilder::getLevelCompress() {
 
 vector<char*> BlibBuilder::getInputFiles() {
     return input_files;
+}
+
+string BlibBuilder::getMaxQuantModsPath() {
+    return maxQuantModsPath;
 }
 
 /**
@@ -315,6 +320,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
     } else if (switchName == 'v' && ++i < argc) {
         V_LEVEL v_level = Verbosity::string_to_level(argv[i]);
         Verbosity::set_verbosity(v_level);
+    } else if (switchName == 'x' && ++i < argc) {
+        maxQuantModsPath = string(argv[i]);
     } else if (switchName == 'L') {
         Verbosity::open_logfile();
     } else {

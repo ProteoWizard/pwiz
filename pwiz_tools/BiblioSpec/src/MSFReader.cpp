@@ -336,6 +336,7 @@ namespace BiblioSpec
                                          peptideId, sequence.c_str(), other->unmodSeq.c_str(), specId);
                         removeFromFileMap(other);
                         curPSM_ = other;
+                        curPSM_->mods.clear();
                     }
                 }
                 // ambigous spectrum, check if score is better

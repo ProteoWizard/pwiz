@@ -179,10 +179,12 @@ int main(int argc, char* argv[])
     // check that library contains spectra
     if( builder.is_empty() ){
         builder.abort_current_library();
-        Verbosity::error("No spectra were found for the new library.");
+        if ( success ){
+            Verbosity::error("No spectra were found for the new library.");
+        }
+    } else {
+        builder.commit();
     }
-
-    builder.commit();
     
     Verbosity::close_logfile();
     return !success;

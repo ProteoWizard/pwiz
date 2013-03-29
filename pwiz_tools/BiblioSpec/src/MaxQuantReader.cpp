@@ -45,6 +45,9 @@ MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
     delete specReader_;
     specReader_ = this;
 
+    // get mods path (will be empty string if not set)
+    modsPath_ = maker.getMaxQuantModsPath();
+
     // define which columns are pulled from the file
     initTargetColumns();
 
@@ -102,22 +105,28 @@ void MaxQuantReader::initTargetColumns()
  */
 void MaxQuantReader::initModifications()
 {
-    // Check for modifications.xml in same folder as tsv file
-    string modFile = (filesystem::path(tsvName_).parent_path() / "modifications.xml").string();
-
-    Verbosity::comment(V_DETAIL, "Checking for modification file %s",
-                       modFile.c_str());
-    if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+    // use specified path if it has been set
+    string modFile = modsPath_;
+    if (modFile.empty() ||
+        !filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
     {
-        // Check for modification.xml in the same folder as tsv file
-        modFile = (filesystem::path(tsvName_).parent_path() / "modification.xml").string();
+        // Check for modifications.xml in same folder as tsv file
+        modFile = (filesystem::path(tsvName_).parent_path() / "modifications.xml").string();
+
         Verbosity::comment(V_DETAIL, "Checking for modification file %s",
                            modFile.c_str());
         if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
         {
-            // Not there, use default
-            Verbosity::comment(V_DETAIL, "Loading default modifications");
-            modFile = getExeDirectory() + "modifications.xml";
+            // Check for modification.xml in the same folder as tsv file
+            modFile = (filesystem::path(tsvName_).parent_path() / "modification.xml").string();
+            Verbosity::comment(V_DETAIL, "Checking for modification file %s",
+                               modFile.c_str());
+            if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+            {
+                // Not there, use default
+                Verbosity::comment(V_DETAIL, "Loading default modifications");
+                modFile = getExeDirectory() + "modifications.xml";
+            }
         }
     }
 

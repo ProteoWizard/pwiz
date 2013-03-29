@@ -79,6 +79,7 @@ class BlibBuilder : public BlibMaker
   double getScoreThreshold(BUILD_INPUT fileType); // replaces getProbabilityCutoff()
   int getLevelCompress();
   vector<char*> getInputFiles();
+  string getMaxQuantModsPath();
   virtual int parseCommandArgs(int argc, char* argv[]);
   virtual void attachAll();
   int transferLibrary(int iLib, const ProgressIndicator* parentProgress);
@@ -99,6 +100,7 @@ class BlibBuilder : public BlibMaker
   int level_compress;
   int fileSizeThresholdForCaching; // for parsing .dat files
   vector<char*> input_files;
+  string maxQuantModsPath;
 };
 
 } // namespace
