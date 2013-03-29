@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -625,10 +626,9 @@ namespace pwiz.Skyline.Model.Results
         #endregion
     }
 
-    public struct ChromPeak
+    public struct ChromPeak : ISummaryPeakData
     {
 // ReSharper disable InconsistentNaming
-        public enum Identification { FALSE, TRUE, ALIGNED }
 // ReSharper restore InconsistentNaming
 
         [Flags]
@@ -725,15 +725,15 @@ namespace pwiz.Skyline.Model.Results
             get { return (Flags & FlagValues.forced_integration) != 0; }
         }
 
-        public Identification IsIdentified
+        public PeakIdentification Identified
         {
             get
             {
                 if ((Flags & FlagValues.contains_id) == 0)
-                    return Identification.FALSE;
+                    return PeakIdentification.FALSE;
                 else if ((Flags & FlagValues.used_id_alignment) == 0)
-                    return Identification.TRUE;
-                return Identification.ALIGNED;
+                    return PeakIdentification.TRUE;
+                return PeakIdentification.ALIGNED;
             }
         }
 
@@ -1219,6 +1219,19 @@ namespace pwiz.Skyline.Model.Results
 
         public float[] Times { get; set; }
         public float[][] IntensityArray { get; set; }
+
+        public bool HasScore(Type scoreType)
+        {
+            return _scoreTypeIndices.ContainsKey(scoreType);
+        }
+
+        public float GetScore(Type scoreType, int peakIndex)
+        {
+            int scoreIndex;
+            if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
+                return 0;
+            return _allScores[_groupHeaderInfo.StartScoreIndex + peakIndex*_scoreTypeIndices.Count + scoreIndex];
+        }
 
         public IEnumerable<ChromatogramInfo> TransitionPointSets
         {

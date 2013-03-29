@@ -331,9 +331,9 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromPeak.IsForcedIntegration; }
         }
 
-        public bool IsIdentified
+        public PeakIdentification Identified
         {
-            get { return _chromPeak.IsForcedIntegration; }
+            get { return _chromPeak.Identified; }
         }
 
         public bool? IsTruncated

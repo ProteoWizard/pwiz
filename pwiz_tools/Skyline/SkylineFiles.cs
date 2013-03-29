@@ -929,6 +929,30 @@ namespace pwiz.Skyline
             }
         }
 
+        private void mProphetFeaturesMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowMProphetFeaturesDialog();
+        }
+
+        private void ShowMProphetFeaturesDialog()
+        {
+            if (!DocumentUI.Settings.HasResults)
+            {
+                MessageDlg.Show(this, "The document must mast have imported results.");
+                return;
+            }
+            if (DocumentUI.PeptideCount == 0)
+            {
+                MessageDlg.Show(this, "The document must contain peptides for which to export features.");
+                return;
+            }
+
+            using (var dlg = new MProphetFeaturesDlg(DocumentUI, DocumentFilePath))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
         private void importFASTAMenuItem_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog dlg = new OpenFileDialog

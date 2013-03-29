@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Results;
@@ -603,7 +604,7 @@ namespace pwiz.Skyline.Model
                 {
                     throw new InvalidDataException(
                         string.Format(Resources.SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications,
-                        Settings.GetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, true)));
+                                      nodePep.ModifiedSequenceDisplay));
                 }
                 dictPeptidesModified.Add(key, nodePep);
             }
@@ -873,7 +874,7 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Transition transition, double startTime, double endTime, ChromPeak.Identification identified)
+            Transition transition, double startTime, double endTime, PeakIdentification identified)
         {
             return ChangePeak(groupPath, nameSet, filePath, true,
                 (node, info, tol, iSet, fileId, reg) =>
@@ -955,6 +956,7 @@ namespace pwiz.Skyline.Model
                 if (createCopy)
                 {
                     nodePeptide = new PeptideDocNode((Peptide)nodePeptide.Peptide.Copy(),
+                                                        Settings,
                                                         nodePeptide.ExplicitMods,
                                                         nodePeptide.Rank,   // Results
                                                         Annotations.EMPTY,
@@ -1487,7 +1489,7 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();
             }
 
-            return new PeptideDocNode(peptide, mods, rank,
+            return new PeptideDocNode(peptide, Settings, mods, rank,
                 annotations, results, children ?? new TransitionGroupDocNode[0], autoManageChildren);
         }
 
@@ -1716,8 +1718,8 @@ namespace pwiz.Skyline.Model
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
             int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
-            ChromPeak.Identification identified = reader.GetEnumAttribute(ATTR.identified,
-                ChromPeak.Identification.FALSE, XmlUtil.EnumCase.upper);
+            PeakIdentification identified = reader.GetEnumAttribute(ATTR.identified,
+                PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
             float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
             var annotations = Annotations.EMPTY;
@@ -2036,7 +2038,7 @@ namespace pwiz.Skyline.Model
                 bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
                 var identified = reader.GetEnumAttribute(ATTR.identified,
-                    ChromPeak.Identification.FALSE, XmlUtil.EnumCase.upper);
+                    PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)

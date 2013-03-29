@@ -223,6 +223,7 @@ namespace pwiz.Skyline
             this.exportMethodMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eSPFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mruBeforeToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1706,7 +1707,8 @@ namespace pwiz.Skyline
             this.exportIsolationListMenuItem,
             this.exportMethodMenuItem,
             this.exportReportMenuItem,
-            this.eSPFeaturesMenuItem});
+            this.eSPFeaturesMenuItem,
+            this.mProphetFeaturesMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             resources.ApplyResources(this.exportToolStripMenuItem, "exportToolStripMenuItem");
             // 
@@ -1739,6 +1741,12 @@ namespace pwiz.Skyline
             this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
             resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
             this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
+            // 
+            // mProphetFeaturesMenuItem
+            // 
+            this.mProphetFeaturesMenuItem.Name = "mProphetFeaturesMenuItem";
+            resources.ApplyResources(this.mProphetFeaturesMenuItem, "mProphetFeaturesMenuItem");
+            this.mProphetFeaturesMenuItem.Click += new System.EventHandler(this.mProphetFeaturesMenuItem_Click);
             // 
             // mruBeforeToolStripSeparator
             // 
@@ -3122,6 +3130,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem importPeptideSearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupReplicatesByContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupByReplicateContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mProphetFeaturesMenuItem;
     }
 }
 

@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -71,8 +72,8 @@ namespace pwiz.SkylineTestFunctional
                     peptideDocNode => seqWithTwoIds.Equals(peptideDocNode.Peptide.Sequence));
             var precursorWithTwoIds = peptideWithTwoIds.TransitionGroups.First();
             Assert.IsTrue(precursorWithOneId.Results[0][0].IsIdentified);
-            Assert.IsFalse(precursorWithOneId.Results[1][0].Identified == ChromPeak.Identification.TRUE);
-            Assert.IsTrue(precursorWithOneId.Results[1][0].Identified == ChromPeak.Identification.ALIGNED);
+            Assert.IsFalse(precursorWithOneId.Results[1][0].Identified == PeakIdentification.TRUE);
+            Assert.IsTrue(precursorWithOneId.Results[1][0].Identified == PeakIdentification.ALIGNED);
             Assert.IsTrue(precursorWithTwoIds.Results[0][0].IsIdentified);
             Assert.IsTrue(precursorWithTwoIds.Results[1][0].IsIdentified);
 

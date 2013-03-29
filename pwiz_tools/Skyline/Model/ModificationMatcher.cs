@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model
                 return nodePep;
             // Create the peptideDocNode.
             nodePep = fastaSequence == null
-              ? new PeptideDocNode(peptide, new TransitionGroupDocNode[0])
+              ? new PeptideDocNode(peptide)
               : fastaSequence.CreateFullPeptideDocNode(Settings, seqUnmod);
             return CreateDocNodeFromMatches(nodePep, EnumerateSequenceInfos(seq, false));
         }

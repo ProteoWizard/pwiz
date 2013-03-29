@@ -99,14 +99,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
-    class LegacyIdentifiedCountStandardCalc : SummaryPeakFeatureCalculator
+    class LegacyIdentifiedCountCalc : SummaryPeakFeatureCalculator
     {
-        public LegacyIdentifiedCountStandardCalc() : base(Resources.LegacyIdentifiedCountStandardCalc_LegacyIdentifiedCountStandardCalc_Legacy_identified_count_standard) { }
+        public LegacyIdentifiedCountCalc() : base(Resources.LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             return summaryPeakData.TransitionGroupPeakData.Count(
-                pd => pd.TranstionPeakData.Any(p => p.PeakData.IsIdentified));
+                pd => pd.TranstionPeakData.Any(p => p.PeakData.Identified != PeakIdentification.FALSE));
         }
     }
 }

@@ -32,22 +32,23 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideDocNode : DocNodeParent
     {
-        public PeptideDocNode(Peptide id, TransitionGroupDocNode[] children)
-            : this(id, null, children, true)
+        public PeptideDocNode(Peptide id)
+            : this(id, null)
         {
         }
 
         public PeptideDocNode(Peptide id, ExplicitMods mods)
-            : this(id, mods, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
+            : this(id, null, mods, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
 
-        public PeptideDocNode(Peptide id, ExplicitMods mods, TransitionGroupDocNode[] children, bool autoManageChildren)
-            : this(id, mods, null, Annotations.EMPTY, null, children, autoManageChildren)
+        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods,
+            TransitionGroupDocNode[] children, bool autoManageChildren)
+            : this(id, settings, mods, null, Annotations.EMPTY, null, children, autoManageChildren)
         {
         }
 
-        public PeptideDocNode(Peptide id, ExplicitMods mods, int? rank, Annotations annotations,
+        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, int? rank, Annotations annotations,
             Results<PeptideChromInfo> results, TransitionGroupDocNode[] children, bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
         {
@@ -55,6 +56,13 @@ namespace pwiz.Skyline.Model
             Rank = rank;
             Results = results;
             BestResult = CalcBestResult();
+
+            if (settings != null)
+            {
+                var calcPre = settings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
+                ModifiedSequence = calcPre.GetModifiedSequence(Peptide.Sequence, false);
+                ModifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);                
+            }
         }
 
         public Peptide Peptide { get { return (Peptide)Id; } }
@@ -66,6 +74,10 @@ namespace pwiz.Skyline.Model
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
         public ExplicitMods ExplicitMods { get; private set; }
+
+        public string ModifiedSequence { get; private set; }
+
+        public string ModifiedSequenceDisplay { get; private set; }
 
         public bool HasExplicitMods { get { return ExplicitMods != null; } }
 
@@ -345,6 +357,23 @@ namespace pwiz.Skyline.Model
         }
 
         #region Property change methods
+
+        private PeptideDocNode UpdateModifiedSequence(SrmSettings settingsNew)
+        {
+            var calcPre = settingsNew.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
+            string modifiedSequence = calcPre.GetModifiedSequence(Peptide.Sequence, false);
+            string modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);
+            if (string.Equals(modifiedSequence, ModifiedSequence) &&
+                string.Equals(modifiedSequenceDisplay, ModifiedSequenceDisplay))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im =>
+                {
+                    im.ModifiedSequence = modifiedSequence;
+                    im.ModifiedSequenceDisplay = modifiedSequenceDisplay;
+                });
+        }
 
         public PeptideDocNode ChangeExplicitMods(ExplicitMods prop)
         {
@@ -641,6 +670,7 @@ namespace pwiz.Skyline.Model
 
             if (!ReferenceEquals(explicitMods, ExplicitMods))
                 nodeResult = nodeResult.ChangeExplicitMods(explicitMods);
+            nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
             if (diff.DiffResults || ChangedResults(nodeResult))
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 
@@ -678,7 +708,7 @@ namespace pwiz.Skyline.Model
             // make sure the Peptide ID no longer points to the old FASTA sequence.
             if (peptideList && Peptide.FastaSequence != null)
             {
-                result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages),
+                result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages), settings,
                                             result.ExplicitMods, new TransitionGroupDocNode[0], result.AutoManageChildren); 
             }
             // Create a new child list, using existing children where GlobalIndexes match.

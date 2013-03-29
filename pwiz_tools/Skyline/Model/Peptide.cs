@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model
             int maxModCount = filter.MaxVariableMods ?? settings.PeptideSettings.Modifications.MaxVariableMods;
 
             // Always return the unmodified peptide doc node first
-            var nodePepUnmod = new PeptideDocNode(this, new TransitionGroupDocNode[0]);
+            var nodePepUnmod = new PeptideDocNode(this);
             bool allowVariableMods;
             if (filter.Accept(settings, this, null, out allowVariableMods))
                 yield return nodePepUnmod;

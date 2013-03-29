@@ -650,8 +650,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);                                    
             }
             // Write modified sequence for the light peptide molecular structure
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
-                IsotopeLabelType.light, nodePep.ExplicitMods));
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
             writer.Write(FieldSeparator);
             writer.WriteDsvField(nodePepGroup.Name, FieldSeparator);
             writer.Write(FieldSeparator);
@@ -793,8 +792,7 @@ namespace pwiz.Skyline.Model
             // Write special ID for AB software
             // Use light modified sequence for peptide molecular structure, with decimal points replaced by underscores
             // because AB uses periods as field separators
-            string modifiedPepSequence = Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
-                IsotopeLabelType.light, nodePep.ExplicitMods).Replace('.', '_'); // Not L10N
+            string modifiedPepSequence = Document.Settings.GetModifiedSequence(nodePep).Replace('.', '_'); // Not L10N
 
             string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                 nodePepGroup.Name,
@@ -1114,8 +1112,7 @@ namespace pwiz.Skyline.Model
             writer.Write(nodePepGroup.Name);
             writer.Write(FieldSeparator);
             // Write modified sequence for the light peptide molecule
-            string modifiedSequence = Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
-                IsotopeLabelType.light, nodePep.ExplicitMods);
+            string modifiedSequence = Document.Settings.GetModifiedSequence(nodePep);
             string compoundName = string.Format("{0}.{1}", modifiedSequence, nodeTranGroup.TransitionGroup.LabelType);
             writer.Write(compoundName);
 
@@ -1388,8 +1385,8 @@ namespace pwiz.Skyline.Model
             string collisionEnergy = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
 
             string comment = string.Format("{0} ({1})", // Not L10N
-                Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence, nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods),
-                nodeTranGroup.TransitionGroup.LabelType);
+                                           Document.Settings.GetModifiedSequence(nodePep),
+                                           nodeTranGroup.TransitionGroup.LabelType);
 
             Write(writer, precursorMz, "Positive", start, end, collisionEnergy, z, comment); // Not L10N
         }

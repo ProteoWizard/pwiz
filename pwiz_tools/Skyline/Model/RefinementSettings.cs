@@ -151,8 +151,7 @@ namespace pwiz.Skyline.Model
                     var listPeptides = new List<PeptideDocNode>();
                     foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                     {
-                        string pepModSeq = document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
-                            IsotopeLabelType.light, nodePep.ExplicitMods);
+                        string pepModSeq = document.Settings.GetModifiedSequence(nodePep);
                         if (!repeatedPeptides.Contains(pepModSeq))
                             listPeptides.Add(nodePep);
                     }
@@ -229,8 +228,7 @@ namespace pwiz.Skyline.Model
 
                 if (includedPeptides != null)
                 {
-                    string pepModSeq = document.Settings.GetModifiedSequence(nodePepRefined.Peptide.Sequence,
-                        IsotopeLabelType.light, nodePepRefined.ExplicitMods);
+                    string pepModSeq = document.Settings.GetModifiedSequence(nodePepRefined);
                     // Skip peptides already added
                     if (includedPeptides.Contains(pepModSeq))
                     {
@@ -581,7 +579,7 @@ namespace pwiz.Skyline.Model
                         Equals(seqMods.Sequence, peptide.Sequence));
                     if (decoyNodeTranGroupList.Count == 0)
                         continue;
-                    var nodePepNew = new PeptideDocNode(decoyPeptide, seqMods.Mods,
+                    var nodePepNew = new PeptideDocNode(decoyPeptide, document.Settings, seqMods.Mods,
                         decoyNodeTranGroupList.ToArray(), false);
 
                     // Avoid adding duplicate peptides

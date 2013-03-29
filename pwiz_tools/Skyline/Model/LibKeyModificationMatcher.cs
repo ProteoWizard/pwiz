@@ -324,7 +324,7 @@ namespace pwiz.Skyline.Model
                 return null;
             bool hasHeavy;
             // Create explicit mods from the found matches.
-            nodePep = CreateDocNodeFromMatches(new PeptideDocNode(peptide, new TransitionGroupDocNode[0]),
+            nodePep = CreateDocNodeFromMatches(new PeptideDocNode(peptide),
                                             EnumerateSequenceInfos(key.Key, true), false, out hasHeavy);
 
             if (nodePep == null)

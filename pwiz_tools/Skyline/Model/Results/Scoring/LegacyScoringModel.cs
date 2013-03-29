@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                  typeof(LegacyLogUnforcedAreaCalc),
                                  typeof(LegacyUnforcedCountScoreCalc),
                                  typeof(LegacyUnforcedCountScoreStandardCalc),
-                                 typeof(LegacyIdentifiedCountStandardCalc)
+                                 typeof(LegacyIdentifiedCountCalc)
                              });
         }
 

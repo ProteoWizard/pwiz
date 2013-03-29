@@ -22,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -155,7 +156,7 @@ namespace pwiz.Skyline.Model.Results
                                         IList<float?> ratios,
                                         IList<float?> stdevs,
                                         int? truncated,
-                                        ChromPeak.Identification identified,
+                                        PeakIdentification identified,
                                         float? libraryDotProduct,
                                         float? isotopeDotProduct,
                                         Annotations annotations,
@@ -202,8 +203,8 @@ namespace pwiz.Skyline.Model.Results
             private set { _ratioStdevs = MakeReadOnly(value); }
         }
         public int? Truncated { get; private set; }
-        public ChromPeak.Identification Identified { get; private set; }
-        public bool IsIdentified { get { return Identified != ChromPeak.Identification.FALSE; } }
+        public PeakIdentification Identified { get; private set; }
+        public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
         public float? LibraryDotProduct { get; private set; }
         public float? IsotopeDotProduct { get; private set; }
         public Annotations Annotations { get; private set; }
@@ -310,7 +311,7 @@ namespace pwiz.Skyline.Model.Results
             IList<float?> ratios, Annotations annotations, bool userSet)
             : this(fileId, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, peak.IsTruncated, peak.IsIdentified,
+                   peak.IsFwhmDegenerate, peak.IsTruncated, peak.Identified,
                    ratios, annotations, userSet)
         {            
         }
@@ -319,7 +320,7 @@ namespace pwiz.Skyline.Model.Results
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated,
-                                   ChromPeak.Identification identified, IList<float?> ratios,
+                                   PeakIdentification identified, IList<float?> ratios,
                                    Annotations annotations, bool userSet)
             : base(fileId)
         {
@@ -355,8 +356,8 @@ namespace pwiz.Skyline.Model.Results
         public float Fwhm { get; private set; }
         public bool IsFwhmDegenerate { get; private set; }
         public bool? IsTruncated { get; private set; }
-        public bool IsIdentified { get { return Identified != ChromPeak.Identification.FALSE; } }
-        public ChromPeak.Identification Identified { get; private set; }
+        public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
+        public PeakIdentification Identified { get; private set; }
         public int Rank { get; private set; }
 
         /// <summary>
@@ -393,7 +394,7 @@ namespace pwiz.Skyline.Model.Results
                    peak.Fwhm == Fwhm &&
                    peak.IsFwhmDegenerate == IsFwhmDegenerate &&
                    peak.IsTruncated == IsTruncated &&
-                   peak.IsIdentified == Identified;
+                   peak.Identified == Identified;
         }
 
         #region Property change methods
@@ -410,7 +411,7 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.Fwhm = peak.Fwhm;
             chromInfo.IsFwhmDegenerate = peak.IsFwhmDegenerate;
             chromInfo.IsTruncated = peak.IsTruncated;
-            chromInfo.Identified = peak.IsIdentified;
+            chromInfo.Identified = peak.Identified;
             chromInfo.UserSet = userSet;
             return chromInfo;
         }

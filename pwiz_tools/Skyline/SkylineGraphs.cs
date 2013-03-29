@@ -32,6 +32,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.SettingsUI;
@@ -1457,7 +1458,7 @@ namespace pwiz.Skyline
                 return;
 
             ModifyDocument(message,
-                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, ChromPeak.Identification.FALSE));            
+                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, PeakIdentification.FALSE));            
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)

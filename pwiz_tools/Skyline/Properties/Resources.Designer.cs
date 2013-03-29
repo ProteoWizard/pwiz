@@ -6490,12 +6490,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Legacy identified count standard.
+        ///   Looks up a localized string similar to Legacy identified count.
         /// </summary>
-        public static string LegacyIdentifiedCountStandardCalc_LegacyIdentifiedCountStandardCalc_Legacy_identified_count_standard {
+        public static string LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count {
             get {
-                return ResourceManager.GetString("LegacyIdentifiedCountStandardCalc_LegacyIdentifiedCountStandardCalc_Legacy_identi" +
-                        "fied_count_standard", resourceCulture);
+                return ResourceManager.GetString("LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count", resourceCulture);
             }
         }
         

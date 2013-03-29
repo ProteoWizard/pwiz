@@ -78,16 +78,21 @@ namespace pwiz.Skyline.Model.Results
 
                 foreach (var chromDataSets in from dataSet in DataSets
                                              where !IsComparable(dataSet)
-                                             group dataSet by dataSet.NodeGroup)
+                                             group dataSet by GetSafeLabelType(dataSet))
                 {
                     yield return chromDataSets;
                 }
             }
         }
 
-        private bool IsComparable(ChromDataSet dataSet)
+        private static bool IsComparable(ChromDataSet dataSet)
         {
             return dataSet.NodeGroup != null && dataSet.NodeGroup.RelativeRT != RelativeRT.Unknown;
+        }
+
+        private static IsotopeLabelType GetSafeLabelType(ChromDataSet dataSet)
+        {
+            return dataSet.NodeGroup != null ? dataSet.NodeGroup.TransitionGroup.LabelType : null;
         }
 
         private IEnumerable<ChromData> ChromDatas

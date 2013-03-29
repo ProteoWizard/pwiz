@@ -60,7 +60,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 .Where(p => !p.NodeTran.IsMs1)
                 .ToArray();
             var statExperiment = new Statistics(tranPeakDatas.Select(p => (double) p.PeakData.Area));
-            var statLib = new Statistics(tranPeakDatas.Select(p => (double) p.NodeTran.LibInfo.Intensity));
+            var statLib = new Statistics(tranPeakDatas.Select(p => (double) (p.NodeTran.LibInfo != null
+                                                                                 ? p.NodeTran.LibInfo.Intensity
+                                                                                 : 0)));
             return (float) statExperiment.NormalizedContrastAngleSqrt(statLib);
         }        
     }

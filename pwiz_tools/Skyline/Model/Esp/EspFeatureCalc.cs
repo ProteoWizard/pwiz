@@ -93,20 +93,19 @@ namespace pwiz.Skyline.Model.Esp
                                      string seqColumn,
                                      IEnumerable<object> featureColumns,
                                      CultureInfo cultureInfo)
-
-    {
-        char separator = TextUtil.GetCsvSeparator(cultureInfo);
-
-        writer.Write(seqColumn);
-        foreach (var featureColumn in featureColumns)
         {
-            writer.Write(separator);
-            if (featureColumn is double)
-                writer.Write(((double) featureColumn).ToString("0.######", cultureInfo)); // Not L10N
-            else
-                writer.Write(featureColumn);
+            char separator = TextUtil.GetCsvSeparator(cultureInfo);
+
+            writer.Write(seqColumn);
+            foreach (var featureColumn in featureColumns)
+            {
+                writer.Write(separator);
+                if (featureColumn is double)
+                    writer.Write(((double) featureColumn).ToString("0.######", cultureInfo)); // Not L10N
+                else
+                    writer.Write(featureColumn);
+            }
+            writer.WriteLine();
         }
-        writer.WriteLine();
-    }
     }
 }

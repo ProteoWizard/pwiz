@@ -443,7 +443,7 @@ namespace pwiz.Skyline.Model.Results
             if (retentionTimes.Length > 0)
                 _listPeakSets.Sort(ComparePeakLists);
 
-//            if (retentionTimes.Length > 0 && !_listPeakSets[0].IsIdentified)
+//            if (retentionTimes.Length > 0 && !_listPeakSets[0].Identified)
 //                Console.WriteLine("Idenifications outside peaks.");
         }
 

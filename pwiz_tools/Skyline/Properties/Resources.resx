@@ -4973,9 +4973,6 @@ Are you sure you want to continue?</value>
   <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
     <value>Legacy unforced count standard</value>
   </data>
-  <data name="LegacyIdentifiedCountStandardCalc_LegacyIdentifiedCountStandardCalc_Legacy_identified_count_standard" xml:space="preserve">
-    <value>Legacy identified count standard</value>
-  </data>
   <data name="LegacyScoringModel_LegacyScoringModel_Skyline_Legacy" xml:space="preserve">
     <value>Skyline Legacy</value>
   </data>
@@ -5044,5 +5041,8 @@ Are you sure you want to continue?</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__" xml:space="preserve">
     <value>Failure attempting to create a file in {0}.</value>
+  </data>
+  <data name="LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count" xml:space="preserve">
+    <value>Legacy identified count</value>
   </data>
 </root>

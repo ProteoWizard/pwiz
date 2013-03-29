@@ -424,6 +424,12 @@
     <Compile Include="FileUI\MinimizeResultsDlg.Designer.cs">
       <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\MProphetFeaturesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\MProphetFeaturesDlg.Designer.cs">
+      <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -718,6 +724,7 @@
     <Compile Include="Model\Results\Scoring\LegacyScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\MProphetScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\MQuestFeatureCalc.cs" />
+    <Compile Include="Model\Results\Scoring\PeakFeatureEnumerator.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />
@@ -988,6 +995,9 @@
     <EmbeddedResource Include="FileUI\ExportMethodDlg.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.resx">
+      <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\OpenDataSourceDialog.resx">
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>

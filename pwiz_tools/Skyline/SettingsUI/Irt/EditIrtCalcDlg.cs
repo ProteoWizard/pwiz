@@ -688,7 +688,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     _dictPeptideRetentionTime = new Dictionary<string, double>();
                     foreach (var nodePep in document.Peptides)
                     {
-                        string modSeq = document.Settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
+                        string modSeq = document.Settings.GetModifiedSequence(nodePep);
                         if (_dictPeptideRetentionTime.ContainsKey(modSeq))
                             continue;
                         float? centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);

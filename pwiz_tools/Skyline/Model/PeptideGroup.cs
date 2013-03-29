@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Model
             var peptide = new Peptide(this, peptideSequence, begin, begin + peptideSequence.Length,
                 settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence));
 
-            return new PeptideDocNode(peptide, new TransitionGroupDocNode[0])
+            return new PeptideDocNode(peptide)
                 .ChangeSettings(settings, SrmSettingsDiff.ALL);
         }
 

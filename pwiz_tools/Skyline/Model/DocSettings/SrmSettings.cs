@@ -253,14 +253,10 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, false);
         }
 
-        public string GetModifiedSequence(PeptideDocNode nodePep, IsotopeLabelType labelType)
-        {
-            return GetModifiedSequence(nodePep.Peptide.Sequence, labelType, nodePep.ExplicitMods);
-        }
-
         public string GetModifiedSequence(PeptideDocNode nodePep)
         {
-            return GetModifiedSequence(nodePep, IsotopeLabelType.light);
+            Helpers.Assume(nodePep.ModifiedSequence != null);
+            return nodePep.ModifiedSequence;
         }
 
         private static readonly SequenceMassCalc MONOISOTOPIC_MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);

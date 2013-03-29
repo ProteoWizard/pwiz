@@ -1420,7 +1420,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     Peptide peptide = new Peptide(null, seq, null, null, _enzyme.CountCleavagePoints(seq));
-                    nodePep = new PeptideDocNode(peptide, new TransitionGroupDocNode[0]);
+                    nodePep = new PeptideDocNode(peptide);
                 }
                 _peptides.Add(nodePep);
             }
@@ -1527,7 +1527,7 @@ namespace pwiz.Skyline.Model
                 CompleteTransitionGroup();
 
             _transitionGroups.Sort(Peptide.CompareGroups);
-            _peptides.Add(new PeptideDocNode(_activePeptide, _activeVariableMods[0],
+            _peptides.Add(new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0],
                 FinalizeTransitionGroups(_transitionGroups), false));
 
             _transitionGroups.Clear();

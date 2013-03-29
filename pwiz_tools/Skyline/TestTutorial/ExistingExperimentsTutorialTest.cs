@@ -32,6 +32,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -201,7 +202,7 @@ namespace pwiz.SkylineTestTutorial
                                                     graphChrom.ChromGroupInfos[0].FilePath,
                                                     new ScaledRetentionTime(29.8, 29.8),
                                                     new ScaledRetentionTime(30.4, 30.4),
-                                                    ChromPeak.Identification.FALSE,
+                                                    PeakIdentification.FALSE,
                                                     PeakBoundsChangeType.both)
                 };
                 graphChrom.SimulateChangedPeakBounds(listChanges);

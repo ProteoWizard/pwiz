@@ -164,6 +164,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         float[] Intensities { get; }
     }
 
+    // ReSharper disable InconsistentNaming
+    public enum PeakIdentification { FALSE, TRUE, ALIGNED }
+    // ReSharper restore InconsistentNaming
+
     public interface ISummaryPeakData
     {
         float RetentionTime { get; }
@@ -176,7 +180,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         bool IsEmpty { get; }
         bool IsFwhmDegenerate { get; }
         bool IsForcedIntegration { get; }
-        bool IsIdentified { get; }
+        PeakIdentification Identified { get; }
         bool? IsTruncated { get; }
     }
 
@@ -200,6 +204,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 new LegacyLogUnforcedAreaCalc(),
                 new LegacyUnforcedCountScoreCalc(),
                 new LegacyUnforcedCountScoreStandardCalc(),
+                new LegacyIdentifiedCountCalc(), 
                 new MQuestLightAreaCalc(),
                 new MQuestIntensityCorrelationCalc(), 
                 new MQuestReferenceCorrelationCalc(), 

@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -1668,7 +1669,7 @@ namespace pwiz.Skyline.Model
             private float? Area { get; set; }
             private float? BackgroundArea { get; set; }
             private int? Truncated { get; set; }
-            private ChromPeak.Identification Identified { get; set; }
+            private PeakIdentification Identified { get; set; }
             private float? LibraryDotProduct { get; set; }
             private float? IsotopeDotProduct { get; set; }
             private IList<float?> Ratios { get; set; }
@@ -1718,7 +1719,7 @@ namespace pwiz.Skyline.Model
                             Truncated++;
                     }
                     if (info.IsIdentified &&
-                        (info.Identified == ChromPeak.Identification.TRUE || Identified == ChromPeak.Identification.FALSE))
+                        (info.Identified == PeakIdentification.TRUE || Identified == PeakIdentification.FALSE))
                     {
                         Identified = info.Identified;
                     }
@@ -1907,7 +1908,7 @@ namespace pwiz.Skyline.Model
                                   Transition transition,
                                   double startTime,
                                   double endTime,
-                                  ChromPeak.Identification identified)
+                                  PeakIdentification identified)
         {
             int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
 
@@ -1918,9 +1919,9 @@ namespace pwiz.Skyline.Model
             ChromPeak.FlagValues flags = 0;
             if (settings.MeasuredResults.IsTimeNormalArea)
                 flags |= ChromPeak.FlagValues.time_normalized;
-            if (identified != ChromPeak.Identification.FALSE)
+            if (identified != PeakIdentification.FALSE)
                 flags |= ChromPeak.FlagValues.contains_id;
-            if (identified == ChromPeak.Identification.ALIGNED)
+            if (identified == PeakIdentification.ALIGNED)
                 flags |= ChromPeak.FlagValues.used_id_alignment;
             foreach (TransitionDocNode nodeTran in Children)
             {

@@ -309,9 +309,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             DbProtein dbProtein, PeptideDocNode nodePeptide)
         {
             Peptide peptide = nodePeptide.Peptide;
-            var calcPre = docInfo.Settings.GetPrecursorCalc(IsotopeLabelType.light, nodePeptide.ExplicitMods);
             string seq = peptide.Sequence;
-            string seqModified = calcPre.GetModifiedSequence(seq, true);
+            string seqModified = nodePeptide.ModifiedSequenceDisplay;
+            Helpers.Assume(seqModified != null);
             DbPeptide dbPeptide = new DbPeptide
             {
                 Protein = dbProtein,

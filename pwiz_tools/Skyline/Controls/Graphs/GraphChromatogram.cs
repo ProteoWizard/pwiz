@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -284,9 +285,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     
                     var identified = dragInfo.IsIdentified
                                          ? (dragInfo.IsAlignedTimes
-                                                ? ChromPeak.Identification.ALIGNED
-                                                : ChromPeak.Identification.TRUE)
-                                         : ChromPeak.Identification.FALSE;
+                                                ? PeakIdentification.ALIGNED
+                                                : PeakIdentification.TRUE)
+                                         : PeakIdentification.FALSE;
 
                     var e = new ChangedPeakBoundsEventArgs(_groupPaths[iGroup],
                                                            nodeTran != null ? nodeTran.Transition : null,
@@ -2408,7 +2409,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                           string filePath,
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
-                                          ChromPeak.Identification identified,
+                                          PeakIdentification identified,
                                           PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
@@ -2422,8 +2423,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public Transition Transition { get; private set; }
         public ScaledRetentionTime StartTime { get; private set; }
         public ScaledRetentionTime EndTime { get; private set; }
-        public ChromPeak.Identification Identified { get; private set; }
-        public bool IsIdentified { get { return Identified != ChromPeak.Identification.FALSE; } }
+        public PeakIdentification Identified { get; private set; }
+        public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
         public PeakBoundsChangeType ChangeType { get; private set; }
     }
 

@@ -1005,6 +1005,9 @@
   <data name="&gt;&gt;dockPanel.Type" xml:space="preserve">
     <value>DigitalRune.Windows.Docking.DockPanel, DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
+  <data name="&gt;&gt;dockPanel.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
   <data name="&gt;&gt;dockPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -1025,6 +1028,9 @@
   </data>
   <data name="&gt;&gt;panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>5</value>
@@ -1109,6 +1115,9 @@
   </data>
   <data name="&gt;&gt;statusStrip.Type" xml:space="preserve">
     <value>System.Windows.Forms.StatusStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;statusStrip.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
   <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
     <value>6</value>
@@ -1218,6 +1227,9 @@
   <data name="&gt;&gt;mainToolStrip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;mainToolStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
   <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
@@ -1321,36 +1333,45 @@
     <value>&amp;Import</value>
   </data>
   <data name="exportTransitionListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>183, 22</value>
   </data>
   <data name="exportTransitionListMenuItem.Text" xml:space="preserve">
     <value>&amp;Transition List...</value>
   </data>
   <data name="exportIsolationListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>183, 22</value>
   </data>
   <data name="exportIsolationListMenuItem.Text" xml:space="preserve">
     <value>&amp;Isolation List...</value>
   </data>
   <data name="exportMethodMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>183, 22</value>
   </data>
   <data name="exportMethodMenuItem.Text" xml:space="preserve">
     <value>&amp;Method...</value>
   </data>
   <data name="exportReportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>183, 22</value>
   </data>
   <data name="exportReportMenuItem.Text" xml:space="preserve">
     <value>&amp;Report...</value>
   </data>
   <data name="eSPFeaturesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>183, 22</value>
   </data>
   <data name="eSPFeaturesMenuItem.Text" xml:space="preserve">
     <value>&amp;ESP Features...</value>
   </data>
   <data name="eSPFeaturesMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="mProphetFeaturesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="mProphetFeaturesMenuItem.Text" xml:space="preserve">
+    <value>m&amp;Prophet Features...</value>
+  </data>
+  <data name="mProphetFeaturesMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -2372,6 +2393,9 @@
   </data>
   <data name="&gt;&gt;menuMain.Type" xml:space="preserve">
     <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;menuMain.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
   <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
     <value>8</value>
@@ -3460,6 +3484,12 @@
     <value>eSPFeaturesMenuItem</value>
   </data>
   <data name="&gt;&gt;eSPFeaturesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mProphetFeaturesMenuItem.Name" xml:space="preserve">
+    <value>mProphetFeaturesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;mProphetFeaturesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;mruBeforeToolStripSeparator.Name" xml:space="preserve">

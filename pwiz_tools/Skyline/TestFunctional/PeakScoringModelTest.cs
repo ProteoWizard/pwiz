@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -47,6 +49,7 @@ namespace pwiz.SkylineTestFunctional
                 fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.Peaks;
             });
 
+            int calculatorCount = PeakFeatureCalculator.Calculators.Count();
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(fullScanDlg.AddPeakScoringModel);
 
@@ -57,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(editDlg.Mean, string.Empty);
                     Assert.AreEqual(editDlg.Stdev, string.Empty);
                     var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                    Assert.AreEqual(10, rows, "Unexpected count of peak calculators");  // Not L10N
+                    Assert.AreEqual(calculatorCount, rows, "Unexpected count of peak calculators");  // Not L10N
                     for (int i = 0; i < rows; i++)
                     {
                         var cellValue = editDlg.PeakCalculatorsGrid.GetCellValue(1, i);
@@ -121,7 +124,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual("1", editDlg.Mean); // Not L10N
                     Assert.AreEqual("2", editDlg.Stdev); // Not L10N
                     var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                    Assert.AreEqual(10, rows, "Unexpected count of peak calculators");  // Not L10N
+                    Assert.AreEqual(calculatorCount, rows, "Unexpected count of peak calculators");  // Not L10N
                     for (int i = 0; i < rows; i++)
                     {
                         var cellValue = editDlg.PeakCalculatorsGrid.GetCellValue(1, i);
@@ -135,6 +138,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
+            var listValues = new List<string>();
             RunUI(() => editList.SelectItem("test2")); // Not L10N
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
@@ -146,11 +150,13 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual("1", editDlg.Mean); // Not L10N
                     Assert.AreEqual("2", editDlg.Stdev); // Not L10N
                     var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                    Assert.AreEqual(10, rows, "Unexpected count of peak calculators");  // Not L10N
+                    Assert.AreEqual(calculatorCount, rows, "Unexpected count of peak calculators");  // Not L10N
                     for (int i = 0; i < rows; i++)
                     {
                         var cellValue = editDlg.PeakCalculatorsGrid.GetCellValue(1, i);
-                        Assert.AreEqual(i.ToString(CultureInfo.CurrentCulture), cellValue); // Not L10N
+                        string expectedValue = i.ToString(CultureInfo.CurrentCulture);
+                        Assert.AreEqual(expectedValue, cellValue); // Not L10N
+                        listValues.Add(expectedValue);
                     }
                     editDlg.OkDialog();
                 });
@@ -164,29 +170,38 @@ namespace pwiz.SkylineTestFunctional
                 // Paste one number.
                 var pasteValue = 173.6789.ToString(CultureInfo.CurrentCulture);
                 ClipboardEx.SetText(pasteValue);
+                listValues[0] = pasteValue;
                 RunUI(() =>
                 {
                     editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
                     Assert.IsTrue(editDlg.PeakCalculatorsGrid.HandleKeyDown(Keys.V, true));
-                    VerifyCellValues(editDlg, new[] { pasteValue, "1", "2", "3", "4", "5", "6", "7", "8", "9" }); // Not L10N
+                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
                 });
 
                 // Paste weights only list.
-                ClipboardEx.SetText("9\n8\n7\n6\n5\n4\n3\n2\n1\n0\n"); // Not L10N
+                listValues.Clear();
+                for (int i = 0; i < calculatorCount; i++)
+                {
+                    listValues.Insert(0, i.ToString(CultureInfo.CurrentCulture));
+                }
+                ClipboardEx.SetText(string.Join("\n", listValues)); // Not L10N
                 RunUI(() =>
                 {
                     editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
                     editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, new[] { "9", "8", "7", "6", "5", "4", "3", "2", "1", "0" }); // Not L10N
+                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
                 });
 
                 // Paste weights list by name.
+                var arrayCalc = PeakFeatureCalculator.Calculators.ToArray();
                 ClipboardEx.SetText("Legacy unforced count\t-1\nmQuest weighted reference\t-99\n"); // Not L10N
+                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, "Legacy unforced count"))] = "-1";
+                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, "mQuest weighted reference"))] = "-99";
                 RunUI(() =>
                 {
                     editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
                     editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, new[] { "9", "-1", "7", "6", "5", "4", "3", "2", "-99", "0" }); // Not L10N
+                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
                 });
 
                 // Paste unknown name.
@@ -221,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
                     editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, new[] { "9", "-1", "7", "6", "5", "4", "3", "2", "-99", "0" }); // Not L10N
+                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
                 });
 
                 // Paste bad weight by name.
@@ -230,7 +245,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
                     editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, new[] { "9", "-1", "7", "6", "5", "4", "3", "2", "-99", "0" }); // Not L10N
+                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
                 });
 
 
