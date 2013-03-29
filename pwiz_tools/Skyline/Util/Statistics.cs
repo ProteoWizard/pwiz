@@ -71,45 +71,10 @@ namespace pwiz.Skyline.Util
         /// <returns>Mode of the set of numbers</returns>
         public double Mode()
         {
-            try
-            {
-                var ordered = OrderedList();
-                double valMode = ordered[0], helpValMode = ordered[0];
-                int oldCounter = 0, newCounter = 0;
-                int j = 0;
-                for (; j <= ordered.Length - 1; j++)
-                {
-                    if (ordered[j] == helpValMode)
-                        newCounter++;
-                    else if (newCounter > oldCounter)
-                    {
-                        valMode = helpValMode;
-                        oldCounter = newCounter;
-                        newCounter = 1;
-                        helpValMode = ordered[j];
-                    }
-                    else if (newCounter == oldCounter)
-                    {
-                        valMode = double.NaN;
-                        helpValMode = ordered[j];
-                        newCounter = 1;
-                    }
-                    else
-                    {
-                        helpValMode = ordered[j];
-                        newCounter = 1;
-                    }
-                }
-                if (newCounter > oldCounter)
-                    valMode = helpValMode;
-                else if (newCounter == oldCounter)
-                    valMode = double.NaN;
-                return valMode;
-            }
-            catch (Exception)
-            {
+            var modes = Modes();
+            if (modes.Length == 0 || modes.Length > 1)
                 return double.NaN;
-            }
+            return modes[0];
         }
 
         /// <summary>
@@ -120,45 +85,22 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                var ordered = OrderedList();
-                List<double> listModes = new List<double>();
-                double helpValMode = ordered[0];
-                int oldCounter = 0, newCounter = 0;
-                int j = 0;
-                for (; j <= ordered.Length - 1; j++)
+                var dictValCount = new Dictionary<double, int>();
+                int maxCount = 1;
+                foreach (double value in _list)
                 {
-                    if (ordered[j] == helpValMode)
-                        newCounter++;
-                    else if (newCounter > oldCounter)
-                    {
-                        listModes.Clear();
-                        listModes.Add(helpValMode);
-
-                        oldCounter = newCounter;
-                        newCounter = 1;
-                        helpValMode = ordered[j];
-                    }
-                    else if (newCounter == oldCounter)
-                    {
-                        listModes.Add(helpValMode);
-
-                        helpValMode = ordered[j];
-                        newCounter = 1;
-                    }
+                    int count;
+                    if (!dictValCount.TryGetValue(value, out count))
+                        dictValCount.Add(value, count = 1);
                     else
-                    {
-                        helpValMode = ordered[j];
-                        newCounter = 1;
-                    }
+                        dictValCount[value] = ++count;
+
+                    if (count > maxCount)
+                        maxCount = count;
                 }
-                if (newCounter > oldCounter)
-                {
-                    listModes.Clear();
-                    listModes.Add(helpValMode);
-                }
-                else if (newCounter == oldCounter)
-                    listModes.Add(helpValMode);
-                return listModes.ToArray();
+                return (from vc in dictValCount
+                        where vc.Value == maxCount
+                        select vc.Key).ToArray();
             }
             catch (Exception)
             {
