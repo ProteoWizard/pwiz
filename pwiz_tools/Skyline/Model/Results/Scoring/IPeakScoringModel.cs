@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -223,6 +224,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public static IEnumerable<IPeakFeatureCalculator> Calculators
         {
             get { return CALCULATORS; }
+        }
+
+        public static IPeakFeatureCalculator GetCalculator(Type calcType)
+        {
+            return CALCULATORS.FirstOrDefault(c => c.GetType() == calcType);
         }
     }
 

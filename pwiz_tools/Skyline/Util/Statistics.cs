@@ -309,6 +309,33 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Calculates the variance of the set of numbers as a
+        /// sample of a larger population.
+        /// </summary>
+        /// <returns>Variance estimate for population</returns>
+        public double VarianceS()
+        {
+            return Variance();
+        }
+
+        /// <summary>
+        /// Calculates the variance of the set of numbers as the
+        /// entire population.
+        /// </summary>
+        /// <returns>Variance of population</returns>
+        public double VarianceP()
+        {
+            try
+            {
+                return VarianceTotal() / _list.Length;
+            }
+            catch (Exception)
+            {
+                return double.NaN;
+            }
+        }
+
+        /// <summary>
         /// Calculates the variance for a set of numbers from a weighted mean.
         /// See:
         /// http://en.wikipedia.org/wiki/Weighted_mean
@@ -317,6 +344,9 @@ namespace pwiz.Skyline.Util
         /// <returns>Variance from weighted mean</returns>
         public double Variance(Statistics weights)
         {
+            if (_list.Length < 2)
+                return 0;
+
             try
             {
                 double s = 0;
@@ -338,6 +368,26 @@ namespace pwiz.Skyline.Util
         public double StdDev()
         {
             return Math.Sqrt(Variance());
+        }
+
+        /// <summary>
+        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// of numbers as a sample of an entire population.  Variance uses n-1.
+        /// </summary>
+        /// <returns>Standard deviation</returns>
+        public double StdDevS()
+        {
+            return StdDev();
+        }
+
+        /// <summary>
+        /// Calculates the stadard deviation (sqrt(variance)) of the set
+        /// of numbers as an entire population.  Variance uses n.
+        /// </summary>
+        /// <returns>Standard deviation</returns>
+        public double StdDevP()
+        {
+            return Math.Sqrt(VarianceP());
         }
 
         /// <summary>
@@ -1332,6 +1382,18 @@ namespace pwiz.Skyline.Util
             return new Statistics(listNewValues).Rank(true);
         }
 
+        public double[] Standardize()
+        {
+            // subtract the mean and divide by the standard deviation
+            double mean = Mean();
+            double std = StdDevP();
+
+            var listNew = new double[_list.Length];
+            for (int i = 0; i < _list.Length; i++)
+                listNew[i] = (_list[i] - mean)/std;
+            return listNew;
+        }
+
         public Dictionary<int, double> CrossCorrelation(Statistics s, bool normalize)
         {
             if (Length != s.Length)
@@ -1346,9 +1408,14 @@ namespace pwiz.Skyline.Util
             // Normalized cross-correlation = subtract the mean and divide by the standard deviation
             if (normalize)
             {
-                double var1 = Variance();
-                double var2 = s.Variance();
-                denominator = Math.Sqrt(var1 * var2);
+                double sqsum1 = 0;
+                double sqsum2 = 0;
+                foreach (double v in _list)
+                  sqsum1 += (v - mean1)*(v - mean1);
+                foreach (double v in s._list)
+                  sqsum2 += (v - mean2)*(v - mean2);
+                // sigma_1 * sigma_2 * n
+                denominator = Math.Sqrt(sqsum1*sqsum2);
             }
 
             for (int delay = -Length; delay <= Length; delay++)

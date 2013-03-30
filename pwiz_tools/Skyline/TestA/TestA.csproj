@@ -132,6 +132,7 @@
     <Compile Include="ModificationMatcherTest.cs" />
     <Compile Include="MoreStatisticsTest.cs" />
     <Compile Include="MProphetScoringModelTest.cs" />
+    <Compile Include="MQuestScoringTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublishDocAddSubfolderTest.cs" />

@@ -180,10 +180,13 @@ namespace pwiz.Skyline.FileUI
                 writer.Write(separator);
                 writer.Write(features.Id.NodePep.IsDecoy ? 1 : 0);
 
-                foreach (var featureColumn in peakGroupFeatures.Features)
+                foreach (float featureColumn in peakGroupFeatures.Features)
                 {
                     writer.Write(separator);
-                    writer.Write(featureColumn);
+                    if (float.IsNaN(featureColumn))
+                        writer.Write("#N/A");
+                    else
+                        writer.Write(featureColumn);
                 }
                 writer.WriteLine();
             }

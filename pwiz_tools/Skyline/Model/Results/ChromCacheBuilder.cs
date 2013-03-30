@@ -644,8 +644,7 @@ namespace pwiz.Skyline.Model.Results
 // ReSharper restore SuggestBaseTypeForParameter
         {
             // Look for potential product ion matches
-            chromDataSet.ClearDataDocNodes();
-            var listMatchingData = new List<ChromData>();
+            var listMatchingData = new List<Tuple<ChromData, TransitionDocNode>>();
             const float tolerance = (float) TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             foreach (var chromData in chromDataSet.Chromatograms)
             {
@@ -654,8 +653,7 @@ namespace pwiz.Skyline.Model.Results
                     if (ChromKey.CompareTolerant(chromData.Key.Product,
                             (float) nodeTran.Mz, tolerance) == 0)
                     {
-                        chromData.DocNode = nodeTran;
-                        listMatchingData.Add(chromData);
+                        listMatchingData.Add(new Tuple<ChromData, TransitionDocNode>(chromData, nodeTran));
                         break;
                     }
                 }
@@ -665,7 +663,16 @@ namespace pwiz.Skyline.Model.Results
             int countChildren = nodeGroup.Children.Count;
             if (countChildren == 0 || listMatchingData.Count < Math.Min(2, countChildren))
                 return null;
-            return listMatchingData;
+            // Assign all the doc nodes and return this list
+            chromDataSet.ClearDataDocNodes();
+            var result = new ChromData[listMatchingData.Count];
+            for (int i = 0; i < listMatchingData.Count; i++)
+            {
+                var match = listMatchingData[i];
+                match.Item1.DocNode = match.Item2;
+                result[i] = match.Item1;
+            }
+            return result;
         }
 
         private static readonly MzComparer MZ_COMPARER = new MzComparer();

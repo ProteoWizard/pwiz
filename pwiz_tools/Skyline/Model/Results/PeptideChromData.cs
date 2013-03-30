@@ -125,6 +125,7 @@ namespace pwiz.Skyline.Model.Results
                 chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
 
             // Merge where possible and pick peak groups at the peptide level
+            _listListPeakSets.Clear();
             foreach (var dataSets in ComparableDataSets)
                 _listListPeakSets.Add(PickPeptidePeaks(dataSets.ToArray()));
 
@@ -639,16 +640,13 @@ namespace pwiz.Skyline.Model.Results
         {
             Data = data;
             PeakGroup = peakGroup;
-            TranstionPeakData = peakGroup != null
-                ? peakGroup.Cast<ITransitionPeakData<IDetailedPeakData>>().ToArray()
-                : new ITransitionPeakData<IDetailedPeakData>[0];
         }
 
         public TransitionGroupDocNode NodeGroup { get { return Data.NodeGroup; } }
 
         public bool IsStandard { get { return Data.IsStandard; } }
 
-        public IList<ITransitionPeakData<IDetailedPeakData>> TranstionPeakData { get; private set; }
+        public IList<ITransitionPeakData<IDetailedPeakData>> TranstionPeakData { get { return PeakGroup; } }
 
         /// <summary>
         /// Entire peak set

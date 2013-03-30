@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -545,8 +546,8 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // Check peaks where their largest peaks overlap to make
                     // sure they have transitions with measured signal in common.
-                    var sharedPeaks = from dataPeak in peakSet
-                                      join dataPeakTest in peakSetTest on
+                    var sharedPeaks = from dataPeak in (Collection<ChromDataPeak>) peakSet
+                                      join dataPeakTest in (Collection<ChromDataPeak>) peakSetTest on
                                           dataPeak.Data.Key equals dataPeakTest.Data.Key
                                       where dataPeak.Peak != null && dataPeakTest.Peak != null
                                       select dataPeak;

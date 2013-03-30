@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates a MQuest cross-correlation based score on the analyte transitions.
     /// </summary>
-    abstract class MQuestWeightedLightCalc : DetailedPeakFeatureCalculator
+    public abstract class MQuestWeightedLightCalc : DetailedPeakFeatureCalculator
     {
         protected MQuestWeightedLightCalc(string name) : base(name) { }
 
@@ -203,14 +203,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected virtual double GetWeight(MQuestCrossCorrelation xcorr)
         {
-            return (double)xcorr.TranPeakData1.PeakData.Area + xcorr.TranPeakData2.PeakData.Area;
+            return xcorr.AreaSum;
         }
     }
 
     /// <summary>
     /// Calculates the MQuest shape score, weighted by the sum of the transition peak areas.
     /// </summary>
-    class MQuestWeightedShapeCalc : MQuestWeightedLightCalc
+    public class MQuestWeightedShapeCalc : MQuestWeightedLightCalc
     {
         public MQuestWeightedShapeCalc() : base(Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape) {}
 
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates the MQuest shape score.
     /// </summary>
-    class MQuestShapeCalc : MQuestWeightedShapeCalc
+    public class MQuestShapeCalc : MQuestWeightedShapeCalc
     {
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {
@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates the MQuest co elution score, weighted by the sum of the transition peak areas.
     /// </summary>
-    class MQuestWeightedCoElutionCalc : MQuestWeightedLightCalc
+    public class MQuestWeightedCoElutionCalc : MQuestWeightedLightCalc
     {
         public MQuestWeightedCoElutionCalc() : base(Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution) { }
 
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates the MQuest co elution score.
     /// </summary>
-    class MQuestCoElutionCalc : MQuestWeightedCoElutionCalc
+    public class MQuestCoElutionCalc : MQuestWeightedCoElutionCalc
     {
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {
@@ -302,9 +302,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             GetCrossCorrelationPairsAll(IList<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
         {
             for (int i = 0; i < tranPeakDatas.Count - 1; i++)
+//            for (int i = 0; i < tranPeakDatas.Count; i++) // OpenSWATH
             {
                 var tran1 = tranPeakDatas[i];
                 for (int j = i + 1; j < tranPeakDatas.Count; j++)
+//                for (int j = i; j < tranPeakDatas.Count; j++) // OpenSWATH
                 {
                     var tran2 = tranPeakDatas[j];
                     yield return new TransitionPeakDataPair(tran1, tran2);
@@ -366,7 +368,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected virtual double GetWeight(MQuestCrossCorrelation xcorr)
         {
-            return (double)xcorr.TranPeakData1.PeakData.Area + xcorr.TranPeakData2.PeakData.Area;
+            return xcorr.AreaSum;
         }
     }
 
@@ -483,14 +485,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 yield return new TransitionPeakDataPair(lightTran, standardTran);
                 i++;
             }
-            // Enumerate any remaining light transitions doing exhaustive search for a standard match
+            // Enumerate any remaining light transitions doing exhaustive search or the remaining
+            // standard transitions for match
+            int startUnmatchedStandard = i;
             while (i < lightGroup.TranstionPeakData.Count)
             {
                 var lightTran = lightGroup.TranstionPeakData[i];
-                var standardTran = standardGroup.TranstionPeakData.FirstOrDefault(
-                        p => EquivalentTrans(lightTran.NodeTran, p.NodeTran));
-                if (standardTran != null)
-                    yield return new TransitionPeakDataPair(lightTran, standardTran);
+                for (int j = startUnmatchedStandard; j < standardGroup.TranstionPeakData.Count; j++)
+                {
+                    var standardTran = standardGroup.TranstionPeakData[j];
+                    if (EquivalentTrans(lightTran.NodeTran, standardTran.NodeTran))
+                        yield return new TransitionPeakDataPair(lightTran, standardTran);
+                }
                 i++;
             }
         }
@@ -508,12 +514,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// A single cross-correlation vector between the intensities of two different transitions.
     /// </summary>
-    class MQuestCrossCorrelation
+    public class MQuestCrossCorrelation
     {
         public MQuestCrossCorrelation(ITransitionPeakData<IDetailedPeakData> tranPeakData1,
                                       ITransitionPeakData<IDetailedPeakData> tranPeakData2,
                                       bool normalize)
         {
+            TranPeakData1 = tranPeakData1;
+            TranPeakData2 = tranPeakData2;
+
             if (ReferenceEquals(tranPeakData1, tranPeakData2))
                 throw new ArgumentException("Cross-correlation attempted on a single transition with itself");  // Not L10N
             int len1 = tranPeakData1.PeakData.Length, len2 = tranPeakData2.PeakData.Length;
@@ -523,9 +532,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 throw new ArgumentException(string.Format("Cross-correlation attempted on peaks of different lengths {0} and {1}", len1, len2)); // Not L10N
             else
             {
-                TranPeakData1 = tranPeakData1;
-                TranPeakData2 = tranPeakData2;
-
                 var stat1 = GetStatistics(tranPeakData1.PeakData.Intensities, tranPeakData1.PeakData.StartIndex, len1);
                 var stat2 = GetStatistics(tranPeakData2.PeakData.Intensities, tranPeakData2.PeakData.StartIndex, len2);
 
@@ -547,6 +553,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// The maximum cross-correlation score between the points of the two transitions
         /// </summary>
         public double MaxCorr { get { return XcorrDict.Max(p => p.Value); } }
+
+        public double AreaSum
+        {
+            get { return (double)TranPeakData1.PeakData.Area + TranPeakData2.PeakData.Area; }
+        }
 
         public int MaxShift
         {

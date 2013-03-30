@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Results
     /// <summary>
     /// A single set of peaks for all transitions in a transition group
     /// </summary>
-    internal sealed class ChromDataPeakList : Collection<ChromDataPeak>
+    internal sealed class ChromDataPeakList : Collection<ChromDataPeak>, IList<ITransitionPeakData<IDetailedPeakData>>
     {
         public ChromDataPeakList(ChromDataPeak peak)
         {
@@ -658,5 +658,38 @@ namespace pwiz.Skyline.Model.Results
             SubtractPeak(peak);
             AddPeak(item);
         }
+
+        #region Implement read-only IList<ITransitionPeakData<IDetailedPeakData>> for peak scoring
+        
+        IEnumerator<ITransitionPeakData<IDetailedPeakData>> IEnumerable<ITransitionPeakData<IDetailedPeakData>>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        bool ICollection<ITransitionPeakData<IDetailedPeakData>>.IsReadOnly { get { return true; } }
+
+        int IList<ITransitionPeakData<IDetailedPeakData>>.IndexOf(ITransitionPeakData<IDetailedPeakData> item)
+        {
+            return IndexOf((ChromDataPeak)item);
+        }
+
+        ITransitionPeakData<IDetailedPeakData> IList<ITransitionPeakData<IDetailedPeakData>>.this[int index]
+        {
+            get { return this[index]; }
+            set { throw new InvalidOperationException(); }
+        }
+
+        void ICollection<ITransitionPeakData<IDetailedPeakData>>.Add(ITransitionPeakData<IDetailedPeakData> item)
+        { throw new InvalidOperationException(); }
+        bool ICollection<ITransitionPeakData<IDetailedPeakData>>.Contains(ITransitionPeakData<IDetailedPeakData> item)
+        { throw new InvalidOperationException(); }
+        void ICollection<ITransitionPeakData<IDetailedPeakData>>.CopyTo(ITransitionPeakData<IDetailedPeakData>[] array, int arrayIndex)
+        { throw new InvalidOperationException(); }
+        bool ICollection<ITransitionPeakData<IDetailedPeakData>>.Remove(ITransitionPeakData<IDetailedPeakData> item)
+        { throw new InvalidOperationException(); }
+        void IList<ITransitionPeakData<IDetailedPeakData>>.Insert(int index, ITransitionPeakData<IDetailedPeakData> item)
+        { throw new InvalidOperationException(); }
+
+        #endregion
     }
 }
