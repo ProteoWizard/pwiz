@@ -213,12 +213,35 @@ namespace seems
             {
                 gridView.Columns["Id"].Visible = false;
 
+                // guard against case where input is mzXML which
+                // is identified as, say, Agilent-derived, but 
+                // which uses "scan" (as mzXML must) instead
+                // of the Agilent "scanID" (as this mzML-centric code expects)
+                bool foundit = false;
+
                 string[] nameValuePairs = spectrum.Id.Split(' ');
                 foreach( string nvp in nameValuePairs )
                 {
                     string[] nameValuePair = nvp.Split('=');
                     if (row.Table.Columns.Contains(nameValuePair[0]))
+                    {
                         row[nameValuePair[0]] = nameValuePair[1];
+                        foundit = true;
+                    }
+                }
+                if (!foundit)
+                {
+                    // mismatch between nativeID format and actual (probably mzXML) format
+                    // better to show an ill-fit match - eg "scan" (mzXML) and "scanID" (Agilent)
+                    // than no info at all
+                    string nativeIdDefinition = new CVTermInfo(nativeIdFormat).def;
+                    string[] idPair = nativeIdDefinition.Split('=');
+                    if (row.Table.Columns.Contains(idPair[0]))
+                    {
+                        string[] valPair = spectrum.Id.Split('=');
+                        row[idPair[0]] = (valPair.Length > 1) ? valPair[1] : spectrum.Id;
+                        foundit = true;
+                    }
                 }
             }
 
