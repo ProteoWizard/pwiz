@@ -107,6 +107,20 @@ void SqliteRoutine::SQL_STMT(const char* stmt, sqlite3* db)
     
 }
 
+string SqliteRoutine::ESCAPE_APOSTROPHES(const string& sql)
+{
+    string escapedString;
+    for (size_t i = 0; i < sql.length(); ++i)
+    {
+        escapedString += sql[i];
+        if (sql[i] == '\'')
+        {
+            escapedString += sql[i];
+        }
+    }
+    return escapedString;
+}
+
 } // namespace
 
 /*

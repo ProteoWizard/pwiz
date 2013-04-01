@@ -219,7 +219,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
 
     // first see if the file already exists
     string statement = "SELECT id FROM SpectrumSourceFiles WHERE filename = '";
-    statement += fullPath;
+    statement += SqliteRoutine::ESCAPE_APOSTROPHES(fullPath);
     statement += "'";
 
     int iRow, iCol;
@@ -236,7 +236,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     sqlite3_free_table(result);
 
     string sql_statement = "INSERT INTO SpectrumSourceFiles(fileName) VALUES('";
-    sql_statement += fullPath;
+    sql_statement += SqliteRoutine::ESCAPE_APOSTROPHES(fullPath);
     sql_statement += "')";
 
     blibMaker_.sql_stmt(sql_statement.c_str());

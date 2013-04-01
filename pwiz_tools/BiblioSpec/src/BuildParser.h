@@ -34,6 +34,7 @@
 #include "mzxmlFinder.h"
 #include "PSM.h"
 #include "SpecFileReader.h"
+#include "SqliteRoutine.h"
 #include "PwizReader.h"
 #include "AminoAcidMasses.h"
 
