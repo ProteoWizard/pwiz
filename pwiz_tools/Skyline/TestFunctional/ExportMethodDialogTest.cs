@@ -60,6 +60,8 @@ namespace pwiz.SkylineTestFunctional
             AbiTofTest();
 
             AgilentThermoTriggeredTest();
+
+            ABSciexShortNameTest();
         }
 
         private static void ThermoTsqTest()
@@ -488,6 +490,29 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(exportMethodDlg);
             }
             Assert.IsTrue(Directory.Exists(agilentActualMeth));
+        }
+
+        private void ABSciexShortNameTest()
+        {
+            // Failure trying to export to file with a peptide lacking results or library match 
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mods_shortNameTest.sky")));
+            string modsShortNameExpected = TestFilesDir.GetTestPath("ModShortName.csv");
+            string modsShortNameActual = TestFilesDir.GetTestPath("ModShortName-Actual.csv");
+            {
+                var exportMethodDlg =
+                    ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                          {
+                              exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_QTRAP;
+                              exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                              exportMethodDlg.OkDialog(modsShortNameActual);
+                          });
+
+                WaitForClosedForm(exportMethodDlg);
+            }
+
+            AssertEx.NoDiff(File.ReadAllText(modsShortNameExpected), File.ReadAllText(modsShortNameActual));
+
         }
 
         private static void CreateDummyRTRegression()

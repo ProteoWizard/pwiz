@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestA
                 libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
                     docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy);
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
-                    mod.Formula.Equals("C2H3ON") && !mod.IsVariable));
+                    mod.Formula.Equals(UniMod.GetModification(StaticModList.DEFAULT_NAME, true).Formula) && !mod.IsVariable));
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
                     mod.Formula.Equals("O") && mod.IsVariable));
             }

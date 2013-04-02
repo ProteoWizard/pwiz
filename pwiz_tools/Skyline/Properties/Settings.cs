@@ -1021,12 +1021,12 @@ namespace pwiz.Skyline.Properties
 
     public sealed class StaticModList : SettingsList<StaticMod>
     {
+        public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine";
+        public const string DEFAULT_NAME = "Carbamidomethyl (C)";
+
         public static StaticMod[] GetDefaultsOn()
         {
-            return new[]
-                {
-                    new StaticMod("Carbamidomethyl Cysteine", "C", null, "C2H3ON") // Not L10N
-                };            
+            return new[] { UniMod.GetModification(DEFAULT_NAME, true) };
         }
 
         public override IEnumerable<StaticMod> GetDefaults(int revisionIndex)

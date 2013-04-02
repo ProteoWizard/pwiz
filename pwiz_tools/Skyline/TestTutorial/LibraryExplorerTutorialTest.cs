@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();   // p. 3
 
             // Modifications Tab in peptideSttingsUI to check "Carbamidomethyl Cysteine"
-            const string carbamidoName = "Carbamidomethyl Cysteine";
+            const string carbamidoName = StaticModList.DEFAULT_NAME;
             RunUI(() =>
                       {
                           peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications;

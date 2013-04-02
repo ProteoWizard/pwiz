@@ -231,19 +231,36 @@ namespace pwiz.Skyline.Model
 
         public static string GetModDiffDescription(double massDiff)
         {
-            return GetModDiffDescription(massDiff, false);
+            return GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff);
         }
 
-        public static string GetModDiffDescription(double massDiff, bool formatNarrow)
+        public static string GetModDiffDescription(double massDiff, StaticMod mod, SequenceModFormatType format)
         {
-            if (formatNarrow)
-                // Narrow format allows for removal of .0 when decimal is not present
-                // One of the more important cases is 15N labeling which produces a lot of
-                // [+1] and [+2] values.  Also assumed to be for UI, so use local format.
-                return string.Format("[{0}{1}]", (massDiff > 0 ? "+" : string.Empty), Math.Round(massDiff, 1)); // Not L10N
-            else
-                // Non-narrow format is used for library look-up and must be consistent with LibKey format
-                return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]", (massDiff > 0 ? "+" : string.Empty), massDiff); // Not L10N
+            switch (format)
+            {
+                case SequenceModFormatType.mass_diff:
+                    // Non-narrow format is used for library look-up and must be consistent with LibKey format
+                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]", (massDiff > 0 ? "+" : string.Empty), massDiff); // Not L10N
+                case SequenceModFormatType.mass_diff_narrow:
+                    // Narrow format allows for removal of .0 when decimal is not present
+                    // One of the more important cases is 15N labeling which produces a lot of
+                    // [+1] and [+2] values.  Also assumed to be for UI, so use local format.
+                    return string.Format("[{0}{1}]", (massDiff > 0 ? "+" : string.Empty), Math.Round(massDiff, 1)); // Not L10N
+                case SequenceModFormatType.three_letter_code:
+                    var shortName = mod.ShortName;
+                    if (string.IsNullOrEmpty(shortName))
+                    {
+                        bool isStructural;
+                        var foundMod = UniMod.GetModification(mod.Name, out isStructural);
+                        if (foundMod != null)
+                            shortName = foundMod.ShortName;
+                    }
+                    return shortName != null
+                        ? string.Format("[{0}]", shortName)
+                        : GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff_narrow);
+                default:
+                    throw new ArgumentOutOfRangeException("format");
+            }
         }
 
         public static string GetMassIDescripion(int massIndex)
@@ -490,7 +507,18 @@ namespace pwiz.Skyline.Model
             return GetModifiedSequence(seq, null, formatNarrow);
         }
 
+        public string GetModifiedSequence(string seq, SequenceModFormatType format, bool useExplicitModsOnly)
+        {
+            return GetModifiedSequence(seq, null, format, useExplicitModsOnly);
+        }
+
         public string GetModifiedSequence(string seq, ExplicitSequenceMods mods, bool formatNarrow)
+        {
+            var format = formatNarrow ? SequenceModFormatType.mass_diff_narrow : SequenceModFormatType.mass_diff;
+            return GetModifiedSequence(seq, mods, format, false);
+        }
+        
+        public string GetModifiedSequence(string seq, ExplicitSequenceMods mods, SequenceModFormatType format, bool useExplicitModsOnly)
         {
             // If no modifications, do nothing
             if (!IsModified(seq) && mods == null)
@@ -501,10 +529,16 @@ namespace pwiz.Skyline.Model
             for (int i = 0, len = seq.Length; i < len; i++)
             {
                 char c = seq[i];
-                var mod = GetAAModMass(c, i, len, mods);
+                var modMass = GetAAModMass(c, i, len, mods);
                 sb.Append(c);
-                if (mod != 0)
-                    sb.Append(GetModDiffDescription(mod, formatNarrow));
+                if (modMass != 0)
+                {
+                    StaticMod mod = mods != null ? mods.FindFirstMod(i) : null;
+                    if (mod == null && useExplicitModsOnly) 
+                        continue;
+
+                    sb.Append(GetModDiffDescription(modMass, mod, format));
+                }
             }
             return sb.ToString();
         }
@@ -959,9 +993,18 @@ namespace pwiz.Skyline.Model
                 _mods.ModMasses.IndexOf(m => m != 0) != -1; // If any non-zero modification values
         }
 
+        public string GetModifiedSequence(string seq, SequenceModFormatType format, bool useExplicitModsOnly)
+        {
+            return _massCalcBase.GetModifiedSequence(seq, _mods, format, useExplicitModsOnly);
+        }
+
         public string GetModifiedSequence(string seq, bool formatNarrow)
         {
-            return _massCalcBase.GetModifiedSequence(seq, _mods, formatNarrow);
+            return GetModifiedSequence(seq,
+                                       formatNarrow
+                                           ? SequenceModFormatType.mass_diff_narrow
+                                           : SequenceModFormatType.mass_diff,
+                                       false);
         }
 
         public double GetAAModMass(char aa, int seqIndex, int seqLength)
@@ -1006,6 +1049,11 @@ namespace pwiz.Skyline.Model
             {
                 return (Mods ?? new ExplicitMod[0]).Union(StaticBaseMods ?? new ExplicitMod[0]);
             }
+        }
+        public StaticMod FindFirstMod(int index)
+        {
+            var firstOrDefault = AllMods.FirstOrDefault(m => m.IndexAA == index);
+            return firstOrDefault != null ? firstOrDefault.Modification : null;
         }
     }
 }

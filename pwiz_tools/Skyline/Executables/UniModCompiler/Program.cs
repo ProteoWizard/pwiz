@@ -28,6 +28,8 @@ namespace UniModCompiler
     /// <summary>
     /// Takes an XML file of modifications,
     /// We used: http://www.unimod.org/xml/unimod.xml.
+    /// Takes an XML file with short-names,
+    /// We used: ProteinPilot.DataDictionary.xml supplied by AB SCIEX
     /// Takes a set of text files that contain line seperated lists of modifications.
     /// We used: http://www.matrixscience.com/cgi/get_params.pl
     /// 
@@ -41,24 +43,23 @@ namespace UniModCompiler
         private static List<Mod> _listedMods;
         private static List<Mod> _listedHiddenMods;
         private static List<string> _impossibleMods;
+        private static Dictionary<string, string> _dictModNameToThreeLetterCode;
 
-        static void Main(string[] args)
+        private const string PROJECT_PATH = @"..\..";
+        private static readonly string INPUT_FILES_PATH = Path.Combine(PROJECT_PATH, "InputFiles");
+
+        static void Main()
         {
-            if (2 > args.Length)
-            {
-                Console.Error.WriteLine("Usage: UniModCompiler <input XML file> <input text file> +");
-                Console.Error.WriteLine("       Matches listed modifications to modifications definitions and compiles them to UniMod.Cs");
-                return;
-            }
             try
             {
                 SequenceMassCalc();
 
                 _dictStructuralMods = new Dictionary<string, mod_t>();
                 _dictIsotopeMods = new Dictionary<string, mod_t>();
+                _dictModNameToThreeLetterCode = LoadShortNames(Path.Combine(INPUT_FILES_PATH, "ProteinPilot.DataDictionary.xml"));                
 
                 // Read in XML, creating a dictionary of mod titles to mods.
-                StreamReader reader = new StreamReader(args[0]);
+                StreamReader reader = new StreamReader(Path.Combine(INPUT_FILES_PATH, "unimod.xml"));
                 XmlSerializer serializer = new XmlSerializer(typeof (Modification));
                 var modifications = ((Modification) serializer.Deserialize(reader)).modifications;
                 reader.Close();
@@ -98,10 +99,10 @@ namespace UniModCompiler
                 _listedMods = new List<Mod>();
                 _listedHiddenMods = new List<Mod>();
 
-                for (int i = 1; i < args.Length; i++)
+                foreach(var textFilePath in Directory.GetFiles(INPUT_FILES_PATH, "*.txt"))
                 {
                     // Read in line seperated list, creating lists of the modifications we are looking for.
-                    reader = new StreamReader(args[i]);
+                    reader = new StreamReader(textFilePath);
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
@@ -115,7 +116,7 @@ namespace UniModCompiler
                 _impossibleMods = new List<string>();
 
                 // Writing the output file.
-                StreamWriter writer = new StreamWriter(@"..\..\..\..\Model\DocSettings\UniModData.cs");
+                StreamWriter writer = new StreamWriter(Path.Combine(PROJECT_PATH, @"..\..\Model\DocSettings\UniModData.cs"));
                 var templateStream =
                     typeof (Program).Assembly.GetManifestResourceStream("UniModCompiler.UniModTemplate.cs");
                 if (templateStream == null)
@@ -154,6 +155,9 @@ namespace UniModCompiler
             {
                 Console.Error.WriteLine("ERROR: " + x.Message);
             }
+
+            Console.Error.WriteLine("Press enter to continue...");
+            Console.ReadLine();
         }
 
         private static elem_ref_t[] DiffMod(elem_ref_t[] element, elem_ref_t[] elementParent)
@@ -226,6 +230,42 @@ namespace UniModCompiler
                 }
             }
             return dictSymToCount.Count == 0;
+        }
+
+
+        private static Dictionary<string, string> LoadShortNames(string path)
+        {
+            var dictModNameToThreeLetterCode = new Dictionary<string, string>();
+            // Throws an exception, if it cannot read the file
+            using (var reader = new StreamReader(path))
+            {
+                var serializer = new XmlSerializer(typeof(DataDictionary));
+                var proteinPilotMods = ((DataDictionary)serializer.Deserialize(reader)).Mod;
+                
+                foreach (var mod in proteinPilotMods)
+                {
+                    var nameIndex =
+                        mod.ItemsElementName.Select((t, i) => new {type = t, index = i}).First(
+                            t => t.type.ToString() == ItemsChoiceType.Nme.ToString()).index;
+                    var name = (string)mod.Items[nameIndex];
+
+                    var threeLetterCodeIndex =
+                        mod.ItemsElementName.Select((t, i) => new {type = t, index = i}).First(
+                            t => t.type.ToString() == ItemsChoiceType.TLC.ToString()).index;
+                    dictModNameToThreeLetterCode[name] = (string)mod.Items[threeLetterCodeIndex];
+
+                    var displayNameItem =
+                        mod.ItemsElementName.Select((t, i) => new {type = t, index = i}).FirstOrDefault(
+                            t => t.type.ToString() == ItemsChoiceType.DisplayName.ToString());
+                    if (displayNameItem != null)
+                    {
+                        nameIndex = displayNameItem.index;
+                        var displayNamename = (string) mod.Items[nameIndex];
+                        dictModNameToThreeLetterCode[displayNamename] = (string)mod.Items[threeLetterCodeIndex];
+                    }
+                }
+            }
+            return dictModNameToThreeLetterCode;
         }
 
         /// <summary>
@@ -364,9 +404,14 @@ namespace UniModCompiler
                         _listedMods.Remove(mod);
                     continue;
                 }
+
+                string threeLetterCode;
+                var nameKey = mod.Name.Substring(0, mod.Name.LastIndexOf("(", StringComparison.Ordinal)).Trim();
+                _dictModNameToThreeLetterCode.TryGetValue(nameKey, out threeLetterCode);
+
                 writer.WriteLine("            new UniModModificationData");
                 writer.WriteLine("            {");
-                writer.WriteLine(string.Format(@"                 Name = ""{0}"", ", mod.Name));
+                writer.WriteLine(@"                 Name = ""{0}"", ", mod.Name);
                 writer.Write("                 ");
                 if (mod.AAs.Length > 0)
                     writer.Write(string.Format(@"AAs = ""{0}"", ", BuildAAString(mod.AAs)));
@@ -377,9 +422,11 @@ namespace UniModCompiler
                     writer.Write(string.Format(@"Formula = ""{0}"", ", BuildFormula(dictMod.delta.element)));
                 if(!Equals(lossesStr, "null"))
                     writer.Write(string.Format("Losses = {0}, ", lossesStr));
-                writer.WriteLine(string.Format("ID = {0}, ", dictMod.record_id));
+                writer.WriteLine("ID = {0}, ", dictMod.record_id);
                 writer.Write(string.Format("                 Structural = {0}, ", (!isotopic).ToString(CultureInfo.InvariantCulture).ToLower()));
-                writer.WriteLine(string.Format("Hidden = {0}, ", hidden.ToString(CultureInfo.InvariantCulture).ToLower()));
+                if (!string.IsNullOrEmpty(threeLetterCode))
+                    writer.Write(string.Format(@"ShortName = ""{0}"", ", threeLetterCode));
+                writer.WriteLine("Hidden = {0}, ", hidden.ToString().ToLower());
                 writer.WriteLine("            },");
 
                 

@@ -64,7 +64,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private static void AddMod(UniModModificationData data)
         {
             var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
-                                       RelativeRT.Matching, null, null, data.Losses, data.ID);
+                                       RelativeRT.Matching, null, null, data.Losses, data.ID,
+                                       data.ShortName);
             AddMod(newMod, data.ID, data.Structural, data.Hidden);
         }
 
@@ -115,6 +116,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static StaticMod GetModification(string modName, bool structural)
         {
+            if (Equals(modName, StaticModList.LEGACY_DEFAULT_NAME))
+                modName = StaticModList.DEFAULT_NAME;
             StaticMod mod;
             var dict = structural ? DictStructuralModNames : DictIsotopeModNames;
             var hiddenDict = structural ? DictHiddenStructuralModNames : DictHiddenIsotopeModNames;
@@ -181,6 +184,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public int? ID { get; set; }
         public bool Structural { get; set; }
         public bool Hidden { get; set; }
+        public string ShortName { get; set; }
     }
 
     public class ModMassLookup

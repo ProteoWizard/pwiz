@@ -792,7 +792,7 @@ namespace pwiz.Skyline.Model
             // Write special ID for AB software
             // Use light modified sequence for peptide molecular structure, with decimal points replaced by underscores
             // because AB uses periods as field separators
-            string modifiedPepSequence = Document.Settings.GetModifiedSequence(nodePep).Replace('.', '_'); // Not L10N
+            string modifiedPepSequence = GetSequenceWithModsString(nodePep, Document.Settings); // Not L10N;
 
             string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                 nodePepGroup.Name,
@@ -815,6 +815,40 @@ namespace pwiz.Skyline.Model
                 writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz));
             }
             writer.WriteLine();
+        }
+
+        static internal string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)
+        {
+            var mods = new ExplicitMods(nodePep,
+                                        settings.PeptideSettings.Modifications.StaticModifications,
+                                        Settings.Default.StaticModList,
+                                        new List<TypedModifications>(),
+                                        null,
+                                        false);
+
+            
+            if (nodePep.ExplicitMods != null)
+            {
+                var staticMods = new List<ExplicitMod>();
+                foreach (var staticMod in mods.StaticModifications)
+                {
+                    staticMods.Add(staticMod);
+                }
+                foreach (var explicitMod in nodePep.ExplicitMods.StaticModifications)
+                {
+                    staticMods.Add(explicitMod);
+                }
+                mods = mods.ChangeStaticModifications(staticMods);
+            }
+
+            string sequenceWithMods = settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                                                                            IsotopeLabelType.light,
+                                                                            mods, SequenceModFormatType.three_letter_code,
+                                                                            true);
+
+            sequenceWithMods = sequenceWithMods.Replace('.', '_');
+
+            return sequenceWithMods;
         }
 
         private static string GetTransitionName(int precursorCharge, Transition transition)
@@ -1006,7 +1040,7 @@ namespace pwiz.Skyline.Model
                   -1               Do an MS1 scan each cycle
                   -i               Generate method for Information Dependent Acquisition (IDA)
                   -r               Add retention time information to inclusion list (requires -i)
-                  -w <RT window>   Retention time window in seconds for schedule (requires -r)
+                  -w <RT window>   Retention time window in minutes for schedule (requires -r)
                   -mq              Create a MultiQuant text method (with same name as generated method but with .txt extension)
             */
             var argv = new List<string>();

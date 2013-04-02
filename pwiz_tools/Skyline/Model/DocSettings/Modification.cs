@@ -94,14 +94,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, string aas, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null)
+            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
         {
             
         }
 
         public StaticMod(string name, string aas, ModTerminus? term, bool isVariable, string formula,
                          LabelAtoms labelAtoms, RelativeRT relativeRT, double? monoMass, double? avgMass, IList<FragmentLoss> losses)
-            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null)
+            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null, null)
         {
             
         }
@@ -116,7 +116,8 @@ namespace pwiz.Skyline.Model.DocSettings
                          double? monoMass,
                          double? avgMass,
                          IList<FragmentLoss> losses,
-                         int? uniModId)
+                         int? uniModId,
+                         string shortName)
             : base(name)
         {
             AAs = aas;
@@ -131,6 +132,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Losses = losses;
 
             UnimodId = uniModId;
+            ShortName = shortName;
 
             Validate();
         }
@@ -241,6 +243,8 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return Losses != null; }
         }
 
+        public string ShortName { get; private set; }
+
         #region Property change methods
 
         public StaticMod ChangeExplicit(bool prop)
@@ -294,7 +298,8 @@ namespace pwiz.Skyline.Model.DocSettings
             massdiff_monoisotopic,
             massdiff_average,
             explicit_decl, 
-            unimod_id
+            unimod_id,
+            short_name
         }
 
         private void Validate()
@@ -410,6 +415,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (UnimodId.HasValue && UnimodId.Value == -1)
                 UnimodId = null;
 
+            ShortName = reader.GetAttribute(ATTR.short_name);
+
             // Consume tag
             reader.Read();
 
@@ -447,6 +454,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             writer.WriteAttributeNullable(ATTR.unimod_id, UnimodId);
 
+            writer.WriteAttributeIfString(ATTR.short_name, ShortName);
+
             if (Losses != null)
                 writer.WriteElements(Losses);
         }
@@ -463,7 +472,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return Equivalent(obj) 
                 && base.Equals(obj) 
                 && obj.IsVariable.Equals(IsVariable) 
-                && Equals(obj.UnimodId, UnimodId);
+                && Equals(obj.UnimodId, UnimodId)
+                && Equals(obj.ShortName, ShortName);
         }
 
         /// <summary>
@@ -594,6 +604,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ RelativeRT.GetHashCode();
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (_losses != null ? _losses.GetHashCodeDeep() : 0);
+                result = (result*397) ^ (ShortName != null ? ShortName.GetHashCode() : 0);
                 return result;
             }
         }

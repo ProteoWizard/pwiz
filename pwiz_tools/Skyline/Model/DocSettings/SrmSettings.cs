@@ -248,9 +248,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
         }
 
-        public string GetModifiedSequence(string seq, IsotopeLabelType labelType, ExplicitMods mods)
+        public string GetModifiedSequence(string seq,
+                                          IsotopeLabelType labelType,
+                                          ExplicitMods mods,
+                                          SequenceModFormatType format = SequenceModFormatType.mass_diff,
+                                          bool useExplicitModsOnly = false)
         {
-            return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, false);
+            return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
         }
 
         public string GetModifiedSequence(PeptideDocNode nodePep)
@@ -1254,12 +1258,18 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
+    /// <summary>
+    /// Enum used to specify the representation of modifications in a sequence
+    /// </summary>
+    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code };
+
     public interface IPrecursorMassCalc
     {
         MassType MassType { get; }
         double GetPrecursorMass(string seq);
         bool IsModified(string seq);
         string GetModifiedSequence(string seq, bool formatNarrow);
+        string GetModifiedSequence(string seq, SequenceModFormatType format, bool explicitModsOnly);
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
     }
