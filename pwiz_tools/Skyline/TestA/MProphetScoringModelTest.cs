@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -252,9 +253,9 @@ namespace pwiz.SkylineTestA
 
                 // Parse feature values for this peak.
                 var features = new double[featuresCount];
-                features[0] = double.Parse(data.Items[i, mainVarColumn]);
+                features[0] = double.Parse(data.Items[i, mainVarColumn], CultureInfo.InvariantCulture);
                 for (int j = 0; j < varColumns.Count; j++)
-                    features[j + 1] = double.Parse(data.Items[i, varColumns[j]]);
+                    features[j + 1] = double.Parse(data.Items[i, varColumns[j]], CultureInfo.InvariantCulture);
 
                 // Add the peak to its transition group.
                 transitionGroup.Add(new MProphetPeakScoringModel.Peak(features));
@@ -300,7 +301,8 @@ namespace pwiz.SkylineTestA
                 foreach (var heading in Header)
                 {
                     double d;
-                    if (!Double.TryParse(heading, out d))
+                    const NumberStyles numberStyle = NumberStyles.Float | NumberStyles.AllowThousands;
+                    if (!double.TryParse(heading, numberStyle, CultureInfo.InvariantCulture, out d))
                     {
                         allNumeric = false;
                         break;

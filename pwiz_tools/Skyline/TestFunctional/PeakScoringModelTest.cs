@@ -194,9 +194,11 @@ namespace pwiz.SkylineTestFunctional
 
                 // Paste weights list by name.
                 var arrayCalc = PeakFeatureCalculator.Calculators.ToArray();
-                ClipboardEx.SetText("Legacy unforced count\t-1\nmQuest weighted reference\t-99\n"); // Not L10N
-                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, "Legacy unforced count"))] = "-1";
-                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, "mQuest weighted reference"))] = "-99";
+                string unforcedCountName = Resources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count;
+                string weightedReferenceName = Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference;
+                ClipboardEx.SetText(string.Format("{0}\t-1\n{1}\t-99\n", unforcedCountName, weightedReferenceName)); // Not L10N
+                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, unforcedCountName))] = "-1";
+                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, weightedReferenceName))] = "-99";
                 RunUI(() =>
                 {
                     editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
@@ -240,7 +242,7 @@ namespace pwiz.SkylineTestFunctional
                 });
 
                 // Paste bad weight by name.
-                ClipboardEx.SetText("Legacy unforced count\tx\n"); // Not L10N
+                ClipboardEx.SetText(string.Format("{0}\tx\n", unforcedCountName)); // Not L10N
                 RunUI(() =>
                 {
                     editDlg.PeakCalculatorsGrid.SelectCell(1, 0);

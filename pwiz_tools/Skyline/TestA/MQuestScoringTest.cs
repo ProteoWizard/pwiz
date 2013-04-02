@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -157,7 +158,7 @@ namespace pwiz.SkylineTestA
             var peakData2 = new MockTranPeakData(INTENS2);
             var peptidePeakData = new MockPeptidePeakData(new[] {peakData1, peakData2});
             var calc = new MQuestCoElutionCalc();
-            AreCloseEnough(calc.Calculate(new PeakScoringContext(), peptidePeakData), 3.0);
+            AreCloseEnough(calc.Calculate(new PeakScoringContext(null), peptidePeakData), 3.0);
 //            AreCloseEnough(calc.Calculate(new PeakScoringContext(), peptidePeakData), 1 + Math.Sqrt(3.0));
 
             // TODO: Figure out OpenSWATH weights
@@ -175,7 +176,7 @@ namespace pwiz.SkylineTestA
             var peakData2 = new MockTranPeakData(INTENS2);
             var peptidePeakData = new MockPeptidePeakData(new[] { peakData1, peakData2 });
             var calc = new MQuestShapeCalc();
-            AreCloseEnough(calc.Calculate(new PeakScoringContext(), peptidePeakData), 0.3969832);
+            AreCloseEnough(calc.Calculate(new PeakScoringContext(null), peptidePeakData), 0.3969832);
 //            AreCloseEnough(calc.Calculate(new PeakScoringContext(), peptidePeakData), (1 + 0.3969832 + 1) / 3.0);
 
             // TODO: Figure out OpenSWATH weights
@@ -191,6 +192,9 @@ namespace pwiz.SkylineTestA
             }
 
             public PeptideDocNode NodePep { get { return null; } }
+
+            public ChromFileInfo FileInfo { get { return null; } }
+
             public IList<ITransitionGroupPeakData<IDetailedPeakData>> TransitionGroupPeakData { get; private set; }
         }
 

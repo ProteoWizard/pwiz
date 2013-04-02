@@ -910,7 +910,7 @@ namespace pwiz.Skyline
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                 {
                     dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
-                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath) + "." + EspFeatureCalc.EXT; // Not L10N
+                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath) + EspFeatureCalc.EXT;
                 }
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     return;

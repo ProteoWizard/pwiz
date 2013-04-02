@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Esp
     /// </summary>
     public class EspFeatureCalc
     {
-        public const string EXT = "csv"; // Not L10N
+        public const string EXT = ".csv"; // Not L10N
 
         private static readonly SequenceMassCalc MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);
 

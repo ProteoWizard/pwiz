@@ -22,7 +22,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -168,7 +167,13 @@ namespace pwiz.Skyline.Model.Results
             }
             return null;
         }
-        
+
+        public ChromFileInfo GetChromFileInfo(string filePath)
+        {
+            return Chromatograms.Select(chromatogramSet => chromatogramSet.GetFileInfo(filePath))
+                                .FirstOrDefault(fileInfo => fileInfo != null);
+        }
+
         private class RefCompareChromFileInfo : IEqualityComparer<ChromFileInfo>
         {
             public bool Equals(ChromFileInfo x, ChromFileInfo y)

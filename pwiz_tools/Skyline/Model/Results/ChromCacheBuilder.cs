@@ -175,6 +175,8 @@ namespace pwiz.Skyline.Model.Results
 
             // If not cancelled, update progress.
             string dataFilePath = MSDataFilePaths[_currentFileIndex];
+            ChromFileInfo fileInfo = _document.Settings.MeasuredResults.GetChromFileInfo(dataFilePath);
+            Helpers.Assume(fileInfo != null);
             string dataFilePathPart;
             string dataFilePathRecalc = GetRecalcDataFilePath(dataFilePath, out dataFilePathPart);
 
@@ -182,7 +184,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 string format = dataFilePathRecalc == null
                                     ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
-                                    : "Recalculating scores for {0}";
+                                    : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
                 string message = string.Format(format, dataFilePath);
                 int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
@@ -239,15 +241,15 @@ namespace pwiz.Skyline.Model.Results
                     _libraryRetentionTimes = null;
                     // Read and write the mass spec data)
                     if (dataFilePathRecalc != null)
-                        provider = CreateChromatogramRecalcProvider(dataFilePathRecalc);
+                        provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
-                        provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
+                        provider = CreateChromatogramProvider(inFile, fileInfo, _tempFileSubsitute == null);
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
                     {                            
                         if (_document.Settings.TransitionSettings.FullScan.IsEnabled && _libraryRetentionTimes == null)
                             _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePathPart);
 
-                        provider = CreateSpectraChromProvider(inFile);
+                        provider = CreateSpectraChromProvider(inFile, fileInfo);
                     }
                     else
                     {
@@ -385,7 +387,8 @@ namespace pwiz.Skyline.Model.Results
                                     chromDataSetMatch,
                                     peptidePercursor,
                                     dictPeptideChromData,
-                                    listChromData);
+                                    listChromData,
+                                    provider.FileInfo);
                 }
             }
 
@@ -468,12 +471,17 @@ namespace pwiz.Skyline.Model.Results
                                             ChromDataSet chromDataSet,
                                             PeptidePrecursorMz peptidePrecursorMz,
                                             IDictionary<int, PeptideChromDataSets> dictPeptideChromData,
-                                            ICollection<PeptideChromDataSets> listChromData)
+                                            ICollection<PeptideChromDataSets> listChromData,
+                                            ChromFileInfo fileInfo)
         {
             // If there was no matching precursor, just add this as a stand-alone set
+            PeptideChromDataSets pepDataSets;
             if (peptidePrecursorMz == null)
             {
-                listChromData.Add(new PeptideChromDataSets(chromDataSet, DetailedPeakFeatureCalculators, isProcessedScans));
+                pepDataSets = new PeptideChromDataSets(null,
+                    _document, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
+                pepDataSets.DataSets.Add(chromDataSet);
+                listChromData.Add(pepDataSets);
                 return;
             }
 
@@ -481,10 +489,10 @@ namespace pwiz.Skyline.Model.Results
             // sure precursors are grouped by peptide
             var nodePep = peptidePrecursorMz.NodePeptide;
             int id = nodePep.Peptide.GlobalIndex;
-            PeptideChromDataSets pepDataSets;
             if (!dictPeptideChromData.TryGetValue(id, out pepDataSets))
             {
-                pepDataSets = new PeptideChromDataSets(nodePep, DetailedPeakFeatureCalculators, isProcessedScans);
+                pepDataSets = new PeptideChromDataSets(nodePep,
+                    _document, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
                 dictPeptideChromData.Add(id, pepDataSets);
             }
             chromDataSet.NodeGroup = peptidePrecursorMz.NodeGroup;
@@ -688,10 +696,17 @@ namespace pwiz.Skyline.Model.Results
         private int StartPercent { get { return _currentFileIndex*100/MSDataFilePaths.Count; } }
         private int EndPercent { get { return (_currentFileIndex + 1)*100/MSDataFilePaths.Count; } }
 
-        private ChromDataProvider CreateChromatogramRecalcProvider(string dataFilePathRecalc)
+        private ChromDataProvider CreateChromatogramRecalcProvider(string dataFilePathRecalc, ChromFileInfo fileInfo)
         {
-            return new CachedChromatogramDataProvider(_cacheRecalc, _document, dataFilePathRecalc,
-                IsSingleMatchMzFile, _status, StartPercent, EndPercent, _loader);
+            return new CachedChromatogramDataProvider(_cacheRecalc,
+                                                      _document,
+                                                      dataFilePathRecalc,
+                                                      fileInfo,
+                                                      IsSingleMatchMzFile,
+                                                      _status,
+                                                      StartPercent,
+                                                      EndPercent,
+                                                      _loader);
         }
 
         private bool? IsSingleMatchMzFile
@@ -704,12 +719,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private ChromDataProvider CreateChromatogramProvider(MsDataFileImpl dataFile, bool throwIfSlow)
+        private ChromDataProvider CreateChromatogramProvider(MsDataFileImpl dataFile, ChromFileInfo fileInfo, bool throwIfSlow)
         {
-            return new ChromatogramDataProvider(dataFile, throwIfSlow, _status, StartPercent, EndPercent, _loader);
+            return new ChromatogramDataProvider(dataFile, fileInfo, throwIfSlow, _status, StartPercent, EndPercent, _loader);
         }
 
-        private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile)
+        private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile, ChromFileInfo fileInfo)
         {
             // New WIFF reader library no longer needs this, and mzWiff.exe has been removed from the installation
             // The old WiffFileDataReader messed up the precursor m/z values for targeted
@@ -723,8 +738,8 @@ namespace pwiz.Skyline.Model.Results
             // If this is a performance work-around, then make sure the progress indicator
             // does not jump backward perceptibly.
             int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);
-                
-            return new SpectraChromDataProvider(dataFile, _document, _status, startPercent, EndPercent, _loader);
+
+            return new SpectraChromDataProvider(dataFile, fileInfo, _document, _status, startPercent, EndPercent, _loader);
         }
 
         private const int MAX_CHROM_READ_AHEAD = 20;

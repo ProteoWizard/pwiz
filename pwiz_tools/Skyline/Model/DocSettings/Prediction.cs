@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRetentionTime(seq, GetConversion(fileId));
         }
 
-        private double? GetRetentionTime(string seq, IRegressionFunction conversion)
+        public double? GetRetentionTime(string seq, IRegressionFunction conversion)
         {
             double? score = Calculator.ScoreSequence(seq);
             if (score.HasValue)
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.DocSettings
                        : null;
         }
 
-        private IRegressionFunction GetConversion(ChromFileInfoId fileId)
+        public IRegressionFunction GetConversion(ChromFileInfoId fileId)
         {
             IRegressionFunction conversion = Conversion;
             if (fileId != null && _listFileIdToConversion != null)

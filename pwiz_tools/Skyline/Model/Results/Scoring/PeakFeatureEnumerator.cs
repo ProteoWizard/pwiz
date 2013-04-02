@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results.Scoring
@@ -28,12 +29,33 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public static class PeakFeatureEnumerator
     {
         public static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
-                                                                               IList<IPeakFeatureCalculator> calcs)
+                                                                               IList<IPeakFeatureCalculator> calcs,
+                                                                               IProgressMonitor progressMonitor)
         {
             // Get features for each peptide
-            return document.PeptideGroups.SelectMany(
-                nodePepGroup => nodePepGroup.Peptides.SelectMany(
-                    nodePep => document.GetPeakFeatures(nodePepGroup, nodePep, calcs)));
+            int totalPeptides = document.PeptideCount;
+            int currentPeptide = 0;
+            var status = new ProgressStatus(string.Empty);
+            foreach (var nodePepGroup in document.PeptideGroups)
+            {
+                foreach (var nodePep in nodePepGroup.Peptides)
+                {
+                    int percentComplete = currentPeptide++*100/totalPeptides;
+                    if (percentComplete < 100)
+                    {
+                        progressMonitor.UpdateProgress(status =
+                            status.ChangeMessage(string.Format("Calculating peak group scores for {0}", nodePep.ModifiedSequenceDisplay))
+                                  .ChangePercentComplete(percentComplete));
+                    }
+
+                    foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, calcs))
+                    {
+                        yield return peakFeature;
+                    }
+                }
+            }
+
+            progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
         }
 
         private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
@@ -84,7 +106,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var listRunFeatures = new List<PeakGroupFeatures>();
 
                     var summaryPeakData = new SummaryPeptidePeakData(document, nodePep, nodeGroups, chromatogramSet, chromGroupInfo);
-                    var context = new PeakScoringContext();
+                    var context = new PeakScoringContext(document);
 
                     while (summaryPeakData.NextPeakIndex())
                     {
@@ -119,6 +141,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 _chromGroupInfoPrimary = chromGroupInfoPrimary;
 
                 NodePep = nodePep;
+                FileInfo = chromatogramSet.GetFileInfo(chromGroupInfoPrimary);
                 TransitionGroupPeakData = nodeGroups.Select(
                     nodeGroup => new SummaryTransitionGroupPeakData(document,
                                                                     nodeGroup,
@@ -127,6 +150,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             public PeptideDocNode NodePep { get; private set; }
+
+            public ChromFileInfo FileInfo { get; private set; }
+
             public IList<ITransitionGroupPeakData<ISummaryPeakData>> TransitionGroupPeakData { get; private set; }
 
             public bool NextPeakIndex()

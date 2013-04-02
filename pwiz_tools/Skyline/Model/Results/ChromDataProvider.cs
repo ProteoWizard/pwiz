@@ -34,8 +34,13 @@ namespace pwiz.Skyline.Model.Results
         private readonly int _endPercent;
         private readonly IProgressMonitor _loader;
 
-        protected ChromDataProvider(ProgressStatus status, int startPercent, int endPercent, IProgressMonitor loader)
+        protected ChromDataProvider(ChromFileInfo fileInfo,
+                                    ProgressStatus status,
+                                    int startPercent,
+                                    int endPercent,
+                                    IProgressMonitor loader)
         {
+            FileInfo = fileInfo;
             Status = status;
 
             _startPercent = startPercent;
@@ -57,6 +62,8 @@ namespace pwiz.Skyline.Model.Results
 
             _loader.UpdateProgress(Status = Status.ChangePercentComplete(percent));
         }
+
+        public ChromFileInfo FileInfo { get; private set; }
 
         public ProgressStatus Status { get; private set; }
 
@@ -103,12 +110,13 @@ namespace pwiz.Skyline.Model.Results
         private readonly LoadingTooSlowlyException.Solution _slowLoadWorkAround;
 
         public ChromatogramDataProvider(MsDataFileImpl dataFile,
+                                        ChromFileInfo fileInfo,
                                         bool throwIfSlow,
                                         ProgressStatus status,
                                         int startPercent,
                                         int endPercent,
                                         IProgressMonitor loader)
-            : base(status, startPercent, endPercent, loader)
+            : base(fileInfo, status, startPercent, endPercent, loader)
         {
             _dataFile = dataFile;
 
@@ -246,12 +254,13 @@ namespace pwiz.Skyline.Model.Results
         private const int READ_PERCENT = 96 - LOAD_PERCENT - BUILD_PERCENT; // Leave 4% empty until the very end
 
         public SpectraChromDataProvider(MsDataFileImpl dataFile,
+                                        ChromFileInfo fileInfo,
                                         SrmDocument document,
                                         ProgressStatus status,
                                         int startPercent,
                                         int endPercent,
                                         IProgressMonitor loader)
-            : base(status, startPercent, endPercent, loader)
+            : base(fileInfo, status, startPercent, endPercent, loader)
         {
             // Create allocator used by all ChromCollectors to store transition times and intensities.
             _allocator = new ChromCollector.Allocator(dataFile.FilePath);

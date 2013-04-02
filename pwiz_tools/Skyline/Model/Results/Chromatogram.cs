@@ -228,13 +228,27 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfo GetFileInfo(ChromFileInfoId fileId)
         {
-            int ordinalIndex = IndexOfId(fileId);
-            return (ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex] : null);
+            return GetFileInfo(IndexOfId(fileId));
+        }
+
+        public ChromFileInfo GetFileInfo(ChromatogramGroupInfo chromGroupInfo)
+        {
+            return GetFileInfo(chromGroupInfo.FilePath);
+        }
+
+        public ChromFileInfo GetFileInfo(string filePath)
+        {
+            return GetFileInfo(IndexOfPath(filePath));
         }
 
         public int IndexOfId(ChromFileInfoId fileId)
         {
             return MSDataFileInfos.IndexOf(info => ReferenceEquals(info.Id, fileId));
+        }
+
+        public int IndexOfPath(string filePath)
+        {
+            return MSDataFileInfos.IndexOf(info => Equals(filePath, info.FilePath));
         }
 
         public ChromFileInfoId FindFile(ChromatogramGroupInfo chromGroupInfo)
@@ -244,12 +258,17 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfoId FindFile(string filePath)
         {
-            return GetFileId(MSDataFileInfos.IndexOf(info => Equals(filePath, info.FilePath)));
+            return GetFileId(IndexOfPath(filePath));
         }
 
         public ChromFileInfoId FindFileById(string id)
         {
             return GetFileId(Array.IndexOf(_fileLoadIds, id));
+        }
+
+        private ChromFileInfo GetFileInfo(int ordinalIndex)
+        {
+            return ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex] : null;
         }
 
         private ChromFileInfoId GetFileId(int ordinalIndex)

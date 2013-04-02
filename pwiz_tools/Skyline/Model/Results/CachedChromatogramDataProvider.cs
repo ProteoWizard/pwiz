@@ -35,12 +35,13 @@ namespace pwiz.Skyline.Model.Results
         public CachedChromatogramDataProvider(ChromatogramCache cache,
                                               SrmDocument document,
                                               string dataFilePath,
+                                              ChromFileInfo fileInfo,
                                               bool? singleMatchMz,
                                               ProgressStatus status,
                                               int startPercent,
                                               int endPercent,
                                               ILoadMonitor loader)
-            : base(status, startPercent, endPercent, loader)
+            : base(fileInfo, status, startPercent, endPercent, loader)
         {
             _cache = cache;
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();

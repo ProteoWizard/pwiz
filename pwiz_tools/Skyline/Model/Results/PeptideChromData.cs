@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Results
 //        private const double TIME_DELTA_MAX_RATIO_THRESHOLD = 25;
 //        private const int MINIMUM_DELTAS_PER_CHROM = 4;
 
+        private readonly SrmDocument _document;
         private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
         private readonly List<List<PeptideChromDataPeakList>> _listListPeakSets = new List<List<PeptideChromDataPeakList>>();
         private double[] _retentionTimes;
@@ -43,24 +44,22 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isProcessedScans;
 
         public PeptideChromDataSets(PeptideDocNode nodePep,
+                                    SrmDocument document,
+                                    ChromFileInfo fileInfo,
                                     IList<DetailedPeakFeatureCalculator> detailedPeakFeatureCalculators,
                                     bool isProcessedScans)
         {
             NodePep = nodePep;
+            FileInfo = fileInfo;
             DetailedPeakFeatureCalculators = detailedPeakFeatureCalculators;
+            _document = document;
             _retentionTimes = new double[0];
             _isProcessedScans = isProcessedScans;
         }
 
-        public PeptideChromDataSets(ChromDataSet chromDataSet,
-                                    IList<DetailedPeakFeatureCalculator> detailedPeakFeatureCalculators,
-                                    bool isProcessedScans)
-            : this((PeptideDocNode) null, detailedPeakFeatureCalculators, isProcessedScans)
-        {
-            DataSets.Add(chromDataSet);
-        }
-
         public PeptideDocNode NodePep { get; private set; }
+
+        public ChromFileInfo FileInfo { get; private set; }
 
         public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
@@ -378,7 +377,7 @@ namespace pwiz.Skyline.Model.Results
                 var dataSet = dataSets.First();
                 dataSet.TruncatePeakSets(MAX_PEAK_GROUPS);
                 listPeakSets.AddRange(dataSet.PeakSets.Select(p =>
-                    new PeptideChromDataPeakList(NodePep, new PeptideChromDataPeak(dataSet, p))));
+                    new PeptideChromDataPeakList(NodePep, FileInfo, new PeptideChromDataPeak(dataSet, p))));
                 return listPeakSets;
             }
 
@@ -472,7 +471,7 @@ namespace pwiz.Skyline.Model.Results
             int timeMax = dataPeakMax.TimeIndex;
 
             // Initialize the collection of peaks with this peak
-            var listPeaks = new PeptideChromDataPeakList(NodePep, dataPeakMax);
+            var listPeaks = new PeptideChromDataPeakList(NodePep, FileInfo, dataPeakMax);
             // Enumerate the precursors for this peptide
             foreach (var chromData in _dataSets)
             {
@@ -613,7 +612,7 @@ namespace pwiz.Skyline.Model.Results
                     // Calculate scores to be saved in the cache
                     var scores = new List<float>();
                     // Use a single context for all scores for a peak group to allow information sharing
-                    var context = new PeakScoringContext();
+                    var context = new PeakScoringContext(_document);
                     foreach (var calc in DetailedPeakFeatureCalculators)
                     {
                         scores.Add(calc.Calculate(context, peakSet));
@@ -704,15 +703,18 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     internal sealed class PeptideChromDataPeakList : Collection<PeptideChromDataPeak>, IPeptidePeakData<IDetailedPeakData>
     {
-        public PeptideChromDataPeakList(PeptideDocNode nodePep, PeptideChromDataPeak peak)
+        public PeptideChromDataPeakList(PeptideDocNode nodePep, ChromFileInfo fileInfo, PeptideChromDataPeak peak)
         {
             NodePep = nodePep;
+            FileInfo = fileInfo;
             TransitionGroupPeakData = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
 
             Add(peak);
         }
 
         public PeptideDocNode NodePep { get; private set; }
+
+        public ChromFileInfo FileInfo { get; private set; }
 
         public IList<ITransitionGroupPeakData<IDetailedPeakData>> TransitionGroupPeakData { get; private set; }
 

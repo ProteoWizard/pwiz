@@ -123,6 +123,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public interface IPeptidePeakData
     {
         PeptideDocNode NodePep { get; }
+
+        ChromFileInfo FileInfo { get; }
     }
 
     public interface IPeptidePeakData<TData> : IPeptidePeakData
@@ -206,6 +208,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 new LegacyUnforcedCountScoreCalc(),
                 new LegacyUnforcedCountScoreStandardCalc(),
                 new LegacyIdentifiedCountCalc(), 
+                new MQuestRetentionTimePredictionCalc(), 
                 new MQuestLightAreaCalc(),
                 new MQuestIntensityCorrelationCalc(), 
                 new MQuestReferenceCorrelationCalc(), 
@@ -238,6 +241,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class PeakScoringContext
     {
         private readonly Dictionary<Type, object> _dictInfo = new Dictionary<Type, object>();
+
+        public PeakScoringContext(SrmDocument document)
+        {
+            Document = document;
+        }
+
+        /// <summary>
+        /// The document in which the peaks are being scored
+        /// </summary>
+        public SrmDocument Document { get; private set; }
 
         /// <summary>
         /// Stores information that can be used by other <see cref="IPeakFeatureCalculator"/> objects.

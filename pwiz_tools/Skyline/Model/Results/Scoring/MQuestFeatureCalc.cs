@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -29,17 +28,79 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
+    public class MQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
+    {
+        public MQuestRetentionTimePredictionCalc() : base(Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference) { }
+
+        protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
+        {
+            if (context.Document == null)
+                return float.NaN;
+            var predictor = context.Document.Settings.PeptideSettings.Prediction.RetentionTime;
+            if (predictor == null)
+                return float.NaN;
+
+            float maxHeight = 0;
+            double? measuredRT = null;
+            foreach (var tranPeakData in summaryPeakData.TransitionGroupPeakData.SelectMany(pd => pd.TranstionPeakData))
+            {
+                if (tranPeakData.PeakData.Height > maxHeight)
+                {
+                    maxHeight = tranPeakData.PeakData.Height;
+                    measuredRT = tranPeakData.PeakData.RetentionTime;
+                }
+            }
+            if (!measuredRT.HasValue)
+                return float.NaN;
+
+            var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
+            string seqModified = summaryPeakData.NodePep.ModifiedSequence;
+            double? predictedRT = predictor.GetRetentionTime(seqModified, fileId);
+            if (!predictedRT.HasValue)
+                return float.NaN;
+            return (float) Math.Abs(measuredRT.Value - predictedRT.Value);
+        }
+    }
+
     static class MQuestHelpers
     {
         public static IEnumerable<ITransitionGroupPeakData<TData>> GetAnalyteGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
-            var analyteTypes = (from pd in summaryPeakData.TransitionGroupPeakData
-                                where !pd.IsStandard
-                                select GetSafeAnalyteType(pd)).Distinct().ToArray();
-            if (analyteTypes.Length == 0)
-                analyteTypes = new[] {summaryPeakData.TransitionGroupPeakData[0].NodeGroup.TransitionGroup.LabelType};
-            return summaryPeakData.TransitionGroupPeakData.Where(pd => analyteTypes.Contains(GetSafeAnalyteType(pd)));
+            // Somewhat verbose implementation, because this showed up under profiling
+            // with a simple implemenation using Linq expressions
+            IsotopeLabelType analyteType = null;
+            HashSet<IsotopeLabelType> analyteTypes = null;
+            for (int i = 1; i < summaryPeakData.TransitionGroupPeakData.Count; i++)
+            {
+                var pd = summaryPeakData.TransitionGroupPeakData[i];
+                if (!pd.IsStandard)
+                {
+                    var labelType = GetSafeAnalyteType(pd);
+                    if (analyteType == null)
+                        analyteType = labelType;
+                    else if (analyteTypes == null)
+                        analyteTypes = new HashSet<IsotopeLabelType> { analyteType, labelType };
+                    else
+                        analyteTypes.Add(labelType);
+                }
+            }
+            if (analyteType == null)
+                analyteType = GetSafeAnalyteType(summaryPeakData.TransitionGroupPeakData[0]);
+
+            foreach (var pd in summaryPeakData.TransitionGroupPeakData)
+            {
+                var labelType = GetSafeAnalyteType(pd);
+                if (analyteTypes == null)
+                {
+                    if (ReferenceEquals(analyteType, labelType))
+                        yield return pd;
+                }
+                else if (analyteTypes.Contains(labelType))
+                {
+                    yield return pd;
+                }
+            }
         }
 
         private static IsotopeLabelType GetSafeAnalyteType<TData>(ITransitionGroupPeakData<TData> pd)
@@ -47,6 +108,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return pd.NodeGroup != null ? pd.NodeGroup.TransitionGroup.LabelType : IsotopeLabelType.light;
         }
     }
+
     /// <summary>
     /// Calculates summed areas of light transitions
     /// </summary>
@@ -79,14 +141,24 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (tranGroupPeakDatas.Length == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup.LibInfo == null))
                 return float.NaN;
 
-            var tranPeakDatas = tranGroupPeakDatas.SelectMany(pd => pd.TranstionPeakData)
-                                                  .Where(p => !p.NodeTran.IsMs1)
-                                                  .ToArray();
+            // Using linq expressions showed up in a profiler
+            var experimentAreas = new List<double>();
+            var libAreas = new List<double>();
+            foreach (var pdGroup in tranGroupPeakDatas)
+            {
+                foreach (var pd in pdGroup.TranstionPeakData)
+                {
+                    if (pd.NodeTran.IsMs1)
+                        continue;
+                    experimentAreas.Add(pd.PeakData.Area);
+                    libAreas.Add(pd.NodeTran.LibInfo != null
+                                     ? pd.NodeTran.LibInfo.Intensity
+                                     : 0);
+                }
+            }
 
-            var statExperiment = new Statistics(tranPeakDatas.Select(p => (double) p.PeakData.Area));
-            var statLib = new Statistics(tranPeakDatas.Select(p => (double) (p.NodeTran.LibInfo != null
-                                                                                 ? p.NodeTran.LibInfo.Intensity
-                                                                                 : 0)));
+            var statExperiment = new Statistics(experimentAreas);
+            var statLib = new Statistics(libAreas);
             return (float) statExperiment.NormalizedContrastAngleSqrt(statLib);
         }        
     }
@@ -101,114 +173,41 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var analyteTypes = (from pd in summaryPeakData.TransitionGroupPeakData
-                                where !pd.IsStandard
-                                select pd.NodeGroup != null
-                                           ? pd.NodeGroup.TransitionGroup.LabelType
-                                           : IsotopeLabelType.light).Distinct().ToArray();
-            var lightGroupPeakData = summaryPeakData.TransitionGroupPeakData
-                .Where(pd => analyteTypes.Contains(pd.NodeGroup.TransitionGroup.LabelType)).ToArray();
-            var standardTypes = (from pd in summaryPeakData.TransitionGroupPeakData
-                                 where pd.IsStandard
-                                 select pd.NodeGroup != null
-                                            ? pd.NodeGroup.TransitionGroup.LabelType
-                                            : IsotopeLabelType.heavy).Distinct().ToArray();
-            var refGroupPeakData = summaryPeakData.TransitionGroupPeakData
-                .Where(pd => standardTypes.Contains(pd.NodeGroup.TransitionGroup.LabelType)).ToArray();
-            if (lightGroupPeakData.Length == 0 || refGroupPeakData.Length == 0)
+            var analyteGroups = new List<ITransitionGroupPeakData<ISummaryPeakData>>();
+            var referenceGroups = new List<ITransitionGroupPeakData<ISummaryPeakData>>();
+            foreach (var pdGroup in summaryPeakData.TransitionGroupPeakData)
+            {
+                if (pdGroup.IsStandard)
+                    referenceGroups.Add(pdGroup);
+                else
+                    analyteGroups.Add(pdGroup);
+            }
+            if (analyteGroups.Count == 0 || referenceGroups.Count == 0)
                 return float.NaN;
 
-            var referencePeakAreas = lightGroupPeakData.SelectMany(pd => pd.TranstionPeakData)
-                .Join(refGroupPeakData.SelectMany(pd => pd.TranstionPeakData),
-                      TransitionKey.Create, TransitionKey.Create, ReferencePeakAreas.Create).ToArray();
-
-            var statAnalyte = new Statistics(referencePeakAreas.Select(p => p.Area));
-            var statReference = new Statistics(referencePeakAreas.Select(p => p.ReferenceArea));
-            return (float) statAnalyte.NormalizedContrastAngleSqrt(statReference);
-        }
-
-        /// <summary>
-        /// This class seems very similar to <see cref="TransitionLossKey"/>, although
-        /// that the equality and hash code implementations for that class may not work here.
-        /// </summary>
-        private struct TransitionKey
-        {
-            public static TransitionKey Create(ITransitionPeakData<ISummaryPeakData> transitionPeakData)
+            var analyteAreas = new List<double>();
+            var referenceAreas = new List<double>();
+            foreach (var analyteGroup in analyteGroups)
             {
-                var nodeTran = transitionPeakData.NodeTran;
-                var tran = nodeTran.Transition;
-                return new TransitionKey(tran.IonType,
-                    tran.Ordinal,
-                    tran.Charge,
-                    tran.Group.PrecursorCharge,
-                    nodeTran.Losses);
-            }
-
-            private readonly IonType _ionType;
-            private readonly int _ionOrdinal;
-            private readonly int _charge;
-            private readonly int _precursorCharge;
-            private readonly TransitionLosses _losses;
-
-            private TransitionKey(IonType ionType, int ionOrdinal, int charge, int precursorCharge, TransitionLosses losses)
-            {
-                _ionType = ionType;
-                _ionOrdinal = ionOrdinal;
-                _charge = charge;
-                _precursorCharge = precursorCharge;
-                _losses = losses;
-            }
-
-            #region object overrides
-
-            private bool Equals(TransitionKey other)
-            {
-                return Equals(other._ionType, _ionType) &&
-                    other._ionOrdinal == _ionOrdinal &&
-                    other._charge == _charge &&
-                    other._precursorCharge == _precursorCharge &&
-                    Equals(other._losses, _losses);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (obj.GetType() != typeof (TransitionKey)) return false;
-                return Equals((TransitionKey) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
+                foreach (var referenceGroup in referenceGroups)
                 {
-                    int result = _ionType.GetHashCode();
-                    result = (result*397) ^ _ionOrdinal;
-                    result = (result*397) ^ _charge;
-                    result = (result*397) ^ _precursorCharge;
-                    result = (result*397) ^ (_losses != null ? _losses.GetHashCode() : 0);
-                    return result;
+                    if (analyteGroup.NodeGroup.TransitionGroup.PrecursorCharge !=
+                            referenceGroup.NodeGroup.TransitionGroup.PrecursorCharge)
+                        continue;
+
+                    foreach (var tranPeakDataPair in TransitionPeakDataPair<ISummaryPeakData>
+                        .GetMatchingReferencePairs(analyteGroup, referenceGroup))
+                    {
+                        var analyteTran = tranPeakDataPair.First;
+                        var referenceTran = tranPeakDataPair.Second;
+                        analyteAreas.Add(analyteTran.PeakData.Area);
+                        referenceAreas.Add(referenceTran.PeakData.Area);
+                    }                    
                 }
             }
-
-            #endregion
-        }
-
-        private struct ReferencePeakAreas
-        {
-            public static ReferencePeakAreas Create(ITransitionPeakData<ISummaryPeakData> lightPeakData,
-                                                    ITransitionPeakData<ISummaryPeakData> referencePeakData)
-            {
-                return new ReferencePeakAreas(lightPeakData.PeakData.Area, referencePeakData.PeakData.Area);
-            }
-
-            private ReferencePeakAreas(double area, double referenceArea) : this()
-            {
-                Area = area;
-                ReferenceArea = referenceArea;
-            }
-
-            public double Area { get; private set; }
-            public double ReferenceArea { get; private set; }
+            var statAnalyte = new Statistics(analyteAreas.ToArray());
+            var statReference = new Statistics(referenceAreas.ToArray());
+            return (float) statAnalyte.NormalizedContrastAngleSqrt(statReference);
         }
     }
 
@@ -340,7 +339,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <summary>
         /// Get all unique combinations of transition pairs excluding pairing transitions with themselves
         /// </summary>
-        private IEnumerable<TransitionPeakDataPair>
+        private IEnumerable<TransitionPeakDataPair<IDetailedPeakData>>
             GetCrossCorrelationPairsAll(IList<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
         {
             for (int i = 0; i < tranPeakDatas.Count - 1; i++)
@@ -351,7 +350,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 //                for (int j = i; j < tranPeakDatas.Count; j++) // OpenSWATH
                 {
                     var tran2 = tranPeakDatas[j];
-                    yield return new TransitionPeakDataPair(tran1, tran2);
+                    yield return new TransitionPeakDataPair<IDetailedPeakData>(tran1, tran2);
                 }
             }
         }
@@ -360,7 +359,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Get all transitions paired with the transition with the maximum area.
         /// </summary>
 // ReSharper disable UnusedMember.Local
-        private IEnumerable<TransitionPeakDataPair>
+        private IEnumerable<TransitionPeakDataPair<IDetailedPeakData>>
             GetCrossCorrelationPairsMax(IList<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
 // ReSharper restore UnusedMember.Local
         {
@@ -377,7 +376,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             return from tranPeakData in tranPeakDatas
                    where tranMax != null && !ReferenceEquals(tranMax, tranPeakData)
-                   select new TransitionPeakDataPair(tranMax, tranPeakData);
+                   select new TransitionPeakDataPair<IDetailedPeakData>(tranMax, tranPeakData);
         }
     }
 
@@ -484,24 +483,35 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         private readonly IList<MQuestCrossCorrelation> _xcorrMatrix;
 
-        public MQuestReferenceCrossCorrelations(IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroupPeakDatas)
+        public MQuestReferenceCrossCorrelations(IEnumerable<ITransitionGroupPeakData<IDetailedPeakData>> tranGroupPeakDatas)
         {
             _xcorrMatrix = new List<MQuestCrossCorrelation>();
-            var lightGroups = tranGroupPeakDatas.Where(pd => !pd.IsStandard).ToArray();
-            foreach (var standardGroup in tranGroupPeakDatas.Where(pd => pd.IsStandard))
+            var analyteGroups = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
+            var referenceGroups = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
+            foreach (var pdGroup in tranGroupPeakDatas)
             {
-                foreach (var lightGroup in lightGroups)
+                if (pdGroup.IsStandard)
+                    referenceGroups.Add(pdGroup);
+                else
+                    analyteGroups.Add(pdGroup);
+            }
+            if (analyteGroups.Count == 0 || referenceGroups.Count == 0)
+                return;
+
+            foreach (var analyteGroup in analyteGroups)
+            {
+                foreach (var referenceGroup in referenceGroups)
                 {
-                    if (lightGroup.NodeGroup.TransitionGroup.PrecursorCharge !=
-                            standardGroup.NodeGroup.TransitionGroup.PrecursorCharge)
+                    if (analyteGroup.NodeGroup.TransitionGroup.PrecursorCharge !=
+                            referenceGroup.NodeGroup.TransitionGroup.PrecursorCharge)
                         continue;
 
-                    foreach (var tranPeakDataPair in GetCrossCorrelationPairs(lightGroup, standardGroup))
+                    foreach (var tranPeakDataPair in TransitionPeakDataPair<IDetailedPeakData>
+                        .GetMatchingReferencePairs(analyteGroup, referenceGroup))
                     {
-                        var tranLight = tranPeakDataPair.First;
-                        var tranStandard = tranPeakDataPair.Second;
-
-                        _xcorrMatrix.Add(new MQuestCrossCorrelation(tranLight, tranStandard, true));
+                        var analyteTran = tranPeakDataPair.First;
+                        var referenceTran = tranPeakDataPair.Second;
+                        _xcorrMatrix.Add(new MQuestCrossCorrelation(analyteTran, referenceTran, true));
                     }
                 }
             }
@@ -512,53 +522,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public Statistics GetStats(Func<MQuestCrossCorrelation, double> getValue)
         {
             return new Statistics(CrossCorrelations.Select(getValue));
-        }
-
-        /// <summary>
-        /// Get all unique combinations of transition pairs excluding pairing transitions with themselves
-        /// </summary>
-        private IEnumerable<TransitionPeakDataPair>
-            GetCrossCorrelationPairs(ITransitionGroupPeakData<IDetailedPeakData> lightGroup,
-                                     ITransitionGroupPeakData<IDetailedPeakData> standardGroup)
-        {
-            // Enumerate as many elements as match by position
-            int i = 0;
-            while (i < lightGroup.TranstionPeakData.Count && i < standardGroup.TranstionPeakData.Count)
-            {
-                var lightTran = lightGroup.TranstionPeakData[i];
-                var standardTran = standardGroup.TranstionPeakData[i];
-                if (!EquivalentTrans(lightTran.NodeTran, standardTran.NodeTran))
-                    break;
-                yield return new TransitionPeakDataPair(lightTran, standardTran);
-                i++;
-            }
-            // Enumerate any remaining light transitions doing exhaustive search or the remaining
-            // standard transitions for match
-            int startUnmatchedStandard = i;
-            while (i < lightGroup.TranstionPeakData.Count)
-            {
-                var lightTran = lightGroup.TranstionPeakData[i];
-                for (int j = startUnmatchedStandard; j < standardGroup.TranstionPeakData.Count; j++)
-                {
-                    var standardTran = standardGroup.TranstionPeakData[j];
-                    if (EquivalentTrans(lightTran.NodeTran, standardTran.NodeTran))
-                        yield return new TransitionPeakDataPair(lightTran, standardTran);
-                }
-                i++;
-            }
-        }
-
-        public bool EquivalentTrans(TransitionDocNode nodeTran1, TransitionDocNode nodeTran2)
-        {
-            if (nodeTran1 == null && nodeTran2 == null)
-                return true;
-            if (nodeTran1 == null || nodeTran2 == null)
-                return false;
-            if (nodeTran1.Transition.Group.PrecursorCharge != nodeTran2.Transition.Group.PrecursorCharge)
-                return false;
-            if (!nodeTran1.Transition.Equivalent(nodeTran2.Transition))
-                return false;
-            return Equals(nodeTran1.Losses, nodeTran2.Losses);
         }
     }
 
@@ -639,17 +602,64 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
-    struct TransitionPeakDataPair
+    struct TransitionPeakDataPair<TData>
     {
-        public TransitionPeakDataPair(ITransitionPeakData<IDetailedPeakData> first,
-                                      ITransitionPeakData<IDetailedPeakData> second)
+        public TransitionPeakDataPair(ITransitionPeakData<TData> first,
+                                      ITransitionPeakData<TData> second)
             : this()
         {
             First = first;
             Second = second;
         }
 
-        public ITransitionPeakData<IDetailedPeakData> First { get; private set; }
-        public ITransitionPeakData<IDetailedPeakData> Second { get; private set; }
+        public ITransitionPeakData<TData> First { get; private set; }
+        public ITransitionPeakData<TData> Second { get; private set; }
+
+        /// <summary>
+        /// Get all combinations of matching analyte and reference transitions
+        /// </summary>
+        public static IEnumerable<TransitionPeakDataPair<TData>>
+            GetMatchingReferencePairs(ITransitionGroupPeakData<TData> lightGroup,
+                                     ITransitionGroupPeakData<TData> standardGroup)
+        {
+            // Enumerate as many elements as match by position
+            int i = 0;
+            while (i < lightGroup.TranstionPeakData.Count && i < standardGroup.TranstionPeakData.Count)
+            {
+                var lightTran = lightGroup.TranstionPeakData[i];
+                var standardTran = standardGroup.TranstionPeakData[i];
+                if (!EquivalentTrans(lightTran.NodeTran, standardTran.NodeTran))
+                    break;
+                yield return new TransitionPeakDataPair<TData>(lightTran, standardTran);
+                i++;
+            }
+            // Enumerate any remaining light transitions doing exhaustive search or the remaining
+            // standard transitions for match
+            int startUnmatchedStandard = i;
+            while (i < lightGroup.TranstionPeakData.Count)
+            {
+                var lightTran = lightGroup.TranstionPeakData[i];
+                for (int j = startUnmatchedStandard; j < standardGroup.TranstionPeakData.Count; j++)
+                {
+                    var standardTran = standardGroup.TranstionPeakData[j];
+                    if (EquivalentTrans(lightTran.NodeTran, standardTran.NodeTran))
+                        yield return new TransitionPeakDataPair<TData>(lightTran, standardTran);
+                }
+                i++;
+            }
+        }
+
+        public static bool EquivalentTrans(TransitionDocNode nodeTran1, TransitionDocNode nodeTran2)
+        {
+            if (nodeTran1 == null && nodeTran2 == null)
+                return true;
+            if (nodeTran1 == null || nodeTran2 == null)
+                return false;
+            if (nodeTran1.Transition.Group.PrecursorCharge != nodeTran2.Transition.Group.PrecursorCharge)
+                return false;
+            if (!nodeTran1.Transition.Equivalent(nodeTran2.Transition))
+                return false;
+            return Equals(nodeTran1.Losses, nodeTran2.Losses);
+        }
     }
 }

@@ -46,11 +46,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         private double SummedArea(IPeptidePeakData<ISummaryPeakData> summaryPeakData, bool isStandard)
         {
-            return summaryPeakData.TransitionGroupPeakData
-                .Where(pd => pd.IsStandard == isStandard)
-                .SelectMany(pd => pd.TranstionPeakData)
-                .Where(p => !p.PeakData.IsForcedIntegration)
-                .Sum(p => p.PeakData.Area);
+            // Slightly verbose implementation, because simpler implementation using
+            // Linq showed up in a profiler.
+            double sumArea = 0;
+            foreach (var groupPd in summaryPeakData.TransitionGroupPeakData)
+            {
+                if (groupPd.IsStandard != isStandard)
+                    continue;
+                foreach (var pd in groupPd.TranstionPeakData)
+                {
+                    if (!pd.PeakData.IsForcedIntegration)
+                        sumArea += pd.PeakData.Area;
+                }
+            }
+            return sumArea;
         }
     }
 

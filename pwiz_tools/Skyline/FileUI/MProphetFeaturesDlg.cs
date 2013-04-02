@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -35,6 +36,8 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class MProphetFeaturesDlg : FormEx
     {
+        public const string EXT = ".csv";
+
         private readonly IPeakFeatureCalculator[] _calculators;
 
         private SrmDocument Document { get; set; }
@@ -71,35 +74,44 @@ namespace pwiz.Skyline.FileUI
             {
                 Title = "Export mProphet Features",
                 OverwritePrompt = true,
-                DefaultExt = EspFeatureCalc.EXT,
-                Filter = TextUtil.FileDialogFilterAll("mProphet Feature Files", EspFeatureCalc.EXT),
+                DefaultExt = EXT,
+                Filter = TextUtil.FileDialogFilterAll("mProphet Feature Files", EXT),
             })
             {
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                 {
                     dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
-                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath) + "." + EspFeatureCalc.EXT; // Not L10N
+                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath) + EXT;
                 }
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
 
                 string mainVarName = comboMainVar.SelectedItem.ToString();
-                var listCalculators = new List<IPeakFeatureCalculator> {GetCalcFromName(mainVarName)};
+                var listCalculators = new List<IPeakFeatureCalculator> { GetCalcFromName(mainVarName) };
                 foreach (var itemCalc in checkedListVars.CheckedItems)
                     listCalculators.Add(GetCalcFromName(itemCalc.ToString()));
 
-                try
+                using (var longWaitDlg = new LongWaitDlg
                 {
-                    WriteFeatures(dlg.FileName,
-                                  listCalculators,
-                                  Document.GetPeakFeatures(listCalculators),
-                                  CultureInfo.CurrentCulture);
-                }
-                catch (IOException x)
+                    Text = Resources.SkylineWindow_OpenSharedFile_Extracting_Files,
+                })
                 {
-                    var message = TextUtil.LineSeparate(string.Format("Failed attempting to save mProphet features to {0}.", dlg.FileName),
-                                                                      x.Message);
-                    MessageDlg.Show(this, message);
+                    try
+                    {
+                        longWaitDlg.PerformWork(this, 1000,
+                                                b => WriteFeatures(dlg.FileName,
+                                                                   listCalculators,
+                                                                   Document.GetPeakFeatures(listCalculators, b),
+                                                                   CultureInfo.CurrentCulture));
+                        if (longWaitDlg.IsCanceled)
+                            return;
+                    }
+                    catch (Exception x)
+                    {
+                        var message = TextUtil.LineSeparate(string.Format("Failed attempting to save mProphet features to {0}.", dlg.FileName),
+                                                                          x.Message);
+                        MessageDlg.Show(this, message);
+                    }
                 }
             }
 
