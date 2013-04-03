@@ -38,6 +38,7 @@
 
 using namespace matrix_science;
 typedef map<char, double> ModTable;
+typedef map<char, vector<double> > MultiModTable;
 
 namespace BiblioSpec {
 
@@ -52,11 +53,13 @@ class MascotResultsReader : public BuildParser{
   bool parseFile();
 
  private:
+  enum { N_TERM_POS = 'n', C_TERM_POS = 'c' };
+
   ms_mascotresfile* ms_file_;
   ms_searchparams* ms_params_;
   ms_mascotresults* ms_results_;
   double scoreThreshold_;
-  ModTable staticMods_;
+  MultiModTable staticMods_;
   map<string, ModTable* > methodModsMaps_;
   // for each method name (e.g. light, heavy) a table with mass difs by residue
   map<string, vector<PSM*> > fileMap_; // PSMs stored by spec filename
@@ -69,6 +72,8 @@ class MascotResultsReader : public BuildParser{
   void parseMods(PSM* psm, string modstr, string readableModStr);
   int getVarModIndex(const char c);
   void addVarMod(PSM* psm, char varLookUpChar, int aaPosition);
+  void addStaticModToTable(char aa, double deltaMass);
+  void addStaticMods(PSM* psm, char staticLookupChar, int aaPosition);
   void addErrorTolerantMod(PSM* psm, string readableModStr, int aaPosition);
   int findMaxRankingPeptideToAdd(int specId);
   void getDistillerRawFiles(const ms_searchparams* searchparams, vector<string>& v);

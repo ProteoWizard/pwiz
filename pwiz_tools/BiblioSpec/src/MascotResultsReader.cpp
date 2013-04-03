@@ -90,13 +90,34 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
         double deltaMass = ms_params_->getFixedModsDelta(i);
         string residues = ms_params_->getFixedModsResidues(i);
 
+        // check for "N_term" or "C_term"
+        string residuesLower(residues);
+        transform(residuesLower.begin(), residuesLower.end(), residuesLower.begin(), ::tolower);
+        size_t findIdx;
+        findIdx = residuesLower.find("n_term");
+        if (findIdx != string::npos)
+        {
+            residues.erase(findIdx, 6);
+            addStaticModToTable(N_TERM_POS, deltaMass);
+            Verbosity::comment(V_DEBUG, "Static mod of delta mass %f on N-term.", deltaMass);
+        }
+        findIdx = residuesLower.find("c_term");
+        if (findIdx != string::npos)
+        {
+            residues.erase(findIdx, 6);
+            addStaticModToTable(C_TERM_POS, deltaMass);
+            Verbosity::comment(V_DEBUG, "Static mod of delta mass %f on C-term.", deltaMass);
+        }
+
         // add each residue with a static mod to the collection
         for(size_t c=0; c < residues.length(); c++){
-            staticMods_.insert(pair<char, double>(residues.at(c), deltaMass));
+            if (residues[c] >= 'A' && residues[c] <= 'Z')
+            {
+                addStaticModToTable(residues[c], deltaMass);
+                Verbosity::comment(V_DEBUG, "Static mod of delta mass %f for residue %c.",
+                                   deltaMass, residues[c]);
+            }
         }
-        Verbosity::comment(V_DEBUG, 
-                           "Static mod of delta mass %f for residues %s.",
-                           deltaMass, residues.c_str());
 
     }
 
@@ -272,15 +293,11 @@ void MascotResultsReader::parseMods(PSM* psm, string modstr,
 
     // for static mods look up each residue in the staticMods collection
     for(size_t i=0; i < psm->unmodSeq.length(); i++){
-        ModTable::iterator found = staticMods_.find(psm->unmodSeq.at(i));
-        if( found != staticMods_.end()) {
-            double deltaMass = found->second;
-            SeqMod mod;
-            mod.position = i + 1;
-            mod.deltaMass = deltaMass;
-            psm->mods.push_back(mod);
-        }
+        addStaticMods(psm, psm->unmodSeq[i], i + 1);
     }
+    // also check for static n-term/c-term mods in the staticMods collection
+    addStaticMods(psm, N_TERM_POS, 1);
+    addStaticMods(psm, C_TERM_POS, psm->unmodSeq.length());
 }
 
 /**
@@ -299,6 +316,40 @@ void MascotResultsReader::addVarMod(PSM* psm,
     mod.position = aaPosition;
     psm->mods.push_back(mod);
   }
+}
+
+/**
+ * Adds all static modifications to the psm. The staticLookUpChar is a character
+ * A-Z, N_TERM_POS, or C_TERM_POS that will be used to look up all masses of mods
+ * for that particular residue. aaPosition is the location of this mod in the peptide.
+ */
+void MascotResultsReader::addStaticMods(PSM* psm, char staticLookUpChar, int aaPosition){
+    MultiModTable::iterator found = staticMods_.find(staticLookUpChar);
+    if (found != staticMods_.end())
+    {
+        for (vector<double>::iterator massIter = found->second.begin();
+             massIter != found->second.end();
+             ++massIter)
+        {
+            SeqMod mod(aaPosition, *massIter);
+            psm->mods.push_back(mod);
+        }
+    }
+}
+
+/**
+ * Adds a new mod to the staticMods_ table.
+ */
+void MascotResultsReader::addStaticModToTable(char aa, double deltaMass){
+    MultiModTable::iterator lookup = staticMods_.find(aa);
+    if (lookup == staticMods_.end())
+    {
+        staticMods_[aa] = vector<double>(1, deltaMass);
+    }
+    else
+    {
+        lookup->second.push_back(deltaMass);
+    }
 }
 
 /**
