@@ -901,6 +901,11 @@ namespace pwiz.Skyline.Properties
         {
             using (EditServerDlg editServer = new EditServerDlg(existing ?? this) {Server = item})
             {
+                bool instructionsRequired = false;
+                if (tag != null)
+                     instructionsRequired = (bool) tag;
+                if (instructionsRequired)
+                    editServer.ShowInstructions();
                 if (editServer.ShowDialog(owner) == DialogResult.OK)
                     return editServer.Server;
 

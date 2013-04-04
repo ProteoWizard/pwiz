@@ -41,6 +41,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1628,15 +1629,38 @@ namespace pwiz.Skyline
                 fileName = DocumentFilePath;
             }
 
-            var servers = Settings.Default.ServerList;
-            if (servers == null || servers.Count == 0)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_server_under_Tools);
-                return;
-            }
-
             if (!SaveDocument())
                 return;
+
+            var servers = Settings.Default.ServerList;
+            if (servers.Count == 0)
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    TextUtil.LineSeparate(Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to,
+                    Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
+                    Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
+                    Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue, true))
+                {
+                    DialogResult buttonPress = dlg.ShowDialog();
+                    if (buttonPress == DialogResult.Cancel)
+                        return;
+
+                    object tag = null;
+                    if (buttonPress == DialogResult.Yes)
+                    {
+                        // person intends to register                   
+                        WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html");
+                        tag = true;
+                    }
+
+                    var serverPanoramaWeb = new Server(EditServerDlg.PANORAMA_WEB, string.Empty, string.Empty);
+                    var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
+                    if (newServer == null)
+                        return;
+
+                    servers.Add(newServer);
+                }
+            }
 
             using (var publishDocumentDlg = new PublishDocumentDlg(servers, fileName))
             {

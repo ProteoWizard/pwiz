@@ -37,6 +37,8 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class EditServerDlg : FormEx
     {
+        public const string PANORAMA_WEB = "https://panoramaweb.org/";
+
         private Server _server;
         private readonly IEnumerable<Server> _existing;
 
@@ -47,6 +49,11 @@ namespace pwiz.Skyline.ToolsUI
             _existing = existing;
             Icon = Resources.Skyline;
             InitializeComponent();
+        }
+
+        public void ShowInstructions()
+        {
+            InstructionPanel.Visible = true;
         }
 
         public Server Server
@@ -66,6 +73,9 @@ namespace pwiz.Skyline.ToolsUI
                     textServerURL.Text = _server.URI.ToString();
                     textPassword.Text = _server.Password;
                     textUsername.Text = _server.Username;
+                    string labelText = lblProjectInfo.Text;
+                    if (labelText.Contains(textServerURL.Text))
+                        lblProjectInfo.Text = labelText.Substring(0, labelText.IndexOf(' ')) + ':';
                 }
             }
         }
