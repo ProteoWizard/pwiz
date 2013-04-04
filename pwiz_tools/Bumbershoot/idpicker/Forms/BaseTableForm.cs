@@ -31,6 +31,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
 using PopupControl;
@@ -793,4 +794,43 @@ namespace IDPicker.Forms
             restoreSelectionPath();
         }
     }
+
+    public class PivotData
+    {
+        public bool IsArray { get; private set; }
+        public object Value { get; private set; }
+
+        #region Constructor
+        public PivotData() { }
+        public PivotData(object[] queryRow)
+        {
+            var value = queryRow[2]; // 3rd column is expected to contain the BLOB array
+            IsArray = false;
+            if (value is int || value is long)
+                Value = Convert.ToInt32(value);
+            else if (value is float || value is double)
+                Value = Convert.ToDouble(value);
+            else if (value == DBNull.Value || value == null)
+                Value = null;
+            else if (value is byte[])
+            {
+                byte[] arrayBytes = value as byte[];
+                if (arrayBytes == null || arrayBytes.Length % 8 > 0)
+                    throw new ArgumentException("PivotData assumes that BLOBs are arrays of double precision floats");
+
+                int arrayLength = arrayBytes.Length / 8;
+
+                double[] arrayValues = new double[arrayLength];
+                var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
+                for (int i = 0; i < arrayLength; ++i)
+                    arrayValues[i] += arrayStream.ReadDouble();
+                Value = arrayValues;
+                IsArray = true;
+            }
+            else
+                throw new ArgumentException("invalid pivot column type " + value.GetType().Name);
+        }
+        #endregion
+    }
+
 }

@@ -126,6 +126,54 @@ namespace IDPicker.DataModel
             }
         }
 
+        /// <summary>
+        /// Takes one or more binary vectors of doubles (as BLOBs) and returns the summed array.
+        /// The bytes of the input arrays are hashed to create distinct ids:
+        /// arrays of doubles that are hashwise-equal are almost certainly duplicates.
+        /// </summary>
+        /// <example>DISTINCT_DOUBLE_ARRAY_SUM([9,1,2,3] [9,1,2,3] [8,4,5,6]) -> [5,7,9]</example>
+        [SQLiteFunction(Name = "distinct_double_array_sum", Arguments = -1, FuncType = FunctionType.Aggregate)]
+        public class DistinctDoubleArraySum : SQLiteFunction
+        {
+            public override void Step(object[] args, int stepNumber, ref object contextData)
+            {
+                if (args[0] == null || args[0] == DBNull.Value)
+                    return;
+
+                byte[] arrayBytes = args[0] as byte[];
+                if (arrayBytes == null || arrayBytes.Length % 8 > 0)
+                    throw new ArgumentException("distinct_double_array_sum only works with BLOBs of double precision floats");
+
+                int arrayLength = arrayBytes.Length / 8;
+
+                if (stepNumber == 1)
+                    contextData = new KeyValuePair<Set<int>, double[]>(new Set<int>(), Enumerable.Repeat(0.0, arrayLength).ToArray());
+
+                var arrayValues = (KeyValuePair<Set<int>, double[]>)contextData;
+                var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
+
+                // if the arrayId was already in the set, ignore its values
+                int arrayId = Util.Crc32.ComputeChecksum(arrayBytes);
+                if (!arrayValues.Key.Insert(arrayId).WasInserted)
+                    return;
+
+                for (int i = 0; i < arrayLength; ++i)
+                    arrayValues.Value[i] += arrayStream.ReadDouble();
+            }
+
+            public override object Final(object contextData)
+            {
+                if (contextData == null)
+                    return DBNull.Value;
+
+                var arrayValues = (KeyValuePair<Set<int>, double[]>)contextData;
+                var bytes = new List<byte>(sizeof(double) * arrayValues.Value.Length);
+                for (int i = 0; i < arrayValues.Value.Length; ++i)
+                    bytes.AddRange(BitConverter.GetBytes(arrayValues.Value[i]));
+                return bytes.ToArray();
+            }
+        }
+
         [SQLiteFunction(Name = "double_array_sum2", Arguments = -1, FuncType = FunctionType.Aggregate)]
         public class DoubleArraySum2 : SQLiteFunction
         {
@@ -172,6 +220,7 @@ namespace IDPicker.DataModel
                 RegisterFunction("distinct_group_concat", new DistinctGroupConcat());
                 RegisterFunction("range_concat", new StandardSQLFunction("range_concat", NHibernateUtil.String));
                 RegisterFunction("double_array_sum", new StandardSQLFunction("double_array_sum", NHibernateUtil.BinaryBlob));
+                RegisterFunction("distinct_double_array_sum", new StandardSQLFunction("distinct_double_array_sum", NHibernateUtil.BinaryBlob));
                 RegisterFunction("double_array_sum2", new StandardSQLFunction("double_array_sum2", NHibernateUtil.BinaryBlob));
             }
         }

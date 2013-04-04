@@ -23,11 +23,13 @@
 //
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Data;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 
@@ -67,5 +69,99 @@ namespace IDPicker
         /// </summary>
         /// <param name="action">action to try</param>
         public static void TryRepeatedly (Action action) { TryRepeatedly<Exception>(action, 2, 500); }
+
+        /// <summary>
+        /// Generate a CRC32 checksum from a byte array.
+        /// </summary>
+        /// <see cref="http://sanity-free.org/134/standard_crc_16_in_csharp.html"/>
+        public class Crc32
+        {
+            private static uint[] table;
+
+            public static int ComputeChecksum(byte[] bytes)
+            {
+                uint crc = 0xffffffff;
+                for (int i = 0; i < bytes.Length; ++i)
+                {
+                    byte index = (byte) (((crc) & 0xff) ^ bytes[i]);
+                    crc = (uint) ((crc >> 8) ^ table[index]);
+                }
+                return (int) ~crc;
+            }
+
+            public static byte[] ComputeChecksumBytes(byte[] bytes)
+            {
+                return BitConverter.GetBytes(ComputeChecksum(bytes));
+            }
+
+            static Crc32()
+            {
+                uint poly = 0xedb88320;
+                table = new uint[256];
+                uint temp = 0;
+                for (uint i = 0; i < table.Length; ++i)
+                {
+                    temp = i;
+                    for (int j = 8; j > 0; --j)
+                    {
+                        if ((temp & 1) == 1)
+                        {
+                            temp = (uint) ((temp >> 1) ^ poly);
+                        }
+                        else
+                        {
+                            temp >>= 1;
+                        }
+                    }
+                    table[i] = temp;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Puts an HTML fragment on the Windows clipboard (in CF_HTML format).
+        /// </summary>
+        /// <param name="htmlFragment">a fragment of HTML to put on the clipboard</param>
+        public static void SetClipboardHtml(string htmlFragment)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            // Builds the CF_HTML header. See format specification here:
+            // http://msdn.microsoft.com/library/default.asp?url=/workshop/networking/clipboard/htmlclipboard.asp
+
+            // Because the Start/End tags refer to other offsets in the string, we use placeholders
+            // and replace them with the real values later.
+            const string header = @"Version:0.9
+StartHTML:<<<<<<<1
+EndHTML:<<<<<<<2
+StartFragment:<<<<<<<3
+EndFragment:<<<<<<<4
+";
+
+            const string pre = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\r\n" +
+                               "<html><body>\r\n<!--StartFragment-->";
+            const string post = "<!--EndFragment-->\r\n</body>\r\n</html>";
+
+            sb.Append(header);
+            int start_html = sb.Length;
+
+            sb.Append(pre);
+            int fragment_start = sb.Length;
+
+            sb.Append(htmlFragment);
+            int fragment_end = sb.Length;
+
+            sb.Append(post);
+            int end_html = sb.Length;
+
+            // Replace offset placeholders
+            sb.Replace("<<<<<<<1", start_html.ToString("D8"), 0, start_html);
+            sb.Replace("<<<<<<<2", end_html.ToString("D8"), 0, start_html);
+            sb.Replace("<<<<<<<3", fragment_start.ToString("D8"), 0, start_html);
+            sb.Replace("<<<<<<<4", fragment_end.ToString("D8"), 0, start_html);
+
+            string cf_html = sb.ToString();
+            Clipboard.SetText(cf_html, TextDataFormat.Html);
+        }
     }
 }

@@ -32,6 +32,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
+using System.IO;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
 using PopupControl;
@@ -225,23 +226,6 @@ namespace IDPicker.Forms
             #endregion
         }
 
-        class PivotData
-        {
-            public int Spectra { get; private set; }
-            public int DistinctMatches { get; private set; }
-            public int DistinctPeptides { get; private set; }
-
-            #region Constructor
-            public PivotData () { }
-            public PivotData (object[] queryRow)
-            {
-                Spectra = Convert.ToInt32(queryRow[2]);
-                DistinctMatches = Convert.ToInt32(queryRow[3]);
-                DistinctPeptides = Convert.ToInt32(queryRow[4]);
-            }
-            #endregion
-        }
-
         struct TotalCounts
         {
             public int Clusters;
@@ -338,11 +322,8 @@ namespace IDPicker.Forms
             return parentRow.ChildRows;
         }
 
-        static string pivotHqlFormat = @"SELECT {0}, {1},
-                                                COUNT(DISTINCT psm.Spectrum.id),
-                                                COUNT(DISTINCT psm.DistinctMatchKey),
-                                                COUNT(DISTINCT psm.Peptide.id)
-                                         {2}
+        static string pivotHqlFormat = @"SELECT {0}, {1}, {2}
+                                         {3}
                                          GROUP BY {0}, {1}
                                          ORDER BY {0}
                                         ";
@@ -352,8 +333,16 @@ namespace IDPicker.Forms
             var groupColumn = group != null && group.Mode == GroupBy.Cluster ? "pro.Cluster" : "pro.ProteinGroup";
             var pivotColumn = pivot.Text.Contains("Group") ? "ssgl.Group.id" : "s.Source.id";
 
+            string valueColumn;
+            if (pivot.Text.Contains("Spectra")) valueColumn = "COUNT(DISTINCT psm.Spectrum.id)";
+            else if (pivot.Text.Contains("Matches")) valueColumn = "COUNT(DISTINCT psm.DistinctMatchId)";
+            else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
+            else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
+            else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
+
             var pivotHql = String.Format(pivotHqlFormat,
-                                         groupColumn, pivotColumn,
+                                         groupColumn, pivotColumn, valueColumn,
                                          parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                              DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink,
                                                                              DataFilter.PeptideSpectrumMatchToProtein));
@@ -588,7 +577,7 @@ namespace IDPicker.Forms
                 columnIndex >= pivotColumns.First().Index)
             {
                 var pivotColumn = pivotColumns[columnIndex - pivotColumns.First().Index];
-                var stats = pivotColumn.Tag as Map<long, PivotData>;
+                var stats = pivotColumn.Tag as Pair<bool, Map<long, PivotData>>;
                 if (stats == null)
                     return 0;
 
@@ -602,26 +591,22 @@ namespace IDPicker.Forms
                 else
                     throw new NotImplementedException();
 
-                var itr = stats.Find(rowId);
+                var itr = stats.second.Find(rowId);
                 if (itr.IsValid)
                 {
-                    if (pivotColumn.HeaderText.EndsWith("/"))
+                    if (stats.first)
                     {
-                        if (checkedPivots.Count(o => o.Mode == PivotBy.SpectraByGroup) > 0)
-                            return itr.Current.Value.Spectra;
-                        else if (checkedPivots.Count(o => o.Mode == PivotBy.MatchesByGroup) > 0)
-                            return itr.Current.Value.DistinctMatches;
-                        else if (checkedPivots.Count(o => o.Mode == PivotBy.PeptidesByGroup) > 0)
-                            return itr.Current.Value.DistinctPeptides;
+                        if (itr.Current.Value.IsArray)
+                            return itr.Current.Value.Value.As<double[]>()[Convert.ToInt32(pivotColumn.DataPropertyName)];
+                        else
+                            return itr.Current.Value.Value;
                     }
                     else
                     {
-                        if (checkedPivots.Count(o => o.Mode == PivotBy.SpectraBySource) > 0)
-                            return itr.Current.Value.Spectra;
-                        else if (checkedPivots.Count(o => o.Mode == PivotBy.MatchesBySource) > 0)
-                            return itr.Current.Value.DistinctMatches;
-                        else if (checkedPivots.Count(o => o.Mode == PivotBy.PeptidesBySource) > 0)
-                            return itr.Current.Value.DistinctPeptides;
+                        if (itr.Current.Value.IsArray)
+                            return itr.Current.Value.Value.As<double[]>()[Convert.ToInt32(pivotColumn.DataPropertyName)];
+                        else
+                            return itr.Current.Value.Value;
                     }
                 }
             }
@@ -1036,8 +1021,29 @@ namespace IDPicker.Forms
             {
                 string uniqueSubstring;
                 Util.UniqueSubstring(sourceById[sourceId].Name, sourceNames, out uniqueSubstring);
+
+                // if pivoting on an isobaric labelling quantitation metric, add one column per reporter ion per source
+                if (checkedPivots.Any(o => o.Text.Contains("Source") && (o.Text.Contains("TMT") || o.Text.Contains("iTRAQ"))))
+                {
+                    var quantColumns = checkedPivots.Any(o => o.Text.Contains("TMT")) ? TMT_ReporterIonColumns : iTRAQ_ReporterIonColumns;
+
+                    for(int i=0; i < quantColumns.Count; ++i)
+                    {
+                        DataGridViewColumn newColumn = quantColumns[i].Clone() as DataGridViewColumn;
+                        newColumn.HeaderText = String.Format("{0} ({1})", uniqueSubstring, newColumn.HeaderText);
+                        newColumn.Tag = new Pair<bool, Map<long, PivotData>>(false, statsBySpectrumSource[sourceId]);
+                        newColumn.DataPropertyName = i.ToString();
+                        // preserve the visibility of the cloned column
+                        pivotColumns.Add(newColumn);
+                    }
+
+                    continue;
+                }
+
+                // otherwise add a single column for each source
+
                 var column = new DataGridViewTextBoxColumn() { HeaderText = uniqueSubstring, FillWeight = 1 };
-                column.Tag = statsBySpectrumSource[sourceId];
+                column.Tag = new Pair<bool, Map<long, PivotData>>(false, statsBySpectrumSource[sourceId]);
 
                 var newProperties = new ColumnProperty()
                 {
@@ -1069,8 +1075,32 @@ namespace IDPicker.Forms
             if (statsBySpectrumSourceGroup != null)
             foreach (long groupId in statsBySpectrumSourceGroup.Keys)
             {
-                var column = new DataGridViewTextBoxColumn() { HeaderText = groupById[groupId].Name.TrimEnd('/') + '/', FillWeight = 1 };
-                column.Tag = statsBySpectrumSourceGroup[groupId];
+                string groupName = groupById[groupId].Name.TrimEnd('/') + '/';
+                if (groupName == "/")
+                    continue; // skip root group
+
+                // if pivoting on an isobaric labelling quantitation metric, add one column per reporter ion per group
+                if (checkedPivots.Any(o => o.Text.Contains("Group") && (o.Text.Contains("TMT") || o.Text.Contains("iTRAQ"))))
+                {
+                    var quantColumns = checkedPivots.Any(o => o.Text.Contains("TMT")) ? TMT_ReporterIonColumns : iTRAQ_ReporterIonColumns;
+
+                    for (int i = 0; i < quantColumns.Count; ++i)
+                    {
+                        DataGridViewColumn newColumn = quantColumns[i].Clone() as DataGridViewColumn;
+                        newColumn.HeaderText = String.Format("{0} ({1})", groupName, newColumn.HeaderText);
+                        newColumn.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
+                        newColumn.DataPropertyName = i.ToString();
+                        // preserve the visibility of the cloned column
+                        pivotColumns.Add(newColumn);
+                    }
+
+                    continue;
+                }
+
+                // otherwise add a single column for each group
+
+                var column = new DataGridViewTextBoxColumn() { HeaderText = groupName, FillWeight = 1 };
+                column.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
 
                 var newProperties = new ColumnProperty()
                 {
@@ -1141,7 +1171,11 @@ namespace IDPicker.Forms
                           new Pivot<PivotBy>() {Mode = PivotBy.MatchesByGroup, Text = "Matches by Group"},
                           new Pivot<PivotBy>() {Mode = PivotBy.MatchesBySource, Text = "Matches by Source"},
                           new Pivot<PivotBy>() {Mode = PivotBy.PeptidesByGroup, Text = "Peptides by Group"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.PeptidesBySource, Text = "Peptides by Source"});
+                          new Pivot<PivotBy>() {Mode = PivotBy.PeptidesBySource, Text = "Peptides by Source"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.iTRAQByGroup, Text = "iTRAQ by Group"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.iTRAQBySource, Text = "iTRAQ by Source"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.TMTByGroup, Text = "TMT by Group"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.TMTBySource, Text = "TMT by Source"});
                 pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
                 return false;
             }

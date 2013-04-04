@@ -228,7 +228,7 @@ namespace IDPicker.DataModel
     }
 
     public enum GroupBy { Cluster, ProteinGroup, Peptide, PeptideGroup, Source, Spectrum, Analysis, Charge, Off }
-    public enum PivotBy { SpectraByGroup, SpectraBySource, MatchesByGroup, MatchesBySource, PeptidesByGroup, PeptidesBySource, Off }
+    public enum PivotBy { SpectraByGroup, SpectraBySource, MatchesByGroup, MatchesBySource, PeptidesByGroup, PeptidesBySource, iTRAQByGroup, iTRAQBySource, TMTByGroup, TMTBySource, Off }
 
     [Serializable]
     public class Grouping : IComparable<Grouping>

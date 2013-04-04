@@ -947,7 +947,7 @@ namespace IDPicker.DataModel
 
             session.CreateSQLQuery(@"DELETE FROM PeptideQuantitation;
                                      INSERT INTO PeptideQuantitation (Id, iTRAQ_ReporterIonIntensities, TMT_ReporterIonIntensities, PrecursorIonIntensity)
-                                        SELECT psm.Peptide, DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
+                                        SELECT psm.Peptide, DISTINCT_DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DISTINCT_DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
                                         FROM PeptideSpectrumMatch psm
                                         JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id
                                         GROUP BY psm.Peptide;
@@ -955,7 +955,7 @@ namespace IDPicker.DataModel
 
             session.CreateSQLQuery(@"DELETE FROM DistinctMatchQuantitation;
                                      INSERT INTO DistinctMatchQuantitation (Id, iTRAQ_ReporterIonIntensities, TMT_ReporterIonIntensities, PrecursorIonIntensity)
-                                        SELECT dm.DistinctMatchKey, DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
+                                        SELECT dm.DistinctMatchKey, DISTINCT_DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DISTINCT_DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
                                         FROM PeptideSpectrumMatch psm
                                         JOIN DistinctMatch dm ON psm.Id=dm.PsmId
                                         JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id
@@ -964,7 +964,7 @@ namespace IDPicker.DataModel
 
             session.CreateSQLQuery(@"DELETE FROM ProteinQuantitation;
                                      INSERT INTO ProteinQuantitation (Id, iTRAQ_ReporterIonIntensities, TMT_ReporterIonIntensities, PrecursorIonIntensity)
-                                        SELECT pi.Protein, DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
+                                        SELECT pi.Protein, DISTINCT_DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DISTINCT_DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
                                         FROM PeptideSpectrumMatch psm
                                         JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide
                                         JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id
