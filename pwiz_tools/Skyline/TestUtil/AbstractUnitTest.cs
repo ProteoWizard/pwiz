@@ -31,10 +31,10 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     [TestClass]
     [DeploymentItem("SkylineLog4Net.config")]
-    public class SkylineUnitTest
+    public class AbstractUnitTest
     {
         private static readonly log4net.ILog LOG =
-            log4net.LogManager.GetLogger("SkylineUnitTest");
+            log4net.LogManager.GetLogger("AbstractUnitTest");
         private static readonly Stopwatch STOPWATCH = new Stopwatch();
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global

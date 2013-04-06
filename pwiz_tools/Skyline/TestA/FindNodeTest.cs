@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestA
     /// Tests Find Node.
     /// </summary>
     [TestClass]
-    public class FindNodeTest : SkylineUnitTest
+    public class FindNodeTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestFindNode()

@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for TransitionSettings07Test
     /// </summary>
     [TestClass]
-    public class TransitionSettings07Test : SkylineUnitTest
+    public class TransitionSettings07Test : AbstractUnitTest
     {
         /// <summary>
         /// Test special fragment support with MeasuredIons in TransitionFilter

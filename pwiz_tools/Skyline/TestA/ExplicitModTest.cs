@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for ExplicitModTest
     /// </summary>
     [TestClass]
-    public class ExplicitModTest : SkylineUnitTest
+    public class ExplicitModTest : AbstractUnitTest
     {
         private static readonly List<StaticMod> ATOMIC_HEAVY_MODS = new List<StaticMod>
             {
@@ -123,7 +123,7 @@ namespace pwiz.SkylineTestA
                 {
                     TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(tranGroup, settings, mods);
                     var nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
-                    nodeGroup = nodeGroup.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
+                    nodeGroup = nodeGroup.ChangeSettings(settings, nodePep, mods, SrmSettingsDiff.ALL);
                     docStudy7 = (SrmDocument) docStudy7.Add(pepPath, nodeGroup);
                     break;
                 }

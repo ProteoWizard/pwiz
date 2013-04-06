@@ -577,6 +577,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nodeTranTree != null)
                 nodeGroupTree = nodeTranTree.Parent as TransitionGroupTreeNode;
 
+            PeptideDocNode nodePep = null;
+            ExplicitMods mods = null;
             TransitionGroupDocNode[] nodeGroups = null;
             IdentityPath[] groupPaths = null;
             PeptideTreeNode nodePepTree;
@@ -603,7 +605,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
-            ExplicitMods mods = (nodePepTree != null ? nodePepTree.DocNode.ExplicitMods : null);
+            if (nodePepTree != null)
+            {
+                nodePep = nodePepTree.DocNode;
+                mods = nodePep.ExplicitMods;
+            }
 
             // Clear existing data from the graph pane
             var graphPane = (MSGraphPane) graphControl.MasterPane[0];
@@ -625,9 +631,14 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Make sure all the chromatogram info for the relevant transition groups is present.
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
-                if (nodeGroups != null &&
-                    EnsureChromInfo(results, chromatograms, nodeGroups, groupPaths, mzMatchTolerance,
-                                    out changedGroups, out changedGroupIds))
+                if (nodeGroups != null && EnsureChromInfo(results,
+                                                          chromatograms,
+                                                          nodePep,
+                                                          nodeGroups,
+                                                          groupPaths,
+                                                          mzMatchTolerance,
+                                                          out changedGroups,
+                                                          out changedGroupIds))
                 {
                     // Update the file choice toolbar, if the set of groups has changed
                     if (changedGroups)
@@ -1624,9 +1635,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private bool EnsureChromInfo(MeasuredResults results, ChromatogramSet chromatograms,
-                                     TransitionGroupDocNode[] nodeGroups, IdentityPath[] groupPaths,
-                                     float mzMatchTolerance, out bool changedGroups, out bool changedGroupIds)
+        private bool EnsureChromInfo(MeasuredResults results,
+                                     ChromatogramSet chromatograms,
+                                     PeptideDocNode nodePep,
+                                     TransitionGroupDocNode[] nodeGroups,
+                                     IdentityPath[] groupPaths,
+                                     float mzMatchTolerance,
+                                     out bool changedGroups,
+                                     out bool changedGroupIds)
         {
             changedGroups = false;
             changedGroupIds = false;
@@ -1659,8 +1675,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var nodeGroup in nodeGroups)
                 {
                     ChromatogramGroupInfo[] arrayChromInfo;
-                    if (
-                        !results.TryLoadChromatogram(chromatograms, nodeGroup, mzMatchTolerance, true,
+                    if (!results.TryLoadChromatogram(chromatograms, nodePep, nodeGroup, mzMatchTolerance, true,
                                                      out arrayChromInfo))
                     {
                         listArrayChromInfo.Add(null);

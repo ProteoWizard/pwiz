@@ -233,14 +233,14 @@ namespace pwiz.SkylineTestUtil
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var results = document.Settings.MeasuredResults;
             int missingPeaks = 0;
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var pair in document.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo1;
-                Assert.IsTrue(results.TryLoadChromatogram(iChrom1, nodeGroup,
+                Assert.IsTrue(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out chromGroupInfo1));
                 Assert.AreEqual(1, chromGroupInfo1.Length);
                 ChromatogramGroupInfo[] chromGroupInfo2;
-                Assert.IsTrue(results.TryLoadChromatogram(iChrom2, nodeGroup,
+                Assert.IsTrue(results.TryLoadChromatogram(iChrom2, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out chromGroupInfo2));
                 Assert.AreEqual(1, chromGroupInfo2.Length);
                 if (delta != -1)

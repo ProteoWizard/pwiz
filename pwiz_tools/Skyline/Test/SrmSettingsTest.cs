@@ -37,7 +37,7 @@ namespace pwiz.SkylineTest
     /// to contain all SrmSettingsTest Unit Tests
     /// </summary>
     [TestClass]
-    public class SrmSettingsTest : SkylineUnitTest
+    public class SrmSettingsTest : AbstractUnitTest
     {
         private const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";
 

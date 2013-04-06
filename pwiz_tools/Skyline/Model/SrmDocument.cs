@@ -275,6 +275,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public IEnumerable<PeptidePrecursorPair> PeptidePrecursorPairs
+        {
+            get
+            {
+                return Peptides.SelectMany(
+                    node => node.TransitionGroups.Select(nodeGroup => new PeptidePrecursorPair(node, nodeGroup)));
+            }
+        }
+
         public IEnumerable<TransitionDocNode> Transitions
         {
             get
@@ -888,9 +897,13 @@ namespace pwiz.Skyline.Model
         private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath, bool loadPoints,
             ChangeNodePeak change)
         {
-            var nodeGroup = (TransitionGroupDocNode)FindNode(groupPath);
+            var groupId = groupPath.Child;
+            var nodePep = (PeptideDocNode) FindNode(groupPath.Parent);
+            if (nodePep == null)
+                throw new IdentityNotFoundException(groupId);
+            var nodeGroup = (TransitionGroupDocNode)nodePep.FindNode(groupId);
             if (nodeGroup == null)
-                throw new IdentityNotFoundException(groupPath.Child);
+                throw new IdentityNotFoundException(groupId);
             // Get the chromatogram set containing the chromatograms of interest
             int indexSet;
             ChromatogramSet chromatograms;
@@ -907,12 +920,19 @@ namespace pwiz.Skyline.Model
             // Get all chromatograms for this transition group
             double mzMatchTolerance = Settings.TransitionSettings.Instrument.MzMatchTolerance;
             ChromatogramGroupInfo[] arrayChromInfo;
-            if (!Settings.MeasuredResults.TryLoadChromatogram(chromatograms, nodeGroup, (float)mzMatchTolerance, loadPoints, out arrayChromInfo))
-                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__, this, nameSet));
+            if (!Settings.MeasuredResults.TryLoadChromatogram(chromatograms, nodePep, nodeGroup,
+                                                              (float) mzMatchTolerance, loadPoints, out arrayChromInfo))
+            {
+                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
+                                                                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty), nameSet));
+            }
             // Get the chromatograms for only the file of interest
             int indexInfo = arrayChromInfo.IndexOf(info => Equals(filePath, info.FilePath));
             if (indexInfo == -1)
-                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__, this, filePath));
+            {
+                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
+                                                                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty), filePath));
+            }
             var chromInfoGroup = arrayChromInfo[indexInfo];
             var nodeGroupNew = change(nodeGroup, chromInfoGroup, mzMatchTolerance, indexSet, fileId,
                 chromatograms.OptimizationFunction);

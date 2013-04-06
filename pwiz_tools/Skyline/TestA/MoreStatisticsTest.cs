@@ -26,7 +26,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA
 {
     [TestClass]
-    public class MoreStatisticsTest : SkylineUnitTest
+    public class MoreStatisticsTest : AbstractUnitTest
     {
         /// <summary>
         /// A test for dot-product scores

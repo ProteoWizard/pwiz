@@ -35,7 +35,7 @@ namespace pwiz.SkylineTest
     /// Tests of changing <see cref="SrmSettings"/> on a <see cref="SrmDocument"/>.
     /// </summary>
     [TestClass]
-    public class SrmSettingsChangeTest : SkylineUnitTest
+    public class SrmSettingsChangeTest : AbstractUnitTest
     {
         /// <summary>
         /// Test of changing settings that should have no impact on the document

@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for EspTest
     /// </summary>
     [TestClass]
-    public class EspTest : SkylineUnitTest
+    public class EspTest : AbstractUnitTest
     {
         [TestMethod]
         public void EspFeatureCalcTest()

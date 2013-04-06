@@ -26,7 +26,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA
 {
     [TestClass]
-    public class ChromCollectorTest : SkylineUnitTest
+    public class ChromCollectorTest : AbstractUnitTest
     {
         /// <summary>
         /// Utility class to create a tiny allocator and return its block count and size.

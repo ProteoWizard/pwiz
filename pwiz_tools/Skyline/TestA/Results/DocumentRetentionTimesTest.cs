@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for RetentionTimeAlignmentsTest
     /// </summary>
     [TestClass]
-    public class DocumentRetentionTimesTest : SkylineUnitTest
+    public class DocumentRetentionTimesTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestXmlSerialize()

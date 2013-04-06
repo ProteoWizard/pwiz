@@ -322,6 +322,7 @@ namespace pwiz.Skyline.Model.Results
 
                         // Process the one SRM spectrum
                         ProcessSrmSpectrum(dataSpectrum.RetentionTime.Value,
+                                           null,  // Peptide unknown
                                            dataSpectrum.Precursors[0].PrecursorMz.Value,
                                            dataSpectrum.Mzs,
                                            dataSpectrum.Intensities,
@@ -362,8 +363,8 @@ namespace pwiz.Skyline.Model.Results
                             foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt, dataSpectrum.Precursors,
                                 dataSpectrum.Mzs, dataSpectrum.Intensities))
                             {
-                                ProcessSrmSpectrum(rt.Value, spectrum.PrecursorMz,
-                                    spectrum.Mzs, spectrum.Intensities, chromMapMs);
+                                ProcessSrmSpectrum(rt.Value, spectrum.ModifiedSequence, spectrum.PrecursorMz,
+                                                   spectrum.Mzs, spectrum.Intensities, chromMapMs);
                             }
                         }
                         if (filter.IsMsMsSpectrum(dataSpectrum))
@@ -406,7 +407,7 @@ namespace pwiz.Skyline.Model.Results
                     var chromCollector = pair.Value;
                     if (timesCollector != null)
                         chromCollector.TimesCollector = timesCollector;
-                    var key = new ChromKey(collector.PrecursorMz, pair.Key, source);
+                    var key = new ChromKey(collector.ModifiedSequence, collector.PrecursorMz, pair.Key, source);
                     _chromatograms.Add(new KeyValuePair<ChromKey, ChromCollector>(key, chromCollector));
                 }
             }
@@ -421,23 +422,24 @@ namespace pwiz.Skyline.Model.Results
                                                                    dataSpectrum.Precursors, dataSpectrum.Mzs,
                                                                    dataSpectrum.Intensities))
             {
-                ProcessSrmSpectrum(rt, spectrum.PrecursorMz,
-                                   spectrum.Mzs, spectrum.Intensities,
-                                   chromMap);
+                ProcessSrmSpectrum(rt, spectrum.ModifiedSequence, spectrum.PrecursorMz,
+                                   spectrum.Mzs, spectrum.Intensities, chromMap);
             }
         }
 
         private static void ProcessSrmSpectrum(double time,
+            string modifiedSequence,
             double precursorMz,
             double[] mzArray,
             double[] intensityArray,
             ChromDataCollectorSet chromMap)
         {
             ChromDataCollector collector;
-            if (!chromMap.PrecursorCollectorMap.TryGetValue(precursorMz, out collector))
+            var key = new PrecursorModSeq(precursorMz, modifiedSequence);
+            if (!chromMap.PrecursorCollectorMap.TryGetValue(key, out collector))
             {
-                collector = new ChromDataCollector(precursorMz, chromMap);
-                chromMap.PrecursorCollectorMap.Add(precursorMz, collector);
+                collector = new ChromDataCollector(modifiedSequence, precursorMz, chromMap);
+                chromMap.PrecursorCollectorMap.Add(key, collector);
             }
 
             int ionCount = collector.ProductIntensityMap.Count;
@@ -550,7 +552,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromDataCollectorSet(TimeSharing timeSharing)
         {
             TypeOfScans = timeSharing;
-            PrecursorCollectorMap = new Dictionary<double, ChromDataCollector>();
+            PrecursorCollectorMap = new Dictionary<PrecursorModSeq, ChromDataCollector>();
             if (timeSharing == TimeSharing.shared)
                 SharedTimesCollector = new ChromCollector();
         }
@@ -568,21 +570,23 @@ namespace pwiz.Skyline.Model.Results
             SharedTimesCollector.Add(time);
         }
 
-        public Dictionary<double, ChromDataCollector> PrecursorCollectorMap { get; private set; }
+        public Dictionary<PrecursorModSeq, ChromDataCollector> PrecursorCollectorMap { get; private set; }
 
         public int Count { get { return PrecursorCollectorMap.Count; } }
     }
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(double precursorMz, ChromDataCollectorSet chromMap)
+        public ChromDataCollector(string modifiedSequence, double precursorMz, ChromDataCollectorSet chromMap)
         {
+            ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
             ProductIntensityMap = new Dictionary<double, ChromCollector>();
             if (chromMap.IsGroupedTime)
                 GroupedTimesCollector = new ChromCollector();
         }
 
+        public string ModifiedSequence { get; private set; }
         public double PrecursorMz { get; private set; }
         public Dictionary<double, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly ChromCollector GroupedTimesCollector;
@@ -646,7 +650,8 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                var dictPrecursorMzToFilter = new SortedDictionary<double, SpectrumFilterPair>();
+                var comparer = PrecursorModSeq.PrecursorModSeqComparerInstance;
+                var dictPrecursorMzToFilter = new SortedDictionary<PrecursorModSeq, SpectrumFilterPair>(comparer);
 
                 Func<double, double> calcWindowsQ1 = _fullScan.GetPrecursorFilterWindow;
                 Func<double, double> calcWindowsQ3 = _fullScan.GetProductFilterWindow;
@@ -717,10 +722,13 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         SpectrumFilterPair filter;
-                        if (!dictPrecursorMzToFilter.TryGetValue(nodeGroup.PrecursorMz, out filter))
+                        string seq = nodePep.ModifiedSequence;
+                        double mz = nodeGroup.PrecursorMz;
+                        var key = new PrecursorModSeq(mz, seq);
+                        if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
-                            filter = new SpectrumFilterPair(nodeGroup.PrecursorMz, minTime, maxTime);
-                            dictPrecursorMzToFilter.Add(nodeGroup.PrecursorMz, filter);
+                            filter = new SpectrumFilterPair(seq, mz, minTime, maxTime);
+                            dictPrecursorMzToFilter.Add(key, filter);
                         }
 
                         if (!EnabledMs)
@@ -1152,15 +1160,72 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    internal struct PrecursorModSeq
+    {
+        public PrecursorModSeq(double precursorMz, string modifiedSequence) : this()
+        {
+            PrecursorMz = precursorMz;
+            ModifiedSequence = modifiedSequence;
+        }
+
+        private double PrecursorMz { get; set; }
+        private string ModifiedSequence { get; set; }
+
+        #region object overrides
+
+        public bool Equals(PrecursorModSeq other)
+        {
+            return PrecursorMz.Equals(other.PrecursorMz) &&
+                string.Equals(ModifiedSequence, other.ModifiedSequence);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is PrecursorModSeq && Equals((PrecursorModSeq) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (PrecursorMz.GetHashCode()*397) ^
+                    (ModifiedSequence != null ? ModifiedSequence.GetHashCode() : 0);
+            }
+        }
+
+        private sealed class PrecursorMzModifiedSequenceComparer : IComparer<PrecursorModSeq>
+        {
+            public int Compare(PrecursorModSeq x, PrecursorModSeq y)
+            {
+                int c = Comparer.Default.Compare(x.PrecursorMz, y.PrecursorMz);
+                if (c != 0)
+                    return c;
+                return string.CompareOrdinal(x.ModifiedSequence, y.ModifiedSequence);
+            }
+        }
+
+        private static readonly IComparer<PrecursorModSeq> PRECURSOR_MOD_SEQ_COMPARER_INSTANCE = new PrecursorMzModifiedSequenceComparer();
+
+        public static IComparer<PrecursorModSeq> PrecursorModSeqComparerInstance
+        {
+            get { return PRECURSOR_MOD_SEQ_COMPARER_INSTANCE; }
+        }
+
+        #endregion
+    }
+
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
-        public SpectrumFilterPair(double q1, double? minTime, double? maxTime)
+        public SpectrumFilterPair(string modifiedSequence, double q1, double? minTime, double? maxTime)
         {
+            ModifiedSequence = modifiedSequence;
             Q1 = q1;
             MinTime = minTime;
             MaxTime = maxTime;
         }
 
+        public string ModifiedSequence { get; private set; }
         public double Q1 { get; private set; }
         private double? MinTime { get; set; }
         private double? MaxTime { get; set; }
@@ -1237,7 +1302,7 @@ namespace pwiz.Skyline.Model.Results
                     intensityArrayNew[i] += intensityArray[iNext++];
             }
 
-            return new FilteredSrmSpectrum(Q1, centerArray, intensityArrayNew);            
+            return new FilteredSrmSpectrum(ModifiedSequence, Q1, centerArray, intensityArrayNew);            
         }
 
         public int CompareTo(SpectrumFilterPair other)
@@ -1254,13 +1319,15 @@ namespace pwiz.Skyline.Model.Results
 
     public sealed class FilteredSrmSpectrum
     {
-        public FilteredSrmSpectrum(double precursorMz, double[] mzs, double[] intensities)
+        public FilteredSrmSpectrum(string modifiedSequence, double precursorMz, double[] mzs, double[] intensities)
         {
+            ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
             Mzs = mzs;
             Intensities = intensities;
         }
 
+        public string ModifiedSequence { get; private set; }
         public double PrecursorMz { get; private set; }
         public double[] Mzs { get; private set; }
         public double[] Intensities { get; private set; }

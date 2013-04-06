@@ -113,6 +113,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsStandard { get; set; }
 
+        public string ModifiedSequence
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.ModifiedSequence : null; }
+        }
+
         public float PrecursorMz
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : 0; }

@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for XmlValidationTest
     /// </summary>
     [TestClass]
-    public class XmlValidationTest : SkylineUnitTest
+    public class XmlValidationTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\XmlValidationTest.zip";
         private int _errorCount;

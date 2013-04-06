@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for FastaImporterTest
     /// </summary>
     [TestClass]
-    public class FastaImporterTest : SkylineUnitTest
+    public class FastaImporterTest : AbstractUnitTest
     {
         [TestMethod]
         public void ProteinListTest()

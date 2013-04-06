@@ -27,7 +27,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA
 {
     [TestClass]
-    public class TestSerializeIsolationScheme : SkylineUnitTest
+    public class TestSerializeIsolationScheme : AbstractUnitTest
     {
         /// <summary>
         /// Test error handling in XML deserialization of <see cref="IsolationScheme"/>.

@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for StringHelpersTest
     /// </summary>
     [TestClass]
-    public class StringHelpersTest : SkylineUnitTest
+    public class StringHelpersTest : AbstractUnitTest
     {
         /// <summary>
         /// Test <see cref="Helpers.RemoveRepeatedLabelText"/> function

@@ -29,7 +29,7 @@ namespace pwiz.SkylineTest
     /// to contain all UndoManagerTest Unit Tests
     /// </summary>
     [TestClass]
-    public class UndoManagerTest : SkylineUnitTest
+    public class UndoManagerTest : AbstractUnitTest
     {
         /// <summary>
         /// A test for undo transactions and stack changed notifications.

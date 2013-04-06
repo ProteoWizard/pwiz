@@ -29,7 +29,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for RestultNameMapTest
     /// </summary>
     [TestClass]
-    public class RestultNameMapTest : SkylineUnitTest
+    public class RestultNameMapTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestSearchForDotOrUnderscore()

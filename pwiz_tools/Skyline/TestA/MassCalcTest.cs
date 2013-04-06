@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestA
     /// Unit tests of mass calculation
     /// </summary>
     [TestClass]
-    public class MassCalcTest : SkylineUnitTest
+    public class MassCalcTest : AbstractUnitTest
     {
         /// <summary>
         /// Test the masses in the <see cref="BioMassCalc.DEFAULT_ABUNDANCES"/> object to make

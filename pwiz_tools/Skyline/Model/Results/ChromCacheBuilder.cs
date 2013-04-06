@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -57,6 +58,9 @@ namespace pwiz.Skyline.Model.Results
         private bool _writerStarted;
         private bool _readCompleted;
         private Exception _writeException;
+
+        // Accessed only on the write thread
+        private Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
             string cachePath, IList<string> msDataFilePaths, ILoadMonitor loader, ProgressStatus status,
@@ -445,15 +449,19 @@ namespace pwiz.Skyline.Model.Results
             var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
             listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
 
-            ChromKey lastKey = new ChromKey(0, 0, ChromSource.unknown);
+            ChromKey lastKey = new ChromKey(null, 0, 0, ChromSource.unknown);
             ChromDataSet chromDataSet = null;
             foreach (var keyIndex in listKeyIndex)
             {
                 var key = keyIndex.Key;
                 var chromData = new ChromData(key, keyIndex.Value);
 
-                if (chromDataSet != null && key.Precursor == lastKey.Precursor)
+                if (chromDataSet != null &&
+                    key.Precursor == lastKey.Precursor &&
+                    string.Equals(key.ModifiedSequence, lastKey.ModifiedSequence))
+                {
                     chromDataSet.Add(chromData);
+                }
                 else
                 {
                     if (chromDataSet != null)
@@ -534,6 +542,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // Find the first precursor m/z that is greater than or equal to the
             // minimum possible match value
+            string modSeq = chromDataSet.ModifiedSequence;
             double minMzMatch = chromDataSet.PrecursorMz - TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             double maxMzMatch = chromDataSet.PrecursorMz + TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             var lookup = new PeptidePrecursorMz(null, null, minMzMatch);
@@ -546,6 +555,9 @@ namespace pwiz.Skyline.Model.Results
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
+                if (modSeq != null && !string.Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedSequence))
+                    continue;
+
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
                 var groupData = GetMatchingData(nodeGroup, chromDataSet);
                 if (groupData != null)
@@ -932,6 +944,8 @@ namespace pwiz.Skyline.Model.Results
                                                               times.Length,
                                                               lenCompressed,
                                                               location);
+
+                        header.CalcSeqIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listSeqBytes);
 
                         int? transitionPeakCount = null;
                         foreach (var chromData in chromDataSet.Chromatograms)

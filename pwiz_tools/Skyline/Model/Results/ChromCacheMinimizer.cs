@@ -78,19 +78,22 @@ namespace pwiz.Skyline.Model.Results
                     .ToDictionary(kvp => kvp.Key, kvp=>kvp.Value);
             var chromGroups = new ChromatogramGroupInfo[ChromGroupHeaderInfos.Count];
             var transitionGroups = new List<TransitionGroupDocNode>[ChromGroupHeaderInfos.Count];
-            foreach (var transitionGroupDocNode in Document.TransitionGroups)
+            foreach (var nodePep in Document.Peptides)
             {
-                ChromatogramGroupInfo[] groupInfos;
-                ChromatogramCache.TryLoadChromatogramInfo(transitionGroupDocNode, _tolerance, out groupInfos);
-                foreach (var chromGroupInfo in groupInfos)
+                foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
-                    int headerIndex = chromGroupHeaderToIndex[chromGroupInfo.Header];
-                    if (chromGroups[headerIndex] == null)
+                    ChromatogramGroupInfo[] groupInfos;
+                    ChromatogramCache.TryLoadChromatogramInfo(nodePep, nodeGroup, _tolerance, out groupInfos);
+                    foreach (var chromGroupInfo in groupInfos)
                     {
-                        chromGroups[headerIndex] = chromGroupInfo;
-                        transitionGroups[headerIndex] = new List<TransitionGroupDocNode>();
+                        int headerIndex = chromGroupHeaderToIndex[chromGroupInfo.Header];
+                        if (chromGroups[headerIndex] == null)
+                        {
+                            chromGroups[headerIndex] = chromGroupInfo;
+                            transitionGroups[headerIndex] = new List<TransitionGroupDocNode>();
+                        }
+                        transitionGroups[headerIndex].Add(nodeGroup);
                     }
-                    transitionGroups[headerIndex].Add(transitionGroupDocNode);
                 }
             }
 
@@ -530,7 +533,10 @@ namespace pwiz.Skyline.Model.Results
                 byte[] pointsCompressed = points.Compress(3);
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
-                var header = new ChromGroupHeaderInfo5(originalHeader.Precursor, fileIndex,
+                var header = new ChromGroupHeaderInfo5(originalHeader.Precursor,
+                                                      originalHeader.SeqIndex,
+                                                      originalHeader.SeqLen,
+                                                      fileIndex,
                                                       _transitions.Count - startTransitionIndex,
                                                       startTransitionIndex,
                                                       numPeaks,
@@ -552,7 +558,8 @@ namespace pwiz.Skyline.Model.Results
                                                _transitions,
                                                _scoreTypes,
                                                _scores.ToArray(),
-                                               _peakCount);
+                                               _peakCount,
+                                               _originalCache);
             }
         }
     }

@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest
     /// Tests for the BookmarkEnumerator class.
     /// </summary>
     [TestClass]
-    public class BookmarkEnumeratorTest : SkylineUnitTest
+    public class BookmarkEnumeratorTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestForwardBackward()

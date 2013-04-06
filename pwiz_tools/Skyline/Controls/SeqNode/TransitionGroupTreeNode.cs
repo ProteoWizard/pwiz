@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             try
             {
                 // Update results on the group to correctly handle user set peak boundaries
-                nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, DocNode);
+                nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, nodePep, DocNode);
             }
             // Ignore I/O exceptions attempting to update results
             catch (UnauthorizedAccessException) {}

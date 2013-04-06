@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for CommandLineTest
     /// </summary>
     [TestClass]
-    public class CommandLineTest : SkylineUnitTest
+    public class CommandLineTest : AbstractUnitTest
     {
         [TestCleanup]
         public new void MyTestCleanup()

@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest
     /// been verified against Excel.
     /// </summary>
     [TestClass]
-    public class StatisticsTest : SkylineUnitTest
+    public class StatisticsTest : AbstractUnitTest
     {
         private readonly Statistics _xValues;
         private readonly Statistics _yValues;

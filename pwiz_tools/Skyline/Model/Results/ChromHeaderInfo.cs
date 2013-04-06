@@ -172,12 +172,32 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromGroupHeaderInfo5 : IComparable<ChromGroupHeaderInfo5>
     {
-        public ChromGroupHeaderInfo5(float precursor, int fileIndex, int numTransitions, int startTransitionIndex,
-                int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
-                int numPoints, int compressedSize, long location)
+        /// <summary>
+        /// Constructs header struct with SeqIndex and SeqCount left to be initialized
+        /// in a subsequent call to <see cref="CalcSeqIndex"/>.
+        /// </summary>
+        public ChromGroupHeaderInfo5(float precursor, int fileIndex,
+                                     int numTransitions, int startTransitionIndex,
+                                     int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
+                                     int numPoints, int compressedSize, long location)
+            : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
+                   numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
+                   compressedSize, location)
+        {            
+        }
+
+        /// <summary>
+        /// Cunstructs header struct with all values populated.
+        /// </summary>
+        public ChromGroupHeaderInfo5(float precursor, int seqIndex, int seqLen, int fileIndex,
+                                     int numTransitions, int startTransitionIndex,
+                                     int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
+                                     int numPoints, int compressedSize, long location)
             : this()
         {
             Precursor = precursor;
+            SeqIndex = seqIndex;
+            SeqLen = seqLen;
             FileIndex = fileIndex;
             NumTransitions = numTransitions;
             StartTransitionIndex = startTransitionIndex;
@@ -205,7 +225,9 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
-        public float Precursor { get; set; }
+        public float Precursor { get; private set; }
+        public int SeqIndex { get; private set; }
+        public int SeqLen { get; private set; }
         public int FileIndex { get; private set; }
         public int NumTransitions { get; private set; }
         public int StartTransitionIndex { get; private set; }
@@ -231,6 +253,29 @@ namespace pwiz.Skyline.Model.Results
         public void ClearScores()
         {
             StartScoreIndex = -1;
+        }
+
+        public void CalcSeqIndex(string modSeq,
+            Dictionary<string, int> dictSequenceToByteIndex,
+            List<byte> listSeqBytes)
+        {
+            if (modSeq == null)
+            {
+                SeqIndex = -1;
+                SeqLen = 0;
+            }
+            else
+            {
+                int modSeqIndex;
+                if (!dictSequenceToByteIndex.TryGetValue(modSeq, out modSeqIndex))
+                {
+                    modSeqIndex = listSeqBytes.Count;
+                    listSeqBytes.AddRange(Encoding.Default.GetBytes(modSeq));
+                    dictSequenceToByteIndex.Add(modSeq, modSeqIndex);
+                }
+                SeqIndex = modSeqIndex;
+                SeqLen = modSeq.Length;
+            }
         }
 
         public int CompareTo(ChromGroupHeaderInfo5 info)
@@ -341,6 +386,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        public static unsafe int DeltaSize5 
+        {
+            get { return sizeof (ChromGroupHeaderInfo5) - sizeof (ChromGroupHeaderInfo); }
+        }
     }
 
 
@@ -1053,19 +1103,21 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromKey : IComparable<ChromKey>
     {
-        public ChromKey(double precursor, double product, ChromSource source)
-            : this((float)precursor, (float)product, source)
+        public ChromKey(byte[] seqBytes, int seqIndex, int seqLen, float precursor, double product, ChromSource source)
+            : this(seqBytes != null ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null, precursor, product, source)
         {
         }
 
-        public ChromKey(float precursor, float product, ChromSource source)
+        public ChromKey(string modifiedSequence, double precursor, double product, ChromSource source)
             : this()
         {
-            Precursor = precursor;
-            Product = product;
+            ModifiedSequence = modifiedSequence;
+            Precursor = (float) precursor;
+            Product = (float) product;
             Source = source;
         }
 
+        public string ModifiedSequence { get; private set; }
         public float Precursor { get; private set; }
         public float Product { get; private set; }
         public ChromSource Source { get; private set; }
@@ -1075,12 +1127,17 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
+            if (ModifiedSequence != null)
+                return string.Format("{0:F04}, {1:F04} - {2} - {3}", Precursor, Product, Source, ModifiedSequence);
             return string.Format("{0:F04}, {1:F04} - {2}", Precursor, Product, Source); // Not L10N
         }
 
         public int CompareTo(ChromKey key)
         {
             int c = Precursor.CompareTo(key.Precursor);
+            if (c != 0)
+                return c;
+            c = CompareSequence(key);
             if (c != 0)
                 return c;
             c = CompareSource(key);
@@ -1094,10 +1151,28 @@ namespace pwiz.Skyline.Model.Results
             int c = CompareTolerant(Precursor, key.Precursor, tolerance);
             if (c != 0)
                 return c;
+            c = CompareSequence(key);
+            if (c != 0)
+                return c;
             c = CompareSource(key);
             if (c != 0)
                 return c;
             return CompareTolerant(Product, key.Product, tolerance);
+        }
+
+        private int CompareSequence(ChromKey key)
+        {
+            if (ModifiedSequence != null && key.ModifiedSequence != null)
+            {
+                int c = string.CompareOrdinal(ModifiedSequence, key.ModifiedSequence);
+                if (c != 0)
+                    return c;
+            }
+            else if (ModifiedSequence != null)
+                return 1;
+            else if (key.ModifiedSequence != null)
+                return -1;
+            return 0;   // both null
         }
 
         public int CompareSource(ChromKey key)
@@ -1132,15 +1207,15 @@ namespace pwiz.Skyline.Model.Results
         {
             try
             {
-                float precursor, product;
+                double precursor, product;
                 if (id.StartsWith(PREFIX_TOTAL))
                 {
-                    precursor = (float)double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    precursor = double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
                     product = 0;
                 }
                 else if (id.StartsWith(PREFIX_PRECURSOR))
                 {
-                    precursor = (float)double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    precursor = double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
                     product = precursor;
                 }
                 else if (id.StartsWith(PREFIX_SINGLE))
@@ -1167,14 +1242,14 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    precursor = (float)double.Parse(mzs[0], CultureInfo.InvariantCulture);
-                    product = (float)double.Parse(mzs[1], CultureInfo.InvariantCulture);
+                    precursor = double.Parse(mzs[0], CultureInfo.InvariantCulture);
+                    product = double.Parse(mzs[1], CultureInfo.InvariantCulture);
                 }
                 else
                 {
                     throw new ArgumentException(string.Format(Resources.ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID, id));
                 }
-                return new ChromKey(precursor, product, ChromSource.fragment);
+                return new ChromKey(null, precursor, product, ChromSource.fragment);
             }
             catch (FormatException)
             {

@@ -34,7 +34,7 @@ namespace pwiz.SkylineTest.Results
     /// Summary description for SmallWiffTest
     /// </summary>
     [TestClass]
-    public class WatersCalcurveTest : SkylineUnitTest
+    public class WatersCalcurveTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"Test\Results\WatersCalcurve.zip";
 
@@ -240,12 +240,12 @@ namespace pwiz.SkylineTest.Results
 
             var results = doc.Settings.MeasuredResults;
             const float tolerance = (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE;
-            foreach (var nodeGroup in doc.TransitionGroups)
+            foreach (var pair in doc.PeptidePrecursorPairs)
             {
                 foreach (var chromSet in results.Chromatograms)
                 {
                     ChromatogramGroupInfo[] chromGroupInfo;
-                    Assert.IsTrue(results.TryLoadChromatogram(chromSet, nodeGroup,
+                    Assert.IsTrue(results.TryLoadChromatogram(chromSet, pair.NodePep, pair.NodeGroup,
                                                               tolerance, true, out chromGroupInfo));
                 }
             }
@@ -307,8 +307,10 @@ namespace pwiz.SkylineTest.Results
 
             const float tolerance = (float)TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE;
 
-            foreach (var nodeGroup in docResults.TransitionGroups)
+            foreach (var pair in docResults.PeptidePrecursorPairs)
             {
+                var nodePep = pair.NodePep;
+                var nodeGroup = pair.NodeGroup;
                 Assert.IsTrue(nodeGroup.HasResults);
                 Assert.AreEqual(2, nodeGroup.Results.Count);
                 foreach (var result in nodeGroup.Results)
@@ -316,7 +318,7 @@ namespace pwiz.SkylineTest.Results
                 for (int i = 0; i < 2; i++)
                 {
                     ChromatogramGroupInfo[] chromInfos;
-                    Assert.IsTrue(measuredResults.TryLoadChromatogram(i, nodeGroup, tolerance, true, out chromInfos));
+                    Assert.IsTrue(measuredResults.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromInfos));
                     Assert.AreEqual(2, chromInfos.Length);
                     double[] peakAreas = new double[2];
                     for (int j = 0; j < 2; j++)

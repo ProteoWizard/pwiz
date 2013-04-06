@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for LibrarySettingsTest
     /// </summary>
     [TestClass]
-    public class LibrarySettingsTest : SkylineUnitTest
+    public class LibrarySettingsTest : AbstractUnitTest
     {
         /// <summary>
         /// List of <see cref="LibrarySpec"/> objects used for testing only,

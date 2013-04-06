@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for ModEquivalentTest
     /// </summary>
     [TestClass]
-    public class ModEquivalentTest : SkylineUnitTest
+    public class ModEquivalentTest : AbstractUnitTest
     {
         [TestMethod]
         public void EquivalentTest()

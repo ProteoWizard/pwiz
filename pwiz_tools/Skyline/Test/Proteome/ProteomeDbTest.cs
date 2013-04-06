@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest.Proteome
     /// Summary description for ProteomeDbTest
     /// </summary>
     [TestClass]
-    public class ProteomeDbTest : SkylineUnitTest
+    public class ProteomeDbTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"Test\Proteome\high_ipi.Human.20060111.zip";
 

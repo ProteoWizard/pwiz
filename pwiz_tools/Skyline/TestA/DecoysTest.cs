@@ -27,7 +27,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for RefineTest
     /// </summary>
     [TestClass]
-    public class DecoysTest : SkylineUnitTest
+    public class DecoysTest : AbstractUnitTest
     {
         [TestMethod]
         public void GenerateDecoysTest()

@@ -31,7 +31,7 @@ namespace pwiz.SkylineTest
     /// Summary description for UtilTest
     /// </summary>
     [TestClass]
-    public class UtilTest : SkylineUnitTest
+    public class UtilTest : AbstractUnitTest
     {
         [TestMethod]
         public void DsvHelperTest()

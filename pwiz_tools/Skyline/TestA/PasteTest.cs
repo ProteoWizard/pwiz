@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for PasteTest
     /// </summary>
     [TestClass]
-    public class PasteTest : SkylineUnitTest
+    public class PasteTest : AbstractUnitTest
     {
         private static readonly StaticMod VAR_MET_OXIDIZED = new StaticMod("Methionine Oxidized", "M", null, true, "O",
           LabelAtoms.None, RelativeRT.Matching, null, null, null);

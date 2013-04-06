@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestA
     /// Tests of MQuest scoring from OpenSWATH project in OpenMS
     /// </summary>
     [TestClass]
-    public class MQuestScoringTest : SkylineUnitTest
+    public class MQuestScoringTest : AbstractUnitTest
     {
         private static readonly double[] DATA1 = new double[] {0, 1, 3, 5, 2, 0};
         private static readonly double[] DATA2 = new double[] {1, 3, 5, 2, 0, 0};

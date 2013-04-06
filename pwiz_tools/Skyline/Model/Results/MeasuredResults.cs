@@ -346,16 +346,18 @@ namespace pwiz.Skyline.Model.Results
         }
         
         public bool TryLoadChromatogram(int index,
+                                        PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
                                         bool loadPoints,
                                         out ChromatogramGroupInfo[] infoSet)
         {
-            return TryLoadChromatogram(_chromatograms[index],
-                                       nodeGroup, tolerance, loadPoints, out infoSet);
+            return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup,
+                                       tolerance, loadPoints, out infoSet);
         }
 
         public bool TryLoadChromatogram(ChromatogramSet chromatogram,
+                                        PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
                                         bool loadPoints,
@@ -375,7 +377,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var cache in Caches)
             {
                 ChromatogramGroupInfo[] info;
-                if (!cache.TryLoadChromatogramInfo(nodeGroup, tolerance, out info))
+                if (!cache.TryLoadChromatogramInfo(nodePep, nodeGroup, tolerance, out info))
                     continue;
 
                 foreach (var chromInfo in info)

@@ -29,7 +29,7 @@ namespace pwiz.SkylineTestA.Results
     /// Test SIM scan results.
     /// </summary>
     [TestClass]
-    public class ImportSimTest : SkylineUnitTest
+    public class ImportSimTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\Results\ImportSim.zip";
         private const string DOCUMENT_NAME = "ImportSimTest.sky";

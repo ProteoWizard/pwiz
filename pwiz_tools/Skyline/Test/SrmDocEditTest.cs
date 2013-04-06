@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest
     /// Summary description for SrmDocEditTest
     /// </summary>
     [TestClass]
-    public class SrmDocEditTest : SkylineUnitTest
+    public class SrmDocEditTest : AbstractUnitTest
     {
         /// <summary>
         /// Test of SrmDocument.ImportFasta functionality

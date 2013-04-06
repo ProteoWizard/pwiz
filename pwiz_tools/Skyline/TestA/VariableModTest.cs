@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for VariableModTest
     /// </summary>
     [TestClass]
-    public class VariableModTest : SkylineUnitTest
+    public class VariableModTest : AbstractUnitTest
     {
         private static readonly StaticMod VAR_MET_OXIDIZED = new StaticMod("Methionine Oxidized", "M", null, true, "O",
             LabelAtoms.None, RelativeRT.Matching, null, null, null);

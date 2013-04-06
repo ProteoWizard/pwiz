@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestA.Results
     /// Tests for the <see cref="ChromCacheMinimizer"/> class.
     /// </summary>
     [TestClass]
-    public class ChromCacheMinimizerTest : SkylineUnitTest
+    public class ChromCacheMinimizerTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";
 
@@ -138,18 +138,18 @@ namespace pwiz.SkylineTestA.Results
             ChromatogramSet chromSet1Min = docMinimized1Min.Settings.MeasuredResults.Chromatograms[0];
             ChromatogramSet chromSet2Min = docMinimized2Min.Settings.MeasuredResults.Chromatograms[0];
             ChromatogramSet chromSetOriginal = docResults.Settings.MeasuredResults.Chromatograms[0];
-            foreach (TransitionGroupDocNode precursor in docResults.TransitionGroups)
+            foreach (var pair in docResults.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupsOriginal;
                 ChromatogramGroupInfo[] chromGroups1;
                 ChromatogramGroupInfo[] chromGroups2;
 
-                docMinimized1Min.Settings.MeasuredResults.TryLoadChromatogram(chromSet1Min, precursor, tolerance, true,
-                                                                              out chromGroups1);
-                docMinimized2Min.Settings.MeasuredResults.TryLoadChromatogram(chromSet2Min, precursor, tolerance, true,
-                                                                              out chromGroups2);
-                docResults.Settings.MeasuredResults.TryLoadChromatogram(chromSetOriginal, precursor, tolerance, true,
-                                                                        out chromGroupsOriginal);
+                docMinimized1Min.Settings.MeasuredResults.TryLoadChromatogram(chromSet1Min,
+                    pair.NodePep, pair.NodeGroup, tolerance, true, out chromGroups1);
+                docMinimized2Min.Settings.MeasuredResults.TryLoadChromatogram(chromSet2Min,
+                    pair.NodePep, pair.NodeGroup, tolerance, true, out chromGroups2);
+                docResults.Settings.MeasuredResults.TryLoadChromatogram(chromSetOriginal,
+                    pair.NodePep, pair.NodeGroup, tolerance, true, out chromGroupsOriginal);
                 Assert.AreEqual(chromGroups1.Length, chromGroups2.Length);
                 Assert.AreEqual(chromGroups1.Length, chromGroupsOriginal.Length);
                 for (int iChromGroup = 0; iChromGroup < chromGroups1.Length; iChromGroup++)

@@ -27,7 +27,7 @@ namespace pwiz.SkylineTest
     /// Randomly failing tests to check failure reporting in SkylineStress.
     /// </summary>
     //[TestClass]
-    public class RandomTest : SkylineUnitTest
+    public class RandomTest : AbstractUnitTest
     {
         private static readonly Random RANDOM = new Random();
 

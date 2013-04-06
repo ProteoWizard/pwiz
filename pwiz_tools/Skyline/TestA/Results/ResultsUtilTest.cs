@@ -27,7 +27,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for ResultsUtilTest
     /// </summary>
     [TestClass]
-    public class ResultsUtilTest : SkylineUnitTest
+    public class ResultsUtilTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestBaseNameMatch()

@@ -97,9 +97,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             foreach (var chromatogramSet in chromatograms)
             {
                 ChromatogramGroupInfo[] arrayChromInfo;
-                if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet,
-                                                                           nodeGroups[0], mzMatchTolerance, false, out arrayChromInfo))
+                if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, nodePep, nodeGroups[0],
+                                                                           mzMatchTolerance, false, out arrayChromInfo))
+                {
                     continue;
+                }
+
                 foreach (var chromGroupInfo in arrayChromInfo)
                 {
                     var peakId = new PeakTransitionGroupId(nodePepGroup, nodePep, labelType, chromatogramSet, chromGroupInfo);
@@ -144,6 +147,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 FileInfo = chromatogramSet.GetFileInfo(chromGroupInfoPrimary);
                 TransitionGroupPeakData = nodeGroups.Select(
                     nodeGroup => new SummaryTransitionGroupPeakData(document,
+                                                                    nodePep,
                                                                     nodeGroup,
                                                                     chromatogramSet,
                                                                     chromGroupInfoPrimary)).ToArray();
@@ -267,6 +271,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             private int _peakIndex;
 
             public SummaryTransitionGroupPeakData(SrmDocument document,
+                                                  PeptideDocNode nodePep,
                                                   TransitionGroupDocNode nodeGroup,
                                                   ChromatogramSet chromatogramSet,
                                                   ChromatogramGroupInfo chromGroupInfoPrimary)
@@ -280,7 +285,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 ChromatogramGroupInfo[] arrayChromInfo;
                 var measuredResults = document.Settings.MeasuredResults;
                 float mzMatchTolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                if (measuredResults.TryLoadChromatogram(chromatogramSet, nodeGroup, mzMatchTolerance, false,
+                if (measuredResults.TryLoadChromatogram(chromatogramSet, nodePep, nodeGroup, mzMatchTolerance, false,
                                                         out arrayChromInfo))
                 {
                     _chromGroupInfo = arrayChromInfo.FirstOrDefault(ci =>

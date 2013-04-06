@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for RefineTest
     /// </summary>
     [TestClass]
-    public class RefineTest : SkylineUnitTest
+    public class RefineTest : AbstractUnitTest
     {
         [TestMethod]
         public void RefineDocumentTest()

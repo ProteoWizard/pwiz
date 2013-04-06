@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for PwizFileInfoTest
     /// </summary>
     [TestClass]
-    public class PwizFileInfoTest : SkylineUnitTest
+    public class PwizFileInfoTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestInstrumentInfo()

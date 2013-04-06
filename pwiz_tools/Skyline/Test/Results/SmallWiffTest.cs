@@ -36,7 +36,7 @@ namespace pwiz.SkylineTest.Results
     /// Summary description for SmallWiffTest
     /// </summary>
     [TestClass]
-    public class SmallWiffTest : SkylineUnitTest
+    public class SmallWiffTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"Test\Results\SmallWiff.zip";
 

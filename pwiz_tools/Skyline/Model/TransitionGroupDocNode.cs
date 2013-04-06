@@ -618,7 +618,7 @@ namespace pwiz.Skyline.Model
                                                  });
         }
 
-        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, ExplicitMods mods, SrmSettingsDiff diff)
+        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
         {
             double precursorMz = PrecursorMz;
             IsotopeDistInfo isotopeDist = IsotopeDist;
@@ -786,7 +786,7 @@ namespace pwiz.Skyline.Model
             // A change in the precursor m/z may impact which results match this node
             // Or if the dot-product may need to be recalculated
             if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz || dotProductChange)
-                nodeResult = nodeResult.UpdateResults(settingsNew, diff, this);
+                nodeResult = nodeResult.UpdateResults(settingsNew, diff, nodePep, this);
 
             return nodeResult;
         }
@@ -795,11 +795,11 @@ namespace pwiz.Skyline.Model
         {
             var result = this;
             // Check if children will change as a result of ChangeSettings.
-            var changed = result.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
+            var changed = result.ChangeSettings(settings, parent, mods, SrmSettingsDiff.ALL);
             if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
             {
                 changed = result = (TransitionGroupDocNode)result.ChangeAutoManageChildren(false);
-                changed = changed.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
+                changed = changed.ChangeSettings(settings, parent, mods, SrmSettingsDiff.ALL);
             }
             // Make sure node points to correct parent.
             if (!ReferenceEquals(parent.Peptide, TransitionGroup.Peptide))
@@ -848,8 +848,10 @@ namespace pwiz.Skyline.Model
             return Children.ToDictionary(child => ((TransitionDocNode) child).Key);
         }
 
-        public TransitionGroupDocNode UpdateResults(SrmSettings settingsNew, SrmSettingsDiff diff,
-                                                     TransitionGroupDocNode nodePrevious)
+        public TransitionGroupDocNode UpdateResults(SrmSettings settingsNew,
+                                                    SrmSettingsDiff diff,
+                                                    PeptideDocNode nodePep,
+                                                    TransitionGroupDocNode nodePrevious)
         {
             if (!settingsNew.HasResults)
             {
@@ -956,7 +958,8 @@ namespace pwiz.Skyline.Model
                              : null;
                     
                     bool loadPoints = (dictUserSetInfoBest != null);
-                    if (measuredResults.TryLoadChromatogram(chromatograms, this, mzMatchTolerance, loadPoints, out arrayChromInfo))
+                    if (measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance, loadPoints,
+                                                            out arrayChromInfo))
                     {
                         // Make sure each file only appears once in the list, since downstream
                         // code has problems with multiple measurements in the same file.
@@ -1995,7 +1998,7 @@ namespace pwiz.Skyline.Model
 
             // Change settings to creat auto-manage children, or calculate
             // mz values, library ranks and result matching
-            return nodeResult.ChangeSettings(settings, nodePep.ExplicitMods, SrmSettingsDiff.ALL);
+            return nodeResult.ChangeSettings(settings, nodePep, nodePep.ExplicitMods, SrmSettingsDiff.ALL);
         }
 
         /// <summary>
@@ -2037,7 +2040,7 @@ namespace pwiz.Skyline.Model
             return (TransitionGroupDocNode)ChangeChildrenChecked(childrenNew.Cast<DocNode>().ToArray());
         }
 
-        public TransitionGroupDocNode MergeUserInfo(TransitionGroupDocNode nodeGroupMerge,
+        public TransitionGroupDocNode MergeUserInfo(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroupMerge,
             SrmSettings settings, SrmSettingsDiff diff)
         {
             var result = Merge(nodeGroupMerge, (n, nMerge) => n.MergeUserInfo(settings, nMerge));
@@ -2047,7 +2050,7 @@ namespace pwiz.Skyline.Model
             var resultsInfo = MergeResultsUserInfo(settings, nodeGroupMerge.Results);
             if (!ReferenceEquals(resultsInfo, Results))
                 result = result.ChangeResults(resultsInfo);
-            return result.UpdateResults(settings, diff, this);
+            return result.UpdateResults(settings, diff, nodePep, this);
         }
 
         private Results<TransitionGroupChromInfo> MergeResultsUserInfo(

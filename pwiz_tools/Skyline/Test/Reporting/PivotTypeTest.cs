@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest.Reporting
     /// Summary description for PivotTypeTest
     /// </summary>
     [TestClass]
-    public class PivotTypeTest : SkylineUnitTest
+    public class PivotTypeTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestCrosstabValues()

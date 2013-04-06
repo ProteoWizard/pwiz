@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Model
                     var settings = document.Settings;
                     if (!settings.TransitionSettings.Filter.AutoSelect && !AutoPickChildrenOff)
                         settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(!AutoPickChildrenOff));
-                    nodeGroupRefined = nodeGroupRefined.ChangeSettings(settings, nodePep.ExplicitMods,
+                    nodeGroupRefined = nodeGroupRefined.ChangeSettings(settings, nodePep, nodePep.ExplicitMods,
                         new SrmSettingsDiff(false, false, false, false, true, false));
                 }
                 nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex);
@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model
 
                     var nodeGroupMatch = new TransitionGroupDocNode(tranGroup, transitions);
 
-                    nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, explicitMods, SrmSettingsDiff.ALL);
+                    nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, nodePep, explicitMods, SrmSettingsDiff.ALL);
 
                     // Make sure it is measurable before adding it
                     if (settings.TransitionSettings.Instrument.IsMeasurable(nodeGroupMatch.PrecursorMz))

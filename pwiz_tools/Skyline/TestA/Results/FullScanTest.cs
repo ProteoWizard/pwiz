@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for FullScanTest
     /// </summary>
     [TestClass]
-    public class FullScanTest : SkylineUnitTest
+    public class FullScanTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";
 

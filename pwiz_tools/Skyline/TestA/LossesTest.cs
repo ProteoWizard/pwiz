@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for NeutralLossTest
     /// </summary>
     [TestClass]
-    public class LossesTest : SkylineUnitTest
+    public class LossesTest : AbstractUnitTest
     {
         private const string TEXT_FASTA_YEAST_7 =
             ">YAL007C ERP2 SGDID:S000000005, Chr I from 138347-137700, reverse complement, Verified ORF, \"Protein that forms a heterotrimeric complex with Erp1p, Emp24p, and Erv25p; member, along with Emp24p and Erv25p, of the p24 family involved in ER to Golgi transport and localized to COPII-coated vesicles\"\n" +

@@ -514,7 +514,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode MergeUserInfo(PeptideDocNode nodePepMerge, SrmSettings settings, SrmSettingsDiff diff)
         {
-            var result = Merge(nodePepMerge, (n, nMerge) => n.MergeUserInfo(nMerge, settings, diff));
+            var result = Merge(nodePepMerge, (n, nMerge) => n.MergeUserInfo(nodePepMerge, nMerge, settings, diff));
             var annotations = Annotations.Merge(nodePepMerge.Annotations);
             if (!ReferenceEquals(annotations, Annotations))
                 result = (PeptideDocNode) result.ChangeAnnotations(annotations);
@@ -591,7 +591,7 @@ namespace pwiz.Skyline.Model
                     if (nodeGroup != null)
                     {
                         TransitionGroupDocNode nodeChanged = recurse
-                            ? nodeGroup.ChangeSettings(settingsNew, explicitMods, diffNode)
+                            ? nodeGroup.ChangeSettings(settingsNew, this, explicitMods, diffNode)
                             : nodeGroup;
                         if (instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             childrenNew.Add(nodeChanged);
@@ -645,7 +645,7 @@ namespace pwiz.Skyline.Model
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, explicitMods, diff);
+                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, this, explicitMods, diff);
                         // Skip if the node can no longer be measured on the target instrument
                         if (!instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             continue;
@@ -1397,5 +1397,17 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+    }
+
+    public struct PeptidePrecursorPair
+    {
+        public PeptidePrecursorPair(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup) : this()
+        {
+            NodePep = nodePep;
+            NodeGroup = nodeGroup;
+        }
+
+        public PeptideDocNode NodePep { get; private set; }
+        public TransitionGroupDocNode NodeGroup { get; private set; }
     }
 }

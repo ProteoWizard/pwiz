@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
         protected readonly List<ChromTransition5> _listTransitions = new List<ChromTransition5>();
         protected readonly List<ChromGroupHeaderInfo5> _listGroups = new List<ChromGroupHeaderInfo5>();
+        protected readonly List<byte> _listSeqBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly List<float> _listScores = new List<float>();
         protected readonly FileSaver _fs;
@@ -69,6 +70,7 @@ namespace pwiz.Skyline.Model.Results
                                                            _listCachedFiles,
                                                            _listGroups,
                                                            _listTransitions,
+                                                           _listSeqBytes,
                                                            _listScoreTypes,
                                                            _listScores.ToArray(),
                                                            _peakCount);
@@ -93,6 +95,7 @@ namespace pwiz.Skyline.Model.Results
                                     count => ChromPeak.ReadArray(_fsPeaks.FileStream.SafeFileHandle, count), _peakCount, ChromPeak.SizeOf, ChromPeak.DEFAULT_BLOCK_SIZE),
                                 ScoreTypes = _listScoreTypes.ToArray(),
                                 Scores = _listScores.ToArray(),
+                                SeqBytes = _listSeqBytes.ToArray(),
                             };
                         result = new ChromatogramCache(CachePath, rawData, readStream);
                         _loader.UpdateProgress(_status.Complete());

@@ -38,7 +38,7 @@ namespace pwiz.SkylineTest.Reporting
     /// Tests for reports
     /// </summary>
     [TestClass]
-    public class ReportTest : SkylineUnitTest
+    public class ReportTest : AbstractUnitTest
     {
         /// <summary>
         /// Tests that the "built-in" reports are syntactically correct.

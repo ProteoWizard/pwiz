@@ -28,7 +28,7 @@ namespace pwiz.SkylineTest.Results
     /// Summary description for AgilentMixTest
     /// </summary>
     [TestClass]
-    public class AgilentMixTest : SkylineUnitTest
+    public class AgilentMixTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"Test\Results\AgilentMix.zip";
 

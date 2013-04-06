@@ -41,7 +41,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    public abstract class AbstractFunctionalTest : SkylineUnitTest
+    public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
         private const int SLEEP_INTERVAL = 100;
         private const int WAIT_TIME = 60*1000;    // 1 minute

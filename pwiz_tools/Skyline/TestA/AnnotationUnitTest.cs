@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for AnnotationUnitTest
     /// </summary>
     [TestClass]
-    public class AnnotationUnitTest : SkylineUnitTest
+    public class AnnotationUnitTest : AbstractUnitTest
     {
         [TestMethod]
         public void AnnotationMergeTest()

@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
             // Use the filtering algorithm that will be used on real data to determine the
             // expected proportions of the mass distribution that will end up filtered into
             // peaks
-            var filter = new SpectrumFilterPair(q1FilterValues[monoMassIndex], null, null);
+            var filter = new SpectrumFilterPair(null, q1FilterValues[monoMassIndex], null, null);
             filter.AddQ1FilterValues(q1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1Spectrum(massDistribution.Keys.ToArray(),

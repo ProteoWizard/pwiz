@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestA
     /// Tests for <see cref="IsotopeLabelType"/> modifications.
     /// </summary>
     [TestClass]
-    public class IsotypeModTest : SkylineUnitTest
+    public class IsotypeModTest : AbstractUnitTest
     {
         private static readonly IsotopeLabelType LABEL_TYPE13_C =
             new IsotopeLabelType("KR 13C", IsotopeLabelType.FirstHeavy);

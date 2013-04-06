@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestA
     /// Test of precursor transition selection for full-scan MS1 cases
     /// </summary>
     [TestClass]
-    public class FullScanPrecursorTest : SkylineUnitTest
+    public class FullScanPrecursorTest : AbstractUnitTest
     {
         [TestMethod]
         public void FullScanPrecursorTransitionsTest()

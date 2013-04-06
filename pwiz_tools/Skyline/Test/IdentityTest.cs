@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest
     /// Tests for <see cref="Identity"/> and <see cref="IdentityPath"/>.
     /// </summary>
     [TestClass]
-    public class IdentityTest : SkylineUnitTest
+    public class IdentityTest : AbstractUnitTest
     {
         [TestMethod]
         public void IdentityBaseTest()

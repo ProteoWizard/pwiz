@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for ModificationMatcherTest
     /// </summary>
     [TestClass]
-    public class ModificationMatcherTest : SkylineUnitTest
+    public class ModificationMatcherTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestModificationMatcher()

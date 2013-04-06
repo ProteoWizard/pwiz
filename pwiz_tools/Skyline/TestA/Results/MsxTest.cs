@@ -30,7 +30,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA.Results
 {
     [TestClass]
-    public class MsxTest : SkylineUnitTest
+    public class MsxTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\Results\MsxTest.zip";
 

@@ -34,7 +34,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA
 {
     [TestClass]
-    public class UniModTest : SkylineUnitTest
+    public class UniModTest : AbstractUnitTest
     {
         private const string STATIC_LIST_FILE = "UniModStaticList.xml";
         private const string HEAVY_LIST_FILE = "UniModHeavyList.xml";

@@ -34,7 +34,7 @@ namespace pwiz.SkylineTest
     /// to contain all SrmDocumentTest Unit Tests
     /// </summary>
     [TestClass]
-    public class SrmDocumentTest : SkylineUnitTest
+    public class SrmDocumentTest : AbstractUnitTest
     {
         /// <summary>
         /// A test for SrmDocument deserialization of v0.1 documents and

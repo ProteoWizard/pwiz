@@ -29,7 +29,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.SkylineTestA
 {
     [TestClass]
-    public class MProphetScoringModelTest : SkylineUnitTest
+    public class MProphetScoringModelTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\MProphetScoringModelTest.zip";  // Not L10N
 

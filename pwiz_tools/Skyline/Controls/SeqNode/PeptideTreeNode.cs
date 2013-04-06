@@ -546,7 +546,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 tranGroup, DocSettings, mods);
 
             var nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
-            return nodeGroup.ChangeSettings(DocSettings, mods, SrmSettingsDiff.ALL);
+            return nodeGroup.ChangeSettings(DocSettings, DocNode, mods, SrmSettingsDiff.ALL);
         }
 
         public override bool ShowAutoManageChildren

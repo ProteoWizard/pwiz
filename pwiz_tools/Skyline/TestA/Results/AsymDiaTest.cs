@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for AsymDiaTest
     /// </summary>
     [TestClass]
-    public class AsymDiaTest : SkylineUnitTest
+    public class AsymDiaTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\Results\AsymDIA.zip";
 

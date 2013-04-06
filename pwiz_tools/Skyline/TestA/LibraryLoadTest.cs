@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestA
     /// Summary description for NistLibraryTest
     /// </summary>
     [TestClass]
-    public class LibraryLoadTest : SkylineUnitTest
+    public class LibraryLoadTest : AbstractUnitTest
     {
         public const string PATH_NIST_LIB = @"C:\Libraries\NIST_yeast_v2.0_2008-07-11.msp";
         public const string PATH_NIST_LIB_CACHE = @"C:\Libraries\NIST_yeast_v2.0_2008-07-11" + NistLibrary.EXT_CACHE;

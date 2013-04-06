@@ -35,7 +35,7 @@ namespace pwiz.SkylineTest.Results
     /// Summary description for ThermoQuantTest
     /// </summary>
     [TestClass]
-    public class ThermoQuantTest : SkylineUnitTest
+    public class ThermoQuantTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"Test\Results\ThermoQuant.zip";
 

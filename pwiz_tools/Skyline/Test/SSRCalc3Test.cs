@@ -29,7 +29,7 @@ namespace pwiz.SkylineTest
     /// </summary>
     [TestClass]
 // ReSharper disable InconsistentNaming
-    public class SSRCalc3Test : SkylineUnitTest
+    public class SSRCalc3Test : AbstractUnitTest
 // ReSharper restore InconsistentNaming
     {
         private readonly object[,] _peptides300A;

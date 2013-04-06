@@ -34,6 +34,12 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ImportDocTest : AbstractFunctionalTest
     {
+        private string[] _documentPaths;
+        private string[] _cachePaths;
+        private int[] _groupCounts;
+        private int[] _tranCounts;
+        private long[] _cacheSizes;
+
         [TestMethod]
         public void TestImportDoc()
         {
@@ -46,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {            
-            string[] documentPaths = new[]
+            _documentPaths = new[]
                                          {
                                              TestFilesDir.GetTestPath("document1.sky"), // subject1, subject2, buffer (waters calcurv - annotations, manual integration, removed peak)
                                              TestFilesDir.GetTestPath("document2.sky"), // subject1, buffer (waters calcurve - annotations + custom, manual integration)
@@ -54,18 +60,21 @@ namespace pwiz.SkylineTestFunctional
                                              TestFilesDir.GetTestPath("document4.sky"), // subject2 (agilent bovine1 - manual integration)
                                              TestFilesDir.GetTestPath("document5.sky"), // opt1, opt2 (thermo bovine2 optimization data)
                                          };
-            string[] cachePaths = new string[documentPaths.Length];
-            long[] cacheSizes = new long[documentPaths.Length];
-            for (int i = 0; i < documentPaths.Length; i++)
+            _groupCounts = new[] {36, 24, 12, 6, 10};
+            _tranCounts = new[] {72, 48, 24, 23, 440};
+
+            _cachePaths = new string[_documentPaths.Length];
+            _cacheSizes = new long[_documentPaths.Length];
+            for (int i = 0; i < _documentPaths.Length; i++)
             {
-                cachePaths[i] = ChromatogramCache.FinalPathForName(documentPaths[i], null);
-                cacheSizes[i] = new FileInfo(cachePaths[i]).Length;
+                _cachePaths[i] = ChromatogramCache.FinalPathForName(_documentPaths[i], null);
+                _cacheSizes[i] = new FileInfo(_cachePaths[i]).Length;
             }
 
             var docEmpty = SkylineWindow.Document;
             var state = new DocResultsState(docEmpty);
             // Import a document into the empty document attempt to keep the results and fail
-            var importDlg = ShowDialog<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[1]));
+            var importDlg = ShowDialog<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[1]));
             RunUI(() => importDlg.Action = MeasuredResults.MergeAction.merge_names);
             var messageDlg = ShowDialog<MessageDlg>(importDlg.OkDialog);
 
@@ -92,7 +101,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(File.Exists(cachePersistPath));
 
             // Try again
-            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[1]), dlg =>
+            const int firstIndex = 1;
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[firstIndex]), dlg =>
                 {
                     dlg.Action = MeasuredResults.MergeAction.merge_names;
                     dlg.OkDialog();
@@ -104,13 +114,14 @@ namespace pwiz.SkylineTestFunctional
             // Make sure cache is where it is expected to be
             Assert.AreEqual(cachePersistPath, docInitial.Settings.MeasuredResults.CachePaths.ToArray()[0]);
             // Make sure original cache file is still on disk
-            Assert.IsTrue(File.Exists(cachePaths[1]));
+            Assert.IsTrue(File.Exists(_cachePaths[firstIndex]));
             Assert.IsTrue(File.Exists(cachePersistPath));
 
             // The cache version of the original test file is 3.
             // The cache file just created is version 4 or higher.
-            long startCacheLen = GetCacheSize(cacheSizes[1], docInitial, 48);
-            Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
+            long startCacheLen = GetCacheSize(firstIndex, docInitial);
+            long singleCacheLen = new FileInfo(cachePersistPath).Length;
+            Assert.AreEqual(startCacheLen, singleCacheLen);
 
             RunUI(() =>
                       {
@@ -118,7 +129,7 @@ namespace pwiz.SkylineTestFunctional
                       });
 
             // Import a document removing the results
-            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[3]), dlg =>
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[3]), dlg =>
                 {
                     dlg.Action = MeasuredResults.MergeAction.remove;
                     dlg.OkDialog();
@@ -132,14 +143,17 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docInitial, SkylineWindow.Document);
 
             // Import a document adding all replicates
-            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[0]), dlg =>
+            const int nextIndex = 0;
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[nextIndex]), dlg =>
             {
                 dlg.Action = MeasuredResults.MergeAction.add;
                 dlg.OkDialog();
             });
             var docAdd = WaitForDocumentChangeLoaded(docInitial);
-            var docAdded = ResultsUtil.DeserializeDocument(documentPaths[0]);
-            long expectCacheLen = startCacheLen + GetCacheSize(cacheSizes[0], docAdded, 60);
+            var docAdded = ResultsUtil.DeserializeDocument(_documentPaths[nextIndex]);
+            long expectCacheLen = startCacheLen
+                + GetCacheSize(nextIndex, docAdded)
+                - ChromatogramCache.HeaderSize; // Only one header between the two caches
 
             // No peptide merging should have happened
             AssertEx.IsDocumentState(docAdd, null,
@@ -182,7 +196,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Cache should now contain results for both documents
             long newCacheLen = new FileInfo(cachePersistPath).Length;
-            Assert.AreEqual(expectCacheLen, newCacheLen, 100);
+            Assert.AreEqual(expectCacheLen, newCacheLen);
             
             // An undo followed by a redo should not change that
             RunUI(SkylineWindow.Undo);
@@ -207,7 +221,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.Undo);
             Assert.AreEqual(docInitial, SkylineWindow.Document);    // Cache optimization changes document
             docInitial = SkylineWindow.Document;
-            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[0]), dlg =>
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[0]), dlg =>
             {                
                 dlg.Action = MeasuredResults.MergeAction.merge_names;
                 dlg.OkDialog();
@@ -241,13 +255,13 @@ namespace pwiz.SkylineTestFunctional
                           Assert.AreSame(docInitial, SkylineWindow.Document);
                       });
             Assert.AreSame(docInitial, SkylineWindow.Document);
-            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[3]), dlg =>
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[3]), dlg =>
             {
                 dlg.Action = MeasuredResults.MergeAction.merge_indices;
                 dlg.OkDialog();
             });
             var docOrder = WaitForDocumentChangeLoaded(docInitial);
-            var docOrderAdded = ResultsUtil.DeserializeDocument(documentPaths[3]);
+            var docOrderAdded = ResultsUtil.DeserializeDocument(_documentPaths[3]);
 
             chromatograms = docOrder.Settings.MeasuredResults.Chromatograms;
             Assert.AreEqual(2, chromatograms.Count);
@@ -272,14 +286,14 @@ namespace pwiz.SkylineTestFunctional
             // Import merging by order with overflow and multiple files
             RunUI(SkylineWindow.Undo);
             Assert.AreEqual(docInitial, SkylineWindow.Document);
-            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[0], documentPaths[2]), dlg =>
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[0], _documentPaths[2]), dlg =>
             {
                 dlg.Action = MeasuredResults.MergeAction.merge_indices;
                 dlg.OkDialog();
             });
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count > 2);
             var docOrder2 = WaitForDocumentLoaded();
-            var docAdded2 = ResultsUtil.DeserializeDocument(documentPaths[2]);
+            var docAdded2 = ResultsUtil.DeserializeDocument(_documentPaths[2]);
 
             // No peptide merging should have happened
             AssertEx.IsDocumentState(docOrder2, null,
@@ -329,7 +343,7 @@ namespace pwiz.SkylineTestFunctional
             // Now import allowing matching peptides to be merged
             RunUI(SkylineWindow.Undo);
             Assert.AreEqual(docInitial, SkylineWindow.Document);
-            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[0], documentPaths[2]), dlg =>
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[0], _documentPaths[2]), dlg =>
             {
                 dlg.Action = MeasuredResults.MergeAction.add;
                 dlg.IsMergePeptides = true;
@@ -367,7 +381,7 @@ namespace pwiz.SkylineTestFunctional
             // Check cache sizes
             // At this point, the main cache should be about the size of the sum of
             // the caches it has incorporated.
-            Assert.AreEqual(newCacheLen + cacheSizes[2] + cacheSizes[3],
+            Assert.AreEqual(newCacheLen + GetCacheSize(2) + GetCacheSize(3) - 2*ChromatogramCache.HeaderSize,
                             new FileInfo(cachePersistPath).Length, 200);
             // Undo and save should have set the main cache back to the initial state
             RunUI(SkylineWindow.Undo);
@@ -375,9 +389,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
             Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
             // And the original caches should remain unchanged
-            for (int i = 0; i < cachePaths.Length; i++)
+            for (int i = 0; i < _cachePaths.Length; i++)
             {
-                Assert.AreEqual(cacheSizes[i], new FileInfo(cachePaths[i]).Length);
+                Assert.AreEqual(_cacheSizes[i], new FileInfo(_cachePaths[i]).Length);
             }
             // Another undo and save should remove the results cache for the active document
             RunUI(() =>
@@ -388,8 +402,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(File.Exists(cachePersistPath));
         }
 
-        private static long GetCacheSize(long format3Size, SrmDocument docInitial, int dataTranCount)
+        private long GetCacheSize(int docIndex, SrmDocument docInitial = null)
         {
+            if (docInitial == null)
+                docInitial = ResultsUtil.DeserializeDocument(_documentPaths[docIndex]);
+            int dataGroupCount = _groupCounts[docIndex];
+            int dataTranCount = _tranCounts[docIndex];
+            long format3Size = _cacheSizes[docIndex];
+
             long cacheSize = format3Size;
             int fileCachedCount = docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
             if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_3)
@@ -401,11 +421,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Cache version 5 adds an int for flags for each file
                 // Allow for a difference in sizes due to the extra information.
-                int fileFlagsSize = sizeof(int) * fileCachedCount;
-                int transitionFlagsSize = sizeof(int) * dataTranCount;
-                // And num score types, num scores and score location
-                const int headerScoreSize = sizeof(int) + sizeof(int) + sizeof(long);
-                cacheSize += fileFlagsSize + transitionFlagsSize + headerScoreSize;
+                int fileFlagsSize = sizeof(int)*fileCachedCount;
+                // And SeqIndex, SeqCount, StartScoreIndex and padding
+                int groupHeadersSize = ChromGroupHeaderInfo5.DeltaSize5*dataGroupCount;
+                // And flags for each transition
+                int transitionFlagsSize = sizeof(int)*dataTranCount;
+                // And num seq byte count, seq location, score types, num scores and score location
+                const int headerScoreSize = sizeof(int) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(long);
+                cacheSize += groupHeadersSize + fileFlagsSize + transitionFlagsSize + headerScoreSize;
             }
             return cacheSize;
         }
