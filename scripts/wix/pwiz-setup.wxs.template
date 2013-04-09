@@ -191,6 +191,9 @@
 <Component Feature="MainFeature"><File Id="_agtsampleinforw.dll" Name="agtsampleinforw.dll" Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_BaseCommon.dll" Name="BaseCommon.dll" Source="msvc-release\BaseCommon.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_BaseDataAccess.dll" Name="BaseDataAccess.dll" Source="msvc-release\BaseDataAccess.dll" KeyPath="yes"/></Component>
+<?if $(var.Toolset)=10.0 or $(var.Toolset)=10.0express ?>
+    <Component Feature="MainFeature"><File Id="_BaseDataAccess.dll.config" Name="BaseDataAccess.dll.config" Source="msvc-release\BaseDataAccess.dll.config" KeyPath="yes"/></Component>
+<?endif?>
 <Component Feature="MainFeature"><File Id="_BaseError.dll" Name="BaseError.dll" Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_BaseTof.dll" Name="BaseTof.dll" Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.dll" Name="BDal.CXt.Lc.dll" Source="msvc-release\BDal.CXt.Lc.dll" KeyPath="yes"/></Component>
