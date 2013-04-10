@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -43,11 +44,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool CanShowRTLegend { get; private set; }
 
-        public int AlignToReplicate
-        {
-            get { return GraphSummary.StateProvider.AlignToReplicate; }
-        }
-
         public override void UpdateGraph(bool checkData)
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
@@ -60,12 +56,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 EmptyGraph(document);
                 return;
             }
-            ChromatogramSet alignToChromatogramSet = null;
-            if (AlignToReplicate >= 0)
-            {
-                alignToChromatogramSet = document.Settings.MeasuredResults.Chromatograms[AlignToReplicate];
-            }
-
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
@@ -114,18 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!results.Chromatograms.Contains(chrom => chrom.OptimizationFunction != null))
                     displayType = DisplayTypeChrom.all;
             }
-            FileRetentionTimeAlignments fileRetentionTimeAlignments = null;
-            ChromFileInfo alignToChromFileInfo = null;
-            if (AlignToReplicate >= 0)
-            {
-                alignToChromFileInfo = ReplicateIndexToChromFileInfo(results, parentNode, AlignToReplicate);
-                if (alignToChromFileInfo != null)
-                {
-                    fileRetentionTimeAlignments = document.Settings.DocumentRetentionTimes.FileAlignments.Find(alignToChromFileInfo);
-                }
-            }
-            var rtAlignment = new GraphValues.RtAlignment(alignToChromatogramSet, alignToChromFileInfo,
-                                                          fileRetentionTimeAlignments);
+            var rtTransformOp = GraphSummary.StateProvider.GetRetentionTimeTransformOperation();
             var rtValue = RTPeptideGraphPane.RTValue;
             GraphValues.ReplicateGroupOp replicateGroupOp;
             if (rtValue == RTPeptideValue.All)
@@ -136,14 +115,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
             }
-            var retentionTimeValue = new GraphValues.RetentionTimeTransform(rtValue, rtAlignment, replicateGroupOp.AggregateOp);
+            var retentionTimeValue = new GraphValues.RetentionTimeTransform(rtValue, rtTransformOp, replicateGroupOp.AggregateOp);
             YAxis.Title.Text = retentionTimeValue.GetAxisTitle();
-            if (!retentionTimeValue.RtAlignment.IsValid)
-            {
-                Title.Text = "Unable to align retention times";
-                EmptyGraph(document);
-                return;
-            }
             GraphData graphData = new RTGraphData(document, parentNode, displayType, retentionTimeValue, replicateGroupOp);
             CanShowRTLegend = graphData.DocNodes.Count != 0;
             InitFromData(graphData);
@@ -230,26 +203,6 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
-        private ChromFileInfo ReplicateIndexToChromFileInfo(MeasuredResults measuredResults, DocNode docNode, int replicateIndex)
-        {
-            var peptideDocNode = docNode as PeptideDocNode;
-            if (peptideDocNode != null)
-            {
-                docNode = peptideDocNode.TransitionGroups.FirstOrDefault();
-            }
-            var transitionGroupDocNode = docNode as TransitionGroupDocNode;
-            if (transitionGroupDocNode != null)
-            {
-                return measuredResults.GetChromFileInfo(transitionGroupDocNode.Results, replicateIndex);
-            }
-            var transitionDocNode = docNode as TransitionDocNode;
-            if (transitionDocNode != null)
-            {
-                return measuredResults.GetChromFileInfo(transitionDocNode.Results, replicateIndex);
-            }
-            return null;
-        }
-
         private void EmptyGraph(SrmDocument document)
         {
             string[] resultNames = GraphData.GetReplicateLabels(document).ToArray();
@@ -290,8 +243,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private bool IsMissingAlignment(ChromInfoData chromInfoData)
             {
-                RetentionTimeAlignment retentionTimeAlignment;
-                return !RetentionTimeTransform.RtAlignment.TryGetRetentionTimeAlignment(chromInfoData, out retentionTimeAlignment);
+                if (null == RetentionTimeTransform.RtTransformOp)
+                {
+                    return false;
+                }
+                IRegressionFunction regressionFunction;
+                return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
             }
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfoData)
@@ -309,21 +266,35 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var chromInfoData in chromInfoDatas)
                 {
                     var retentionTimeValues = getRetentionTimeValues(chromInfoData).GetValueOrDefault();
-                    RetentionTimeAlignment retentionTimeAlignment;
-                    RetentionTimeTransform.RtAlignment.TryGetRetentionTimeAlignment(chromInfoData, out retentionTimeAlignment);
-                    if (retentionTimeAlignment == null)
+                    IRegressionFunction regressionFunction = null;
+                    if (null != RetentionTimeTransform.RtTransformOp)
+                    {
+                        RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
+                    }
+                    if (regressionFunction == null)
                     {
                         startTimes.Add(retentionTimeValues.StartRetentionTime);
                         endTimes.Add(retentionTimeValues.EndRetentionTime);
                         retentionTimes.Add(retentionTimeValues.RetentionTime);
-                        fwhms.Add(retentionTimeValues.Fwhm);
+                        fwhms.Add(retentionTimeValues.Fwhm ?? 0);
                     }
                     else
                     {
-                        startTimes.Add(retentionTimeAlignment.RegressionLine.GetY(retentionTimeValues.StartRetentionTime));
-                        endTimes.Add(retentionTimeAlignment.RegressionLine.GetY(retentionTimeValues.EndRetentionTime));
-                        retentionTimes.Add(retentionTimeAlignment.RegressionLine.GetY(retentionTimeValues.RetentionTime));
-                        fwhms.Add(retentionTimeAlignment.RegressionLine.Slope * retentionTimeValues.Fwhm);
+                        startTimes.Add(regressionFunction.GetY(retentionTimeValues.StartRetentionTime));
+                        endTimes.Add(regressionFunction.GetY(retentionTimeValues.EndRetentionTime));
+                        retentionTimes.Add(regressionFunction.GetY(retentionTimeValues.RetentionTime));
+                        if (retentionTimeValues.Fwhm.HasValue)
+                        {
+                            fwhms.Add(regressionFunction.GetY(retentionTimeValues.RetentionTime +
+                                                              retentionTimeValues.Fwhm.Value/2)
+                                      -
+                                      regressionFunction.GetY(retentionTimeValues.RetentionTime -
+                                                              retentionTimeValues.Fwhm.Value/2));
+                        }
+                        else
+                        {
+                            fwhms.Add(0);
+                        }
                     }
                 }
                 if (RTPeptideValue.All == RTPeptideGraphPane.RTValue)
@@ -367,45 +338,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private RetentionTimeValues? GetRetentionTimeValues(TransitionChromInfoData transitionChromInfoData)
             {
-                if (transitionChromInfoData.ChromInfo == null
-                    || transitionChromInfoData.ChromInfo.StartRetentionTime == 0
-                    || transitionChromInfoData.ChromInfo.EndRetentionTime == 0)
-                {
-                    return null;
-                }
-                return new RetentionTimeValues
-                           {
-                               StartRetentionTime = transitionChromInfoData.ChromInfo.StartRetentionTime,
-                               EndRetentionTime = transitionChromInfoData.ChromInfo.EndRetentionTime,
-                               RetentionTime = transitionChromInfoData.ChromInfo.RetentionTime,
-                               Fwhm = transitionChromInfoData.ChromInfo.Fwhm,
-                           };
+                return transitionChromInfoData.GetRetentionTimes();
             }
 
             private RetentionTimeValues? GetRetentionTimeValues(TransitionGroupChromInfoData transitionGroupChromInfoData)
             {
-                if (transitionGroupChromInfoData.ChromInfo == null
-                    || !transitionGroupChromInfoData.ChromInfo.StartRetentionTime.HasValue
-                    || !transitionGroupChromInfoData.ChromInfo.EndRetentionTime.HasValue
-                    || !transitionGroupChromInfoData.ChromInfo.RetentionTime.HasValue)
-                {
-                    return null;
-                }
-                return new RetentionTimeValues
-                           {
-                               StartRetentionTime = transitionGroupChromInfoData.ChromInfo.StartRetentionTime.Value,
-                               EndRetentionTime = transitionGroupChromInfoData.ChromInfo.EndRetentionTime.Value,
-                               RetentionTime = transitionGroupChromInfoData.ChromInfo.RetentionTime.Value,
-                               Fwhm = transitionGroupChromInfoData.ChromInfo.Fwhm ?? 0,
-                           };
+                return transitionGroupChromInfoData.GetRetentionTimes();
             }
-        }
-        private struct RetentionTimeValues
-        {
-            public double StartRetentionTime { get; set; }
-            public double EndRetentionTime { get; set; }
-            public double RetentionTime { get; set; }
-            public double Fwhm { get; set; }
         }
     }
 }

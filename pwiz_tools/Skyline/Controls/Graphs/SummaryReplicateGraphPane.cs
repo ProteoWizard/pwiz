@@ -452,29 +452,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private IEnumerable<int> GetReplicateIndices(PeptideDocNode nodePep)
             {
-                return GetReplicateIndices(i =>
-                                               {
-                                                   var result = nodePep.HasResults && i < nodePep.Results.Count ? nodePep.Results[i] : null;
-                                                   return (result != null ? result[0].FileId : null);
-                                               });
+                return GetReplicateIndices(i => GetChromFileInfoId(nodePep.Results, i));
             }
 
             private IEnumerable<int> GetReplicateIndices(TransitionDocNode nodeTran)
             {
-                return GetReplicateIndices(i =>
-                {
-                    var result = nodeTran.HasResults && i < nodeTran.Results.Count ? nodeTran.Results[i] : null;
-                    return (result != null ? result[0].FileId : null);
-                });
+                return GetReplicateIndices(i => GetChromFileInfoId(nodeTran.Results, i));
             }
 
             private IEnumerable<int> GetReplicateIndices(TransitionGroupDocNode nodeGroup)
             {
-                return GetReplicateIndices(i =>
-                {
-                    var result = nodeGroup.HasResults && i < nodeGroup.Results.Count ? nodeGroup.Results[i] : null;
-                    return (result != null ? result[0].FileId : null);
-                });
+                return GetReplicateIndices(i => GetChromFileInfoId(nodeGroup.Results, i));
             }
 
             private IEnumerable<int> GetReplicateIndices(Func<int, ChromFileInfoId> getFileId)
@@ -521,6 +509,20 @@ namespace pwiz.Skyline.Controls.Graphs
                         yield return tuple.Item3;
                 }
             }
+        }
+
+        private static ChromFileInfoId GetChromFileInfoId<TItem>(Results<TItem> results, int iReplicate) where TItem : ChromInfo
+        {
+            if (null == results || iReplicate >= results.Count)
+            {
+                return null;
+            }
+            var chromInfoList = results[iReplicate];
+            if (chromInfoList != null && chromInfoList.Count > 0 && chromInfoList[0] != null)
+            {
+                return chromInfoList[0].FileId;
+            }
+            return null;
         }
     }
 

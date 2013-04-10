@@ -175,13 +175,36 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IRegressionFunction GetConversion(ChromFileInfoId fileId)
         {
-            IRegressionFunction conversion = Conversion;
+            return GetRegressionFunction(fileId) ?? (IRegressionFunction) Conversion;
+        }
+
+        public IRegressionFunction GetUnconversion(ChromFileInfoId fileId)
+        {
+            double slope, intercept;
+            var regressionLine = GetRegressionFunction(fileId);
+            if (null != regressionLine)
+            {
+                slope = regressionLine.Slope;
+                intercept = regressionLine.Intercept;
+            }
+            else if (null != Conversion)
+            {
+                slope = Conversion.Slope;
+                intercept = Conversion.Intercept;
+            }
+            else
+            {
+                return null;
+            }
+            return new RegressionLine(1.0/slope, -intercept/slope);
+        }
+
+        private RegressionLine GetRegressionFunction(ChromFileInfoId fileId)
+        {
+            RegressionLine conversion = null;
             if (fileId != null && _listFileIdToConversion != null)
             {
-                int iConversion = _listFileIdToConversion.BinarySearch(fileId.GlobalIndex, true);
-                conversion = iConversion >= 0
-                                 ? _listFileIdToConversion[iConversion].Value
-                                 : null;
+                _listFileIdToConversion.TryGetValue(fileId.GlobalIndex, out conversion);
             }
             return conversion;
         }
@@ -386,7 +409,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Calculator, Calculator) &&
                    Equals(obj.Conversion, Conversion) &&
                    obj.TimeWindow == TimeWindow &&
-                   ArrayUtil.EqualsDeep(_listFileIdToConversion, _listFileIdToConversion) &&
+                   Equals(obj._listFileIdToConversion, _listFileIdToConversion) &&
                    ArrayUtil.EqualsDeep(obj.PeptideTimes, PeptideTimes);
         }
 
@@ -407,9 +430,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ TimeWindow.GetHashCode();
                 result = (result*397) ^ PeptideTimes.GetHashCodeDeep();
                 result = (result*397) ^ (_listFileIdToConversion != null
-                                             ? _listFileIdToConversion.GetHashCodeDeep(
-                                                 p => (p.Key.GetHashCode()*397) ^ p.Value.GetHashCode())
-                                             : 0);
+                                             ? _listFileIdToConversion.GetHashCode()
+                                                 : 0);
                 return result;
             }
         }

@@ -730,6 +730,7 @@
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeManager.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeSource.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeValues.cs" />
     <Compile Include="Model\SrmDocument.cs" />
     <Compile Include="Model\SrmDocumentExtensions.cs" />
     <Compile Include="Model\SrmDocumentSharing.cs" />

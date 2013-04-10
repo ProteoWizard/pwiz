@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  PeptideGroupDocNode selectedProtein,
                                  int? result,
                                  DisplayTypeChrom displayType)
-                : base(document, selectedGroup, selectedProtein, result, displayType)
+                : base(document, selectedGroup, selectedProtein, result, displayType, null)
             {
             }
 

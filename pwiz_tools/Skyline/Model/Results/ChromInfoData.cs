@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromInfo ChromInfo { get; private set; }
         public ChromatogramSet ChromatogramSet { get { return MeasuredResults.Chromatograms[ReplicateIndex]; } }
         public abstract int OptimizationStep { get; }
+        public abstract RetentionTimeValues? GetRetentionTimes();
     }
 
     public class TransitionChromInfoData : ChromInfoData
@@ -84,6 +86,11 @@ namespace pwiz.Skyline.Model.Results
             }
             return list;
         }
+
+        public override RetentionTimeValues? GetRetentionTimes()
+        {
+            return RetentionTimeValues.GetValues(ChromInfo);
+        }
     }
 
     public class TransitionGroupChromInfoData : ChromInfoData
@@ -127,6 +134,11 @@ namespace pwiz.Skyline.Model.Results
                 list.Add(datas);
             }
             return list;
+        }
+
+        public override RetentionTimeValues? GetRetentionTimes()
+        {
+            return RetentionTimeValues.GetValues(ChromInfo);
         }
     } 
 }

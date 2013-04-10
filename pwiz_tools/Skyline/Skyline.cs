@@ -388,11 +388,13 @@ namespace pwiz.Skyline
                 docIdChanged = !ReferenceEquals(DocumentUI.Id, documentPrevious.Id);
             }
 
-            if (_alignToReplicate >= 0)
+            if (null != AlignToFile)
             {
-                if (!settingsNew.HasResults || _alignToReplicate >= settingsNew.MeasuredResults.Chromatograms.Count)
+                if (!settingsNew.HasResults || !settingsNew.MeasuredResults.Chromatograms
+                    .SelectMany(chromatograms=>chromatograms.MSDataFileInfos)
+                    .Any(chromFileInfo=>ReferenceEquals(chromFileInfo.FileId, AlignToFile)))
                 {
-                    _alignToReplicate = -1;
+                    AlignToFile = null;
                 }
             }
             // Update results combo UI and sequence tree

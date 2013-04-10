@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             int SelectedResultsIndex { get; set; }
 
-            int AlignToReplicate { get; set; }
+            GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation();
 
             void ActivateSpectrum();
 
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
             public int SelectedResultsIndex { get; set; }
             public void ActivateSpectrum() {}
-            public int AlignToReplicate { get; set; }
+            public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation() {return null;}
         }
 
         private readonly IDocumentUIContainer _documentContainer;

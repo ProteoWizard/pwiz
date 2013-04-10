@@ -139,17 +139,20 @@ namespace pwiz.Skyline.Controls.Graphs
             TreeNodeMS SelectedNode { get; }
 
             SpectrumDisplayInfo SelectedSpectrum { get; }
-            int AlignToReplicate { get; }
+            GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation();
 
-            void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
+            void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId);
         }
 
         private class DefaultStateProvider : IStateProvider
         {
             public TreeNodeMS SelectedNode { get { return null; } }
             public SpectrumDisplayInfo SelectedSpectrum { get { return null; } }
-            public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) { }
-            public int AlignToReplicate { get { return -1; } }
+            public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId) { }
+            public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
+            {
+                return null;
+            }
         }
 
         private string _nameChromatogramSet;
@@ -456,6 +459,21 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public ChromFileInfoId GetChromFileInfoId()
+        {
+            var document = DocumentUI;
+            if (!document.Settings.HasResults || null == _arrayChromInfo)
+            {
+                return null;
+            }
+            ChromatogramSet chromatograms;
+            if (!document.Settings.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out chromatograms, out _chromIndex))
+            {
+                return null;
+            }
+            return chromatograms.FindFile(ChromGroupInfos[0]);
+        }
+
         public double? SelectedRetentionTimeMsMs
         {
             get
@@ -546,25 +564,15 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!results.TryGetChromatogramSet(_nameChromatogramSet, out chromatograms, out _chromIndex))
                 return;
 
-            string xAxisTitle = Resources.GraphChromatogram_UpdateUI_Retention_Time;
+            string xAxisTitle = GraphValues.ToLocalizedString(RTPeptideValue.Retention);
             IRegressionFunction timeRegressionFunction = null;
-            if (_stateProvider.AlignToReplicate >= 0)
+            var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
+            if (null != retentionTimeTransformOp && null != _arrayChromInfo)
             {
-                var chromatogramSet = results.Chromatograms[_stateProvider.AlignToReplicate];
-                foreach (var alignToChromFileInfo in chromatogramSet.MSDataFileInfos)
+                retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);
+                if (null != timeRegressionFunction)
                 {
-                    var fileAlignments = settings.DocumentRetentionTimes.FileAlignments.Find(alignToChromFileInfo);
-                    if (fileAlignments == null)
-                    {
-                        continue;
-                    }
-                    var retentionTimeAlignment = fileAlignments.RetentionTimeAlignments.Find(_nameChromatogramSet);
-                    if (retentionTimeAlignment != null)
-                    {
-                        timeRegressionFunction = retentionTimeAlignment.RegressionLine;
-                        xAxisTitle = string.Format(Resources.GraphChromatogram_UpdateUI_Time_Aligned_to__0_, chromatogramSet.Name);
-                        break;
-                    }
+                    xAxisTitle = retentionTimeTransformOp.GetAxisTitle(RTPeptideValue.Retention);
                 }
             }
             graphControl.GraphPane.XAxis.Title.Text = xAxisTitle;
@@ -960,6 +968,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionChromInfo tranPeakInfoGraph = null;
                 if (bestPeakTran == i)
                     tranPeakInfoGraph = tranPeakInfo;
+
                 var graphItem = new ChromGraphItem(nodeGroup,
                                                    nodeTran,
                                                    info,
@@ -2203,7 +2212,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                      ContextMenuStrip menuStrip, Point mousePt,
                                                      ZedGraphControl.ContextMenuObjectState objState)
         {
-            _stateProvider.BuildChromatogramMenu(sender, menuStrip);
+            _stateProvider.BuildChromatogramMenu(sender, menuStrip, GetChromFileInfoId());
         }
 
         protected override void OnClosed(EventArgs e)

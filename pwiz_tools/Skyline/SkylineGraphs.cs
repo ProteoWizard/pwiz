@@ -55,7 +55,8 @@ namespace pwiz.Skyline
         private ResultsGridForm _resultsGridForm;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
-        private int _alignToReplicate = -1;
+        private ChromFileInfoId _alignToFile;
+        private bool _alignToPrediction;
 
         public RTGraphController RTGraphController
         {
@@ -591,19 +592,58 @@ namespace pwiz.Skyline
             }
         }
 
-        public int AlignToReplicate
+        public ChromFileInfoId AlignToFile
         {
-            get { return _alignToReplicate; }
+            get { return _alignToFile; }
             set 
             { 
-                if (value == AlignToReplicate)
+                if (ReferenceEquals(value, AlignToFile))
                 {
                     return;
                 }
-                _alignToReplicate = value;
+                _alignToFile = value;
                 UpdateGraphPanes();
             }
         }
+
+        public bool AlignToRtPrediction
+        {
+            get { return null == AlignToFile && _alignToPrediction; }
+            set
+            {
+                if (Equals(value, AlignToRtPrediction))
+                {
+                    return;
+                }
+                _alignToPrediction = value;
+                if (_alignToPrediction)
+                {
+                    _alignToFile = null;
+                }
+                UpdateGraphPanes();
+            }
+        }
+
+        public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
+        {
+            if (null != AlignToFile)
+            {
+                return GraphValues.AlignToFileOp.GetAlignmentToFile(AlignToFile, Document.Settings);
+            }
+            if (AlignToRtPrediction)
+            {
+                // Only align to regressions that are auto-calculated.  Otherwise,
+                // conversion will be the same for all replicates, making this just
+                // a linear unit conversion
+                var predictRT = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                if (predictRT != null && predictRT.IsAutoCalculated)
+                {
+                    return new GraphValues.RegressionUnconversion(predictRT);
+                }
+            }
+            return null;
+        }
+
 
         #region Spectrum graph
 
@@ -1041,7 +1081,7 @@ namespace pwiz.Skyline
             }
         }
 
-        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -1174,7 +1214,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, lockYChromContextMenuItem);
             synchronizeZoomingContextMenuItem.Checked = set.AutoZoomAllChromatograms;
             menuStrip.Items.Insert(iInsert++, synchronizeZoomingContextMenuItem);
-            iInsert = InsertAlignToSelectionMenuItem(menuStrip.Items, iInsert);
+            iInsert = InsertAlignmentMenuItems(menuStrip.Items, chromFileInfoId, iInsert);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator18);
             menuStrip.Items.Insert(iInsert++, chromPropsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator19);
@@ -2221,7 +2261,16 @@ namespace pwiz.Skyline
                     }
                     if (rtReplicateGraphPane != null)
                     {
-                        iInsert = InsertAlignToSelectionMenuItem(menuStrip.Items, iInsert);
+                        ChromFileInfoId chromFileInfoId = null;
+                        if (DocumentUI.Settings.HasResults)
+                        {
+                            var chromatogramSet = DocumentUI.Settings.MeasuredResults.Chromatograms[SelectedResultsIndex];
+                            if (chromatogramSet.MSDataFileInfos.Count == 1)
+                            {
+                                chromFileInfoId = chromatogramSet.MSDataFileInfos[0].FileId;
+                            }
+                        }
+                        iInsert = InsertAlignmentMenuItems(menuStrip.Items, chromFileInfoId, iInsert);
                     }
                 }
                 else if (graphType == GraphTypeRT.peptide)
@@ -2260,6 +2309,7 @@ namespace pwiz.Skyline
                             proteinScopeContextMenuItem
                         });
                     }
+                    InsertAlignmentMenuItems(menuStrip.Items, null, iInsert);
                 }
                 if (graphType == GraphTypeRT.peptide || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
                 {
@@ -2564,35 +2614,53 @@ namespace pwiz.Skyline
             fwbRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWB);
         }
 
-        private void alignRTToSelectionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_graphRetentionTime == null)
-            {
-                return;
-            }
-            var menuItem = (ToolStripMenuItem) sender;
-                if (menuItem.Checked)
-                {
-                    AlignToReplicate = SelectedResultsIndex;    
-                }
-                else
-                {
-                    AlignToReplicate = -1;
-                }
-            }
-
         /// <summary>
-        /// Adds the "Align Times To {Selected Replicate} menu item to a context menu.
+        /// If the predicted retention time is auto calculated, add a "Show {Prediction} score" menu item.
+        /// If there are retention time alignments available for the specified chromFileInfoId, then adds 
+        /// a "Align Times To {Specified File}" menu item to a context menu.
         /// </summary>
-        private int InsertAlignToSelectionMenuItem(ToolStripItemCollection items, int iInsert)
+        private int InsertAlignmentMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
         {
-            if (DocumentUI.Settings.HasResults && !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+            var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
+            if (predictRT != null && predictRT.IsAutoCalculated)
             {
-                var alignToSelectionItem = alignRTToSelectionContextMenuItem;
-                alignToSelectionItem.Text = string.Format("Align Times To {0}", ComboResults.SelectedItem);
-                alignToSelectionItem.Checked = AlignToReplicate == SelectedResultsIndex;
-                items.Insert(iInsert++, alignToSelectionItem);
-        }
+                var menuItem = new ToolStripMenuItem(string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null, 
+                    (sender, eventArgs)=>AlignToRtPrediction=!AlignToRtPrediction)
+                    {
+                        Checked = AlignToRtPrediction,
+                    };
+                items.Insert(iInsert++, menuItem);
+            }
+            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
+                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+            {
+                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
+                {
+                    var chromFileInfo = chromatogramSet.MSDataFileInfos
+                                                       .FirstOrDefault(
+                                                           chromFileInfoMatch =>
+                                                           ReferenceEquals(chromFileInfoMatch.FileId, chromFileInfoId));
+                    if (null == chromFileInfo)
+                    {
+                        continue;
+                    }
+                    string fileItemName = Path.GetFileNameWithoutExtension(chromFileInfo.FilePath);
+                    // TODO(nicksh): localize this
+                    var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
+                    var alignToFileItem = new ToolStripMenuItem(menuItemText);
+                    if (ReferenceEquals(chromFileInfoId, AlignToFile))
+                    {
+                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = null;
+                        alignToFileItem.Checked = true;
+                    }
+                    else
+                    {
+                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = chromFileInfoId;
+                        alignToFileItem.Checked = false;
+                    }
+                    items.Insert(iInsert++, alignToFileItem);
+                }
+            }
             return iInsert;
         }
 

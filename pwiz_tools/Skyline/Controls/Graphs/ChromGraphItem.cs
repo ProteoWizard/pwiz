@@ -326,7 +326,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (RetentionWindow > 0)
                 {
                     double boxHeight = yMax;
-                    BoxObj box = new BoxObj(time - RetentionWindow / 2, boxHeight, RetentionWindow, boxHeight,
+                    double x1 = ScaleRetentionTime(time - RetentionWindow/2).DisplayTime;
+                    double x2 = ScaleRetentionTime(time + RetentionWindow/2).DisplayTime;
+                    BoxObj box = new BoxObj(x1, boxHeight, x2-x1, boxHeight,
                                             COLOR_RETENTION_WINDOW, COLOR_RETENTION_WINDOW)
                                      {
                                          IsClippedToChartRect = true,

@@ -5042,6 +5042,18 @@ Are you sure you want to continue?</value>
   <data name="BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__" xml:space="preserve">
     <value>Failure attempting to create a file in {0}.</value>
   </data>
+  <data name="RegressionUnconversion_CalculatorScoreValueFormat" xml:space="preserve">
+    <value>{0} Score ({1})</value>
+  </data>
+  <data name="RegressionUnconversion_CalculatorScoreFormat" xml:space="preserve">
+    <value>{0} Score</value>
+  </data>
+  <data name="SkylineWindow_ShowCalculatorScoreFormat" xml:space="preserve">
+    <value>Show {0} Score</value>
+  </data>
+  <data name="SkylineWindow_AlignTimesToFileFormat" xml:space="preserve">
+    <value>Align Times To {0}</value>
+  </data>
   <data name="LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count" xml:space="preserve">
     <value>Legacy identified count</value>
   </data>
@@ -5075,10 +5087,5 @@ Are you sure you want to continue?</value>
   <data name="ResultsGrid_ResultsGrid_Mass_Error_PPM" xml:space="preserve">
     <value>Mass Error PPM</value>
   </data>
-  <data name="GraphChromatogram_UpdateUI_Retention_Time" xml:space="preserve">
-    <value>Retention Time</value>
-  </data>
-  <data name="GraphChromatogram_UpdateUI_Time_Aligned_to__0_" xml:space="preserve">
-    <value>Time Aligned to {0}</value>
-  </data>
+  >>>>>>> .r4474
 </root>

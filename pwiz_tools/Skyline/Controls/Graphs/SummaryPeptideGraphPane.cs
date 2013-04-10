@@ -23,7 +23,9 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -214,10 +216,10 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly int? _resultIndex;
 
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
-                             int? iResult, DisplayTypeChrom displayType)
+                             int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp)
             {
                 _resultIndex = iResult;
-                
+                RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide
                 var uniqueSeq = new List<KeyValuePair<string, string>>();
                 foreach (var nodePep in document.Peptides)
@@ -393,6 +395,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     MinY = minY;
             }
 
+            public GraphValues.IRetentionTimeTransformOp RetentionTimeTransformOp { get; private set; }
             public IList<PointPairList> PointPairLists { get; private set; }
             public string[] Labels { get; private set; }
             public IdentityPath[] XScalePaths { get; private set; }
@@ -593,6 +596,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     uniqueSeq.Insert(iVal, insertVal);
                 }
+            }
+
+            protected RetentionTimeValues? ScaleRetentionTimeValues(ChromFileInfoId chromFileInfoId, RetentionTimeValues? retentionTimeValues)
+            {
+                if (!retentionTimeValues.HasValue)
+                {
+                    return null;
+                }
+                if (null == RetentionTimeTransformOp)
+                {
+                    return retentionTimeValues;
+                }
+                IRegressionFunction regressionFunction;
+                if (!RetentionTimeTransformOp.TryGetRegressionFunction(chromFileInfoId, out regressionFunction))
+                {
+                    return null;
+                }
+                return retentionTimeValues.Value.Scale(regressionFunction);
             }
         }
 

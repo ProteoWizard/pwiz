@@ -132,7 +132,6 @@ namespace pwiz.Skyline
             this.fwbRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showRTLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.alignRTToSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.predictionRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicatesRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -998,7 +997,6 @@ namespace pwiz.Skyline
             this.rtValueMenuItem,
             this.showRTLegendContextMenuItem,
             this.selectionContextMenuItem,
-            this.alignRTToSelectionContextMenuItem,
             this.refineRTContextMenuItem,
             this.predictionRTContextMenuItem,
             this.replicatesRTContextMenuItem,
@@ -1101,13 +1099,6 @@ namespace pwiz.Skyline
             this.selectionContextMenuItem.Name = "selectionContextMenuItem";
             resources.ApplyResources(this.selectionContextMenuItem, "selectionContextMenuItem");
             this.selectionContextMenuItem.Click += new System.EventHandler(this.selectionContextMenuItem_Click);
-            // 
-            // alignRTToSelectionContextMenuItem
-            // 
-            this.alignRTToSelectionContextMenuItem.CheckOnClick = true;
-            this.alignRTToSelectionContextMenuItem.Name = "alignRTToSelectionContextMenuItem";
-            resources.ApplyResources(this.alignRTToSelectionContextMenuItem, "alignRTToSelectionContextMenuItem");
-            this.alignRTToSelectionContextMenuItem.Click += new System.EventHandler(this.alignRTToSelectionContextMenuItem_Click);
             // 
             // refineRTContextMenuItem
             // 
@@ -3124,7 +3115,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem alignedPeptideIDTimesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem retentionTimeAlignmentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportIsolationListMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem alignRTToSelectionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsMenu;
         private System.Windows.Forms.ToolStripMenuItem placeholderToolsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem configureToolsMenuItem;
