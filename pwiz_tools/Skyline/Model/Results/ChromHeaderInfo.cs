@@ -172,42 +172,56 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromGroupHeaderInfo5 : IComparable<ChromGroupHeaderInfo5>
     {
+        [Flags]
+        public enum FlagValues
+        {
+            has_mass_errors = 0x01,
+            has_calculated_mzs = 0x02,
+        }
+
         /// <summary>
         /// Constructs header struct with SeqIndex and SeqCount left to be initialized
         /// in a subsequent call to <see cref="CalcSeqIndex"/>.
         /// </summary>
-        public ChromGroupHeaderInfo5(float precursor, int fileIndex,
+        public ChromGroupHeaderInfo5(double precursor, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
-                                     int numPoints, int compressedSize, long location)
+                                     int numPoints, int compressedSize, long location, FlagValues flags)
             : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
                    numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
-                   compressedSize, location)
+                   compressedSize, location, flags)
         {            
         }
 
         /// <summary>
         /// Cunstructs header struct with all values populated.
         /// </summary>
-        public ChromGroupHeaderInfo5(float precursor, int seqIndex, int seqLen, int fileIndex,
+        public ChromGroupHeaderInfo5(double precursor, int seqIndex, int seqLen, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
-                                     int numPoints, int compressedSize, long location)
+                                     int numPoints, int compressedSize, long location, FlagValues flags)
             : this()
         {
+            // Several values need to be downcast to fit into fewer bits, but only the
+            // maximum chromatogram points at 65536 seems at all likely to ever be an issue.
+            if (numPoints > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(string.Format("The number {0} of points in the chromatogram exceeds the limit of {1}", numPoints, ushort.MaxValue));
             Precursor = precursor;
             SeqIndex = seqIndex;
-            SeqLen = seqLen;
-            FileIndex = fileIndex;
-            NumTransitions = numTransitions;
+            SeqLen = (ushort) seqLen;
+            FileIndex = (ushort) fileIndex;
+            NumTransitions = (ushort) numTransitions;
             StartTransitionIndex = startTransitionIndex;
-            NumPeaks = numPeaks;
+            NumPeaks = (sbyte) numPeaks;
             StartPeakIndex = startPeakIndex;
             StartScoreIndex = startScoreIndex;
-            MaxPeakIndex = maxPeakIndex;
-            NumPoints = numPoints;
+            MaxPeakIndex = (sbyte) maxPeakIndex;
+            NumPoints = (ushort) numPoints;
             CompressedSize = compressedSize;
             LocationPoints = location;
+            FlagBits = (ushort) flags;
+            Align1 = 0;
+            Align2 = 1;
         }
 
         public ChromGroupHeaderInfo5(ChromGroupHeaderInfo headerInfo)
@@ -221,28 +235,42 @@ namespace pwiz.Skyline.Model.Results
             headerInfo.MaxPeakIndex,
             headerInfo.NumPoints,
             headerInfo.CompressedSize,
-            headerInfo.LocationPoints)
+            headerInfo.LocationPoints,
+            0)
         {
         }
 
-        public float Precursor { get; private set; }
+        /////////////////////////////////////////////////////////////////////
+        // CAREFUL: This ordering determines the layout of this struct on
+        //          disk from which it gets loaded directly into memory.
+        //          The order and size of each element has been very carefully
+        //          considered to avoid wasted space due to alignment.
         public int SeqIndex { get; private set; }
-        public int SeqLen { get; private set; }
-        public int FileIndex { get; private set; }
-        public int NumTransitions { get; private set; }
         public int StartTransitionIndex { get; private set; }
-        public int NumPeaks { get; private set; }
         public int StartPeakIndex { get; private set; }
         public int StartScoreIndex { get; private set; }
-        public int MaxPeakIndex { get; private set; }
         public int NumPoints { get; private set; }
         public int CompressedSize { get; private set; }
-        // public int Align { get; private set; }  // Need even number of 4-byte values - evenly aligned in v5
+        public ushort FlagBits { get; private set; }
+        public ushort FileIndex { get; private set; }
+        public ushort SeqLen { get; private set; }
+        public ushort NumTransitions { get; private set; }
+        public sbyte NumPeaks { get; private set; }        // The number of peaks stored per chrom should be well under 128
+        public sbyte MaxPeakIndex { get; private set; }    // and MaxPeakIndex needs to be allowed to be -1 or 0xFF
+        public ushort Align1 { get; private set; }
+        public int Align2 { get; private set; }
+        public double Precursor { get; private set; }
         public long LocationPoints { get; private set; }
+        /////////////////////////////////////////////////////////////////////
+
+        public FlagValues Flags { get { return (FlagValues) FlagBits; } }
+
+        public bool HasCalculatedMzs { get { return (Flags & FlagValues.has_calculated_mzs) != 0; } }
+        public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
 
         public void Offset(int offsetFiles, int offsetTransitions, int offsetPeaks, int offsetScores, long offsetPoints)
         {
-            FileIndex += offsetFiles;
+            FileIndex += (ushort) offsetFiles;
             StartTransitionIndex += offsetTransitions;
             StartPeakIndex += offsetPeaks;
             if (StartScoreIndex != -1)
@@ -274,7 +302,7 @@ namespace pwiz.Skyline.Model.Results
                     dictSequenceToByteIndex.Add(modSeq, modSeqIndex);
                 }
                 SeqIndex = modSeqIndex;
-                SeqLen = modSeq.Length;
+                SeqLen = (ushort) modSeq.Length;
             }
         }
 
@@ -386,6 +414,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        public static unsafe int SizeOf
+        {
+            get { return sizeof (ChromGroupHeaderInfo5); }
+        }
 
         public static unsafe int DeltaSize5 
         {
@@ -510,10 +543,12 @@ namespace pwiz.Skyline.Model.Results
             source2 =       0x02,   // ms1     = 10, sim      = 11
         }
 
-        public ChromTransition5(float product, ChromSource source) : this()
+        public ChromTransition5(double product, ChromSource source) : this()
         {
             Product = product;
             Source = source;
+            Align1 = 0;
+            Align2 = 0;
         }
 
         public ChromTransition5(ChromTransition chromTransition)
@@ -521,8 +556,12 @@ namespace pwiz.Skyline.Model.Results
         {            
         }
 
-        public float Product { get; private set; }
-        public FlagValues Flags { get; private set; }
+        public double Product { get; private set; }
+        public ushort FlagBits { get; private set; }
+        public ushort Align1 { get; private set; }  // Explicitly declaring alignment padding the compiler will add anyway
+        public uint Align2 { get; private set; }    // Explicitly declaring alignment padding the compiler will add anyway
+
+        public FlagValues Flags { get { return (FlagValues) FlagBits; } }
 
         public ChromSource Source
         {
@@ -541,7 +580,7 @@ namespace pwiz.Skyline.Model.Results
             }
             set
             {
-                Flags = GetFlags(value);
+                FlagBits = (ushort) GetFlags(value);
             }
         }
 
@@ -674,6 +713,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        public static unsafe int DeltaSize5
+        {
+            get { return sizeof(ChromTransition5) - sizeof(ChromTransition); }
+        }
     }
 
     public struct ChromPeak : ISummaryPeakData
@@ -684,13 +728,17 @@ namespace pwiz.Skyline.Model.Results
         [Flags]
         public enum FlagValues
         {
-            degenerate_fwhm =       0x01,
-            forced_integration =    0x02,
-            time_normalized =       0x04,
-            peak_truncation_known = 0x08,
-            peak_truncated =        0x10,
-            contains_id =           0x20,
-            used_id_alignment =     0x40,
+            degenerate_fwhm =       0x0001,
+            forced_integration =    0x0002,
+            time_normalized =       0x0004,
+            peak_truncation_known = 0x0008,
+            peak_truncated =        0x0010,
+            contains_id =           0x0020,
+            used_id_alignment =     0x0040,
+
+            // This is the last available flag
+            // The high word of the flags is reserved for delta-mass-error
+            mass_error_known =      0x8000,
         }
 
 // ReSharper disable InconsistentNaming
@@ -706,7 +754,11 @@ namespace pwiz.Skyline.Model.Results
             get { unsafe { return sizeof (ChromPeak); } }
         }
 
-        public ChromPeak(CrawdadPeak peak, FlagValues flags, IList<float> times, IList<float> intensities)
+        public ChromPeak(CrawdadPeak peak,
+                         FlagValues flags,
+                         IList<float> times,
+                         IList<float> intensities,
+                         IList<short> massErrors10X)
             : this()
         {
             // Get the interval being used to convert from Crawdad index based numbers
@@ -734,19 +786,39 @@ namespace pwiz.Skyline.Model.Results
             }
             Height = peak.Height;
             Fwhm = (float) (peak.Fwhm * interval);
-            Flags = flags;
             if (peak.FwhmDegenerate)
-                Flags |= FlagValues.degenerate_fwhm;
+                flags |= FlagValues.degenerate_fwhm;
 
             // Calculate peak truncation as a peak extent at either end of the
             // recorded values, where the intensity is higher than the other extent
             // by more than 1% of the peak height.
-            Flags |= FlagValues.peak_truncation_known;
+            flags |= FlagValues.peak_truncation_known;
             const double truncationTolerance = 0.01;
             double deltaIntensityExtents = (intensities[peak.EndIndex] - intensities[peak.StartIndex]) / Height;
             if ((peak.StartIndex == 0 && deltaIntensityExtents < -truncationTolerance) ||
-                    (peak.EndIndex == times.Count - 1 && deltaIntensityExtents > truncationTolerance))
-                Flags |= FlagValues.peak_truncated;
+                (peak.EndIndex == times.Count - 1 && deltaIntensityExtents > truncationTolerance))
+            {
+                flags |= FlagValues.peak_truncated;
+            }
+            if (massErrors10X != null)
+            {
+                // Mass error is mean of mass errors in the peak, weighted by intensity
+                double massError = 0;
+                double totalIntensity = 0;
+                for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
+                {
+                    double intensity = intensities[i];
+                    if (intensity <= 0)
+                        continue;
+
+                    double massErrorLocal = massErrors10X[i] / 10.0;
+                    totalIntensity += intensity;
+                    massError += (massErrorLocal - massError)*intensity/totalIntensity;
+                }
+                flags |= FlagValues.mass_error_known;
+                FlagBits = ((uint) (massError*10 + 0.5)) << 16;
+            }
+            FlagBits |= (uint) flags;
         }
 
         public float RetentionTime { get; private set; }
@@ -756,7 +828,16 @@ namespace pwiz.Skyline.Model.Results
         public float BackgroundArea { get; private set; }
         public float Height { get; private set; }
         public float Fwhm { get; private set; }
-        public FlagValues Flags { get; private set; }
+        public uint FlagBits { get; private set; }
+
+        public FlagValues Flags
+        {
+            get
+            {
+                // Mask off mass error bits
+                return (FlagValues) (FlagBits & 0xFFFF);
+            }
+        }
 
         public bool IsEmpty { get { return EndTime == 0; } }
 
@@ -795,6 +876,29 @@ namespace pwiz.Skyline.Model.Results
                     return null;
                 return (Flags & FlagValues.peak_truncated) != 0;
             }
+        }
+
+        public float? MassError
+        {
+            get
+            {
+                if ((FlagBits & (uint) FlagValues.mass_error_known) == 0)
+                    return null;
+                // Mass error is stored in the high 16 bits of the Flags
+                // as 10x the calculated mass error in PPM.
+                return ((short)(FlagBits >> 16))/10f;
+            }
+        }
+
+        /// <summary>
+        /// Removes the mass error bits from the upper 16 in order to keep
+        /// from writing mass errors into older cache file formats until
+        /// the v5 format version is ready.
+        /// </summary>
+        public ChromPeak RemoveMassError()
+        {
+            FlagBits = (uint) (Flags & ~FlagValues.mass_error_known);
+            return this;
         }
 
         public static float Intersect(ChromPeak peak1, ChromPeak peak2)
@@ -1103,24 +1207,42 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromKey : IComparable<ChromKey>
     {
-        public ChromKey(byte[] seqBytes, int seqIndex, int seqLen, float precursor, double product, ChromSource source)
-            : this(seqBytes != null ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null, precursor, product, source)
+        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, ChromSource.unknown, false);
+
+        public ChromKey(byte[] seqBytes,
+                        int seqIndex,
+                        int seqLen,
+                        double precursor,
+                        double product,
+                        ChromSource source,
+                        bool calculatedMzs)
+            : this(seqBytes != null ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null,
+                   precursor,
+                   product,
+                   source,
+                   calculatedMzs)
         {
         }
 
-        public ChromKey(string modifiedSequence, double precursor, double product, ChromSource source)
+        public ChromKey(string modifiedSequence,
+                        double precursor,
+                        double product,
+                        ChromSource source,
+                        bool calculatedMzs)
             : this()
         {
             ModifiedSequence = modifiedSequence;
             Precursor = (float) precursor;
             Product = (float) product;
             Source = source;
+            HasCalculatedMzs = calculatedMzs;
         }
 
         public string ModifiedSequence { get; private set; }
-        public float Precursor { get; private set; }
-        public float Product { get; private set; }
+        public double Precursor { get; private set; }
+        public double Product { get; private set; }
         public ChromSource Source { get; private set; }
+        public bool HasCalculatedMzs { get; private set; }
 
         /// <summary>
         /// For debugging only
@@ -1184,7 +1306,7 @@ namespace pwiz.Skyline.Model.Results
             return key.Source.CompareTo(Source);
         }
 
-        public static int CompareTolerant(float f1, float f2, float tolerance)
+        public static int CompareTolerant(double f1, double f2, float tolerance)
         {
             if (Math.Abs(f1 - f2) < tolerance)
                 return 0;
@@ -1249,7 +1371,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     throw new ArgumentException(string.Format(Resources.ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID, id));
                 }
-                return new ChromKey(null, precursor, product, ChromSource.fragment);
+                return new ChromKey(null, precursor, product, ChromSource.fragment, false);
             }
             catch (FormatException)
             {
@@ -1294,6 +1416,7 @@ namespace pwiz.Skyline.Model.Results
 
         public float[] Times { get; set; }
         public float[][] IntensityArray { get; set; }
+        public short[][] MassError10XArray { get; set; }
 
         public bool HasScore(Type scoreType)
         {
@@ -1327,10 +1450,11 @@ namespace pwiz.Skyline.Model.Results
                                         _allPeaks,
                                         _allScores,
                                         Times,
-                                        IntensityArray);
+                                        IntensityArray,
+                                        MassError10XArray);
         }
 
-        protected float GetProduct(int index)
+        protected double GetProduct(int index)
         {
             return _allTransitions[index].Product;
         }
@@ -1452,19 +1576,21 @@ namespace pwiz.Skyline.Model.Results
 
             int numPoints = _groupHeaderInfo.NumPoints;
             int numTrans = _groupHeaderInfo.NumTransitions;
+            bool hasErrors = _groupHeaderInfo.HasMassErrors;
 
-            int sizeArray = sizeof(float) * numPoints;
-            int size = sizeArray * (numTrans + 1);
+            int size = ChromatogramCache.GetChromatogramsByteCount(numTrans, numPoints, hasErrors);
             byte[] peaks = pointsCompressed.Uncompress(size);
 
-            float[][] intensities;
             float[] times;
+            float[][] intensities;
+            short[][] massErrors;
 
-            ChromatogramCache.BytesToTimeIntensities(peaks, numPoints, numTrans,
-                out intensities, out times);
+            ChromatogramCache.BytesToTimeIntensities(peaks, numPoints, numTrans, hasErrors,
+                out times, out intensities, out massErrors);
 
-            IntensityArray = intensities;
             Times = times;
+            IntensityArray = intensities;
+            MassError10XArray = massErrors;
         }
 
         public class PathEqualityComparer : IEqualityComparer<ChromatogramGroupInfo>
@@ -1513,7 +1639,8 @@ namespace pwiz.Skyline.Model.Results
                                 BlockedArray<ChromPeak> allPeaks,
                                 float[] allScores,
                                 float[] times,
-                                float[][] intensities)
+                                float[][] intensities,
+                                short[][] massError10Xs)
             : base(groupHeaderInfo, scoreTypeIndices, allFiles, allTransitions, allPeaks, allScores)
         {
             if (transitionIndex >= _groupHeaderInfo.NumTransitions)
@@ -1528,6 +1655,9 @@ namespace pwiz.Skyline.Model.Results
             IntensityArray = intensities;
             if (intensities != null)
                 Intensities = intensities[transitionIndex];
+            MassError10XArray = massError10Xs;
+            if (MassError10XArray != null)
+                MassError10Xs = massError10Xs[transitionIndex];
         }
 
         public double ProductMz
@@ -1539,6 +1669,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public float[] Intensities { get; private set; }
+        public short[] MassError10Xs { get; private set; }
 
         public IEnumerable<ChromPeak> Peaks
         {
@@ -1570,7 +1701,7 @@ namespace pwiz.Skyline.Model.Results
             CrawdadPeakFinder finder = new CrawdadPeakFinder();
             finder.SetChromatogram(Times, Intensities);
             var peak = finder.GetPeak(startIndex, endIndex);
-            return new ChromPeak(peak, flags, Times, Intensities);
+            return new ChromPeak(peak, flags, Times, Intensities, MassError10Xs);
         }
 
         public int IndexOfPeak(double retentionTime)

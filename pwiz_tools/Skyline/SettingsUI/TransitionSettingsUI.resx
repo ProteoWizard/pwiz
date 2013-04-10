@@ -177,7 +177,6 @@
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-<!-- ReSharper disable DuplicateResource -->
   <data name="&gt;&gt;labelOptimizeType.Name" xml:space="preserve">
     <value>labelOptimizeType</value>
   </data>
@@ -547,6 +546,19 @@
   <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="textMaxInclusions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>189, 185</value>
+  </data>
+  <data name="textMaxInclusions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMaxInclusions.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="textMaxInclusions.ToolTip" xml:space="preserve">
+    <value>Maximum number of inclusion windows measured by the target
+instrument during multiplexed scanning.</value>
+  </data>
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
     <value>textMaxInclusions</value>
   </data>
@@ -558,6 +570,21 @@
   </data>
   <data name="&gt;&gt;textMaxInclusions.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="label21.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label21.Location" type="System.Drawing.Point, System.Drawing">
+    <value>186, 169</value>
+  </data>
+  <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
+    <value>116, 13</value>
+  </data>
+  <data name="label21.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="label21.Text" xml:space="preserve">
+    <value>Firmware &amp;inclusion limit:</value>
   </data>
   <data name="&gt;&gt;label21.Name" xml:space="preserve">
     <value>label21</value>
@@ -571,6 +598,21 @@
   <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="label30.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label30.Location" type="System.Drawing.Point, System.Drawing">
+    <value>264, 252</value>
+  </data>
+  <data name="label30.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 13</value>
+  </data>
+  <data name="label30.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="label30.Text" xml:space="preserve">
+    <value>min</value>
+  </data>
   <data name="&gt;&gt;label30.Name" xml:space="preserve">
     <value>label30</value>
   </data>
@@ -582,6 +624,21 @@
   </data>
   <data name="&gt;&gt;label30.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="label31.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label31.Location" type="System.Drawing.Point, System.Drawing">
+    <value>101, 252</value>
+  </data>
+  <data name="label31.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 13</value>
+  </data>
+  <data name="label31.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="label31.Text" xml:space="preserve">
+    <value>min</value>
   </data>
   <data name="&gt;&gt;label31.Name" xml:space="preserve">
     <value>label31</value>
@@ -595,6 +652,21 @@
   <data name="&gt;&gt;label31.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="label33.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label33.Location" type="System.Drawing.Point, System.Drawing">
+    <value>187, 233</value>
+  </data>
+  <data name="label33.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 13</value>
+  </data>
+  <data name="label33.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="label33.Text" xml:space="preserve">
+    <value>M&amp;ax time:</value>
+  </data>
   <data name="&gt;&gt;label33.Name" xml:space="preserve">
     <value>label33</value>
   </data>
@@ -606,6 +678,21 @@
   </data>
   <data name="&gt;&gt;label33.ZOrder" xml:space="preserve">
     <value>4</value>
+  </data>
+  <data name="label34.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label34.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 233</value>
+  </data>
+  <data name="label34.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 13</value>
+  </data>
+  <data name="label34.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="label34.Text" xml:space="preserve">
+    <value>Mi&amp;n time:</value>
   </data>
   <data name="&gt;&gt;label34.Name" xml:space="preserve">
     <value>label34</value>
@@ -619,6 +706,20 @@
   <data name="&gt;&gt;label34.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="textMaxTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>190, 249</value>
+  </data>
+  <data name="textMaxTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMaxTime.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="textMaxTime.ToolTip" xml:space="preserve">
+    <value>Maximum time allowed in chromatograms regardless of how
+they were acquired.  Setting this can save memory and disk space
+that might be used on uninteresting parts of the gradient.</value>
+  </data>
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
     <value>textMaxTime</value>
   </data>
@@ -630,6 +731,20 @@
   </data>
   <data name="&gt;&gt;textMaxTime.ZOrder" xml:space="preserve">
     <value>6</value>
+  </data>
+  <data name="textMinTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 249</value>
+  </data>
+  <data name="textMinTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMinTime.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="textMinTime.ToolTip" xml:space="preserve">
+    <value>Minimum time allowed in chromatograms regardless of how
+they were acquired.  Setting this can save memory and disk space
+that might be used on uninteresting parts of the gradient.</value>
   </data>
   <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
     <value>textMinTime</value>
@@ -643,6 +758,21 @@
   <data name="&gt;&gt;textMinTime.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
+  <data name="label26.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label26.Location" type="System.Drawing.Point, System.Drawing">
+    <value>101, 127</value>
+  </data>
+  <data name="label26.Size" type="System.Drawing.Size, System.Drawing">
+    <value>20, 13</value>
+  </data>
+  <data name="label26.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="label26.Text" xml:space="preserve">
+    <value>Th</value>
+  </data>
   <data name="&gt;&gt;label26.Name" xml:space="preserve">
     <value>label26</value>
   </data>
@@ -654,6 +784,21 @@
   </data>
   <data name="&gt;&gt;label26.ZOrder" xml:space="preserve">
     <value>8</value>
+  </data>
+  <data name="label25.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
+    <value>264, 41</value>
+  </data>
+  <data name="label25.Size" type="System.Drawing.Size, System.Drawing">
+    <value>20, 13</value>
+  </data>
+  <data name="label25.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label25.Text" xml:space="preserve">
+    <value>Th</value>
   </data>
   <data name="&gt;&gt;label25.Name" xml:space="preserve">
     <value>label25</value>
@@ -667,6 +812,21 @@
   <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
+  <data name="label24.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label24.Location" type="System.Drawing.Point, System.Drawing">
+    <value>101, 41</value>
+  </data>
+  <data name="label24.Size" type="System.Drawing.Size, System.Drawing">
+    <value>20, 13</value>
+  </data>
+  <data name="label24.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label24.Text" xml:space="preserve">
+    <value>Th</value>
+  </data>
   <data name="&gt;&gt;label24.Name" xml:space="preserve">
     <value>label24</value>
   </data>
@@ -678,6 +838,26 @@
   </data>
   <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
     <value>10</value>
+  </data>
+  <data name="cbDynamicMinimum.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbDynamicMinimum.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 64</value>
+  </data>
+  <data name="cbDynamicMinimum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 17</value>
+  </data>
+  <data name="cbDynamicMinimum.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="cbDynamicMinimum.Text" xml:space="preserve">
+    <value>&amp;Dynamic min product m/z</value>
+  </data>
+  <data name="cbDynamicMinimum.ToolTip" xml:space="preserve">
+    <value>If checked, minimum m/z value for product ions is calculate
+dynamically from the precursor m/z using a specific equation
+provided by Thermo-Scientific for LTQ instruments</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
     <value>cbDynamicMinimum</value>
@@ -691,6 +871,19 @@
   <data name="&gt;&gt;cbDynamicMinimum.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
+  <data name="textMaxTrans.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 185</value>
+  </data>
+  <data name="textMaxTrans.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMaxTrans.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="textMaxTrans.ToolTip" xml:space="preserve">
+    <value>Maximum total number of transitions measurable by the target
+instrument in a single injection or blank if no maximum applies</value>
+  </data>
   <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
     <value>textMaxTrans</value>
   </data>
@@ -702,6 +895,21 @@
   </data>
   <data name="&gt;&gt;textMaxTrans.ZOrder" xml:space="preserve">
     <value>12</value>
+  </data>
+  <data name="label17.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label17.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 169</value>
+  </data>
+  <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="label17.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="label17.Text" xml:space="preserve">
+    <value>&amp;Firmware transition limit:</value>
   </data>
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
@@ -715,6 +923,20 @@
   <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
+  <data name="textMzMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 124</value>
+  </data>
+  <data name="textMzMatchTolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMzMatchTolerance.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="textMzMatchTolerance.ToolTip" xml:space="preserve">
+    <value>Maximum delta for matching instrument method transition m/z values
+with predicted transition m/z values.
+(Applies only to SRM and targeted-MS/MS data.)</value>
+  </data>
   <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
     <value>textMzMatchTolerance</value>
   </data>
@@ -726,6 +948,21 @@
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
     <value>14</value>
+  </data>
+  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 108</value>
+  </data>
+  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 13</value>
+  </data>
+  <data name="label16.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="label16.Text" xml:space="preserve">
+    <value>Method match &amp;tolerance m/z:</value>
   </data>
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -739,6 +976,21 @@
   <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
+  <data name="label10.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="label10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>51, 13</value>
+  </data>
+  <data name="label10.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label10.Text" xml:space="preserve">
+    <value>Ma&amp;x m/z:</value>
+  </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
     <value>label10</value>
   </data>
@@ -750,6 +1002,21 @@
   </data>
   <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
     <value>16</value>
+  </data>
+  <data name="label11.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label11.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 22</value>
+  </data>
+  <data name="label11.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="label11.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label11.Text" xml:space="preserve">
+    <value>&amp;Min m/z:</value>
   </data>
   <data name="&gt;&gt;label11.Name" xml:space="preserve">
     <value>label11</value>
@@ -763,6 +1030,18 @@
   <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
+  <data name="textMaxMz.Location" type="System.Drawing.Point, System.Drawing">
+    <value>190, 38</value>
+  </data>
+  <data name="textMaxMz.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMaxMz.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="textMaxMz.ToolTip" xml:space="preserve">
+    <value>Maximum measurable m/z value for the target instrument</value>
+  </data>
   <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
     <value>textMaxMz</value>
   </data>
@@ -774,6 +1053,18 @@
   </data>
   <data name="&gt;&gt;textMaxMz.ZOrder" xml:space="preserve">
     <value>18</value>
+  </data>
+  <data name="textMinMz.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 38</value>
+  </data>
+  <data name="textMinMz.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMinMz.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textMinMz.ToolTip" xml:space="preserve">
+    <value>Minimum measurable m/z value for the target instrument</value>
   </data>
   <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
     <value>textMinMz</value>
@@ -874,22 +1165,6 @@
   <data name="&gt;&gt;tabFullScan.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
-  </data>
-  <data name="comboPeakScoringModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboPeakScoringModel.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="comboPeakScoringModel.ToolTip" xml:space="preserve">
-    <value>Specifies a linear equation that may be used to predict retention
-times from a peptide specific hydrophobicity score.</value>
-  </data>
   <data name="&gt;&gt;comboPeakScoringModel.Name" xml:space="preserve">
     <value>comboPeakScoringModel</value>
   </data>
@@ -901,21 +1176,6 @@ times from a peptide specific hydrophobicity score.</value>
   </data>
   <data name="&gt;&gt;comboPeakScoringModel.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="label36.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
-    <value>103, 13</value>
-  </data>
-  <data name="label36.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label36.Text" xml:space="preserve">
-    <value>&amp;Peak scoring model:</value>
   </data>
   <data name="&gt;&gt;label36.Name" xml:space="preserve">
     <value>label36</value>
@@ -2269,537 +2529,6 @@ whenever peptides are matched to library spectrum.</value>
   <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="textMaxInclusions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>189, 185</value>
-  </data>
-  <data name="textMaxInclusions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
-  </data>
-  <data name="textMaxInclusions.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
-  <data name="textMaxInclusions.ToolTip" xml:space="preserve">
-    <value>Maximum number of inclusion windows measured by the target
-instrument during multiplexed scanning.</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
-    <value>textMaxInclusions</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="label21.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label21.Location" type="System.Drawing.Point, System.Drawing">
-    <value>186, 169</value>
-  </data>
-  <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 13</value>
-  </data>
-  <data name="label21.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="label21.Text" xml:space="preserve">
-    <value>Firmware &amp;inclusion limit:</value>
-  </data>
-  <data name="&gt;&gt;label21.Name" xml:space="preserve">
-    <value>label21</value>
-  </data>
-  <data name="&gt;&gt;label21.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label21.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="label30.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label30.Location" type="System.Drawing.Point, System.Drawing">
-    <value>264, 252</value>
-  </data>
-  <data name="label30.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 13</value>
-  </data>
-  <data name="label30.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="label30.Text" xml:space="preserve">
-    <value>min</value>
-  </data>
-  <data name="&gt;&gt;label30.Name" xml:space="preserve">
-    <value>label30</value>
-  </data>
-  <data name="&gt;&gt;label30.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label30.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label30.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="label31.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label31.Location" type="System.Drawing.Point, System.Drawing">
-    <value>101, 252</value>
-  </data>
-  <data name="label31.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 13</value>
-  </data>
-  <data name="label31.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="label31.Text" xml:space="preserve">
-    <value>min</value>
-  </data>
-  <data name="&gt;&gt;label31.Name" xml:space="preserve">
-    <value>label31</value>
-  </data>
-  <data name="&gt;&gt;label31.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label31.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label31.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="label33.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label33.Location" type="System.Drawing.Point, System.Drawing">
-    <value>187, 233</value>
-  </data>
-  <data name="label33.Size" type="System.Drawing.Size, System.Drawing">
-    <value>52, 13</value>
-  </data>
-  <data name="label33.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="label33.Text" xml:space="preserve">
-    <value>M&amp;ax time:</value>
-  </data>
-  <data name="&gt;&gt;label33.Name" xml:space="preserve">
-    <value>label33</value>
-  </data>
-  <data name="&gt;&gt;label33.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label33.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label33.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="label34.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label34.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 233</value>
-  </data>
-  <data name="label34.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 13</value>
-  </data>
-  <data name="label34.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="label34.Text" xml:space="preserve">
-    <value>Mi&amp;n time:</value>
-  </data>
-  <data name="&gt;&gt;label34.Name" xml:space="preserve">
-    <value>label34</value>
-  </data>
-  <data name="&gt;&gt;label34.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label34.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label34.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="textMaxTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>190, 249</value>
-  </data>
-  <data name="textMaxTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
-  </data>
-  <data name="textMaxTime.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="textMaxTime.ToolTip" xml:space="preserve">
-    <value>Maximum time allowed in chromatograms regardless of how
-they were acquired.  Setting this can save memory and disk space
-that might be used on uninteresting parts of the gradient.</value>
-  </data>
-  <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
-    <value>textMaxTime</value>
-  </data>
-  <data name="&gt;&gt;textMaxTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxTime.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxTime.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="textMinTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 249</value>
-  </data>
-  <data name="textMinTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
-  </data>
-  <data name="textMinTime.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="textMinTime.ToolTip" xml:space="preserve">
-    <value>Minimum time allowed in chromatograms regardless of how
-they were acquired.  Setting this can save memory and disk space
-that might be used on uninteresting parts of the gradient.</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
-    <value>textMinTime</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="label26.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label26.Location" type="System.Drawing.Point, System.Drawing">
-    <value>101, 127</value>
-  </data>
-  <data name="label26.Size" type="System.Drawing.Size, System.Drawing">
-    <value>20, 13</value>
-  </data>
-  <data name="label26.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="label26.Text" xml:space="preserve">
-    <value>Th</value>
-  </data>
-  <data name="&gt;&gt;label26.Name" xml:space="preserve">
-    <value>label26</value>
-  </data>
-  <data name="&gt;&gt;label26.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label26.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label26.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="label25.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
-    <value>264, 41</value>
-  </data>
-  <data name="label25.Size" type="System.Drawing.Size, System.Drawing">
-    <value>20, 13</value>
-  </data>
-  <data name="label25.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="label25.Text" xml:space="preserve">
-    <value>Th</value>
-  </data>
-  <data name="&gt;&gt;label25.Name" xml:space="preserve">
-    <value>label25</value>
-  </data>
-  <data name="&gt;&gt;label25.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label25.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="label24.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label24.Location" type="System.Drawing.Point, System.Drawing">
-    <value>101, 41</value>
-  </data>
-  <data name="label24.Size" type="System.Drawing.Size, System.Drawing">
-    <value>20, 13</value>
-  </data>
-  <data name="label24.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label24.Text" xml:space="preserve">
-    <value>Th</value>
-  </data>
-  <data name="&gt;&gt;label24.Name" xml:space="preserve">
-    <value>label24</value>
-  </data>
-  <data name="&gt;&gt;label24.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label24.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="cbDynamicMinimum.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbDynamicMinimum.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 64</value>
-  </data>
-  <data name="cbDynamicMinimum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 17</value>
-  </data>
-  <data name="cbDynamicMinimum.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="cbDynamicMinimum.Text" xml:space="preserve">
-    <value>&amp;Dynamic min product m/z</value>
-  </data>
-  <data name="cbDynamicMinimum.ToolTip" xml:space="preserve">
-    <value>If checked, minimum m/z value for product ions is calculate
-dynamically from the precursor m/z using a specific equation
-provided by Thermo-Scientific for LTQ instruments</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
-    <value>cbDynamicMinimum</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="textMaxTrans.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 185</value>
-  </data>
-  <data name="textMaxTrans.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
-  </data>
-  <data name="textMaxTrans.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="textMaxTrans.ToolTip" xml:space="preserve">
-    <value>Maximum total number of transitions measurable by the target
-instrument in a single injection or blank if no maximum applies</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
-    <value>textMaxTrans</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="label17.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label17.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 169</value>
-  </data>
-  <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="label17.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="label17.Text" xml:space="preserve">
-    <value>&amp;Firmware transition limit:</value>
-  </data>
-  <data name="&gt;&gt;label17.Name" xml:space="preserve">
-    <value>label17</value>
-  </data>
-  <data name="&gt;&gt;label17.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label17.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="textMzMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 124</value>
-  </data>
-  <data name="textMzMatchTolerance.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
-  </data>
-  <data name="textMzMatchTolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="textMzMatchTolerance.ToolTip" xml:space="preserve">
-    <value>Maximum delta for matching measured transition m/z values
-with predicted transition m/z values</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
-    <value>textMzMatchTolerance</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
-  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 108</value>
-  </data>
-  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>108, 13</value>
-  </data>
-  <data name="label16.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="label16.Text" xml:space="preserve">
-    <value>Match &amp;tolerance m/z:</value>
-  </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
-  </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
-    <value>15</value>
-  </data>
-  <data name="label10.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>187, 22</value>
-  </data>
-  <data name="label10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>51, 13</value>
-  </data>
-  <data name="label10.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label10.Text" xml:space="preserve">
-    <value>Ma&amp;x m/z:</value>
-  </data>
-  <data name="&gt;&gt;label10.Name" xml:space="preserve">
-    <value>label10</value>
-  </data>
-  <data name="&gt;&gt;label10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label10.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
-    <value>16</value>
-  </data>
-  <data name="label11.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label11.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 22</value>
-  </data>
-  <data name="label11.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 13</value>
-  </data>
-  <data name="label11.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label11.Text" xml:space="preserve">
-    <value>&amp;Min m/z:</value>
-  </data>
-  <data name="&gt;&gt;label11.Name" xml:space="preserve">
-    <value>label11</value>
-  </data>
-  <data name="&gt;&gt;label11.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label11.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
-    <value>17</value>
-  </data>
-  <data name="textMaxMz.Location" type="System.Drawing.Point, System.Drawing">
-    <value>190, 38</value>
-  </data>
-  <data name="textMaxMz.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
-  </data>
-  <data name="textMaxMz.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="textMaxMz.ToolTip" xml:space="preserve">
-    <value>Maximum measurable m/z value for the target instrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
-    <value>textMaxMz</value>
-  </data>
-  <data name="&gt;&gt;textMaxMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxMz.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMaxMz.ZOrder" xml:space="preserve">
-    <value>18</value>
-  </data>
-  <data name="textMinMz.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 38</value>
-  </data>
-  <data name="textMinMz.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
-  </data>
-  <data name="textMinMz.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="textMinMz.ToolTip" xml:space="preserve">
-    <value>Minimum measurable m/z value for the target instrument</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
-    <value>textMinMz</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Parent" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.ZOrder" xml:space="preserve">
-    <value>19</value>
-  </data>
   <data name="&gt;&gt;radioTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>radioTimeAroundMs2Ids</value>
   </data>
@@ -4121,6 +3850,61 @@ Multiple - match any precursor within the isolation window</value>
   <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
+  <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 36</value>
+  </data>
+  <data name="comboPeakScoringModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>169, 21</value>
+  </data>
+  <data name="comboPeakScoringModel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="comboPeakScoringModel.ToolTip" xml:space="preserve">
+    <value>Specifies a linear equation that may be used to predict retention
+times from a peptide specific hydrophobicity score.</value>
+  </data>
+  <data name="&gt;&gt;comboPeakScoringModel.Name" xml:space="preserve">
+    <value>comboPeakScoringModel</value>
+  </data>
+  <data name="&gt;&gt;comboPeakScoringModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboPeakScoringModel.Parent" xml:space="preserve">
+    <value>tabPeaks</value>
+  </data>
+  <data name="&gt;&gt;comboPeakScoringModel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label36.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 13</value>
+  </data>
+  <data name="label36.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label36.Text" xml:space="preserve">
+    <value>&amp;Peak scoring model:</value>
+  </data>
+  <data name="&gt;&gt;label36.Name" xml:space="preserve">
+    <value>label36</value>
+  </data>
+  <data name="&gt;&gt;label36.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label36.Parent" xml:space="preserve">
+    <value>tabPeaks</value>
+  </data>
+  <data name="&gt;&gt;label36.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>

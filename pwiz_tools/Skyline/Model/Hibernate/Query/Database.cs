@@ -533,6 +533,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             TotalBackground = chromInfo.BackgroundArea,
                             TotalAreaRatio = chromInfo.Ratios[0],
                             // StdevAreaRatio = chromInfo.RatioStdevs[0],
+                            AverageMassErrorPPM = chromInfo.MassError,
                             CountTruncated = chromInfo.Truncated,
                             Identified = chromInfo.Identified,
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
@@ -718,6 +719,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             transitionResult.Height = chromInfo.Height;
                             transitionResult.Fwhm = chromInfo.Fwhm;
                             transitionResult.FwhmDegenerate = chromInfo.IsFwhmDegenerate;
+                            transitionResult.MassErrorPPM = chromInfo.MassError;
                             transitionResult.Truncated = chromInfo.IsTruncated;
                             transitionResult.PeakRank = chromInfo.Rank;
                         }

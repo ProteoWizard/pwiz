@@ -509,6 +509,9 @@ namespace pwiz.Skyline.Model.Results
 
                 float[] times = originalChromGroup.Times.Skip(minimizedChromGroup.OptimizedFirstScan).Take(numPoints).ToArray();
                 List<float[]> intensities = new List<float[]>();
+                List<short[]> massError10Xs = originalChromGroup.MassError10XArray != null
+                                                  ? new List<short[]>()
+                                                  : null;
 
                 foreach (var originalIndex in minimizedChromGroup.RetainedTransitionIndexes)
                 {
@@ -527,8 +530,15 @@ namespace pwiz.Skyline.Model.Results
                     intensities.Add(originalChromGroup.IntensityArray[originalIndex]
                         .Skip(minimizedChromGroup.OptimizedFirstScan)
                         .Take(numPoints).ToArray());
+                    if (massError10Xs != null)
+                    {
+                        massError10Xs.Add(originalChromGroup.MassError10XArray[originalIndex]
+                            .Skip(minimizedChromGroup.OptimizedFirstScan)
+                            .Take(numPoints).ToArray());
+                    }
                 }
-                byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities.ToArray());
+                var massError10XArray = massError10Xs != null ? massError10Xs.ToArray() : null;
+                byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities.ToArray(), massError10XArray);
                 // Compress the data (can be huge for AB data with lots of zeros)
                 byte[] pointsCompressed = points.Compress(3);
                 int lenCompressed = pointsCompressed.Length;
@@ -545,7 +555,8 @@ namespace pwiz.Skyline.Model.Results
                                                       maxPeakIndex,
                                                       numPoints,
                                                       pointsCompressed.Length,
-                                                      location);
+                                                      location,
+                                                      originalHeader.Flags);
                 _chromGroupHeaderInfos.Add(header);
             }
 

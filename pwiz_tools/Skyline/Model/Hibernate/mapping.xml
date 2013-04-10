@@ -110,6 +110,7 @@
     <property name="TotalAreaRatio" />
     <!-- <property name="StdevAreaRatio" /> -->
     <property name="TotalAreaNormalized" />
+    <property name="AverageMassErrorPPM" />
     <property name="CountTruncated" />
     <property name="Identified" />
     <property name="LibraryDotProduct" />
@@ -188,6 +189,7 @@
     <property name="AreaNormalized" />
     <!--    <property name="SignalToNoise" /> -->
     <property name="Height" />
+    <property name="MassErrorPPM" />
     <property name="Truncated" />
     <property name="PeakRank" />
     <property name="UserSetPeak" />

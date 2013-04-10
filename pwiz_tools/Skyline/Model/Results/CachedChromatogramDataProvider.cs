@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromKeyIndices.Select((v, i) => new KeyValuePair<ChromKey, int>(v.Key, i)); }
         }
 
-        public override void GetChromatogram(int id, out float[] times, out float[] intensities)
+        public override void GetChromatogram(int id, out float[] times, out float[] intensities, out float[] massErrors)
         {
             var chromKeyIndices = _chromKeyIndices[id];
             if (_lastChromGroupInfo == null || _lastIndices.GroupIndex != chromKeyIndices.GroupIndex)
@@ -70,6 +70,9 @@ namespace pwiz.Skyline.Model.Results
             var tranInfo = _lastChromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
             times = tranInfo.Times;
             intensities = tranInfo.Intensities;
+            massErrors = null;
+            if (tranInfo.MassError10Xs != null)
+                massErrors = tranInfo.MassError10Xs.Select(m => m/10.0f).ToArray();
 
             SetPercentComplete(100 * id / _chromKeyIndices.Length);
         }

@@ -1671,6 +1671,7 @@ namespace pwiz.Skyline.Model
             private float? Fwhm { get; set; }
             private float? Area { get; set; }
             private float? BackgroundArea { get; set; }
+            private float? MassError { get; set; }
             private int? Truncated { get; set; }
             private PeakIdentification Identified { get; set; }
             private float? LibraryDotProduct { get; set; }
@@ -1702,6 +1703,13 @@ namespace pwiz.Skyline.Model
 
                     Area = (Area ?? 0) + info.Area;
                     BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;
+
+                    if (info.MassError.HasValue)
+                    {
+                        double massError = MassError ?? 0;
+                        massError += (info.MassError.Value - massError)*info.Area/Area.Value;
+                        MassError = (float) massError;
+                    }
 
                     if (info.Height > MaxHeight)
                     {
@@ -1769,6 +1777,7 @@ namespace pwiz.Skyline.Model
                                                     BackgroundArea,
                                                     Ratios,
                                                     RatioStdevs,
+                                                    MassError,
                                                     Truncated,
                                                     Identified,
                                                     LibraryDotProduct,

@@ -312,8 +312,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Create temporary label to calculate positions
                 if (GraphChromatogram.ShowRT != ShowRTChrom.none)
                 {
-                    AddRetentionTimeAnnotation(graphPane, g, annotations,
-                        ptTop, "Predicted", GraphObjType.predicted_rt_window, COLOR_RETENTION_TIME, ScaleRetentionTime(time));
+                    AddRetentionTimeAnnotation(graphPane,
+                                               g,
+                                               annotations,
+                                               ptTop,
+                                               Resources.ChromGraphItem_AddAnnotations_Predicted,
+                                               GraphObjType.predicted_rt_window,
+                                               COLOR_RETENTION_TIME,
+                                               ScaleRetentionTime(time));
                 }
 
                 // Draw background for retention time window
@@ -345,7 +351,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         // Best peak gets its own label to avoid curve overlap detection
                         double intensityLabel = graphPane.YAxis.Scale.ReverseTransform(yBest - 5);
-                        string label = FormatTimeLabel(timeBest.DisplayTime, _dotProducts != null ? _bestProduct : 0);
+                        float? massError = Settings.Default.ShowMassError && TransitionChromInfo != null
+                                               ? TransitionChromInfo.MassError
+                                               : null;
+                        double dotProduct = _dotProducts != null ? _bestProduct : 0;
+                        string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
+
                         TextObj text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
                                                    CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
                                            {
@@ -373,13 +384,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Show the best peak boundary lines
-                double startTime, endTime;
+                double startTime = 0, endTime = 0;
                 if (DragInfo != null)
                 {
                     startTime = DragInfo.StartTime.MeasuredTime;
                     endTime = DragInfo.EndTime.MeasuredTime;
                 }
-                else
+                else if (TransitionChromInfo != null)
                 {
                     var tranPeakInfo = TransitionChromInfo;
                     startTime = tranPeakInfo.StartRetentionTime;
@@ -521,27 +532,33 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override PointAnnotation AnnotatePoint(PointPair point)
         {
-            int indexPeak;
             var showRT = GraphChromatogram.ShowRT;
             int timeIndex = Array.BinarySearch(_displayTimes, point.X);
-            if ((showRT == ShowRTChrom.all ||
-                 (showRT == ShowRTChrom.threshold && Settings.Default.ShowRetentionTimesThreshold <= point.Y))
-                && _annotatedTimes.TryGetValue(timeIndex, out indexPeak))
+            if (showRT == ShowRTChrom.all||
+                    (showRT == ShowRTChrom.threshold && Settings.Default.ShowRetentionTimesThreshold <= point.Y))
             {
-                string label = FormatTimeLabel(point.X, _dotProducts != null
-                    ? _dotProducts[indexPeak] : 0);
-                return new PointAnnotation(label, FontSpec);
+                int indexPeak;
+                if (_annotatedTimes.TryGetValue(timeIndex, out indexPeak))
+                {
+                    double dotProduct = _dotProducts != null ? _dotProducts[indexPeak] : 0;
+                    float? massError = null;
+                    if (Settings.Default.ShowMassError)
+                        massError = Chromatogram.GetPeak(indexPeak).MassError;
+                    string label = FormatTimeLabel(point.X, massError, dotProduct);
+                    return new PointAnnotation(label, FontSpec);
+                }
             }
 
             return null;
         }
 
-        public string FormatTimeLabel(double time, double dotProduct)
+        public string FormatTimeLabel(double time, float? massError, double dotProduct)
         {
             string label = string.Format("{0:F01}", time); // Not L10N
+            if (massError.HasValue)
+                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value);
             if (dotProduct != 0)
                 label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct); // L10N
-//<<<<<<< .mine
             return label;
         }
 

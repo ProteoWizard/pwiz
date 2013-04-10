@@ -118,9 +118,14 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.ModifiedSequence : null; }
         }
 
-        public float PrecursorMz
+        public double PrecursorMz
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : 0; }
+        }
+
+        public bool HasCalculatedMzs
+        {
+            get { return _listChromData.Count > 0 && BestChromatogram.Key.HasCalculatedMzs; }
         }
 
         public int CountPeaks
@@ -141,6 +146,16 @@ namespace pwiz.Skyline.Model.Results
         public float[][] Intensities
         {
             get { return _listChromData.ConvertAll(data => data.Intensities).ToArray(); }
+        }
+
+        public short[][] MassErrors10X
+        {
+            get
+            {
+                return _listChromData.First().MassErrors10x != null
+                           ? _listChromData.ConvertAll(data => data.MassErrors10x).ToArray()
+                           : null;
+            }
         }
 
         public void Load(ChromDataProvider provider)

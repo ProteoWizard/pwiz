@@ -155,6 +155,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? backgroundArea,
                                         IList<float?> ratios,
                                         IList<float?> stdevs,
+                                        float? massError,
                                         int? truncated,
                                         PeakIdentification identified,
                                         float? libraryDotProduct,
@@ -173,6 +174,7 @@ namespace pwiz.Skyline.Model.Results
             BackgroundArea = backgroundArea;
             Ratios = ratios;
             RatioStdevs = stdevs;
+            MassError = massError;
             Truncated = truncated;
             Identified = identified;
             LibraryDotProduct = libraryDotProduct;
@@ -202,6 +204,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _ratioStdevs; }
             private set { _ratioStdevs = MakeReadOnly(value); }
         }
+        public float? MassError { get; private set; }
         public int? Truncated { get; private set; }
         public PeakIdentification Identified { get; private set; }
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
@@ -309,15 +312,15 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
             IList<float?> ratios, Annotations annotations, bool userSet)
-            : this(fileId, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
+            : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
                    peak.IsFwhmDegenerate, peak.IsTruncated, peak.Identified,
                    ratios, annotations, userSet)
         {            
         }
 
-        public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, float retentionTime,
-                                   float startRetentionTime, float endRetentionTime,
+        public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, float? massError,
+                                   float retentionTime, float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated,
                                    PeakIdentification identified, IList<float?> ratios,
@@ -325,6 +328,7 @@ namespace pwiz.Skyline.Model.Results
             : base(fileId)
         {
             OptimizationStep = optimizationStep;
+            MassError = massError;
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
@@ -347,6 +351,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int OptimizationStep { get; private set; }
 
+        public float? MassError { get; private set; }
         public float RetentionTime { get; private set; }
         public float StartRetentionTime { get; private set; }
         public float EndRetentionTime { get; private set; }
@@ -385,6 +390,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return ReferenceEquals(fileId, FileId) &&
                    step == OptimizationStep &&
+                   Equals(peak.MassError, MassError) &&
                    peak.RetentionTime == RetentionTime &&
                    peak.StartTime == StartRetentionTime &&
                    peak.EndTime == EndRetentionTime &&
@@ -393,8 +399,8 @@ namespace pwiz.Skyline.Model.Results
                    peak.Height == Height &&
                    peak.Fwhm == Fwhm &&
                    peak.IsFwhmDegenerate == IsFwhmDegenerate &&
-                   peak.IsTruncated == IsTruncated &&
-                   peak.Identified == Identified;
+                   Equals(peak.IsTruncated, IsTruncated) &&
+                   Equals(peak.Identified, Identified);
         }
 
         #region Property change methods
@@ -402,6 +408,7 @@ namespace pwiz.Skyline.Model.Results
         public TransitionChromInfo ChangePeak(ChromPeak peak, bool userSet)
         {
             var chromInfo = ImClone(this);
+            chromInfo.MassError = peak.MassError;
             chromInfo.RetentionTime = peak.RetentionTime;
             chromInfo.StartRetentionTime = peak.StartTime;
             chromInfo.EndRetentionTime = peak.EndTime;
@@ -444,6 +451,7 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
+                   Equals(other.MassError, MassError) &&
                    other.RetentionTime == RetentionTime &&
                    other.StartRetentionTime == StartRetentionTime &&
                    other.EndRetentionTime == EndRetentionTime &&
@@ -473,6 +481,7 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = base.GetHashCode();
+                result = (result*397) ^ (MassError.HasValue ? MassError.Value.GetHashCode() : 0);
                 result = (result*397) ^ RetentionTime.GetHashCode();
                 result = (result*397) ^ StartRetentionTime.GetHashCode();
                 result = (result*397) ^ EndRetentionTime.GetHashCode();

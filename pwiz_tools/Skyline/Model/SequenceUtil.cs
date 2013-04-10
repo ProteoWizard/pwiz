@@ -172,6 +172,11 @@ namespace pwiz.Skyline.Model
             return mz*charge - (charge - 1)*BioMassCalc.MassProton;
         }
 
+        public static double GetPpm(double mz, double deltaMz)
+        {
+            return deltaMz*1000*1000/mz;
+        }
+
         public static double ParseModMass(BioMassCalc calc, string desc)
         {
             string parse = desc;

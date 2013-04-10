@@ -134,9 +134,9 @@
             this.comboAcquisitionMethod = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.tabPeaks = new System.Windows.Forms.TabPage();
-            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.label36 = new System.Windows.Forms.Label();
             this.comboPeakScoringModel = new System.Windows.Forms.ComboBox();
+            this.label36 = new System.Windows.Forms.Label();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -899,17 +899,6 @@
             this.tabPeaks.Name = "tabPeaks";
             this.tabPeaks.UseVisualStyleBackColor = true;
             // 
-            // helpTip
-            // 
-            this.helpTip.AutoPopDelay = 15000;
-            this.helpTip.InitialDelay = 500;
-            this.helpTip.ReshowDelay = 100;
-            // 
-            // label36
-            // 
-            resources.ApplyResources(this.label36, "label36");
-            this.label36.Name = "label36";
-            // 
             // comboPeakScoringModel
             // 
             this.comboPeakScoringModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -918,6 +907,17 @@
             this.comboPeakScoringModel.Name = "comboPeakScoringModel";
             this.helpTip.SetToolTip(this.comboPeakScoringModel, resources.GetString("comboPeakScoringModel.ToolTip"));
             this.comboPeakScoringModel.SelectedIndexChanged += new System.EventHandler(this.comboPeakScoringModel_SelectedIndexChanged);
+            // 
+            // label36
+            // 
+            resources.ApplyResources(this.label36, "label36");
+            this.label36.Name = "label36";
+            // 
+            // helpTip
+            // 
+            this.helpTip.AutoPopDelay = 15000;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
             // 
             // TransitionSettingsUI
             // 

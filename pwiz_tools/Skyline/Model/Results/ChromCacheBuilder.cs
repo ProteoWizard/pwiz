@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -56,11 +55,12 @@ namespace pwiz.Skyline.Model.Results
         // Lock on _chromDataSets to access these variables
         private readonly List<PeptideChromDataSets> _chromDataSets = new List<PeptideChromDataSets>();
         private bool _writerStarted;
+        private bool _writerCompleted;
         private bool _readCompleted;
         private Exception _writeException;
 
         // Accessed only on the write thread
-        private Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
             string cachePath, IList<string> msDataFilePaths, ILoadMonitor loader, ProgressStatus status,
@@ -449,7 +449,7 @@ namespace pwiz.Skyline.Model.Results
             var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
             listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
 
-            ChromKey lastKey = new ChromKey(null, 0, 0, ChromSource.unknown);
+            ChromKey lastKey = ChromKey.EMPTY;
             ChromDataSet chromDataSet = null;
             foreach (var keyIndex in listKeyIndex)
             {
@@ -592,7 +592,7 @@ namespace pwiz.Skyline.Model.Results
                 float? bestMz = null;
                 if (singleMatch)
                 {
-                    float matchMz = chromDataSet.PrecursorMz;
+                    double matchMz = chromDataSet.PrecursorMz;
                     foreach (var match in listMatchingGroups)
                     {
                         float currentMz = (float) match.Key.PrecursorMz;
@@ -791,12 +791,12 @@ namespace pwiz.Skyline.Model.Results
                     // writer to complete, in case of an exception.
                     if (_readCompleted)
                     {
-                        int countSets = _chromDataSets.Count;
-                        if (countSets > 0)
+                        if (!_writerCompleted)
                         {
                             // Wait while work is being accomplished by the writer, but not
                             // if it is hung.
                             bool completed;
+                            int countSets;
                             do
                             {
                                 countSets = _chromDataSets.Count;
@@ -871,7 +871,8 @@ namespace pwiz.Skyline.Model.Results
                                 DateTime? runStartTime = _currentFileInfo.StartTime;
                                 var flags = _currentFileInfo.Flags;
                                 _listCachedFiles.Add(new ChromCachedFile(dataFilePath, flags,
-                                    fileWriteTime, runStartTime, _currentFileInfo.InstrumentInfoList));
+                                                                         fileWriteTime, runStartTime,
+                                                                         _currentFileInfo.InstrumentInfoList));
                                 _currentFileIndex++;
 
                                 // Allow the reader thread to exit
@@ -901,14 +902,19 @@ namespace pwiz.Skyline.Model.Results
                     foreach (var chromDataSet in chromDataSetNext.DataSets)
                     {
                         if (_fs.Stream == null)
-                            throw new InvalidDataException(Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
+                            throw new InvalidDataException(
+                                Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
 
                         long location = _fs.Stream.Position;
 
                         float[] times = chromDataSet.Times;
                         float[][] intensities = chromDataSet.Intensities;
+                        // Assign mass errors only it the cache is allowed to store them
+                        short[][] massErrors = null;
+                        if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
+                            massErrors = chromDataSet.MassErrors10X;
                         // Write the raw chromatogram points
-                        byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities);
+                        byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities, massErrors);
                         // Compress the data (can be huge for AB data with lots of zeros)
                         byte[] pointsCompressed = points.Compress(3);
                         int lenCompressed = pointsCompressed.Length;
@@ -926,24 +932,30 @@ namespace pwiz.Skyline.Model.Results
                         {
                             scoresIndex = _listScores.Count;
                             dictScoresToIndex.Add(startPeak.DetailScores, scoresIndex);
-                            
+
                             // Add scores to the scores list
                             foreach (var peakSet in chromDataSet.PeakSets)
                                 _listScores.AddRange(peakSet.DetailScores);
                         }
 
                         // Add to header list
+                        ChromGroupHeaderInfo5.FlagValues flags = 0;
+                        if (massErrors != null)
+                            flags |= ChromGroupHeaderInfo5.FlagValues.has_mass_errors;
+                        if (chromDataSet.HasCalculatedMzs)
+                            flags |= ChromGroupHeaderInfo5.FlagValues.has_calculated_mzs;
                         var header = new ChromGroupHeaderInfo5(chromDataSet.PrecursorMz,
-                                                              currentFileIndex,
-                                                              chromDataSet.Count,
-                                                              _listTransitions.Count,
-                                                              chromDataSet.CountPeaks,
-                                                              _peakCount,
-                                                              scoresIndex,
-                                                              chromDataSet.MaxPeakIndex,
-                                                              times.Length,
-                                                              lenCompressed,
-                                                              location);
+                                                               currentFileIndex,
+                                                               chromDataSet.Count,
+                                                               _listTransitions.Count,
+                                                               chromDataSet.CountPeaks,
+                                                               _peakCount,
+                                                               scoresIndex,
+                                                               chromDataSet.MaxPeakIndex,
+                                                               times.Length,
+                                                               lenCompressed,
+                                                               location,
+                                                               flags);
 
                         header.CalcSeqIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listSeqBytes);
 
@@ -958,12 +970,21 @@ namespace pwiz.Skyline.Model.Results
                             else if (transitionPeakCount.Value != chromData.Peaks.Count)
                             {
                                 throw new InvalidDataException(
-                                    string.Format(Resources.ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
-                                                  transitionPeakCount, chromData.Peaks.Count));
+                                    string.Format(
+                                        Resources
+                                            .ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
+                                        transitionPeakCount, chromData.Peaks.Count));
                             }
 
                             // Add to peaks list
                             _peakCount += chromData.Peaks.Count;
+                            if (ChromatogramCache.FORMAT_VERSION_CACHE <= ChromatogramCache.FORMAT_VERSION_CACHE_4)
+                            {
+                                // Zero out the mass error bits in the peaks to make sure mass errors
+                                // do not show up until after they are officially released
+                                for (int i = 0; i < chromData.Peaks.Count; i++)
+                                    chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
+                            }
                             ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, chromData.Peaks.ToArray());
                         }
 
@@ -975,9 +996,21 @@ namespace pwiz.Skyline.Model.Results
             {
                 lock (_chromDataSets)
                 {
+                    _writerCompleted = true;
                     _writeException = x;
                     // Make sure the reader thread can exit
                     Monitor.Pulse(_chromDataSets);
+                }
+            }
+            finally
+            {
+                lock (_chromDataSets)
+                {
+                    if (!_writerCompleted)
+                    {
+                        _writerCompleted = true;
+                        Monitor.Pulse(_chromDataSets);
+                    }
                 }
             }
         }

@@ -5066,4 +5066,19 @@ Are you sure you want to continue?</value>
     <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
     <value>Press Continue to use the server of your choice.</value>
   </data>
+  <data name="ChromGraphItem_AddAnnotations_Predicted" xml:space="preserve">
+    <value>Predicted</value>
+  </data>
+  <data name="ResultsGrid_ResultsGrid_Average_Mass_Error_PPM" xml:space="preserve">
+    <value>Average Mass Error PPM</value>
+  </data>
+  <data name="ResultsGrid_ResultsGrid_Mass_Error_PPM" xml:space="preserve">
+    <value>Mass Error PPM</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_Retention_Time" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_Time_Aligned_to__0_" xml:space="preserve">
+    <value>Time Aligned to {0}</value>
+  </data>
 </root>

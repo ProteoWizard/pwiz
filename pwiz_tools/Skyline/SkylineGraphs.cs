@@ -1090,6 +1090,14 @@ namespace pwiz.Skyline
             }
             legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
             menuStrip.Items.Insert(iInsert++, legendChromContextMenuItem);
+            var fullScan = Document.Settings.TransitionSettings.FullScan;
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4
+                    && fullScan.IsEnabled
+                    && (fullScan.IsHighResPrecursor || fullScan.IsHighResProduct))
+            {
+                massErrorContextMenuItem.Checked = set.ShowMassError;
+                menuStrip.Items.Insert(iInsert++, massErrorContextMenuItem);
+            }
             peakBoundariesContextMenuItem.Checked = set.ShowPeakBoundaries;
             menuStrip.Items.Insert(iInsert++, peakBoundariesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
@@ -1202,6 +1210,12 @@ namespace pwiz.Skyline
         private void legendChromContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowChromatogramLegend = legendChromContextMenuItem.Checked;
+            UpdateChromGraphs();
+        }
+
+        private void massErrorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowMassError = massErrorContextMenuItem.Checked;
             UpdateChromGraphs();
         }
 

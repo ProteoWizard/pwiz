@@ -81,9 +81,14 @@ namespace pwiz.SkylineTestA
                     for (int j = 0; j < blockCount; j++)
                     {
                         if (singleTimes)
-                            blocks[j].Add(i * j, i + j);
-                        else
+                        {
+                            blocks[j].AddTime(i*j);
                             blocks[j].Add(i + j);
+                        }
+                        else
+                        {
+                            blocks[j].Add(i + j);
+                        }
                     }
                 }
 
@@ -157,9 +162,8 @@ namespace pwiz.SkylineTestA
             {
                 TestAllocator.Test(testAllocator.BlockCount, testAllocator.BlockSize, -1, true, (collector, index) =>
                     {
-                        float[] times;
-                        float[] intensities;
-                        collector.ReleaseChromatogram(out times, out intensities);
+                        float[] times, intensities, massErrors;
+                        collector.ReleaseChromatogram(out times, out intensities, out massErrors);
                         Assert.AreEqual(testAllocator.BlockSize, times.Length);
                         Assert.AreEqual(testAllocator.BlockSize, intensities.Length);
                         for (int i = 0; i < testAllocator.BlockSize; i++)
@@ -183,9 +187,8 @@ namespace pwiz.SkylineTestA
                 TestAllocator.Test(testAllocator.BlockCount, testAllocator.BlockSize, -1, false, (collector, index) =>
                 {
                     collector.TimesCollector = groupedTimesCollector;
-                    float[] times;
-                    float[] intensities;
-                    collector.ReleaseChromatogram(out times, out intensities);
+                    float[] times, intensities, massErrors;
+                    collector.ReleaseChromatogram(out times, out intensities, out massErrors);
                     Assert.AreEqual(testAllocator.BlockSize, times.Length);
                     Assert.AreEqual(testAllocator.BlockSize, intensities.Length);
                     for (int i = 0; i < testAllocator.BlockSize; i++)
@@ -253,9 +256,8 @@ namespace pwiz.SkylineTestA
                 TestAllocator.Test(testAllocator.BlockCount, testAllocator.BlockSize, -1, false, (collector, index) =>
                 {
                     collector.TimesCollector = groupedTimesCollector;
-                    float[] times;
-                    float[] intensities;
-                    collector.ReleaseChromatogram(out times, out intensities);
+                    float[] times, intensities, massErrors;
+                    collector.ReleaseChromatogram(out times, out intensities, out massErrors);
                     Assert.AreEqual(testAllocator.BlockSize, times.Length);
                     Assert.AreEqual(testAllocator.BlockSize, intensities.Length);
                     // Times will be ordered, and data reversed.

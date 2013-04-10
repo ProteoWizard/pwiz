@@ -209,6 +209,14 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
+            Columns.Add(AverageMassErrorColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "AverageMassErrorPPM",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Average_Mass_Error_PPM,
+                    ReadOnly = true,
+                    DefaultCellStyle = {Format = Formats.MASS_ERROR}
+                });
             Columns.Add(CountTruncatedColumn
                 = new DataGridViewTextBoxColumn
                       {
@@ -333,6 +341,14 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
                       });
+            Columns.Add(MassErrorColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "MassErrorPPM",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Mass_Error_PPM,
+                    ReadOnly = true,
+                    DefaultCellStyle = {Format = Formats.MASS_ERROR}
+                });
             Columns.Add(TruncatedColumn
                 = new DataGridViewTextBoxColumn
                       {
@@ -756,6 +772,7 @@ namespace pwiz.Skyline.Controls
                                 BackgroundColumn,
                                 AreaRatioColumn,
                                 HeightColumn,
+                                MassErrorColumn,
                                 TruncatedColumn,
                                 UserSetColumn,
                                 PeakRankColumn,
@@ -778,6 +795,7 @@ namespace pwiz.Skyline.Controls
                                TotalAreaColumn,
                                TotalBackgroundColumn,
                                TotalAreaRatioColumn,
+                               AverageMassErrorColumn,
                                CountTruncatedColumn,
                                IdentifiedColumn,
                                UserSetTotalColumn,
@@ -1485,6 +1503,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[TotalAreaRatioColumn.Index].Value =
                     row.Cells[LibraryDotProductColumn.Index].Value =
                     row.Cells[IsotopeDotProductColumn.Index].Value =
+                    row.Cells[MassErrorColumn.Index].Value =
                     row.Cells[CountTruncatedColumn.Index].Value =
                     row.Cells[IdentifiedColumn.Index].Value =
                     row.Cells[UserSetTotalColumn.Index].Value =
@@ -1502,6 +1521,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
                 row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratios[0];
+                row.Cells[AverageMassErrorColumn.Index].Value = chromInfo.MassError;
                 row.Cells[CountTruncatedColumn.Index].Value = chromInfo.Truncated;
                 row.Cells[IdentifiedColumn.Index].Value = chromInfo.Identified;
                 row.Cells[UserSetTotalColumn.Index].Value = chromInfo.UserSet;
@@ -1566,6 +1586,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[BackgroundColumn.Index].Value =
                     row.Cells[AreaRatioColumn.Index].Value =
                     row.Cells[HeightColumn.Index].Value =
+                    row.Cells[MassErrorColumn.Index].Value =
                     row.Cells[TruncatedColumn.Index].Value =
                     row.Cells[PeakRankColumn.Index].Value =
                     row.Cells[UserSetColumn.Index].Value =
@@ -1581,6 +1602,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[BackgroundColumn.Index].Value = chromInfo.BackgroundArea;
                 row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratios[0];
                 row.Cells[HeightColumn.Index].Value = chromInfo.Height;
+                row.Cells[MassErrorColumn.Index].Value = chromInfo.MassError;
                 row.Cells[TruncatedColumn.Index].Value = chromInfo.IsTruncated;
                 row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
                 row.Cells[UserSetColumn.Index].Value = chromInfo.UserSet;
@@ -1780,7 +1802,7 @@ namespace pwiz.Skyline.Controls
             var result = new HashSet<DataGridViewColumn> { ReplicateNameColumn };
             if (SelectedTransitionDocNode != null)
             {
-                result.UnionWith(TransitionColumns.Except(new[] {TruncatedColumn, UserSetColumn}));
+                result.UnionWith(TransitionColumns.Except(new[] {MassErrorColumn, TruncatedColumn, UserSetColumn}));
             }
             else if (OnlyTransitionsSelected())
             {
@@ -1793,8 +1815,12 @@ namespace pwiz.Skyline.Controls
                 result.UnionWith(
                     PrecursorColumns.Except(new[]
                                                 {
-                                                    IsotopeDotProductColumn, CountTruncatedColumn, IdentifiedColumn,
-                                                    UserSetTotalColumn, OptCollisionEnergyColumn,
+                                                    IsotopeDotProductColumn,
+                                                    AverageMassErrorColumn,
+                                                    CountTruncatedColumn,
+                                                    IdentifiedColumn,
+                                                    UserSetTotalColumn,
+                                                    OptCollisionEnergyColumn,
                                                     OptDeclusteringPotentialColumn
                                                 }));
             }
@@ -2081,6 +2107,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn TotalAreaColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalBackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaRatioColumn { get; private set; }
+        public DataGridViewTextBoxColumn AverageMassErrorColumn { get; private set; }
         public DataGridViewTextBoxColumn CountTruncatedColumn { get; private set; }
         public DataGridViewTextBoxColumn IdentifiedColumn { get; private set; }
         public DataGridViewTextBoxColumn UserSetTotalColumn { get; private set; }
@@ -2098,6 +2125,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn BackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn AreaRatioColumn { get; private set; }
         public DataGridViewTextBoxColumn HeightColumn { get; private set; }
+        public DataGridViewTextBoxColumn MassErrorColumn { get; private set; }
         public DataGridViewTextBoxColumn TruncatedColumn { get; private set; }
         public DataGridViewTextBoxColumn PeakRankColumn { get; private set; }
         public DataGridViewTextBoxColumn UserSetColumn { get; private set; }

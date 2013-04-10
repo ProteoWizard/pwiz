@@ -553,6 +553,10 @@ namespace pwiz.Skyline.Model
 
             TransitionInstrument instrument = settingsNew.TransitionSettings.Instrument;
             PeptideDocNode nodeResult = this;
+            if (!ReferenceEquals(explicitMods, ExplicitMods))
+                nodeResult = nodeResult.ChangeExplicitMods(explicitMods);
+            nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
+
             if (diff.DiffTransitionGroups && settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren)
             {
                 IList<DocNode> childrenNew = new List<DocNode>();
@@ -591,7 +595,7 @@ namespace pwiz.Skyline.Model
                     if (nodeGroup != null)
                     {
                         TransitionGroupDocNode nodeChanged = recurse
-                            ? nodeGroup.ChangeSettings(settingsNew, this, explicitMods, diffNode)
+                            ? nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)
                             : nodeGroup;
                         if (instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             childrenNew.Add(nodeChanged);
@@ -617,7 +621,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                nodeResult = (PeptideDocNode) ChangeChildrenChecked(childrenNew);                
+                nodeResult = (PeptideDocNode) nodeResult.ChangeChildrenChecked(childrenNew);                
             }
             else
             {
@@ -632,7 +636,7 @@ namespace pwiz.Skyline.Model
                             childrenNew.Add(nodeGroup);
                     }
 
-                    nodeResult = (PeptideDocNode)ChangeChildrenChecked(childrenNew);
+                    nodeResult = (PeptideDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
                 }
 
                 // Update properties and children, if necessary
@@ -664,13 +668,10 @@ namespace pwiz.Skyline.Model
                         childrenNew.Add(nodeChanged);
                     }
 
-                    nodeResult = (PeptideDocNode)ChangeChildrenChecked(childrenNew);
+                    nodeResult = (PeptideDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
                 }                
             }
 
-            if (!ReferenceEquals(explicitMods, ExplicitMods))
-                nodeResult = nodeResult.ChangeExplicitMods(explicitMods);
-            nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
             if (diff.DiffResults || ChangedResults(nodeResult))
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 

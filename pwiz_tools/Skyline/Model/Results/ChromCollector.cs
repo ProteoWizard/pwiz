@@ -64,23 +64,32 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Add an intensity value with no corresponding time.
+        /// Add a value directly to this data collector.
         /// </summary>
-        public int Add(float intensity)
+        public int Add(float val)
         {
             if (_index == _endIndex)
                 Save();
-            _buffer[_index++] = intensity;
+            _buffer[_index++] = val;
             return ++_length;
         }
 
         /// <summary>
-        /// Add a time/intensity pair.
+        /// Add a time.
         /// </summary>
-        public void Add(float time, float intensity)
+        public void AddTime(float time)
         {
             TimesCollector.Add(time);
-            Add(intensity);
+        }
+
+        /// <summary>
+        /// Add a time.
+        /// </summary>
+        public void AddMassError(float error)
+        {
+            // TODO: This currently stores floats, because the collector is designed for that,
+            //       but these could be 16-bit values which would reduce memory / disk space needs.
+            MassErrorCollector.Add(error);
         }
 
         /// <summary>
@@ -111,6 +120,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public ChromCollector TimesCollector { private get; set; }
 
+        /// <summary>
+        /// This collector holds mass error values for high res chromatograms.
+        /// </summary>
+        public ChromCollector MassErrorCollector { private get; set; }
+
         private static ChromCollector _lastTimesCollector;
         private static float[] _lastTimes;
         private static int[] _sortIndexes;
@@ -118,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
-        public void ReleaseChromatogram(out float[] times, out float[] intensities)
+        public void ReleaseChromatogram(out float[] times, out float[] intensities, out float[] massErrors)
         {
             if (!ReferenceEquals(_lastTimesCollector, TimesCollector))
             {
@@ -131,11 +145,18 @@ namespace pwiz.Skyline.Model.Results
 
             times = _lastTimes;
             intensities = GetData();
+            massErrors = MassErrorCollector != null
+                ? MassErrorCollector.GetData()
+                : null;
 
             // Intensities may need to be sorted if the corresponding times
             // were out of order.
             if (_sortIndexes != null)
+            {
                 intensities = ArrayUtil.ApplyOrder(_sortIndexes, intensities);
+                if (massErrors != null)
+                    massErrors = ArrayUtil.ApplyOrder(_sortIndexes, massErrors);
+            }
 
             // Make sure times and intensities match in length
             if (times.Length != intensities.Length)

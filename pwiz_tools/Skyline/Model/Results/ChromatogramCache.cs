@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Model.Results
             return FindEntry(precursorMz, tolerance, 0, _chromatogramEntries.Length - 1);
         }
 
-        private int FindEntry(float precursorMz, float tolerance, int left, int right)
+        private int FindEntry(double precursorMz, float tolerance, int left, int right)
         {
             // Binary search for the right precursorMz
             if (left > right)
@@ -315,19 +315,19 @@ namespace pwiz.Skyline.Model.Results
                 return FindEntry(precursorMz, tolerance, mid + 1, right);
             
             // Scan backward until the first matching element is found.
-            while (mid > 0 && MatchMz(precursorMz, tolerance, _chromatogramEntries[mid - 1].Precursor))
+            while (mid > 0 && MatchMz(precursorMz, _chromatogramEntries[mid - 1].Precursor, tolerance))
                 mid--;
 
             return mid;
         }
 
-        private static int CompareMz(float precursorMz1, float precursorMz2, float tolerance)
+        private static int CompareMz(double precursorMz1, double precursorMz2, float tolerance)
         {
             return ChromKey.CompareTolerant(precursorMz1, precursorMz2,
                 tolerance);
         }
 
-        private static bool MatchMz(float mz1, float mz2, float tolerance)
+        private static bool MatchMz(double mz1, double mz2, float tolerance)
         {
             return CompareMz(mz1, mz2, tolerance) == 0;
         }
@@ -712,9 +712,17 @@ namespace pwiz.Skyline.Model.Results
             long locationTrans = outStream.Position;
             foreach (var tran in chromTransitions)
             {
-                outStream.Write(BitConverter.GetBytes(tran.Product), 0, sizeof(float));
                 if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
-                    outStream.Write(BitConverter.GetBytes((int)tran.Flags), 0, sizeof(int));
+                {
+                    outStream.Write(BitConverter.GetBytes(tran.Product), 0, sizeof(double));
+                    outStream.Write(BitConverter.GetBytes(tran.FlagBits), 0, sizeof(ushort));
+                    outStream.Write(BitConverter.GetBytes(tran.Align1), 0, sizeof(ushort));
+                    outStream.Write(BitConverter.GetBytes(tran.Align2), 0, sizeof(uint));
+                }
+                else
+                {
+                    outStream.Write(BitConverter.GetBytes((float)tran.Product), 0, sizeof(float));
+                }
             }
 
             long locationScores = outStream.Position;
@@ -755,25 +763,38 @@ namespace pwiz.Skyline.Model.Results
                 long lastPeak = info.StartPeakIndex + info.NumPeaks*info.NumTransitions;
                 if (lastPeak > peakCount)
                     throw new InvalidDataException(string.Format(Resources.ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_, lastPeak, peakCount));
-                outStream.Write(BitConverter.GetBytes(info.Precursor), 0, sizeof(float));
                 if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
                 {
                     outStream.Write(BitConverter.GetBytes(info.SeqIndex), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.SeqLen), 0, sizeof(int));
-                }
-                outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(info.StartTransitionIndex), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(info.StartPeakIndex), 0, sizeof(int));
-                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
+                    outStream.Write(BitConverter.GetBytes(info.StartTransitionIndex), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.StartPeakIndex), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(info.StartScoreIndex), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(info.MaxPeakIndex), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(info.NumPoints), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof(int));
-                if (FORMAT_VERSION_CACHE <= FORMAT_VERSION_CACHE_4)
-                    outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));  // Alignment for 64-bit LocationPoints value
-                outStream.Write(BitConverter.GetBytes(info.LocationPoints), 0, sizeof(long));
+                    outStream.Write(BitConverter.GetBytes(info.NumPoints), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.FlagBits), 0, sizeof(ushort));
+                    outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(ushort));
+                    outStream.Write(BitConverter.GetBytes(info.SeqLen), 0, sizeof(ushort));
+                    outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(ushort));
+                    outStream.Write(new[] {(byte)info.NumPeaks, (byte)info.MaxPeakIndex}, 0, 2);
+                    outStream.Write(BitConverter.GetBytes(info.Align1), 0, sizeof(ushort));
+                    outStream.Write(BitConverter.GetBytes(info.Align2), 0, sizeof(uint));
+                    outStream.Write(BitConverter.GetBytes(info.Precursor), 0, sizeof(double));
+                    outStream.Write(BitConverter.GetBytes(info.LocationPoints), 0, sizeof(long));
+                }
+                else
+                {
+                    outStream.Write(BitConverter.GetBytes((float)info.Precursor), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes((int)info.FileIndex), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes((int)info.NumTransitions), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.StartTransitionIndex), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes((int)info.NumPeaks), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.StartPeakIndex), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes((int)info.MaxPeakIndex), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.NumPoints), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.Align2), 0, sizeof(int));  // Alignment for 64-bit LocationPoints value
+                    outStream.Write(BitConverter.GetBytes(info.LocationPoints), 0, sizeof(long));
+                }
             }
 
             // Write the list of cached files and their modification time stamps
@@ -832,38 +853,68 @@ namespace pwiz.Skyline.Model.Results
             outStream.Write(BitConverter.GetBytes(locationFiles), 0, sizeof(long));
         }
 
-        public static void BytesToTimeIntensities(byte[] peaks, int numPoints, int numTrans,
-            out float[][] intensities, out float[] times)
+        public static void BytesToTimeIntensities(byte[] bytes, int numPoints, int numTrans, bool withErrors,
+            out float[] times, out float[][] intensities, out short[][] massErrors)
         {
             times = new float[numPoints];
             intensities = new float[numTrans][];
+            massErrors = withErrors ? new short[numTrans][] : null; 
 
             int sizeArray = sizeof(float)*numPoints;
-            Debug.Assert(sizeArray == Buffer.ByteLength(times));
-            Buffer.BlockCopy(peaks, 0, times, 0, sizeArray);
+            Buffer.BlockCopy(bytes, 0, times, 0, sizeArray);
             for (int i = 0, offsetTran = sizeArray; i < numTrans; i++, offsetTran += sizeArray)
             {
                 intensities[i] = new float[numPoints];
-                Debug.Assert(sizeArray == Buffer.ByteLength(intensities[i]));
-                Buffer.BlockCopy(peaks, offsetTran, intensities[i], 0, sizeArray);
+                Buffer.BlockCopy(bytes, offsetTran, intensities[i], 0, sizeArray);
+            }
+            if (withErrors)
+            {
+                int sizeArrayErrors = sizeof(short)*numPoints;
+                for (int i = 0, offsetTran = sizeArray*(numTrans + 1); i < numTrans; i++, offsetTran += sizeArrayErrors)
+                {
+                    massErrors[i] = new short[numPoints];
+                    Buffer.BlockCopy(bytes, offsetTran, massErrors[i], 0, sizeArrayErrors);
+                }
             }
         }
 
-        public static byte[] TimeIntensitiesToBytes(float[] times, float[][] intensities)
+        public static byte[] TimeIntensitiesToBytes(float[] times, float[][] intensities, short[][] massErrors)
         {
-            int len = times.Length;
-            int countChroms = intensities.Length;
-            int sizeArray = len * sizeof(float);
-            byte[] points = new byte[sizeArray * (countChroms + 1)];
+            int numPoints = times.Length;
+            int sizeArray = numPoints*sizeof(float);
+            int numTrans = intensities.Length;
+            bool hasErrors = massErrors != null;
+            byte[] points = new byte[GetChromatogramsByteCount(numTrans, numPoints, hasErrors)];
 
-            Debug.Assert(sizeArray == Buffer.ByteLength(times));
+            // Write times
             Buffer.BlockCopy(times, 0, points, 0, sizeArray);
-            for (int i = 0, offsetTran = sizeArray; i < countChroms; i++, offsetTran += sizeArray)
+
+            // Write intensites
+            for (int i = 0, offsetTran = sizeArray; i < numTrans; i++, offsetTran += sizeArray)
             {
-                Debug.Assert(sizeArray == Buffer.ByteLength(intensities[i]));
                 Buffer.BlockCopy(intensities[i], 0, points, offsetTran, sizeArray);
             }
+
+            // Write mass errors, if provided
+            if (hasErrors)
+            {
+                int sizeArrayErrors = numPoints*sizeof(short);
+                for (int i = 0, offsetTran = sizeArray*(numTrans + 1); i < numTrans; i++, offsetTran += sizeArrayErrors)
+                {
+                    Buffer.BlockCopy(massErrors[i], 0, points, offsetTran, sizeArrayErrors);
+                }
+            }
             return points;
+        }
+
+        public static int GetChromatogramsByteCount(int numTrans, int numPoints, bool hasErrors)
+        {
+            int sizeArray = sizeof(float)*numPoints;
+            int sizeArrayErrors = sizeof(short)*numPoints;
+            int sizeTotal = sizeArray*(numTrans + 1);
+            if (hasErrors)
+                sizeTotal += sizeArrayErrors*numTrans;
+            return sizeTotal;
         }
 
         public IEnumerable<ChromKeyIndices> GetChromKeys(string msDataFilePath)
@@ -881,10 +932,11 @@ namespace pwiz.Skyline.Model.Results
                 for (int j = 0; j < groupInfo.NumTransitions; j++)
                 {
                     int tranIndex = groupInfo.StartTransitionIndex + j;
-                    ChromSource source = _chromTransitions[tranIndex].Source;
-                    double product = _chromTransitions[tranIndex].Product;
+                    var tranInfo = _chromTransitions[tranIndex];
+                    ChromSource source = tranInfo.Source;
+                    double product = tranInfo.Product;
                     ChromKey key = new ChromKey(_seqBytes, groupInfo.SeqIndex, groupInfo.SeqLen,
-                        groupInfo.Precursor, product, source);
+                        groupInfo.Precursor, product, source, true);
                     yield return new ChromKeyIndices(key, groupInfo.LocationPoints, i, j);
                 }
             }
@@ -977,7 +1029,8 @@ namespace pwiz.Skyline.Model.Results
                                                                       lastEntry.MaxPeakIndex,
                                                                       lastEntry.NumPoints,
                                                                       lastEntry.CompressedSize,
-                                                                      lastEntry.LocationPoints + offsetPoints));
+                                                                      lastEntry.LocationPoints + offsetPoints,
+                                                                      lastEntry.Flags));
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)

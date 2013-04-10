@@ -84,6 +84,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator33 = new System.Windows.Forms.ToolStripSeparator();
             this.legendChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peakBoundariesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bestRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -697,6 +698,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator33,
             this.legendChromContextMenuItem,
             this.peakBoundariesContextMenuItem,
+            this.massErrorContextMenuItem,
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
             this.peptideIDTimesContextMenuItem,
@@ -754,6 +756,13 @@ namespace pwiz.Skyline
             this.peakBoundariesContextMenuItem.Name = "peakBoundariesContextMenuItem";
             resources.ApplyResources(this.peakBoundariesContextMenuItem, "peakBoundariesContextMenuItem");
             this.peakBoundariesContextMenuItem.Click += new System.EventHandler(this.peakBoundariesContextMenuItem_Click);
+            // 
+            // massErrorContextMenuItem
+            // 
+            this.massErrorContextMenuItem.CheckOnClick = true;
+            this.massErrorContextMenuItem.Name = "massErrorContextMenuItem";
+            resources.ApplyResources(this.massErrorContextMenuItem, "massErrorContextMenuItem");
+            this.massErrorContextMenuItem.Click += new System.EventHandler(this.massErrorContextMenuItem_Click);
             // 
             // retentionTimesContextMenuItem
             // 
@@ -3131,6 +3140,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem groupReplicatesByContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupByReplicateContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mProphetFeaturesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorContextMenuItem;
     }
 }
 

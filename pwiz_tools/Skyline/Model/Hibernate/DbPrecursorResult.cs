@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Hibernate
@@ -52,6 +51,8 @@ namespace pwiz.Skyline.Model.Hibernate
 //        public virtual double? StdevAreaRatio { get; set; }
         [QueryColumn(Format = Formats.PEAK_AREA_NORMALIZED)]
         public virtual double? TotalAreaNormalized { get; set; }
+        [QueryColumn(Format = Formats.MASS_ERROR)]
+        public virtual double? AverageMassErrorPPM { get; set; }
         public virtual int? CountTruncated { get; set; }
         public virtual PeakIdentification Identified { get; set; }
         [QueryColumn(Format = Formats.STANDARD_RATIO)]

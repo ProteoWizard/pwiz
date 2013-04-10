@@ -425,7 +425,7 @@ namespace pwiz.SkylineTestFunctional
                 // And SeqIndex, SeqCount, StartScoreIndex and padding
                 int groupHeadersSize = ChromGroupHeaderInfo5.DeltaSize5*dataGroupCount;
                 // And flags for each transition
-                int transitionFlagsSize = sizeof(int)*dataTranCount;
+                int transitionFlagsSize = ChromTransition5.DeltaSize5*dataTranCount;
                 // And num seq byte count, seq location, score types, num scores and score location
                 const int headerScoreSize = sizeof(int) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(long);
                 cacheSize += groupHeadersSize + fileFlagsSize + transitionFlagsSize + headerScoreSize;

@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Properties
             return !Equals(originalSerializedValue, GetSerializedValue(propertyName, currentValue));
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public ToolList ToolList
         {
             get
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public List<string> MruList
         {
             get
@@ -221,7 +221,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public List<string> StackTraceList
         {
             get
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Properties
             set { this["StackTraceList"] = value; }
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public MethodTemplateList ExportMethodTemplateList
         {
             get
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Properties
             return enzyme;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public GridColumnsList GridColumnsList
         {
             get
@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Properties
                 this["GridColumnsList"] = value;
             }
         }
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {
             get
@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Properties
             return exclusion;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public PeptideExcludeList PeptideExcludeList
         {
             get
@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Properties
             return spec;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public SpectralLibraryList SpectralLibraryList
         {
             get
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Properties
                 this[typeof(SpectralLibraryList).Name] = value;
             }
         }
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public BackgroundProteomeList BackgroundProteomeList
         {
             get
@@ -381,7 +381,7 @@ namespace pwiz.Skyline.Properties
             return mod;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public StaticModList StaticModList
         {
             get
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.Properties
             return mod;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public HeavyModList HeavyModList
         {
             get
@@ -435,7 +435,7 @@ namespace pwiz.Skyline.Properties
             return regression;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public CollisionEnergyList CollisionEnergyList
         {
             get
@@ -467,7 +467,7 @@ namespace pwiz.Skyline.Properties
             return regression;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public DeclusterPotentialList DeclusterPotentialList
         {
             get
@@ -504,7 +504,7 @@ namespace pwiz.Skyline.Properties
             return regression;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public RetentionTimeList RetentionTimeList
         {
             get
@@ -536,7 +536,7 @@ namespace pwiz.Skyline.Properties
             return calc;
         }
         
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public RTScoreCalculatorList RTScoreCalculatorList
         {
             get
@@ -569,7 +569,7 @@ namespace pwiz.Skyline.Properties
             return model;
         }
         
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public PeakScoringModelList PeakScoringModelList
         {
             get
@@ -603,7 +603,7 @@ namespace pwiz.Skyline.Properties
             return ion;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public MeasuredIonList MeasuredIonList
         {
             get
@@ -631,7 +631,7 @@ namespace pwiz.Skyline.Properties
             return enrichments;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public IsotopeEnrichmentsList IsotopeEnrichmentsList 
         {
             get
@@ -651,7 +651,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public IsolationSchemeList IsolationSchemeList
         {
             get
@@ -671,7 +671,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public SrmSettingsList SrmSettingsList
         {
             get
@@ -698,7 +698,7 @@ namespace pwiz.Skyline.Properties
             return reportSpec;
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public ReportSpecList ReportSpecList
         {
             get
@@ -718,7 +718,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public AnnotationDefList AnnotationDefList
         {
             get
@@ -738,7 +738,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        [System.Configuration.UserScopedSettingAttribute]
+        [UserScopedSettingAttribute]
         public ServerList ServerList
         {
             get

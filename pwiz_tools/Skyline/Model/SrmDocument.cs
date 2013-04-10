@@ -1142,6 +1142,7 @@ namespace pwiz.Skyline.Model
             public const string replicate = "replicate";
             public const string file = "file";
             public const string step = "step";
+            public const string mass_error_ppm = "mass_error_ppm";
             public const string retention_time = "retention_time";
             public const string start_time = "start_time";
             public const string end_time = "end_time";
@@ -1737,7 +1738,8 @@ namespace pwiz.Skyline.Model
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
-            int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
+            float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
+            int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);            
             PeakIdentification identified = reader.GetEnumAttribute(ATTR.identified,
                 PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
@@ -1764,6 +1766,7 @@ namespace pwiz.Skyline.Model
                                                 backgroundArea,
                                                 new float?[countRatios],
                                                 new float?[countRatios],
+                                                massError,
                                                 truncated,
                                                 identified,
                                                 libraryDotProduct,
@@ -2046,6 +2049,7 @@ namespace pwiz.Skyline.Model
                 SrmSettings settings, ChromFileInfoId fileId)
             {
                 int optimizationStep = reader.GetIntAttribute(ATTR.step);
+                float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
                 float retentionTime = reader.GetFloatAttribute(ATTR.retention_time);
                 float startRetentionTime = reader.GetFloatAttribute(ATTR.start_time);
                 float endRetentionTime = reader.GetFloatAttribute(ATTR.end_time);
@@ -2069,6 +2073,7 @@ namespace pwiz.Skyline.Model
                 int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
                 return new TransitionChromInfo(fileId,
                                                optimizationStep,
+                                               massError,
                                                retentionTime,
                                                startRetentionTime,
                                                endRetentionTime,
@@ -2691,6 +2696,7 @@ namespace pwiz.Skyline.Model
             // Only write peak information, if it is not empty
             if (!chromInfo.IsEmpty)
             {
+                writer.WriteAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);

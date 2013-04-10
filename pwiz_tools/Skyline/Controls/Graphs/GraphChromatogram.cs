@@ -546,7 +546,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!results.TryGetChromatogramSet(_nameChromatogramSet, out chromatograms, out _chromIndex))
                 return;
 
-            string xAxisTitle = "Retention Time";
+            string xAxisTitle = Resources.GraphChromatogram_UpdateUI_Retention_Time;
             IRegressionFunction timeRegressionFunction = null;
             if (_stateProvider.AlignToReplicate >= 0)
             {
@@ -562,7 +562,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (retentionTimeAlignment != null)
                     {
                         timeRegressionFunction = retentionTimeAlignment.RegressionLine;
-                        xAxisTitle = string.Format("Time aligned to {0}", chromatogramSet.Name);
+                        xAxisTitle = string.Format(Resources.GraphChromatogram_UpdateUI_Time_Aligned_to__0_, chromatogramSet.Name);
                         break;
                     }
                 }

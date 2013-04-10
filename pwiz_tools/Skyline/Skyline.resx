@@ -416,6 +416,12 @@
   <data name="peakBoundariesContextMenuItem.Text" xml:space="preserve">
     <value>Peak Boundaries</value>
   </data>
+  <data name="massErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>256, 22</value>
+  </data>
+  <data name="massErrorContextMenuItem.Text" xml:space="preserve">
+    <value>Mass Error</value>
+  </data>
   <data name="allRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
   </data>
@@ -606,7 +612,7 @@
     <value>253, 6</value>
   </data>
   <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 392</value>
+    <value>257, 414</value>
   </data>
   <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
     <value>contextMenuChromatogram</value>
@@ -978,7 +984,7 @@
     <value>Group By</value>
   </data>
   <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 296</value>
+    <value>171, 274</value>
   </data>
   <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
     <value>contextMenuPeakAreas</value>
@@ -2692,6 +2698,12 @@
     <value>peakBoundariesContextMenuItem</value>
   </data>
   <data name="&gt;&gt;peakBoundariesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;massErrorContextMenuItem.Name" xml:space="preserve">
+    <value>massErrorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;retentionTimesContextMenuItem.Name" xml:space="preserve">
