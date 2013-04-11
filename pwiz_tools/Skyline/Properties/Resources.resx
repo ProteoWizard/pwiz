@@ -5087,5 +5087,13 @@ Are you sure you want to continue?</value>
   <data name="ResultsGrid_ResultsGrid_Mass_Error_PPM" xml:space="preserve">
     <value>Mass Error PPM</value>
   </data>
-  >>>>>>> .r4474
+  <data name="ResultsGrid_ResultsGrid_Max_Height" xml:space="preserve">
+    <value>Max Height</value>
+  </data>
+  <data name="ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__" xml:space="preserve">
+    <value>The SKYD file format {0} is not supported by Skyline {1}.</value>
+  </data>
+  <data name="ChromatogramCache_LoadStructs_Please_check_for_a_newer_release_" xml:space="preserve">
+    <value>Please check for a newer release.</value>
+  </data>
 </root>

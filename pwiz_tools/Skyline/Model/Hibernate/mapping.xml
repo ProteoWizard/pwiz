@@ -110,6 +110,7 @@
     <property name="TotalAreaRatio" />
     <!-- <property name="StdevAreaRatio" /> -->
     <property name="TotalAreaNormalized" />
+    <property name="MaxHeight" />
     <property name="AverageMassErrorPPM" />
     <property name="CountTruncated" />
     <property name="Identified" />
@@ -146,6 +147,9 @@
     <property name="MeanTotalAreaNormalized" />
     <property name="StdevTotalAreaNormalized" />
     <property name="CvTotalAreaNormalized" />
+    <property name="MeanMaxHeight" />
+    <property name="StdevMaxHeight" />
+    <property name="CvMaxHeight" />
   </class>
   <class name="DbTransition">
     <id name="Id">

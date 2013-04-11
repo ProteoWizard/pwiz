@@ -209,6 +209,14 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
+            Columns.Add(MaxHeightColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "MaxHeight",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Max_Height,
+                    ReadOnly = true,
+                    DefaultCellStyle = { Format = Formats.PEAK_AREA }
+                });
             Columns.Add(AverageMassErrorColumn
                 = new DataGridViewTextBoxColumn
                 {
@@ -795,6 +803,7 @@ namespace pwiz.Skyline.Controls
                                TotalAreaColumn,
                                TotalBackgroundColumn,
                                TotalAreaRatioColumn,
+                               MaxHeightColumn,
                                AverageMassErrorColumn,
                                CountTruncatedColumn,
                                IdentifiedColumn,
@@ -1521,6 +1530,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
                 row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratios[0];
+                row.Cells[MaxHeightColumn.Index].Value = chromInfo.Height;
                 row.Cells[AverageMassErrorColumn.Index].Value = chromInfo.MassError;
                 row.Cells[CountTruncatedColumn.Index].Value = chromInfo.Truncated;
                 row.Cells[IdentifiedColumn.Index].Value = chromInfo.Identified;
@@ -1802,7 +1812,12 @@ namespace pwiz.Skyline.Controls
             var result = new HashSet<DataGridViewColumn> { ReplicateNameColumn };
             if (SelectedTransitionDocNode != null)
             {
-                result.UnionWith(TransitionColumns.Except(new[] {MassErrorColumn, TruncatedColumn, UserSetColumn}));
+                result.UnionWith(TransitionColumns.Except(new[]
+                                                              {
+                                                                  MassErrorColumn,
+                                                                  TruncatedColumn,
+                                                                  UserSetColumn
+                                                              }));
             }
             else if (OnlyTransitionsSelected())
             {
@@ -2107,6 +2122,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn TotalAreaColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalBackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaRatioColumn { get; private set; }
+        public DataGridViewTextBoxColumn MaxHeightColumn { get; private set; }
         public DataGridViewTextBoxColumn AverageMassErrorColumn { get; private set; }
         public DataGridViewTextBoxColumn CountTruncatedColumn { get; private set; }
         public DataGridViewTextBoxColumn IdentifiedColumn { get; private set; }

@@ -191,7 +191,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_1_2 = 1.2;   // Used briefly during development of v1.3
         public const double FORMAT_VERSION_1_3 = 1.3;
         public const double FORMAT_VERSION_1_4 = 1.4;
-        public const double FORMAT_VERSION = FORMAT_VERSION_1_4;
+        public const double FORMAT_VERSION_1_5 = 1.5;
+        public const double FORMAT_VERSION = FORMAT_VERSION_1_5;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
@@ -1738,6 +1739,7 @@ namespace pwiz.Skyline.Model
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
+            float? height = reader.GetNullableFloatAttribute(ATTR.height);
             float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
             int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);            
             PeakIdentification identified = reader.GetEnumAttribute(ATTR.identified,
@@ -1764,6 +1766,7 @@ namespace pwiz.Skyline.Model
                                                 fwhm,
                                                 area,
                                                 backgroundArea,
+                                                height,
                                                 new float?[countRatios],
                                                 new float?[countRatios],
                                                 massError,
@@ -2512,6 +2515,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
+            writer.WriteAttributeNullable(ATTR.height, chromInfo.Height);
             writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
             writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLower());
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);

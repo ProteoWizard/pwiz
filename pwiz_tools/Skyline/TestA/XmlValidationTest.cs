@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestA
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            var schemaFile = TestContext.GetProjectDirectory(@"TestA\Schemas\Skyline_1.4.xsd");
+            var schemaFile = TestContext.GetProjectDirectory(@"TestA\Schemas\Skyline_1.5.xsd");
             var doc08Path = testFilesDir.GetTestPath("Study7_for_xml_validation.sky");
             var docCurrentPath = testFilesDir.GetTestPath("Study7_for_xml_validation_current.sky");
 

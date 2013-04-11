@@ -53,5 +53,12 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? StdevTotalAreaNormalized { get; set; }
         [QueryColumn(Format = Formats.CV)]
         public virtual double? CvTotalAreaNormalized { get; set; }
+        // Height
+        [QueryColumn(Format = Formats.PEAK_AREA)]
+        public virtual double? MeanMaxHeight { get; set; }
+        [QueryColumn(Format = Formats.PEAK_AREA)]
+        public virtual double? StdevMaxHeight { get; set; }
+        [QueryColumn(Format = Formats.CV)]
+        public virtual double? CvMaxHeight { get; set; }
     }
 }

@@ -533,6 +533,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             TotalBackground = chromInfo.BackgroundArea,
                             TotalAreaRatio = chromInfo.Ratios[0],
                             // StdevAreaRatio = chromInfo.RatioStdevs[0],
+                            MaxHeight = chromInfo.Height,
                             AverageMassErrorPPM = chromInfo.MassError,
                             CountTruncated = chromInfo.Truncated,
                             Identified = chromInfo.Identified,
@@ -917,6 +918,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                           select result.TotalAreaNormalized.Value);
                 }
             }
+
+            private Statistics MaxHeightStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.TotalArea.HasValue
+                                          select result.TotalArea.Value);
+                }
+            }
 // ReSharper restore PossibleInvalidOperationException
 
             public void CalculateStatistics(DbPrecursorResultSummary precursorResultSummary)
@@ -961,6 +972,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     precursorResultSummary.MeanTotalAreaNormalized = mean;
                     precursorResultSummary.StdevTotalAreaNormalized = stdev;
                     precursorResultSummary.CvTotalAreaNormalized = cv;
+                });
+                CalcSummary(MaxHeightStats, (mean, stdev, cv) =>
+                {
+                    precursorResultSummary.MeanMaxHeight = mean;
+                    precursorResultSummary.StdevMaxHeight = stdev;
+                    precursorResultSummary.CvMaxHeight = cv;
                 });
             }
         }

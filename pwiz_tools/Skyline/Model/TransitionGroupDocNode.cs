@@ -1775,6 +1775,7 @@ namespace pwiz.Skyline.Model
                                                     Fwhm,
                                                     Area,
                                                     BackgroundArea,
+                                                    MaxHeight,
                                                     Ratios,
                                                     RatioStdevs,
                                                     MassError,

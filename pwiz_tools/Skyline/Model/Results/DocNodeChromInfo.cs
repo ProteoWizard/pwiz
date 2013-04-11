@@ -153,6 +153,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? fwhm,
                                         float? area,
                                         float? backgroundArea,
+                                        float? height,
                                         IList<float?> ratios,
                                         IList<float?> stdevs,
                                         float? massError,
@@ -172,6 +173,7 @@ namespace pwiz.Skyline.Model.Results
             Fwhm = fwhm;
             Area = area;
             BackgroundArea = backgroundArea;
+            Height = height;
             Ratios = ratios;
             RatioStdevs = stdevs;
             MassError = massError;
@@ -192,6 +194,7 @@ namespace pwiz.Skyline.Model.Results
         public float? Fwhm { get; private set; }
         public float? Area { get; private set; }
         public float? BackgroundArea { get; private set; }
+        public float? Height { get; private set; }
         public float? Ratio { get { return _ratios[0]; } }
         public IList<float?> Ratios
         {
@@ -255,6 +258,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Fwhm.Equals(Fwhm) &&
                    other.Area.Equals(Area) &&
                    other.BackgroundArea.Equals(BackgroundArea) &&
+                   other.Height.Equals(Height) &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    ArrayUtil.EqualsDeep(other.RatioStdevs, RatioStdevs) &&
                    other.Truncated.Equals(Truncated) &&
@@ -286,6 +290,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Area.HasValue ? Area.Value.GetHashCode() : 0);
                 result = (result*397) ^ (BackgroundArea.HasValue ? BackgroundArea.Value.GetHashCode() : 0);
+                result = (result*397) ^ (Height.HasValue ? Height.Value.GetHashCode() : 0);
                 result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ RatioStdevs.GetHashCodeDeep();
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);

@@ -28,6 +28,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -513,6 +514,12 @@ namespace pwiz.Skyline.Model.Results
             ReadComplete(stream, cacheHeader, countHeader);
 
             int formatVersion = GetInt32(cacheHeader, (int) Header.format_version);
+            if (formatVersion > FORMAT_VERSION_CACHE)
+            {
+                throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__,
+                                                                          formatVersion, Install.Version),
+                                                            Resources.ChromatogramCache_LoadStructs_Please_check_for_a_newer_release_));
+            }
             if (formatVersion < FORMAT_VERSION_CACHE_2)
             {
                 return EmptyCache(out raw);
