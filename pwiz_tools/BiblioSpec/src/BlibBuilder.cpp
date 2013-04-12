@@ -34,7 +34,8 @@ using namespace std;
 namespace BiblioSpec {
 
 BlibBuilder::BlibBuilder():
-level_compress(3), fileSizeThresholdForCaching(800000000)
+level_compress(3), fileSizeThresholdForCaching(800000000),
+targetSequences(NULL), targetSequencesModified(NULL), stdinStream(&cin)
 {
     scoreThresholds[SQT] = 0.01;    // 1% FDR
     scoreThresholds[PEPXML] = 0.95; // peptide prophet probability
@@ -51,6 +52,22 @@ level_compress(3), fileSizeThresholdForCaching(800000000)
 
 BlibBuilder::~BlibBuilder()
 {
+    if (stdinStream != &cin && stdinStream != NULL)
+    {
+        ((ifstream*)stdinStream)->close();
+        delete stdinStream;
+        stdinStream = NULL;
+    }
+    if (targetSequences != NULL)
+    {
+        delete targetSequences;
+        targetSequences = NULL;
+    }
+    if (targetSequencesModified != NULL)
+    {
+        delete targetSequencesModified;
+        targetSequencesModified = NULL;
+    }
 }
 
 void BlibBuilder::usage()
@@ -58,7 +75,10 @@ void BlibBuilder::usage()
     const char* usage =
         "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.msms.txt|*.msf|*.mzid|*.perc.xml|*final_fragment.csv>+ <library_name>\n"
         "   -o                Overwrite existing library. Default append.\n"
+        "   -S  <filename>    Read from file as though it were stdin.\n"
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
+        "   -i                Ignore peptides except those with the unmodified sequences from stdin.\n"
+        "   -I                Ignore peptides except those with the modified sequences from stdin.\n"
         "   -q  <max score>   Maximum FDR for accepting results from Percolator (.sqt or .perc.xml) files. Default 0.01.\n"
         "   -p  <min score>   Minimum probability for accepting results from PeptideProphet (.pep.xml) files. Default 0.95.\n"
         "   -e  <max score>   Maximum expectation value for accepting results from Mascot (.dat) files. Default 0.05\n"
@@ -98,6 +118,14 @@ string BlibBuilder::getMaxQuantModsPath() {
     return maxQuantModsPath;
 }
 
+const set<string>* BlibBuilder::getTargetSequences() {
+    return targetSequences;
+}
+
+const set<string>* BlibBuilder::getTargetSequencesModified() {
+    return targetSequencesModified;
+}
+
 /**
  * Read the command line.  Use BlibMaker to parse options.  Get
  * filenames and store in input_files vector.
@@ -108,58 +136,88 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
     int i = BlibMaker::parseCommandArgs(argc, argv);
     argc--;               // Remove output library at the end
 
-    int nInputs = argc - i;
-    if(!isStdinput() && (nInputs < 1) ) {
-        Verbosity::comment(V_ERROR,
-                           "Missing input files (.sqt, .pep.xml/.pep.XML/.pepXML, .idpXML, .dat, .xtan.xml, .pride.xml, .mzid, .perc.xml.)");
-        usage();          // Nothing to add
-    }
-
-    if(isStdinput()) {
-        string inFileName;
-
-        while(cin) {
-            getline(cin, inFileName);
-
-            if(!inFileName.empty()) {
-                char* name = new char[inFileName.size()+1];
-                strcpy(name,inFileName.c_str());
+    bool filesFromStdin = false;
+    while (!stdinput.empty())
+    {
+        // handle list
+        switch (stdinput.front())
+        {
+        case FILENAMES:
+            // read filenames until end of cin or empty line
+            filesFromStdin = true;
+            Verbosity::debug("Reading input filenames");
+            while (*stdinStream)
+            {
+                string infileName;
+                getline(*stdinStream, infileName);
+                if (infileName.empty())
+                {
+                    break;
+                }
+                char* name = new char[infileName.size()+1];
+                strcpy(name, infileName.c_str());
                 input_files.push_back(name);
-
-            } else {
-                break;
             }
+            break;
+        case UNMODIFIED_SEQUENCES:
+            // read unmodified sequences until end of cin or empty line
+            Verbosity::debug("Reading target unmodified sequences");
+            readSequences(&targetSequences);
+            break;
+        case MODIFIED_SEQUENCES:
+            // read modified sequences until end of cin or empty line
+            Verbosity::debug("Reading target modified sequences");
+            readSequences(&targetSequencesModified, true);
+            break;
         }
 
-    } else {
-        for (int j = i; j < argc; j++) {
-            char* file_name = argv[j];
-            //if (has_extension(file_name, ".blib"))
-            //merge_libs[merge_count++] = file_name;
-            if(has_extension(file_name,".blib") ||
-               has_extension(file_name, ".pep.xml") ||
-               has_extension(file_name, ".pep.XML") ||
-               has_extension(file_name, ".pepXML") ||
-               has_extension(file_name, ".sqt") ||
-               has_extension(file_name, ".perc.xml") ||
-               has_extension(file_name, ".dat") ||
-               has_extension(file_name, ".xtan.xml") ||
-               has_extension(file_name, ".idpXML") ||
-               has_extension(file_name, ".group.xml") ||
-               has_extension(file_name, ".pride.xml") ||
-               has_extension(file_name, ".msf") ||
-               has_extension(file_name, ".mzid") ||
-               has_extension(file_name, "msms.txt") ||
-               has_extension(file_name, "final_fragment.csv") ||
-               has_extension(file_name, ".ssl") ) {
+        stdinput.pop();
+    }
 
-                input_files.push_back(file_name);
-            } else {
-                Verbosity::error("Unsupported file type '%s'.  Must be .sqt, "
-                                 ".pep.xml/.pep.XML/.pepXML, .idpXML, .dat, "
-                                 ".xtan.xml, .ssl, .group.xml, .pride.xml, .msms.txt, "
-                                 ".msf, .mzid, perc.xml, final_fragment.csv or .blib.",
-                                 file_name);
+    if (stdinStream != &cin && stdinStream != NULL)
+    {
+        ((ifstream*)stdinStream)->close();
+    }
+
+    if(!filesFromStdin) {
+        int nInputs = argc - i;
+        if (nInputs < 1)
+        {
+            Verbosity::comment(V_ERROR,
+                               "Missing input files (.sqt, .pep.xml/.pep.XML/.pepXML, .idpXML, .dat, .xtan.xml, .pride.xml, .mzid, .perc.xml.)");
+            usage();          // Nothing to add
+        }
+        else
+        {
+            for (int j = i; j < argc; j++) {
+                char* file_name = argv[j];
+                //if (has_extension(file_name, ".blib"))
+                //merge_libs[merge_count++] = file_name;
+                if(has_extension(file_name,".blib") ||
+                   has_extension(file_name, ".pep.xml") ||
+                   has_extension(file_name, ".pep.XML") ||
+                   has_extension(file_name, ".pepXML") ||
+                   has_extension(file_name, ".sqt") ||
+                   has_extension(file_name, ".perc.xml") ||
+                   has_extension(file_name, ".dat") ||
+                   has_extension(file_name, ".xtan.xml") ||
+                   has_extension(file_name, ".idpXML") ||
+                   has_extension(file_name, ".group.xml") ||
+                   has_extension(file_name, ".pride.xml") ||
+                   has_extension(file_name, ".msf") ||
+                   has_extension(file_name, ".mzid") ||
+                   has_extension(file_name, "msms.txt") ||
+                   has_extension(file_name, "final_fragment.csv") ||
+                   has_extension(file_name, ".ssl") ) {
+
+                    input_files.push_back(file_name);
+                } else {
+                    Verbosity::error("Unsupported file type '%s'.  Must be .sqt, "
+                                     ".pep.xml/.pep.XML/.pepXML, .idpXML, .dat, "
+                                     ".xtan.xml, .ssl, .group.xml, .pride.xml, .msms.txt, "
+                                     ".msf, .mzid, perc.xml, final_fragment.csv or .blib.",
+                                     file_name);
+                }
             }
         }
     }
@@ -267,8 +325,14 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
     if (switchName == 'o')
         setOverwrite(true);
     else if(switchName == 's')
-        setStdinput(true);
-    else if (switchName == 'c' && ++i < argc) {
+        stdinput.push(FILENAMES);
+    else if (switchName == 'S' && ++i < argc) {
+        stdinStream = new ifstream(argv[i]);
+        if (!stdinStream->good())
+        {
+            Verbosity::error("Could not open file %s as stdin.", argv[i]);
+        }
+    } else if (switchName == 'c' && ++i < argc) {
         double probability_cutoff = atof(argv[i]);
         scoreThresholds[PEPXML] = probability_cutoff;
         scoreThresholds[PROT_PILOT] = probability_cutoff;
@@ -322,6 +386,10 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         Verbosity::set_verbosity(v_level);
     } else if (switchName == 'x' && ++i < argc) {
         maxQuantModsPath = string(argv[i]);
+    } else if (switchName == 'i') {
+        stdinput.push(UNMODIFIED_SEQUENCES);
+    } else if (switchName == 'I') {
+        stdinput.push(MODIFIED_SEQUENCES);
     } else if (switchName == 'L') {
         Verbosity::open_logfile();
     } else {
@@ -329,6 +397,116 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
     }
 
     return min(argc, i + 1);
+}
+
+int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
+{
+    if (*seqSet == NULL)
+    {
+        *seqSet = new set<string>;
+    }
+
+    int sequencesRead = 0;
+    while (*stdinStream)
+    {
+        string sequence;
+        getline(*stdinStream, sequence);
+        if (sequence.empty())
+        {
+            break;
+        }
+
+        string newSeq;
+        string unexpected;
+        vector<SeqMod> mods;
+        size_t aaPosition = 1;
+        // check that each character is a letter and convert it to uppercase
+        for (size_t i = 0; i < sequence.length(); ++i)
+        {
+            if (isalpha(sequence[i]))
+            {
+                newSeq += toupper(sequence[i]);
+                ++aaPosition;
+            }
+            else if (modified && sequence[i] == '[')
+            {
+                // get modification
+                size_t endIdx = sequence.find(']', i + 1);
+                if (endIdx != string::npos)
+                {
+                    ++i;
+                    istringstream deltaMassExtractor(sequence.substr(i, endIdx - i));
+                    double deltaMass;
+                    deltaMassExtractor >> deltaMass;
+                    if (!deltaMassExtractor.fail())
+                    {
+                        SeqMod newMod(aaPosition, deltaMass);
+                        mods.push_back(newMod);
+                    }
+                    else
+                    {
+                        Verbosity::warn("Could not read '%s' as a mass in target sequence %s, skipping this "
+                                        "modification", deltaMassExtractor.str().c_str(), sequence.c_str());
+                    }
+
+                    // move iterator to end of modification
+                    i = endIdx;
+                }
+                else
+                {
+                    Verbosity::warn("Ignoring opening bracket without closing bracket in target sequence %s",
+                                    sequence.c_str());
+                }
+            }
+            else
+            {
+                unexpected += sequence[i];
+            }
+        }
+        if (!unexpected.empty())
+        {
+            Verbosity::warn("Ignoring unexpected characters %s in target sequence %s",
+                            unexpected.c_str(), sequence.c_str());
+        }
+        if (modified)
+        {
+            newSeq = generateModifiedSeq(newSeq.c_str(), mods);
+        }
+        Verbosity::debug("Adding target sequence %s", newSeq.c_str());
+        (*seqSet)->insert(newSeq);
+        ++sequencesRead;
+    }
+
+    return sequencesRead;
+}
+
+/**
+ * \brief Create a sequence that includes modifications from an
+ * unmodified seq and a list of mods.  Assumes that mods are sorted in
+ * increasing order by position and that no two entries in the mods
+ * vector are to the same position.
+ */
+string BlibBuilder::generateModifiedSeq(const char* unmodSeq,
+                                        const vector<SeqMod>& mods) {
+    string modifiedSeq(unmodSeq);
+    char modBuffer[SMALL_BUFFER_SIZE];
+
+    // insert mods from the rear so that the position remains the same
+    for(int i = mods.size() - 1; i > -1; i--) {
+        if( mods.at(i).deltaMass == 0 ) {
+            continue;
+        }
+        if( mods.at(i).position > (int)modifiedSeq.size() ){
+            Verbosity::error("Cannot modify sequence %s, length %d, at "
+                             "position %d. ", modifiedSeq.c_str(), 
+                             modifiedSeq.size(), mods.back().position);
+        }
+
+        sprintf(modBuffer, "[%+.1f]", mods.at(i).deltaMass);
+        modifiedSeq.insert(mods.at(i).position, modBuffer);
+    }
+
+    return modifiedSeq;
 }
 
 string base_name(const char* name)

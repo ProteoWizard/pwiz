@@ -346,7 +346,7 @@ void PrideXmlReader::endData()
         if (decoded.size() != numMzs_)
         {
             // check if the length attribute was the number of bytes
-            int decodedBytes = getDecodedNumBytes(charBuf_);
+            size_t decodedBytes = getDecodedNumBytes(charBuf_);
             if (decodedBytes != numMzs_)
             {
                 Verbosity::warn("Length attribute (%d) did not match number of m/zs (%d) or bytes (%d)",
@@ -370,7 +370,7 @@ void PrideXmlReader::endData()
         if (decoded.size() != numIntensities_)
         {
             // check if the length attribute was the number of bytes
-            int decodedBytes = getDecodedNumBytes(charBuf_);
+            size_t decodedBytes = getDecodedNumBytes(charBuf_);
             if (decodedBytes != numIntensities_)
             {
                 Verbosity::warn("Length attribute (%d) did not match number of intensities (%d) or bytes (%d)",
@@ -388,7 +388,7 @@ void PrideXmlReader::endData()
     }
 }
 
-int PrideXmlReader::getDecodedNumBytes(string base64)
+size_t PrideXmlReader::getDecodedNumBytes(string base64)
 {
     // base 64 string length must be multiple of 4
     if (base64.length() % 4 != 0)

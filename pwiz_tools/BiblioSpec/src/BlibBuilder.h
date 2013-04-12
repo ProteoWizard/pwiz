@@ -29,23 +29,33 @@
  * $ BlibBuilder.h,v 1.0 2009/01/07 15:53:52 Ning Zhang Exp $
  */
 
+#include <istream>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
+#include <sstream>
+#include <cctype>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
 #include "sqlite3.h"
 #include <time.h>
 #include <vector>
+#include <set>
+#include <queue>
 #include <sys/stat.h>
 #include "BlibMaker.h"
 #include "ProgressIndicator.h"
 #include "Verbosity.h"
 #include "BlibUtils.h"
+#include "PSM.h"
 
 using namespace std;
 
 namespace BiblioSpec {
+
+const static int SMALL_BUFFER_SIZE = 64;
+const static int LARGE_BUFFER_SIZE = 8192;
 
 enum BUILD_INPUT
 {
@@ -80,6 +90,8 @@ class BlibBuilder : public BlibMaker
   int getLevelCompress();
   vector<char*> getInputFiles();
   string getMaxQuantModsPath();
+  const set<string>* getTargetSequences();
+  const set<string>* getTargetSequencesModified();
   virtual int parseCommandArgs(int argc, char* argv[]);
   virtual void attachAll();
   int transferLibrary(int iLib, const ProgressIndicator* parentProgress);
@@ -89,18 +101,26 @@ class BlibBuilder : public BlibMaker
                    double* pM, 
                    float* pI);
   int getCacheThreshold(){ return fileSizeThresholdForCaching; }
+  static string generateModifiedSeq(const char* unmodSeq, const vector<SeqMod>& mods);
 
  protected:
   int parseNextSwitch(int i, int argc, char* argv[]);
 
  private:
   // Command-line options
-  //double probability_cutoff; 
+  enum STDIN_LIST { FILENAMES, UNMODIFIED_SEQUENCES, MODIFIED_SEQUENCES };
+  //double probability_cutoff;
   double scoreThresholds[NUM_BUILD_INPUTS]; // replaces probability_cutoff
   int level_compress;
   int fileSizeThresholdForCaching; // for parsing .dat files
   vector<char*> input_files;
   string maxQuantModsPath;
+  set<string>* targetSequences;
+  set<string>* targetSequencesModified;
+  queue<STDIN_LIST> stdinput;
+  istream* stdinStream;
+
+  int readSequences(set<string>** seqSet, bool modified = false);
 };
 
 } // namespace

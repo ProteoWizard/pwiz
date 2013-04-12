@@ -73,7 +73,7 @@ private:
   void parseCvParam(const XML_Char** attr);
   void parseData(const XML_Char** attr);
   void endData();
-  int getDecodedNumBytes(string base64);
+  size_t getDecodedNumBytes(string base64);
   void parsePeptideItem();
   void endPeptideItem();
   void endSequence();
@@ -109,8 +109,8 @@ private:
   SpecData* curSpec_;
   SeqMod curMod_;
   BinaryDataEncoder::Config curBinaryConfig_;
-  int numMzs_;
-  int numIntensities_;
+  size_t numMzs_;
+  size_t numIntensities_;
   string charBuf_;
   map<int, SpecData*> spectra_;
   map<int, int> spectraChargeStates_;

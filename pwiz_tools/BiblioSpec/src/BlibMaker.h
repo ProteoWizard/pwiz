@@ -118,9 +118,6 @@ protected:
     bool isRedundant() const { return redundant; };
     void setRedundant(bool value) { redundant = value; }
 
-    bool isStdinput() const { return stdinput;};
-    void setStdinput(bool value) { stdinput = value;}
-
 protected:
     char zSql[8192];
     bool verbose;
@@ -136,7 +133,6 @@ private:
     int cache_size; 
     bool redundant;
     bool overwrite;
-    bool stdinput;
     string message;
     map<int,int> oldToNewFileID_;
     int unknown_file_id; // if incoming libs don't have file ids,

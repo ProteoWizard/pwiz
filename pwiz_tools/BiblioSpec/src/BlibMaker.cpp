@@ -48,7 +48,6 @@ BlibMaker::BlibMaker(void)
     redundant = true;
     overwrite = false;
     verbose = false;
-    stdinput = false;
     unknown_file_id = -1; // none entered yet
 }
 

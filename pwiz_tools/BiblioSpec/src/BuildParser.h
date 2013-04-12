@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 #include <map>
 #include <limits>
 #include <cmath>
@@ -32,7 +33,6 @@
 #include "BlibBuilder.h"
 #include "BlibUtils.h"
 #include "mzxmlFinder.h"
-#include "PSM.h"
 #include "SpecFileReader.h"
 #include "SqliteRoutine.h"
 #include "PwizReader.h"
@@ -41,9 +41,6 @@
 using namespace std;
 
 namespace BiblioSpec {
-
-const static int SMALL_BUFFER_SIZE = 64;
-const static int LARGE_BUFFER_SIZE = 8192;
 
 const static double H2O_MASS = 18.01056469252;
 
@@ -90,7 +87,8 @@ class BuildParser : protected SAXHandler{
   void sortPsmMods(PSM* psm);
   double calculatePeptideMass(PSM* psm);
   int calculateCharge(double neutralMass, double precursorMz);
-  string generateModifiedSeq(const char* unmodSeq, const vector<SeqMod>& mods);
+  void verifySequences();
+  void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
   void removeDuplicates();
   string fileNotFoundMessage(const char* specfileroot,
                              const vector<const char*>& extensions,

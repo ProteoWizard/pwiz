@@ -446,11 +446,6 @@ void MaxQuantReader::collectPsms()
             parseSuccess = false;
             errorMsg = s;
         }
-        catch (bad_lexical_cast e)
-        {
-            parseSuccess = false;
-            errorMsg = e.what();
-        }
         catch (...)
         {
             parseSuccess = false;

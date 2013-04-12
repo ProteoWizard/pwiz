@@ -270,7 +270,13 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         return;
     }
 
-    // first prune out any duplicates from the list of psms
+    // make sure sequences are uppercase; generate modified sequences if necessary
+    verifySequences();
+
+    // filter psms by sequence
+    filterBySequence(blibMaker_.getTargetSequences(), blibMaker_.getTargetSequencesModified());
+
+    // prune out any duplicates from the list of psms
     removeDuplicates();
 
     // for reading spectrum file
@@ -439,35 +445,6 @@ void BuildParser::insertSpectrum(PSM* psm,
 
 }
 
-/**
- * \brief Create a sequence that includes modifications from an
- * unmodified seq and a list of mods.  Assumes that mods are sorted in
- * increasing order by position and that no two entries in the mods
- * vector are to the same position.
- */
-string BuildParser::generateModifiedSeq(const char* unmodSeq,
-                                       const vector<SeqMod>& mods) {
-    string modifiedSeq(unmodSeq);
-    char modBuffer[SMALL_BUFFER_SIZE];
-
-    // insert mods from the rear so that the position remains the same
-    for(int i = mods.size() - 1; i > -1; i--) {
-        if( mods.at(i).deltaMass == 0 ) {
-            continue;
-        }
-        if( mods.at(i).position > (int)modifiedSeq.size() ){
-            throw BlibException(false, 
-                                "Cannot modify sequence %s, length %d, at "
-                                "position %d. ", modifiedSeq.c_str(), 
-                                modifiedSeq.size(), mods.back().position);
-        }
-
-        sprintf(modBuffer, "[%+.1f]", mods.at(i).deltaMass);
-        modifiedSeq.insert(mods.at(i).position, modBuffer);
-    }
-
-    return modifiedSeq;
-}
 
 bool seqsILEquivalent(string seq1, string seq2)
 {
@@ -481,6 +458,56 @@ bool seqsILEquivalent(string seq1, string seq2)
             return false;
     }
     return true;
+}
+
+void BuildParser::verifySequences()
+{
+    for (vector<PSM*>::iterator iter = psms_.begin(); iter != psms_.end(); ++iter)
+    {
+        PSM* psm = *iter;
+        // make sure sequence is all uppercase
+        psm->unmodSeq = boost::to_upper_copy(psm->unmodSeq);
+        // create the modified sequence, if we don't have it already
+        if( psm->modifiedSeq.empty() ){
+            sortPsmMods(psm);
+            psm->modifiedSeq = BlibBuilder::generateModifiedSeq(psm->unmodSeq.c_str(),
+                                                                psm->mods);
+        } else {
+            psm->modifiedSeq = boost::to_upper_copy(psm->modifiedSeq);
+        }
+    }
+}
+
+/**
+ * Erase all PSMs except those with an unmodified sequence matching a sequence in targetSequences, or
+ * a modified sequence matching a sequence in targetSequencesModified.
+ * Does not erase any PSMs if there are no target sequences.
+ */
+void BuildParser::filterBySequence(const set<string>* targetSequences,
+                                   const set<string>* targetSequencesModified)
+{
+    // don't filter if there are no targets
+    if (targetSequences == NULL && targetSequencesModified == NULL)
+    {
+        return;
+    }
+
+    for (int i = (int)(psms_.size() - 1); i >= 0; --i)
+    {
+        // don't filter this psm if:
+        //   targetSequences is not null and it contains the unmodified sequence
+        //     OR
+        //   targetSequencesModified is not null and it contains the modified sequence
+        if ((targetSequences != NULL &&
+             targetSequences->find(psms_[i]->unmodSeq) != targetSequences->end()) ||
+            (targetSequencesModified != NULL &&
+             targetSequencesModified->find(psms_[i]->modifiedSeq) != targetSequencesModified->end()))
+        {
+            continue;
+        }
+        delete psms_[i];
+        psms_.erase(psms_.begin() + i);
+    }
 }
 
 /**
@@ -503,17 +530,6 @@ void BuildParser::removeDuplicates() {
         if( psm == NULL ){
             continue;
         }
-        // make sure sequence is all uppercase
-        psm->unmodSeq = boost::to_upper_copy(psm->unmodSeq);
-        // create the modified sequence, if we don't have it already
-        if( psm->modifiedSeq.empty() ){
-            sortPsmMods(psm);
-            psm->modifiedSeq = generateModifiedSeq(psm->unmodSeq.c_str(),
-                                                   psm->mods);
-        } else {
-            psm->modifiedSeq = boost::to_upper_copy(psm->modifiedSeq);
-        }
-
         // choose the correct id type
         string id = boost::lexical_cast<string>(psm->specKey);
         if( lookUpBy_ == INDEX_ID ){
