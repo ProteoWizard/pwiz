@@ -77,8 +77,8 @@ void BlibBuilder::usage()
         "   -o                Overwrite existing library. Default append.\n"
         "   -S  <filename>    Read from file as though it were stdin.\n"
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
-        "   -i                Ignore peptides except those with the unmodified sequences from stdin.\n"
-        "   -I                Ignore peptides except those with the modified sequences from stdin.\n"
+        "   -u                Ignore peptides except those with the unmodified sequences from stdin.\n"
+        "   -U                Ignore peptides except those with the modified sequences from stdin.\n"
         "   -q  <max score>   Maximum FDR for accepting results from Percolator (.sqt or .perc.xml) files. Default 0.01.\n"
         "   -p  <min score>   Minimum probability for accepting results from PeptideProphet (.pep.xml) files. Default 0.95.\n"
         "   -e  <max score>   Maximum expectation value for accepting results from Mascot (.dat) files. Default 0.05\n"
@@ -386,9 +386,9 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         Verbosity::set_verbosity(v_level);
     } else if (switchName == 'x' && ++i < argc) {
         maxQuantModsPath = string(argv[i]);
-    } else if (switchName == 'i') {
+    } else if (switchName == 'u') {
         stdinput.push(UNMODIFIED_SEQUENCES);
-    } else if (switchName == 'I') {
+    } else if (switchName == 'U') {
         stdinput.push(MODIFIED_SEQUENCES);
     } else if (switchName == 'L') {
         Verbosity::open_logfile();

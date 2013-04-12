@@ -391,7 +391,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 # Test reading from stdin (filenames and target sequences)
 make output/maxquant.targeted.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
-  : -o -s -i -I -S
+  : -o -s -u -U -S
   : ../src//BlibBuild inputs/maxquant-targeted-stdin.txt output/maxquant.targeted.blib
   :
   : build-maxquant-targeted ;
