@@ -419,7 +419,7 @@ int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
         string newSeq;
         string unexpected;
         vector<SeqMod> mods;
-        size_t aaPosition = 1;
+        size_t aaPosition = 0;
         // check that each character is a letter and convert it to uppercase
         for (size_t i = 0; i < sequence.length(); ++i)
         {
