@@ -403,7 +403,6 @@ namespace pwiz.Skyline.Model.Results
                     ChromatogramPeaks = new BlockedArray<ChromPeak>(),
                     ScoreTypes = new Type[0],
                     Scores = new float[0],
-                    SeqBytes = new byte[0],
                 };
 
             public int FormatVersion { get; set; }
@@ -603,7 +602,7 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                raw.SeqBytes = new byte[0];
+                raw.SeqBytes = null;
             }
             if (formatVersion > FORMAT_VERSION_CACHE_4 && numScoreTypes > 0)
             {

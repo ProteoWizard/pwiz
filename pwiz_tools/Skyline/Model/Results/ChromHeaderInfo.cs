@@ -1216,7 +1216,7 @@ namespace pwiz.Skyline.Model.Results
                         double product,
                         ChromSource source,
                         bool calculatedMzs)
-            : this(seqBytes != null ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null,
+            : this(seqIndex != -1 ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null,
                    precursor,
                    product,
                    source,

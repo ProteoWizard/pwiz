@@ -155,6 +155,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
+        {
+            // Do nothing
+        }
+        
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
         {
             // ReSharper disable UseObjectOrCollectionInitializer
@@ -346,6 +351,11 @@ namespace pwiz.Skyline.Controls.Graphs
             // Do nothing
         }
 
+        public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
+        {
+            // Do nothing
+        }
+
         public override IPointList Points
         {
             get
@@ -360,6 +370,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public abstract string Title { get; }
         public abstract PointAnnotation AnnotatePoint(PointPair point);
         public abstract void AddAnnotations(MSGraphPane graphPane, Graphics g,
+                                            MSPointList pointList, GraphObjList annotations);
+        public abstract void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g,
                                             MSPointList pointList, GraphObjList annotations);
         public abstract IPointList Points { get; }
 

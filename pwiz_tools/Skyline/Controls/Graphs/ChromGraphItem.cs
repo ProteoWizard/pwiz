@@ -248,6 +248,78 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g,
+                                            MSPointList pointList, GraphObjList annotations)
+        {
+            if (Chromatogram == null)
+                return;
+
+            // Give priority to showing the best peak text object above all other annoations
+            if ((DragInfo != null || (!HideBest && TransitionChromInfo != null)))
+            {
+                // Show text and arrow for the best peak
+                double intensityBest = 0;
+                if (_bestPeakTimeIndex != -1)
+                {
+                    ScaledRetentionTime timeBest = new ScaledRetentionTime(_measuredTimes[_bestPeakTimeIndex], _displayTimes[_bestPeakTimeIndex]);
+                    float xBest = graphPane.XAxis.Scale.Transform(timeBest.DisplayTime);
+                    intensityBest = _intensities[_bestPeakTimeIndex];
+                    float yBest = graphPane.YAxis.Scale.Transform(intensityBest);
+
+                    if (GraphChromatogram.ShowRT != ShowRTChrom.none || DragInfo != null)
+                    {
+                        // Best peak gets its own label to avoid curve overlap detection
+                        double intensityLabel = graphPane.YAxis.Scale.ReverseTransform(yBest - 5);
+                        float? massError = Settings.Default.ShowMassError && TransitionChromInfo != null
+                                               ? TransitionChromInfo.MassError
+                                               : null;
+                        double dotProduct = _dotProducts != null ? _bestProduct : 0;
+                        string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
+
+                        TextObj text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
+                                                   CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+                        {
+                            ZOrder = ZOrder.A_InFront,
+                            IsClippedToChartRect = true,
+                            FontSpec = FontSpec,
+                            Tag = new GraphObjTag(this, GraphObjType.best_peak, timeBest)
+                        };
+                        annotations.Add(text);
+                    }
+
+                    // Show the best peak arrow indicator
+                    double timeArrow = graphPane.XAxis.Scale.ReverseTransform(xBest - 4);
+                    double intensityArrow = graphPane.YAxis.Scale.ReverseTransform(yBest - 2);
+
+                    ArrowObj arrow = new ArrowObj(COLOR_BEST_PEAK, 12f,
+                                                  timeArrow, intensityArrow, timeArrow, intensityArrow)
+                    {
+                        Location = { CoordinateFrame = CoordType.AxisXYScale },
+                        IsArrowHead = true,
+                        IsClippedToChartRect = true,
+                        ZOrder = ZOrder.A_InFront
+                    };
+                    annotations.Add(arrow);
+                }
+
+                // Show the best peak boundary lines
+                double startTime = 0, endTime = 0;
+                if (DragInfo != null)
+                {
+                    startTime = DragInfo.StartTime.MeasuredTime;
+                    endTime = DragInfo.EndTime.MeasuredTime;
+                }
+                else if (TransitionChromInfo != null)
+                {
+                    var tranPeakInfo = TransitionChromInfo;
+                    startTime = tranPeakInfo.StartRetentionTime;
+                    endTime = tranPeakInfo.EndRetentionTime;
+                }
+                AddPeakBoundaries(graphPane, annotations, true,
+                                  ScaleRetentionTime(startTime), ScaleRetentionTime(endTime), intensityBest);
+            }
+        }
+
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g,
                                             MSPointList pointList, GraphObjList annotations)
         {
@@ -336,70 +408,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                      };
                     annotations.Add(box);
                 }
-            }
-
-            if ((DragInfo != null || (!HideBest && TransitionChromInfo != null)))
-            {
-                // Show text and arrow for the best peak
-                double intensityBest = 0;
-                if (_bestPeakTimeIndex != -1)
-                {
-                    ScaledRetentionTime timeBest = new ScaledRetentionTime(_measuredTimes[_bestPeakTimeIndex], _displayTimes[_bestPeakTimeIndex]);
-                    float xBest = graphPane.XAxis.Scale.Transform(timeBest.DisplayTime);
-                    intensityBest = _intensities[_bestPeakTimeIndex];
-                    float yBest = graphPane.YAxis.Scale.Transform(intensityBest);
-
-                    if (GraphChromatogram.ShowRT != ShowRTChrom.none || DragInfo != null)
-                    {
-                        // Best peak gets its own label to avoid curve overlap detection
-                        double intensityLabel = graphPane.YAxis.Scale.ReverseTransform(yBest - 5);
-                        float? massError = Settings.Default.ShowMassError && TransitionChromInfo != null
-                                               ? TransitionChromInfo.MassError
-                                               : null;
-                        double dotProduct = _dotProducts != null ? _bestProduct : 0;
-                        string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
-
-                        TextObj text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
-                                                   CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
-                                           {
-                                               ZOrder = ZOrder.A_InFront,
-                                               IsClippedToChartRect = true,
-                                               FontSpec = FontSpec,
-                                               Tag = new GraphObjTag(this, GraphObjType.best_peak, timeBest)
-                                           };
-                        annotations.Add(text);
-                    }
-
-                    // Show the best peak arrow indicator
-                    double timeArrow = graphPane.XAxis.Scale.ReverseTransform(xBest - 4);
-                    double intensityArrow = graphPane.YAxis.Scale.ReverseTransform(yBest - 2);
-
-                    ArrowObj arrow = new ArrowObj(COLOR_BEST_PEAK, 12f,
-                                                  timeArrow, intensityArrow, timeArrow, intensityArrow)
-                                         {
-                                             Location = { CoordinateFrame = CoordType.AxisXYScale },
-                                             IsArrowHead = true,
-                                             IsClippedToChartRect = true,
-                                             ZOrder = ZOrder.A_InFront
-                                         };
-                    annotations.Add(arrow);                    
-                }
-
-                // Show the best peak boundary lines
-                double startTime = 0, endTime = 0;
-                if (DragInfo != null)
-                {
-                    startTime = DragInfo.StartTime.MeasuredTime;
-                    endTime = DragInfo.EndTime.MeasuredTime;
-                }
-                else if (TransitionChromInfo != null)
-                {
-                    var tranPeakInfo = TransitionChromInfo;
-                    startTime = tranPeakInfo.StartRetentionTime;
-                    endTime = tranPeakInfo.EndRetentionTime;                    
-                }
-                AddPeakBoundaries(graphPane, annotations, true,
-                                  ScaleRetentionTime(startTime), ScaleRetentionTime(endTime), intensityBest);
             }
 
             for (int i = 0, len = Chromatogram.NumPeaks; i < len; i++)
@@ -730,6 +738,11 @@ namespace pwiz.Skyline.Controls.Graphs
             // Do nothing
         }
 
+        public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
+        {
+            // Do nothing
+        }
+
         public override IPointList Points
         {
             get
@@ -744,6 +757,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public abstract string Title { get; }
         public abstract PointAnnotation AnnotatePoint(PointPair point);
         public abstract void AddAnnotations(MSGraphPane graphPane, Graphics g,
+                                            MSPointList pointList, GraphObjList annotations);
+        public abstract void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g,
                                             MSPointList pointList, GraphObjList annotations);
         public abstract IPointList Points { get; }
 

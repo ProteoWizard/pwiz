@@ -156,6 +156,18 @@ namespace pwiz.MSGraph
             double yMin = yAxis.Scale.Min;
             double yMax = yAxis.Scale.Max;
 
+            // add manual annotations with TextObj priority over curve annoations
+            foreach (CurveItem item in CurveList)
+            {
+                var info = item.Tag as IMSGraphItemExtended;
+                MSPointList points = item.Points as MSPointList;
+                if (info == null || points == null)
+                    continue;
+
+                info.AddPreCurveAnnotations(this, g, points, _pointAnnotations);
+                AddAnnotations(g, item, clipRegion);
+            }
+
             // add automatic labels for MSGraphItems
             foreach( CurveItem item in CurveList )
             {
@@ -257,30 +269,30 @@ namespace pwiz.MSGraph
                 if( info == null || points == null )
                     continue;
 
-                info.AddAnnotations( this, g,  points, _pointAnnotations );
-                foreach (GraphObj obj in _pointAnnotations)
+                info.AddAnnotations(this, g,  points, _pointAnnotations);
+                AddAnnotations(g, item, clipRegion);
+            }
+        }
+
+        private void AddAnnotations(Graphics g, CurveItem item, Region clipRegion)
+        {
+            foreach (GraphObj obj in _pointAnnotations)
+            {
+                if (!GraphObjList.Contains(obj))
                 {
-                    if (!GraphObjList.Contains(obj))
+                    TextObj text = obj as TextObj;
+                    if (text != null)
                     {
-                        TextObj text = obj as TextObj;
-                        if (text != null)
-                        {
-                            if (detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem))
-                                continue;
+                        Region textBoundsRegion;
+                        if (detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem))
+                            continue;
 
-                            clipRegion.Union(textBoundsRegion);
-                            g.SetClip(clipRegion, CombineMode.Replace);
-                        }
-
-                        GraphObjList.Add(obj);
+                        clipRegion.Union(textBoundsRegion);
+                        g.SetClip(clipRegion, CombineMode.Replace);
                     }
+
+                    GraphObjList.Add(obj);
                 }
-                /*GraphObjList objsToRemove = new GraphObjList();
-                foreach( GraphObj obj in GraphObjList )
-                    if( !pointAnnotations_.Contains( obj ) )
-                        objsToRemove.Add( obj );
-                foreach( GraphObj obj in objsToRemove )
-                    GraphObjList.Remove( obj );*/
             }
         }
 

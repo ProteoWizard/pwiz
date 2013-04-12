@@ -478,7 +478,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.First().Tag;
+                var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.Last().Tag;
                 return graphItem.SelectedRetentionMsMs;
             }
         }
@@ -487,7 +487,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.First().Tag;
+                var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.Last().Tag;
                 return graphItem.RetentionPrediction;
             }
         }
@@ -680,7 +680,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (listChromGraphs.Count > 0)
                     {
-                        SetRetentionTimeIndicators(listChromGraphs[0], settings, chromatograms, nodeGroups, mods);
+                        SetRetentionTimeIndicators(listChromGraphs[listChromGraphs.Count - 1], settings, chromatograms, nodeGroups, mods);
                     }
                 }
                 GraphPane.Legend.IsVisible = Settings.Default.ShowChromatogramLegend;

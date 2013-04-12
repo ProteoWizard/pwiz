@@ -152,8 +152,8 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return _listChromData.First().MassErrors10x != null
-                           ? _listChromData.ConvertAll(data => data.MassErrors10x).ToArray()
+                return _listChromData.First().MassErrors10X != null
+                           ? _listChromData.ConvertAll(data => data.MassErrors10X).ToArray()
                            : null;
             }
         }

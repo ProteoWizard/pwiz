@@ -130,5 +130,13 @@ namespace pwiz.MSGraph
         /// </summary>
         /// <param name="curveItem"></param>
         void CustomizeCurve(CurveItem curveItem);
+
+        /// <summary>
+        /// fill in a list of ZedGraph objects to display on the graph that get considered
+        /// before the annotations added by <see cref="IMSGraphItemInfo.AnnotatePoint"/>;
+        /// the list may change depending on the state of the pointList
+        /// and the annotations that have already been added
+        /// </summary>
+        void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations);
     }
 }

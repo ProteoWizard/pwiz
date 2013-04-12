@@ -126,9 +126,27 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Mass error array averaged base on interpolated intensities
-        /// to the shared time scale.
+        /// to the shared time scale.  Defered setting backing variable
+        /// to avoid doing unnecessary work when interpolation is necessary.
+        /// When no interpolation is necessary, field with be calculate on
+        /// the first access and stored.
         /// </summary>
-        public short[] MassErrors10x { get; private set; }
+        public short[] MassErrors10X
+        {
+            get
+            {
+                if (_massErrors10X == null && RawMassErrors != null)
+                    _massErrors10X = RawMassErrors.Select(m => To10x(m)).ToArray();
+                return _massErrors10X;
+            }
+            private set { _massErrors10X = value; }
+        }
+        private short[] _massErrors10X;
+
+        private static short To10x(double f)
+        {
+            return (short) (f*10 + 0.5);
+        }
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
@@ -157,7 +175,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
-            return new ChromPeak(peak, flags, Times, Intensities, MassErrors10x);
+            return new ChromPeak(peak, flags, Times, Intensities, MassErrors10X);
         }
 
         public void Interpolate(float[] timesNew, double intervalDelta, bool inferZeros)
@@ -277,14 +295,14 @@ namespace pwiz.Skyline.Model.Results
             // Reassign times and intensities.
             Times = timesNew;
             Intensities = intensNew.ToArray();
-            MassErrors10x = massErrorsNew != null ? massErrorsNew.ToArray() : null;
+            MassErrors10X = massErrorsNew != null ? massErrorsNew.ToArray() : null;
         }
 
         private static short AddMassError(ICollection<short> massErrors10X, double massError)
         {
             if (massErrors10X != null)
             {
-                short massError10X = (short) (massError*10 + 0.5);
+                short massError10X = To10x(massError);
                 massErrors10X.Add(massError10X);
                 return massError10X;
             }
