@@ -5193,6 +5193,13 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap FragmentLibDecoy {
+            get {
+                object obj = ResourceManager.GetObject("FragmentLibDecoy", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Neutral losses must be greater than or equal to {0}..
         /// </summary>
@@ -5310,21 +5317,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} must be less than the number of precursors of type &apos;{1}&apos;, or use the &apos;{2}&apos; decoy generation method..
+        ///   Looks up a localized string similar to {0} must be less than the number of precursor models for decoys, or use the &apos;{2}&apos; decoy generation method..
         /// </summary>
-        public static string GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursors_of_type__1__or_use_the__2__decoy_generation_method {
+        public static string GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___2___decoy_generation_method_ {
             get {
-                return ResourceManager.GetString("GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursors_of_type" +
-                        "__1__or_use_the__2__decoy_generation_method", resourceCulture);
+                return ResourceManager.GetString("GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_f" +
+                        "or_decoys__or_use_the___2___decoy_generation_method_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No precursors of type &apos;{1}&apos; were found..
+        ///   Looks up a localized string similar to No precursor models for decoys were found..
         /// </summary>
-        public static string GenerateDecoysDlg_OkDialog_No_precursors_of_type__1__were_found {
+        public static string GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_ {
             get {
-                return ResourceManager.GetString("GenerateDecoysDlg_OkDialog_No_precursors_of_type__1__were_found", resourceCulture);
+                return ResourceManager.GetString("GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_", resourceCulture);
             }
         }
         
@@ -8627,6 +8634,13 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap PeptideLib {
             get {
                 object obj = ResourceManager.GetObject("PeptideLib", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap PeptideLibDecoy {
+            get {
+                object obj = ResourceManager.GetObject("PeptideLibDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -13625,6 +13639,13 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap TransitionGroupLib {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroupLib", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap TransitionGroupLibDecoy {
+            get {
+                object obj = ResourceManager.GetObject("TransitionGroupLibDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -812,11 +812,6 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode[] GetMatchingTransitions(TransitionGroup tranGroup, SrmSettings settings, ExplicitMods explicitMods)
         {
-            // If no calculator for this type, then not possible to calculate transtions
-            var calc = settings.GetFragmentCalc(tranGroup.LabelType, explicitMods);
-            if (calc == null)
-                return null;
-
             int iMatch = Children.IndexOf(nodeGroup =>
                                           ((TransitionGroupDocNode)nodeGroup).TransitionGroup.PrecursorCharge == tranGroup.PrecursorCharge);
             if (iMatch == -1)
@@ -829,6 +824,20 @@ namespace pwiz.Skyline.Model
                 // Having disconnected libraries can mess up automatic picking
                     settings.PeptideSettings.Libraries.DisconnectedLibraries == null)
                 return null;
+
+            return GetMatchingTransitions(tranGroup, nodeGroupMatching, settings, explicitMods);
+        }
+
+        public static TransitionDocNode[] GetMatchingTransitions(TransitionGroup tranGroup,
+                                                                  TransitionGroupDocNode nodeGroupMatching,
+                                                                  SrmSettings settings,
+                                                                  ExplicitMods explicitMods)
+        {
+            // If no calculator for this type, then not possible to calculate transtions
+            var calc = settings.GetFragmentCalc(tranGroup.LabelType, explicitMods);
+            if (calc == null)
+                return null;
+
             var listTrans = new List<TransitionDocNode>();
             foreach (TransitionDocNode nodeTran in nodeGroupMatching.Children)
             {
@@ -838,7 +847,8 @@ namespace pwiz.Skyline.Model
                                              transition.IonType,
                                              transition.CleavageOffset,
                                              transition.MassIndex,
-                                             transition.Charge);
+                                             transition.Charge,
+                                             transition.DecoyMassShift);
                 var isotopeDist = nodeGroupMatching.IsotopeDist;
                 double massH = calc.GetFragmentMass(tranNew, isotopeDist);
                 var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, isotopeDist);

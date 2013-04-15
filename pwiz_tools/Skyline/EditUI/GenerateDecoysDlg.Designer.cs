@@ -31,8 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GenerateDecoysDlg));
             this.label1 = new System.Windows.Forms.Label();
             this.textNumberOfDecoys = new System.Windows.Forms.TextBox();
-            this.comboDecoysLabelType = new System.Windows.Forms.ComboBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
@@ -48,18 +46,6 @@
             // 
             resources.ApplyResources(this.textNumberOfDecoys, "textNumberOfDecoys");
             this.textNumberOfDecoys.Name = "textNumberOfDecoys";
-            // 
-            // comboDecoysLabelType
-            // 
-            this.comboDecoysLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboDecoysLabelType.FormattingEnabled = true;
-            resources.ApplyResources(this.comboDecoysLabelType, "comboDecoysLabelType");
-            this.comboDecoysLabelType.Name = "comboDecoysLabelType";
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
             // 
             // btnCancel
             // 
@@ -97,8 +83,6 @@
             this.Controls.Add(this.comboDecoysGenerationMethod);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.comboDecoysLabelType);
             this.Controls.Add(this.textNumberOfDecoys);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -115,8 +99,6 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textNumberOfDecoys;
-        private System.Windows.Forms.ComboBox comboDecoysLabelType;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label label3;

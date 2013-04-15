@@ -84,7 +84,10 @@ namespace pwiz.Skyline.Controls
             peptide_decoy,
             tran_group_decoy,
             fragment_decoy,
-            protein_decoy
+            protein_decoy,
+            peptide_lib_decoy,
+            tran_group_lib_decoy,
+            fragment_lib_decoy,
         }
 
         public enum StateImageId
@@ -122,6 +125,9 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.TransitionGroupDecoy);
             ImageList.Images.Add(Resources.FragmentDecoy);
             ImageList.Images.Add(Resources.ProteinDecoy);
+            ImageList.Images.Add(Resources.PeptideLibDecoy);
+            ImageList.Images.Add(Resources.TransitionGroupLibDecoy);
+            ImageList.Images.Add(Resources.FragmentLibDecoy);
 
 
             StateImageList = new ImageList();

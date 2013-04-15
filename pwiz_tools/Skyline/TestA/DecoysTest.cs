@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestA
             // First check right number of decoy peptide groups and transtions are generated
             var refineSettings = new RefinementSettings();
             int numDecoys = document.TransitionCount/3;
-            var decoysDoc = refineSettings.GenerateDecoys(document, numDecoys, IsotopeLabelType.light, DecoyGeneration.ADD_RANDOM);
+            var decoysDoc = refineSettings.GenerateDecoys(document, numDecoys, DecoyGeneration.ADD_RANDOM);
 
             AssertEx.IsDocumentState(decoysDoc, 1, document.PeptideGroupCount + 1, document.PeptideCount + numDecoys, 
                                      document.TransitionGroupCount + numDecoys, document.TransitionCount*2);
@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestA
             //AssertEx.Serializable(decoysDoc);
 
             //second call to generate decoys to make sure that it removes the original Decoys group and generates a completely new one.
-            var newDecoysDoc = refineSettings.GenerateDecoys(decoysDoc, numDecoys, IsotopeLabelType.light, DecoyGeneration.ADD_RANDOM);
+            var newDecoysDoc = refineSettings.GenerateDecoys(decoysDoc, numDecoys, DecoyGeneration.ADD_RANDOM);
             Assert.AreNotEqual(decoysDoc.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy),
                 newDecoysDoc.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy));
         }

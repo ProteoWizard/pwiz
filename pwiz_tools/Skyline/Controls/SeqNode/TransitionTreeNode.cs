@@ -93,9 +93,14 @@ namespace pwiz.Skyline.Controls.SeqNode
         private static int GetTypeImageIndex(TransitionDocNode nodeTran)
         {
             if (nodeTran.IsDecoy)
-                return (int) SequenceTree.ImageId.fragment_decoy;
-            return (int)(nodeTran.HasLibInfo ?
-                    SequenceTree.ImageId.fragment_lib : SequenceTree.ImageId.fragment);
+            {
+                return (int)(nodeTran.HasLibInfo
+                    ? SequenceTree.ImageId.fragment_lib_decoy
+                    : SequenceTree.ImageId.fragment_decoy);
+            }
+            return (int)(nodeTran.HasLibInfo
+                ? SequenceTree.ImageId.fragment_lib
+                : SequenceTree.ImageId.fragment);
         }
 
         public int PeakImageIndex

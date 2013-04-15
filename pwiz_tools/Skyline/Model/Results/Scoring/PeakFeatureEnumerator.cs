@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     select document.GetPeakFeatures(nodePepGroup, nodePep, labelType, arrayGroups, calcs)).SelectMany(f => f);
         }
 
-        private static IEnumerable<IEnumerable<TransitionGroupDocNode>> ComparableGroups(PeptideDocNode nodePep)
+        public static IEnumerable<IEnumerable<TransitionGroupDocNode>> ComparableGroups(PeptideDocNode nodePep)
         {
             // Everything with relative RT not unknown makes up a comparable set
             yield return from nodeGroup in nodePep.TransitionGroups

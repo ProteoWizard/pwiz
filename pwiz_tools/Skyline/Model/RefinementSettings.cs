@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -91,7 +92,6 @@ namespace pwiz.Skyline.Model
         public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
         public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
-        public IsotopeLabelType DecoysLabelUsed { get; set; }
         public string DecoysMethod { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
@@ -525,21 +525,21 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument GenerateDecoys(SrmDocument document)
         {
-            return GenerateDecoys(document, NumberOfDecoys, DecoysLabelUsed, DecoysMethod);
+            return GenerateDecoys(document, NumberOfDecoys, DecoysMethod);
         }
 
-        public SrmDocument GenerateDecoys(SrmDocument document, int numDecoys, IsotopeLabelType useLabel, string decoysMethod)
+        public SrmDocument GenerateDecoys(SrmDocument document, int numDecoys, string decoysMethod)
         {
             // Remove the existing decoys
             document = RemoveDecoys(document);
 
             if (decoysMethod == DecoyGeneration.SHUFFLE_SEQUENCE)
-                return GenerateDecoysFunc(document, numDecoys, DecoysLabelUsed, true, GetShuffledPeptideSequence);
+                return GenerateDecoysFunc(document, numDecoys, true, GetShuffledPeptideSequence);
             
             if (decoysMethod == DecoyGeneration.REVERSE_SEQUENCE)
-                return GenerateDecoysFunc(document, numDecoys, DecoysLabelUsed, false, GetReversedPeptideSequence);
+                return GenerateDecoysFunc(document, numDecoys, false, GetReversedPeptideSequence);
 
-            return GenerateDecoysFunc(document, numDecoys, DecoysLabelUsed, false, null);
+            return GenerateDecoysFunc(document, numDecoys, false, null);
         }
 
         private struct SequenceMods
@@ -556,8 +556,8 @@ namespace pwiz.Skyline.Model
             public ExplicitMods Mods { get; set; }
         }
 
-        private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, IsotopeLabelType useLabel,
-                                              bool multiCycle, Func<SequenceMods, SequenceMods> genDecoySequence)
+        private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, bool multiCycle,
+                                                      Func<SequenceMods, SequenceMods> genDecoySequence)
         {
             // Loop through the existing tree in random order creating decoys
             var decoyNodePepList = new List<PeptideDocNode>();
@@ -575,20 +575,24 @@ namespace pwiz.Skyline.Model
                         seqMods = genDecoySequence(seqMods);
                     var peptide = nodePep.Peptide;
                     var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, peptide.MissedCleavages, true);
-                    var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document,
-                        Equals(seqMods.Sequence, peptide.Sequence));
-                    if (decoyNodeTranGroupList.Count == 0)
-                        continue;
-                    var nodePepNew = new PeptideDocNode(decoyPeptide, document.Settings, seqMods.Mods,
-                        decoyNodeTranGroupList.ToArray(), false);
 
-                    // Avoid adding duplicate peptides
-                    if (setDecoyKeys.Contains(nodePepNew.Key))
-                        continue;
-                    setDecoyKeys.Add(nodePepNew.Key);
+                    foreach (var comparableGroups in PeakFeatureEnumerator.ComparableGroups(nodePep))
+                    {
+                        var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, comparableGroups, document,
+                                                                    Equals(seqMods.Sequence, peptide.Sequence));
+                        if (decoyNodeTranGroupList.Count == 0)
+                            continue;
+                        var nodePepNew = new PeptideDocNode(decoyPeptide, document.Settings, seqMods.Mods,
+                            decoyNodeTranGroupList.ToArray(), false);
 
-                    decoyNodePepList.Add(nodePepNew);
-                    numDecoys--;
+                        // Avoid adding duplicate peptides
+                        if (setDecoyKeys.Contains(nodePepNew.Key))
+                            continue;
+                        setDecoyKeys.Add(nodePepNew.Key);
+
+                        decoyNodePepList.Add(nodePepNew);
+                        numDecoys--;
+                    }
                 }
                 // Stop if not multi-cycle or the number of decoys has not changed.
                 if (!multiCycle || startDecoys == numDecoys)
@@ -601,37 +605,58 @@ namespace pwiz.Skyline.Model
             return (SrmDocument)document.Add(decoyNodePepGroup);
         }
 
-        private static List<TransitionGroupDocNode> GetDecoyGroups(PeptideDocNode nodePep, Peptide decoyPeptide, IsotopeLabelType useLabel, SrmDocument document, bool shiftMass)
+        private static List<TransitionGroupDocNode> GetDecoyGroups(PeptideDocNode nodePep, Peptide decoyPeptide,
+            IEnumerable<TransitionGroupDocNode> comparableGroups, SrmDocument document, bool shiftMass)
         {
             var decoyNodeTranGroupList = new List<TransitionGroupDocNode>();
-                
-            foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+
+            var chargeToPrecursor = new Tuple<int, TransitionGroupDocNode>[TransitionGroup.MAX_PRECURSOR_CHARGE+1];
+            foreach (TransitionGroupDocNode nodeGroup in comparableGroups)
             {
                 var transGroup = nodeGroup.TransitionGroup;
-                if (useLabel == null || ReferenceEquals(transGroup.LabelType, useLabel))
+
+                int precursorMassShift = 0;
+                TransitionGroupDocNode nodeGroupPrimary = null;
+
+                var primaryPrecursor = chargeToPrecursor[nodeGroup.TransitionGroup.PrecursorCharge];
+                if (primaryPrecursor != null)
                 {
+                    precursorMassShift = primaryPrecursor.Item1;
+                    nodeGroupPrimary = primaryPrecursor.Item2;
+                }
+                else if (shiftMass)
+                {
+                    precursorMassShift = GetPrecursorMassShift();
+                }
 
-                    int precursorMassShift = (shiftMass ? GetPrecursorMassShift() : 0);
-                    var decoyGroup = new TransitionGroup(decoyPeptide, transGroup.PrecursorCharge,
-                                                         transGroup.LabelType, false, precursorMassShift);
+                var decoyGroup = new TransitionGroup(decoyPeptide, transGroup.PrecursorCharge,
+                                                        transGroup.LabelType, false, precursorMassShift);
 
-                    var decoyNodeTranList = GetDecoyTransitions(nodeGroup, decoyGroup, shiftMass);
+                var decoyNodeTranList = nodeGroupPrimary != null
+                    ? PeptideDocNode.GetMatchingTransitions(decoyGroup, nodeGroupPrimary, document.Settings, nodePep.ExplicitMods)
+                    : GetDecoyTransitions(nodeGroup, decoyGroup, shiftMass);
 
-                    decoyNodeTranGroupList.Add(new TransitionGroupDocNode(decoyGroup,
-                                                                          Annotations.EMPTY,
-                                                                          document.Settings,
-                                                                          nodePep.ExplicitMods,
-                                                                          nodeGroup.LibInfo,
-                                                                          nodeGroup.Results,
-                                                                          decoyNodeTranList.ToArray(),
-                                                                          false));
+                var nodeGroupDecoy = new TransitionGroupDocNode(decoyGroup,
+                                                                Annotations.EMPTY,
+                                                                document.Settings,
+                                                                nodePep.ExplicitMods,
+                                                                nodeGroup.LibInfo,
+                                                                nodeGroup.Results,
+                                                                decoyNodeTranList,
+                                                                false);
+                decoyNodeTranGroupList.Add(nodeGroupDecoy);
+
+                if (primaryPrecursor == null)
+                {
+                    chargeToPrecursor[transGroup.PrecursorCharge] =
+                        new Tuple<int, TransitionGroupDocNode>(precursorMassShift, nodeGroupDecoy);
                 }
             }
 
             return decoyNodeTranGroupList;
         }
 
-        private static List<TransitionDocNode> GetDecoyTransitions(TransitionGroupDocNode nodeGroup, TransitionGroup decoyGroup, bool shiftMass)
+        private static TransitionDocNode[] GetDecoyTransitions(TransitionGroupDocNode nodeGroup, TransitionGroup decoyGroup, bool shiftMass)
         {
             var decoyNodeTranList = new List<TransitionDocNode>();
             foreach (var nodeTran in nodeGroup.Transitions)
@@ -643,7 +668,7 @@ namespace pwiz.Skyline.Model
                 decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, 0,
                                                             nodeTran.IsotopeDistInfo, nodeTran.LibInfo));
             }
-            return decoyNodeTranList;
+            return decoyNodeTranList.ToArray();
         }
 
         static readonly Random RANDOM = new Random();

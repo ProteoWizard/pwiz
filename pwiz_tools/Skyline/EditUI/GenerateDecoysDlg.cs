@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -24,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -36,7 +38,6 @@ namespace pwiz.Skyline.EditUI
 
         // Number of precursor (TransitionGroup) decoys
         private int _numDecoys;
-        private IsotopeLabelType _refineLabelType;
 
         public int NumDecoys
         {
@@ -46,12 +47,6 @@ namespace pwiz.Skyline.EditUI
                 _numDecoys = value;
                 textNumberOfDecoys.Text = _numDecoys.ToString(CultureInfo.CurrentCulture);
             }
-        }
-
-        public IsotopeLabelType DecoysLabelType
-        {
-            get { return _refineLabelType; }
-            set { _refineLabelType = value; }
         }
 
         public string DecoysMethod
@@ -72,13 +67,6 @@ namespace pwiz.Skyline.EditUI
             // Set initial decoys number
             textNumberOfDecoys.Text = (document.TransitionGroupCount/2).ToString(CultureInfo.CurrentCulture);
 
-            // Fill label type combo box
-            comboDecoysLabelType.Items.Add(Resources.GenerateDecoysDlg_GenerateDecoysDlg_All);
-            comboDecoysLabelType.Items.Add(IsotopeLabelType.LIGHT_NAME);
-            foreach (var typedMods in _settings.PeptideSettings.Modifications.GetHeavyModifications())
-                comboDecoysLabelType.Items.Add(typedMods.LabelType.Name);
-            comboDecoysLabelType.SelectedIndex = 1;
-
             // Fill method type combo box
             comboDecoysGenerationMethod.Items.AddRange(DecoyGeneration.Methods.Cast<object>().ToArray());
             comboDecoysGenerationMethod.SelectedIndex = 0;
@@ -93,32 +81,21 @@ namespace pwiz.Skyline.EditUI
             if (!helper.ValidateNumberTextBox(e, textNumberOfDecoys, 0, null, out numDecoys))
                 return;
 
-            var refineLabelType = IsotopeLabelType.light;
-            string refineTypeName = comboDecoysLabelType.SelectedItem.ToString();
-            if (refineTypeName != IsotopeLabelType.LIGHT_NAME)
+            int numComparableGroups = _document.Peptides.SelectMany(PeakFeatureEnumerator.ComparableGroups).Count();
+            if (numComparableGroups == 0)
             {
-                var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(refineTypeName);
-                if (typedMods != null)
-                    refineLabelType = typedMods.LabelType;
-            }
-
-            int precursorsTyped = _document.TransitionGroups.Count(nodeGroup =>
-                Equals(refineLabelType, nodeGroup.TransitionGroup.LabelType));
-            if (precursorsTyped == 0)
-            {
-                helper.ShowTextBoxError(textNumberOfDecoys, Resources.GenerateDecoysDlg_OkDialog_No_precursors_of_type__1__were_found, null, refineLabelType);
+                helper.ShowTextBoxError(textNumberOfDecoys, Resources.GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_, null);
                 return;
             }
-            if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && precursorsTyped < numDecoys)
+            if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && numComparableGroups < numDecoys)
             {
                 helper.ShowTextBoxError(textNumberOfDecoys,
-                                        Resources.GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursors_of_type__1__or_use_the__2__decoy_generation_method,
-                                        null, refineLabelType, DecoyGeneration.SHUFFLE_SEQUENCE);
+                                        Resources.GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___2___decoy_generation_method_,
+                                        null, DecoyGeneration.SHUFFLE_SEQUENCE);
                 return;
             }
 
             _numDecoys = numDecoys;
-            _refineLabelType = refineLabelType;
             DialogResult = DialogResult.OK;
         }
 

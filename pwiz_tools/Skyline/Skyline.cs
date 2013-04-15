@@ -1835,7 +1835,7 @@ namespace pwiz.Skyline
             {
                 if (decoysDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysLabelUsed = decoysDlg.DecoysLabelType, DecoysMethod = decoysDlg.DecoysMethod };
+                    var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
                     ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys);
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);

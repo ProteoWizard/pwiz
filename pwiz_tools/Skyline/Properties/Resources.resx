@@ -2354,13 +2354,6 @@ Are you sure you want to continue?</value>
   <data name="GenerateDecoysDlg_GenerateDecoysDlg_All" xml:space="preserve">
     <value>All</value>
   </data>
-  <data name="GenerateDecoysDlg_OkDialog_No_precursors_of_type__1__were_found" xml:space="preserve">
-    <value>No precursors of type '{1}' were found.</value>
-    <comment>{0} intentionally skipped</comment>
-  </data>
-  <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursors_of_type__1__or_use_the__2__decoy_generation_method" xml:space="preserve">
-    <value>{0} must be less than the number of precursors of type '{1}', or use the '{2}' decoy generation method.</value>
-  </data>
   <data name="AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__" xml:space="preserve">
     <value>Invalid amino acid '{0}' found in the value '{1}'.</value>
   </data>
@@ -4715,239 +4708,239 @@ Are you sure you want to continue?</value>
   <data name="AnnotationDef_AnnotationTarget_Transitions" xml:space="preserve">
     <value>Transitions</value>
   </data>
-  <data name="ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_">
-    <value xml:space="preserve">The path '{0}' was not found among previously imported results.</value>
+  <data name="ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_" xml:space="preserve">
+    <value>The path '{0}' was not found among previously imported results.</value>
   </data>
-  <data name="MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_">
-    <value xml:space="preserve">Attempting to recalculate peak integration without first completing raw data import.</value>
+  <data name="MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_" xml:space="preserve">
+    <value>Attempting to recalculate peak integration without first completing raw data import.</value>
   </data>
-  <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__">
-    <value xml:space="preserve">Error renaming temporary zip file: </value>
+  <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__" xml:space="preserve">
+    <value>Error renaming temporary zip file: </value>
   </data>
-  <data name="WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__">
-    <value xml:space="preserve">Error deleting temporary zip file: </value>
+  <data name="WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__" xml:space="preserve">
+    <value>Error deleting temporary zip file: </value>
   </data>
-  <data name="PublishDocumentDlg_OkDialog_Please_select_a_folder">
-    <value xml:space="preserve">Please select a folder</value>
+  <data name="PublishDocumentDlg_OkDialog_Please_select_a_folder" xml:space="preserve">
+    <value>Please select a folder</value>
   </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server">
-    <value xml:space="preserve">Deleting temporary file on server</value>
+  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
+    <value>Deleting temporary file on server</value>
   </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server">
-    <value xml:space="preserve">Renaming temporary file on server</value>
+  <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
+    <value>Renaming temporary file on server</value>
   </data>
-  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak">
-    <value xml:space="preserve">Remove peak</value>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak" xml:space="preserve">
+    <value>Remove peak</value>
   </data>
-  <data name="ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts">
-    <value xml:space="preserve">Python Scripts</value>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts" xml:space="preserve">
+    <value>Python Scripts</value>
   </data>
-  <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts">
-    <value xml:space="preserve">Perl Scripts</value>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts" xml:space="preserve">
+    <value>Perl Scripts</value>
   </data>
-  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_">
-    <value xml:space="preserve">You must save this document before importing a peptide search.</value>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_" xml:space="preserve">
+    <value>You must save this document before importing a peptide search.</value>
   </data>
-  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next">
-    <value xml:space="preserve">Next</value>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
+    <value>Next</value>
   </data>
-  <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_">
-    <value xml:space="preserve">The document specific spectral library does not have valid retention times.</value>
+  <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_" xml:space="preserve">
+    <value>The document specific spectral library does not have valid retention times.</value>
   </data>
-  <data name="ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_">
-    <value xml:space="preserve">Please check your peptide search pipeline or contact Skyline support to ensure retention times appear in your spectral libraries.</value>
+  <data name="ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_" xml:space="preserve">
+    <value>Please check your peptide search pipeline or contact Skyline support to ensure retention times appear in your spectral libraries.</value>
   </data>
-  <data name="ImportPeptideSearchDlg_NextPage_Finish">
-    <value xml:space="preserve">Finish</value>
+  <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
+    <value>Finish</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_">
-    <value xml:space="preserve">An error occurred attempting to import the {0} library.</value>
+  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
+    <value>An error occurred attempting to import the {0} library.</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library">
-    <value xml:space="preserve">Loading Library</value>
+  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library" xml:space="preserve">
+    <value>Loading Library</value>
   </data>
-  <data name="PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_">
-    <value xml:space="preserve">Libraries and library specifications do not match.</value>
+  <data name="PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_" xml:space="preserve">
+    <value>Libraries and library specifications do not match.</value>
   </data>
-  <data name="ImportResultsControl_GetPeptideSearchChromatograms_Import_results">
-    <value xml:space="preserve">Import results</value>
+  <data name="ImportResultsControl_GetPeptideSearchChromatograms_Import_results" xml:space="preserve">
+    <value>Import results</value>
   </data>
-  <data name="ImportResultsControl_findResultsFilesButton_Click_Results_Directory">
-    <value xml:space="preserve">Results Directory</value>
+  <data name="ImportResultsControl_findResultsFilesButton_Click_Results_Directory" xml:space="preserve">
+    <value>Results Directory</value>
   </data>
-  <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_">
-    <value xml:space="preserve">Could not find all the missing results files.</value>
+  <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
+    <value>Could not find all the missing results files.</value>
   </data>
-  <data name="ImportResultsControl_FindResultsFiles_Searching_for_Results_Files">
-    <value xml:space="preserve">Searching for Results Files</value>
+  <data name="ImportResultsControl_FindResultsFiles_Searching_for_Results_Files" xml:space="preserve">
+    <value>Searching for Results Files</value>
   </data>
-  <data name="ImportResultsControl_FindResultsFiles_Searching_for_matching_results_files_in__0__">
-    <value xml:space="preserve">Searching for matching results files in {0}.</value>
+  <data name="ImportResultsControl_FindResultsFiles_Searching_for_matching_results_files_in__0__" xml:space="preserve">
+    <value>Searching for matching results files in {0}.</value>
   </data>
-  <data name="ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_">
-    <value xml:space="preserve">An error occurred attempting to find results files.</value>
+  <data name="ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_" xml:space="preserve">
+    <value>An error occurred attempting to find results files.</value>
   </data>
-  <data name="ImportFastaControl_browseFastaBtn_Click_Open_FASTA">
-    <value xml:space="preserve">Open FASTA</value>
+  <data name="ImportFastaControl_browseFastaBtn_Click_Open_FASTA" xml:space="preserve">
+    <value>Open FASTA</value>
   </data>
-  <data name="ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__">
-    <value xml:space="preserve">Failed reading the file {0}.</value>
+  <data name="ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__" xml:space="preserve">
+    <value>Failed reading the file {0}.</value>
   </data>
-  <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_">
-    <value xml:space="preserve">The document must contain at least one precursor transition in order to proceed.</value>
+  <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
+    <value>The document must contain at least one precursor transition in order to proceed.</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_">
-    <value xml:space="preserve">The document does not contain any peptides.</value>
+  <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_" xml:space="preserve">
+    <value>The document does not contain any peptides.</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Please_import_FASTA_to_add_peptides_to_the_document_">
-    <value xml:space="preserve">Please import FASTA to add peptides to the document.</value>
+  <data name="ImportFastaControl_ImportFasta_Please_import_FASTA_to_add_peptides_to_the_document_" xml:space="preserve">
+    <value>Please import FASTA to add peptides to the document.</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_">
-    <value xml:space="preserve">The document does not contain any precursor transitions.</value>
+  <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_" xml:space="preserve">
+    <value>The document does not contain any precursor transitions.</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_">
-    <value xml:space="preserve">Would you like to change the document settings to automatically pick the precursor transitions specified in the full-scan settings?</value>
+  <data name="ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_" xml:space="preserve">
+    <value>Would you like to change the document settings to automatically pick the precursor transitions specified in the full-scan settings?</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Change_settings_to_add_precursors">
-    <value xml:space="preserve">Change settings to add precursors</value>
+  <data name="ImportFastaControl_ImportFasta_Change_settings_to_add_precursors" xml:space="preserve">
+    <value>Change settings to add precursors</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Change_settings">
-    <value xml:space="preserve">Change settings</value>
+  <data name="ImportFastaControl_ImportFasta_Change_settings" xml:space="preserve">
+    <value>Change settings</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Insert_FASTA">
-    <value xml:space="preserve">Insert FASTA</value>
+  <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
+    <value>Insert FASTA</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library">
-    <value xml:space="preserve">Building Peptide Search Library</value>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library" xml:space="preserve">
+    <value>Building Peptide Search Library</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_">
-    <value xml:space="preserve">Building document library for peptide search.</value>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_" xml:space="preserve">
+    <value>Building document library for peptide search.</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library">
-    <value xml:space="preserve">Add document spectral library</value>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library" xml:space="preserve">
+    <value>Add document spectral library</value>
   </data>
-  <data name="RtGraphValue_Retention_Time">
-    <value xml:space="preserve">Retention Time</value>
+  <data name="RtGraphValue_Retention_Time" xml:space="preserve">
+    <value>Retention Time</value>
   </data>
-  <data name="RtGraphValue_FWB_Time">
-    <value xml:space="preserve">FWB Time</value>
+  <data name="RtGraphValue_FWB_Time" xml:space="preserve">
+    <value>FWB Time</value>
   </data>
-  <data name="RtGraphValue_FWHM_Time">
-    <value xml:space="preserve">FWHM Time</value>
+  <data name="RtGraphValue_FWHM_Time" xml:space="preserve">
+    <value>FWHM Time</value>
   </data>
-  <data name="AggregateOp_AxisTitleCv">
-    <value xml:space="preserve">{0} CV</value>
+  <data name="AggregateOp_AxisTitleCv" xml:space="preserve">
+    <value>{0} CV</value>
   </data>
-  <data name="AggregateOp_AxisTitleCvPercent">
-    <value xml:space="preserve">{0} CV (%)</value>
+  <data name="AggregateOp_AxisTitleCvPercent" xml:space="preserve">
+    <value>{0} CV (%)</value>
   </data>
-  <data name="RtAlignment_AxisTitleAlignedTo">
-    <value xml:space="preserve">{0} aligned to {1}</value>
+  <data name="RtAlignment_AxisTitleAlignedTo" xml:space="preserve">
+    <value>{0} aligned to {1}</value>
   </data>
-  <data name="GraphValues_Log_AxisTitle">
-    <value xml:space="preserve">Log {0}</value>
+  <data name="GraphValues_Log_AxisTitle" xml:space="preserve">
+    <value>Log {0}</value>
   </data>
-  <data name="ReplicateGroupOp_ReplicateAxisTitle">
-    <value xml:space="preserve">Replicate</value>
+  <data name="ReplicateGroupOp_ReplicateAxisTitle" xml:space="preserve">
+    <value>Replicate</value>
   </data>
-  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered">
-    <value xml:space="preserve">Triggered</value>
+  <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered" xml:space="preserve">
+    <value>Triggered</value>
   </data>
-  <data name="EditCEDlg_ValidateCell_A_value_is_required">
-    <value xml:space="preserve">A value is required.</value>
+  <data name="EditCEDlg_ValidateCell_A_value_is_required" xml:space="preserve">
+    <value>A value is required.</value>
   </data>
-  <data name="NistLibraryBase_Load_The_file___0___is_not_a_valid_library_">
-    <value xml:space="preserve">The file '{0}' is not a valid library.</value>
+  <data name="NistLibraryBase_Load_The_file___0___is_not_a_valid_library_" xml:space="preserve">
+    <value>The file '{0}' is not a valid library.</value>
   </data>
-  <data name="ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_">
-    <value xml:space="preserve">The instrument type {0} does not support triggered acquisition.</value>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
+    <value>The instrument type {0} does not support triggered acquisition.</value>
   </data>
-  <data name="ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_">
-    <value xml:space="preserve">Triggered acquistion requires a spectral library or imported results in order to rank transitions.</value>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_" xml:space="preserve">
+    <value>Triggered acquistion requires a spectral library or imported results in order to rank transitions.</value>
   </data>
-  <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_">
-    <value xml:space="preserve">The current document contains peptides without enough information to rank transitions for triggered acquisition.</value>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
+    <value>The current document contains peptides without enough information to rank transitions for triggered acquisition.</value>
   </data>
-  <data name="ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_">
-    <value xml:space="preserve">The {0} instrument lacks support for direct method export for triggered acquisition.</value>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_" xml:space="preserve">
+    <value>The {0} instrument lacks support for direct method export for triggered acquisition.</value>
   </data>
-  <data name="ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_">
-    <value xml:space="preserve">You must export a {0} transition list and manually import it into a method file using vendor software.</value>
+  <data name="ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_" xml:space="preserve">
+    <value>You must export a {0} transition list and manually import it into a method file using vendor software.</value>
   </data>
-  <data name="AnnotationDef_ValidationErrorMessage_Invalid_value">
-    <value xml:space="preserve">Invalid value</value>
+  <data name="AnnotationDef_ValidationErrorMessage_Invalid_value" xml:space="preserve">
+    <value>Invalid value</value>
   </data>
-  <data name="AnnotationDef_ValidationErrorMessage_Value_must_be_a_number">
-    <value xml:space="preserve">Value must be a number</value>
+  <data name="AnnotationDef_ValidationErrorMessage_Value_must_be_a_number" xml:space="preserve">
+    <value>Value must be a number</value>
   </data>
-  <data name="SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__">
-    <value xml:space="preserve">No formula found for the amino acid '{0}'</value>
+  <data name="SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__" xml:space="preserve">
+    <value>No formula found for the amino acid '{0}'</value>
   </data>
-  <data name="FileEx_SafeDelete_Path_is_empty">
-    <value xml:space="preserve">Path is empty</value>
+  <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
+    <value>Path is empty</value>
   </data>
-  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_">
-    <value xml:space="preserve">Path contains invalid characters: {0}</value>
+  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_" xml:space="preserve">
+    <value>Path contains invalid characters: {0}</value>
   </data>
-  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_">
-    <value xml:space="preserve">Directory could not be found: {0}</value>
+  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
+    <value>Directory could not be found: {0}</value>
   </data>
-  <data name="FileEx_SafeDelete_File_path_is_invalid___0_">
-    <value xml:space="preserve">File path is invalid: {0}</value>
+  <data name="FileEx_SafeDelete_File_path_is_invalid___0_" xml:space="preserve">
+    <value>File path is invalid: {0}</value>
   </data>
-  <data name="FileEx_SafeDelete_File_path_is_too_long___0_">
-    <value xml:space="preserve">File path is too long: {0}</value>
+  <data name="FileEx_SafeDelete_File_path_is_too_long___0_" xml:space="preserve">
+    <value>File path is too long: {0}</value>
   </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_">
-    <value xml:space="preserve">Unable to delete file which is in use: {0}</value>
+  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_" xml:space="preserve">
+    <value>Unable to delete file which is in use: {0}</value>
   </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_">
-    <value xml:space="preserve">Unable to delete read-only file: {0}</value>
+  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_" xml:space="preserve">
+    <value>Unable to delete read-only file: {0}</value>
   </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_">
-    <value xml:space="preserve">Unable to delete directory: {0}</value>
+  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_" xml:space="preserve">
+    <value>Unable to delete directory: {0}</value>
   </data>
-  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_">
-    <value xml:space="preserve">Insufficient permission to delete file: {0}</value>
+  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_" xml:space="preserve">
+    <value>Insufficient permission to delete file: {0}</value>
   </data>
-  <data name="VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_">
-    <value xml:space="preserve">ProteinPilot software (trial or full version) must be installed to convert '.group' files to compatible '.group.xml' files.</value>
+  <data name="VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_" xml:space="preserve">
+    <value>ProteinPilot software (trial or full version) must be installed to convert '.group' files to compatible '.group.xml' files.</value>
   </data>
-  <data name="VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_">
-    <value xml:space="preserve">Failure attempting to convert file {0} to .group.xml.</value>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Failure_attempting_to_convert_file__0__to__group_xml_" xml:space="preserve">
+    <value>Failure attempting to convert file {0} to .group.xml.</value>
   </data>
-  <data name="VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml">
-    <value xml:space="preserve">Converting {0} to xml</value>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml" xml:space="preserve">
+    <value>Converting {0} to xml</value>
   </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_">
-    <value xml:space="preserve">CompassXport software must be installed to import Bruker raw data files.</value>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_" xml:space="preserve">
+    <value>CompassXport software must be installed to import Bruker raw data files.</value>
   </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_">
-    <value xml:space="preserve">Failure attempting to convert {0} to mzML using CompassXport.</value>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
+    <value>Failure attempting to convert {0} to mzML using CompassXport.</value>
   </data>
-  <data name="SkylineWindow_CreateGraphPeakArea_Peak_Areas">
-    <value xml:space="preserve">Peak Areas</value>
+  <data name="SkylineWindow_CreateGraphPeakArea_Peak_Areas" xml:space="preserve">
+    <value>Peak Areas</value>
   </data>
-  <data name="BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library">
-    <value xml:space="preserve">BiblioSpec Library</value>
+  <data name="BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library" xml:space="preserve">
+    <value>BiblioSpec Library</value>
   </data>
-  <data name="XHunterLibrary_SpecFilter_GPM_Spectral_Library">
-    <value xml:space="preserve">GPM Spectral Library</value>
+  <data name="XHunterLibrary_SpecFilter_GPM_Spectral_Library" xml:space="preserve">
+    <value>GPM Spectral Library</value>
   </data>
-  <data name="NistLibrary_SpecFilter_NIST_Spectral_Library">
-    <value xml:space="preserve">NIST Spectral Library</value>
+  <data name="NistLibrary_SpecFilter_NIST_Spectral_Library" xml:space="preserve">
+    <value>NIST Spectral Library</value>
   </data>
-  <data name="SpectrastLibrary_SpecFilter_SpectraST_Library">
-    <value xml:space="preserve">SpectraST Library</value>
+  <data name="SpectrastLibrary_SpecFilter_SpectraST_Library" xml:space="preserve">
+    <value>SpectraST Library</value>
   </data>
-  <data name="BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library">
-    <value xml:space="preserve">Legacy BiblioSpec Library</value>
+  <data name="BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library" xml:space="preserve">
+    <value>Legacy BiblioSpec Library</value>
   </data>
-  <data name="SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_">
-    <value xml:space="preserve">Failed reading Skyline document from the clipboard.</value>
+  <data name="SkylineWindow_Paste_Failed_reading_Skyline_document_from_the_clipboard_" xml:space="preserve">
+    <value>Failed reading Skyline document from the clipboard.</value>
   </data>
-  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_">
-    <value xml:space="preserve">To extract chromatograms from {0} full-scan settings must be enabled.</value>
+  <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_" xml:space="preserve">
+    <value>To extract chromatograms from {0} full-scan settings must be enabled.</value>
   </data>
   <data name="MProphetPeakScoringModel_DoValidate_MProphetScoringModel_has_a_peak_feature_calculator_of_type__0__which_does_not_implement_IPeakFeatureCalculator" xml:space="preserve">
     <value>MProphetScoringModel has a peak feature calculator of type {0} which does not implement IPeakFeatureCalculator</value>
@@ -5063,19 +5056,19 @@ Are you sure you want to continue?</value>
   <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
     <value>Recalculating scores for {0}</value>
   </data>
-    <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to" xml:space="preserve">
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to" xml:space="preserve">
     <value>There are no Panorama servers to publish to</value>
   </data>
-    <data name="SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_" xml:space="preserve">
+  <data name="SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_" xml:space="preserve">
     <value>Press Register to register for a project on PanoramaWeb.</value>
   </data>
-    <data name="SkylineWindow_ShowPublishDlg_Register" xml:space="preserve">
+  <data name="SkylineWindow_ShowPublishDlg_Register" xml:space="preserve">
     <value>Register</value>
   </data>
-    <data name="SkylineWindow_ShowPublishDlg_Continue" xml:space="preserve">
+  <data name="SkylineWindow_ShowPublishDlg_Continue" xml:space="preserve">
     <value>Continue</value>
   </data>
-    <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
+  <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
     <value>Press Continue to use the server of your choice.</value>
   </data>
   <data name="ChromGraphItem_AddAnnotations_Predicted" xml:space="preserve">
@@ -5095,5 +5088,20 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ChromatogramCache_LoadStructs_Please_check_for_a_newer_release_" xml:space="preserve">
     <value>Please check for a newer release.</value>
+  </data>
+  <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PeptideLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="TransitionGroupLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TransitionGroupLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_" xml:space="preserve">
+    <value>No precursor models for decoys were found.</value>
+  </data>
+  <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___2___decoy_generation_method_" xml:space="preserve">
+    <value>{0} must be less than the number of precursor models for decoys, or use the '{2}' decoy generation method.</value>
   </data>
 </root>
