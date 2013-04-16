@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -72,27 +73,70 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("missing_mzxml.pep.XML", "Could not find spectrum file");
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index
             // BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
-            BuildLibraryValid(TestFilesDir.GetTestPath("library_errors"), new[] { "bad_mzxml.pep.XML" }, false, false, 1);
+            BuildLibraryValid(TestFilesDir.GetTestPath("library_errors"), new[] { "bad_mzxml.pep.XML" }, false, false, false, 1);
 
             // Test successful builds
             string libraryBaseName = _libraryName;
             _libraryName = libraryBaseName + "a";
             string libraryA = _libraryName + BiblioSpecLiteSpec.EXT;
             string libraryARedundant = _libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT;
-            BuildLibraryValid("CPTAC_Set4_725_091509.pep.XML", true, false, 1);
-            BuildLibraryValid("CPTAC_Set4_610_080509.pep.XML", true, true, 2);
+            BuildLibraryValid("CPTAC_Set4_725_091509.pep.XML", true, false, false, 1);
+            BuildLibraryValid("CPTAC_Set4_610_080509.pep.XML", true, false, true, 2);
             _libraryName = libraryBaseName + "b";
             string libraryB = _libraryName + BiblioSpecLiteSpec.EXT;
-            BuildLibraryValid("CPTAC_Set4_624_072409.pep.XML", false, false, 6);
+            BuildLibraryValid("CPTAC_Set4_624_072409.pep.XML", false, false, false, 6);
             _libraryName = libraryBaseName + "c";
             string libraryC = _libraryName + BiblioSpecLiteSpec.EXT;
             BuildLibraryValid(TestFilesDir.FullPath, new[] {libraryA, libraryB},
-                false, false, 8);
+                false, false, false, 8);
 
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryA)));
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryARedundant)));
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryB)));
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryC)));
+
+            // Test peptide filter
+            const string filterList = "ADRDESSPYAAM[+16.0]IAAQDVAQR\n" +
+                                      "ACARPIISVYSEK\n" +
+                                      "ADAIQAGASQFETSAAK";
+
+            PastePeptideList(filterList, true, 0, 3, true);
+
+            _libraryName = libraryBaseName + "filter";
+            string libraryFilter = _libraryName + BiblioSpecLiteSpec.EXT;
+            BuildLibraryValid(TestFilesDir.GetTestPath("maxquant"), new[] { "test.msms.txt" },
+                false, true, false, 2);
+
+            Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryFilter)));
+            RunUI(SkylineWindow.Undo);
+            RunUI(SkylineWindow.Undo);
+
+            // Test AddPathsDlg (file not found)
+            EnsurePeptideSettings();
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(PeptideSettingsUI.ShowBuildLibraryDlg);
+            string[] invalidPaths = new[]
+                {
+                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.xml"),
+                    Path.Combine(TestFilesDir.GetTestPath("library_valid"), "CPTAC_Set4_624_072409.pep.XML")
+                };
+            TestAddPaths(buildLibraryDlg, invalidPaths, true);
+
+            // Test AddPathsDlg (file invalid type)
+            string[] invalidTypes = new[]
+                {
+                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.txt"),
+                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "mqpar.xml")
+                };
+            TestAddPaths(buildLibraryDlg, invalidTypes, true);
+
+            // Test AddPathsDlg (valid files)
+            string[] goodPaths = new[]
+                {
+                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.txt"),
+                    Path.Combine(TestFilesDir.GetTestPath("library_valid"), "CPTAC_Set4_624_072409.pep.XML")
+                };
+            TestAddPaths(buildLibraryDlg, goodPaths, false);
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
 
             const string heavyRPeptide = "TPAQFDADELR";
             const string oxidizedMPeptide = "LVGNMHGDETVSR";
@@ -168,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
             _libraryName = libraryBaseName + "_idp";
             string libraryIdp = _libraryName + BiblioSpecLiteSpec.EXT;
             BuildLibraryValid(TestFilesDir.GetTestPath("idp_xml"), new[] { "orbi-small-eg.idpXML" },
-                false, false, idpCount + idpCount3);
+                false, false, false, idpCount + idpCount3);
 
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryIdp)));
 
@@ -195,7 +239,7 @@ namespace pwiz.SkylineTestFunctional
             _libraryName = libraryBaseName + "_cpas1";
             string libraryCpas1 = _libraryName + BiblioSpecLiteSpec.EXT;
             BuildLibraryValid(TestFilesDir.GetTestPath("cpas"), null,
-                false, false, 3);
+                false, false, false, 3);
 
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryCpas1)));
 
@@ -204,7 +248,7 @@ namespace pwiz.SkylineTestFunctional
 
             _libraryName = libraryBaseName + "_cpas2";
             BuildLibraryValid(TestFilesDir.GetTestPath("cpas"), null,
-                false, false, 100);
+                false, false, false, 100);
 
             // And, since the spectra are really poor, allow lots of
             // possibilities for fragment ions.
@@ -250,7 +294,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private static void PastePeptideList(string peptideList, bool keep,
-            int filteredPeptideCount, int missingSpectraCount)
+            int filteredPeptideCount, int missingSpectraCount, bool expectMessage = false)
         {
             int peptideCount = peptideList.Split('\n').Length;
 
@@ -258,11 +302,19 @@ namespace pwiz.SkylineTestFunctional
                 () => SkylineWindow.Paste(peptideList));
 
             if (keep)
+            {
                 OkDialog(pasteFilteredPeptideDlg, pasteFilteredPeptideDlg.NoDialog);
+            }
             else
             {
                 OkDialog(pasteFilteredPeptideDlg, pasteFilteredPeptideDlg.YesDialog);
                 peptideCount -= filteredPeptideCount;
+            }
+
+            if (expectMessage)
+            {
+                var messageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                OkDialog(messageDlg, messageDlg.Btn1Click);
             }
 
             Assert.IsTrue(WaitForCondition(() => SkylineWindow.Document.PeptideCount == peptideCount),
@@ -283,7 +335,7 @@ namespace pwiz.SkylineTestFunctional
         private static void AssertLibInfo(SrmDocument docCurrent, TransitionGroupDocNode nodeGroup)
         {
             Assert.IsTrue(nodeGroup.HasLibInfo,
-                string.Format("Pecursor {0} found without library info", nodeGroup.TransitionGroup));
+                string.Format("Precursor {0} found without library info", nodeGroup.TransitionGroup));
             int ionCount = docCurrent.Settings.TransitionSettings.Libraries.IonCount;
             Assert.AreEqual(ionCount, nodeGroup.Children.Count);
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
@@ -294,18 +346,32 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private void TestAddPaths(BuildLibraryDlg buildLibraryDlg, string[] paths, bool error)
+        {
+            RunDlg<AddPathsDlg>(buildLibraryDlg.ShowAddPathsDlg, addPathsDlg =>
+                {
+                    addPathsDlg.FileNames = paths;
+                    if (error)
+                    {
+                        string errorMsg = addPathsDlg.CheckForError();
+                        Assert.AreNotEqual(string.Empty, errorMsg);
+                    }
+                    addPathsDlg.CancelDialog();
+                });
+        }
+
         private void BuildLibraryValid(string inputFile,
-            bool keepRedundant, bool append, int expectedSpectra)
+            bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra)
         {
             BuildLibraryValid(TestFilesDir.GetTestPath("library_valid"), new[] { inputFile },
-                keepRedundant, append, expectedSpectra);
+                keepRedundant, filterPeptides, append, expectedSpectra);
         }
 
         private void BuildLibraryValid(string inputDir, IEnumerable<string> inputFiles,
-            bool keepRedundant, bool append, int expectedSpectra)
+            bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra)
         {
             BuildLibrary(inputDir, inputFiles,
-                null, null, keepRedundant, append);
+                null, null, keepRedundant, filterPeptides, append);
 
             Assert.IsTrue(WaitForCondition(() =>
                 PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)));
@@ -351,7 +417,7 @@ namespace pwiz.SkylineTestFunctional
             FileEx.SafeDelete(nonredundantBuildPath);
 
             BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] { inputFile },
-                libraryPath, libraryAuth, false, false);
+                libraryPath, libraryAuth, false, false, false);
 
             var messageDlg = WaitForOpenForm<MessageDlg>();
             Assert.IsNotNull(messageDlg, "No message box shown");
@@ -372,7 +438,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles,
-            string libraryPath, string libraryAuth, bool keepRedundant, bool append)
+            string libraryPath, string libraryAuth, bool keepRedundant, bool filterPeptides, bool append)
         {
             EnsurePeptideSettings();
 
@@ -390,6 +456,7 @@ namespace pwiz.SkylineTestFunctional
                 autoLibPath = buildLibraryDlg.LibraryPath;
                 autoLibId = buildLibraryDlg.LibraryId;
                 buildLibraryDlg.LibraryKeepRedundant = keepRedundant;
+                buildLibraryDlg.LibraryFilterPeptides = filterPeptides;
                 buildLibraryDlg.LibraryBuildAction = (append ?
                     LibraryBuildAction.Append : LibraryBuildAction.Create);
                 if (libraryAuth != null)

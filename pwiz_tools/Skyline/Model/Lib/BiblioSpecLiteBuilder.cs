@@ -51,11 +51,12 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles)
+        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<string> targetSequences)
         {
             LibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
 
             InputFiles = inputFiles;
+            TargetSequences = targetSequences;
         }
 
         public LibrarySpec LibrarySpec { get; private set; }
@@ -72,6 +73,8 @@ namespace pwiz.Skyline.Model.Lib
             get { return _inputFiles; }
             private set { _inputFiles = value as ReadOnlyCollection<string> ?? new ReadOnlyCollection<string>(value); }
         }
+
+        public IList<string> TargetSequences { get; private set; }
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
@@ -95,7 +98,7 @@ namespace pwiz.Skyline.Model.Lib
             string message = string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
                                            Path.GetFileName(OutputPath));            progress.UpdateProgress(status = status.ChangeMessage(message));
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
-            var blibBuilder = new BlibBuild(redundantLibrary, InputFiles)
+            var blibBuilder = new BlibBuild(redundantLibrary, InputFiles, TargetSequences)
             {
                 Authority = Authority,
                 CutOffScore = CutOffScore,

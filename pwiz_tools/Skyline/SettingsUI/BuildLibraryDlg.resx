@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="textName.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 23</value>
   </data>
-  <data name="textName.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>267, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -144,15 +144,15 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 7</value>
   </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>38, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
@@ -171,16 +171,16 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 395</value>
   </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
@@ -204,10 +204,10 @@
   <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
     <value>227, 395</value>
   </data>
-  <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnNext.TabIndex" type="System.Int32, mscorlib">
@@ -231,10 +231,10 @@
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 69</value>
   </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
@@ -253,15 +253,15 @@
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="textPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="textPath.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textPath.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 85</value>
   </data>
-  <data name="textPath.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textPath.Size" type="System.Drawing.Size, System.Drawing">
     <value>267, 20</value>
   </data>
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
@@ -281,7 +281,7 @@ library will be created.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textPath.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="comboAction.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -292,10 +292,10 @@ library will be created.</value>
   <data name="comboAction.Items1" xml:space="preserve">
     <value>Append</value>
   </data>
-  <data name="comboAction.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboAction.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 147</value>
   </data>
-  <data name="comboAction.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboAction.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 21</value>
   </data>
   <data name="comboAction.TabIndex" type="System.Int32, mscorlib">
@@ -316,15 +316,15 @@ of the redundant library data.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 131</value>
   </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>40, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
@@ -343,19 +343,19 @@ of the redundant library data.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 256</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>238, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>Lab A&amp;uthority (e.g. proteome.gs.washington.edu):</value>
@@ -370,16 +370,16 @@ of the redundant library data.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
-  <data name="textAuthority.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textAuthority.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 272</value>
   </data>
-  <data name="textAuthority.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textAuthority.Size" type="System.Drawing.Size, System.Drawing">
     <value>267, 20</value>
   </data>
   <data name="textAuthority.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="textAuthority.ToolTip" xml:space="preserve">
     <value>This value is used in an LSID which uniquely identifies
@@ -400,16 +400,16 @@ tabb.vanderbilt.edu</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textAuthority.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
-  <data name="textID.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textID.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 334</value>
   </data>
-  <data name="textID.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textID.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="textID.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="textID.ToolTip" xml:space="preserve">
     <value>This value is used in an LSID which uniquely identifies
@@ -431,15 +431,15 @@ Yeast_20090902</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textID.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 318</value>
   </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
     <value>55, 13</value>
   </data>
   <data name="label5.TabIndex" type="System.Int32, mscorlib">
@@ -458,15 +458,15 @@ Yeast_20090902</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="cbKeepRedundant.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbKeepRedundant.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbKeepRedundant.Location" type="System.Drawing.Point, System.Drawing">
     <value>155, 149</value>
   </data>
-  <data name="cbKeepRedundant.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbKeepRedundant.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 17</value>
   </data>
   <data name="cbKeepRedundant.TabIndex" type="System.Int32, mscorlib">
@@ -489,12 +489,12 @@ you can append more spectra in the future.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
-  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 210</value>
   </data>
-  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
@@ -519,15 +519,15 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 194</value>
   </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
     <value>70, 13</value>
   </data>
   <data name="label6.TabIndex" type="System.Int32, mscorlib">
@@ -546,18 +546,45 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="cbFilter.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>155, 212</value>
+  </data>
+  <data name="cbFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 17</value>
+  </data>
+  <data name="cbFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="cbFilter.Text" xml:space="preserve">
+    <value>Filter for document peptides</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
+    <value>cbFilter</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
     <value>306, 83</value>
   </data>
-  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
@@ -576,12 +603,12 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
-  <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing">
     <value>2, 2</value>
   </data>
-  <data name="panelProperties.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelProperties.Size" type="System.Drawing.Size, System.Drawing">
     <value>390, 387</value>
   </data>
   <data name="panelProperties.TabIndex" type="System.Int32, mscorlib">
@@ -597,10 +624,34 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelProperties.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
+    <value>288, 96</value>
+  </data>
+  <data name="btnAddPaths.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 23</value>
+  </data>
+  <data name="btnAddPaths.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnAddPaths.Text" xml:space="preserve">
+    <value>Add &amp;Paths...</value>
+  </data>
+  <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
+    <value>btnAddPaths</value>
+  </data>
+  <data name="&gt;&gt;btnAddPaths.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddPaths.Parent" xml:space="preserve">
+    <value>panelFiles</value>
+  </data>
+  <data name="&gt;&gt;btnAddPaths.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="cbSelect.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -611,14 +662,14 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
   <data name="cbSelect.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="cbSelect.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbSelect.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 356</value>
   </data>
-  <data name="cbSelect.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbSelect.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 17</value>
   </data>
   <data name="cbSelect.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="cbSelect.Text" xml:space="preserve">
     <value>&amp;Select / deselect all</value>
@@ -633,15 +684,15 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>panelFiles</value>
   </data>
   <data name="&gt;&gt;cbSelect.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label7.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 19</value>
   </data>
-  <data name="label7.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
     <value>58, 13</value>
   </data>
   <data name="label7.TabIndex" type="System.Int32, mscorlib">
@@ -660,15 +711,15 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
     <value>panelFiles</value>
   </data>
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnAddDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
     <value>288, 67</value>
   </data>
-  <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
   </data>
   <data name="btnAddDirectory.TabIndex" type="System.Int32, mscorlib">
@@ -691,15 +742,15 @@ You can uncheck ones you do not want added to the library.</value>
     <value>panelFiles</value>
   </data>
   <data name="&gt;&gt;btnAddDirectory.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
     <value>288, 38</value>
   </data>
-  <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
   </data>
   <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
@@ -721,15 +772,15 @@ You can uncheck ones you do not want added to the library.</value>
     <value>panelFiles</value>
   </data>
   <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="listInputFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="listInputFiles.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="listInputFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 38</value>
   </data>
-  <data name="listInputFiles.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="listInputFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>271, 304</value>
   </data>
   <data name="listInputFiles.TabIndex" type="System.Int32, mscorlib">
@@ -750,12 +801,12 @@ the final non-redundant library is then built.</value>
     <value>panelFiles</value>
   </data>
   <data name="&gt;&gt;listInputFiles.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
-  <data name="panelFiles.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>2, 2</value>
   </data>
-  <data name="panelFiles.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>390, 387</value>
   </data>
   <data name="panelFiles.TabIndex" type="System.Int32, mscorlib">
@@ -774,7 +825,7 @@ the final non-redundant library is then built.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelFiles.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="btnPrevious.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -782,10 +833,10 @@ the final non-redundant library is then built.</value>
   <data name="btnPrevious.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="btnPrevious.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnPrevious.Location" type="System.Drawing.Point, System.Drawing">
     <value>146, 395</value>
   </data>
-  <data name="btnPrevious.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnPrevious.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnPrevious.TabIndex" type="System.Int32, mscorlib">

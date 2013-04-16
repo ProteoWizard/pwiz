@@ -750,6 +750,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\AddPathsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\AddPathsDlg.Designer.cs">
+      <DependentUpon>AddPathsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditPeakScoringModelDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1026,6 +1032,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RescoreResultsDlg.resx">
       <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddPathsDlg.resx">
+      <DependentUpon>AddPathsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>

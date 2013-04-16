@@ -152,7 +152,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // TODO: I need to figure out the name based on the .sky filename
             string name = Path.GetFileNameWithoutExtension(SkylineWindow.DocumentFilePath);
-            var builder = new BiblioSpecLiteBuilder(name, outputPath, SearchFileNames)
+            var builder = new BiblioSpecLiteBuilder(name, outputPath, SearchFileNames, null)
             {
                 Action = libraryBuildAction,
                 KeepRedundant = true,

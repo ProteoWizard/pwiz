@@ -27,6 +27,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -62,12 +63,15 @@ namespace pwiz.Skyline.SettingsUI
         private string _dirInputRoot = string.Empty;
 
         private readonly MessageBoxHelper _helper;
+        private readonly IDocumentUIContainer _documentUiContainer;
 
-        public BuildLibraryDlg()
+        public BuildLibraryDlg(IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
+
+            _documentUiContainer = documentContainer;
 
             panelFiles.Visible = false;
 
@@ -76,6 +80,9 @@ namespace pwiz.Skyline.SettingsUI
             comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
             textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(CultureInfo.CurrentCulture);
             textAuthority.Text = Settings.Default.LibraryAuthority;
+
+            cbFilter.Checked = Settings.Default.LibraryFilterDocumentPeptides;
+            cbKeepRedundant.Checked = Settings.Default.LibraryKeepRedundant;
 
             _helper = new MessageBoxHelper(this);
         }
@@ -202,7 +209,17 @@ namespace pwiz.Skyline.SettingsUI
                     inputFilesChosen.Add(_inputFileNames[i]);
                 }
 
-                _builder = new BiblioSpecLiteBuilder(name, outputPath, inputFilesChosen)
+                List<string> targetPeptidesChosen = null;
+                if (cbFilter.Checked)
+                {
+                    targetPeptidesChosen = new List<string>();
+                    foreach (PeptideDocNode nodePep in _documentUiContainer.Document.Peptides)
+                    {
+                        targetPeptidesChosen.Add(nodePep.ModifiedSequence);
+                    }
+                }
+
+                _builder = new BiblioSpecLiteBuilder(name, outputPath, inputFilesChosen, targetPeptidesChosen)
                               {
                                   Action = libraryBuildAction,
                                   KeepRedundant = LibraryKeepRedundant,
@@ -278,8 +295,9 @@ namespace pwiz.Skyline.SettingsUI
                 ValidateBuilder(e, true);
                 if (!e.Cancel)
                 {
+                    Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
+                    Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
                     DialogResult = DialogResult.OK;
-                    Close();
                 }
             }
             else if (ValidateBuilder(new CancelEventArgs(), false))
@@ -381,6 +399,24 @@ namespace pwiz.Skyline.SettingsUI
                                                     x.Message);
                 MessageDlg.Show(this, message);
             }            
+        }
+
+        private void btnAddPaths_Click(object sender, EventArgs e)
+        {
+            ShowAddPathsDlg();
+        }
+
+        public void ShowAddPathsDlg()
+        {
+            CheckDisposed();
+
+            using (var dlg = new AddPathsDlg())
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    AddInputFiles(dlg.FileNames);
+                }
+            }
         }
 
         private static void FindInputFiles(string dir, ICollection<string> inputFiles, ILongWaitBroker broker)
@@ -596,6 +632,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbKeepRedundant.Checked; }
             set { cbKeepRedundant.Checked = value; }
+        }
+
+        public bool LibraryFilterPeptides
+        {
+            get { return cbFilter.Checked; }
+            set { cbFilter.Checked = value; }
         }
 
         public LibraryBuildAction LibraryBuildAction

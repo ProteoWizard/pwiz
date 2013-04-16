@@ -5089,6 +5089,12 @@ Are you sure you want to continue?</value>
   <data name="ChromatogramCache_LoadStructs_Please_check_for_a_newer_release_" xml:space="preserve">
     <value>Please check for a newer release.</value>
   </data>
+  <data name="AddPathsDlg_OkDialog_The_following_files_could_not_be_found_" xml:space="preserve">
+    <value>The following files could not be found:</value>
+  </data>
+  <data name="AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_" xml:space="preserve">
+    <value>The following files are not valid library input files:</value>
+  </data>
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

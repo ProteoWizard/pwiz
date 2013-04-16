@@ -415,6 +415,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The following files are not valid library input files:.
+        /// </summary>
+        public static string AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_ {
+            get {
+                return ResourceManager.GetString("AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following files could not be found:.
+        /// </summary>
+        public static string AddPathsDlg_OkDialog_The_following_files_could_not_be_found_ {
+            get {
+                return ResourceManager.GetString("AddPathsDlg_OkDialog_The_following_files_could_not_be_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid byte buffer for checksum..
         /// </summary>
         public static string AdlerChecksum_MakeForBuff_Invalid_byte_buffer_for_checksum {

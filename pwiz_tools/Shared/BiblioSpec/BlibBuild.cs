@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.BiblioSpec.Properties;
 using pwiz.Common.SystemUtil;
@@ -76,10 +77,11 @@ namespace pwiz.BiblioSpec
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BlibBuild(string outputPath, IList<string> inputFiles)
+        public BlibBuild(string outputPath, IList<string> inputFiles, IList<string> targetSequences)
         {
             OutputPath = outputPath;
             InputFiles = inputFiles;
+            TargetSequences = targetSequences;
         }
 
         public string OutputPath { get; private set; }
@@ -93,6 +95,8 @@ namespace pwiz.BiblioSpec
             get { return _inputFiles; }
             private set { _inputFiles = value as ReadOnlyCollection<string> ?? new ReadOnlyCollection<string>(value); }
         }
+
+        public IList<string> TargetSequences { get; private set; }
 
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref ProgressStatus status)
         {
@@ -124,6 +128,13 @@ namespace pwiz.BiblioSpec
             var stdinBuilder = new StringBuilder();
             foreach (string fileName in InputFiles)
                 stdinBuilder.AppendLine(fileName.Substring(dirCommon.Length));
+            if (TargetSequences != null)
+            {
+                argv.Add("-U");
+                stdinBuilder.AppendLine();
+                foreach (string targetSequence in TargetSequences)
+                    stdinBuilder.AppendLine(targetSequence);
+            }
 
             argv.Add("\"" + OutputPath + "\"");
 

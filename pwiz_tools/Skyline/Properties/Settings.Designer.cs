@@ -1602,23 +1602,18 @@ namespace pwiz.Skyline.Properties {
                 this["GroupByReplicateAnnotation"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string OrderByReplicateAnnotation
-        {
-            get
-            {
+        public string OrderByReplicateAnnotation {
+            get {
                 return ((string)(this["OrderByReplicateAnnotation"]));
             }
-            set
-            {
+            set {
                 this["OrderByReplicateAnnotation"] = value;
             }
         }
-
-
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1665,6 +1660,30 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ShowMassError"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LibraryFilterDocumentPeptides {
+            get {
+                return ((bool)(this["LibraryFilterDocumentPeptides"]));
+            }
+            set {
+                this["LibraryFilterDocumentPeptides"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LibraryKeepRedundant {
+            get {
+                return ((bool)(this["LibraryKeepRedundant"]));
+            }
+            set {
+                this["LibraryKeepRedundant"] = value;
             }
         }
     }

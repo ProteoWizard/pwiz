@@ -46,8 +46,10 @@
             this.textCutoff = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.panelProperties = new System.Windows.Forms.Panel();
+            this.cbFilter = new System.Windows.Forms.CheckBox();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.panelFiles = new System.Windows.Forms.Panel();
+            this.btnAddPaths = new System.Windows.Forms.Button();
             this.cbSelect = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
             this.btnAddDirectory = new System.Windows.Forms.Button();
@@ -157,6 +159,7 @@
             // panelProperties
             // 
             resources.ApplyResources(this.panelProperties, "panelProperties");
+            this.panelProperties.Controls.Add(this.cbFilter);
             this.panelProperties.Controls.Add(this.btnBrowse);
             this.panelProperties.Controls.Add(this.label6);
             this.panelProperties.Controls.Add(this.textCutoff);
@@ -173,6 +176,12 @@
             this.panelProperties.Controls.Add(this.label4);
             this.panelProperties.Name = "panelProperties";
             // 
+            // cbFilter
+            // 
+            resources.ApplyResources(this.cbFilter, "cbFilter");
+            this.cbFilter.Name = "cbFilter";
+            this.cbFilter.UseVisualStyleBackColor = true;
+            // 
             // btnBrowse
             // 
             resources.ApplyResources(this.btnBrowse, "btnBrowse");
@@ -183,12 +192,20 @@
             // panelFiles
             // 
             resources.ApplyResources(this.panelFiles, "panelFiles");
+            this.panelFiles.Controls.Add(this.btnAddPaths);
             this.panelFiles.Controls.Add(this.cbSelect);
             this.panelFiles.Controls.Add(this.label7);
             this.panelFiles.Controls.Add(this.btnAddDirectory);
             this.panelFiles.Controls.Add(this.btnAddFile);
             this.panelFiles.Controls.Add(this.listInputFiles);
             this.panelFiles.Name = "panelFiles";
+            // 
+            // btnAddPaths
+            // 
+            resources.ApplyResources(this.btnAddPaths, "btnAddPaths");
+            this.btnAddPaths.Name = "btnAddPaths";
+            this.btnAddPaths.UseVisualStyleBackColor = true;
+            this.btnAddPaths.Click += new System.EventHandler(this.btnAddPaths_Click);
             // 
             // cbSelect
             // 
@@ -249,8 +266,8 @@
             this.Controls.Add(this.btnPrevious);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnNext);
-            this.Controls.Add(this.panelProperties);
             this.Controls.Add(this.panelFiles);
+            this.Controls.Add(this.panelProperties);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "BuildLibraryDlg";
@@ -290,5 +307,7 @@
         private System.Windows.Forms.Button btnPrevious;
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.CheckBox cbFilter;
+        private System.Windows.Forms.Button btnAddPaths;
     }
 }
