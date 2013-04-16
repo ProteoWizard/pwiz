@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Results
         public static int FORMAT_VERSION_CACHE
         {
             // TODO: Switch to FORMAT_VERSION_5 after mProphet scores are integrated.
-            get { return FORMAT_VERSION_CACHE_4; }
+            get { return FORMAT_VERSION_CACHE_5; }
         }
 
         /// <summary>
@@ -217,6 +217,32 @@ namespace pwiz.Skyline.Model.Results
             return false;            
         }
 
+        public bool TryLoadTicInfo(out ChromatogramGroupInfo info)
+        {
+            return TryLoadAllIonsChromatogramInfo(ChromExtractor.summed, out info);
+        }
+
+        public bool TryLoadBpcInfo(out ChromatogramGroupInfo info)
+        {
+            return TryLoadAllIonsChromatogramInfo(ChromExtractor.base_peak, out info);
+        }
+
+        private bool TryLoadAllIonsChromatogramInfo(ChromExtractor extractor, out ChromatogramGroupInfo info)
+        {
+            ChromGroupHeaderInfo5[] headers;
+            if (TryLoadChromInfo(null, null, 0, out headers))
+            {
+                int indexTic = headers.IndexOf(header => header.Extractor == extractor);
+                if (indexTic != -1)
+                {
+                    info = LoadChromatogramInfo(headers[indexTic]);
+                    return true;
+                }
+            }
+            info = null;
+            return false;            
+        }
+
         public ChromatogramGroupInfo LoadChromatogramInfo(int index)
         {
             return LoadChromatogramInfo(_chromatogramEntries[index]);
@@ -255,7 +281,7 @@ namespace pwiz.Skyline.Model.Results
         private bool TryLoadChromInfo(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
                                       float tolerance, out ChromGroupHeaderInfo5[] headerInfos)
         {
-            float precursorMz = (float)nodeGroup.PrecursorMz;
+            float precursorMz = nodeGroup != null ? (float)nodeGroup.PrecursorMz : 0;
             int i = FindEntry(precursorMz, tolerance);
             if (i == -1)
             {
@@ -267,7 +293,7 @@ namespace pwiz.Skyline.Model.Results
             var listChromatograms = new List<ChromGroupHeaderInfo5>();
             for (; i < _chromatogramEntries.Length && MatchMz(precursorMz, _chromatogramEntries[i].Precursor, tolerance); i++)
             {
-                if (!SequenceEqual(i, nodePep.ModifiedSequence))
+                if (nodePep != null && !SequenceEqual(i, nodePep.ModifiedSequence))
                     continue;
 
                 listChromatograms.Add(_chromatogramEntries[i]);
@@ -721,9 +747,9 @@ namespace pwiz.Skyline.Model.Results
                 if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
                 {
                     outStream.Write(BitConverter.GetBytes(tran.Product), 0, sizeof(double));
+                    outStream.Write(BitConverter.GetBytes(tran.ExtractionWidth), 0, sizeof(float));
                     outStream.Write(BitConverter.GetBytes(tran.FlagBits), 0, sizeof(ushort));
                     outStream.Write(BitConverter.GetBytes(tran.Align1), 0, sizeof(ushort));
-                    outStream.Write(BitConverter.GetBytes(tran.Align2), 0, sizeof(uint));
                 }
                 else
                 {
@@ -939,10 +965,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     int tranIndex = groupInfo.StartTransitionIndex + j;
                     var tranInfo = _chromTransitions[tranIndex];
-                    ChromSource source = tranInfo.Source;
                     double product = tranInfo.Product;
+                    float extractionWidth = tranInfo.ExtractionWidth;
+                    ChromSource source = tranInfo.Source;
                     ChromKey key = new ChromKey(_seqBytes, groupInfo.SeqIndex, groupInfo.SeqLen,
-                        groupInfo.Precursor, product, source, true);
+                        groupInfo.Precursor, product, extractionWidth, source, groupInfo.Extractor, true);
                     yield return new ChromKeyIndices(key, groupInfo.LocationPoints, i, j);
                 }
             }

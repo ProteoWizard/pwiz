@@ -123,6 +123,16 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : 0; }
         }
 
+        public ChromExtractor Extractor
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Extractor : ChromExtractor.summed; }
+        }
+
+        public float ExtractionWidth
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.ExtractionWidth : 0; }
+        }
+
         public bool HasCalculatedMzs
         {
             get { return _listChromData.Count > 0 && BestChromatogram.Key.HasCalculatedMzs; }

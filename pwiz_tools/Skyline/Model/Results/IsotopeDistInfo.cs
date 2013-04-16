@@ -75,7 +75,8 @@ namespace pwiz.Skyline.Model.Results
             // expected proportions of the mass distribution that will end up filtered into
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
-            var filter = new SpectrumFilterPair(null, q1FilterValues[monoMassIndex], null, null, false, false);
+            var key = new PrecursorModSeq(q1FilterValues[monoMassIndex], null, ChromExtractor.summed);
+            var filter = new SpectrumFilterPair(key, null, null, false, false);
             filter.AddQ1FilterValues(q1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1Spectrum(massDistribution.Keys.ToArray(),
@@ -97,7 +98,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < countPeaks; i++)
             {
                 listProportionIndices.Add(new KeyValuePair<float, int>(
-                    (float) expectedSpectrum.Intensities[i + startIndex], i));
+                    expectedSpectrum.Intensities[i + startIndex], i));
             }
             // Sort proportions descending.
             listProportionIndices.Sort((p1, p2) => Comparer.Default.Compare(p2.Key, p1.Key));

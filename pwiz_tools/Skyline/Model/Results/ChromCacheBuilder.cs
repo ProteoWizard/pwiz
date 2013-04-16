@@ -777,7 +777,7 @@ namespace pwiz.Skyline.Model.Results
                     if (_writerStarted)
                     {
                         Monitor.Pulse(_chromDataSets);
-                        while (_chromDataSets.Count >= MAX_CHROM_READ_AHEAD)
+                        while (!_writerCompleted && _chromDataSets.Count >= MAX_CHROM_READ_AHEAD)
                             Monitor.Wait(_chromDataSets);
                     }
                     else
@@ -944,6 +944,8 @@ namespace pwiz.Skyline.Model.Results
                             flags |= ChromGroupHeaderInfo5.FlagValues.has_mass_errors;
                         if (chromDataSet.HasCalculatedMzs)
                             flags |= ChromGroupHeaderInfo5.FlagValues.has_calculated_mzs;
+                        if (chromDataSet.Extractor == ChromExtractor.base_peak)
+                            flags |= ChromGroupHeaderInfo5.FlagValues.extracted_base_peak;
                         var header = new ChromGroupHeaderInfo5(chromDataSet.PrecursorMz,
                                                                currentFileIndex,
                                                                chromDataSet.Count,
@@ -962,7 +964,10 @@ namespace pwiz.Skyline.Model.Results
                         int? transitionPeakCount = null;
                         foreach (var chromData in chromDataSet.Chromatograms)
                         {
-                            _listTransitions.Add(new ChromTransition5(chromData.Key.Product, chromData.Key.Source));
+                            var chromTran = new ChromTransition5(chromData.Key.Product,
+                                                                 chromData.Key.ExtractionWidth,
+                                                                 chromData.Key.Source);
+                            _listTransitions.Add(chromTran);
 
                             // Make sure all transitions have the same number of peaks, as this is a cache requirement
                             if (!transitionPeakCount.HasValue)

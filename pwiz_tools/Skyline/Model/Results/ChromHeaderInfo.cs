@@ -177,6 +177,7 @@ namespace pwiz.Skyline.Model.Results
         {
             has_mass_errors = 0x01,
             has_calculated_mzs = 0x02,
+            extracted_base_peak = 0x04,
         }
 
         /// <summary>
@@ -267,6 +268,16 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasCalculatedMzs { get { return (Flags & FlagValues.has_calculated_mzs) != 0; } }
         public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
+        
+        public ChromExtractor Extractor
+        {
+            get
+            {
+                return (Flags & FlagValues.extracted_base_peak) != 0
+                           ? ChromExtractor.base_peak
+                           : ChromExtractor.summed;
+            }
+        }
 
         public void Offset(int offsetFiles, int offsetTransitions, int offsetPeaks, int offsetScores, long offsetPoints)
         {
@@ -543,23 +554,23 @@ namespace pwiz.Skyline.Model.Results
             source2 =       0x02,   // ms1     = 10, sim      = 11
         }
 
-        public ChromTransition5(double product, ChromSource source) : this()
+        public ChromTransition5(double product, float extractionWidth, ChromSource source) : this()
         {
             Product = product;
+            ExtractionWidth = extractionWidth;
             Source = source;
             Align1 = 0;
-            Align2 = 0;
         }
 
         public ChromTransition5(ChromTransition chromTransition)
-            : this(chromTransition.Product, ChromSource.unknown)
+            : this(chromTransition.Product, 0, ChromSource.unknown)
         {            
         }
 
         public double Product { get; private set; }
+        public float ExtractionWidth { get; private set; }  // In m/z
         public ushort FlagBits { get; private set; }
         public ushort Align1 { get; private set; }  // Explicitly declaring alignment padding the compiler will add anyway
-        public uint Align2 { get; private set; }    // Explicitly declaring alignment padding the compiler will add anyway
 
         public FlagValues Flags { get { return (FlagValues) FlagBits; } }
 
@@ -1205,21 +1216,28 @@ namespace pwiz.Skyline.Model.Results
 
     public enum ChromSource { fragment, sim, ms1, unknown  }
 
+    public enum ChromExtractor { summed, base_peak }
+
     public struct ChromKey : IComparable<ChromKey>
     {
-        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, ChromSource.unknown, false);
+        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0,
+            ChromSource.unknown, ChromExtractor.summed, false);
 
         public ChromKey(byte[] seqBytes,
                         int seqIndex,
                         int seqLen,
                         double precursor,
                         double product,
+                        double extractionWidth,
                         ChromSource source,
+                        ChromExtractor extractor,
                         bool calculatedMzs)
             : this(seqIndex != -1 ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null,
                    precursor,
                    product,
+                   extractionWidth,
                    source,
+                   extractor,
                    calculatedMzs)
         {
         }
@@ -1227,21 +1245,27 @@ namespace pwiz.Skyline.Model.Results
         public ChromKey(string modifiedSequence,
                         double precursor,
                         double product,
+                        double extractionWidth,
                         ChromSource source,
+                        ChromExtractor extractor,
                         bool calculatedMzs)
             : this()
         {
             ModifiedSequence = modifiedSequence;
-            Precursor = (float) precursor;
-            Product = (float) product;
+            Precursor = precursor;
+            Product = product;
+            ExtractionWidth = (float) extractionWidth;
             Source = source;
+            Extractor = extractor;
             HasCalculatedMzs = calculatedMzs;
         }
 
         public string ModifiedSequence { get; private set; }
         public double Precursor { get; private set; }
         public double Product { get; private set; }
+        public float ExtractionWidth { get; private set; }
         public ChromSource Source { get; private set; }
+        public ChromExtractor Extractor { get; private set; }
         public bool HasCalculatedMzs { get; private set; }
 
         /// <summary>
@@ -1256,21 +1280,17 @@ namespace pwiz.Skyline.Model.Results
 
         public int CompareTo(ChromKey key)
         {
-            int c = Precursor.CompareTo(key.Precursor);
-            if (c != 0)
-                return c;
-            c = CompareSequence(key);
-            if (c != 0)
-                return c;
-            c = CompareSource(key);
-            if (c != 0)
-                return c;
-            return Product.CompareTo(key.Product);
+            return CompareTo(key, (mz1, mz2) => mz1.CompareTo(mz2));
         }
 
         public int CompareTolerant(ChromKey key, float tolerance)
         {
-            int c = CompareTolerant(Precursor, key.Precursor, tolerance);
+            return CompareTo(key, (mz1, mz2) => CompareTolerant(mz1, mz2, tolerance));
+        }
+
+        private int CompareTo(ChromKey key, Func<double, double, int> compareMz)
+        {
+            int c = compareMz(Precursor, key.Precursor);
             if (c != 0)
                 return c;
             c = CompareSequence(key);
@@ -1279,7 +1299,13 @@ namespace pwiz.Skyline.Model.Results
             c = CompareSource(key);
             if (c != 0)
                 return c;
-            return CompareTolerant(Product, key.Product, tolerance);
+            c = Extractor - key.Extractor;
+            if (c != 0)
+                return c;
+            c = compareMz(Product, key.Product);
+            if (c != 0)
+                return c;
+            return ExtractionWidth.CompareTo(key.ExtractionWidth);
         }
 
         private int CompareSequence(ChromKey key)
@@ -1371,7 +1397,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     throw new ArgumentException(string.Format(Resources.ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID, id));
                 }
-                return new ChromKey(null, precursor, product, ChromSource.fragment, false);
+                return new ChromKey(null, precursor, product, 0, ChromSource.fragment, ChromExtractor.summed, false);
             }
             catch (FormatException)
             {
