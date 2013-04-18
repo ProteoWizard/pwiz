@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -249,7 +248,7 @@ namespace pwiz.Skyline.Model.V01
             // Write special ID for ABI software
             var fastaSequence = new FastaSequence(sequence.Name, sequence.Description, null, peptide.Sequence);
             var newPeptide = new Peptide(fastaSequence, peptide.Sequence, 0, peptide.Sequence.Length, peptide.MissedCleavages);
-            var nodePep = new PeptideDocNode(newPeptide, (ExplicitMods) null);
+            var nodePep = new PeptideDocNode(newPeptide, null);
             string modifiedPepSequence = AbiMassListExporter.GetSequenceWithModsString(nodePep, _document.Settings); // Not L10N;
 
             string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N

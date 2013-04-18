@@ -23,7 +23,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using pwiz.BiblioSpec.Properties;
 using pwiz.Common.SystemUtil;

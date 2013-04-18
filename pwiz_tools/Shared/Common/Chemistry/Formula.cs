@@ -29,7 +29,7 @@ namespace pwiz.Common.Chemistry
         where TValue : IComparable<TValue>
     {
 // ReSharper disable InconsistentNaming
-        public static readonly T Empty = new T { Dictionary = ImmutableSortedList<string, TValue>.Empty };
+        public static readonly T Empty = new T { Dictionary = ImmutableSortedList<string, TValue>.EMPTY };
 // ReSharper restore InconsistentNaming
         public override abstract string ToString();
         private int _hashCode;

@@ -45,7 +45,7 @@ namespace pwiz.Common.Collections
         }
         public static IList<T> Empty<T>()
         {
-            return Impl<T>.EmptyImpl;
+            return Impl<T>.EMPTY_IMPL;
         }
         public static IList<T> Singleton<T>(T value)
         {
@@ -53,7 +53,7 @@ namespace pwiz.Common.Collections
         }
         class Impl<T> : ReadOnlyCollection<T>
         {
-            public static readonly IList<T> EmptyImpl = new Impl<T>(new T[0]);
+            public static readonly IList<T> EMPTY_IMPL = new Impl<T>(new T[0]);
             public Impl(IList<T> list) : base(list)
             {
             }

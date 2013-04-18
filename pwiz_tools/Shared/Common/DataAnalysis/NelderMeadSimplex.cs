@@ -33,7 +33,7 @@ namespace pwiz.Common.DataAnalysis
     /// </summary>
     public sealed class NelderMeadSimplex
     {
-        private const double Jitter = 1e-10d; // a small value used to protect against floating point noise
+        private const double JITTER = 1e-10d; // a small value used to protect against floating point noise
 
         public static RegressionResult Regress(SimplexConstant[] simplexConstants, double convergenceTolerance, int maxEvaluations, 
                                         ObjectiveFunctionDelegate objectiveFunction)
@@ -126,7 +126,7 @@ namespace pwiz.Common.DataAnalysis
         private static bool HasConverged(double convergenceTolerance, ErrorProfile errorProfile, double[] errorValues)
         {
             double range = 2 * Math.Abs(errorValues[errorProfile.HighestIndex] - errorValues[errorProfile.LowestIndex]) /
-                (Math.Abs(errorValues[errorProfile.HighestIndex]) + Math.Abs(errorValues[errorProfile.LowestIndex]) + Jitter);
+                (Math.Abs(errorValues[errorProfile.HighestIndex]) + Math.Abs(errorValues[errorProfile.LowestIndex]) + JITTER);
 
             if (range < convergenceTolerance)
             {

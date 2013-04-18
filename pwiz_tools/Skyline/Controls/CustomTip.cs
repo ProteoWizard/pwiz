@@ -298,38 +298,38 @@ namespace pwiz.Skyline.Controls
 		/// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
 		public virtual void ShowAnimate(int x, int y, AnimateMode mode)
 		{
-			uint flag = (uint)AnimateWindow.AW_CENTER;
+			uint flag = AnimateWindow.AW_CENTER;
 			switch (mode)
 			{
 				case AnimateMode.Blend:
 					Show(x, y, true);
 					return;
 				case AnimateMode.ExpandCollapse:
-					flag = (uint)AnimateWindow.AW_CENTER;
+					flag = AnimateWindow.AW_CENTER;
 					break;
 				case AnimateMode.SlideLeftToRight:
-					flag = (uint)(AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
+					flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
 					break;
 				case AnimateMode.SlideRightToLeft:
-					flag = (uint)(AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
+					flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
 					break;
                 case AnimateMode.SlideTopToBottom:
-                    flag = (uint)(AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
+                    flag = (AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
                     break;
                 case AnimateMode.SlideBottomToTop:
-					flag = (uint)(AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
+					flag = (AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
 					break;
 				case AnimateMode.RollLeftToRight:
-					flag = (uint)(AnimateWindow.AW_HOR_POSITIVE);
+					flag = (AnimateWindow.AW_HOR_POSITIVE);
 					break;
 				case AnimateMode.RollRightToLeft:
-					flag = (uint)(AnimateWindow.AW_HOR_NEGATIVE);
+					flag = (AnimateWindow.AW_HOR_NEGATIVE);
 					break;
 				case AnimateMode.RollBottomToTop:
-					flag = (uint)(AnimateWindow.AW_VER_POSITIVE);
+					flag = (AnimateWindow.AW_VER_POSITIVE);
 					break;
 				case AnimateMode.RollTopToBottom:
-					flag = (uint)(AnimateWindow.AW_VER_NEGATIVE);
+					flag = (AnimateWindow.AW_VER_NEGATIVE);
 					break;
 			}
 			if (_supportsLayered)
@@ -376,41 +376,41 @@ namespace pwiz.Skyline.Controls
 		/// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
 		public virtual void HideAnimate(AnimateMode mode)
 		{
-			uint flag = (uint)AnimateWindow.AW_CENTER;
+			uint flag = AnimateWindow.AW_CENTER;
 			switch (mode)
 			{
 				case AnimateMode.Blend:
 					HideWindowWithAnimation();
 					return;
 				case AnimateMode.ExpandCollapse:
-					flag = (uint)AnimateWindow.AW_CENTER;
+					flag = AnimateWindow.AW_CENTER;
 					break;
 				case AnimateMode.SlideLeftToRight:
-					flag = (uint)(AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
+					flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
 					break;
 				case AnimateMode.SlideRightToLeft:
-					flag = (uint)(AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
+					flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
 					break;
 				case AnimateMode.SlideTopToBottom:
-					flag = (uint)(AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
+					flag = (AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
 					break;
                 case AnimateMode.SlideBottomToTop:
-                    flag = (uint)(AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
+                    flag = (AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
                     break;
                 case AnimateMode.RollLeftToRight:
-					flag = (uint)(AnimateWindow.AW_HOR_POSITIVE);
+					flag = (AnimateWindow.AW_HOR_POSITIVE);
 					break;
 				case AnimateMode.RollRightToLeft:
-					flag = (uint)(AnimateWindow.AW_HOR_NEGATIVE);
+					flag = (AnimateWindow.AW_HOR_NEGATIVE);
 					break;
 				case AnimateMode.RollBottomToTop:
-					flag = (uint)(AnimateWindow.AW_VER_POSITIVE);
+					flag = (AnimateWindow.AW_VER_POSITIVE);
 					break;
 				case AnimateMode.RollTopToBottom:
-					flag = (uint)(AnimateWindow.AW_VER_NEGATIVE);
+					flag = (AnimateWindow.AW_VER_NEGATIVE);
 					break;
 			}
-			flag |= (uint)AnimateWindow.AW_HIDE;
+			flag |= AnimateWindow.AW_HIDE;
 			if (_supportsLayered)
 			{
 				UpdateLayeredWindow();
@@ -1265,15 +1265,16 @@ namespace pwiz.Skyline.Controls
 		private AnimateWindow() 
 		{
 		}
-		public static int AW_HOR_POSITIVE = 0x1;
-		public static int AW_HOR_NEGATIVE = 0x2;
-		public static int AW_VER_POSITIVE = 0x4;
-		public static int AW_VER_NEGATIVE = 0x8;
-		public static int AW_CENTER = 0x10;
-		public static int AW_HIDE = 0x10000;
-		public static int AW_ACTIVATE = 0x20000;
-		public static int AW_SLIDE = 0x40000;
-		public static int AW_BLEND = 0x80000;
+
+        public const int AW_HOR_POSITIVE = 0x1;
+        public const int AW_HOR_NEGATIVE = 0x2;
+        public const int AW_VER_POSITIVE = 0x4;
+        public const int AW_VER_NEGATIVE = 0x8;
+        public const int AW_CENTER = 0x10;
+        public const int AW_HIDE = 0x10000;
+        public const int AW_ACTIVATE = 0x20000;
+        public const int AW_SLIDE = 0x40000;
+        public const int AW_BLEND = 0x80000;
 	}
 	public enum AnimateMode
 	{

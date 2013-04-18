@@ -38,7 +38,7 @@ namespace pwiz.Common.Collections
     [Pure]
     public class ImmutableSortedList<TKey, TValue> : IList<KeyValuePair<TKey, TValue>>
     {
-        public static readonly ImmutableSortedList<TKey, TValue> Empty = new ImmutableSortedList<TKey, TValue>(ImmutableList.Empty<TKey>(), ImmutableList.Empty<TValue>(), Comparer<TKey>.Default);
+        public static readonly ImmutableSortedList<TKey, TValue> EMPTY = new ImmutableSortedList<TKey, TValue>(ImmutableList.Empty<TKey>(), ImmutableList.Empty<TValue>(), Comparer<TKey>.Default);
         public static ImmutableSortedList<TKey, TValue> FromValues(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs, IComparer<TKey> keyComparer)
         {
             return new ImmutableSortedList<TKey, TValue>(keyValuePairs, keyComparer);
