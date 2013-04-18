@@ -148,6 +148,8 @@ namespace pwiz.Skyline.Util
             _broker.Message = status.Message;
             Status = status;
         }
+
+        public bool HasUI { get { return false; } }
     }
 
     public class ProgressUpdateEventArgs : EventArgs

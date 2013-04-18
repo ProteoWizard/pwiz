@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls
 
                     // Make sure the combo contains the results name, if one is
                     // available, because graph handling depends on this.
-                    if (results != null)
+                    if (results != null && results.Chromatograms.Count > 0)
                     {
                         string resultsName = results.Chromatograms[0].Name;
                         if (ComboResults.Items.Count != 1 || !Equals(ComboResults.SelectedItem, resultsName))

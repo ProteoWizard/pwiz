@@ -34,6 +34,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramManager : BackgroundLoader
     {
+        public bool SupportAllGraphs { get; set; }
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             if (previous == null)
@@ -134,8 +136,8 @@ namespace pwiz.Skyline.Model.Results
                 if (results.IsLoaded)
                     return;
 
-                results.Load(_docCurrent, documentFilePath, new LoadMonitor(_manager, _container, results),
-                            FinishLoad);
+                var loadMonitor = new LoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs};
+                results.Load(_docCurrent, documentFilePath, loadMonitor, FinishLoad);
             }
 
             private void CancelLoad(MeasuredResults results)

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using log4net;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -222,8 +221,7 @@ namespace pwiz.Skyline.Model.Results
         {
             public static Allocator Instance;
 
-            private static readonly ILog LOG = 
-                LogManager.GetLogger("ChromCollector.Allocator");   // Not L10N
+            private static readonly Log LOG = new Log<Allocator>();
 
             private const int MEGABYTES = 1024 * 1024;
 

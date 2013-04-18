@@ -429,11 +429,22 @@ namespace pwiz.Skyline
             DestroyGraphPeakArea();
             DestroyResultsGrid();
             DestroyImmediateWindow();
+            DestroyAllChromatogramsGraph();
             foreach (GraphChromatogram graphChrom in _listGraphChrom)
                 DestroyGraphChrom(graphChrom);
             _listGraphChrom.Clear();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
             EnsureFloatingWindowsVisible();
+        }
+
+        private void DestroyAllChromatogramsGraph()
+        {
+            if (_allChromatogramsGraph != null)
+            {
+                _allChromatogramsGraph.Finish();
+                _allChromatogramsGraph.Close();
+                _allChromatogramsGraph = null;
+            }
         }
 
         public void InvalidateChromatogramGraphs()

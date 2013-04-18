@@ -569,6 +569,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel import.
+        /// </summary>
+        public static string AllChromatogramsGraph_btnCancel_Click_Cancel_import {
+            get {
+                return ResourceManager.GetString("AllChromatogramsGraph_btnCancel_Click_Cancel_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel file.
+        /// </summary>
+        public static string AllChromatogramsGraph_btnCancelFile_Click_Cancel_file {
+            get {
+                return ResourceManager.GetString("AllChromatogramsGraph_btnCancelFile_Click_Cancel_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} files.
+        /// </summary>
+        public static string AllChromatogramsGraph_UpdateStatus__0__of__1__files {
+            get {
+                return ResourceManager.GetString("AllChromatogramsGraph_UpdateStatus__0__of__1__files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Joining chromatograms....
+        /// </summary>
+        public static string AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___ {
+            get {
+                return ResourceManager.GetString("AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
         public static string AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__ {
@@ -791,6 +827,33 @@ namespace pwiz.Skyline.Properties {
         public static string AreaReplicateGraphPane_UpdateGraph_Step__0_ {
             get {
                 return ResourceManager.GetString("AreaReplicateGraphPane_UpdateGraph_Step__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Intensity.
+        /// </summary>
+        public static string AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity {
+            get {
+                return ResourceManager.GetString("AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time (min.).
+        /// </summary>
+        public static string AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__ {
+            get {
+                return ResourceManager.GetString("AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, sample {1}.
+        /// </summary>
+        public static string AsyncChromatogramsGraph_Render__0___sample__1_ {
+            get {
+                return ResourceManager.GetString("AsyncChromatogramsGraph_Render__0___sample__1_", resourceCulture);
             }
         }
         

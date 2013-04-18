@@ -67,6 +67,8 @@ namespace pwiz.Skyline.Model.Results
 
         public ProgressStatus Status { get; private set; }
 
+        public ChromatogramLoadingStatus LoadingStatus { get { return (ChromatogramLoadingStatus) Status; } }
+
         public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
 
         public abstract void GetChromatogram(int id, out float[] times, out float[] intensities, out float[] massErrors);
@@ -84,6 +86,7 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly IList<KeyValuePair<ChromKey, int>> _chromIds =
             new List<KeyValuePair<ChromKey, int>>();
+        private readonly int[] _chromIndices;
 
         private MsDataFileImpl _dataFile;
 
@@ -140,7 +143,10 @@ namespace pwiz.Skyline.Model.Results
             }
 
             int len = dataFile.ChromatogramCount;
+            _chromIndices = new int[len];
 
+            int indexPrecursor = -1;
+            double lastPrecursor = 0;
             for (int i = 0; i < len; i++)
             {
                 int index;
@@ -149,7 +155,14 @@ namespace pwiz.Skyline.Model.Results
                 if (!ChromKey.IsKeyId(id))
                     continue;
 
-                var ki = new KeyValuePair<ChromKey, int>(ChromKey.FromId(id), index);
+                var chromKey = ChromKey.FromId(id);
+                if (chromKey.Precursor != lastPrecursor)
+                {
+                    lastPrecursor = chromKey.Precursor;
+                    indexPrecursor++;
+                }
+                var ki = new KeyValuePair<ChromKey, int>(chromKey, index);
+                _chromIndices[index] = indexPrecursor;
                 _chromIds.Add(ki);
             }
 
@@ -180,14 +193,23 @@ namespace pwiz.Skyline.Model.Results
             // not always be completely true.
             _readChromatograms++;
 
-            double predictedMinutes = ExpectedReadDurationMinutes;
-            if (_readMaxMinutes > 0 && predictedMinutes > _readMaxMinutes)
+            if (!System.Diagnostics.Debugger.IsAttached)
             {
-                throw new LoadingTooSlowlyException(_slowLoadWorkAround, Status, predictedMinutes, _readMaxMinutes);
+                double predictedMinutes = ExpectedReadDurationMinutes;
+                if (_readMaxMinutes > 0 && predictedMinutes > _readMaxMinutes)
+                {
+                    throw new LoadingTooSlowlyException(_slowLoadWorkAround, Status, predictedMinutes, _readMaxMinutes);
+                }
             }
 
             if (_readChromatograms < _chromIds.Count)
                 SetPercentComplete(50 + _readChromatograms * 50 / _chromIds.Count);
+
+            // Display in AllChromatogramsGraph
+            LoadingStatus.Transitions.AddSrm(
+                _chromIndices[id],
+                times,
+                intensities);
         }
 
         private double ExpectedReadDurationMinutes
@@ -284,14 +306,35 @@ namespace pwiz.Skyline.Model.Results
                 // This could be done lazily, but does not seem worth it, given the file reading
                 var filter = new SpectrumFilter(document, dataFile);
 
+                // Get data object used to graph all of the chromatograms.
+                ChromatogramLoadingStatus.TransitionData allChromData = null;
+                if (loader.HasUI)
+                {
+                    allChromData = LoadingStatus.Transitions;
+                    allChromData.FilterCount = filter.FilterPairs != null ? filter.FilterPairs.Count() : 0;
+                }
+
                 // First read all of the spectra, building chromatogram time, intensity lists
-                var chromMap = new ChromDataCollectorSet(isSrm ? TimeSharing.single : TimeSharing.grouped);
-                var chromMapMs1 = new ChromDataCollectorSet(filter.IsSharedTime ? TimeSharing.shared : TimeSharing.grouped);
-                var chromMapSim = new ChromDataCollectorSet(TimeSharing.grouped);
+                var chromMap = new ChromDataCollectorSet(ChromSource.fragment, isSrm ? TimeSharing.single : TimeSharing.grouped, allChromData);
+                var chromMapMs1 = new ChromDataCollectorSet(ChromSource.ms1, filter.IsSharedTime ? TimeSharing.shared : TimeSharing.grouped, allChromData);
+                var chromMapSim = new ChromDataCollectorSet(ChromSource.sim, TimeSharing.grouped, allChromData);
                 int lenSpectra = dataFile.SpectrumCount;
                 int statusPercent = 0;
 
+                var dictPrecursorMzToIndex = new Dictionary<double, int>(); // For SRM processing
+
                 var demultiplexer = dataFile.IsMsx ? new MsxDemultiplexer(dataFile, filter) : null;
+
+                // If possible, find the maximum retention time in order to scale the chromatogram graph.
+                if (filter.EnabledMsMs || filter.EnabledMs)
+                {
+                    var dataSpectrum = dataFile.GetSpectrum(lenSpectra - 1);
+                    if (dataSpectrum.RetentionTime.HasValue && allChromData != null)
+                    {
+                        allChromData.MaxTime = (float) dataSpectrum.RetentionTime.Value;
+                        allChromData.Progressive = true;
+                    }
+                }
 
                 for (int i = 0; i < lenSpectra; i++)
                 {
@@ -322,13 +365,23 @@ namespace pwiz.Skyline.Model.Results
                                               dataFile.GetSpectrumId(i)));
                         }
 
+                        double precursorMz = dataSpectrum.Precursors[0].PrecursorMz.Value;
+                        int filterIndex;
+                        if (!dictPrecursorMzToIndex.TryGetValue(precursorMz, out filterIndex))
+                        {
+                            filterIndex = dictPrecursorMzToIndex.Count;
+                            dictPrecursorMzToIndex.Add(precursorMz, filterIndex);
+                        }
+
                         // Process the one SRM spectrum
-                        ProcessSrmSpectrum(dataSpectrum.RetentionTime.Value,
-                                           null,  // Peptide unknown
-                                           dataSpectrum.Precursors[0].PrecursorMz.Value,
-                                           dataSpectrum.Mzs,
-                                           dataSpectrum.Intensities,
-                                           chromMap);
+                        ProcessSrmSpectrum(
+                            dataSpectrum.RetentionTime.Value,
+                            null,  // Peptide unknown
+                            precursorMz,
+                            filterIndex,
+                            dataSpectrum.Mzs,
+                            dataSpectrum.Intensities,
+                            chromMap);
                     }
 
                     else if (filter.EnabledMsMs || filter.EnabledMs)
@@ -350,6 +403,8 @@ namespace pwiz.Skyline.Model.Results
                         double? rt = dataSpectrum.RetentionTime;
                         if (!rt.HasValue)
                             continue;
+                        if (allChromData != null)
+                            allChromData.CurrentTime = rt.Value;
 
                         if (filter.IsMsSpectrum(dataSpectrum))
                         {
@@ -436,6 +491,7 @@ namespace pwiz.Skyline.Model.Results
         private static void ProcessSrmSpectrum(double time,
             string modifiedSequence,
             double precursorMz,
+            int filterIndex,
             double[] mzs,
             double[] intensities,
             ChromDataCollectorSet chromMap)
@@ -443,7 +499,7 @@ namespace pwiz.Skyline.Model.Results
             float[] intensityFloats = new float[intensities.Length];
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
-            var spectrum = new ExtractedSpectrum(modifiedSequence, precursorMz, ChromExtractor.summed,
+            var spectrum = new ExtractedSpectrum(modifiedSequence, precursorMz, ChromExtractor.summed, filterIndex,
                                                  mzs, null, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum(time, spectrum);
         }
@@ -500,15 +556,20 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollectorSet
     {
-        public ChromDataCollectorSet(TimeSharing timeSharing)
+        public ChromDataCollectorSet(ChromSource chromSource, TimeSharing timeSharing, ChromatogramLoadingStatus.TransitionData allChromData)
         {
+            ChromSource = chromSource;
             TypeOfScans = timeSharing;
             PrecursorCollectorMap = new Dictionary<PrecursorModSeq, ChromDataCollector>();
             if (timeSharing == TimeSharing.shared)
                 SharedTimesCollector = new ChromCollector();
+            _allChromData = allChromData;
         }
 
+        private ChromSource ChromSource { get; set; }
+
         private TimeSharing TypeOfScans { get; set; }
+        private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
 
         public bool IsSingleTime { get { return TypeOfScans == TimeSharing.single; } }
         public bool IsGroupedTime { get { return TypeOfScans == TimeSharing.grouped; } }
@@ -582,6 +643,10 @@ namespace pwiz.Skyline.Model.Results
                     tis.AddMassError(spectrum.MassErrors[j]);
                 tis.Add(spectrum.Intensities[j]);
             }
+
+            // Add data for chromatogram graph.
+            if (_allChromData != null && spectrum.PrecursorMz != 0) // Exclude TIC and BPC
+                _allChromData.Add(spectrum.FilterIndex, ChromSource, (float) time, spectrum.Intensities);
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.
@@ -667,10 +732,10 @@ namespace pwiz.Skyline.Model.Results
                                                  FullScanMassAnalyzerType.qit);
 
                     var key = new PrecursorModSeq(0, null, ChromExtractor.summed);  // TIC
-                    dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key,
+                    dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
                         _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                     key = new PrecursorModSeq(0, null, ChromExtractor.base_peak);   // BPC
-                    dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key,
+                    dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
                         _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                 }
                 if (EnabledMsMs)
@@ -760,8 +825,8 @@ namespace pwiz.Skyline.Model.Results
                         var key = new PrecursorModSeq(mz, seq, ChromExtractor.summed);
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
-                            filter = new SpectrumFilterPair(key,
-                                minTime, maxTime, _isHighAccMsFilter, _isHighAccProductFilter);
+                            filter = new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count, minTime, maxTime,
+                                _isHighAccMsFilter, _isHighAccProductFilter);
                             dictPrecursorMzToFilter.Add(key, filter);
                         }
 
@@ -1295,9 +1360,9 @@ namespace pwiz.Skyline.Model.Results
 
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
-        public SpectrumFilterPair(PrecursorModSeq precursorModSeq, double? minTime, double? maxTime,
-                                  bool highAccQ1, bool highAccQ3)
+        public SpectrumFilterPair(PrecursorModSeq precursorModSeq, int id, double? minTime, double? maxTime, bool highAccQ1, bool highAccQ3)
         {
+            Id = id;
             ModifiedSequence = precursorModSeq.ModifiedSequence;
             Q1 = precursorModSeq.PrecursorMz;
             Extractor = precursorModSeq.Extractor;
@@ -1312,6 +1377,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public int Id { get; private set; }
         public ChromExtractor Extractor { get; private set; }
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
@@ -1446,6 +1512,7 @@ namespace pwiz.Skyline.Model.Results
             return new ExtractedSpectrum(ModifiedSequence,
                                          Q1,
                                          Extractor,
+                                         Id,
                                          centerArray,
                                          windowArray,
                                          extractedIntensities,
@@ -1469,6 +1536,7 @@ namespace pwiz.Skyline.Model.Results
         public ExtractedSpectrum(string modifiedSequence,
                                  double precursorMz,
                                  ChromExtractor chromExtractor,
+                                 int filterIndex,
                                  double[] mzs,
                                  double[] extractionWidths,
                                  float[] intensities,
@@ -1477,6 +1545,7 @@ namespace pwiz.Skyline.Model.Results
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
             Extractor = chromExtractor;
+            FilterIndex = filterIndex;
             Mzs = mzs;
             ExtractionWidths = extractionWidths;
             Intensities = intensities;
@@ -1485,6 +1554,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string ModifiedSequence { get; private set; }
         public double PrecursorMz { get; private set; }
+        public int FilterIndex { get; private set; }
         public double[] Mzs { get; private set; }
         public double[] ExtractionWidths { get; private set; }
         public float[] Intensities { get; private set; }

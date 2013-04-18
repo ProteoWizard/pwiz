@@ -167,6 +167,8 @@ namespace pwiz.SkylineTestA
             public void UpdateProgress(ProgressStatus status)
             {
             }
+
+            public bool HasUI { get { return false; } }
         }
 
         public static readonly LibKey[] KEYS_LIB_YEAST_NIST = new[]

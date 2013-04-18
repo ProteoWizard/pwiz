@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Model.Results
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
             var key = new PrecursorModSeq(q1FilterValues[monoMassIndex], null, ChromExtractor.summed);
-            var filter = new SpectrumFilterPair(key, null, null, false, false);
+            var filter = new SpectrumFilterPair(key, 0, null, null, false, false);
             filter.AddQ1FilterValues(q1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1Spectrum(massDistribution.Keys.ToArray(),

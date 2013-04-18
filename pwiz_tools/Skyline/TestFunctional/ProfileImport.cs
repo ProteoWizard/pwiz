@@ -40,11 +40,23 @@ namespace pwiz.SkylineTestFunctional
         //[TestMethod]
         public void ProfileImportBigWiff()
         {
-            if (!IsProfiling) return;
+            //if (!IsProfiling) return;
 
             // From Brendanx/data/MacCoss/FullScan/20111031_Bigit_buckmemory/Birgit(Dylan):
             _skyFile = @"C:\Users\donmarsh\Documents\perf\importBigWiff\Birgit(Dylan)\mito_throughput_1003_2011_v14f.sky";
             _dataFile = @"110914_0038_A0Mito_rep1_.wiff";
+            
+            RunFunctionalTest();
+        }
+
+        //[TestMethod]
+        public void ProfileImportBigRaw()
+        {
+            //if (!IsProfiling) return;
+
+            // From Brendanx/data/Issues/20130311_Don_stress:
+            _skyFile = @"C:\Users\donmarsh\Documents\20130311_Don_stress\Skyline - all - 2.sky";
+            _dataFile = @"20120821_103B_242_01.raw";
             
             RunFunctionalTest();
         }
@@ -61,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
                     ImportResultsFiles((string[])_dataFile, 60*60); // Allow 60 minutes for loading.
             }
 
-            //PauseAndContinue();
+            PauseAndContinue();
         }
     }
 }

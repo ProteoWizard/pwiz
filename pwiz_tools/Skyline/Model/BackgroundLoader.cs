@@ -233,6 +233,8 @@ namespace pwiz.Skyline.Model
             {
                 _manager.UpdateProgress(status);
             }
+
+            public bool HasUI { get; set; }
         }
     }
 
@@ -269,6 +271,8 @@ namespace pwiz.Skyline.Model
         {
             _monitor.UpdateProgress(status);
         }
+
+        public bool HasUI { get { return false; } }
 
         public IStreamManager StreamManager
         {

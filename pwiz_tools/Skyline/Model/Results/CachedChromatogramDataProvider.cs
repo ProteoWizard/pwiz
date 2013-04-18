@@ -75,6 +75,8 @@ namespace pwiz.Skyline.Model.Results
                 massErrors = tranInfo.MassError10Xs.Select(m => m/10.0f).ToArray();
 
             SetPercentComplete(100 * id / _chromKeyIndices.Length);
+
+            // TODO: Add to AllChromatogramsGraph so rescoring will show the graph!
         }
 
         public override bool IsProcessedScans

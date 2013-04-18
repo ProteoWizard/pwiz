@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -35,8 +36,7 @@ namespace pwiz.SkylineTestUtil
         private const string PROFILER_TYPE = "JetBrains.Profiler.Core.Api.PerformanceProfiler";
 
         private static readonly Type PROFILER;
-        private static readonly log4net.ILog LOG =
-            log4net.LogManager.GetLogger("DotTraceProfile");
+        private static readonly Log LOG = new Log<DotTraceProfile>();
         private static bool _profilerStopped;
         
         // Load JetBrains profiler dynamically so we don't have to statically link with a DLL that may

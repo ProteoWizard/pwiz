@@ -1496,6 +1496,7 @@ namespace pwiz.Skyline.FileUI
         {
             public bool IsCanceled { get { return false; } }
             public void UpdateProgress(ProgressStatus status) { }
+            public bool HasUI { get { return false; } }
         }
     }
 }

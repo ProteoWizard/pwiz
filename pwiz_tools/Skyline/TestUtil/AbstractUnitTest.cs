@@ -19,6 +19,7 @@
 
 using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Util;
 
 // Once-per-application setup information to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
@@ -33,8 +34,7 @@ namespace pwiz.SkylineTestUtil
     [DeploymentItem("SkylineLog4Net.config")]
     public class AbstractUnitTest
     {
-        private static readonly log4net.ILog LOG =
-            log4net.LogManager.GetLogger("AbstractUnitTest");
+        private static readonly Log LOG = new Log<AbstractUnitTest>();
         private static readonly Stopwatch STOPWATCH = new Stopwatch();
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global

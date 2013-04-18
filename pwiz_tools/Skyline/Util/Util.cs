@@ -1171,6 +1171,11 @@ namespace pwiz.Skyline.Util
             return Enum.GetValues(typeof (TEnum)).Cast<TEnum>();
         }
 
+        public static int CountEnumValues<TEnum>()
+        {
+            return Enum.GetValues(typeof (TEnum)).Length;
+        }
+
         public static string MakeId(IEnumerable<char> name)
         {
             return MakeId(name, false);

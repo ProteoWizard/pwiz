@@ -270,6 +270,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 _manager.UpdateProgress(status);
             }
+
+            public bool HasUI { get { return false; } }
         }
     }
 

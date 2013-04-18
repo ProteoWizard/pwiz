@@ -2249,6 +2249,8 @@ namespace pwiz.Skyline
             UpdateProgress(status);
         }
 
+        public bool HasUI { get { return false; } }
+
         private void UpdateProgress(ProgressStatus status)
         {
             if (!string.IsNullOrEmpty(status.Message) &&

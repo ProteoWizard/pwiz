@@ -89,6 +89,7 @@ namespace pwiz.Skyline
         private readonly ChromatogramManager _chromatogramManager;
         private readonly IrtDbManager _irtDbManager;
         private readonly RetentionTimeManager _retentionTimeManager;
+        private AllChromatogramsGraph _allChromatogramsGraph;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
@@ -97,7 +98,7 @@ namespace pwiz.Skyline
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
 
-        private static readonly log4net.ILog LOG = log4net.LogManager.GetLogger("SkylineWindow");
+        private static readonly Log LOG = new Log<SkylineWindow>();
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -129,7 +130,7 @@ namespace pwiz.Skyline
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
             _backgroundProteomeManager.Register(this);
-            _chromatogramManager = new ChromatogramManager();
+            _chromatogramManager = new ChromatogramManager { SupportAllGraphs = true };
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
             _irtDbManager = new IrtDbManager();
@@ -178,6 +179,9 @@ namespace pwiz.Skyline
             // threads.
             if (Equals(Handle, default(IntPtr)))
                 throw new InvalidOperationException(Resources.SkylineWindow_SkylineWindow_Must_have_a_window_handle_to_begin_processing);
+
+            // TODO: get this from settings
+            AutoShowAllChromatogramsGraph = true;
 
             // Load any file the user may have double-clicked on to run this application
             bool newFile = true;
@@ -3134,6 +3138,8 @@ namespace pwiz.Skyline
             UpdateProgress(this, new ProgressUpdateEventArgs(status));
         }
 
+        public bool HasUI { get { return true; } }
+
         private void UpdateProgress(object sender, ProgressUpdateEventArgs e)
         {
             var status = e.Progress;
@@ -3229,6 +3235,13 @@ namespace pwiz.Skyline
                 statusProgress.Visible = false;
                 statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
                 _timerProgress.Stop();
+
+                if (_allChromatogramsGraph != null)
+                {
+                    // TODO: Store in settings
+                    AutoShowAllChromatogramsGraph = _allChromatogramsGraph.Visible;
+                    DestroyAllChromatogramsGraph();
+                }
             }
             else
             {
@@ -3236,8 +3249,23 @@ namespace pwiz.Skyline
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
                 statusGeneral.Text = status.Message;
+
+                // Update chromatogram graph if we are importing a data file.
+                var loadingStatus = status as ChromatogramLoadingStatus;
+                if (loadingStatus != null)
+                {
+                    if (_allChromatogramsGraph == null)
+                    {
+                        _allChromatogramsGraph = new AllChromatogramsGraph {Owner = this};
+                        if (AutoShowAllChromatogramsGraph)
+                            _allChromatogramsGraph.Show();
+                    }
+                    _allChromatogramsGraph.UpdateStatus(loadingStatus);
+                }
             }
         }
+
+        public bool AutoShowAllChromatogramsGraph { get; set; }
 
         Point INotificationContainer.NotificationAnchor
         {

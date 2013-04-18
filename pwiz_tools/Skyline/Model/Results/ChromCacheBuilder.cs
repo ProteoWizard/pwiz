@@ -192,6 +192,7 @@ namespace pwiz.Skyline.Model.Results
                 string message = string.Format(format, dataFilePath);
                 int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
+                _status = ((ChromatogramLoadingStatus) _status).ChangeFilePath(dataFilePath);
                 _loader.UpdateProgress(_status);
             }
 

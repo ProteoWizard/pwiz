@@ -1686,5 +1686,41 @@ namespace pwiz.Skyline.Properties {
                 this["LibraryKeepRedundant"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point AllChromatogramsLocation {
+            get {
+                return ((global::System.Drawing.Point)(this["AllChromatogramsLocation"]));
+            }
+            set {
+                this["AllChromatogramsLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Size AllChromatogramsSize {
+            get {
+                return ((global::System.Drawing.Size)(this["AllChromatogramsSize"]));
+            }
+            set {
+                this["AllChromatogramsSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AllChromatogramsMaximized {
+            get {
+                return ((bool)(this["AllChromatogramsMaximized"]));
+            }
+            set {
+                this["AllChromatogramsMaximized"] = value;
+            }
+        }
     }
 }

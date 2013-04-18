@@ -24,7 +24,7 @@ namespace pwiz.Common.SystemUtil
     public enum ProgressState { begin, running, complete, cancelled, error }
 // ReSharper restore InconsistentNaming
 
-    public class ProgressStatus
+    public class ProgressStatus : Immutable
     {
         /// <summary>
         /// Initial constructor for progress status of a long operation.  Starts
@@ -37,22 +37,10 @@ namespace pwiz.Common.SystemUtil
             Id = new object();
         }
 
-        public ProgressStatus(ProgressStatus status)
-        {
-            ErrorException = status.ErrorException;
-            Message = status.Message;
-            PercentComplete = status.PercentComplete;
-            PercentZoomEnd = status.PercentZoomEnd;
-            PercentZoomStart = status.PercentZoomStart;
-            Segment = status.Segment;
-            SegmentCount = status.SegmentCount;
-            State = status.State;
-            Id = status.Id;
-        }
-
         public ProgressState State { get; private set; }
         public string Message { get; private set; }
         public int PercentComplete { get; private set; }
+        public int ZoomedPercentComplete { get; private set; }
         public int PercentZoomStart { get; private set; }
         public int PercentZoomEnd { get; private set; }
         public int SegmentCount { get; private set; }
@@ -102,47 +90,58 @@ namespace pwiz.Common.SystemUtil
 
         #region Property change methods
 
-        public ProgressStatus ChangePercentComplete(int prop)
+        public ProgressStatus ChangePercentComplete(int percent)
         {
+            var zoomedPercentComplete = percent;
+
             // Handle progress zooming, if a range of progress has been zoomed
             if (PercentZoomEnd != 0)
             {
-                prop = prop == 100 ? PercentZoomEnd : ZoomedToPercent(prop);
+                percent = percent == 100 ? PercentZoomEnd : ZoomedToPercent(percent);
             }
             // Allow -1 as a way of allowing a looping progress indicator
-            if (prop != -1)
-                prop = Math.Min(100, Math.Max(0, prop));
-            if (prop == PercentComplete)
+            if (percent != -1)
+                percent = Math.Min(100, Math.Max(0, percent));
+            // If this percent complete value has already been set, then do nothing.
+            if (percent == PercentComplete)
                 return this;
 
-            var status = new ProgressStatus(this) {PercentComplete = prop};
-            // Turn off progress zooming, if the end has been reached
-            if (prop == PercentZoomEnd)
-                status.PercentZoomEnd = 0;
-            status.State = (status.PercentComplete == 100
-                                ? ProgressState.complete
-                                : ProgressState.running);
-            return status;
+            return ChangeProp(ImClone(this), s =>
+                {
+                    s.PercentComplete = percent;
+                    s.ZoomedPercentComplete = zoomedPercentComplete;
+                    // Turn off progress zooming, if the end has been reached
+                    if (percent == PercentZoomEnd)
+                        s.PercentZoomEnd = 0;
+                    s.State = (s.PercentComplete == 100
+                                        ? ProgressState.complete
+                                        : ProgressState.running);
+                });
         }
 
         public ProgressStatus ZoomUntil(int end)
         {
-            return new ProgressStatus(this) {PercentZoomStart = PercentComplete, PercentZoomEnd = end};
+            return ChangeProp(ImClone(this), s =>
+                {
+                    s.PercentZoomStart = PercentComplete;
+                    s.PercentZoomEnd = end;
+                });
         }
 
         public ProgressStatus ChangeSegments(int segment, int segmentCount)
         {
-            ProgressStatus status = new ProgressStatus(this);
-            if (segmentCount == 0)
-                status.PercentZoomStart = status.PercentZoomEnd = 0;
-            else
-            {
-                status.PercentComplete = status.PercentZoomStart = segment*100/segmentCount;
-                status.PercentZoomEnd = (segment+1)*100/segmentCount;
-            }
-            status.SegmentCount = segmentCount;
-            status.Segment = segment;
-            return status;
+            return ChangeProp(ImClone(this), s =>
+                {
+                    if (segmentCount == 0)
+                        s.PercentZoomStart = s.PercentZoomEnd = 0;
+                    else
+                    {
+                        s.PercentComplete = s.PercentZoomStart = segment*100/segmentCount;
+                        s.PercentZoomEnd = (segment + 1)*100/segmentCount;
+                    }
+                    s.SegmentCount = segmentCount;
+                    s.Segment = segment;
+                });
         }
 
         public ProgressStatus NextSegment()
@@ -155,27 +154,21 @@ namespace pwiz.Common.SystemUtil
 
         public ProgressStatus ChangeErrorException(Exception prop)
         {
-            return new ProgressStatus(this)
-                       {
-                           ErrorException = prop,
-                           State = ProgressState.error,
-                       };
+            return ChangeProp(ImClone(this), s =>
+                {
+                    s.ErrorException = prop;
+                    s.State = ProgressState.error;
+                });
         }
 
         public ProgressStatus ChangeMessage(string prop)
         {
-            return new ProgressStatus(this)
-                {
-                    Message = prop,
-                };
+            return ChangeProp(ImClone(this), s => s.Message = prop);
         }
 
         public ProgressStatus Cancel()
         {
-            return new ProgressStatus(this)
-                       {
-                           State = ProgressState.cancelled,
-                       };
+            return ChangeProp(ImClone(this), s => s.State = ProgressState.cancelled);
         }
 
         public ProgressStatus Complete()

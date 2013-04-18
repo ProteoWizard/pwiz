@@ -5110,4 +5110,25 @@ Are you sure you want to continue?</value>
   <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___2___decoy_generation_method_" xml:space="preserve">
     <value>{0} must be less than the number of precursor models for decoys, or use the '{2}' decoy generation method.</value>
   </data>
+  <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
+    <value>Joining chromatograms...</value>
+  </data>
+  <data name="AllChromatogramsGraph_UpdateStatus__0__of__1__files" xml:space="preserve">
+    <value>{0} of {1} files</value>
+  </data>
+  <data name="AllChromatogramsGraph_btnCancel_Click_Cancel_import" xml:space="preserve">
+    <value>Cancel import</value>
+  </data>
+  <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
+    <value>Cancel file</value>
+  </data>
+  <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__" xml:space="preserve">
+    <value>Retention Time (min.)</value>
+  </data>
+  <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">
+    <value>Intensity</value>
+  </data>
+  <data name="AsyncChromatogramsGraph_Render__0___sample__1_" xml:space="preserve">
+    <value>{0}, sample {1}</value>
+  </data>
 </root>

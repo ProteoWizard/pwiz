@@ -800,7 +800,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (_resultsClone._statusLoading == null)
                 {
-                    _status = new ProgressStatus(string.Format(Resources.Loader_Load_Loading_results_for__0__, Path.GetFileName(_documentPath)));
+                    var fileName = Path.GetFileName(_documentPath);
+                    _status = new ChromatogramLoadingStatus(string.Format(Resources.Loader_Load_Loading_results_for__0__, fileName));
                     _loader.UpdateProgress(_status);
                 }
                 else
