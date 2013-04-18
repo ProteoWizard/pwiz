@@ -76,7 +76,14 @@ namespace pwiz.Skyline.Model.Results
 
             SetPercentComplete(100 * id / _chromKeyIndices.Length);
 
-            // TODO: Add to AllChromatogramsGraph so rescoring will show the graph!
+            // Display in AllChromatogramsGraph
+            if (chromKeyIndices.Key.Precursor != 0)
+            {
+                LoadingStatus.Transitions.AddTransition(
+                    id,
+                    times,
+                    intensities);
+            }
         }
 
         public override bool IsProcessedScans

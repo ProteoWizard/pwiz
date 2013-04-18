@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model.Results
                 SetPercentComplete(50 + _readChromatograms * 50 / _chromIds.Count);
 
             // Display in AllChromatogramsGraph
-            LoadingStatus.Transitions.AddSrm(
+            LoadingStatus.Transitions.AddTransition(
                 _chromIndices[id],
                 times,
                 intensities);

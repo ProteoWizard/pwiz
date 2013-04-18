@@ -16,19 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Common.Collections;
 
-namespace pwiz.Skyline.Model
+namespace pwiz.Common.SystemUtil
 {
     /// <summary>
     /// Implement on an <see cref="Immutable"/> subclass to cause a <see cref="Validate"/>
     /// function to be called during <see cref="Immutable.ChangeProp{T,TProp}"/> calls.
     /// </summary>
-    internal interface IValidating
+    public interface IValidating
     {
         /// <summary>
         /// Called after the <see cref="Immutable.SetProperty{T,TProp}"/> function is
@@ -38,8 +39,7 @@ namespace pwiz.Skyline.Model
     }
 
     /// <summary>
-    /// Provides utility functions for working with immutable objects
-    /// within the <see cref="SrmDocument"/>.
+    /// Provides utility functions for working with immutable objects.
     /// </summary>
     public class Immutable
     {
@@ -132,11 +132,19 @@ namespace pwiz.Skyline.Model
         protected static TIm ChangeProp<TIm, TProp>(TIm immutable, SetProperty<TIm, TProp> set, TProp value)
             where TIm : Immutable
         {
+// ReSharper disable SuspiciousTypeConversion.Global
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+// ReSharper disable ExpressionIsAlwaysNull
+// ReSharper disable HeuristicUnreachableCode
             set(immutable, value);
             var validating = immutable as IValidating;
             if (validating != null)
                 validating.Validate();
             return immutable;
+// ReSharper restore HeuristicUnreachableCode
+// ReSharper restore ExpressionIsAlwaysNull
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+// ReSharper restore SuspiciousTypeConversion.Global
         }
 
         /// <summary>
@@ -181,11 +189,19 @@ namespace pwiz.Skyline.Model
         protected static TIm ChangeProp<TIm>(TIm immutable, SetLambda<TIm> set)
             where TIm : Immutable
         {
+            // ReSharper disable SuspiciousTypeConversion.Global
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable ExpressionIsAlwaysNull
+            // ReSharper disable HeuristicUnreachableCode
             set(immutable);
             var validating = immutable as IValidating;
             if (validating != null)
                 (validating).Validate();
             return immutable;
+            // ReSharper restore HeuristicUnreachableCode
+            // ReSharper restore ExpressionIsAlwaysNull
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore SuspiciousTypeConversion.Global
         }
     }
 }

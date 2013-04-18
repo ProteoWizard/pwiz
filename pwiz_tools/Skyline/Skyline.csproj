@@ -691,7 +691,6 @@
     <Compile Include="Model\Hibernate\Query\Schema.cs" />
     <Compile Include="Model\Hibernate\SessionFactoryFactory.cs" />
     <Compile Include="Model\Identity.cs" />
-    <Compile Include="Model\Immutable.cs" />
     <Compile Include="Model\Import.cs" />
     <Compile Include="Model\Lib\BiblioSpecLite.cs" />
     <Compile Include="Model\Lib\BiblioSpecLiteBuilder.cs" />

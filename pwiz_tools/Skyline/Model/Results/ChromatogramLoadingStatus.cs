@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Model.Results
             private static readonly int SOURCE_INDEX_COUNT = Helpers.CountEnumValues<ChromSource>() - 1;
 
             /// <summary>
-            /// Save raw chromatogram data for display by AllChromatogramsGraph.
+            /// Add transition points (partial data for multiple transitions) to AllChromatogramsGraph.
             /// </summary>
             /// <param name="filterIndex"></param>
             /// <param name="chromSource"></param>
@@ -241,12 +241,12 @@ namespace pwiz.Skyline.Model.Results
             }
 
             /// <summary>
-            /// Save SRM chromatogram data for display by AllChromatogramsGraph.
+            /// Add a complete transition to AllChromatogramsGraph.
             /// </summary>
             /// <param name="index"></param>
             /// <param name="times"></param>
             /// <param name="intensities"></param>
-            public void AddSrm(int index, float[] times, float[] intensities)
+            public void AddTransition(int index, float[] times, float[] intensities)
             {
                 MaxTime = Math.Max(MaxTime, times[times.Length - 1]);
 

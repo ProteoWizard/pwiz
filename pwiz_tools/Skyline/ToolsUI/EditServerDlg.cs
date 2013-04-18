@@ -28,6 +28,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
