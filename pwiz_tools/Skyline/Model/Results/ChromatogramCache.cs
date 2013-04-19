@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Results
         public static int FORMAT_VERSION_CACHE
         {
             // TODO: Switch to FORMAT_VERSION_5 after mProphet scores are integrated.
-            get { return FORMAT_VERSION_CACHE_5; }
+            get { return FORMAT_VERSION_CACHE_4; }
         }
 
         /// <summary>
