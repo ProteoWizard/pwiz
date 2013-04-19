@@ -25,48 +25,28 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public class Animation
     {
-        private double _startValue;
-        private double _endValue;
-        private double[] _scaleFactors;
+        private readonly double _startValue;
+        private readonly double _endValue;
         private readonly double _acceleration;
-        private readonly Action<Animation> _valueChangedAction;
-        private readonly Action _doneAction;
         private readonly int _updateMsec;
-        private DateTime _startTime;
+        private readonly DateTime _startTime;
+        private double[] _scaleFactors;
 
         /// <summary>
         /// Create an animation object that can smoothly animate between values.
         /// </summary>
-        /// <param name="valueChangedAction">Action to perform when the animated value changes.</param>
-        /// <param name="doneAction">Action to perform when the animation is finished.</param>
+        /// <param name="startValue">Value at start of animation.</param>
+        /// <param name="endValue">Value at end of animation.</param>
+        /// <param name="steps">Number of steps in the animation.</param>
         /// <param name="updateMsec">Expected update interval in milliseconds.</param>
         /// <param name="acceleration">Acceleration rate (how fast the animation speeds up and slows down).</param>
-        public Animation(Action<Animation> valueChangedAction, Action doneAction = null, int updateMsec = 200, double acceleration = 1.4)
+        public Animation(double startValue, double endValue, int steps = 10, int updateMsec = 200, double acceleration = 1.4)
         {
-            _valueChangedAction = valueChangedAction;
-            _doneAction = doneAction;
-            _updateMsec = updateMsec;
-            _acceleration = acceleration;
-        }
-
-        public double Value { get; private set; }
-
-        public bool Done { get { return _scaleFactors == null; } }
-
-        /// <summary>
-        /// Animate a value in the given range.
-        /// </summary>
-        /// <param name="startValue">Starting value.</param>
-        /// <param name="endValue">Ending value.</param>
-        /// <param name="steps">How many steps to take in the animation.</param>
-        public void Animate(double startValue, double endValue, int steps)
-        {
-            // Don't reset clock if animation is already running.
-            if (Value <= _endValue)
-                _startTime = DateTime.Now;
-
             _startValue = startValue;
             _endValue = endValue;
+            _updateMsec = updateMsec;
+            _acceleration = acceleration;
+            _startTime = DateTime.Now;
 
             // Calculate smoothly accelerating and decelerating scale factors.
             steps |= 1;
@@ -84,13 +64,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 _scaleFactors[steps - 1 - i] = 1.0 - _scaleFactors[i];
             }
 
-            NextStep();
+            Value = _startValue;
         }
+
+        public double Value { get; private set; }
+
+        public bool Done { get { return _scaleFactors == null; } }
 
         /// <summary>
         /// Do the next step of the animation.
         /// </summary>
-        public void NextStep()
+        public double Step()
         {
             if (_scaleFactors != null)
             {
@@ -101,22 +85,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     _scaleFactors.Length - 1,
                     elapsed / _updateMsec + 1);
 
-                var newValue = _startValue + (_endValue - _startValue) * _scaleFactors[step];
-
-                if (Value != newValue)
-                {
-                    Value = newValue;
-                    if (_valueChangedAction != null)
-                        _valueChangedAction(this);
-                }
+                Value = _startValue + (_endValue - _startValue) * _scaleFactors[step];
 
                 if (step == _scaleFactors.Length - 1)
-                {
                     _scaleFactors = null;
-                    if (_doneAction != null)
-                        _doneAction();
-                }
             }
+
+            return Value;
         }
     }
 }

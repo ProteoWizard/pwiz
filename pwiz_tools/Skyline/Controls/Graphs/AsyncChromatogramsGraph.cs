@@ -54,10 +54,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private BoxObj _unfinishedBox;
         private LineObj _unfinishedLine;
         private double _maxLoadedTime;
-        private bool _render;
         private readonly SortedSet<CurveInfo> _displayedPeaks =
             new SortedSet<CurveInfo>(new CurveInfo.Comparer());
-        private readonly List<Animation> _animatingCurves = new List<Animation>();
+        private readonly List<CurveInfo> _animatingCurves = new List<CurveInfo>();
         private readonly Dictionary<int, Color> _peakColors = new Dictionary<int, Color>();
         private int _peakColorSeed;
         private double _maxPeakIntensity;
@@ -65,27 +64,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private ChromatogramLoadingStatus _status;
         private ChromatogramLoadingStatus _newStatus;
 
-        /// <summary>
-        /// Associate one of our transition peaks (Peak) with ZedGraph's curve object (LineItem).
-        /// </summary>
-        private class CurveInfo
-        {
-            public LineItem Curve;
-            public ChromatogramLoadingStatus.TransitionData.Peak Peak;
-
-            // Sort by maximum intensity and then filter index.
-            public class Comparer : IComparer<CurveInfo>
-            {
-                public int Compare(CurveInfo x, CurveInfo y)
-                {
-                    var compare = x.Peak.MaxIntensity.CompareTo(y.Peak.MaxIntensity);
-                    if (compare == 0)
-                        compare = x.Peak.FilterIndex.CompareTo(y.Peak.FilterIndex);
-                    return compare;
-                }
-            }
-        }
-        
         public AsyncChromatogramsGraph()
             : base(ANIMATION_INTERVAL_MSEC)
         {
@@ -112,36 +90,17 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphPane.YAxis.MajorTic.IsOpposite = false;
             _graphPane.YAxis.Scale.Min = 0.0;
             _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
-
-            // Initialize x axis animation.
-            _xAxisAnimation = new Animation(
-                animation =>
-                {
-                    _graphPane.XAxis.Scale.Max = animation.Value;
-                    _graphPane.AxisChange();
-                    _render = true;
-                });
-
-            // Initialize y axis animation.
-            _yAxisAnimation = new Animation(
-                animation =>
-                {
-                    _graphPane.YAxis.Scale.Max = animation.Value;
-                    _graphPane.AxisChange();
-                    _render = true;
-                },
-                RemoveLowIntensityPeaks);
         }
 
-        private void RemoveLowIntensityPeaks()
+        /// <summary>
+        /// Clear the graph and track new status object.
+        /// </summary>
+        /// <param name="status"></param>
+        public void ClearGraph(ChromatogramLoadingStatus status)
         {
-            while (_displayedPeaks.Count > 0)
+            lock (this)
             {
-                var minPeak = _displayedPeaks.Min;
-                if (minPeak.Peak.MaxIntensity >= _status.Transitions.ThresholdIntensity)
-                    break;
-                _displayedPeaks.Remove(minPeak);
-                _graphPane.CurveList.Remove(minPeak.Curve);
+                _newStatus = status;
             }
         }
 
@@ -171,7 +130,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     _graphPane.CurveList.Clear();
                     _graphPane.XAxis.Scale.Max = _xMax = X_AXIS_START;
                     _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
+                    _xAxisAnimation = null;
+                    _yAxisAnimation = null;
                     _displayedPeaks.Clear();
+                    _animatingCurves.Clear();
                     if (_status.Transitions != null)
                         _status.Transitions.CurrentTime = 0;
                     _maxPeakIntensity = 0;
@@ -182,27 +144,24 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_status == null)
                 return;
 
-            // Render a new bitmap if size changed
-            _render = forceRender && IsVisible;
-
             if (_status.Transitions != null)
             {
                 // We need to process data even if the control isn't visible to reduce
                 // the memory load of raw chromatogram data.
-                AddData(_status.Transitions);
+                forceRender = AddData(_status.Transitions) || forceRender;
 
                 if (!IsVisible)
                     return;
 
                 // Animate growing curves and changing axis scales.
-                Animate();
+                forceRender = Animate() || forceRender;
 
                 // For progressive import, update the progress line.
-                UpdateProgressLine();
+                forceRender = UpdateProgressLine() || forceRender;
             }
 
             // Render a new bitmap if something has changed.
-            if (_render)
+            if (forceRender)
             {
                 var newBitmap = new Bitmap(width, height);
                 using (var graphics = Graphics.FromImage(newBitmap))
@@ -214,79 +173,18 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void AnimateAxes(double xTarget, double yTarget)
-        {
-            // Animate the x axis if the range has changed.
-            if (_xMax < xTarget)
-            {
-                _xMax = xTarget;
-
-                // Don't animate on the first range change (too much activity to watch).
-                if (_graphPane.XAxis.Scale.Max == X_AXIS_START)
-                {
-                    _graphPane.XAxis.Scale.Max = _xMax;
-                    _graphPane.AxisChange();
-                }
-                else
-                {
-                    _xAxisAnimation.Animate(_graphPane.XAxis.Scale.Max, _xMax, 10);
-                }
-            }
-
-            // Animate the y axis if the range has changed.
-            if (_yMax < yTarget)
-            {
-                _yMax = yTarget;
-
-                // Don't animate on the first range change (too much activity to watch).
-                if (_graphPane.YAxis.Scale.Max == Y_AXIS_START)
-                {
-                    _graphPane.YAxis.Scale.Max = _yMax;
-                    _graphPane.AxisChange();
-                }
-                else
-                {
-                    _yAxisAnimation.Animate(_graphPane.YAxis.Scale.Max, _yMax, 10);
-                }
-            }
-        }
-
-        // Animate the range of each axis and the height of recently-added peaks.
-        private void Animate()
-        {
-            // Animate range of x and y axes.
-            _xAxisAnimation.NextStep();
-            _yAxisAnimation.NextStep();
-
-            // Animate scale of new transition curves.
-            for (int i = _animatingCurves.Count - 1; i >= 0; i--)
-            {
-                _render = true;
-                _animatingCurves[i].NextStep();
-                if (_animatingCurves[i].Done)
-                    _animatingCurves.RemoveAt(i);
-            }
-        }
-
         /// <summary>
-        /// Clear the graph and track new status object.
+        /// Add peaks to the graph.
         /// </summary>
-        /// <param name="status"></param>
-        public void ClearGraph(ChromatogramLoadingStatus status)
+        /// <returns>True if render is needed.</returns>
+        private bool AddData(ChromatogramLoadingStatus.TransitionData transitions)
         {
-            lock (this)
-            {
-                _newStatus = status;
-            }
-        }
+            var render = false;
 
-        // Add transition data to the graph.
-        private void AddData(ChromatogramLoadingStatus.TransitionData transitions)
-        {
             if (transitions.Progressive && transitions.CurrentTime > _lastCurrentTime)
             {
                 _lastCurrentTime = transitions.CurrentTime;
-                _render = true;
+                render = true;
             }
 
             // Add new curves and points.
@@ -308,9 +206,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (displayedPeak.Peak.FilterIndex == peak.FilterIndex && peak.Overlaps(displayedPeak.Peak))
                         {
                             animatedScaleFactor = displayedPeak.Peak.MaxIntensity;
+                            if (displayedPeak.Animation != null)
+                                animatedScaleFactor *= displayedPeak.Animation.Value;
                             peak.Add(displayedPeak.Peak);
                             animatedScaleFactor /= peak.MaxIntensity;
                             removePeaks.Add(displayedPeak);
+                            render = true;
                         }
                     }
 
@@ -329,28 +230,28 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Add new peak.
-                var curveInfo = new CurveInfo { Peak = peak };
+                var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0) };
                 _maxPeakIntensity = Math.Max(_maxPeakIntensity, peak.MaxIntensity);
                 _displayedPeaks.Add(curveInfo);
-                NewCurve(curveInfo, animatedScaleFactor);
+                _animatingCurves.Add(curveInfo);
+                NewCurve(curveInfo);
+                render = true;
             }
 
             if (IsVisible)
             {
                 // Rescale axes to new maximum values.
                 var timeScale = (transitions.Progressive) ? transitions.MaxTime : _maxLoadedTime*1.1;
-                AnimateAxes(timeScale, _maxPeakIntensity*1.1);
+                render = AnimateAxes(timeScale, _maxPeakIntensity*1.1) || render;
             }
+
+            return render;
         }
 
-        // Remove a peak from the displayed peaks list and the graph.
-        private void RemoveCurve(CurveInfo curve)
-        {
-            _displayedPeaks.Remove(curve);
-            _graphPane.CurveList.Remove(curve.Curve);
-        }
-
-        private void NewCurve(CurveInfo curveInfo, double animatedScaleFactor)
+        /// <summary>
+        /// Add a new curve (representing a peak) to the graph.
+        /// </summary>
+        private void NewCurve(CurveInfo curveInfo)
         {
             const int lineTransparency = 200;
             const int fillTransparency = 90;
@@ -366,39 +267,153 @@ namespace pwiz.Skyline.Controls.Graphs
             var fillColor = Color.FromArgb(peakId == 0 ? 50 : fillTransparency, color);
             curve.Line.Fill = new Fill(fillColor);
             curve.Line.IsAntiAlias = true;
-            _graphPane.CurveList.Insert(0, curve);
 
             // Add leading zero to curve.
             curve.AddPoint(peak.Times[0] - ChromatogramLoadingStatus.TIME_RESOLUTION, 0.0);
 
             for (int i = 0; i < peak.Times.Count; i++)
-            {
-                curve.AddPoint(peak.Times[i], peak.Intensities[i]*animatedScaleFactor);
-            }
+                curve.AddPoint(peak.Times[i], 0.0);
 
             // Add trailing zero.
             curve.AddPoint(peak.Times[peak.Times.Count - 1] + ChromatogramLoadingStatus.TIME_RESOLUTION, 0.0);
 
-            var curveAnimation = new Animation(
-                animation =>
-                    {
-                        for (int j = 0; j < curveInfo.Peak.Intensities.Count; j++)
-                            curveInfo.Curve[j + 1].Y = curveInfo.Peak.Intensities[j]*animation.Value;
-                        _render = true;
-                    });
-            curveAnimation.Animate(animatedScaleFactor, 1.0, 10);
-            _animatingCurves.Add(curveAnimation);
+            _graphPane.CurveList.Insert(0, curve);
         }
 
-        private void UpdateProgressLine()
+        /// <summary>
+        /// Remove a peak from the displayed peaks list and the graph.
+        /// </summary>
+        private void RemoveCurve(CurveInfo curve)
         {
+            _displayedPeaks.Remove(curve);
+            _graphPane.CurveList.Remove(curve.Curve);
+        }
+
+        /// <summary>
+        /// Perform one step of peak and graph axes animations.
+        /// </summary>
+        /// <returns>True if render is needed.</returns>
+        private bool Animate()
+        {
+            var render = _animatingCurves.Count > 0 || _xAxisAnimation != null || _yAxisAnimation != null;
+
+            // Animate range of x and y axes.
+            if (_xAxisAnimation != null)
+            {
+                _graphPane.XAxis.Scale.Max = _xAxisAnimation.Step();
+                _graphPane.AxisChange();
+
+                if (_xAxisAnimation.Done)
+                    _xAxisAnimation = null;
+            }
+
+            if (_yAxisAnimation != null)
+            {
+                _graphPane.YAxis.Scale.Max = _yAxisAnimation.Step();
+                _graphPane.AxisChange();
+
+                if (_yAxisAnimation.Done)
+                {
+                    _yAxisAnimation = null;
+
+                    // Remove low-intensity peaks under the threshold intensity after y axis is done animating.
+                    while (_displayedPeaks.Count > 0)
+                    {
+                        var minPeak = _displayedPeaks.Min;
+                        if (minPeak.Peak.MaxIntensity >= _status.Transitions.ThresholdIntensity)
+                            break;
+                        _displayedPeaks.Remove(minPeak);
+                        _graphPane.CurveList.Remove(minPeak.Curve);
+                    }
+                }
+            }
+
+            // Animate scale of new transition curves.
+            for (int i = _animatingCurves.Count - 1; i >= 0; i--)
+            {
+                var curveInfo = _animatingCurves[i];
+                var animation = curveInfo.Animation;
+                animation.Step();
+                
+                for (int j = 0; j < curveInfo.Peak.Intensities.Count; j++)
+                    curveInfo.Curve[j + 1].Y = curveInfo.Peak.Intensities[j] * animation.Value;
+
+                if (animation.Done)
+                {
+                    curveInfo.Animation = null;
+                    _animatingCurves.RemoveAt(i);
+                }
+            }
+
+            return render;
+        }
+
+        /// <summary>
+        /// Determine if graph axes need to be adjusted (animated).
+        /// </summary>
+        /// <param name="xTarget">Target value for x axis.</param>
+        /// <param name="yTarget">Target value for y axis.</param>
+        /// <returns>True if render is needed.</returns>
+        private bool AnimateAxes(double xTarget, double yTarget)
+        {
+            var render = false;
+
+            // Animate the x axis if the range has changed.
+            if (_xMax < xTarget)
+            {
+                _xMax = xTarget;
+
+                // Don't animate on the first range change (too much activity to watch).
+                if (_graphPane.XAxis.Scale.Max == X_AXIS_START)
+                {
+                    _graphPane.XAxis.Scale.Max = _xMax;
+                    _graphPane.AxisChange();
+                }
+                else
+                {
+                    _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax);
+                }
+
+                render = true;
+            }
+
+            // Animate the y axis if the range has changed.
+            if (_yMax < yTarget)
+            {
+                _yMax = yTarget;
+
+                // Don't animate on the first range change (too much activity to watch).
+                if (_graphPane.YAxis.Scale.Max == Y_AXIS_START)
+                {
+                    _graphPane.YAxis.Scale.Max = _yMax;
+                    _graphPane.AxisChange();
+                }
+                else
+                {
+                    _yAxisAnimation = new Animation(_graphPane.YAxis.Scale.Max, _yMax);
+                }
+
+                render = true;
+            }
+
+            return render;
+        }
+
+        /// <summary>
+        /// Update vertical line the marks current import time for progressively loaded files.
+        /// </summary>
+        /// <returns>True if render is needed.</returns>
+        private bool UpdateProgressLine()
+        {
+            var render = false;
+
             // Remove old progressive loading indicators.
             if (_unfinishedBox != null)
             {
                 _graphPane.GraphObjList.Remove(_unfinishedBox);
                 _graphPane.GraphObjList.Remove(_unfinishedLine);
                 _unfinishedBox = null;
-                _render = true;
+                render = true;
             }
 
             // If we're still loading, create a white rectangle which blocks the fill background, indicating data yet to be loaded.
@@ -430,8 +445,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     ZOrder = ZOrder.D_BehindAxis
                 };
                 _graphPane.GraphObjList.Add(_unfinishedLine);
-                _render = true;
+                render = true;
             }
+
+            return render;
         }
 
         // Generate a pleasant color for a peak by subdividing the hue circle.
@@ -487,6 +504,28 @@ namespace pwiz.Skyline.Controls.Graphs
                 return Color.FromArgb(255, t, p, v);
             else
                 return Color.FromArgb(255, v, p, q);
+        }
+
+        /// <summary>
+        /// Associate one of our transition peaks (Peak) with ZedGraph's curve object (LineItem).
+        /// </summary>
+        private class CurveInfo
+        {
+            public LineItem Curve;
+            public ChromatogramLoadingStatus.TransitionData.Peak Peak;
+            public Animation Animation;
+
+            // Sort by maximum intensity and then filter index.
+            public class Comparer : IComparer<CurveInfo>
+            {
+                public int Compare(CurveInfo x, CurveInfo y)
+                {
+                    var compare = x.Peak.MaxIntensity.CompareTo(y.Peak.MaxIntensity);
+                    if (compare == 0)
+                        compare = x.Peak.FilterIndex.CompareTo(y.Peak.FilterIndex);
+                    return compare;
+                }
+            }
         }
     }
 }

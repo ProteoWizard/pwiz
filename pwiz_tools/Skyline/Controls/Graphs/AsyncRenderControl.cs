@@ -41,6 +41,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static readonly Log LOG = new Log<AsyncRenderControl>();
 
+        public AsyncRenderControl()
+        {
+        }
+        
         protected AsyncRenderControl(int updateIntervalMsec)
         {
             InitializeComponent();
@@ -57,6 +61,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         pictureBox.Image = _renderedBitmap;
                     StartBackgroundRendering();
                 };
+            _updateTimer.Start();
 
             _backgroundRenderThread = new Thread(BackgroundRender)
                 {
@@ -133,12 +138,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     LOG.Error("Exception in async renderer", exception);    // Not L10N
                 }
             }
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _updateTimer.Start();
         }
 
         /// <summary>

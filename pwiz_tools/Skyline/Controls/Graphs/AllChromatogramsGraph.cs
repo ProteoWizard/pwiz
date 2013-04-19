@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     panelMultifileProgress.Visible = true;
                     panelFileProgress.Top -= _adjustLayoutForMultifile;
                     panelGraph.Height -= _adjustLayoutForMultifile;
+                    btnCancelFile.Visible = true;
                 }
                 progressBarAllFiles.Value = status.PercentComplete;
             }
@@ -170,7 +171,6 @@ namespace pwiz.Skyline.Controls.Graphs
         // Cancel one file.
         private void btnCancelFile_Click(object sender, EventArgs e)
         {
-            Hide();
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancelFile_Click_Cancel_file,
                                               doc => FilterFiles(doc, info => info.FilePath != _currentFilePath));
         }

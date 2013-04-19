@@ -160,18 +160,27 @@ namespace pwiz.Skyline.Model.Results
 
                 // Find start of transition above the threshold intensity value.
                 int startIndex = 0;
-                while (startIndex < intensities.Length && intensities[startIndex] < ThresholdIntensity)
-                    startIndex++;
-                if (startIndex == intensities.Length)
-                    return;
+                while (true)
+                {
+                    while (startIndex < intensities.Length && intensities[startIndex] < ThresholdIntensity)
+                        startIndex++;
+                    if (startIndex == intensities.Length)
+                        return;
 
-                // Find end of transition above the threshold intensity value.
-                int endIndex = intensities.Length-1;
-                while (endIndex > startIndex && intensities[endIndex] < ThresholdIntensity)
-                    endIndex--;
-                if (endIndex < startIndex + 2)
-                    return;
-                endIndex++;
+                    // Find end of transition below the threshold intensity value.
+                    int endIndex = startIndex + 1;
+                    while (endIndex < intensities.Length && intensities[endIndex] >= ThresholdIntensity)
+                        endIndex++;
+
+                    AddTransition(index, times, intensities, startIndex, endIndex);
+
+                    startIndex = endIndex;
+                }
+            }
+
+            private void AddTransition(int index, float[] times, float[] intensities, int startIndex, int endIndex)
+            {
+                MaxTime = Math.Max(MaxTime, times[times.Length - 1]);
 
                 var peak = new Peak(index, true);
                 var lastTimeBin = GetTimeBin(times[startIndex]);
@@ -241,8 +250,8 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 public readonly int FilterIndex;
-                public List<float> Times;
-                public List<float> Intensities;
+                public List<float> Times { get; private set; }
+                public List<float> Intensities { get; private set; }
                 public int PointCount;
                 public float MaxIntensity;
                 public readonly bool MayOverlap;
