@@ -5131,4 +5131,10 @@ Are you sure you want to continue?</value>
   <data name="AsyncChromatogramsGraph_Render__0___sample__1_" xml:space="preserve">
     <value>{0}, sample {1}</value>
   </data>
+  <data name="ChromGraphItem_Title__0____base_peak" xml:space="preserve">
+    <value>{0} - base peak</value>
+  </data>
+  <data name="ChromGraphItem_Title__0____TIC" xml:space="preserve">
+    <value>{0} - TIC</value>
+  </data>
 </root>

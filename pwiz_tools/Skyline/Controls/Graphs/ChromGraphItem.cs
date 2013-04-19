@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
@@ -69,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly double[] _dotProducts;
         private readonly double _bestProduct;
         private readonly bool _isFullScanMs;
+        private readonly bool _isSummary;
         private readonly int _step;
 
         private int _bestPeakTimeIndex = -1;
@@ -83,6 +85,7 @@ namespace pwiz.Skyline.Controls.Graphs
                               double[] dotProducts,
                               double bestProduct,
                               bool isFullScanMs,
+                              bool isSummary,
                               int step,
                               Color color,
                               float fontSize,
@@ -102,6 +105,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _dotProducts = dotProducts;
             _bestProduct = bestProduct;
             _isFullScanMs = isFullScanMs;
+            _isSummary = isSummary;
 
             _arrayLabelIndexes = new int[annotatePeaks.Length];
 
@@ -231,6 +235,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
+                if (_isSummary)
+                {
+                    string title = SampleHelp.GetFileSampleName(Chromatogram.FilePath);
+                    var extractor = Chromatogram.Header.Extractor;
+                    return string.Format(extractor == ChromExtractor.base_peak
+                                             ? Resources.ChromGraphItem_Title__0____base_peak
+                                             : Resources.ChromGraphItem_Title__0____TIC, title);
+                }
                 if (_step != 0)
                     return string.Format(Resources.ChromGraphItem_Title_Step__0_, _step);
 
@@ -514,6 +526,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (yZero - yMax < MIN_BEST_BOUNDARY_HEIGHT)
                     maxIntensity = graphPane.YAxis.Scale.ReverseTransform(yZero - MIN_BEST_BOUNDARY_HEIGHT);
             }
+            // Summary graphs show only the best peak boundaries
+            else if (_isSummary)
+            {
+                return;
+            }
 
             Color colorBoundaries = (best ? COLOR_BOUNDARIES_BEST : COLOR_BOUNDARIES);
             GraphObjType graphObjType = best ? GraphObjType.best_peak : GraphObjType.peak;
@@ -565,10 +582,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public string FormatTimeLabel(double time, float? massError, double dotProduct)
         {
             string label = string.Format("{0:F01}", time); // Not L10N
-            if (massError.HasValue)
-                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value);
+            if (massError.HasValue && !_isSummary)
+                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value); // not L10N
             if (dotProduct != 0)
-                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct); // L10N
+                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct); // not L10N
             return label;
         }
 

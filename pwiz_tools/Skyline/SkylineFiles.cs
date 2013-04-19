@@ -472,7 +472,7 @@ namespace pwiz.Skyline
                         string pathFile = SampleHelp.GetPathFilePart(pathFileSample);
                         if (missingFiles.Contains(pathFile))
                             continue;
-                        string pathPartCache = ChromatogramCache.PartPathForName(path, pathFileSample, null);
+                        string pathPartCache = ChromatogramCache.PartPathForName(path, pathFileSample);
                         if (File.Exists(pathFile) ||
                             File.Exists(pathPartCache) ||
                             File.Exists(Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, Path.GetFileName(pathFile) ?? string.Empty)))

@@ -457,9 +457,7 @@ namespace pwiz.Skyline.Model.Results
                 var key = keyIndex.Key;
                 var chromData = new ChromData(key, keyIndex.Value);
 
-                if (chromDataSet != null &&
-                    key.Precursor == lastKey.Precursor &&
-                    string.Equals(key.ModifiedSequence, lastKey.ModifiedSequence))
+                if (chromDataSet != null && key.ComparePrecursors(lastKey) == 0)
                 {
                     chromDataSet.Add(chromData);
                 }

@@ -344,6 +344,44 @@ namespace pwiz.Skyline.Model.Results
             chromatogramSet = (index != -1 ? _chromatograms[index] : null);
             return index != -1;            
         }
+
+        public bool HasAllIonsChromatograms
+        {
+            get { return Caches.Any(cache => cache.HasAllIonsChromatograms); }
+        }
+
+        public bool TryLoadAllIonsChromatogram(int index,
+                                               ChromExtractor extractor,
+                                               bool loadPoints,
+                                               out ChromatogramGroupInfo[] infoSet)
+        {
+            return TryLoadAllIonsChromatogram(_chromatograms[index], extractor, loadPoints, out infoSet);
+        }
+
+        public bool TryLoadAllIonsChromatogram(ChromatogramSet chromatogram,
+                                               ChromExtractor extractor,
+                                               bool loadPoints,
+                                               out ChromatogramGroupInfo[] infoSet)
+        {
+            var listChrom = new List<ChromatogramGroupInfo>();
+            foreach (var cache in Caches)
+            {
+                ChromatogramGroupInfo[] info;
+                if (!cache.TryLoadAllIonsChromatogramInfo(extractor, out info))
+                    continue;
+
+                foreach (var chromInfo in info)
+                {
+                    if (!ContainsInfo(chromatogram, chromInfo) || chromInfo.Header.Extractor != extractor)
+                        continue;
+                    if (loadPoints)
+                        chromInfo.ReadChromatogram(cache);
+                    listChrom.Add(chromInfo);
+                }
+            }
+            infoSet = listChrom.ToArray();
+            return infoSet.Length > 0;
+        }
         
         public bool TryLoadChromatogram(int index,
                                         PeptideDocNode nodePep,
@@ -385,7 +423,7 @@ namespace pwiz.Skyline.Model.Results
                     if (!ContainsInfo(chromatogram, chromInfo))
                         continue;
 
-                    // If the chromatogram set has an optimazation function than the number
+                    // If the chromatogram set has an optimization function, then the number
                     // of matching chromatograms per transition is a reflection of better
                     // matching.  Otherwise, we only expect one match per transition.
                     bool multiMatch = chromatogram.OptimizationFunction != null;
@@ -864,16 +902,19 @@ namespace pwiz.Skyline.Model.Results
                             string replicatePath = ChromatogramCache.FinalPathForName(_documentPath, chromSet.Name);
                             if (File.Exists(replicatePath))
                             {
-                                try
-                                {
-                                    var cache = ChromatogramCache.Load(replicatePath, _status, _loader);
-                                    if (cache.IsSupportedVersion)
-                                        listPartialCaches.Add(cache);
-                                }
-                                catch (Exception x)
-                                {
-                                    Fail(x);
+                                if (!LoadAndAdd(replicatePath, listPartialCaches))
                                     return;
+                            }
+                            else
+                            {
+                                foreach (var filePath in chromSet.MSDataFilePaths)
+                                {
+                                    string cacheFilePath = ChromatogramCache.PartPathForName(_documentPath, filePath);
+                                    if (File.Exists(cacheFilePath))
+                                    {
+                                        if (!LoadAndAdd(cacheFilePath, listPartialCaches))
+                                            return;
+                                    }
                                 }
                             }
                         }
@@ -976,7 +1017,7 @@ namespace pwiz.Skyline.Model.Results
                             partPath = cachePath;
                         else
                         {
-                            partPath = ChromatogramCache.PartPathForName(_documentPath, path, null);
+                            partPath = ChromatogramCache.PartPathForName(_documentPath, path);
                             // If the partial cache exists, try to load it.
                             if (File.Exists(partPath))
                             {
@@ -1062,6 +1103,22 @@ namespace pwiz.Skyline.Model.Results
                     ChromatogramCache.Join(cachePath, streamDestination,
                         listPaths, _status, _loader, FinishCacheJoin);
                 }
+            }
+
+            private bool LoadAndAdd(string replicatePath, List<ChromatogramCache> listPartialCaches)
+            {
+                try
+                {
+                    var cache = ChromatogramCache.Load(replicatePath, _status, _loader);
+                    if (cache.IsSupportedVersion)
+                        listPartialCaches.Add(cache);
+                }
+                catch (Exception x)
+                {
+                    Fail(x);
+                    return false;
+                }
+                return true;
             }
 
             private void Complete(bool final)

@@ -1290,22 +1290,35 @@ namespace pwiz.Skyline.Model.Results
 
         private int CompareTo(ChromKey key, Func<double, double, int> compareMz)
         {
-            int c = compareMz(Precursor, key.Precursor);
+            // Order by precursor values
+            int c = ComparePrecursors(key, compareMz);
             if (c != 0)
                 return c;
-            c = CompareSequence(key);
-            if (c != 0)
-                return c;
+            // Order by scan-type source, product m/z, extraction width
             c = CompareSource(key);
-            if (c != 0)
-                return c;
-            c = Extractor - key.Extractor;
             if (c != 0)
                 return c;
             c = compareMz(Product, key.Product);
             if (c != 0)
                 return c;
             return ExtractionWidth.CompareTo(key.ExtractionWidth);
+        }
+
+        public int ComparePrecursors(ChromKey key)
+        {
+            return ComparePrecursors(key, (mz1, mz2) => mz1.CompareTo(mz2));
+        }
+
+        private int ComparePrecursors(ChromKey key, Func<double, double, int> compareMz)
+        {
+            // Order by precursor m/z, peptide sequence, extraction method
+            int c = compareMz(Precursor, key.Precursor);
+            if (c != 0)
+                return c;
+            c = CompareSequence(key);
+            if (c != 0)
+                return c;
+            return Extractor - key.Extractor;
         }
 
         private int CompareSequence(ChromKey key)
@@ -1334,7 +1347,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static int CompareTolerant(double f1, double f2, float tolerance)
         {
-            if (Math.Abs(f1 - f2) < tolerance)
+            if (Math.Abs(f1 - f2) <= tolerance)
                 return 0;
             return (f1 > f2 ? 1 : -1);
         }

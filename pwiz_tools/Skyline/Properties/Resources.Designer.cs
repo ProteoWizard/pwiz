@@ -2087,6 +2087,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} - base peak.
+        /// </summary>
+        public static string ChromGraphItem_Title__0____base_peak {
+            get {
+                return ResourceManager.GetString("ChromGraphItem_Title__0____base_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} - TIC.
+        /// </summary>
+        public static string ChromGraphItem_Title__0____TIC {
+            get {
+                return ResourceManager.GetString("ChromGraphItem_Title__0____TIC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Step {0}.
         /// </summary>
         public static string ChromGraphItem_Title_Step__0_ {

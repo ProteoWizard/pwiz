@@ -830,13 +830,15 @@ namespace pwiz.Skyline.Model
             if (nodePep.ExplicitMods != null)
             {
                 var staticMods = new List<ExplicitMod>();
-                foreach (var staticMod in mods.StaticModifications)
+                if (mods.StaticModifications != null)
                 {
-                    staticMods.Add(staticMod);
+                    foreach (var staticMod in mods.StaticModifications)
+                        staticMods.Add(staticMod);
                 }
-                foreach (var explicitMod in nodePep.ExplicitMods.StaticModifications)
+                if (nodePep.ExplicitMods.StaticModifications != null)
                 {
-                    staticMods.Add(explicitMod);
+                    foreach (var explicitMod in nodePep.ExplicitMods.StaticModifications)
+                        staticMods.Add(explicitMod);
                 }
                 mods = mods.ChangeStaticModifications(staticMods);
             }

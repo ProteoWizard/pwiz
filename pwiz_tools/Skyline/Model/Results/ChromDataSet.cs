@@ -402,20 +402,24 @@ namespace pwiz.Skyline.Model.Results
             listRank.RemoveRange(0, Math.Min(MINIMUM_PEAKS, listRank.Count));
             listAreas.RemoveRange(0, Math.Min(MINIMUM_PEAKS, listAreas.Count));
             int iRemove = 0;
-            // And there must be at least 5 peaks in the line to qualify for removal
-            for (int i = 0, len = listAreas.Count; i < len - 4; i++)
+            // Keep all peaks for summary chromatograms
+            if (PrecursorMz != 0)
             {
-                var statsRank = new Statistics(listRank);
-                var statsArea = new Statistics(listAreas);
-                double rvalue = statsArea.R(statsRank);
-                //                Console.WriteLine("i = {0}, r = {1}", i, rvalue);
-                if (Math.Abs(rvalue) > NOISE_CORRELATION_THRESHOLD)
+                // And there must be at least 5 peaks in the line to qualify for removal
+                for (int i = 0, len = listAreas.Count; i < len - 4; i++)
                 {
-                    iRemove = i + MINIMUM_PEAKS;
-                    break;
+                    var statsRank = new Statistics(listRank);
+                    var statsArea = new Statistics(listAreas);
+                    double rvalue = statsArea.R(statsRank);
+                    //                Console.WriteLine("i = {0}, r = {1}", i, rvalue);
+                    if (Math.Abs(rvalue) > NOISE_CORRELATION_THRESHOLD)
+                    {
+                        iRemove = i + MINIMUM_PEAKS;
+                        break;
+                    }
+                    listRank.RemoveAt(0);
+                    listAreas.RemoveAt(0);
                 }
-                listRank.RemoveAt(0);
-                listAreas.RemoveAt(0);
             }
             if (iRemove == 0)
             {

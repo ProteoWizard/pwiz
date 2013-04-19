@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="dataFilePath">Results file path</param>
         /// <param name="name">Name of data cache</param>
         /// <returns>A path to the data cache</returns>
-        public static string PartPathForName(string documentPath, string dataFilePath, string name)
+        public static string PartPathForName(string documentPath, string dataFilePath, string name = null)
         {
             string filePath = SampleHelp.GetPathFilePart(dataFilePath);
             string dirData = Path.GetDirectoryName(filePath);
@@ -217,29 +217,30 @@ namespace pwiz.Skyline.Model.Results
             return false;            
         }
 
-        public bool TryLoadTicInfo(out ChromatogramGroupInfo info)
+        public bool HasAllIonsChromatograms
         {
-            return TryLoadAllIonsChromatogramInfo(ChromExtractor.summed, out info);
+            get
+            {
+                ChromGroupHeaderInfo5[] headers;
+                return TryLoadChromInfo(null, null, 0, out headers);
+            }
         }
 
-        public bool TryLoadBpcInfo(out ChromatogramGroupInfo info)
-        {
-            return TryLoadAllIonsChromatogramInfo(ChromExtractor.base_peak, out info);
-        }
-
-        private bool TryLoadAllIonsChromatogramInfo(ChromExtractor extractor, out ChromatogramGroupInfo info)
+        public bool TryLoadAllIonsChromatogramInfo(ChromExtractor extractor, out ChromatogramGroupInfo[] infoSet)
         {
             ChromGroupHeaderInfo5[] headers;
             if (TryLoadChromInfo(null, null, 0, out headers))
             {
-                int indexTic = headers.IndexOf(header => header.Extractor == extractor);
-                if (indexTic != -1)
+                var infoSetNew = new List<ChromatogramGroupInfo>();
+                foreach (ChromGroupHeaderInfo5 chromGroupHeader in headers)
                 {
-                    info = LoadChromatogramInfo(headers[indexTic]);
-                    return true;
+                    if (chromGroupHeader.Extractor == extractor)
+                        infoSetNew.Add(LoadChromatogramInfo(chromGroupHeader));
                 }
+                infoSet = infoSetNew.ToArray();
+                return true;
             }
-            info = null;
+            infoSet = new ChromatogramGroupInfo[0];
             return false;            
         }
 

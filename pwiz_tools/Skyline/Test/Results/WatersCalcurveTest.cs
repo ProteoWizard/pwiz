@@ -533,7 +533,7 @@ namespace pwiz.SkylineTest.Results
                 listResultsFiles.AddRange(chromatogram.MSDataFilePaths);
             for (int i = 0; i < fileCacheNames.Length; i++)
             {
-                string partPath = ChromatogramCache.PartPathForName(docPath, listResultsFiles[i], null);
+                string partPath = ChromatogramCache.PartPathForName(docPath, listResultsFiles[i]);
                 File.Move(testFilesDir.GetTestPath(fileCacheNames[i]), partPath);
             }
 

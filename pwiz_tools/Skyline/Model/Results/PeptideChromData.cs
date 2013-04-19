@@ -375,7 +375,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Create peptide peak group data structures for scoring only
                 var dataSet = dataSets.First();
-                dataSet.TruncatePeakSets(MAX_PEAK_GROUPS);
+                // Truncate to maximum peak groups, unless this is a summary chromatogram
+                // where we want to leave more annotated peaks
+                if (dataSet.PrecursorMz != 0)
+                    dataSet.TruncatePeakSets(MAX_PEAK_GROUPS);
                 listPeakSets.AddRange(dataSet.PeakSets.Select(p =>
                     new PeptideChromDataPeakList(NodePep, FileInfo, new PeptideChromDataPeak(dataSet, p))));
                 return listPeakSets;
