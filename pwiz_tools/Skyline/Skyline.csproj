@@ -1201,6 +1201,7 @@
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
+    <Compile Include="Util\DotTraceProfile.cs" />
     <Compile Include="Util\Extensions\ActionUtil.cs" />
     <Compile Include="Util\FileSize.cs" />
     <Compile Include="Util\Install.cs" />
@@ -1817,6 +1818,7 @@
     <EmbeddedResource Include="Resources\PeptideLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\TransitionGroupLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\FragmentLibDecoy.bmp" />
+    <EmbeddedResource Include="Resources\AllIonsStatusButton.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

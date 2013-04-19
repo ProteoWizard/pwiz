@@ -156,12 +156,13 @@ namespace pwiz.Skyline.Controls.Graphs
         // Close the window.
         private void btnClose_Click(object sender, EventArgs e)
         {
-            Close();
+            Hide();
         }
 
         // Cancel all files.
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            Hide();
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
                                               doc => FilterFiles(doc, info => info.FileWriteTime.HasValue));
         }
@@ -169,6 +170,7 @@ namespace pwiz.Skyline.Controls.Graphs
         // Cancel one file.
         private void btnCancelFile_Click(object sender, EventArgs e)
         {
+            Hide();
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancelFile_Click_Cancel_file,
                                               doc => FilterFiles(doc, info => info.FilePath != _currentFilePath));
         }

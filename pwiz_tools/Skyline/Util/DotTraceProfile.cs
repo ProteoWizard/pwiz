@@ -21,9 +21,8 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using pwiz.Skyline.Util;
 
-namespace pwiz.SkylineTestUtil
+namespace pwiz.Skyline.Util
 {
     /// <summary>
     /// DotTraceProfile turns the dotTrace performance profiler on and off for portions of

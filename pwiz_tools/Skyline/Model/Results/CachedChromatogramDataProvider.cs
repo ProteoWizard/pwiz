@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Results
             if (chromKeyIndices.Key.Precursor != 0)
             {
                 LoadingStatus.Transitions.AddTransition(
-                    id,
+                    chromKeyIndices.GroupIndex,
                     times,
                     intensities);
             }

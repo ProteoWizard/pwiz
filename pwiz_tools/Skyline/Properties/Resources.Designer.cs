@@ -604,6 +604,13 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap AllIonsStatusButton {
+            get {
+                object obj = ResourceManager.GetObject("AllIonsStatusButton", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>

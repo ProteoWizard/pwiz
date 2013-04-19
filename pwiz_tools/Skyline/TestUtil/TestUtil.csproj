@@ -120,7 +120,6 @@
   <ItemGroup>
     <Compile Include="AssertEx.cs" />
     <Compile Include="CheckDocumentState.cs" />
-    <Compile Include="DotTraceProfile.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="MemoryStreamManager.cs" />

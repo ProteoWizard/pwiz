@@ -192,6 +192,7 @@ namespace pwiz.Skyline
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusGeneral = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusProgress = new System.Windows.Forms.ToolStripProgressBar();
+            this.buttonShowAllChromatograms = new System.Windows.Forms.ToolStripSplitButton();
             this.statusSequences = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusPeptides = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusPrecursors = new System.Windows.Forms.ToolStripStatusLabel();
@@ -1495,6 +1496,7 @@ namespace pwiz.Skyline
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusGeneral,
             this.statusProgress,
+            this.buttonShowAllChromatograms,
             this.statusSequences,
             this.statusPeptides,
             this.statusPrecursors,
@@ -1513,6 +1515,15 @@ namespace pwiz.Skyline
             // 
             this.statusProgress.Name = "statusProgress";
             resources.ApplyResources(this.statusProgress, "statusProgress");
+            // 
+            // buttonShowAllChromatograms
+            // 
+            this.buttonShowAllChromatograms.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.buttonShowAllChromatograms.DropDownButtonWidth = 0;
+            this.buttonShowAllChromatograms.Image = global::pwiz.Skyline.Properties.Resources.AllIonsStatusButton;
+            resources.ApplyResources(this.buttonShowAllChromatograms, "buttonShowAllChromatograms");
+            this.buttonShowAllChromatograms.Name = "buttonShowAllChromatograms";
+            this.buttonShowAllChromatograms.ButtonClick += new System.EventHandler(this.buttonShowAllChromatograms_ButtonClick);
             // 
             // statusSequences
             // 
@@ -3201,6 +3212,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem idTimesMatchingContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem idTimesAlignedContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem idTimesOtherContextMenuItem;
+        private System.Windows.Forms.ToolStripSplitButton buttonShowAllChromatograms;
     }
 }
 

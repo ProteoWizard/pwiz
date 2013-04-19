@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly int _startPercent;
         private readonly int _endPercent;
-        private readonly IProgressMonitor _loader;
+        protected readonly IProgressMonitor _loader;
 
         protected ChromDataProvider(ChromFileInfo fileInfo,
                                     ProgressStatus status,
@@ -477,13 +477,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private static void ProcessSpectrum(MsDataSpectrum dataSpectrum,
+        private void ProcessSpectrum(MsDataSpectrum dataSpectrum,
                                             ChromDataCollectorSet chromMap,
                                             double rt,
                                             SpectrumFilter filter)
         {
             foreach (var spectrum in filter.Extract(rt, dataSpectrum))
             {
+                if (_loader.IsCanceled)
+                    throw new LoadCanceledException(Status);
+
                 chromMap.ProcessExtractedSpectrum(rt, spectrum);
             }
         }

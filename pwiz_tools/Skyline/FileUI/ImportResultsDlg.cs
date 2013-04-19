@@ -68,6 +68,8 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.Items.Add(ExportOptimize.CE);
             if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
                 comboOptimizing.Items.Add(ExportOptimize.DP);
+
+            cbShowAllChromatograms.Checked = Settings.Default.AutoShowAllChromatogramsGraph;
         }
 
         private string DefaultNewName
@@ -553,6 +555,11 @@ namespace pwiz.Skyline.FileUI
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void cbShowAllChromatograms_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.AutoShowAllChromatogramsGraph = cbShowAllChromatograms.Checked;
         }
     }
 }

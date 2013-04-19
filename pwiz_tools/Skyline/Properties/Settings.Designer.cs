@@ -1722,5 +1722,17 @@ namespace pwiz.Skyline.Properties {
                 this["AllChromatogramsMaximized"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoShowAllChromatogramsGraph {
+            get {
+                return ((bool)(this["AutoShowAllChromatogramsGraph"]));
+            }
+            set {
+                this["AutoShowAllChromatogramsGraph"] = value;
+            }
+        }
     }
 }

@@ -43,6 +43,7 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.labelOptimizing = new System.Windows.Forms.Label();
+            this.cbShowAllChromatograms = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // radioCreateNew
@@ -134,12 +135,20 @@
             resources.ApplyResources(this.labelOptimizing, "labelOptimizing");
             this.labelOptimizing.Name = "labelOptimizing";
             // 
+            // cbShowAllChromatograms
+            // 
+            resources.ApplyResources(this.cbShowAllChromatograms, "cbShowAllChromatograms");
+            this.cbShowAllChromatograms.Name = "cbShowAllChromatograms";
+            this.cbShowAllChromatograms.UseVisualStyleBackColor = true;
+            this.cbShowAllChromatograms.CheckedChanged += new System.EventHandler(this.cbShowAllChromatograms_CheckedChanged);
+            // 
             // ImportResultsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbShowAllChromatograms);
             this.Controls.Add(this.labelOptimizing);
             this.Controls.Add(this.comboOptimizing);
             this.Controls.Add(this.radioCreateMultipleMulti);
@@ -177,5 +186,6 @@
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.ComboBox comboOptimizing;
         private System.Windows.Forms.Label labelOptimizing;
+        private System.Windows.Forms.CheckBox cbShowAllChromatograms;
     }
 }

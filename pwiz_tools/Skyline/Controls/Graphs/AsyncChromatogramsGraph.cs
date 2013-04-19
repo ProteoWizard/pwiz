@@ -129,7 +129,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     _graphPane.YAxis.Scale.Max = animation.Value;
                     _graphPane.AxisChange();
                     _render = true;
-                });
+                },
+                RemoveLowIntensityPeaks);
+        }
+
+        private void RemoveLowIntensityPeaks()
+        {
+            while (_displayedPeaks.Count > 0)
+            {
+                var minPeak = _displayedPeaks.Min;
+                if (minPeak.Peak.MaxIntensity >= _status.Transitions.ThresholdIntensity)
+                    break;
+                _displayedPeaks.Remove(minPeak);
+                _graphPane.CurveList.Remove(minPeak.Curve);
+            }
         }
 
         /// <summary>
@@ -176,7 +189,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // We need to process data even if the control isn't visible to reduce
                 // the memory load of raw chromatogram data.
-                AddData();
+                AddData(_status.Transitions);
 
                 if (!IsVisible)
                     return;
@@ -268,12 +281,8 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         // Add transition data to the graph.
-        private void AddData()
+        private void AddData(ChromatogramLoadingStatus.TransitionData transitions)
         {
-            var transitions = _status.Transitions;
-            if (transitions == null)
-                return;
-
             if (transitions.Progressive && transitions.CurrentTime > _lastCurrentTime)
             {
                 _lastCurrentTime = transitions.CurrentTime;
@@ -286,26 +295,29 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _maxLoadedTime = Math.Max(_maxLoadedTime, peak.Times[peak.Times.Count - 1]);
 
-                // For SRM data, we need to combine peaks for the same filter index that overlap in time.
-                // When we do that, the new combined peak should grow from its current height, not from
-                // the base of the graph again.  Here we combine peaks and calculate a scale factor to
-                // start animation from so that the peak maintains its current height.
                 var animatedScaleFactor = 0.0;
-                var removePeaks = new List<CurveInfo>();
-                foreach (var displayedPeak in _displayedPeaks)
+                if (peak.MayOverlap)
                 {
-                    if (displayedPeak.Peak.FilterIndex == peak.FilterIndex && peak.Overlaps(displayedPeak.Peak))
+                    // For SRM data, we need to combine peaks for the same filter index that overlap in time.
+                    // When we do that, the new combined peak should grow from its current height, not from
+                    // the base of the graph again.  Here we combine peaks and calculate a scale factor to
+                    // start animation from so that the peak maintains its current height.
+                    var removePeaks = new List<CurveInfo>();
+                    foreach (var displayedPeak in _displayedPeaks)
                     {
-                        animatedScaleFactor = displayedPeak.Peak.MaxIntensity;
-                        peak.Add(displayedPeak.Peak);
-                        animatedScaleFactor /= peak.MaxIntensity;
-                        removePeaks.Add(displayedPeak);
+                        if (displayedPeak.Peak.FilterIndex == peak.FilterIndex && peak.Overlaps(displayedPeak.Peak))
+                        {
+                            animatedScaleFactor = displayedPeak.Peak.MaxIntensity;
+                            peak.Add(displayedPeak.Peak);
+                            animatedScaleFactor /= peak.MaxIntensity;
+                            removePeaks.Add(displayedPeak);
+                        }
                     }
-                }
 
-                // Remove an old peak that has been combined with an overlapping peak.
-                foreach (var removePeak in removePeaks)
-                    RemoveCurve(removePeak);
+                    // Remove an old peak that has been combined with an overlapping peak.
+                    foreach (var removePeak in removePeaks)
+                        RemoveCurve(removePeak);
+                }
 
                 // Remove the lowest-intensity peak if we've hit the peak limit.
                 if (_displayedPeaks.Count == MAX_PEAKS)
@@ -346,16 +358,15 @@ namespace pwiz.Skyline.Controls.Graphs
             var peak = curveInfo.Peak;
             var peakId = peak.FilterIndex;
             var color = GetPeakColor(peakId);
-            var curve = _graphPane.AddCurve(peakId + "", new PointPairList(), color, SymbolType.None);
-            curveInfo.Curve = curve;
+            var curve = curveInfo.Curve = new LineItem(peakId + "", new PointPairList(), color, SymbolType.None);
             curve.Label.IsVisible = false;
             curve.Line.Color = Color.FromArgb(peakId == 0 ? 70 : lineTransparency, color);
             curve.Line.Width = CURVE_LINE_WIDTH;
             curve.Line.Style = DashStyle.Solid;
-            var fillColor1 = Color.FromArgb(peakId == 0 ? 50 : fillTransparency, color);
-            var fillColor2 = Color.FromArgb(0, color);
-            curve.Line.Fill = new Fill(fillColor1, fillColor2, 90);
+            var fillColor = Color.FromArgb(peakId == 0 ? 50 : fillTransparency, color);
+            curve.Line.Fill = new Fill(fillColor);
             curve.Line.IsAntiAlias = true;
+            _graphPane.CurveList.Insert(0, curve);
 
             // Add leading zero to curve.
             curve.AddPoint(peak.Times[0] - ChromatogramLoadingStatus.TIME_RESOLUTION, 0.0);

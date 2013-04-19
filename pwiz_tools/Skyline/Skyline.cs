@@ -180,9 +180,6 @@ namespace pwiz.Skyline
             if (Equals(Handle, default(IntPtr)))
                 throw new InvalidOperationException(Resources.SkylineWindow_SkylineWindow_Must_have_a_window_handle_to_begin_processing);
 
-            // TODO: get this from settings
-            AutoShowAllChromatogramsGraph = true;
-
             // Load any file the user may have double-clicked on to run this application
             bool newFile = true;
             var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
@@ -3233,13 +3230,13 @@ namespace pwiz.Skyline
             if (listProgress.Count == 0)
             {
                 statusProgress.Visible = false;
+                buttonShowAllChromatograms.Visible = false;
                 statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
                 _timerProgress.Stop();
 
                 if (_allChromatogramsGraph != null)
                 {
-                    // TODO: Store in settings
-                    AutoShowAllChromatogramsGraph = _allChromatogramsGraph.Visible;
+                    Settings.Default.AutoShowAllChromatogramsGraph = _allChromatogramsGraph.Visible;
                     DestroyAllChromatogramsGraph();
                 }
             }
@@ -3254,10 +3251,11 @@ namespace pwiz.Skyline
                 var loadingStatus = status as ChromatogramLoadingStatus;
                 if (loadingStatus != null)
                 {
+                    buttonShowAllChromatograms.Visible = true;
                     if (_allChromatogramsGraph == null)
                     {
                         _allChromatogramsGraph = new AllChromatogramsGraph {Owner = this};
-                        if (AutoShowAllChromatogramsGraph)
+                        if (Settings.Default.AutoShowAllChromatogramsGraph)
                             _allChromatogramsGraph.Show();
                     }
                     _allChromatogramsGraph.UpdateStatus(loadingStatus);
@@ -3265,7 +3263,10 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool AutoShowAllChromatogramsGraph { get; set; }
+        private void buttonShowAllChromatograms_ButtonClick(object sender, EventArgs e)
+        {
+            _allChromatogramsGraph.Show();
+        }
 
         Point INotificationContainer.NotificationAnchor
         {

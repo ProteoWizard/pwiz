@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Results
                 string format = dataFilePathRecalc == null
                                     ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
                                     : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
-                string message = string.Format(format, dataFilePath);
+                string message = string.Format(format, SampleHelp.GetFileSampleName(dataFilePath));
                 int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
                 _status = ((ChromatogramLoadingStatus) _status).ChangeFilePath(dataFilePath);
