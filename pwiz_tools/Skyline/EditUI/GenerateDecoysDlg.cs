@@ -23,7 +23,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -33,7 +32,6 @@ namespace pwiz.Skyline.EditUI
     public partial class GenerateDecoysDlg : FormEx
     {
         private readonly SrmDocument _document;
-        private readonly SrmSettings _settings;
 
         // Number of precursor (TransitionGroup) decoys
         private int _numDecoys;
@@ -57,7 +55,6 @@ namespace pwiz.Skyline.EditUI
         public GenerateDecoysDlg(SrmDocument document)
         {
             _document = document;
-            _settings = document.Settings;
 
             InitializeComponent();
 
