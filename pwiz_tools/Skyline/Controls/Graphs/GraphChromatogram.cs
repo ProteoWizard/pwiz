@@ -2152,7 +2152,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return true;
             }
 
-            if (e.Button != MouseButtons.None || _extractor.HasValue)
+            if (e.Button != MouseButtons.None)
                 return false;
 
             using (Graphics g = CreateGraphics())
@@ -2167,7 +2167,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         TransitionGroupDocNode nodeGroup;
                         TransitionDocNode nodeTran;
-                        if (!FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran).IsZero ||
+                        if ((!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran).IsZero) ||
                             !FindAnnotatedSpectrumRetentionTime(label).IsZero)
                         {
                             graphControl.Cursor = Cursors.Hand;
@@ -2183,12 +2183,15 @@ namespace pwiz.Skyline.Controls.Graphs
                             graphControl.Cursor = Cursors.Hand;
                             return true;
                         }
-                        if (!FindBestPeakBoundary(pt, out graphItem).IsZero)
+                        if (!_extractor.HasValue && !FindBestPeakBoundary(pt, out graphItem).IsZero)
                         {
                             graphControl.Cursor = Cursors.VSplit;
                             return true;
                         }
                     }
+
+                    if (_extractor.HasValue)
+                        return false;
 
                     if (nearest is CurveItem)
                     {
@@ -2208,7 +2211,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left && !_extractor.HasValue)
+            if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
                 using (Graphics g = CreateGraphics())
@@ -2221,14 +2224,17 @@ namespace pwiz.Skyline.Controls.Graphs
                         var label = nearest as TextObj;
                         if (label != null)
                         {
-                            TransitionGroupDocNode nodeGroup;
-                            TransitionDocNode nodeTran;
-                            var peakTime = FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran);
-                            if (!peakTime.IsZero)
+                            if (!_extractor.HasValue)
                             {
-                                FirePickedPeak(nodeGroup, nodeTran, peakTime);
-                                graphControl.Cursor = Cursors.Hand; // ZedGraph changes to crosshair without this
-                                return true;
+                                TransitionGroupDocNode nodeGroup;
+                                TransitionDocNode nodeTran;
+                                var peakTime = FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran);
+                                if (!peakTime.IsZero)
+                                {
+                                    FirePickedPeak(nodeGroup, nodeTran, peakTime);
+                                    graphControl.Cursor = Cursors.Hand; // ZedGraph changes to crosshair without this
+                                    return true;
+                                }
                             }
                             var spectrumTime = FindAnnotatedSpectrumRetentionTime(label);
                             if (!spectrumTime.IsZero)
@@ -2241,21 +2247,27 @@ namespace pwiz.Skyline.Controls.Graphs
                         var line = nearest as LineObj;
                         if (line != null)
                         {
-                            ChromGraphItem graphItem;
                             var spectrumTime = FindAnnotatedSpectrumRetentionTime(line);
                             if (!spectrumTime.IsZero)
                             {
                                 FirePickedSpectrum(spectrumTime);
                                 return true;
                             }
-                            ScaledRetentionTime time = FindBestPeakBoundary(pt, out graphItem);
-                            if (!time.IsZero)
+                            if (!_extractor.HasValue)
                             {
-                                _peakBoundDragInfos = new[] {StartDrag(graphItem, pt, time, false)};
-                                graphControl.Cursor = Cursors.VSplit; // ZedGraph changes to crosshair without this
-                                return true;
+                                ChromGraphItem graphItem;
+                                ScaledRetentionTime time = FindBestPeakBoundary(pt, out graphItem);
+                                if (!time.IsZero)
+                                {
+                                    _peakBoundDragInfos = new[] { StartDrag(graphItem, pt, time, false) };
+                                    graphControl.Cursor = Cursors.VSplit; // ZedGraph changes to crosshair without this
+                                    return true;
+                                }
                             }
                         }
+
+                        if (_extractor.HasValue)
+                            return false;
 
                         CurveItem[] changeCurves = null;
                         // If clicked on the XAxis for a graph of a single precursor, use its first curve
