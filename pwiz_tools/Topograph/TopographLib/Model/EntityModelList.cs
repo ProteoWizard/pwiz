@@ -45,7 +45,7 @@ namespace pwiz.Topograph.Model
             {
                 if (null == GetData(Workspace.Data))
                 {
-                    return ImmutableSortedList<TKey, TEntity>.Empty;
+                    return ImmutableSortedList<TKey, TEntity>.EMPTY;
                 }
                 _entityList = CreateEntityList();
             }
@@ -62,7 +62,7 @@ namespace pwiz.Topograph.Model
             {
                 return;
             }
-            var newData = GetData(Workspace.Data) ?? ImmutableSortedList<TKey, TData>.Empty;
+            var newData = GetData(Workspace.Data) ?? ImmutableSortedList<TKey, TData>.EMPTY;
             var newKeys = new HashSet<TKey>(newData.Keys);
             bool changed = !Equals(newData.Keys, _entityList.Keys);
             if (changed)

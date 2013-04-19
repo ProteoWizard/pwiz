@@ -12,7 +12,7 @@ namespace pwiz.Topograph.Model
         public RetentionTimeAlignments(WorkspaceData workspaceData)
         {
             WorkspaceData = workspaceData;
-            _alignments = ImmutableSortedList<AlignmentKey, RetentionTimeAlignment>.Empty;
+            _alignments = ImmutableSortedList<AlignmentKey, RetentionTimeAlignment>.EMPTY;
         }
         public WorkspaceData WorkspaceData { get; private set; }
         public void MergeFrom(RetentionTimeAlignments retentionTimeAlignments)

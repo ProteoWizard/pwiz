@@ -76,7 +76,7 @@ namespace pwiz.BiblioSpec
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BlibBuild(string outputPath, IList<string> inputFiles, IList<string> targetSequences)
+        public BlibBuild(string outputPath, IList<string> inputFiles, IList<string> targetSequences = null)
         {
             OutputPath = outputPath;
             InputFiles = inputFiles;

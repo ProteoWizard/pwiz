@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<string> targetSequences)
+        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<string> targetSequences = null)
         {
             LibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
 

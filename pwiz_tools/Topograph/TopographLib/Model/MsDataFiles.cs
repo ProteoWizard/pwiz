@@ -34,7 +34,7 @@ namespace pwiz.Topograph.Model
             var data = Workspace.Data.MsDataFiles;
             if (data == null)
             {
-                return ImmutableSortedList<long, MsDataFile>.Empty;
+                return ImmutableSortedList<long, MsDataFile>.EMPTY;
             }
             return
                 ImmutableSortedList.FromValues(data.Select(entry => new KeyValuePair<long, MsDataFile>(

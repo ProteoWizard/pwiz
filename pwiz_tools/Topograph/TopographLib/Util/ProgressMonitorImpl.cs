@@ -22,6 +22,11 @@ namespace pwiz.Topograph.Util
             _updateProgressImpl.Invoke(status);
         }
 
+        public bool HasUI
+        {
+            get { return false; }
+        }
+
         public static ProgressMonitorImpl NewProgressMonitorImpl(ProgressStatus currentStatus, Func<int, bool> updateProgress)
         {
             return new ProgressMonitorImpl(

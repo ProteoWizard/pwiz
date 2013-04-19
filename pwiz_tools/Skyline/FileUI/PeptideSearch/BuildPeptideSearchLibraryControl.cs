@@ -150,9 +150,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // "Append" instead of "Create"
             var libraryBuildAction = File.Exists(outputPath) ? LibraryBuildAction.Append : LibraryBuildAction.Create;
 
-            // TODO: I need to figure out the name based on the .sky filename
             string name = Path.GetFileNameWithoutExtension(SkylineWindow.DocumentFilePath);
-            var builder = new BiblioSpecLiteBuilder(name, outputPath, SearchFileNames, null)
+            var builder = new BiblioSpecLiteBuilder(name, outputPath, SearchFileNames)
             {
                 Action = libraryBuildAction,
                 KeepRedundant = true,

@@ -35,7 +35,7 @@ namespace pwiz.Topograph.Model
             var data = Workspace.Data.PeptideAnalyses;
             if (data == null)
             {
-                return ImmutableSortedList<long, PeptideAnalysis>.Empty;
+                return ImmutableSortedList<long, PeptideAnalysis>.EMPTY;
             }
             return
                 ImmutableSortedList.FromValues(data.Select(entry => new KeyValuePair<long, PeptideAnalysis>(

@@ -34,7 +34,7 @@ namespace pwiz.Topograph.Model.Data
             MaxCharge = dbPeptideAnalysis.MaxCharge;
             ExcludedMasses = ExcludedMasses.FromByteArray(dbPeptideAnalysis.ExcludedMasses);
             MassAccuracy = dbPeptideAnalysis.MassAccuracy;
-            FileAnalyses = ImmutableSortedList<long, PeptideFileAnalysisData>.Empty;
+            FileAnalyses = ImmutableSortedList<long, PeptideFileAnalysisData>.EMPTY;
         }
 
         public PeptideAnalysisData(PeptideAnalysisData peptideAnalysisData)
