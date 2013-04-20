@@ -684,10 +684,9 @@ namespace pwiz.Skyline.Model
         private static int GetProductMassShift()
         {
             int massShift = RANDOM.Next(Transition.MIN_PRODUCT_DECOY_MASS_SHIFT,
-                                        Transition.MAX_PRODUCT_DECOY_MASS_SHIFT + 1);
-            // TODO: Validation code
-
-            return massShift;
+                                        Transition.MAX_PRODUCT_DECOY_MASS_SHIFT);
+            // TODO: Validation code (at least 5 from the precursor)
+            return massShift < 0 ? massShift : massShift + 1;
         }
 
         private static SequenceMods GetReversedPeptideSequence(SequenceMods seqMods)

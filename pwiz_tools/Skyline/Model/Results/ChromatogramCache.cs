@@ -540,7 +540,8 @@ namespace pwiz.Skyline.Model.Results
             ReadComplete(stream, cacheHeader, countHeader);
 
             int formatVersion = GetInt32(cacheHeader, (int) Header.format_version);
-            if (formatVersion > FORMAT_VERSION_CACHE)
+            // TODO: Switch to FORMAT_VERSION after SKYD 5 format is released
+            if (formatVersion > FORMAT_VERSION_CACHE_5)
             {
                 throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__,
                                                                           formatVersion, Install.Version),
