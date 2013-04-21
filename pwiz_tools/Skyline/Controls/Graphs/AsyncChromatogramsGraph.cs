@@ -54,11 +54,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private BoxObj _unfinishedBox;
         private LineObj _unfinishedLine;
         private double _maxLoadedTime;
-        private readonly SortedSet<CurveInfo> _displayedPeaks =
-            new SortedSet<CurveInfo>(new CurveInfo.Comparer());
+        private SortedSet<CurveInfo> _displayedPeaks = new SortedSet<CurveInfo>();
         private readonly List<CurveInfo> _animatingCurves = new List<CurveInfo>();
-        private readonly Dictionary<int, Color> _peakColors = new Dictionary<int, Color>();
-        private int _peakColorSeed;
         private double _maxPeakIntensity;
         private double _lastCurrentTime;
         private ChromatogramLoadingStatus _status;
@@ -191,8 +188,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var finishedPeaks = transitions.GetPeaks();
             foreach (var peak in finishedPeaks)
             {
-                _maxLoadedTime = Math.Max(_maxLoadedTime, peak.Times[peak.Times.Count - 1]);
-
                 var animatedScaleFactor = 0.0;
                 if (peak.MayOverlap)
                 {
@@ -230,11 +225,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Add new peak.
+                var maxTime = peak.Times[peak.Times.Count - 1];
+                if (_maxLoadedTime < maxTime)
+                    _maxLoadedTime = maxTime;
+                if (_maxPeakIntensity < peak.MaxIntensity)
+                    _maxPeakIntensity = peak.MaxIntensity;
                 var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0) };
-                _maxPeakIntensity = Math.Max(_maxPeakIntensity, peak.MaxIntensity);
                 _displayedPeaks.Add(curveInfo);
+
+                // Order insertions into graph list so lower-intensity peaks are displayed in front of higher-intensity peaks.
+                var index = 0;
+                foreach (var displayedPeak in _displayedPeaks)
+                {
+                    if (ReferenceEquals(curveInfo, displayedPeak))
+                        break;
+                    index++;
+                }
                 _animatingCurves.Add(curveInfo);
-                NewCurve(curveInfo);
+                NewCurve(curveInfo, index);
                 render = true;
             }
 
@@ -251,7 +259,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Add a new curve (representing a peak) to the graph.
         /// </summary>
-        private void NewCurve(CurveInfo curveInfo)
+        private void NewCurve(CurveInfo curveInfo, int index)
         {
             const int lineTransparency = 200;
             const int fillTransparency = 90;
@@ -271,13 +279,14 @@ namespace pwiz.Skyline.Controls.Graphs
             // Add leading zero to curve.
             curve.AddPoint(peak.Times[0] - ChromatogramLoadingStatus.TIME_RESOLUTION, 0.0);
 
+            var animationScaleFactor = curveInfo.Animation != null ? curveInfo.Animation.Value : 1.0;
             for (int i = 0; i < peak.Times.Count; i++)
-                curve.AddPoint(peak.Times[i], 0.0);
+                curve.AddPoint(peak.Times[i], peak.Intensities[i]*animationScaleFactor);
 
             // Add trailing zero.
             curve.AddPoint(peak.Times[peak.Times.Count - 1] + ChromatogramLoadingStatus.TIME_RESOLUTION, 0.0);
 
-            _graphPane.CurveList.Insert(0, curve);
+            _graphPane.CurveList.Insert(index, curve);
         }
 
         /// <summary>
@@ -317,14 +326,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _yAxisAnimation = null;
 
                     // Remove low-intensity peaks under the threshold intensity after y axis is done animating.
-                    while (_displayedPeaks.Count > 0)
-                    {
-                        var minPeak = _displayedPeaks.Min;
-                        if (minPeak.Peak.MaxIntensity >= _status.Transitions.ThresholdIntensity)
-                            break;
-                        _displayedPeaks.Remove(minPeak);
-                        _graphPane.CurveList.Remove(minPeak.Curve);
-                    }
+                    FilterLowIntensityPeaks();
                 }
             }
 
@@ -346,6 +348,71 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return render;
+        }
+
+        private void FilterLowIntensityPeaks()
+        {
+            // Discard low-intensity points, possibly breaking one peak into several.
+            var oldPeaks = _displayedPeaks;
+            _displayedPeaks = new SortedSet<CurveInfo>();
+            foreach (var oldPeak in oldPeaks)
+                ExtractPeaks(oldPeak);
+
+            // Discard low-intensity peaks and peaks over the count limit.
+            var thresholdIntensity = _maxPeakIntensity * ChromatogramLoadingStatus.INTENSITY_THRESHOLD_PERCENT;
+            while (_displayedPeaks.Count > 0)
+            {
+                var minPeak = _displayedPeaks.Min;
+                if (_displayedPeaks.Count <= MAX_PEAKS && 
+                    minPeak.Peak.MaxIntensity >= thresholdIntensity)
+                    break;
+                _displayedPeaks.Remove(minPeak);
+            }
+
+            // Rebuild curve list and animating list.
+            _animatingCurves.Clear();
+            _graphPane.CurveList.Clear();
+            var index = 0;
+            foreach (var displayedPeak in _displayedPeaks)
+            {
+                if (displayedPeak.Animation != null)
+                    _animatingCurves.Add(displayedPeak);
+
+                NewCurve(displayedPeak, index++);
+            }
+        }
+
+        private void ExtractPeaks(CurveInfo curveInfo)
+        {
+            var intensities = curveInfo.Peak.Intensities;
+            var startIndex = 0;
+            var thresholdIntensity = _maxPeakIntensity * ChromatogramLoadingStatus.INTENSITY_THRESHOLD_PERCENT;
+
+            while (true)
+            {
+                while (startIndex < intensities.Count && intensities[startIndex] < thresholdIntensity)
+                    startIndex++;
+                if (startIndex == intensities.Count)
+                    break;
+
+                // Find end of transition below the threshold intensity value.
+                int endIndex = startIndex + 1;
+                var maxIntensity = intensities[startIndex];
+                while (endIndex < intensities.Count && intensities[endIndex] >= thresholdIntensity)
+                    maxIntensity = Math.Max(maxIntensity, intensities[endIndex++]);
+
+                var extractedPeak = new ChromatogramLoadingStatus.TransitionData.Peak(curveInfo.Peak.FilterIndex, false)
+                    {
+                        Times = curveInfo.Peak.Times.GetRange(startIndex, endIndex - startIndex),
+                        Intensities = curveInfo.Peak.Intensities.GetRange(startIndex, endIndex - startIndex),
+                        MaxIntensity = maxIntensity
+                    };
+
+                var newCurveInfo = new CurveInfo {Animation = curveInfo.Animation, Peak = extractedPeak};
+                _displayedPeaks.Add(newCurveInfo);
+
+                startIndex = endIndex;
+            }
         }
 
         /// <summary>
@@ -387,6 +454,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _graphPane.YAxis.Scale.Max = _yMax;
                     _graphPane.AxisChange();
+                    FilterLowIntensityPeaks();
                 }
                 else
                 {
@@ -457,27 +525,13 @@ namespace pwiz.Skyline.Controls.Graphs
             if (peakId == 0)
                 return _unknownPeakColor;
 
-            Color peakColor;
-            if (_peakColors.TryGetValue(peakId, out peakColor))
-                return peakColor;
+            var hue = (peakId*109)%360;
 
-            while (true)
-            {
-                _peakColorSeed++;
+            // Random saturation (but not too bland) and value (but not too dark).
+            var saturation = ((peakId*433)%50000)/100000.0 + 0.5;   // Range [0.5..1.0]
+            var value = ((peakId*809)%50000)/100000.0 + 0.5;        // Range [0.5..1.0]
 
-                // This tricky bit of code does a binary subdivision of the hue circle, trying to place each hue
-                // as far as possible from the hues of its predecessor and successor.
-                var nextPowerOf2 = (int)Math.Pow(2, (int)(Math.Log(_peakColorSeed) / Math.Log(2)) + 1);
-                var hue = (360.0 * (_peakColorSeed / 2 * 2 - nextPowerOf2 / 2 + 1 + nextPowerOf2 / 2 * (_peakColorSeed & 1)) / nextPowerOf2) % 360;
-
-                // Random saturation (but not too bland) and value (but not too dark).
-                var saturation = ((peakId * 397) & 127) / 254.0 + 0.5;   // Range [0.5..1.0]
-                var value = ((peakId * 859) & 127) / 254.0 + 0.5;        // Range [0.5..1.0]
-
-                peakColor = ColorFromHSV(hue, saturation, value);
-                _peakColors[peakId] = peakColor;
-                return peakColor;
-            }
+            return ColorFromHSV(hue, saturation, value);
         }
 
         // Return a color for the given hue, saturation, and value.
@@ -509,22 +563,19 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Associate one of our transition peaks (Peak) with ZedGraph's curve object (LineItem).
         /// </summary>
-        private class CurveInfo
+        private class CurveInfo : IComparable
         {
             public LineItem Curve;
             public ChromatogramLoadingStatus.TransitionData.Peak Peak;
             public Animation Animation;
 
-            // Sort by maximum intensity and then filter index.
-            public class Comparer : IComparer<CurveInfo>
+            public int CompareTo(object obj)
             {
-                public int Compare(CurveInfo x, CurveInfo y)
-                {
-                    var compare = x.Peak.MaxIntensity.CompareTo(y.Peak.MaxIntensity);
-                    if (compare == 0)
-                        compare = x.Peak.FilterIndex.CompareTo(y.Peak.FilterIndex);
-                    return compare;
-                }
+                var other = (CurveInfo) obj;
+                var compare = Peak.MaxIntensity.CompareTo(other.Peak.MaxIntensity);
+                if (compare == 0)
+                    compare = Peak.FilterIndex.CompareTo(other.Peak.FilterIndex);
+                return compare;
             }
         }
     }

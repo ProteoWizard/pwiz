@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         // Resolution of binning.  Set too low, this will consume a lot of memory.  Set too high, the graph
         // gets coarse and looks less like Skyline's other chromatogram graphs.
         public const float TIME_RESOLUTION = 0.1f;    // 6 seconds
-        private const float THRESHOLD = 0.03f;
+        public const float INTENSITY_THRESHOLD_PERCENT = 0.03f;
 
         public ChromatogramLoadingStatus(string message) :
             base(message)
@@ -58,11 +58,11 @@ namespace pwiz.Skyline.Model.Results
             private List<Peak[]> _peaks;
             private List<Peak> _finishedPeaks = new List<Peak>();
             private static readonly int SOURCE_INDEX_COUNT = Helpers.CountEnumValues<ChromSource>() - 1;
+            private float _thresholdIntensity;
 
             public double MaxTime { get; set; }
             public double CurrentTime { get; set; }
             public bool Progressive { get; set; }
-            public float ThresholdIntensity { get; private set; }
 
             public int FilterCount
             {
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.Results
                     MaxTime = 0.0;
                     CurrentTime = 0.0;
                     Progressive = false;
-                    ThresholdIntensity = 0.0f;
+                    _thresholdIntensity = 0.0f;
                     _finishedPeaks = new List<Peak>();
                 }
             }
@@ -126,14 +126,14 @@ namespace pwiz.Skyline.Model.Results
                     if (peak.MaxIntensity < lastIntensity)
                     {
                         peak.MaxIntensity = lastIntensity;
-                        ThresholdIntensity = Math.Max(ThresholdIntensity, peak.MaxIntensity * THRESHOLD);
+                        _thresholdIntensity = Math.Max(_thresholdIntensity, peak.MaxIntensity * INTENSITY_THRESHOLD_PERCENT);
                     }
 
                     // Finish a peak if intensity falls too low.
-                    if (lastIntensity < ThresholdIntensity)
+                    if (lastIntensity < _thresholdIntensity)
                     {
                         // If the peak was above our current threshold, send to display.
-                        if (peak.Intensities.Count > 1 && peak.MaxIntensity > ThresholdIntensity)
+                        if (peak.Intensities.Count > 1 && peak.MaxIntensity > _thresholdIntensity)
                         {
                             lock (this)
                             {
@@ -162,14 +162,14 @@ namespace pwiz.Skyline.Model.Results
                 int startIndex = 0;
                 while (true)
                 {
-                    while (startIndex < intensities.Length && intensities[startIndex] < ThresholdIntensity)
+                    while (startIndex < intensities.Length && intensities[startIndex] < _thresholdIntensity)
                         startIndex++;
                     if (startIndex == intensities.Length)
                         return;
 
                     // Find end of transition below the threshold intensity value.
                     int endIndex = startIndex + 1;
-                    while (endIndex < intensities.Length && intensities[endIndex] >= ThresholdIntensity)
+                    while (endIndex < intensities.Length && intensities[endIndex] >= _thresholdIntensity)
                         endIndex++;
 
                     AddTransition(index, times, intensities, startIndex, endIndex);
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Update threshold intensity.
-                ThresholdIntensity = Math.Max(ThresholdIntensity, peak.MaxIntensity * THRESHOLD);
+                _thresholdIntensity = Math.Max(_thresholdIntensity, peak.MaxIntensity * INTENSITY_THRESHOLD_PERCENT);
 
                 // Add to list of peaks for display.
                 lock (this)
@@ -250,8 +250,8 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 public readonly int FilterIndex;
-                public List<float> Times { get; private set; }
-                public List<float> Intensities { get; private set; }
+                public List<float> Times;
+                public List<float> Intensities;
                 public int PointCount;
                 public float MaxIntensity;
                 public readonly bool MayOverlap;
