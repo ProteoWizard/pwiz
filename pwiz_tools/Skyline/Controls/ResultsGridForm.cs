@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls
             InitializeComponent();
 
             Icon = Resources.Skyline;
-
+            DataGridViewPasteHandler.Attach((SkylineWindow) documentUiContainer, resultsGrid);
             resultsGrid.Init(documentUiContainer, sequenceTree);
         }
 

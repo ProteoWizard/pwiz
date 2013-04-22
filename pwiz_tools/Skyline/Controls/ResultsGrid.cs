@@ -408,9 +408,13 @@ namespace pwiz.Skyline.Controls
             {
                 if (DocumentUiContainer.InUndoRedo)
                     return;
-                Program.MainWindow.ModifyDocument(Resources.ResultsGrid_ResultsGrid_CellEndEdit_Edit_note, doc => 
-                    UpdateDocument(doc, SelectedPaths, Rows[e.RowIndex], Columns, e.ColumnIndex, 
-                    PrecursorNoteColumn.Index, TransitionNoteColumn.Index ));
+                Program.MainWindow.ModifyDocument(Resources.ResultsGrid_ResultsGrid_CellEndEdit_Edit_note, doc =>
+                    {
+                        var newDocument = UpdateDocument(doc, SelectedPaths, Rows[e.RowIndex], Columns, e.ColumnIndex,
+                                                         PrecursorNoteColumn.Index, TransitionNoteColumn.Index);
+                        return newDocument.Equals(doc) ? doc : newDocument;
+                    }
+                );
             }
             finally
             {

@@ -1200,6 +1200,7 @@
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
     <Compile Include="Util\DotTraceProfile.cs" />
     <Compile Include="Util\Extensions\ActionUtil.cs" />

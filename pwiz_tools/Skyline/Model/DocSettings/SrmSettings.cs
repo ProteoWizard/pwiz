@@ -1558,7 +1558,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                  ;
 
             // If the results changed, then update the results information which has changed
-            DiffResults = !ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults);
+            DiffResults = !EqualExceptAnnotations(settingsNew.MeasuredResults, settingsOld.MeasuredResults);
             // If the integration strategy has changed, then force a full update of all results
             if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll)
                 DiffResults = DiffResultsAll = true;
@@ -1570,6 +1570,32 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 DiffResults = true;
             }
+        }
+
+        private static bool EqualExceptAnnotations(MeasuredResults measuredResultsNew, MeasuredResults measuredResultsOld)
+        {
+            if (ReferenceEquals(measuredResultsNew, measuredResultsOld))
+            {
+                return true;
+            }
+            if (measuredResultsNew == null || measuredResultsOld == null)
+            {
+                return false;
+            }
+            if (measuredResultsNew.Chromatograms.Count != measuredResultsOld.Chromatograms.Count)
+            {
+                return false;
+            }
+            for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
+            {
+                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY);
+                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY);
+                if (!chromatogramSetNew.Equals(chromatogramSetOld))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private static bool EquivalentLibraries(PeptideLibraries newLib, PeptideLibraries oldLib)

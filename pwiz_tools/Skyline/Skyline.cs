@@ -3412,6 +3412,11 @@ namespace pwiz.Skyline
         }
 
         #endregion
+
+        public bool IsPasteKeys(Keys keys)
+        {
+            return Equals(pasteMenuItem.ShortcutKeys, keys);
+        }
     }
 }
 
