@@ -56,6 +56,7 @@ namespace pwiz.Skyline.FileUI
             this.treeViewFolders.Name = "treeViewFolders";
             this.treeViewFolders.Size = new System.Drawing.Size(447, 220);
             this.treeViewFolders.TabIndex = 4;
+            this.treeViewFolders.DoubleClick += new System.EventHandler(this.treeViewFolders_DoubleClick);
             // 
             // btnCancel
             // 

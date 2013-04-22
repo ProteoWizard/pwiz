@@ -2265,17 +2265,15 @@ namespace pwiz.Skyline.Model
         {
             Peptide peptide = node.Peptide;
             string sequence = peptide.Sequence;
+            writer.WriteAttributeString(ATTR.sequence, sequence);
+            string modSeq = Settings.GetModifiedSequence(node);
+            writer.WriteAttributeString(ATTR.modified_sequence, modSeq);
             if (peptide.Begin.HasValue && peptide.End.HasValue)
             {
                 writer.WriteAttribute(ATTR.start, peptide.Begin.Value);
                 writer.WriteAttribute(ATTR.end, peptide.End.Value);
-                writer.WriteAttributeString(ATTR.sequence, sequence);
                 writer.WriteAttribute(ATTR.prev_aa, peptide.PrevAA);
                 writer.WriteAttribute(ATTR.next_aa, peptide.NextAA);
-            }
-            else
-            {
-                writer.WriteAttributeString(ATTR.sequence, sequence);                
             }
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
@@ -2287,7 +2285,6 @@ namespace pwiz.Skyline.Model
             writer.WriteAttribute(ATTR.num_missed_cleavages, peptide.MissedCleavages);
             writer.WriteAttributeNullable(ATTR.rank, node.Rank);
 
-            string modSeq = Settings.GetModifiedSequence(node);
             var rtPredictor = Settings.PeptideSettings.Prediction.RetentionTime;
             double? scoreCalc = null;
             if(rtPredictor != null)
@@ -2516,6 +2513,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
             writer.WriteAttributeNullable(ATTR.height, chromInfo.Height);
+            writer.WriteAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
             writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
             writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLower());
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);

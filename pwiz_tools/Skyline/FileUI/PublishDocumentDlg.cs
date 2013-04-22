@@ -332,6 +332,11 @@ namespace pwiz.Skyline.FileUI
                 }
             }
         }
+
+        private void treeViewFolders_DoubleClick(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
     }
 
     public interface IPanoramaPublishClient
@@ -504,6 +509,9 @@ namespace pwiz.Skyline.FileUI
             // An exception will be thrown if the response code is not 200 (Success).
             catch (WebException x)
             {
+                // Try again
+                RenameTempZipFile(sourceUri, destUri, authHeader);
+
                 var msg = x.Message;
                 if(x.InnerException != null)
                 {

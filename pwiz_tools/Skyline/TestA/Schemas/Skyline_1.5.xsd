@@ -584,9 +584,10 @@
                     <xs:element name="precursor" type="transition_group_type" minOccurs="0"
                         maxOccurs="unbounded"/>
                 </xs:sequence>
+                <xs:attribute name="sequence" type="sequence_type" use="required"/>
+                <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
                 <xs:attribute name="start" type="xs:positiveInteger"/>
                 <xs:attribute name="end" type="xs:positiveInteger"/>
-                <xs:attribute name="sequence" type="sequence_type" use="required"/>
                 <xs:attribute name="prev_aa" type="amino_acid_type"/>
                 <xs:attribute name="next_aa" type="amino_acid_type"/>
                 <xs:attribute name="decoy" type="xs:boolean"/>
