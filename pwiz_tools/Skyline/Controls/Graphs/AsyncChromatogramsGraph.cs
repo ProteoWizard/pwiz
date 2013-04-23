@@ -33,7 +33,6 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         // This is the interval in milliseconds between frame updates.
         private const int ANIMATION_INTERVAL_MSEC = 200;
-        private const int MAX_PEAKS = 1000;
         
         private const float CURVE_LINE_WIDTH = 1.0f;
         private const float PROGRESS_LINE_WIDTH = 2.0f;
@@ -53,7 +52,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private Animation _yAxisAnimation;
         private BoxObj _unfinishedBox;
         private LineObj _unfinishedLine;
-        private double _maxLoadedTime;
         private SortedSet<CurveInfo> _displayedPeaks = new SortedSet<CurveInfo>();
         private readonly List<CurveInfo> _animatingCurves = new List<CurveInfo>();
         private double _maxPeakIntensity;
@@ -216,7 +214,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Remove the lowest-intensity peak if we've hit the peak limit.
-                if (_displayedPeaks.Count == MAX_PEAKS)
+                if (_displayedPeaks.Count == ChromatogramLoadingStatus.MAX_PEAKS)
                 {
                     var lowestCurve = _displayedPeaks.Min;
                     if (peak.MaxIntensity <= lowestCurve.Peak.MaxIntensity)
@@ -225,9 +223,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Add new peak.
-                var maxTime = peak.Times[peak.Times.Count - 1];
-                if (_maxLoadedTime < maxTime)
-                    _maxLoadedTime = maxTime;
                 if (_maxPeakIntensity < peak.MaxIntensity)
                     _maxPeakIntensity = peak.MaxIntensity;
                 var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0) };
@@ -249,8 +244,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsVisible)
             {
                 // Rescale axes to new maximum values.
-                var timeScale = (transitions.Progressive) ? transitions.MaxTime : _maxLoadedTime*1.1;
-                render = AnimateAxes(timeScale, _maxPeakIntensity*1.1) || render;
+                var maxRetentionTime = transitions.MaxRetentionTime;
+                if (!transitions.MaxRetentionTimeKnown)
+                    maxRetentionTime *= 1.1f;
+                render = AnimateAxes(maxRetentionTime, _maxPeakIntensity*1.1) || render;
             }
 
             return render;
@@ -363,7 +360,7 @@ namespace pwiz.Skyline.Controls.Graphs
             while (_displayedPeaks.Count > 0)
             {
                 var minPeak = _displayedPeaks.Min;
-                if (_displayedPeaks.Count <= MAX_PEAKS && 
+                if (_displayedPeaks.Count <= ChromatogramLoadingStatus.MAX_PEAKS && 
                     minPeak.Peak.MaxIntensity >= thresholdIntensity)
                     break;
                 _displayedPeaks.Remove(minPeak);
@@ -486,7 +483,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // If we're still loading, create a white rectangle which blocks the fill background, indicating data yet to be loaded.
             var currentTime = _status.Transitions.CurrentTime;
-            if (_status.Transitions.Progressive && currentTime < _status.Transitions.MaxTime)
+            if (_status.Transitions.Progressive && currentTime < _status.Transitions.MaxRetentionTime)
             {
                 _unfinishedBox = new BoxObj(
                     currentTime,

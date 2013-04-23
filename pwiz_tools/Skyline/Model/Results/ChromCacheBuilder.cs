@@ -264,6 +264,16 @@ namespace pwiz.Skyline.Model.Results
 
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
 
+                    // Set dimensions for status graph.
+                    LoadingStatus.Transitions.MaxRetentionTimeKnown = false;
+                    if (provider.MaxRetentionTime.HasValue)
+                    {
+                        LoadingStatus.Transitions.MaxRetentionTimeKnown = true;
+                        LoadingStatus.Transitions.MaxRetentionTime = provider.MaxRetentionTime.Value;
+                    }
+                    if (provider.MaxIntensity.HasValue)
+                        LoadingStatus.Transitions.MaxIntensity = provider.MaxIntensity.Value;
+                    
                     Read(provider);
 
                     _status = provider.Status;
@@ -871,6 +881,8 @@ namespace pwiz.Skyline.Model.Results
                                 var flags = _currentFileInfo.Flags;
                                 _listCachedFiles.Add(new ChromCachedFile(dataFilePath, flags,
                                                                          fileWriteTime, runStartTime,
+                                                                         LoadingStatus.Transitions.MaxRetentionTime,
+                                                                         LoadingStatus.Transitions.MaxIntensity,
                                                                          _currentFileInfo.InstrumentInfoList));
                                 _currentFileIndex++;
 
@@ -956,7 +968,9 @@ namespace pwiz.Skyline.Model.Results
                                                                times.Length,
                                                                lenCompressed,
                                                                location,
-                                                               flags);
+                                                               flags,
+                                                               chromDataSet.StatusId,
+                                                               chromDataSet.StatusRank);
 
                         header.CalcSeqIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listSeqBytes);
 

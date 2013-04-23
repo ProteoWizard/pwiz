@@ -71,7 +71,12 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
 
-        public abstract void GetChromatogram(int id, out float[] times, out float[] intensities, out float[] massErrors);
+        public abstract void GetChromatogram(int id, out ChromExtra extra,
+            out float[] times, out float[] intensities, out float[] massErrors);
+
+        public abstract float? MaxRetentionTime { get; }
+
+        public abstract float? MaxIntensity { get; }
 
         public abstract bool IsProcessedScans { get; }
 
@@ -177,7 +182,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override void GetChromatogram(int id, out float[] times, out float[] intensities, out float[] massErrors)
+        public override void GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
         {
             // No mass errors in SRM
             massErrors = null;
@@ -205,9 +210,12 @@ namespace pwiz.Skyline.Model.Results
             if (_readChromatograms < _chromIds.Count)
                 SetPercentComplete(50 + _readChromatograms * 50 / _chromIds.Count);
 
+            int index = _chromIndices[id];
+            extra = new ChromExtra(index, -1);  // TODO: is zero the right value?
+
             // Display in AllChromatogramsGraph
             LoadingStatus.Transitions.AddTransition(
-                _chromIndices[id],
+                index, -1,
                 times,
                 intensities);
         }
@@ -215,6 +223,16 @@ namespace pwiz.Skyline.Model.Results
         private double ExpectedReadDurationMinutes
         {
             get { return DateTime.Now.Subtract(_readStartTime).TotalMinutes * _chromIds.Count / _readChromatograms; }
+        }
+
+        public override float? MaxIntensity
+        {
+            get { return null; }
+        }
+
+        public override float? MaxRetentionTime
+        {
+            get { return null; }
         }
 
         public override bool IsProcessedScans
@@ -261,8 +279,14 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class SpectraChromDataProvider : ChromDataProvider
     {
-        private List<KeyValuePair<ChromKey, ChromCollector>> _chromatograms =
-            new List<KeyValuePair<ChromKey, ChromCollector>>();
+        private struct ChromKeyAndCollector
+        {
+            public ChromKey Key;
+            public int StatusId;
+            public ChromCollector Collector;
+        }
+        private List<ChromKeyAndCollector> _chromatograms =
+            new List<ChromKeyAndCollector>();
 
         private readonly bool _isProcessedScans;
         private readonly bool _isSingleMzMatch;
@@ -326,13 +350,15 @@ namespace pwiz.Skyline.Model.Results
                 var demultiplexer = dataFile.IsMsx ? new MsxDemultiplexer(dataFile, filter) : null;
 
                 // If possible, find the maximum retention time in order to scale the chromatogram graph.
+                LoadingStatus.Transitions.MaxRetentionTimeKnown = false;
                 if (filter.EnabledMsMs || filter.EnabledMs)
                 {
                     var dataSpectrum = dataFile.GetSpectrum(lenSpectra - 1);
                     if (dataSpectrum.RetentionTime.HasValue && allChromData != null)
                     {
-                        allChromData.MaxTime = (float) dataSpectrum.RetentionTime.Value;
+                        allChromData.MaxRetentionTime = (float) dataSpectrum.RetentionTime.Value;
                         allChromData.Progressive = true;
+                        allChromData.MaxRetentionTimeKnown = true;
                     }
                 }
 
@@ -404,7 +430,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!rt.HasValue)
                             continue;
                         if (allChromData != null)
-                            allChromData.CurrentTime = rt.Value;
+                            allChromData.CurrentTime = (float)rt.Value;
 
                         if (filter.IsMsSpectrum(dataSpectrum))
                         {
@@ -455,8 +481,10 @@ namespace pwiz.Skyline.Model.Results
             var timesCollector = chromMap.SharedTimesCollector;
             foreach (var pairPrecursor in chromMap.PrecursorCollectorMap)
             {
-                var modSeq = pairPrecursor.Key;
-                var collector = pairPrecursor.Value;
+                if (pairPrecursor == null)
+                    continue;
+                var modSeq = pairPrecursor.Item1;
+                var collector = pairPrecursor.Item2;
                 if (chromMap.IsGroupedTime)
                     timesCollector = collector.GroupedTimesCollector;
 
@@ -472,7 +500,12 @@ namespace pwiz.Skyline.Model.Results
                                            source,
                                            modSeq.Extractor,
                                            true);
-                    _chromatograms.Add(new KeyValuePair<ChromKey, ChromCollector>(key, chromCollector));
+                    _chromatograms.Add(new ChromKeyAndCollector
+                        {
+                            Key = key,
+                            StatusId = collector.StatusId,
+                            Collector = chromCollector
+                        });
                 }
             }
         }
@@ -516,9 +549,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override void GetChromatogram(int id, out float[] times, out float[] intensities, out float[] massErrors)
+        public override void GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
         {
-            _chromatograms[id].Value.ReleaseChromatogram(out times, out intensities, out massErrors);
+            var keyAndCollector = _chromatograms[id];
+            keyAndCollector.Collector.ReleaseChromatogram(out times, out intensities, out massErrors);
+
+            extra = new ChromExtra(keyAndCollector.StatusId, LoadingStatus.Transitions.GetRank(id));  // TODO: Get rank
 
             // Assume that each chromatogram will be read once, though this may
             // not always be completely true.
@@ -526,6 +562,16 @@ namespace pwiz.Skyline.Model.Results
 
             if (_readChromatograms < _chromatograms.Count)
                 SetPercentComplete(LOAD_PERCENT + BUILD_PERCENT + _readChromatograms * READ_PERCENT / _chromatograms.Count);
+        }
+
+        public override float? MaxRetentionTime
+        {
+            get { return LoadingStatus.Transitions.MaxRetentionTime; }
+        }
+
+        public override float? MaxIntensity
+        {
+            get { return LoadingStatus.Transitions.MaxIntensity; }
         }
 
         public override bool IsProcessedScans
@@ -559,11 +605,12 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollectorSet
     {
-        public ChromDataCollectorSet(ChromSource chromSource, TimeSharing timeSharing, ChromatogramLoadingStatus.TransitionData allChromData)
+        public ChromDataCollectorSet(ChromSource chromSource, TimeSharing timeSharing,
+                                     ChromatogramLoadingStatus.TransitionData allChromData)
         {
             ChromSource = chromSource;
             TypeOfScans = timeSharing;
-            PrecursorCollectorMap = new Dictionary<PrecursorModSeq, ChromDataCollector>();
+            PrecursorCollectorMap = new List<Tuple<PrecursorModSeq, ChromDataCollector>>();
             if (timeSharing == TimeSharing.shared)
                 SharedTimesCollector = new ChromCollector();
             _allChromData = allChromData;
@@ -585,7 +632,7 @@ namespace pwiz.Skyline.Model.Results
             SharedTimesCollector.Add(time);
         }
 
-        public Dictionary<PrecursorModSeq, ChromDataCollector> PrecursorCollectorMap { get; private set; }
+        public IList<Tuple<PrecursorModSeq, ChromDataCollector>> PrecursorCollectorMap { get; private set; }
 
         public int Count { get { return PrecursorCollectorMap.Count; } }
 
@@ -594,16 +641,21 @@ namespace pwiz.Skyline.Model.Results
             double precursorMz = spectrum.PrecursorMz;
             string modifiedSequence = spectrum.ModifiedSequence;
             ChromExtractor extractor = spectrum.Extractor;
+            int ionScanCount = spectrum.Mzs.Length;
             ChromDataCollector collector;
             var key = new PrecursorModSeq(precursorMz, modifiedSequence, extractor);
-            if (!PrecursorCollectorMap.TryGetValue(key, out collector))
+            int index = spectrum.FilterIndex;
+            while (PrecursorCollectorMap.Count <= index)
+                PrecursorCollectorMap.Add(null);
+            if (PrecursorCollectorMap[index] != null)
+                collector = PrecursorCollectorMap[index].Item2;
+            else
             {
-                collector = new ChromDataCollector(modifiedSequence, precursorMz, this);
-                PrecursorCollectorMap.Add(key, collector);
+                collector = new ChromDataCollector(modifiedSequence, precursorMz, index, IsGroupedTime);
+                PrecursorCollectorMap[index] = new Tuple<PrecursorModSeq, ChromDataCollector>(key, collector);
             }
 
             int ionCount = collector.ProductIntensityMap.Count;
-            int ionScanCount = spectrum.Mzs.Length;
             if (ionCount == 0)
                 ionCount = ionScanCount;
 
@@ -670,17 +722,19 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(string modifiedSequence, double precursorMz, ChromDataCollectorSet chromMap)
+        public ChromDataCollector(string modifiedSequence, double precursorMz, int statusId, bool isGroupedTime)
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
-            ProductIntensityMap = new Dictionary<ProductExtractionWidth, ChromCollector>();
-            if (chromMap.IsGroupedTime)
+            StatusId = statusId;
+            ProductIntensityMap = new Dictionary<ProductExtractionWidth, ChromCollector>(); 
+            if (isGroupedTime)
                 GroupedTimesCollector = new ChromCollector();
         }
 
         public string ModifiedSequence { get; private set; }
         public double PrecursorMz { get; private set; }
+        public int StatusId { get; private set; }
         public Dictionary<ProductExtractionWidth, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly ChromCollector GroupedTimesCollector;
         

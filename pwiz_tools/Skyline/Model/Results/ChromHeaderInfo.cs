@@ -187,10 +187,11 @@ namespace pwiz.Skyline.Model.Results
         public ChromGroupHeaderInfo5(double precursor, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
-                                     int numPoints, int compressedSize, long location, FlagValues flags)
+                                     int numPoints, int compressedSize, long location, FlagValues flags,
+                                     int statusId, int statusRank)
             : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
                    numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
-                   compressedSize, location, flags)
+                   compressedSize, location, flags, statusId, statusRank)
         {            
         }
 
@@ -200,7 +201,8 @@ namespace pwiz.Skyline.Model.Results
         public ChromGroupHeaderInfo5(double precursor, int seqIndex, int seqLen, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
-                                     int numPoints, int compressedSize, long location, FlagValues flags)
+                                     int numPoints, int compressedSize, long location, FlagValues flags,
+                                     int statusId, int statusRank)
             : this()
         {
             // Several values need to be downcast to fit into fewer bits, but only the
@@ -221,8 +223,9 @@ namespace pwiz.Skyline.Model.Results
             CompressedSize = compressedSize;
             LocationPoints = location;
             FlagBits = (ushort) flags;
+            StatusId = (ushort) statusId;
+            StatusRank = (ushort) statusRank;
             Align1 = 0;
-            Align2 = 1;
         }
 
         public ChromGroupHeaderInfo5(ChromGroupHeaderInfo headerInfo)
@@ -237,7 +240,7 @@ namespace pwiz.Skyline.Model.Results
             headerInfo.NumPoints,
             headerInfo.CompressedSize,
             headerInfo.LocationPoints,
-            0)
+            0, -1, -1)
         {
         }
 
@@ -259,7 +262,8 @@ namespace pwiz.Skyline.Model.Results
         public sbyte NumPeaks { get; private set; }        // The number of peaks stored per chrom should be well under 128
         public sbyte MaxPeakIndex { get; private set; }    // and MaxPeakIndex needs to be allowed to be -1 or 0xFF
         public ushort Align1 { get; private set; }
-        public int Align2 { get; private set; }
+        public ushort StatusId { get; private set; }
+        public ushort StatusRank { get; private set; }
         public double Precursor { get; private set; }
         public long LocationPoints { get; private set; }
         /////////////////////////////////////////////////////////////////////
@@ -268,6 +272,9 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasCalculatedMzs { get { return (Flags & FlagValues.has_calculated_mzs) != 0; } }
         public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
+
+        public bool HasStatusId { get { return ((short)StatusId) != -1; } }
+        public bool HasStatusRank { get { return ((short)StatusRank) != -1; } }
         
         public ChromExtractor Extractor
         {
@@ -1041,12 +1048,14 @@ namespace pwiz.Skyline.Model.Results
             return (flags & FlagValues.single_match_mz) != 0;            
         }
 
-        public ChromCachedFile(string filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime, 
-                               IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
+        public ChromCachedFile(string filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
+                               float maxRT, float maxIntensity, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
             : this()
         {
             FilePath = filePath;
             Flags = flags;
+            MaxRetentionTime = maxRT;
+            MaxIntensity = maxIntensity;
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
             InstrumentInfoList = instrumentInfoList;
@@ -1056,6 +1065,8 @@ namespace pwiz.Skyline.Model.Results
         public FlagValues Flags { get; private set; }
         public DateTime FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+        public float MaxRetentionTime { get; private set; }
+        public float MaxIntensity { get; private set; }
         public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; } 
 
         public bool IsCurrent
@@ -1417,6 +1428,22 @@ namespace pwiz.Skyline.Model.Results
                 throw new InvalidDataException(string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, id));
             }
         }
+    }
+
+    /// <summary>
+    /// Extra information about a chromatogram, which does not belong in ChromKey
+    /// CONSIDER: Move other values from ChromKey to this class?
+    /// </summary>
+    public class ChromExtra
+    {
+        public ChromExtra(int statusId, int statusRank)
+        {
+            StatusId = (ushort) statusId;
+            StatusRank = (ushort) statusRank;
+        }
+
+        public ushort StatusId { get; private set; }
+        public ushort StatusRank { get; private set; }
     }
 
     public class ChromatogramGroupInfo

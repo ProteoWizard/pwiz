@@ -31,6 +31,9 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramGroupInfo _lastChromGroupInfo;
 
         private readonly bool _singleMatchMz;
+        
+        private readonly float? _maxRetentionTime;
+        private readonly float? _maxIntensity;
 
         public CachedChromatogramDataProvider(ChromatogramCache cache,
                                               SrmDocument document,
@@ -45,6 +48,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _cache = cache;
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();
+            _cache.GetStatusDimensions(dataFilePath, out _maxRetentionTime, out _maxIntensity);
             _singleMatchMz = singleMatchMz.HasValue
                                  ? singleMatchMz.Value
                                  // Unfortunately, before the single matching status was
@@ -58,7 +62,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromKeyIndices.Select((v, i) => new KeyValuePair<ChromKey, int>(v.Key, i)); }
         }
 
-        public override void GetChromatogram(int id, out float[] times, out float[] intensities, out float[] massErrors)
+        public override void GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
         {
             var chromKeyIndices = _chromKeyIndices[id];
             if (_lastChromGroupInfo == null || _lastIndices.GroupIndex != chromKeyIndices.GroupIndex)
@@ -76,15 +80,22 @@ namespace pwiz.Skyline.Model.Results
 
             SetPercentComplete(100 * id / _chromKeyIndices.Length);
 
+            extra = new ChromExtra(chromKeyIndices.StatusId, chromKeyIndices.StatusRank);
+
             // Display in AllChromatogramsGraph
             if (chromKeyIndices.Key.Precursor != 0)
             {
                 LoadingStatus.Transitions.AddTransition(
-                    chromKeyIndices.GroupIndex,
+                    chromKeyIndices.StatusId,
+                    chromKeyIndices.StatusRank,
                     times,
                     intensities);
             }
         }
+
+        public override float? MaxRetentionTime { get { return _maxRetentionTime; } }
+
+        public override float? MaxIntensity { get { return _maxIntensity; } }
 
         public override bool IsProcessedScans
         {

@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
+        public const int FORMAT_VERSION_CACHE_6 = 6;
         public const int FORMAT_VERSION_CACHE_5 = 5;
         public const int FORMAT_VERSION_CACHE_4 = 4;
         public const int FORMAT_VERSION_CACHE_3 = 3;
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
         public static int FORMAT_VERSION_CACHE
         {
             // TODO: Switch to FORMAT_VERSION_5 after mProphet scores are integrated.
-            get { return FORMAT_VERSION_CACHE_4; }
+            get { return FORMAT_VERSION_CACHE_6; }
         }
 
         /// <summary>
@@ -153,7 +154,8 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsVersionCurrent(int version)
         {
-            return (version == FORMAT_VERSION_CACHE_5 ||
+            return (version == FORMAT_VERSION_CACHE_6 ||
+                    version == FORMAT_VERSION_CACHE_5 ||
                     version == FORMAT_VERSION_CACHE_4 ||
                     version == FORMAT_VERSION_CACHE_3);
         }
@@ -412,11 +414,15 @@ namespace pwiz.Skyline.Model.Results
             len_instrument_info,
             // Version 5 file header addition
             flags,
+            // Version 6 file header addition
+            max_retention_time,
+            max_intensity,
 
             count,
             count2 = runstart_lo,
 			count3 = len_instrument_info,
-            count4 = flags
+            count4 = flags,
+            count5 = max_retention_time
         }
         // ReSharper restore UnusedMember.Local
 
@@ -541,7 +547,7 @@ namespace pwiz.Skyline.Model.Results
 
             int formatVersion = GetInt32(cacheHeader, (int) Header.format_version);
             // TODO: Switch to FORMAT_VERSION after SKYD 5 format is released
-            if (formatVersion > FORMAT_VERSION_CACHE_5)
+            if (formatVersion > FORMAT_VERSION_CACHE_6)
             {
                 throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__,
                                                                           formatVersion, Install.Version),
@@ -601,6 +607,12 @@ namespace pwiz.Skyline.Model.Results
                 ChromCachedFile.FlagValues fileFlags = 0;
                 if (formatVersion > FORMAT_VERSION_CACHE_4)
                     fileFlags = (ChromCachedFile.FlagValues) GetInt32(fileHeader, (int) FileHeader.flags);
+                float maxRT = 0, maxIntensity = 0;
+                if (formatVersion > FORMAT_VERSION_CACHE_5)
+                {
+                    maxRT = GetFloat(fileHeader, (int)FileHeader.max_retention_time);
+                    maxIntensity = GetFloat(fileHeader, (int)FileHeader.max_intensity);
+                }
                 string instrumentInfoStr = null;
                 if (formatVersion > FORMAT_VERSION_CACHE_3)
                 {
@@ -614,7 +626,7 @@ namespace pwiz.Skyline.Model.Results
                 DateTime? runstartTime = runstartBinary != 0 ? DateTime.FromBinary(runstartBinary) : (DateTime?) null;
                 var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
                 raw.ChromCacheFiles[i] = new ChromCachedFile(filePath, fileFlags,
-                    modifiedTime, runstartTime, instrumentInfoList);
+                    modifiedTime, runstartTime, maxRT, maxIntensity, instrumentInfoList);
             }
 
             // Read list of chromatogram group headers
@@ -679,6 +691,8 @@ namespace pwiz.Skyline.Model.Results
                     return (int) (FileHeader.count3)*4;
                 case FORMAT_VERSION_CACHE_4:
                     return (int) (FileHeader.count4)*4;
+                case FORMAT_VERSION_CACHE_5:
+                    return (int) (FileHeader.count5)*4;
                 default:
                     return (int) (FileHeader.count)*4;
             }
@@ -693,7 +707,13 @@ namespace pwiz.Skyline.Model.Results
         private static int GetInt32(byte[] bytes, int index)
         {
             int ibyte = index * 4;
-            return bytes[ibyte] | bytes[ibyte + 1] << 8 | bytes[ibyte + 2] << 16 | bytes[ibyte + 3] << 24;
+            return BitConverter.ToInt32(bytes, ibyte);
+        }
+        
+        private static float GetFloat(byte[] bytes, int index)
+        {
+            int ibyte = index * 4;
+            return BitConverter.ToSingle(bytes, ibyte);
         }
 
         private static void ReadComplete(Stream stream, byte[] buffer, int size)
@@ -811,7 +831,15 @@ namespace pwiz.Skyline.Model.Results
                     outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(ushort));
                     outStream.Write(new[] {(byte)info.NumPeaks, (byte)info.MaxPeakIndex}, 0, 2);
                     outStream.Write(BitConverter.GetBytes(info.Align1), 0, sizeof(ushort));
-                    outStream.Write(BitConverter.GetBytes(info.Align2), 0, sizeof(uint));
+                    if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_5)
+                    {
+                        outStream.Write(BitConverter.GetBytes(info.StatusId), 0, sizeof(ushort));
+                        outStream.Write(BitConverter.GetBytes(info.StatusRank), 0, sizeof(ushort));                        
+                    }
+                    else
+                    {
+                        outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));
+                    }
                     outStream.Write(BitConverter.GetBytes(info.Precursor), 0, sizeof(double));
                     outStream.Write(BitConverter.GetBytes(info.LocationPoints), 0, sizeof(long));
                 }
@@ -826,7 +854,7 @@ namespace pwiz.Skyline.Model.Results
                     outStream.Write(BitConverter.GetBytes((int)info.MaxPeakIndex), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(info.NumPoints), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.Align2), 0, sizeof(int));  // Alignment for 64-bit LocationPoints value
+                    outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));  // Alignment for 64-bit LocationPoints value
                     outStream.Write(BitConverter.GetBytes(info.LocationPoints), 0, sizeof(long));
                 }
             }
@@ -856,6 +884,13 @@ namespace pwiz.Skyline.Model.Results
                 // Version 5 write flags
                 if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
                     outStream.Write(BitConverter.GetBytes((int) cachedFile.Flags), 0, sizeof(int));
+
+                // Version 6 write time and intensity dimensions
+                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_5)
+                {
+                    outStream.Write(BitConverter.GetBytes(cachedFile.MaxRetentionTime), 0, sizeof(float));
+                    outStream.Write(BitConverter.GetBytes(cachedFile.MaxIntensity), 0, sizeof(float));
+                }
 
                 // Write variable length buffers
                 outStream.Write(pathBuffer, 0, len);
@@ -951,6 +986,21 @@ namespace pwiz.Skyline.Model.Results
             return sizeTotal;
         }
 
+        public void GetStatusDimensions(string msDataFilePath, out float? maxRetentionTime, out float? maxIntensity)
+        {
+            int fileIndex = CachedFiles.IndexOf(f => Equals(f.FilePath, msDataFilePath));
+            if (fileIndex == -1)
+            {
+                maxRetentionTime = maxIntensity = null;
+            }
+            else
+            {
+                var cacheFile = CachedFiles[fileIndex];
+                maxRetentionTime = cacheFile.MaxRetentionTime;
+                maxIntensity = cacheFile.MaxIntensity;
+            }
+        }
+
         public IEnumerable<ChromKeyIndices> GetChromKeys(string msDataFilePath)
         {
             int fileIndex = CachedFiles.IndexOf(f => Equals(f.FilePath, msDataFilePath));
@@ -972,7 +1022,10 @@ namespace pwiz.Skyline.Model.Results
                     ChromSource source = tranInfo.Source;
                     ChromKey key = new ChromKey(_seqBytes, groupInfo.SeqIndex, groupInfo.SeqLen,
                         groupInfo.Precursor, product, extractionWidth, source, groupInfo.Extractor, true);
-                    yield return new ChromKeyIndices(key, groupInfo.LocationPoints, i, j);
+
+                    int id = groupInfo.HasStatusId ? groupInfo.StatusId : i;
+                    int rank = groupInfo.HasStatusRank ? groupInfo.StatusRank : -1;
+                    yield return new ChromKeyIndices(key, groupInfo.LocationPoints, i, id, rank, j);
                 }
             }
         }
@@ -1065,7 +1118,9 @@ namespace pwiz.Skyline.Model.Results
                                                                       lastEntry.NumPoints,
                                                                       lastEntry.CompressedSize,
                                                                       lastEntry.LocationPoints + offsetPoints,
-                                                                      lastEntry.Flags));
+                                                                      lastEntry.Flags,
+                                                                      lastEntry.StatusId,
+                                                                      lastEntry.StatusRank));
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)
@@ -1173,18 +1228,22 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromKeyIndices
     {
-        public ChromKeyIndices(ChromKey key, long locationPoints, int groupIndex, int tranIndex)
+        public ChromKeyIndices(ChromKey key, long locationPoints, int groupIndex, int statusId, int statusRank, int tranIndex)
             : this()
         {
             Key = key;
             LocationPoints = locationPoints;
             GroupIndex = groupIndex;
+            StatusId = statusId;
+            StatusRank = statusRank;
             TranIndex = tranIndex;
         }
 
         public ChromKey Key { get; private set; }
         public long LocationPoints { get; private set; }
         public int GroupIndex { get; private set; }
+        public int StatusId { get; private set; }
+        public int StatusRank { get; private set; }
         public int TranIndex { get; private set; }
     }
 }

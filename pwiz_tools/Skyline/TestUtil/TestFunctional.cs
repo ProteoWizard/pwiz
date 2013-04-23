@@ -479,9 +479,15 @@ namespace pwiz.SkylineTestUtil
 
             if (_testExceptions.Count > 0)
             {
+                Log<AbstractFunctionalTest>.Exception("Functional test exception", _testExceptions[0]); // Not L10N
                 Assert.Fail(_testExceptions[0].ToString());
             }
-            Assert.IsTrue(_testCompleted);
+
+            if (!_testCompleted)
+            {
+                Log<AbstractFunctionalTest>.Fail("Functional test did not complete"); // Not L10N
+                Assert.IsTrue(_testCompleted);
+            }
         }
 
         private void WaitForSkyline()

@@ -148,7 +148,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     panelMultifileProgress.Visible = true;
                     panelFileProgress.Top -= _adjustLayoutForMultifile;
                     panelGraph.Height -= _adjustLayoutForMultifile;
-                    btnCancelFile.Visible = true;
+                    // TODO: uncomment this when single file cancellation works
+                    //btnCancelFile.Visible = true;
                 }
                 progressBarAllFiles.Value = status.PercentComplete;
             }
@@ -172,7 +173,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void btnCancelFile_Click(object sender, EventArgs e)
         {
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancelFile_Click_Cancel_file,
-                                              doc => FilterFiles(doc, info => info.FilePath != _currentFilePath));
+                                              doc => FilterFiles(doc, info => !Equals(info.FilePath, _currentFilePath)));
         }
 
         /// <summary>
@@ -189,9 +190,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 var keepFiles = chromSet.MSDataFileInfos.Where(selectFilesToKeepFunc).ToList();
                 if (keepFiles.Count != 0)
                 {
-                    keepChromatograms.Add(keepFiles.Count == chromSet.FileCount
-                                                ? chromSet
-                                                : chromSet.ChangeMSDataFileInfos(keepFiles));
+                    if (keepFiles.Count == chromSet.FileCount)
+                        keepChromatograms.Add(chromSet);
+                    else
+                        keepChromatograms.Add(chromSet.ChangeMSDataFileInfos(keepFiles));
                 }
             }
 

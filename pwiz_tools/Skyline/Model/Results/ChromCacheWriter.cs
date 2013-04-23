@@ -54,6 +54,8 @@ namespace pwiz.Skyline.Model.Results
 
         protected string CachePath { get; private set; }
 
+        protected ChromatogramLoadingStatus LoadingStatus { get { return (ChromatogramLoadingStatus)_status; } }
+
         protected void Complete(Exception x)
         {
             lock (this)

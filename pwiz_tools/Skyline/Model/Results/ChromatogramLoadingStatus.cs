@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.Results
         // gets coarse and looks less like Skyline's other chromatogram graphs.
         public const float TIME_RESOLUTION = 0.1f;    // 6 seconds
         public const float INTENSITY_THRESHOLD_PERCENT = 0.03f;
+        public const float MAX_PEAKS = 1000;
 
         public ChromatogramLoadingStatus(string message) :
             base(message)
@@ -58,10 +59,15 @@ namespace pwiz.Skyline.Model.Results
             private List<Peak[]> _peaks;
             private List<Peak> _finishedPeaks = new List<Peak>();
             private static readonly int SOURCE_INDEX_COUNT = Helpers.CountEnumValues<ChromSource>() - 1;
-            private float _thresholdIntensity;
 
-            public double MaxTime { get; set; }
-            public double CurrentTime { get; set; }
+            public float MaxRetentionTime { get; set; }
+            public bool MaxRetentionTimeKnown { get; set; }
+            // TODO: This MaxIntensity (used to save the axes dimensions in AllChromatogramsGraph) must
+            // TODO: be calculated on the processing thread, because that is where SRM peaks are summed.
+            // TODO: We need to move that calculation into this file (but on the processing thread),
+            // TODO: because this value should be retrieved from the Model, not the Graphs.
+            public float MaxIntensity { get; set; }
+            public float CurrentTime { get; set; }
             public bool Progressive { get; set; }
 
             public int FilterCount
@@ -70,10 +76,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // Allocate list for holding partially constructed peaks.
                     _peaks = new List<Peak[]>(value > 0 ? value : 1000);
-                    MaxTime = 0.0;
-                    CurrentTime = 0.0;
+                    MaxRetentionTime = 0.0f;
+                    MaxIntensity = 0.0f;
+                    CurrentTime = 0.0f;
                     Progressive = false;
-                    _thresholdIntensity = 0.0f;
                     _finishedPeaks = new List<Peak>();
                 }
             }
@@ -93,7 +99,8 @@ namespace pwiz.Skyline.Model.Results
             /// <param name="intensities"></param>
             public void Add(int filterIndex, ChromSource chromSource, float time, float[] intensities)
             {
-                MaxTime = Math.Max(MaxTime, time);
+                if (!Progressive)
+                    MaxRetentionTime = Math.Max(MaxRetentionTime, time);
                 var timeBin = GetTimeBin(time);
 
                 // Create transition list for this filter.
@@ -126,14 +133,15 @@ namespace pwiz.Skyline.Model.Results
                     if (peak.MaxIntensity < lastIntensity)
                     {
                         peak.MaxIntensity = lastIntensity;
-                        _thresholdIntensity = Math.Max(_thresholdIntensity, peak.MaxIntensity * INTENSITY_THRESHOLD_PERCENT);
+                        if (MaxIntensity < lastIntensity)
+                            MaxIntensity = lastIntensity;
                     }
 
                     // Finish a peak if intensity falls too low.
-                    if (lastIntensity < _thresholdIntensity)
+                    if (lastIntensity < MaxIntensity*INTENSITY_THRESHOLD_PERCENT)
                     {
                         // If the peak was above our current threshold, send to display.
-                        if (peak.Intensities.Count > 1 && peak.MaxIntensity > _thresholdIntensity)
+                        if (peak.Intensities.Count > 1 && peak.MaxIntensity > MaxIntensity*INTENSITY_THRESHOLD_PERCENT)
                         {
                             lock (this)
                             {
@@ -154,22 +162,28 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add a complete transition to AllChromatogramsGraph.
             /// </summary>
-            public void AddTransition(int index, float[] times, float[] intensities)
+            public void AddTransition(int index, int rank, float[] times, float[] intensities)
             {
-                MaxTime = Math.Max(MaxTime, times[times.Length - 1]);
+                if (rank == 0)
+                    return;
+
+                var maxTime = times[times.Length - 1];
+                if (MaxRetentionTime < maxTime)
+                    MaxRetentionTime = maxTime;
+                var thresholdIntensity = MaxIntensity*INTENSITY_THRESHOLD_PERCENT;
 
                 // Find start of transition above the threshold intensity value.
                 int startIndex = 0;
                 while (true)
                 {
-                    while (startIndex < intensities.Length && intensities[startIndex] < _thresholdIntensity)
+                    while (startIndex < intensities.Length && intensities[startIndex] < thresholdIntensity)
                         startIndex++;
                     if (startIndex == intensities.Length)
                         return;
 
                     // Find end of transition below the threshold intensity value.
                     int endIndex = startIndex + 1;
-                    while (endIndex < intensities.Length && intensities[endIndex] >= _thresholdIntensity)
+                    while (endIndex < intensities.Length && intensities[endIndex] >= thresholdIntensity)
                         endIndex++;
 
                     AddTransition(index, times, intensities, startIndex, endIndex);
@@ -180,7 +194,7 @@ namespace pwiz.Skyline.Model.Results
 
             private void AddTransition(int index, float[] times, float[] intensities, int startIndex, int endIndex)
             {
-                MaxTime = Math.Max(MaxTime, times[times.Length - 1]);
+                MaxRetentionTime = Math.Max(MaxRetentionTime, times[times.Length - 1]);
 
                 var peak = new Peak(index, true);
                 var lastTimeBin = GetTimeBin(times[startIndex]);
@@ -215,8 +229,9 @@ namespace pwiz.Skyline.Model.Results
                     binSampleCount = 1;
                 }
 
-                // Update threshold intensity.
-                _thresholdIntensity = Math.Max(_thresholdIntensity, peak.MaxIntensity * INTENSITY_THRESHOLD_PERCENT);
+                // Update max intensity.
+                if (MaxIntensity < peak.MaxIntensity)
+                    MaxIntensity = peak.MaxIntensity;
 
                 // Add to list of peaks for display.
                 lock (this)
@@ -228,7 +243,6 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Return list of finished peaks.
             /// </summary>
-            /// <returns></returns>
             public IEnumerable<Peak> GetPeaks()
             {
                 lock (this)
@@ -237,6 +251,12 @@ namespace pwiz.Skyline.Model.Results
                     _finishedPeaks = new List<Peak>();
                     return peaks;
                 }
+            }
+
+            public int GetRank(int id)
+            {
+                // TODO: how to get rank from AllChromatogramsGraph (information must be moved to Model!)
+                return 1;
             }
 
             public class Peak
@@ -260,7 +280,6 @@ namespace pwiz.Skyline.Model.Results
                 /// Returns true if time points in another peak overlap this one.
                 /// </summary>
                 /// <param name="peak"></param>
-                /// <returns></returns>
                 public bool Overlaps(Peak peak)
                 {
                     return (Times[0] <= peak.Times[peak.Times.Count - 1] &&

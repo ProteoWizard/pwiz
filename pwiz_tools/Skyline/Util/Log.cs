@@ -226,5 +226,15 @@ namespace pwiz.Skyline.Util
         public Log() : base(log4net.LogManager.GetLogger(typeof (T).Name))
         {
         }
+
+        public static void Exception(string message, Exception exception)
+        {
+            new Log<T>().Fatal(message, exception);
+        }
+
+        public static void Fail(string message)
+        {
+            new Log<T>().Fatal(message);
+        }
     }
 }

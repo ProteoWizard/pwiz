@@ -430,6 +430,11 @@ namespace pwiz.SkylineTestFunctional
                 const int headerScoreSize = sizeof(int) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(long);
                 cacheSize += groupHeadersSize + fileFlagsSize + transitionFlagsSize + headerScoreSize;
             }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
+            {
+                // Cache version 6 adds status graph dimensions for every file
+                cacheSize += sizeof(float)*2*fileCachedCount;
+            }
             return cacheSize;
         }
 

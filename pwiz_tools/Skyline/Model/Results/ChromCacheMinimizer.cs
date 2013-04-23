@@ -556,7 +556,9 @@ namespace pwiz.Skyline.Model.Results
                                                       numPoints,
                                                       pointsCompressed.Length,
                                                       location,
-                                                      originalHeader.Flags);
+                                                      originalHeader.Flags,
+                                                      originalHeader.StatusId,
+                                                      originalHeader.StatusRank);
                 _chromGroupHeaderInfos.Add(header);
             }
 

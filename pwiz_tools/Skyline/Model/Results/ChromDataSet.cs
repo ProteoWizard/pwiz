@@ -138,6 +138,16 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 && BestChromatogram.Key.HasCalculatedMzs; }
         }
 
+        public int StatusId
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Extra.StatusId : -1; }
+        }
+
+        public int StatusRank
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Extra.StatusRank : -1; }
+        }
+
         public int CountPeaks
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Peaks.Count : 0; }

@@ -54,8 +54,10 @@ namespace pwiz.Skyline.Model.Results
 
         public void Load(ChromDataProvider provider)
         {
+            ChromExtra extra;
             float[] times, intensities, massErrors;
-            provider.GetChromatogram(ProviderId, out times, out intensities, out massErrors);
+            provider.GetChromatogram(ProviderId, out extra, out times, out intensities, out massErrors);
+            Extra = extra;
             RawTimes = Times = times;
             RawIntensities = Intensities = intensities;
             RawMassErrors = massErrors;
@@ -101,6 +103,7 @@ namespace pwiz.Skyline.Model.Results
         private CrawdadPeakFinder Finder { get; set; }
 
         public ChromKey Key { get; private set; }
+        public ChromExtra Extra { get; private set; }
         public TransitionDocNode DocNode { get; set; }
         private int ProviderId { get; set; }
         public float[] RawTimes { get; private set; }
