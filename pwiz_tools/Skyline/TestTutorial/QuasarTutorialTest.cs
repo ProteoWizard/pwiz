@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,6 +40,9 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class QuasarTutorialTest : AbstractFunctionalTest
     {
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, StringBuilder lParam);
+        const UInt32 WM_KEYDOWN	= 0x100;
         [TestMethod]
         public void TestQuasarTutorial()
         {
@@ -121,17 +126,27 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                ResultsGridForm.SynchronizeSelection = false;
-
+                Assert.AreEqual(colSampleId.DisplayIndex + 1, colConcentration.DisplayIndex);
+                Assert.AreEqual(colSampleId.DisplayIndex + 1, colConcentration.DisplayIndex);
+                StringBuilder clipboardText = new StringBuilder();
                 for (int i = 0; i < concentrations.Length; i++)
                 {
                     for (int j = i*4; j < (i + 1)*4; j++)
                     {
-                        SetCellValue(resultsGrid, j, colSampleId.Index, sampleIds[i]);
-                        SetCellValue(resultsGrid, j, colConcentration.Index, concentrations[i]);
-                        SetCellValue(resultsGrid, j, colIsConc.Index, 10);
+                        if (clipboardText.Length > 0)
+                        {
+                            clipboardText.Append('\n');
+                        }
+                        clipboardText.Append(sampleIds[i]);
+                        clipboardText.Append('\t');
+                        clipboardText.Append(concentrations[i]);
+                        clipboardText.Append('\t');
+                        clipboardText.Append(10);
                     }
                 }
+                resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells[colSampleId.Index];
+                ClipboardEx.SetText(clipboardText.ToString());
+                resultsGrid.SendPaste();
             });
             WaitForGraphs();
             PauseForScreenShot("p. 7 - Results Grid");

@@ -2102,6 +2102,14 @@ namespace pwiz.Skyline.Controls
             return null;
         }
 
+        /// <summary>
+        /// Testing method: Sends Ctrl-V to this control.
+        /// </summary>
+        public void SendPaste()
+        {
+            OnKeyDown(new KeyEventArgs(Keys.V | Keys.Control));
+        }
+
 
         public IDocumentUIContainer DocumentUiContainer { get; private set; }
         public IStateProvider StateProvider { get; private set; }
