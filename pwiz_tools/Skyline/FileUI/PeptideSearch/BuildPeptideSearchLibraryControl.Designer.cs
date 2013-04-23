@@ -63,7 +63,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.listSearchFiles);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.label7);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.btnAddFile);
-            this.peptideSearchSplitContainer.Size = new System.Drawing.Size(381, 307);
+            this.peptideSearchSplitContainer.Size = new System.Drawing.Size(381, 460);
             this.peptideSearchSplitContainer.SplitterDistance = 53;
             this.peptideSearchSplitContainer.TabIndex = 0;
             // 
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.listSearchFiles.FormattingEnabled = true;
             this.listSearchFiles.Location = new System.Drawing.Point(14, 25);
             this.listSearchFiles.Name = "listSearchFiles";
-            this.listSearchFiles.Size = new System.Drawing.Size(265, 212);
+            this.listSearchFiles.Size = new System.Drawing.Size(265, 355);
             this.listSearchFiles.TabIndex = 1;
             this.listSearchFiles.SelectedIndexChanged += new System.EventHandler(this.listSearchFiles_SelectedIndexChanged);
             // 
@@ -134,7 +134,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.BackColor = System.Drawing.Color.Transparent;
             this.Controls.Add(this.peptideSearchSplitContainer);
             this.Name = "BuildPeptideSearchLibraryControl";
-            this.Size = new System.Drawing.Size(381, 307);
+            this.Size = new System.Drawing.Size(381, 460);
             this.peptideSearchSplitContainer.Panel1.ResumeLayout(false);
             this.peptideSearchSplitContainer.Panel1.PerformLayout();
             this.peptideSearchSplitContainer.Panel2.ResumeLayout(false);

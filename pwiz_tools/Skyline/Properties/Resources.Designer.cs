@@ -5389,6 +5389,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid RetentionTimeFilterType.
+        /// </summary>
+        public static string FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No valid precursor m/z column found..
         /// </summary>
         public static string GeneralRowReader_Create_No_valid_precursor_m_z_column_found {

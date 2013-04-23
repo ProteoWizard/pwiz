@@ -98,41 +98,6 @@
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
             this.tabFullScan = new System.Windows.Forms.TabPage();
-            this.groupBoxRetentionTimeToKeep = new System.Windows.Forms.GroupBox();
-            this.radioTimeAroundMs2Ids = new System.Windows.Forms.RadioButton();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.label35 = new System.Windows.Forms.Label();
-            this.tbxTimeAroundMs2Ids = new System.Windows.Forms.TextBox();
-            this.label27 = new System.Windows.Forms.Label();
-            this.radioUseSchedulingWindow = new System.Windows.Forms.RadioButton();
-            this.radioKeepAllTime = new System.Windows.Forms.RadioButton();
-            this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
-            this.comboEnrichments = new System.Windows.Forms.ComboBox();
-            this.label29 = new System.Windows.Forms.Label();
-            this.labelPrecursorIsotopeFilterPercent = new System.Windows.Forms.Label();
-            this.textPrecursorIsotopeFilter = new System.Windows.Forms.TextBox();
-            this.labelPrecursorIsotopeFilter = new System.Windows.Forms.Label();
-            this.label23 = new System.Windows.Forms.Label();
-            this.comboPrecursorIsotopes = new System.Windows.Forms.ComboBox();
-            this.labelPrecursorAt = new System.Windows.Forms.Label();
-            this.textPrecursorAt = new System.Windows.Forms.TextBox();
-            this.labelPrecursorTh = new System.Windows.Forms.Label();
-            this.textPrecursorRes = new System.Windows.Forms.TextBox();
-            this.labelPrecursorRes = new System.Windows.Forms.Label();
-            this.comboPrecursorAnalyzerType = new System.Windows.Forms.ComboBox();
-            this.label32 = new System.Windows.Forms.Label();
-            this.groupBoxMS2 = new System.Windows.Forms.GroupBox();
-            this.comboIsolationScheme = new System.Windows.Forms.ComboBox();
-            this.labelProductAt = new System.Windows.Forms.Label();
-            this.textProductAt = new System.Windows.Forms.TextBox();
-            this.labelProductTh = new System.Windows.Forms.Label();
-            this.textProductRes = new System.Windows.Forms.TextBox();
-            this.labelProductRes = new System.Windows.Forms.Label();
-            this.comboProductAnalyzerType = new System.Windows.Forms.ComboBox();
-            this.label22 = new System.Windows.Forms.Label();
-            this.labelIsolationScheme = new System.Windows.Forms.Label();
-            this.comboAcquisitionMethod = new System.Windows.Forms.ComboBox();
-            this.label20 = new System.Windows.Forms.Label();
             this.tabPeaks = new System.Windows.Forms.TabPage();
             this.comboPeakScoringModel = new System.Windows.Forms.ComboBox();
             this.label36 = new System.Windows.Forms.Label();
@@ -144,11 +109,6 @@
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
-            this.tabFullScan.SuspendLayout();
-            this.groupBoxRetentionTimeToKeep.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
-            this.groupBoxMS1.SuspendLayout();
-            this.groupBoxMS2.SuspendLayout();
             this.tabPeaks.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -637,259 +597,9 @@
             // 
             // tabFullScan
             // 
-            this.tabFullScan.Controls.Add(this.groupBoxRetentionTimeToKeep);
-            this.tabFullScan.Controls.Add(this.groupBoxMS1);
-            this.tabFullScan.Controls.Add(this.groupBoxMS2);
             resources.ApplyResources(this.tabFullScan, "tabFullScan");
             this.tabFullScan.Name = "tabFullScan";
             this.tabFullScan.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxRetentionTimeToKeep
-            // 
-            this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioTimeAroundMs2Ids);
-            this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanel1);
-            this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioUseSchedulingWindow);
-            this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioKeepAllTime);
-            resources.ApplyResources(this.groupBoxRetentionTimeToKeep, "groupBoxRetentionTimeToKeep");
-            this.groupBoxRetentionTimeToKeep.Name = "groupBoxRetentionTimeToKeep";
-            this.groupBoxRetentionTimeToKeep.TabStop = false;
-            // 
-            // radioTimeAroundMs2Ids
-            // 
-            resources.ApplyResources(this.radioTimeAroundMs2Ids, "radioTimeAroundMs2Ids");
-            this.radioTimeAroundMs2Ids.Name = "radioTimeAroundMs2Ids";
-            this.radioTimeAroundMs2Ids.TabStop = true;
-            this.helpTip.SetToolTip(this.radioTimeAroundMs2Ids, resources.GetString("radioTimeAroundMs2Ids.ToolTip"));
-            this.radioTimeAroundMs2Ids.UseVisualStyleBackColor = true;
-            this.radioTimeAroundMs2Ids.CheckedChanged += new System.EventHandler(this.RadioNoiseAroundMs2IdsCheckedChanged);
-            // 
-            // flowLayoutPanel1
-            // 
-            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
-            this.flowLayoutPanel1.Controls.Add(this.label35);
-            this.flowLayoutPanel1.Controls.Add(this.tbxTimeAroundMs2Ids);
-            this.flowLayoutPanel1.Controls.Add(this.label27);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            // 
-            // label35
-            // 
-            resources.ApplyResources(this.label35, "label35");
-            this.label35.Name = "label35";
-            this.helpTip.SetToolTip(this.label35, resources.GetString("label35.ToolTip"));
-            // 
-            // tbxTimeAroundMs2Ids
-            // 
-            resources.ApplyResources(this.tbxTimeAroundMs2Ids, "tbxTimeAroundMs2Ids");
-            this.tbxTimeAroundMs2Ids.Name = "tbxTimeAroundMs2Ids";
-            this.helpTip.SetToolTip(this.tbxTimeAroundMs2Ids, resources.GetString("tbxTimeAroundMs2Ids.ToolTip"));
-            // 
-            // label27
-            // 
-            resources.ApplyResources(this.label27, "label27");
-            this.label27.Name = "label27";
-            this.helpTip.SetToolTip(this.label27, resources.GetString("label27.ToolTip"));
-            // 
-            // radioUseSchedulingWindow
-            // 
-            resources.ApplyResources(this.radioUseSchedulingWindow, "radioUseSchedulingWindow");
-            this.radioUseSchedulingWindow.Name = "radioUseSchedulingWindow";
-            this.radioUseSchedulingWindow.TabStop = true;
-            this.helpTip.SetToolTip(this.radioUseSchedulingWindow, resources.GetString("radioUseSchedulingWindow.ToolTip"));
-            this.radioUseSchedulingWindow.UseVisualStyleBackColor = true;
-            // 
-            // radioKeepAllTime
-            // 
-            resources.ApplyResources(this.radioKeepAllTime, "radioKeepAllTime");
-            this.radioKeepAllTime.Name = "radioKeepAllTime";
-            this.radioKeepAllTime.TabStop = true;
-            this.helpTip.SetToolTip(this.radioKeepAllTime, resources.GetString("radioKeepAllTime.ToolTip"));
-            this.radioKeepAllTime.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxMS1
-            // 
-            this.groupBoxMS1.Controls.Add(this.comboEnrichments);
-            this.groupBoxMS1.Controls.Add(this.label29);
-            this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilterPercent);
-            this.groupBoxMS1.Controls.Add(this.textPrecursorIsotopeFilter);
-            this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilter);
-            this.groupBoxMS1.Controls.Add(this.label23);
-            this.groupBoxMS1.Controls.Add(this.comboPrecursorIsotopes);
-            this.groupBoxMS1.Controls.Add(this.labelPrecursorAt);
-            this.groupBoxMS1.Controls.Add(this.textPrecursorAt);
-            this.groupBoxMS1.Controls.Add(this.labelPrecursorTh);
-            this.groupBoxMS1.Controls.Add(this.textPrecursorRes);
-            this.groupBoxMS1.Controls.Add(this.labelPrecursorRes);
-            this.groupBoxMS1.Controls.Add(this.comboPrecursorAnalyzerType);
-            this.groupBoxMS1.Controls.Add(this.label32);
-            resources.ApplyResources(this.groupBoxMS1, "groupBoxMS1");
-            this.groupBoxMS1.Name = "groupBoxMS1";
-            this.groupBoxMS1.TabStop = false;
-            // 
-            // comboEnrichments
-            // 
-            this.comboEnrichments.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboEnrichments.FormattingEnabled = true;
-            resources.ApplyResources(this.comboEnrichments, "comboEnrichments");
-            this.comboEnrichments.Name = "comboEnrichments";
-            this.comboEnrichments.SelectedIndexChanged += new System.EventHandler(this.comboEnrichments_SelectedIndexChanged);
-            // 
-            // label29
-            // 
-            resources.ApplyResources(this.label29, "label29");
-            this.label29.Name = "label29";
-            // 
-            // labelPrecursorIsotopeFilterPercent
-            // 
-            resources.ApplyResources(this.labelPrecursorIsotopeFilterPercent, "labelPrecursorIsotopeFilterPercent");
-            this.labelPrecursorIsotopeFilterPercent.Name = "labelPrecursorIsotopeFilterPercent";
-            // 
-            // textPrecursorIsotopeFilter
-            // 
-            resources.ApplyResources(this.textPrecursorIsotopeFilter, "textPrecursorIsotopeFilter");
-            this.textPrecursorIsotopeFilter.Name = "textPrecursorIsotopeFilter";
-            // 
-            // labelPrecursorIsotopeFilter
-            // 
-            resources.ApplyResources(this.labelPrecursorIsotopeFilter, "labelPrecursorIsotopeFilter");
-            this.labelPrecursorIsotopeFilter.Name = "labelPrecursorIsotopeFilter";
-            // 
-            // label23
-            // 
-            resources.ApplyResources(this.label23, "label23");
-            this.label23.Name = "label23";
-            // 
-            // comboPrecursorIsotopes
-            // 
-            this.comboPrecursorIsotopes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboPrecursorIsotopes.FormattingEnabled = true;
-            resources.ApplyResources(this.comboPrecursorIsotopes, "comboPrecursorIsotopes");
-            this.comboPrecursorIsotopes.Name = "comboPrecursorIsotopes";
-            this.comboPrecursorIsotopes.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorIsotopes_SelectedIndexChanged);
-            // 
-            // labelPrecursorAt
-            // 
-            resources.ApplyResources(this.labelPrecursorAt, "labelPrecursorAt");
-            this.labelPrecursorAt.Name = "labelPrecursorAt";
-            // 
-            // textPrecursorAt
-            // 
-            resources.ApplyResources(this.textPrecursorAt, "textPrecursorAt");
-            this.textPrecursorAt.Name = "textPrecursorAt";
-            this.helpTip.SetToolTip(this.textPrecursorAt, resources.GetString("textPrecursorAt.ToolTip"));
-            // 
-            // labelPrecursorTh
-            // 
-            resources.ApplyResources(this.labelPrecursorTh, "labelPrecursorTh");
-            this.labelPrecursorTh.Name = "labelPrecursorTh";
-            // 
-            // textPrecursorRes
-            // 
-            resources.ApplyResources(this.textPrecursorRes, "textPrecursorRes");
-            this.textPrecursorRes.Name = "textPrecursorRes";
-            // 
-            // labelPrecursorRes
-            // 
-            resources.ApplyResources(this.labelPrecursorRes, "labelPrecursorRes");
-            this.labelPrecursorRes.Name = "labelPrecursorRes";
-            // 
-            // comboPrecursorAnalyzerType
-            // 
-            this.comboPrecursorAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            resources.ApplyResources(this.comboPrecursorAnalyzerType, "comboPrecursorAnalyzerType");
-            this.comboPrecursorAnalyzerType.FormattingEnabled = true;
-            this.comboPrecursorAnalyzerType.Name = "comboPrecursorAnalyzerType";
-            this.helpTip.SetToolTip(this.comboPrecursorAnalyzerType, resources.GetString("comboPrecursorAnalyzerType.ToolTip"));
-            this.comboPrecursorAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorAnalyzerType_SelectedIndexChanged);
-            // 
-            // label32
-            // 
-            resources.ApplyResources(this.label32, "label32");
-            this.label32.Name = "label32";
-            // 
-            // groupBoxMS2
-            // 
-            this.groupBoxMS2.Controls.Add(this.comboIsolationScheme);
-            this.groupBoxMS2.Controls.Add(this.labelProductAt);
-            this.groupBoxMS2.Controls.Add(this.textProductAt);
-            this.groupBoxMS2.Controls.Add(this.labelProductTh);
-            this.groupBoxMS2.Controls.Add(this.textProductRes);
-            this.groupBoxMS2.Controls.Add(this.labelProductRes);
-            this.groupBoxMS2.Controls.Add(this.comboProductAnalyzerType);
-            this.groupBoxMS2.Controls.Add(this.label22);
-            this.groupBoxMS2.Controls.Add(this.labelIsolationScheme);
-            this.groupBoxMS2.Controls.Add(this.comboAcquisitionMethod);
-            this.groupBoxMS2.Controls.Add(this.label20);
-            resources.ApplyResources(this.groupBoxMS2, "groupBoxMS2");
-            this.groupBoxMS2.Name = "groupBoxMS2";
-            this.groupBoxMS2.TabStop = false;
-            // 
-            // comboIsolationScheme
-            // 
-            this.comboIsolationScheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboIsolationScheme.FormattingEnabled = true;
-            resources.ApplyResources(this.comboIsolationScheme, "comboIsolationScheme");
-            this.comboIsolationScheme.Name = "comboIsolationScheme";
-            this.helpTip.SetToolTip(this.comboIsolationScheme, resources.GetString("comboIsolationScheme.ToolTip"));
-            this.comboIsolationScheme.SelectedIndexChanged += new System.EventHandler(this.comboIsolationScheme_SelectedIndexChanged);
-            // 
-            // labelProductAt
-            // 
-            resources.ApplyResources(this.labelProductAt, "labelProductAt");
-            this.labelProductAt.Name = "labelProductAt";
-            // 
-            // textProductAt
-            // 
-            resources.ApplyResources(this.textProductAt, "textProductAt");
-            this.textProductAt.Name = "textProductAt";
-            this.helpTip.SetToolTip(this.textProductAt, resources.GetString("textProductAt.ToolTip"));
-            // 
-            // labelProductTh
-            // 
-            resources.ApplyResources(this.labelProductTh, "labelProductTh");
-            this.labelProductTh.Name = "labelProductTh";
-            // 
-            // textProductRes
-            // 
-            resources.ApplyResources(this.textProductRes, "textProductRes");
-            this.textProductRes.Name = "textProductRes";
-            // 
-            // labelProductRes
-            // 
-            resources.ApplyResources(this.labelProductRes, "labelProductRes");
-            this.labelProductRes.Name = "labelProductRes";
-            // 
-            // comboProductAnalyzerType
-            // 
-            this.comboProductAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            resources.ApplyResources(this.comboProductAnalyzerType, "comboProductAnalyzerType");
-            this.comboProductAnalyzerType.FormattingEnabled = true;
-            this.comboProductAnalyzerType.Name = "comboProductAnalyzerType";
-            this.helpTip.SetToolTip(this.comboProductAnalyzerType, resources.GetString("comboProductAnalyzerType.ToolTip"));
-            this.comboProductAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboProductAnalyzerType_SelectedIndexChanged);
-            // 
-            // label22
-            // 
-            resources.ApplyResources(this.label22, "label22");
-            this.label22.Name = "label22";
-            // 
-            // labelIsolationScheme
-            // 
-            resources.ApplyResources(this.labelIsolationScheme, "labelIsolationScheme");
-            this.labelIsolationScheme.Name = "labelIsolationScheme";
-            // 
-            // comboAcquisitionMethod
-            // 
-            this.comboAcquisitionMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboAcquisitionMethod.FormattingEnabled = true;
-            resources.ApplyResources(this.comboAcquisitionMethod, "comboAcquisitionMethod");
-            this.comboAcquisitionMethod.Name = "comboAcquisitionMethod";
-            this.helpTip.SetToolTip(this.comboAcquisitionMethod, resources.GetString("comboAcquisitionMethod.ToolTip"));
-            this.comboAcquisitionMethod.SelectedIndexChanged += new System.EventHandler(this.comboAcquisitionMethod_SelectedIndexChanged);
-            // 
-            // label20
-            // 
-            resources.ApplyResources(this.label20, "label20");
-            this.label20.Name = "label20";
             // 
             // tabPeaks
             // 
@@ -946,15 +656,6 @@
             this.panelPick.PerformLayout();
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
-            this.tabFullScan.ResumeLayout(false);
-            this.groupBoxRetentionTimeToKeep.ResumeLayout(false);
-            this.groupBoxRetentionTimeToKeep.PerformLayout();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
-            this.groupBoxMS1.ResumeLayout(false);
-            this.groupBoxMS1.PerformLayout();
-            this.groupBoxMS2.ResumeLayout(false);
-            this.groupBoxMS2.PerformLayout();
             this.tabPeaks.ResumeLayout(false);
             this.tabPeaks.PerformLayout();
             this.ResumeLayout(false);
@@ -1024,49 +725,14 @@
         private System.Windows.Forms.Label label24;
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.TabPage tabFullScan;
-        private System.Windows.Forms.GroupBox groupBoxMS2;
-        private System.Windows.Forms.Label labelProductTh;
-        private System.Windows.Forms.TextBox textProductRes;
-        private System.Windows.Forms.Label labelProductRes;
-        private System.Windows.Forms.ComboBox comboProductAnalyzerType;
-        private System.Windows.Forms.Label label22;
-        private System.Windows.Forms.Label labelIsolationScheme;
-        private System.Windows.Forms.ComboBox comboAcquisitionMethod;
-        private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.GroupBox groupBoxMS1;
-        private System.Windows.Forms.Label labelPrecursorTh;
-        private System.Windows.Forms.TextBox textPrecursorRes;
-        private System.Windows.Forms.Label labelPrecursorRes;
-        private System.Windows.Forms.ComboBox comboPrecursorAnalyzerType;
-        private System.Windows.Forms.Label label32;
-        private System.Windows.Forms.TextBox textProductAt;
-        private System.Windows.Forms.Label labelProductAt;
-        private System.Windows.Forms.Label labelPrecursorAt;
-        private System.Windows.Forms.TextBox textPrecursorAt;
-        private System.Windows.Forms.Label labelPrecursorIsotopeFilterPercent;
-        private System.Windows.Forms.TextBox textPrecursorIsotopeFilter;
-        private System.Windows.Forms.Label labelPrecursorIsotopeFilter;
-        private System.Windows.Forms.Label label23;
-        private System.Windows.Forms.ComboBox comboPrecursorIsotopes;
-        private System.Windows.Forms.ComboBox comboEnrichments;
-        private System.Windows.Forms.Label label29;
         private System.Windows.Forms.Label label30;
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.Label label33;
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.TextBox textMaxTime;
         private System.Windows.Forms.TextBox textMinTime;
-        private System.Windows.Forms.ComboBox comboIsolationScheme;
-        private System.Windows.Forms.GroupBox groupBoxRetentionTimeToKeep;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.RadioButton radioTimeAroundMs2Ids;
         private System.Windows.Forms.Label label21;
-        private System.Windows.Forms.TextBox tbxTimeAroundMs2Ids;
-        private System.Windows.Forms.RadioButton radioUseSchedulingWindow;
-        private System.Windows.Forms.RadioButton radioKeepAllTime;
         private System.Windows.Forms.TextBox textMaxInclusions;
-        private System.Windows.Forms.Label label35;
-        private System.Windows.Forms.Label label27;
         private System.Windows.Forms.TabPage tabPeaks;
         private System.Windows.Forms.Label label36;
         private System.Windows.Forms.ComboBox comboPeakScoringModel;

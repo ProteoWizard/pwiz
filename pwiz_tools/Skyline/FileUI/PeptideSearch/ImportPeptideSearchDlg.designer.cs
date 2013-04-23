@@ -85,7 +85,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 394);
+            this.btnCancel.Location = new System.Drawing.Point(315, 546);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 7;
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // btnNext
             // 
             this.btnNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnNext.Location = new System.Drawing.Point(227, 394);
+            this.btnNext.Location = new System.Drawing.Point(234, 546);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(75, 23);
             this.btnNext.TabIndex = 6;
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             this.btnEarlyFinish.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnEarlyFinish.Enabled = false;
-            this.btnEarlyFinish.Location = new System.Drawing.Point(146, 394);
+            this.btnEarlyFinish.Location = new System.Drawing.Point(153, 546);
             this.btnEarlyFinish.Name = "btnEarlyFinish";
             this.btnEarlyFinish.Size = new System.Drawing.Size(75, 23);
             this.btnEarlyFinish.TabIndex = 9;
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPagesImportPeptideSearch.Location = new System.Drawing.Point(0, 0);
             this.wizardPagesImportPeptideSearch.Name = "wizardPagesImportPeptideSearch";
             this.wizardPagesImportPeptideSearch.SelectedIndex = 0;
-            this.wizardPagesImportPeptideSearch.Size = new System.Drawing.Size(395, 388);
+            this.wizardPagesImportPeptideSearch.Size = new System.Drawing.Size(402, 540);
             this.wizardPagesImportPeptideSearch.TabIndex = 8;
             // 
             // buildSearchSpecLibPage
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.buildSearchSpecLibPage.Location = new System.Drawing.Point(4, 22);
             this.buildSearchSpecLibPage.Name = "buildSearchSpecLibPage";
             this.buildSearchSpecLibPage.Padding = new System.Windows.Forms.Padding(3);
-            this.buildSearchSpecLibPage.Size = new System.Drawing.Size(387, 362);
+            this.buildSearchSpecLibPage.Size = new System.Drawing.Size(394, 514);
             this.buildSearchSpecLibPage.TabIndex = 0;
             this.buildSearchSpecLibPage.Text = "1";
             this.buildSearchSpecLibPage.UseVisualStyleBackColor = true;
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.buildSpectralLibraryTitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.buildSpectralLibraryTitlePanel.Location = new System.Drawing.Point(3, 3);
             this.buildSpectralLibraryTitlePanel.Name = "buildSpectralLibraryTitlePanel";
-            this.buildSpectralLibraryTitlePanel.Size = new System.Drawing.Size(381, 43);
+            this.buildSpectralLibraryTitlePanel.Size = new System.Drawing.Size(388, 43);
             this.buildSpectralLibraryTitlePanel.TabIndex = 15;
             // 
             // label14
@@ -322,7 +322,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.getChromatogramsPage.Location = new System.Drawing.Point(4, 22);
             this.getChromatogramsPage.Name = "getChromatogramsPage";
             this.getChromatogramsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.getChromatogramsPage.Size = new System.Drawing.Size(387, 362);
+            this.getChromatogramsPage.Size = new System.Drawing.Size(394, 512);
             this.getChromatogramsPage.TabIndex = 1;
             this.getChromatogramsPage.Text = "2";
             this.getChromatogramsPage.UseVisualStyleBackColor = true;
@@ -335,7 +335,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(381, 43);
+            this.panel1.Size = new System.Drawing.Size(388, 43);
             this.panel1.TabIndex = 17;
             // 
             // label20
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.matchModificationsPage.Location = new System.Drawing.Point(4, 22);
             this.matchModificationsPage.Name = "matchModificationsPage";
             this.matchModificationsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.matchModificationsPage.Size = new System.Drawing.Size(387, 362);
+            this.matchModificationsPage.Size = new System.Drawing.Size(394, 512);
             this.matchModificationsPage.TabIndex = 3;
             this.matchModificationsPage.Text = "3";
             this.matchModificationsPage.UseVisualStyleBackColor = true;
@@ -369,7 +369,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.addModsTitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.addModsTitlePanel.Location = new System.Drawing.Point(3, 3);
             this.addModsTitlePanel.Name = "addModsTitlePanel";
-            this.addModsTitlePanel.Size = new System.Drawing.Size(381, 43);
+            this.addModsTitlePanel.Size = new System.Drawing.Size(388, 43);
             this.addModsTitlePanel.TabIndex = 0;
             // 
             // label16
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // matchModsSplitContainer.Panel2
             // 
             this.matchModsSplitContainer.Panel2.Controls.Add(this.modificationsListBox);
-            this.matchModsSplitContainer.Size = new System.Drawing.Size(381, 307);
+            this.matchModsSplitContainer.Size = new System.Drawing.Size(388, 457);
             this.matchModsSplitContainer.SplitterDistance = 42;
             this.matchModsSplitContainer.TabIndex = 0;
             // 
@@ -430,7 +430,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.modificationsListBox.FormattingEnabled = true;
             this.modificationsListBox.Location = new System.Drawing.Point(18, 3);
             this.modificationsListBox.Name = "modificationsListBox";
-            this.modificationsListBox.Size = new System.Drawing.Size(340, 244);
+            this.modificationsListBox.Size = new System.Drawing.Size(347, 364);
             this.modificationsListBox.TabIndex = 1;
             // 
             // ms1FullScanSettingsPage
@@ -439,7 +439,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ms1FullScanSettingsPage.Location = new System.Drawing.Point(4, 22);
             this.ms1FullScanSettingsPage.Name = "ms1FullScanSettingsPage";
             this.ms1FullScanSettingsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.ms1FullScanSettingsPage.Size = new System.Drawing.Size(387, 362);
+            this.ms1FullScanSettingsPage.Size = new System.Drawing.Size(394, 512);
             this.ms1FullScanSettingsPage.TabIndex = 5;
             this.ms1FullScanSettingsPage.Text = "4";
             this.ms1FullScanSettingsPage.UseVisualStyleBackColor = true;
@@ -452,7 +452,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ms1FullScanSettingsTitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.ms1FullScanSettingsTitlePanel.Location = new System.Drawing.Point(3, 3);
             this.ms1FullScanSettingsTitlePanel.Name = "ms1FullScanSettingsTitlePanel";
-            this.ms1FullScanSettingsTitlePanel.Size = new System.Drawing.Size(381, 43);
+            this.ms1FullScanSettingsTitlePanel.Size = new System.Drawing.Size(388, 43);
             this.ms1FullScanSettingsTitlePanel.TabIndex = 16;
             // 
             // label19
@@ -472,7 +472,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFastaPage.Location = new System.Drawing.Point(4, 22);
             this.importFastaPage.Name = "importFastaPage";
             this.importFastaPage.Padding = new System.Windows.Forms.Padding(3);
-            this.importFastaPage.Size = new System.Drawing.Size(387, 362);
+            this.importFastaPage.Size = new System.Drawing.Size(394, 512);
             this.importFastaPage.TabIndex = 4;
             this.importFastaPage.Text = "5";
             this.importFastaPage.UseVisualStyleBackColor = true;
@@ -485,7 +485,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFASTATitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.importFASTATitlePanel.Location = new System.Drawing.Point(3, 3);
             this.importFASTATitlePanel.Name = "importFASTATitlePanel";
-            this.importFASTATitlePanel.Size = new System.Drawing.Size(381, 43);
+            this.importFASTATitlePanel.Size = new System.Drawing.Size(388, 43);
             this.importFASTATitlePanel.TabIndex = 15;
             // 
             // label18
@@ -504,14 +504,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 430);
+            this.ClientSize = new System.Drawing.Size(402, 582);
             this.Controls.Add(this.btnEarlyFinish);
             this.Controls.Add(this.wizardPagesImportPeptideSearch);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnNext);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(411, 468);
+            this.MinimumSize = new System.Drawing.Size(416, 620);
             this.Name = "ImportPeptideSearchDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

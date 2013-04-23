@@ -46,8 +46,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.tbxFasta.Multiline = true;
             this.tbxFasta.Name = "tbxFasta";
             this.tbxFasta.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbxFasta.Size = new System.Drawing.Size(282, 214);
-            this.tbxFasta.TabIndex = 1;
+            this.tbxFasta.Size = new System.Drawing.Size(282, 367);
+            this.tbxFasta.TabIndex = 0;
             this.tbxFasta.TextChanged += new System.EventHandler(this.tbxFasta_TextChanged);
             // 
             // textBox1
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.Size = new System.Drawing.Size(363, 26);
-            this.textBox1.TabIndex = 0;
+            this.textBox1.TabIndex = 2;
             this.textBox1.Text = "FASTA records begin with \'>\' and have the protein name followed by the optional p" +
     "rotein description.";
             // 
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.browseFastaBtn.Location = new System.Drawing.Point(302, 35);
             this.browseFastaBtn.Name = "browseFastaBtn";
             this.browseFastaBtn.Size = new System.Drawing.Size(75, 23);
-            this.browseFastaBtn.TabIndex = 2;
+            this.browseFastaBtn.TabIndex = 1;
             this.browseFastaBtn.Text = "&Browse...";
             this.browseFastaBtn.UseVisualStyleBackColor = true;
             this.browseFastaBtn.Click += new System.EventHandler(this.browseFastaBtn_Click);
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelError.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelError.Controls.Add(this.tbxError);
-            this.panelError.Location = new System.Drawing.Point(14, 258);
+            this.panelError.Location = new System.Drawing.Point(14, 411);
             this.panelError.Name = "panelError";
             this.panelError.Size = new System.Drawing.Size(282, 35);
             this.panelError.TabIndex = 22;
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.tbxError.Name = "tbxError";
             this.tbxError.ReadOnly = true;
             this.tbxError.Size = new System.Drawing.Size(282, 35);
-            this.tbxError.TabIndex = 0;
+            this.tbxError.TabIndex = 3;
             // 
             // ImportFastaControl
             // 
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.tbxFasta);
             this.Name = "ImportFastaControl";
-            this.Size = new System.Drawing.Size(381, 307);
+            this.Size = new System.Drawing.Size(381, 460);
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
             this.ResumeLayout(false);

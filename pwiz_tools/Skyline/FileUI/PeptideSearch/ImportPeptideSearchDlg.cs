@@ -22,8 +22,12 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -71,7 +75,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             FullScanSettingsControl = new FullScanSettingsControl(SkylineWindow)
                                            {
                                                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
-                                               Location = new Point(2, 60)
+                                               Location = new Point(18, 50)
                                            };
             ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
 
@@ -85,6 +89,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         private SkylineWindow SkylineWindow { get; set; }
+        private TransitionSettings TransitionSettings { get { return SkylineWindow.DocumentUI.Settings.TransitionSettings; } }
+        public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
+
 
         public BuildPeptideSearchLibraryControl BuildPepSearchLibControl { get; private set; }
         public ImportFastaControl ImportFastaControl { get; private set; }
@@ -142,7 +149,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // Todo: This needs to be moved under Pages.match_modifications_page when that page is finally enabled!
                         // The next page is going to be the MS1 Full-Scan Settings
                         // page, so initialize it.
-                        FullScanSettingsControl.InitializeMs1FullScanSettingsPage();
+                        // FullScanSettingsControl.InitializeMs1FullScanSettingsPage();
 
                         // Todo: The next page should be the modifications page, but we skip past it for now. We'll revisit once everything else is working.
                         CurrentPage++;
@@ -154,7 +161,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 case Pages.ms1_full_scan_settings_page:
                     // Try to accept changes to MS1 full-scan settings
-                    if (!FullScanSettingsControl.UpdateMS1FullScanSettings())
+                    if (!UpdateFullScanSettings())
                     {
                         // We can't allow the user to progress any further until
                         // we can verify that the MS1 full scan settings are valid.
@@ -180,6 +187,73 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 btnNext.Text = Resources.ImportPeptideSearchDlg_NextPage_Finish;
             }
+        }
+
+        private bool UpdateFullScanSettings()
+        {
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            // Validate and store MS1 full-scan settings
+
+            // If high resolution MS1 filtering is enabled, make sure precursor m/z type
+            // is monoisotopic and isotope enrichments are set
+            var precursorIsotopes = FullScanSettingsControl.PrecursorIsotopesCurrent;
+            var precursorAnalyzerType = FullScanSettingsControl.PrecursorMassAnalyzer;
+            var precursorMassType = TransitionSettings.Prediction.PrecursorMassType;
+            if (precursorIsotopes != FullScanPrecursorIsotopes.None &&
+                    precursorAnalyzerType != FullScanMassAnalyzerType.qit)
+            {
+                precursorMassType = MassType.Monoisotopic;
+                if (FullScanSettingsControl.Enrichments == null)
+                {
+                    MessageDlg.Show(FormEx.GetParentForm(this), Resources.TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_filtering_on_high_resolution_mass_spectrometers);
+                    return false;
+                }
+            }
+
+            if (FullScanSettingsControl.IsolationScheme == null && FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.DIA)
+            {
+                MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_An_isolation_scheme_is_required_to_match_multiple_precursors);
+                return false;
+            }
+
+            TransitionFullScan fullScan;
+            if (!FullScanSettingsControl.ValidateFullScanSettings(e, helper, out fullScan))
+                return false;
+
+            Helpers.AssignIfEquals(ref fullScan, TransitionSettings.FullScan);
+
+            TransitionPrediction prediction = new TransitionPrediction(precursorMassType,
+                                                           TransitionSettings.Prediction.FragmentMassType,
+                                                           TransitionSettings.Prediction.CollisionEnergy,
+                                                           TransitionSettings.Prediction.DeclusteringPotential,
+                                                           TransitionSettings.Prediction.OptimizedMethodType);
+            Helpers.AssignIfEquals(ref prediction, TransitionSettings.Prediction);
+
+            TransitionSettings settings = new TransitionSettings(prediction, TransitionSettings.Filter,
+                TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
+
+            // Only update, if anything changed
+            if (!Equals(settings, TransitionSettings))
+            {
+                SrmSettings newSettings = SkylineWindow.DocumentUI.Settings.ChangeTransitionSettings(settings);
+                if (!SkylineWindow.ChangeSettings(newSettings, true))
+                {
+                    e.Cancel = true;
+                    return false;
+                }
+            }
+
+            // MS1 filtering must be enabled
+            if (!FullScan.IsEnabledMs)
+            {
+                MessageDlg.Show(this, "Full-scan MS1 filtering must be enabled in order to import peptide search.");
+                return false;
+            }
+
+            return true;
+
         }
 
         private void ShowEarlyFinish(bool show)

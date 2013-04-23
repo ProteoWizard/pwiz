@@ -446,12 +446,6 @@
     <Compile Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.Designer.cs">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\PeptideSearch\FullScanSettingsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\FullScanSettingsControl.Designer.cs">
-      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="FileUI\PeptideSearch\ImportFastaControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -791,6 +785,12 @@
     <Compile Include="SettingsUI\EditIsolationSchemeDlg.Designer.cs">
       <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\FullScanSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\FullScanSettingsControl.Designer.cs">
+      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\AddIrtCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1032,9 +1032,6 @@
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.resx">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\FullScanSettingsControl.resx">
-      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportFastaControl.resx">
       <DependentUpon>ImportFastaControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -1092,6 +1089,9 @@
     <EmbeddedResource Include="SettingsUI\EditStaticModDlg.resx">
       <DependentUpon>EditStaticModDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.resx">
+      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.resx">
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>

@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -43,8 +44,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<CollisionEnergyRegression> _driverCE;
         private readonly SettingsListComboDriver<DeclusteringPotentialRegression> _driverDP;
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
-        private readonly SettingsListComboDriver<IsotopeEnrichments> _driverEnrichments;
-        private readonly SettingsListComboDriver<IsolationScheme> _driverIsolationScheme;
         private readonly SettingsListComboDriver<PeakScoringModelSpec> _driverPeakScoringModel;
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
 
@@ -122,65 +121,21 @@ namespace pwiz.Skyline.SettingsUI
                 textMaxTime.Text = Instrument.MaxTime.Value.ToString(CultureInfo.CurrentCulture);
 
             // Initialize full-scan settings
-            _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments,
-                                                                                 Settings.Default.IsotopeEnrichmentsList);
-            sel = (FullScan.IsotopeEnrichments != null ? FullScan.IsotopeEnrichments.Name : null);
-            _driverEnrichments.LoadList(sel);
-
-            _driverIsolationScheme = new SettingsListComboDriver<IsolationScheme>(comboIsolationScheme,
-                                                                                  Settings.Default.IsolationSchemeList);
-            sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
-            _driverIsolationScheme.LoadList(sel);
-
-            comboPrecursorIsotopes.Items.AddRange(
-                new object[]
-                    {
-                        FullScanPrecursorIsotopes.None.GetLocalizedString(),
-                        FullScanPrecursorIsotopes.Count.GetLocalizedString(),
-                        FullScanPrecursorIsotopes.Percent.GetLocalizedString()
-                    });
-            comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
-            comboPrecursorIsotopes.SelectedItem = FullScan.PrecursorIsotopes.GetLocalizedString();
-
-            // Update the precursor analyzer type in case the SelectedIndex is still -1
-            UpdatePrecursorAnalyzerType();
-
-
-            comboAcquisitionMethod.Items.AddRange(
-                new object[]
-                    {
-                        FullScanAcquisitionMethod.None.GetLocalizedString(),
-                        FullScanAcquisitionMethod.Targeted.GetLocalizedString(),
-                        FullScanAcquisitionMethod.DIA.GetLocalizedString()
-                    });
-            comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
-            comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod.GetLocalizedString();
-
-            // Update the product analyzer type in case the SelectedIndex is still -1
-            UpdateProductAnalyzerType();
-            tbxTimeAroundMs2Ids.Text = DEFAULT_TIME_AROUND_MS2_IDS.ToString(CultureInfo.CurrentUICulture);
-            tbxTimeAroundMs2Ids.Enabled = false;
-            if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
-            {
-                radioUseSchedulingWindow.Checked = true;
-            }
-            else if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
-            {
-                radioTimeAroundMs2Ids.Checked = true;
-                tbxTimeAroundMs2Ids.Text =
-                    FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
-                tbxTimeAroundMs2Ids.Enabled = true;
-            }
-            else
-            {
-                radioKeepAllTime.Checked = true;
-            }
+            FullScanSettingsControl = new FullScanSettingsControl(_parent)
+                                          {
+                                              Anchor = (AnchorStyles.Top | AnchorStyles.Left),
+                                              Location = new Point(0, 0),
+                                              Size = new Size(363, 491)
+                                          };
+            tabFullScan.Controls.Add(FullScanSettingsControl);
 
             // Initialize peak scoring settings.
             tabControl1.TabPages.Remove(tabPeaks);  // TODO: Remove this line when the Peaks tab is ready
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
             _driverPeakScoringModel.LoadList(null);
         }
+
+        private FullScanSettingsControl FullScanSettingsControl { get; set; }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }
         public TransitionFilter Filter { get { return _transitionSettings.Filter; } }
@@ -193,42 +148,40 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return FullScanAcquisitionExtension.GetEnum(comboAcquisitionMethod.SelectedItem.ToString(),
-                    FullScanAcquisitionMethod.None);
+                return FullScanSettingsControl.AcquisitionMethod;
             }
 
-            set { comboAcquisitionMethod.SelectedItem = value.GetLocalizedString(); }
+            set { FullScanSettingsControl.AcquisitionMethod = value; }
         }
 
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
             get
             {
-                return TransitionFullScan.ParseMassAnalyzer((string) comboProductAnalyzerType.SelectedItem);
+                return FullScanSettingsControl.ProductMassAnalyzer;
             }
 
-            set { comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(value); }
+            set { FullScanSettingsControl.ProductMassAnalyzer = value; }
         }
 
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
             get
             {
-                return FullScanPrecursorIsotopesExtension.GetEnum(comboPrecursorIsotopes.SelectedItem.ToString(),
-                    FullScanPrecursorIsotopes.None);
+                return FullScanSettingsControl.PrecursorIsotopesCurrent;
             }
 
-            set { comboPrecursorIsotopes.SelectedItem = value.GetLocalizedString(); }
+            set { FullScanSettingsControl.PrecursorIsotopesCurrent = value; }
         }
 
         public FullScanMassAnalyzerType PrecursorMassAnalyzer
         {
             get
             {
-                return TransitionFullScan.ParseMassAnalyzer((string) comboPrecursorAnalyzerType.SelectedItem);
+                return FullScanSettingsControl.PrecursorMassAnalyzer;
             }
 
-            set { comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(value); }
+            set { FullScanSettingsControl.PrecursorMassAnalyzer = value; }
         }
 
         protected override void OnShown(EventArgs e)
@@ -427,104 +380,11 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             // Validate and store full-scan settings
-            FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;
-            FullScanMassAnalyzerType productAnalyzerType = FullScanMassAnalyzerType.none;
-            double? productRes = null;
-            double? productResMz = null;
-
-            FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
-            double? precursorIsotopeFilter = null;
-            FullScanMassAnalyzerType precursorAnalyzerType = FullScanMassAnalyzerType.none;
-            double? precursorRes = null;
-            double? precursorResMz = null;
-            if (precursorIsotopes != FullScanPrecursorIsotopes.None)
-            {
-                double minFilt, maxFilt;
-                if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
-                {
-                    minFilt = TransitionFullScan.MIN_ISOTOPE_COUNT;
-                    maxFilt = TransitionFullScan.MAX_ISOTOPE_COUNT;
-                }
-                else
-                {
-                    minFilt = TransitionFullScan.MIN_ISOTOPE_PERCENT;
-                    maxFilt = TransitionFullScan.MAX_ISOTOPE_PERCENT;
-                }
-                double precIsotopeFilt;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorIsotopeFilter,
-                                                   minFilt, maxFilt, out precIsotopeFilt))
-                    return;
-                precursorIsotopeFilter = precIsotopeFilt;
-
-                precursorAnalyzerType = PrecursorMassAnalyzer;
-                if (precursorAnalyzerType == FullScanMassAnalyzerType.qit)
-                {
-                    if (precursorIsotopes != FullScanPrecursorIsotopes.Count || precursorIsotopeFilter != 1)
-                    {
-                        helper.ShowTextBoxError(tabControl1, (int)TABS.FullScan, textPrecursorIsotopeFilter,
-                                                Resources.TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported);
-                        return;
-                    }
-                    minFilt = TransitionFullScan.MIN_LO_RES;
-                    maxFilt = TransitionFullScan.MAX_LO_RES;
-                }
-                else
-                {
-                    minFilt = TransitionFullScan.MIN_HI_RES;
-                    maxFilt = TransitionFullScan.MAX_HI_RES;
-                }
-                double precRes;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorRes,
-                        minFilt, maxFilt, out precRes))
-                    return;
-                precursorRes = precRes;
-                if (precursorAnalyzerType != FullScanMassAnalyzerType.qit &&
-                    precursorAnalyzerType != FullScanMassAnalyzerType.tof)
-                {
-                    double precResMz;
-                    if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorAt,
-                            TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out precResMz))
-                        return;
-                    precursorResMz = precResMz;
-                }
-            }
-
-            if (acquisitionMethod != FullScanAcquisitionMethod.None)
-            {
-                double minFilt, maxFilt;
-
-                productAnalyzerType = ProductMassAnalyzer;
-                if (productAnalyzerType == FullScanMassAnalyzerType.qit)
-                {
-                    minFilt = TransitionFullScan.MIN_LO_RES;
-                    maxFilt = TransitionFullScan.MAX_LO_RES;
-                }
-                else
-                {
-                    minFilt = TransitionFullScan.MIN_HI_RES;
-                    maxFilt = TransitionFullScan.MAX_HI_RES;
-                }
-                double prodRes;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textProductRes,
-                        minFilt, maxFilt, out prodRes))
-                    return;
-
-                productRes = prodRes;
-
-                if (productAnalyzerType != FullScanMassAnalyzerType.qit &&
-                    productAnalyzerType != FullScanMassAnalyzerType.tof)
-                {
-                    double prodResMz;
-                    if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textProductAt,
-                            TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out prodResMz))
-                        return;
-                    productResMz = prodResMz;
-                }
-            }
 
             // If high resolution MS1 filtering is enabled, make sure precursor m/z type
             // is monoisotopic and isotope enrichments are set
-            IsotopeEnrichments enrichments = null;
+            FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
+            FullScanMassAnalyzerType precursorAnalyzerType = PrecursorMassAnalyzer;
             if (precursorIsotopes != FullScanPrecursorIsotopes.None &&
                     precursorAnalyzerType != FullScanMassAnalyzerType.qit)
             {
@@ -536,24 +396,25 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
 
-                enrichments = _driverEnrichments.SelectedItem;
-                if (enrichments == null)
+                if (FullScanSettingsControl.Enrichments == null)
                 {
-                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_filtering_on_high_resolution_mass_spectrometers);
                     tabControl1.SelectedIndex = (int) TABS.FullScan;
-                    comboEnrichments.Focus();
+                    MessageDlg.Show(GetParentForm(this), Resources.TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_filtering_on_high_resolution_mass_spectrometers);
+                    FullScanSettingsControl.ComboEnrichmentsSetFocus();
                     return;
                 }
             }
 
-            IsolationScheme isolationScheme = _driverIsolationScheme.SelectedItem;
+            IsolationScheme isolationScheme = FullScanSettingsControl.IsolationScheme;
+            FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;
             if (isolationScheme == null && acquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
+                tabControl1.SelectedIndex = (int)TABS.FullScan;
                 MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_An_isolation_scheme_is_required_to_match_multiple_precursors);
-                tabControl1.SelectedIndex = (int) TABS.FullScan;
-                comboIsolationScheme.Focus();
+                FullScanSettingsControl.ComboIsolationSchemeSetFocus();
                 return;
             }
+
             if (isolationScheme != null && isolationScheme.WindowsPerScan.HasValue && !maxInclusions.HasValue)
             {
                 MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified);
@@ -562,40 +423,9 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            RetentionTimeFilterType retentionTimeFilterType;
-            double timeAroundMs2Ids = 0;
-            if (radioUseSchedulingWindow.Checked)
-            {
-                retentionTimeFilterType = RetentionTimeFilterType.scheduling_windows;
-            }
-            else if (radioTimeAroundMs2Ids.Checked)
-            {
-                retentionTimeFilterType = RetentionTimeFilterType.ms2_ids;
-                if (!double.TryParse(tbxTimeAroundMs2Ids.Text, out timeAroundMs2Ids) || timeAroundMs2Ids < 0)
-                {
-                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
-                    tabControl1.SelectedIndex = (int) TABS.FullScan;
-                    tbxTimeAroundMs2Ids.Focus();
-                    return;
-                }
-            }
-            else
-            {
-                retentionTimeFilterType = RetentionTimeFilterType.none;
-            }
-            var fullScan = new TransitionFullScan(acquisitionMethod,
-                                                  isolationScheme,
-                                                  productAnalyzerType,
-                                                  productRes,
-                                                  productResMz,
-                                                  precursorIsotopes,
-                                                  precursorIsotopeFilter,
-                                                  precursorAnalyzerType,
-                                                  precursorRes,
-                                                  precursorResMz,
-                                                  enrichments,
-                                                  retentionTimeFilterType,
-                                                  timeAroundMs2Ids);
+            TransitionFullScan fullScan;
+            if (!FullScanSettingsControl.ValidateFullScanSettings(e, helper, out fullScan, tabControl1, (int)TABS.FullScan))
+                return;
 
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
@@ -667,16 +497,6 @@ namespace pwiz.Skyline.SettingsUI
             _driverDP.SelectedIndexChangedEvent(sender, e);
         }
 
-        private void comboEnrichments_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _driverEnrichments.SelectedIndexChangedEvent(sender, e);
-        }
-
-        private void comboIsolationScheme_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _driverIsolationScheme.SelectedIndexChangedEvent(sender, e);
-        }
-
         private void comboPeakScoringModel_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
@@ -690,219 +510,6 @@ namespace pwiz.Skyline.SettingsUI
         private void btnEditSpecialTransitions_Click(object sender, EventArgs e)
         {
             _driverIons.EditList();
-        }
-
-        private void comboAcquisitionMethod_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var acquisitionMethod = AcquisitionMethod;
-            if (acquisitionMethod == FullScanAcquisitionMethod.None)
-            {
-                EnableIsolationScheme(false);
-                // Selection change should set filter m/z textbox correctly
-                comboProductAnalyzerType.SelectedIndex = -1;
-                comboProductAnalyzerType.Enabled = false;
-                comboIsolationScheme.SelectedIndex = -1;
-                comboIsolationScheme.Enabled = false;
-            }
-            else
-            {
-                EnableIsolationScheme(acquisitionMethod == FullScanAcquisitionMethod.DIA);
-
-                // If the combo is being set to the type it started with, use the starting values
-                if (acquisitionMethod == FullScan.AcquisitionMethod)
-                {
-                    if (!comboProductAnalyzerType.Enabled)
-                        comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.ProductMassAnalyzer);
-                }
-                else
-                {
-                    if (!comboProductAnalyzerType.Enabled)
-                    {
-                        string tofAnalyzer = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.tof);
-                        comboProductAnalyzerType.SelectedItem =
-                            comboPrecursorAnalyzerType.SelectedItem != null &&
-                                Equals(comboPrecursorAnalyzerType.SelectedItem.ToString(), tofAnalyzer)
-                            ? tofAnalyzer
-                            : TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
-                    }
-                }
-                comboProductAnalyzerType.Enabled = true;
-            }            
-        }
-
-        private void EnableIsolationScheme(bool enable)
-        {
-            comboIsolationScheme.Enabled = enable;
-            if (!enable)
-            {
-                comboIsolationScheme.SelectedIndex = -1;
-            }
-        }
-
-        private void comboProductAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateProductAnalyzerType();
-        }
-
-        private void UpdateProductAnalyzerType()
-        {
-            SetAnalyzerType(ProductMassAnalyzer,
-                            FullScan.ProductMassAnalyzer,
-                            FullScan.ProductRes,
-                            FullScan.ProductResMz,
-                            labelProductRes,
-                            textProductRes,
-                            labelProductAt,
-                            textProductAt,
-                            labelProductTh);
-        }
-
-        private void comboPrecursorIsotopes_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var precursorIsotopes = PrecursorIsotopesCurrent;
-
-            bool percentType = (precursorIsotopes == FullScanPrecursorIsotopes.Percent);
-            labelPrecursorIsotopeFilter.Text = percentType
-                                                   ? Resources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak
-                                                   : Resources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks;
-            labelPrecursorIsotopeFilterPercent.Visible = percentType;
-            
-            if (precursorIsotopes == FullScanPrecursorIsotopes.None)
-            {
-                textPrecursorIsotopeFilter.Text = string.Empty;
-                textPrecursorIsotopeFilter.Enabled = false;
-                comboEnrichments.SelectedIndex = -1;
-                comboEnrichments.Enabled = false;
-                // Selection change should set filter m/z textbox correctly
-                comboPrecursorAnalyzerType.SelectedIndex = -1;
-                comboPrecursorAnalyzerType.Enabled = false;
-            }
-            else
-            {
-                // If the combo is being set to the type it started with, use the starting values
-                if (precursorIsotopes == FullScan.PrecursorIsotopes)
-                {
-                    textPrecursorIsotopeFilter.Text = FullScan.PrecursorIsotopeFilter.HasValue
-                                                          ? FullScan.PrecursorIsotopeFilter.Value.ToString(CultureInfo.CurrentCulture)
-                                                          : string.Empty;
-                    if (FullScan.IsotopeEnrichments != null)
-                        comboEnrichments.SelectedItem = FullScan.IsotopeEnrichments.Name;
-                    if (!comboPrecursorAnalyzerType.Enabled)
-                        comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.PrecursorMassAnalyzer);
-                }
-                else
-                {
-                    textPrecursorIsotopeFilter.Text = (percentType
-                                                           ? TransitionFullScan.DEFAULT_ISOTOPE_PERCENT
-                                                           : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString(CultureInfo.CurrentCulture);
-                    
-                    var precursorMassAnalyzer = PrecursorMassAnalyzer;
-                    if (!comboPrecursorAnalyzerType.Enabled || (percentType && precursorMassAnalyzer == FullScanMassAnalyzerType.qit))
-                    {
-                        comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.tof);
-                        comboEnrichments.SelectedItem = IsotopeEnrichmentsList.GetDefault().Name;
-                    }
-                }
-
-                comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
-                textPrecursorIsotopeFilter.Enabled = true;
-                comboPrecursorAnalyzerType.Enabled = true;
-            }
-        }
-
-        private void comboPrecursorAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdatePrecursorAnalyzerType();
-        }
-
-        private void UpdatePrecursorAnalyzerType()
-        {
-            var precursorMassAnalyzer = PrecursorMassAnalyzer;
-            SetAnalyzerType(PrecursorMassAnalyzer,
-                            FullScan.PrecursorMassAnalyzer,
-                            FullScan.PrecursorRes,
-                            FullScan.PrecursorResMz,
-                            labelPrecursorRes,
-                            textPrecursorRes,
-                            labelPrecursorAt,
-                            textPrecursorAt,
-                            labelPrecursorTh);
-
-            // For QIT, only 1 isotope peak is allowed
-            if (precursorMassAnalyzer == FullScanMassAnalyzerType.qit)
-            {
-                comboPrecursorIsotopes.SelectedItem = FullScanPrecursorIsotopes.Count.GetLocalizedString();
-                textPrecursorIsotopeFilter.Text = 1.ToString(CultureInfo.CurrentCulture);
-                comboEnrichments.SelectedIndex = -1;
-                comboEnrichments.Enabled = false;
-            }
-            else if (precursorMassAnalyzer != FullScanMassAnalyzerType.none && !comboEnrichments.Enabled)
-            {
-                comboEnrichments.SelectedIndex = 0;
-                comboEnrichments.Enabled = true;
-            }
-        }
-
-        public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
-                                            FullScanMassAnalyzerType analyzerTypeCurrent,
-                                            double? resCurrent,
-                                            double? resMzCurrent,
-                                            Label label,
-                                            TextBox textRes,
-                                            Label labelAt,
-                                            TextBox textAt,
-                                            Label labelTh)
-        {
-            string labelText = Resources.TransitionSettingsUI_SetAnalyzerType_Resolution;
-            if (analyzerTypeNew == FullScanMassAnalyzerType.none)
-            {
-                textRes.Enabled = false;
-                textRes.Text = string.Empty;
-                labelAt.Visible = false;
-                textAt.Visible = false;
-                labelTh.Left = textRes.Right;
-            }
-            else
-            {
-                textRes.Enabled = true;
-                bool variableRes = false;
-                TextBox textMz = null;
-                if (analyzerTypeNew == FullScanMassAnalyzerType.qit)
-                {
-                    textMz = textRes;
-                }
-                else
-                {
-                    labelText = Resources.TransitionSettingsUI_SetAnalyzerType_Resolving_power;
-                    if (analyzerTypeNew != FullScanMassAnalyzerType.tof)
-                    {
-                        variableRes = true;
-                        textMz = textAt;
-                    }
-                }
-
-                const string resolvingPowerFormat = "#,0.####"; // Not L10N
-                if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
-                    textRes.Text = resCurrent.Value.ToString(resolvingPowerFormat);
-                else
-                    textRes.Text = TransitionFullScan.DEFAULT_RES_VALUES[(int) analyzerTypeNew].ToString(resolvingPowerFormat);
-
-                labelAt.Visible = variableRes;
-                textAt.Visible = variableRes;
-                textAt.Text = resMzCurrent.HasValue
-                                  ? resMzCurrent.Value.ToString(CultureInfo.CurrentCulture)
-                                  : TransitionFullScan.DEFAULT_RES_MZ.ToString(CultureInfo.CurrentCulture);
-
-                labelTh.Visible = (textMz != null);
-                if (textMz != null)
-                    labelTh.Left = textMz.Right;
-            }
-            label.Text = labelText;
-        }
-
-        private void RadioNoiseAroundMs2IdsCheckedChanged(object sender, EventArgs e)
-        {
-            tbxTimeAroundMs2Ids.Enabled = radioTimeAroundMs2Ids.Checked;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -986,21 +593,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetRetentionTimeFilter(RetentionTimeFilterType retentionTimeFilterType, double length)
         {
-            switch (retentionTimeFilterType)
-            {
-                case RetentionTimeFilterType.none:
-                    radioKeepAllTime.Checked = true;
-                    break;
-                case RetentionTimeFilterType.scheduling_windows:
-                    radioUseSchedulingWindow.Checked = true;
-                    break;
-                case RetentionTimeFilterType.ms2_ids:
-                    radioTimeAroundMs2Ids.Checked = true;
-                    break;
-                default:
-                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType"); // Not L10N
-            }
-            tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentUICulture);
+            FullScanSettingsControl.SetRetentionTimeFilter(retentionTimeFilterType, length);
         }
 
         public double MZMatchTolerance
@@ -1056,12 +649,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditEnrichmentsList()
         {
-            _driverEnrichments.EditList();
+            FullScanSettingsControl.EditEnrichmentsList();
         }
 
         public void AddToEnrichmentsList()
         {
-            _driverEnrichments.AddItem();
+            FullScanSettingsControl.AddToEnrichmentsList();
         }
 
         public bool UseOptimized
@@ -1103,8 +696,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public string Peaks
         {
-            get { return textPrecursorIsotopeFilter.Text; }
-            set { textPrecursorIsotopeFilter.Text = value; }
+            get { return FullScanSettingsControl.Peaks; }
+            set { FullScanSettingsControl.Peaks = value; }
         }
 
         public string MinTime
@@ -1126,12 +719,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddIsolationScheme()
         {
-            _driverIsolationScheme.AddItem();
+            FullScanSettingsControl.AddIsolationScheme();
         }
 
         public void EditIsolationScheme()
         {
-            _driverIsolationScheme.EditList();
+            FullScanSettingsControl.EditIsolationScheme();
         }
 
         public void AddPeakScoringModel()
