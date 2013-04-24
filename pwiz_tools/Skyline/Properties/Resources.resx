@@ -5143,4 +5143,19 @@ Are you sure you want to continue?</value>
   <data name="FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType">
     <value xml:space="preserve">Invalid RetentionTimeFilterType</value>
   </data>
+  <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
+    <value>Select a peptide, precursor or transition to view its chromatograms</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found" xml:space="preserve">
+    <value>No precursor ion chromatograms found</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found" xml:space="preserve">
+    <value>No product ion chromatograms found</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found" xml:space="preserve">
+    <value>No base peak chromatogram found</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_TIC_chromatogram_found" xml:space="preserve">
+    <value>No TIC chromatogram found</value>
+  </data>
 </root>

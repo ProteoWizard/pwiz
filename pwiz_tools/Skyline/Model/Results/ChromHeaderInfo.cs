@@ -205,26 +205,22 @@ namespace pwiz.Skyline.Model.Results
                                      int statusId, int statusRank)
             : this()
         {
-            // Several values need to be downcast to fit into fewer bits, but only the
-            // maximum chromatogram points at 65536 seems at all likely to ever be an issue.
-            if (numPoints > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(string.Format("The number {0} of points in the chromatogram exceeds the limit of {1}", numPoints, ushort.MaxValue));
             Precursor = precursor;
             SeqIndex = seqIndex;
-            SeqLen = (ushort) seqLen;
-            FileIndex = (ushort) fileIndex;
-            NumTransitions = (ushort) numTransitions;
+            SeqLen = CheckUShort(seqLen);
+            FileIndex = CheckUShort(fileIndex);
+            NumTransitions = CheckUShort(numTransitions);
             StartTransitionIndex = startTransitionIndex;
-            NumPeaks = (sbyte) numPeaks;
+            NumPeaks = CheckSByte(numPeaks);
             StartPeakIndex = startPeakIndex;
             StartScoreIndex = startScoreIndex;
-            MaxPeakIndex = (sbyte) maxPeakIndex;
-            NumPoints = (ushort) numPoints;
+            MaxPeakIndex = CheckSByte(maxPeakIndex);
+            NumPoints = CheckUShort(numPoints);
             CompressedSize = compressedSize;
             LocationPoints = location;
             FlagBits = (ushort) flags;
-            StatusId = (ushort) statusId;
-            StatusRank = (ushort) statusRank;
+            StatusId = CheckUShort(statusId, true);
+            StatusRank = CheckUShort(statusRank, true);
             Align1 = 0;
         }
 
@@ -242,6 +238,26 @@ namespace pwiz.Skyline.Model.Results
             headerInfo.LocationPoints,
             0, -1, -1)
         {
+        }
+
+        private static ushort CheckUShort(int value, bool allowNegativeOne = false)
+        {
+            return (ushort) CheckValue(value, ushort.MinValue, ushort.MaxValue, allowNegativeOne);
+        }
+
+        private static sbyte CheckSByte(int value)
+        {
+            return (sbyte) CheckValue(value, sbyte.MinValue, sbyte.MaxValue);
+        }
+
+        private static int CheckValue(int value, int min, int max, bool allowNegativeOne = false)
+        {
+            if (min > value || value > max)
+            {
+                if (!allowNegativeOne || value != -1)
+                    throw new ArgumentOutOfRangeException(string.Format("The value {0} must be between {1} and {2}.", value, min, max));
+            }
+            return value;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -772,6 +788,11 @@ namespace pwiz.Skyline.Model.Results
             get { unsafe { return sizeof (ChromPeak); } }
         }
 
+        public static short To10x(double f)
+        {
+            return (short) (f*10 + 0.5);
+        }
+
         public ChromPeak(CrawdadPeak peak,
                          FlagValues flags,
                          IList<float> times,
@@ -823,9 +844,11 @@ namespace pwiz.Skyline.Model.Results
                 // Mass error is mean of mass errors in the peak, weighted by intensity
                 double massError = 0;
                 double totalIntensity = 0;
+                // Subtract background intensity to reduce noise contribution to this mean value
+                double backgroundIntensity = Math.Min(intensities[peak.StartIndex], intensities[peak.EndIndex]);
                 for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
                 {
-                    double intensity = intensities[i];
+                    double intensity = intensities[i] - backgroundIntensity;
                     if (intensity <= 0)
                         continue;
 
@@ -834,7 +857,7 @@ namespace pwiz.Skyline.Model.Results
                     massError += (massErrorLocal - massError)*intensity/totalIntensity;
                 }
                 flags |= FlagValues.mass_error_known;
-                FlagBits = ((uint) (massError*10 + 0.5)) << 16;
+                FlagBits = ((uint) To10x(massError)) << 16;
             }
             FlagBits |= (uint) flags;
         }
@@ -1754,7 +1777,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new IndexOutOfRangeException(
                     string.Format(Resources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
-                                  peakIndex, _groupHeaderInfo.NumPeaks));
+                                  peakIndex, (int) _groupHeaderInfo.NumPeaks));
             }
             return _allPeaks[_groupHeaderInfo.StartPeakIndex + peakIndex + (_transitionIndex * _groupHeaderInfo.NumPeaks)];
         }

@@ -5460,6 +5460,52 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No base peak chromatogram found.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No precursor ion chromatograms found.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No product ion chromatograms found.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No TIC chromatogram found.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_TIC_chromatogram_found {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_TIC_chromatogram_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a peptide, precursor or transition to view its chromatograms.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_" +
+                        "chromatograms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to window.
         /// </summary>
         public static string GraphData_AddRegressionLabel_window {

@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Results
         /// Mass error array averaged base on interpolated intensities
         /// to the shared time scale.  Defered setting backing variable
         /// to avoid doing unnecessary work when interpolation is necessary.
-        /// When no interpolation is necessary, field with be calculate on
+        /// When no interpolation is necessary, field will be calculated on
         /// the first access and stored.
         /// </summary>
         public short[] MassErrors10X
@@ -139,17 +139,17 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 if (_massErrors10X == null && RawMassErrors != null)
-                    _massErrors10X = RawMassErrors.Select(m => To10x(m)).ToArray();
+                {
+                    int len = RawMassErrors.Length;
+                    _massErrors10X = new short[len];
+                    for (int i = 0; i < len; i++)
+                        _massErrors10X[i] = ChromPeak.To10x(RawMassErrors[i]);
+                }
                 return _massErrors10X;
             }
             private set { _massErrors10X = value; }
         }
         private short[] _massErrors10X;
-
-        private static short To10x(double f)
-        {
-            return (short) (f*10 + 0.5);
-        }
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
@@ -305,7 +305,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (massErrors10X != null)
             {
-                short massError10X = To10x(massError);
+                short massError10X = ChromPeak.To10x(massError);
                 massErrors10X.Add(massError10X);
                 return massError10X;
             }

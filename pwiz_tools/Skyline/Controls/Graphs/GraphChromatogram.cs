@@ -724,7 +724,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (listChromGraphs.Count > 0)
                     {
-                        SetRetentionTimeIndicators(listChromGraphs[listChromGraphs.Count - 1], settings, chromatograms, nodeGroups, mods);
+                        SetRetentionTimeIndicators(listChromGraphs[listChromGraphs.Count - 1], settings, chromatograms,
+                                                   nodeGroups, mods);
                     }
                 }
                 GraphPane.Legend.IsVisible = Settings.Default.ShowChromatogramLegend;
@@ -737,11 +738,17 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 DisplayFailureGraph(graphPane, nodeGroups, x);
             }
+            // Error decompressing chromatograms
+            catch (NotSupportedException x)
+            {
+                DisplayFailureGraph(graphPane, nodeGroups, x);
+            }
+            // Skyd file on a network drive where access is restricted
             catch (UnauthorizedAccessException x)
             {
                 DisplayFailureGraph(graphPane, nodeGroups, x);
             }
-                // Can happen in race condition where file is released before UI cleaned up
+            // Can happen in race condition where file is released before UI cleaned up
             catch (ObjectDisposedException x)
             {
                 DisplayFailureGraph(graphPane, nodeGroups, x);
@@ -756,7 +763,27 @@ namespace pwiz.Skyline.Controls.Graphs
                     EndDrag(false);
                 }
                 if (graphPane.CurveList.Count == 0)
-                    graphControl.AddGraphItem(graphPane, new UnavailableChromGraphItem(), false);
+                {
+                    string message = null;
+                    if (nodePep == null)
+                        message = Resources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
+                    else switch (DisplayType)
+                    {
+                        case DisplayTypeChrom.precursors:
+                            message = Resources.GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found;
+                            break;
+                        case DisplayTypeChrom.products:
+                            message = Resources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
+                            break;
+                        case DisplayTypeChrom.base_peak:
+                            message = Resources.GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found;
+                            break;
+                        case DisplayTypeChrom.tic:
+                            message = Resources.GraphChromatogram_UpdateUI_No_TIC_chromatogram_found;
+                            break;
+                    }
+                    graphControl.AddGraphItem(graphPane, new UnavailableChromGraphItem(message), false);
+                }
             }
             else if (forceZoom || changedGroupIds || _zoomState != zoom ||
                      _timeRange != Settings.Default.ChromatogramTimeRange ||
