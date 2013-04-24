@@ -690,6 +690,8 @@ namespace pwiz.Skyline
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            e.Cancel = false;
+
             if (!CheckSaveDocument())
             {
                 e.Cancel = true;
@@ -722,6 +724,7 @@ namespace pwiz.Skyline
             }
 
             _closing = true;
+            DestroyAllChromatogramsGraph();
 
             base.OnClosing(e);
         }
