@@ -50,6 +50,10 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
 
+            // Keep VS designer from crashing.
+            if (Program.MainWindow == null)
+                return;
+
             // NOTE: We create our a timer manually instead of using a designer component
             // because we want the timer to continue ticking even when the window is
             // closed.  Some subclasses may need to render even without a window to

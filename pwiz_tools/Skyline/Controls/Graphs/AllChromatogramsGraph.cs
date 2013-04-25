@@ -42,6 +42,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
+            // Keep VS designer from crashing.
+            if (Program.MainWindow == null)
+                return;
+
             Icon = Resources.Skyline;
             lblFileName.Text = string.Empty;
             lblFileCount.Text = string.Empty;
