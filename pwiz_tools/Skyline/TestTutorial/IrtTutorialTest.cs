@@ -637,6 +637,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(editIrtCalc);
             }
 
+            RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
         }
 

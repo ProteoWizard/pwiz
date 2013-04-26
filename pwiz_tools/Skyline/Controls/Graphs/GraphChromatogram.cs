@@ -482,7 +482,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return null;
             }
-            return chromatograms.FindFile(ChromGroupInfos[0]);
+            var chromGroupInfo = ChromGroupInfos[0];
+            if (chromGroupInfo == null)
+            {
+                return null;
+            }
+            return chromatograms.FindFile(chromGroupInfo);
         }
 
         public double? SelectedRetentionTimeMsMs

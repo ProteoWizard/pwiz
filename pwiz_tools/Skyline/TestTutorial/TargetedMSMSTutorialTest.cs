@@ -597,6 +597,9 @@ namespace pwiz.SkylineTestTutorial
             });
             VerifyDotProducts(0.99, 0.52, 0.98, 1.00, 1.00, 1.00);
             PauseForScreenShot("p. 30 and 31 - Chromatograms and area replicate graph");
+
+            RunUI(() => SkylineWindow.SaveDocument());
+            WaitForConditionUI(() => !SkylineWindow.Dirty);
         }
 
         private void WaitForDotProducts()

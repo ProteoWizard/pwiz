@@ -472,6 +472,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();
             
             RunUI(() => SkylineWindow.ShowCVValues(false));
+            RunUI(() => SkylineWindow.SaveDocument());
             PauseForScreenShot();
 
             // Further Exploration, p. 33.

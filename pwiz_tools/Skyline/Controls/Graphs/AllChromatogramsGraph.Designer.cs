@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panelMultifileProgress.Margin = new System.Windows.Forms.Padding(2);
             this.panelMultifileProgress.Name = "panelMultifileProgress";
             this.panelMultifileProgress.Size = new System.Drawing.Size(589, 36);
-            this.panelMultifileProgress.TabIndex = 0;
+            this.panelMultifileProgress.TabIndex = 1;
             // 
             // progressBarAllFiles
             // 
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.progressBarAllFiles.Margin = new System.Windows.Forms.Padding(2);
             this.progressBarAllFiles.Name = "progressBarAllFiles";
             this.progressBarAllFiles.Size = new System.Drawing.Size(587, 19);
-            this.progressBarAllFiles.TabIndex = 11;
+            this.progressBarAllFiles.TabIndex = 1;
             // 
             // lblFileCount
             // 
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.lblFileCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblFileCount.Name = "lblFileCount";
             this.lblFileCount.Size = new System.Drawing.Size(57, 13);
-            this.lblFileCount.TabIndex = 10;
+            this.lblFileCount.TabIndex = 0;
             this.lblFileCount.Text = "X of Y files";
             // 
             // panel2
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panel2.Margin = new System.Windows.Forms.Padding(2);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(589, 21);
-            this.panel2.TabIndex = 9;
+            this.panel2.TabIndex = 2;
             // 
             // btnCancelFile
             // 
@@ -101,8 +101,8 @@ namespace pwiz.Skyline.Controls.Graphs
             this.btnCancelFile.Margin = new System.Windows.Forms.Padding(2);
             this.btnCancelFile.Name = "btnCancelFile";
             this.btnCancelFile.Size = new System.Drawing.Size(94, 21);
-            this.btnCancelFile.TabIndex = 11;
-            this.btnCancelFile.Text = "Cancel File";
+            this.btnCancelFile.TabIndex = 0;
+            this.btnCancelFile.Text = "Cancel &File";
             this.btnCancelFile.UseVisualStyleBackColor = true;
             this.btnCancelFile.Click += new System.EventHandler(this.btnCancelFile_Click);
             // 
@@ -114,8 +114,8 @@ namespace pwiz.Skyline.Controls.Graphs
             this.btnCancel.Margin = new System.Windows.Forms.Padding(2);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(94, 21);
-            this.btnCancel.TabIndex = 10;
-            this.btnCancel.Text = "Cancel Import";
+            this.btnCancel.TabIndex = 1;
+            this.btnCancel.Text = "Cancel I&mport";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
@@ -123,12 +123,13 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnClose.Location = new System.Drawing.Point(495, 0);
             this.btnClose.Margin = new System.Windows.Forms.Padding(2);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(94, 21);
-            this.btnClose.TabIndex = 9;
-            this.btnClose.Text = "Close";
+            this.btnClose.TabIndex = 2;
+            this.btnClose.Text = "&Close";
             this.btnClose.UseVisualStyleBackColor = true;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
@@ -150,7 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.asyncGraph.Location = new System.Drawing.Point(0, 0);
             this.asyncGraph.Name = "asyncGraph";
             this.asyncGraph.Size = new System.Drawing.Size(607, 319);
-            this.asyncGraph.TabIndex = 2;
+            this.asyncGraph.TabIndex = 0;
             // 
             // panelFileProgress
             // 
@@ -161,7 +162,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panelFileProgress.Location = new System.Drawing.Point(9, 326);
             this.panelFileProgress.Name = "panelFileProgress";
             this.panelFileProgress.Size = new System.Drawing.Size(589, 36);
-            this.panelFileProgress.TabIndex = 15;
+            this.panelFileProgress.TabIndex = 0;
             // 
             // progressBarFile
             // 
@@ -171,7 +172,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.progressBarFile.Margin = new System.Windows.Forms.Padding(2);
             this.progressBarFile.Name = "progressBarFile";
             this.progressBarFile.Size = new System.Drawing.Size(587, 19);
-            this.progressBarFile.TabIndex = 12;
+            this.progressBarFile.TabIndex = 1;
             // 
             // lblFileName
             // 
@@ -180,7 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.lblFileName.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblFileName.Name = "lblFileName";
             this.lblFileName.Size = new System.Drawing.Size(49, 13);
-            this.lblFileName.TabIndex = 10;
+            this.lblFileName.TabIndex = 0;
             this.lblFileName.Text = "file name";
             // 
             // AllChromatogramsGraph
@@ -188,6 +189,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
+            this.CancelButton = this.btnClose;
             this.ClientSize = new System.Drawing.Size(607, 446);
             this.Controls.Add(this.panelFileProgress);
             this.Controls.Add(this.panelGraph);

@@ -457,6 +457,9 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot("page 23"); // Not L10N
+
+            RunUI(() => SkylineWindow.SaveDocument());
+            RunUI(SkylineWindow.NewDocument);
         }
     }
 }

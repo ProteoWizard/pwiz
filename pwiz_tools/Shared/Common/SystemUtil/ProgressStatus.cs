@@ -80,7 +80,7 @@ namespace pwiz.Common.SystemUtil
         {
             if (PercentZoomEnd == 0)
                 return (PercentComplete == percent);
-            return (PercentComplete == ZoomedToPercent(percent));
+            return (ZoomedPercentComplete == percent);
         }
 
         private int ZoomedToPercent(int percent)

@@ -249,6 +249,9 @@ namespace pwiz.SkylineTestTutorial
             var filePathTemplate2 = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv"); // Not L10N
 
             CheckTransitionList(filePathTemplate2, 1, 9);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+            WaitForConditionUI(() => !SkylineWindow.Dirty);
         }
 
         public static void CheckRegressionLines(ChargeRegressionLine[] lines1, ChargeRegressionLine[] lines2)

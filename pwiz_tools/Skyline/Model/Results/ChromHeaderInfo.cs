@@ -1839,7 +1839,11 @@ namespace pwiz.Skyline.Model.Results
 
                 var intensitiesAdd = info.Intensities;
                 for (int i = 0; i < intensitiesAdd.Length; i++)
-                    intensitiesNew[i] += intensitiesAdd[i];
+                {
+                    // Avoid arithmetic overflow
+                    double intensitySum = intensitiesNew[i] + intensitiesAdd[i];
+                    intensitiesNew[i] = intensitySum < float.MaxValue ? (float) intensitySum : float.MaxValue;
+                }
             }
             Intensities = intensitiesNew;
         }

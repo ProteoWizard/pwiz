@@ -21,6 +21,7 @@ using System;
 using System.Collections.Specialized;
 using System.Deployment.Application;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
@@ -33,6 +34,17 @@ namespace pwiz.Skyline.Alerts
     {
         private readonly Exception _exception;
         private readonly StackTrace _stackTraceExceptionCaughtAt;
+
+        public static string UserGuid
+        {
+            get
+            {
+                string guid = Settings.Default.InstallationId;
+                if (String.IsNullOrEmpty(guid))
+                    guid = Settings.Default.InstallationId = Guid.NewGuid().ToString();
+                return guid;
+            }
+        }
 
         public ReportErrorDlg(Exception e, StackTrace stackTraceExceptionCaughtAt)
         {
@@ -68,6 +80,36 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        private string PostTitle
+        {
+            get
+            {
+                string exceptionType = _exception.GetType().Name;
+                var stackTraceReader = new StringReader(_exception.StackTrace);
+                string line;
+                while ((line = stackTraceReader.ReadLine()) != null)
+                {
+                    if (line.Contains(typeof (Program).Namespace ?? string.Empty))
+                    {
+                        int iSuffix = line.LastIndexOf("\\", StringComparison.Ordinal);  // Not L10N
+                        if (iSuffix == -1)
+                            iSuffix = line.LastIndexOf(".", StringComparison.Ordinal);
+
+                        string location = line.Substring(iSuffix + 1);
+                        string userInputIndicator = string.Empty;
+                        if (!string.IsNullOrEmpty(tbEmail.Text))
+                            userInputIndicator = "*";
+                        else if (!string.IsNullOrEmpty(tbMessage.Text))
+                            userInputIndicator = "+";
+                        string guid = UserGuid;
+                        guid = guid.Substring(guid.LastIndexOf('-') + 1);
+                        return userInputIndicator + exceptionType + " | " + location + " | " + guid;
+                    }
+                }
+                return exceptionType;
+            }
+        }
+
         private void OkDialog()
         {
             if (!Equals(Settings.Default.StackTraceListVersion, Install.Version))
@@ -88,7 +130,7 @@ namespace pwiz.Skyline.Alerts
 
             NameValueCollection form = new NameValueCollection // Not L10N: Information passed to browser
                                            {
-                                               { "title", "Unhandled " + exceptionType},
+                                               { "title", PostTitle},
                                                { "body", messageBody },
                                                { "fromDiscussion", "false"},
                                                { "allowMultipleDiscussions", "false"},
@@ -145,10 +187,7 @@ namespace pwiz.Skyline.Alerts
                     sb.AppendLine();
                 }
 
-                string guid = Settings.Default.InstallationId;
-                if (String.IsNullOrEmpty(guid))
-                    guid = Settings.Default.InstallationId = Guid.NewGuid().ToString();
-                sb.Append("Installation ID: ").AppendLine(guid); // Not L10N
+                sb.Append("Installation ID: ").AppendLine(UserGuid); // Not L10N
 
                 sb.Append("Exception type: ").AppendLine(ExceptionType); // Not L10N
                 sb.Append("Error message: ").AppendLine(_exception.Message).AppendLine(); // Not L10N

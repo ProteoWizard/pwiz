@@ -26,6 +26,7 @@ using System.Linq;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
@@ -78,7 +79,11 @@ namespace pwiz.Skyline.EditUI
             var e = new CancelEventArgs();
 
             double[] timeWindows;
-            if (!helper.ValidateDecimalListTextBox(e, textTimeWindows, 1, 200, out timeWindows))
+            if (!helper.ValidateDecimalListTextBox(e,
+                                                   textTimeWindows,
+                                                   PeptidePrediction.MIN_MEASURED_RT_WINDOW,
+                                                   PeptidePrediction.MAX_MEASURED_RT_WINDOW,
+                                                   out timeWindows)) 
                 return;
 
             int primaryTransitionCount = 0;

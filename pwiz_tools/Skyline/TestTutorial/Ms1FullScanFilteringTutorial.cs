@@ -326,6 +326,9 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.CancelButton.PerformClick();
             });
             WaitForClosedForm(exportMethodDlg);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+            RunUI(SkylineWindow.NewDocument);
         }
     }
 }
