@@ -17,11 +17,9 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -40,9 +38,11 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class QuasarTutorialTest : AbstractFunctionalTest
     {
+/*
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, StringBuilder lParam);
+        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 msg, IntPtr wParam, StringBuilder lParam);
         const UInt32 WM_KEYDOWN	= 0x100;
+*/
         [TestMethod]
         public void TestQuasarTutorial()
         {
@@ -247,6 +247,7 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
+/*
         private void SetCellValue(DataGridView dataGridView, int rowIndex, int columnIndex, object value)
         {
             dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[columnIndex];
@@ -254,5 +255,6 @@ namespace pwiz.SkylineTestTutorial
             dataGridView.CurrentCell.Value = value;
             dataGridView.EndEdit();
         }
+*/
     }
 }
