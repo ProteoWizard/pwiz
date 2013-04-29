@@ -306,13 +306,11 @@ void BlibFilter::buildNonRedundantLib()
     //first Order by peptideModSeq and charge, filter by num peaks
     sprintf(zSql,
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
-            "prevAA, nextAA, numPeaks, peakMZ, peakIntensity %s"
-            "FROM %s.RefSpectra, %s.RefSpectraPeaks "
-            "WHERE %s.RefSpectra.id=%s.RefSpectraPeaks.RefSpectraID "
-            " and %s.RefSpectra.numPeaks >= %i "
-            "ORDER BY peptideModSeq, precursorCharge %s", optional_cols.c_str(),
-            redundantDbName_, redundantDbName_, redundantDbName_,
-            redundantDbName_, redundantDbName_, minPeaks_, optional_cols.c_str());
+            "prevAA, nextAA, numPeaks %s"
+            "FROM %s.RefSpectra "
+            "WHERE numPeaks >= %i "
+            "ORDER BY peptideModSeq, precursorCharge %s", optional_cols.c_str(), redundantDbName_, minPeaks_,
+            optional_cols.c_str());
 
     smart_stmt pStmt;
     int rc = sqlite3_prepare(getDb(), zSql, -1, &pStmt, 0);
@@ -322,6 +320,22 @@ void BlibFilter::buildNonRedundantLib()
     Verbosity::debug("Successfully sorted.");
 
     rc = sqlite3_step(pStmt);
+
+    // setup for getting peak data
+    sqlite3* peakConnection;
+    int peakRc = sqlite3_open(redundantFileName_.c_str(), &peakConnection);
+    if (peakRc != SQLITE_OK)
+    {
+        Verbosity::error("Could not open connection to database '%s'", redundantFileName_.c_str());
+    }
+    sqlite3_stmt* peakStmt;
+    char zSqlPeakQuery[2048];
+    strcpy(zSqlPeakQuery,
+           "SELECT peakMZ, peakIntensity "
+           "FROM RefSpectraPeaks "
+           "WHERE RefSpectraId = ");
+    char* idPos = zSqlPeakQuery;
+    idPos += strlen(zSqlPeakQuery);
 
     // for each spectrum entry in table
     while( rc==SQLITE_ROW ) {
@@ -343,23 +357,34 @@ void BlibFilter::buildNonRedundantLib()
         tmpRef->setMz(sqlite3_column_double(pStmt,2));
         tmpRef->setCharge(charge);
         // if not selected, value == 0
-        tmpRef->setRetentionTime(sqlite3_column_double(pStmt, 11));
+        tmpRef->setRetentionTime(sqlite3_column_double(pStmt, 9));
         tmpRef->setMods(pepModSeq);
         tmpRef->setPrevAA("-");
         tmpRef->setNextAA("-");
-        tmpRef->setScanNumber(sqlite3_column_int(pStmt, 10));
+        tmpRef->setScanNumber(sqlite3_column_int(pStmt, 8));
 
         int numPeaks = sqlite3_column_int(pStmt,7);
 
-        int numBytes1=sqlite3_column_bytes(pStmt,8);
-        Byte* comprM = (Byte*)sqlite3_column_blob(pStmt,8);
-        int numBytes2=sqlite3_column_bytes(pStmt,9);
-        Byte* comprI = (Byte*)sqlite3_column_blob(pStmt,9);
+        // get peaks for this spectrum
+        int refSpectraId = sqlite3_column_int(pStmt, 0);
+        sprintf(idPos, "%i", refSpectraId);
+        peakRc = sqlite3_prepare(peakConnection, zSqlPeakQuery, -1, &peakStmt, NULL);
+        check_rc(peakRc, zSqlPeakQuery, "Failed selecting peaks.");
+        peakRc = sqlite3_step(peakStmt);
+        if (peakRc != SQLITE_ROW)
+        {
+            Verbosity::error("Did not find peaks for spectrum %d.", refSpectraId);
+        }
+        int numBytes1 = sqlite3_column_bytes(peakStmt, 0);
+        Byte* comprM = (Byte*)sqlite3_column_blob(peakStmt, 0);
+        int numBytes2 = sqlite3_column_bytes(peakStmt, 1);
+        Byte* comprI = (Byte*)sqlite3_column_blob(peakStmt, 1);        
         
         
         // is this slow for copying the peak vector? better to return a ptr?
         vector<PEAK_T> peaks = getUncompressedPeaks(numPeaks, numBytes1,
                                                     comprM, numBytes2, comprI);
+        sqlite3_finalize(peakStmt);
         if (peaks.size() == 0) {
             Verbosity::error("Unable to read peaks for redundant library "
                              "spectrum %i, sequence %s, charge %i.",
