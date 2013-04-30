@@ -244,9 +244,17 @@ namespace pwiz.Skyline.Model.Results
 
                     _currentFileInfo = GetRecalcFileBuildInfo(dataFilePathRecalc) ?? new FileBuildInfo(inFile);
                     _libraryRetentionTimes = null;
+                    LoadingStatus.Transitions.FromCache = false;
+
                     // Read and write the mass spec data)
                     if (dataFilePathRecalc != null)
+                    {
                         provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
+                        LoadingStatus.Transitions.FromCache = true;
+                        LoadingStatus.Transitions.MaxIntensity = (float)(provider.MaxIntensity ?? 0);
+                        LoadingStatus.Transitions.MaxRetentionTime = (float)(provider.MaxRetentionTime ?? 0);
+                        LoadingStatus.Transitions.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
+                    }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
                         provider = CreateChromatogramProvider(inFile, fileInfo, _tempFileSubsitute == null);
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
@@ -264,16 +272,6 @@ namespace pwiz.Skyline.Model.Results
 
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
 
-                    // Set dimensions for status graph.
-                    LoadingStatus.Transitions.MaxRetentionTimeKnown = false;
-                    if (provider.MaxRetentionTime.HasValue)
-                    {
-                        LoadingStatus.Transitions.MaxRetentionTimeKnown = true;
-                        LoadingStatus.Transitions.MaxRetentionTime = provider.MaxRetentionTime.Value;
-                    }
-                    if (provider.MaxIntensity.HasValue)
-                        LoadingStatus.Transitions.MaxIntensity = provider.MaxIntensity.Value;
-                    
                     Read(provider);
 
                     _status = provider.Status;

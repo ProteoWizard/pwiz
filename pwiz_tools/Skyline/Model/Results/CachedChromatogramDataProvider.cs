@@ -93,9 +93,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override float? MaxRetentionTime { get { return _maxRetentionTime; } }
+        public override double? MaxRetentionTime { get { return _maxRetentionTime; } }
 
-        public override float? MaxIntensity { get { return _maxIntensity; } }
+        public override double? MaxIntensity { get { return _maxIntensity; } }
 
         public override bool IsProcessedScans
         {

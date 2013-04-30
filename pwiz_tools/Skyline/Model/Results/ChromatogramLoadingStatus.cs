@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
@@ -33,9 +32,8 @@ namespace pwiz.Skyline.Model.Results
     {
         // Resolution of binning.  Set too low, this will consume a lot of memory.  Set too high, the graph
         // gets coarse and looks less like Skyline's other chromatogram graphs.
-        public const float TIME_RESOLUTION = 0.1f;    // 6 seconds
-        public const float INTENSITY_THRESHOLD_PERCENT = 0.03f;
-        public const float MAX_PEAKS = 1000;
+        public const double TIME_RESOLUTION = 0.2;    // 12 seconds
+        public const float INTENSITY_THRESHOLD_PERCENT = 0.002f;
 
         public ChromatogramLoadingStatus(string message) :
             base(message)
@@ -57,16 +55,16 @@ namespace pwiz.Skyline.Model.Results
         public class TransitionData
         {
             private List<Peak[]> _peaks;
+            private readonly List<Peak> _accumulatePeaks = new List<Peak>();
+            private DateTime _lastDisplayTime;
             private List<Peak> _finishedPeaks = new List<Peak>();
             private static readonly int SOURCE_INDEX_COUNT = Helpers.CountEnumValues<ChromSource>() - 1;
+            private float _maxImportedIntensity;
 
+            public bool FromCache { get; set; }
+            public float MaxIntensity { get; set; }
             public float MaxRetentionTime { get; set; }
             public bool MaxRetentionTimeKnown { get; set; }
-            // TODO: This MaxIntensity (used to save the axes dimensions in AllChromatogramsGraph) must
-            // TODO: be calculated on the processing thread, because that is where SRM peaks are summed.
-            // TODO: We need to move that calculation into this file (but on the processing thread),
-            // TODO: because this value should be retrieved from the Model, not the Graphs.
-            public float MaxIntensity { get; set; }
             public float CurrentTime { get; set; }
             public bool Progressive { get; set; }
 
@@ -81,13 +79,19 @@ namespace pwiz.Skyline.Model.Results
                     CurrentTime = 0.0f;
                     Progressive = false;
                     _finishedPeaks = new List<Peak>();
+                    _maxImportedIntensity = 0.0f;
                 }
             }
 
             // Accumulate points in bins so that there isn't an overwhelming amount of data to display in the graph.
             private static float GetTimeBin(float time)
             {
-                return (float)Math.Floor(time / TIME_RESOLUTION) * TIME_RESOLUTION;
+                return (float)(Math.Round(time / TIME_RESOLUTION) * TIME_RESOLUTION);
+            }
+
+            private static int GetBinIndex(float time)
+            {
+                return (int) Math.Round(time/TIME_RESOLUTION);
             }
 
             /// <summary>
@@ -101,62 +105,69 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!Progressive)
                     MaxRetentionTime = Math.Max(MaxRetentionTime, time);
-                var timeBin = GetTimeBin(time);
+                double intensity = 0;
+                for (int i = 0; i < intensities.Length; i++)
+                    intensity += intensities[i];
+                if (intensity <= 0.0)
+                    return;
+                float timeBin = GetTimeBin(time);
 
                 // Create transition list for this filter.
-                var sourceIndex = (int) chromSource;
+                int sourceIndex = (int) chromSource;
                 while (filterIndex >= _peaks.Count)
                     _peaks.Add(new Peak[SOURCE_INDEX_COUNT]);
                 var peak = _peaks[filterIndex][sourceIndex];
-                if (peak == null)
-                    _peaks[filterIndex][sourceIndex] = peak = new Peak(filterIndex, false);
-
-                var intensity = 0.0f;
-                for (int i = 0; i < intensities.Count(); i++)
-                    intensity += intensities[i];
-
-                // Add point to current time bin.
-                var lastIndex = peak.Times.Count - 1;
-                if (lastIndex >= 0 && timeBin <= peak.Times[lastIndex])
+                if (peak != null)
                 {
-                    float intensityAvg = peak.Intensities[lastIndex];
-                    peak.PointCount++;
-                    float newAvg = intensityAvg + (intensity - intensityAvg)/peak.PointCount;
-                    peak.Intensities[lastIndex] = newAvg;
-                    return;
-                }
-
-                // Remove last bin if intensity was too low.
-                if (lastIndex >= 0)
-                {
-                    var lastIntensity = peak.Intensities[lastIndex];
-                    if (peak.MaxIntensity < lastIntensity)
+                    // Add point to current time bin.
+                    int lastIndex = peak.Times.Count - 1;
+                    float lastTime = peak.Times[lastIndex];
+                    float lastIntensity = peak.Intensities[lastIndex];
+                    if (timeBin <= lastTime)
                     {
-                        peak.MaxIntensity = lastIntensity;
-                        if (MaxIntensity < lastIntensity)
-                            MaxIntensity = lastIntensity;
+                        peak.PointCount++;
+                        double newAvg = lastIntensity + (intensity - lastIntensity) / peak.PointCount;
+                        peak.Intensities[lastIndex] = (float)newAvg;
+                        return;
                     }
 
-                    // Finish a peak if intensity falls too low.
-                    if (lastIntensity < MaxIntensity*INTENSITY_THRESHOLD_PERCENT)
+                    _maxImportedIntensity = Math.Max(_maxImportedIntensity, lastIntensity);
+
+                    // Send to display if we skipped a time bin, or if we have a long enough peak that has dipped sufficiently.
+                    bool skippedBin = GetBinIndex(timeBin) > GetBinIndex(lastTime) + 1;
+                    if (skippedBin ||
+                        (lastTime - peak.Times[0] > TIME_RESOLUTION * 10 && (_maxImportedIntensity == 0.0f || lastIntensity < _maxImportedIntensity / 10)))
                     {
-                        // If the peak was above our current threshold, send to display.
-                        if (peak.Intensities.Count > 1 && peak.MaxIntensity > MaxIntensity*INTENSITY_THRESHOLD_PERCENT)
+                        // Find highest intensity/time for this peak.
+                        for (int i = 0; i < peak.Intensities.Count; i++)
                         {
-                            lock (this)
+                            float peakIntensity = peak.Intensities[i];
+                            if (peak.PeakIntensity < peakIntensity)
                             {
-                                _finishedPeaks.Add(peak);
+                                peak.PeakIntensity = peakIntensity;
+                                peak.PeakTime = peak.Times[i];
                             }
                         }
 
-                        _peaks[filterIndex][sourceIndex] = peak = new Peak(filterIndex, false);
+                        // Ignore the peak if its intensity is below a reasonable threshold.
+                        if (peak.PeakIntensity > _maxImportedIntensity * INTENSITY_THRESHOLD_PERCENT)
+                        {
+                            peak.NoTrailingZero = !skippedBin;
+                            DisplayPeak(peak);
+                        }
+
+                        peak = null;
                     }
                 }
 
                 // Create a new time bin.
+                if (peak == null)
+                {
+                    _peaks[filterIndex][sourceIndex] = peak = new Peak(filterIndex, false);
+                    peak.PointCount = 1;
+                }
                 peak.Times.Add(timeBin);
-                peak.Intensities.Add(intensity);
-                peak.PointCount = 1;
+                peak.Intensities.Add((float)intensity);
             }
 
             /// <summary>
@@ -167,10 +178,10 @@ namespace pwiz.Skyline.Model.Results
                 if (rank == 0)
                     return;
 
-                var maxTime = times[times.Length - 1];
+                float maxTime = times[times.Length - 1];
                 if (MaxRetentionTime < maxTime)
                     MaxRetentionTime = maxTime;
-                var thresholdIntensity = MaxIntensity*INTENSITY_THRESHOLD_PERCENT;
+                float thresholdIntensity = _maxImportedIntensity * INTENSITY_THRESHOLD_PERCENT;
 
                 // Find start of transition above the threshold intensity value.
                 int startIndex = 0;
@@ -197,18 +208,18 @@ namespace pwiz.Skyline.Model.Results
                 MaxRetentionTime = Math.Max(MaxRetentionTime, times[times.Length - 1]);
 
                 var peak = new Peak(index, true);
-                var lastTimeBin = GetTimeBin(times[startIndex]);
-                var binIntensity = 0.0f;
-                var binSampleCount = 0;
+                float lastTimeBin = GetTimeBin(times[startIndex]);
+                double binIntensity = 0.0;
+                int binSampleCount = 0;
 
                 // Average intensity values into each time bin.
-                for (int i = startIndex; i <= endIndex; i++)
+                for (int i = startIndex; ; i++)
                 {
-                    var timeBin = 0.0f;
+                    float timeBin = 0.0f;
                     if (i < endIndex)
                     {
                         timeBin = GetTimeBin(times[i]);
-                        if (lastTimeBin == timeBin)
+                        if (timeBin == lastTimeBin)
                         {
                             binIntensity += intensities[i];
                             binSampleCount++;
@@ -217,9 +228,13 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     peak.Times.Add(lastTimeBin);
-                    var averageIntensity = binIntensity/binSampleCount;
+                    float averageIntensity = (float)(binIntensity / binSampleCount);
                     peak.Intensities.Add(averageIntensity);
-                    peak.MaxIntensity = Math.Max(peak.MaxIntensity, averageIntensity);
+                    if (peak.PeakIntensity < averageIntensity)
+                    {
+                        peak.PeakIntensity = averageIntensity;
+                        peak.PeakTime = lastTimeBin;
+                    }
 
                     if (i == endIndex)
                         break;
@@ -230,13 +245,30 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Update max intensity.
-                if (MaxIntensity < peak.MaxIntensity)
-                    MaxIntensity = peak.MaxIntensity;
+                if (_maxImportedIntensity < peak.PeakIntensity)
+                    _maxImportedIntensity = peak.PeakIntensity;
 
                 // Add to list of peaks for display.
-                lock (this)
+                DisplayPeak(peak);
+            }
+
+            /// <summary>
+            /// Add peak to display list.
+            /// </summary>
+            private void DisplayPeak(Peak peak)
+            {
+                _accumulatePeaks.Add(peak);
+
+                // Has enough time elapsed to send this to the display?
+                var now = DateTime.Now;
+                if ((now - _lastDisplayTime).TotalMilliseconds > 200)
                 {
-                    _finishedPeaks.Add(peak);
+                    lock (this)
+                    {
+                        _finishedPeaks.AddRange(_accumulatePeaks);
+                    }
+                    _accumulatePeaks.Clear();
+                    _lastDisplayTime = now;
                 }
             }
 
@@ -272,14 +304,16 @@ namespace pwiz.Skyline.Model.Results
                 public readonly int FilterIndex;
                 public List<float> Times;
                 public List<float> Intensities;
+                public float PeakTime;
+                public float PeakIntensity;
                 public int PointCount;
-                public float MaxIntensity;
                 public readonly bool MayOverlap;
+                public object CurveInfo;
+                public bool NoTrailingZero;
 
                 /// <summary>
                 /// Returns true if time points in another peak overlap this one.
                 /// </summary>
-                /// <param name="peak"></param>
                 public bool Overlaps(Peak peak)
                 {
                     return (Times[0] <= peak.Times[peak.Times.Count - 1] &&
@@ -293,7 +327,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var newTimes = new List<float>();
                     var newIntensities = new List<float>();
-                    var newMaxIntensity = Math.Max(MaxIntensity, peak.MaxIntensity);
+                    if (PeakIntensity < peak.PeakIntensity)
+                    {
+                        PeakIntensity = peak.PeakIntensity;
+                        PeakTime = peak.PeakTime;
+                    }
                     var i = 0;
                     var j = 0;
 
@@ -321,9 +359,13 @@ namespace pwiz.Skyline.Model.Results
                             else
                             {
                                 newTimes.Add(Times[i]);
-                                var sum = Intensities[i] + peak.Intensities[j];
-                                newMaxIntensity = Math.Max(newMaxIntensity, sum);
+                                float sum = Intensities[i] + peak.Intensities[j];
                                 newIntensities.Add(sum);
+                                if (PeakIntensity < sum)
+                                {
+                                    PeakIntensity = sum;
+                                    PeakTime = Times[i];
+                                }
                                 i++;
                                 j++;
                             }
@@ -344,7 +386,6 @@ namespace pwiz.Skyline.Model.Results
 
                     Times = newTimes;
                     Intensities = newIntensities;
-                    MaxIntensity = newMaxIntensity;
                 }
             }
         }

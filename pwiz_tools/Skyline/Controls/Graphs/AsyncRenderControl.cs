@@ -44,8 +44,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public AsyncRenderControl()
         {
         }
-        
-        protected AsyncRenderControl(int updateIntervalMsec)
+
+        protected AsyncRenderControl(int framesPerSecond)
         {
             InitializeComponent();
             pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // because we want the timer to continue ticking even when the window is
             // closed.  Some subclasses may need to render even without a window to
             // process data that would otherwise consume a lot of memory.
-            _updateTimer = new Timer {Interval = updateIntervalMsec};
+            _updateTimer = new Timer { Interval = 1000/framesPerSecond };
             _updateTimer.Tick += (s, e) =>
                 {
                     if (_renderedBitmap != null && !ReferenceEquals(pictureBox.Image, _renderedBitmap))

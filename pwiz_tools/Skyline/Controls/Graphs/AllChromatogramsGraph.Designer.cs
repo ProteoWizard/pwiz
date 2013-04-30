@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnCancelFile = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.btnClose = new System.Windows.Forms.Button();
+            this.btnHide = new System.Windows.Forms.Button();
             this.panelGraph = new System.Windows.Forms.Panel();
             this.asyncGraph = new pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph();
             this.panelFileProgress = new System.Windows.Forms.Panel();
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel2.Controls.Add(this.btnCancelFile);
             this.panel2.Controls.Add(this.btnCancel);
-            this.panel2.Controls.Add(this.btnClose);
+            this.panel2.Controls.Add(this.btnHide);
             this.panel2.Location = new System.Drawing.Point(9, 413);
             this.panel2.Margin = new System.Windows.Forms.Padding(2);
             this.panel2.Name = "panel2";
@@ -119,19 +119,19 @@ namespace pwiz.Skyline.Controls.Graphs
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // btnClose
+            // btnHide
             // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.btnHide.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnClose.Location = new System.Drawing.Point(495, 0);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(2);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(94, 21);
-            this.btnClose.TabIndex = 2;
-            this.btnClose.Text = "&Close";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            this.btnHide.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnHide.Location = new System.Drawing.Point(495, 0);
+            this.btnHide.Margin = new System.Windows.Forms.Padding(2);
+            this.btnHide.Name = "btnHide";
+            this.btnHide.Size = new System.Drawing.Size(94, 21);
+            this.btnHide.TabIndex = 2;
+            this.btnHide.Text = "&Hide";
+            this.btnHide.UseVisualStyleBackColor = true;
+            this.btnHide.Click += new System.EventHandler(this.btnClose_Click);
             // 
             // panelGraph
             // 
@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.CancelButton = this.btnClose;
+            this.CancelButton = this.btnHide;
             this.ClientSize = new System.Drawing.Size(607, 446);
             this.Controls.Add(this.panelFileProgress);
             this.Controls.Add(this.panelGraph);
@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btnCancelFile;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.Button btnHide;
         private System.Windows.Forms.Panel panelGraph;
         private System.Windows.Forms.Panel panelFileProgress;
         private System.Windows.Forms.ProgressBar progressBarFile;

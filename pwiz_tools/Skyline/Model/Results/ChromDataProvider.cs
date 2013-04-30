@@ -74,9 +74,9 @@ namespace pwiz.Skyline.Model.Results
         public abstract void GetChromatogram(int id, out ChromExtra extra,
             out float[] times, out float[] intensities, out float[] massErrors);
 
-        public abstract float? MaxRetentionTime { get; }
+        public abstract double? MaxRetentionTime { get; }
 
-        public abstract float? MaxIntensity { get; }
+        public abstract double? MaxIntensity { get; }
 
         public abstract bool IsProcessedScans { get; }
 
@@ -225,12 +225,12 @@ namespace pwiz.Skyline.Model.Results
             get { return DateTime.Now.Subtract(_readStartTime).TotalMinutes * _chromIds.Count / _readChromatograms; }
         }
 
-        public override float? MaxIntensity
+        public override double? MaxIntensity
         {
             get { return null; }
         }
 
-        public override float? MaxRetentionTime
+        public override double? MaxRetentionTime
         {
             get { return null; }
         }
@@ -564,12 +564,12 @@ namespace pwiz.Skyline.Model.Results
                 SetPercentComplete(LOAD_PERCENT + BUILD_PERCENT + _readChromatograms * READ_PERCENT / _chromatograms.Count);
         }
 
-        public override float? MaxRetentionTime
+        public override double? MaxRetentionTime
         {
             get { return LoadingStatus.Transitions.MaxRetentionTime; }
         }
 
-        public override float? MaxIntensity
+        public override double? MaxIntensity
         {
             get { return LoadingStatus.Transitions.MaxIntensity; }
         }
