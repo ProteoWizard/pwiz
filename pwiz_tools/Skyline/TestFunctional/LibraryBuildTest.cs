@@ -75,8 +75,16 @@ namespace pwiz.SkylineTestFunctional
             // BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
             BuildLibraryValid(TestFilesDir.GetTestPath("library_errors"), new[] { "bad_mzxml.pep.XML" }, false, false, false, 1);
 
-            // Test successful builds
             string libraryBaseName = _libraryName;
+
+            // Test mascot parser
+            _libraryName = libraryBaseName + "mascot";
+            string libraryMascot = _libraryName + BiblioSpecLiteSpec.EXT;
+            BuildLibraryValid(TestFilesDir.GetTestPath("mascot"), new[] { "F027319.dat" },
+                true, false, false, 101);
+            Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryMascot)));
+
+            // Test successful builds
             _libraryName = libraryBaseName + "a";
             string libraryA = _libraryName + BiblioSpecLiteSpec.EXT;
             string libraryARedundant = _libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT;
