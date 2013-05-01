@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Controls
             SetStyle(ControlStyles.EnableNotifyMessage, true);
             LabelEdit = false;
             
-            BeforeExpand += SequenceTree_BeforeExpand;
+            BeforeExpand += TreeViewMS_BeforeExpand;
 
             ImageList = new ImageList();
             ImageList.Images.Add(Resources.Blank);
@@ -128,7 +128,6 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.PeptideLibDecoy);
             ImageList.Images.Add(Resources.TransitionGroupLibDecoy);
             ImageList.Images.Add(Resources.FragmentLibDecoy);
-
 
             StateImageList = new ImageList();
             StateImageList.Images.Add(Resources.Peak);
@@ -310,9 +309,6 @@ namespace pwiz.Skyline.Controls
                     cover.Dispose();
             }
         }
-
-        [Browsable(true)]
-        public bool AutoExpandSingleNodes { get; set; }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -1097,26 +1093,18 @@ namespace pwiz.Skyline.Controls
             get { return _editTextBox; }
         }
 
-        private void SequenceTree_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+        protected override bool IsParentNode(TreeNode node)
         {
-            if (!IsInUpdate)
-            {
-               
-                SrmTreeNodeParent nodeTree = e.Node as SrmTreeNodeParent;
-                if (nodeTree != null)
-                {
-                    // Save and restore top node to keep from scrolling
-                    TreeNode nodeTop = TopNode;
+            return node is SrmTreeNodeParent;
+        }
 
-                    nodeTree.EnsureChildren();
-
-                    // Do the Windows explorer thing of expanding single node children.
-                    if (AutoExpandSingleNodes && nodeTree.ChildDocNodes.Count == 1)
-                        nodeTree.Nodes[0].Expand();
-
-                    TopNode = nodeTop;
-                }
-            }
+        protected override int EnsureChildren(TreeNode node)
+        {
+            var nodeParent = node as SrmTreeNodeParent;
+            if (nodeParent == null)
+                return 0;
+            nodeParent.EnsureChildren();
+            return nodeParent.ChildDocNodes.Count;
         }
 
         public Rectangle ScreenRect
@@ -1212,6 +1200,12 @@ namespace pwiz.Skyline.Controls
             ToolTipOwner = null;
             _nodeTip.HideTip();
         }
+
+        public bool ExpandProteins { get { return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandProteins; } }
+        public bool ExpandPeptides { get { return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandPeptides; } }
+        public bool ExpandPrecursors { get { return !LockDefaultExpansion && Settings.Default.SequenceTreeExpandPrecursors; } }
+
+        public bool LockDefaultExpansion { get; set; }
     }
 
     public class ValidateLabelEditEventArgs : CancelEventArgs

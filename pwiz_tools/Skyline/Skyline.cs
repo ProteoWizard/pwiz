@@ -2491,7 +2491,7 @@ namespace pwiz.Skyline
         }
                 else
         {
-                    _sequenceTreeForm = CreateSequenceTreeForm();
+                    _sequenceTreeForm = CreateSequenceTreeForm(null);
                     _sequenceTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
                 // Make sure ComboResults has the right selection
@@ -2508,10 +2508,10 @@ namespace pwiz.Skyline
                 }
             }
 
-        private SequenceTreeForm CreateSequenceTreeForm()
+        private SequenceTreeForm CreateSequenceTreeForm(string persistentString)
         {
             // Initialize sequence tree control
-            _sequenceTreeForm = new SequenceTreeForm(this);
+            _sequenceTreeForm = new SequenceTreeForm(this, persistentString != null);
             _sequenceTreeForm.FormClosed += sequenceTreeForm_FormClosed;
             _sequenceTreeForm.VisibleChanged += sequenceTreeForm_VisibleChanged;
             _sequenceTreeForm.SequenceTree.SelectedNodeChanged += sequenceTree_SelectedNodeChanged;
@@ -2525,9 +2525,10 @@ namespace pwiz.Skyline
             _sequenceTreeForm.SequenceTree.DragOver += sequenceTree_DragOver;
             _sequenceTreeForm.SequenceTree.DragEnter += sequenceTree_DragDrop;
             _sequenceTreeForm.SequenceTree.UseKeysOverride = _useKeysOverride;
-            _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;
+            _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;            
+            _sequenceTreeForm.SequenceTree.RestoreExpansionAndSelection(persistentString);
             return _sequenceTreeForm;
-            }
+        }
 
         private void DestroySequenceTreeForm()
         {

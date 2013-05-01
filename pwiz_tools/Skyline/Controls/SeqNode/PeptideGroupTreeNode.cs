@@ -35,13 +35,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         //public string PROTEIN_TITLE = "Protein";
         //public const string PEPTIDE_LIST_TITLE = "Peptide List";
 
-        public static bool ExpandDefault { get { return Settings.Default.SequenceTreeExpandProteins; } }
-
         public static PeptideGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             var nodeTree = new PeptideGroupTreeNode(tree, (PeptideGroupDocNode)nodeDoc);
 
-            if (ExpandDefault)
+            if (tree.ExpandProteins)
                 nodeTree.Expand();
 
             return nodeTree;
@@ -86,7 +84,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 Text = label;
 
             // Make sure children are up to date
-            OnUpdateChildren(ExpandDefault);
+            OnUpdateChildren(SequenceTree.ExpandProteins);
         }
 
         public int TypeImageIndex

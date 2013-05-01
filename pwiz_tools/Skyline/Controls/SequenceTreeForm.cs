@@ -29,11 +29,13 @@ namespace pwiz.Skyline.Controls
 {
     public partial class SequenceTreeForm : DockableFormEx
     {
-        public SequenceTreeForm(IDocumentUIContainer documentContainer)
+        public SequenceTreeForm(IDocumentUIContainer documentContainer, bool restoringState)
         {
             InitializeComponent();
 
+            sequenceTree.LockDefaultExpansion = restoringState;
             sequenceTree.InitializeTree(documentContainer);
+            sequenceTree.LockDefaultExpansion = false;
             if (documentContainer.DocumentUI != null)
                 UpdateResultsUI(documentContainer.DocumentUI.Settings, null);
         }
@@ -43,6 +45,11 @@ namespace pwiz.Skyline.Controls
             SequenceTree.HideEffects();
             base.OnClosing(e);
         }
+
+        protected override string GetPersistentString()
+        {
+            return base.GetPersistentString() + "|" + SequenceTree.GetPersistentString();
+        } 
 
         public SequenceTree SequenceTree { get { return sequenceTree; } }
         public ToolStripComboBox ComboResults { get { return comboResults; } }

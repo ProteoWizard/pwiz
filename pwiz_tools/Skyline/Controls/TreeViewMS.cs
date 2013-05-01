@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Controls
     /// <para>
     /// Inspired by the example at http://www.codeproject.com/KB/tree/treeviewms.aspx for details.</para>
 	/// </summary>
-    public class TreeViewMS : TreeView
+    public abstract class TreeViewMS : TreeView
     {
         // Length of the horizontal dashed lines representing each branch of the tree
         protected internal const int HORZ_DASH_LENGTH = 11;
@@ -54,7 +55,7 @@ namespace pwiz.Skyline.Controls
 	    public const double LRG_TEXT_FACTOR = 1.25;
 	    public const double XLRG_TEXT_FACTOR = 1.5;
 
-        public TreeViewMS()
+        protected TreeViewMS()
         {
             UseKeysOverride = false;
             _inRightClick = false;
@@ -64,6 +65,9 @@ namespace pwiz.Skyline.Controls
             DashBrush = new TextureBrush(Resources.Dash) { WrapMode = WrapMode.Tile };
             SetStyle(ControlStyles.UserPaint, true);
             ItemHeight = DEFAULT_ITEM_HEIGHT;
+
+            AutoExpandSingleNodes = true;
+            RestoredFromPersistentString = false;
         }
 
         [Browsable(false)]
@@ -158,6 +162,309 @@ namespace pwiz.Skyline.Controls
             if (selectedNodes.Length != SelectedNodes.Count)
                 _anchorNode = (TreeNodeMS) SelectedNode;
         }
+
+	    /// <summary>
+        /// Generates a persistent string storing information about the expansion and selection
+        /// of nodes as well as the vertical scrolling of the form, separated by pipes
+	    /// </summary>
+        public string GetPersistentString()
+	    {
+	        StringBuilder result = new StringBuilder();
+            result.Append(GenerateExpansionString(Nodes)).Append('|');
+	        result.Append(GenerateSelectionString()).Append('|');
+	        result.Append(GenerateScrollString());
+	        return result.ToString();
+	    }
+      
+        /// <summary>
+        /// The expansion string stores the indices of expanded nodes when called in the format
+        /// a(b(c)), where a is the top level node as an integer, b is a child of a, and c
+        /// is a child of b, etc. Multiple nodes and their children are stored as a comma-separated
+        /// string, e.g. 0(1(0,1),2(0)),3
+        /// </summary>
+        private static string GenerateExpansionString(IEnumerable nodes)
+        {
+            int index = 0;
+            StringBuilder result = new StringBuilder();
+            foreach (TreeNode parent in nodes)
+            {
+                if (parent.IsExpanded)
+                {
+                    if (result.Length > 0)
+                        result.Append(',');
+                    result.Append(index);
+                    string children = GenerateExpansionString(parent.Nodes);
+                    if (children.Length != 0)
+                    {
+                        result.Append('(').Append(children).Append(')');
+                    }
+                }
+                index++;
+            }
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// <para>The selection string stores which nodes are selected in the graph. The first element
+        /// is a single integer representing which node "the" selected node of the underlying TreeView.
+        /// The remaining comma-separated elements in the string represent the indices of nodes
+        /// that are selected according to the visual order of the nodes</para> 
+        ///
+        /// <para>These selections can be a single element (e.g. 1), a range (e.g. 1-7) or a disjoint selection
+        /// consisting of multiple single elements and/or ranges (e.g. 1,3-6,8)</para>
+        /// </summary>
+        private string GenerateSelectionString()
+        {
+            StringBuilder selectedRanges = new StringBuilder();
+
+            int index = 0;
+            int rangeStart = -1;
+            int prevSelection = -1;
+            int selectedIndex = -1;
+            
+            foreach (TreeNodeMS node in VisibleNodes)
+            {
+                if (node.IsInSelection)
+                {
+                    if (rangeStart == -1)
+                    {
+                        rangeStart = index;
+                    }
+                    else if (index != prevSelection + 1)
+                    {
+                        AppendRange(selectedRanges, rangeStart, prevSelection);
+                        rangeStart = index;
+                    }
+                    prevSelection = index;
+                }
+
+                // insert the TreeView selected node at the front of the string
+                if (node.IsSelected)
+                    selectedIndex = index;
+                index++;
+            }
+
+            // complete any selection(s) that occur at the end of the tree
+            if (rangeStart != -1)
+            {
+                AppendRange(selectedRanges, rangeStart, prevSelection);
+            }
+
+            return selectedIndex + "," + selectedRanges;
+        }
+
+	    private static void AppendRange(StringBuilder selectedRanges, int rangeStart, int prevSelection)
+	    {
+	        if (selectedRanges.Length > 0)
+	            selectedRanges.Append(',');
+
+	        if (rangeStart == prevSelection)
+	            selectedRanges.Append(rangeStart);
+	        else
+	            selectedRanges.AppendFormat("{0}-{1}", rangeStart, prevSelection);
+	    }
+
+        /// <summary>
+        /// The scroll string stores the numerical index of the first visible node in the form.
+        /// The index corresponds to the location in the visual order of nodes in the form
+        /// </summary>
+        /// <returns></returns>
+        private int GenerateScrollString()
+        {
+            int index = 0;
+            foreach (TreeNode node in VisibleNodes)
+            {
+                if (node.IsVisible)
+                    return index;
+                index++;
+            }
+            return 0;
+        }
+
+        public bool RestoredFromPersistentString { get; private set; }
+
+        /// <summary>
+        /// Restores the expansion and selection of the tree, and sets the top node for scrolling
+        /// to be updated after all resizing has occured
+        /// </summary>
+        public void RestoreExpansionAndSelection(string persistentString)
+        {
+            if (!string.IsNullOrEmpty(persistentString))
+            {
+                string[] stateStrings = persistentString.Split('|');
+
+                // check that the .view file will have the necessary information to rebuild the tree
+                if (stateStrings.Length > 3)
+                {
+                    try
+                    {
+                        AutoExpandSingleNodes = false;
+                        ExpandTreeFromString(stateStrings[1]);
+                        AutoExpandSingleNodes = true;
+                        SelectTreeFromString(stateStrings[2]);
+                        NextTopNode = GetTopNodeFromString(stateStrings[3]);
+                        RestoredFromPersistentString = true;
+                    }
+                    catch (FormatException)
+                    {
+                        // Ignore and give up
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Expands the tree from the persistent string data
+        /// </summary>
+        private void ExpandTreeFromString(string persistentString)
+        {
+            IEnumerator<char> dataEnumerator = persistentString.GetEnumerator();
+            ExpandTreeFromString(Nodes, dataEnumerator);
+        }
+
+        private static bool ExpandTreeFromString(TreeNodeCollection nodes, IEnumerator<char> data)
+        {
+            bool finishedEnumerating = !data.MoveNext();
+            int currentNode = 0;
+            while (!finishedEnumerating)
+            {
+                char value = data.Current;
+                switch (value)
+                {
+                    case ',':
+                        finishedEnumerating = !data.MoveNext();
+                        break;
+                    case '(':
+                        finishedEnumerating = ExpandTreeFromString(nodes[currentNode].Nodes, data);
+                        break;
+                    case ')':
+                        return !data.MoveNext();
+                    default: // value must be an integer
+                        StringBuilder dataIndex = new StringBuilder();
+                        dataIndex.Append(value);
+                        finishedEnumerating = !data.MoveNext();
+
+                        // enumerate until the next element is not an integer
+                        while (!finishedEnumerating && data.Current != ',' && data.Current != '(' && data.Current != ')')
+                        {
+                            dataIndex.Append(data.Current);
+                            finishedEnumerating = !data.MoveNext();
+                        }
+
+                        currentNode = int.Parse(dataIndex.ToString());
+
+                        // if invalid node in tree, return
+                        if (currentNode >= nodes.Count)
+                            return true;
+                        nodes[currentNode].Expand();
+                        break;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Reselects tree nodes from the persistent string data
+        /// </summary>
+        /// <param name="persistentString"></param>
+        private void SelectTreeFromString(string persistentString)
+        {
+            IList<TreeNode> visualOrder = VisibleNodes.ToArray();
+            int nodeCount = visualOrder.Count;
+            string[] selections = persistentString.Split(',');
+            
+            // select first element separately, returning if it is not a valid node
+            int selectedIndex = int.Parse(selections[0]);
+            if (selectedIndex >= nodeCount)
+                return;
+            SelectedNode = visualOrder[selectedIndex];
+            
+            // add remaining nodes to selection
+            for (int i = 1; i < selections.Length; i++)
+            {
+                string selection = selections[i];
+                if (selection.Contains("-")) // when true, the string represents a range and not a single element
+                {
+                    string[] range = selection.Split('-');
+                    int start = Math.Min(nodeCount - 1, Math.Max(0, int.Parse(range[0])));
+                    int end = Math.Min(nodeCount - 1, Math.Max(0, int.Parse(range[1])));
+                    for (int j = start; j <= end; j++)
+                    {
+                        SelectNode((TreeNodeMS)visualOrder[j], true);
+                    }
+                }
+                else  // the string represents a single element
+                {
+                    int index = int.Parse(selection);
+                    if (0 > index || index >= nodeCount)
+                        return;
+                    SelectNode((TreeNodeMS)visualOrder[index], true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the top node (for scrolling) for update when the tree has finished resizing
+        /// </summary>
+        private TreeNode GetTopNodeFromString(string persistentString)
+        {
+            IList<TreeNode> nodes = VisibleNodes.ToArray();
+            int index = int.Parse(persistentString);
+            if (0 > index || index >= nodes.Count)
+                return null;
+            return nodes[index];
+        }
+
+        private TreeNode NextTopNode { get; set; }
+
+        /// <summary>
+        /// Updates the top node in order to establish the correct scrolling of the tree. This should
+        /// not be called until all resizing of the tree has occured
+        /// </summary>
+        public void UpdateTopNode()
+        {
+            TopNode = NextTopNode ?? TopNode;
+        }
+
+        /// <summary>
+        /// Generates the visual order of nodes as they appear in the tree
+        /// </summary>
+        private IEnumerable<TreeNode> VisibleNodes
+        {
+            get
+            {
+                for (TreeNode node = Nodes.Count > 0 ? Nodes[0] : null; node != null; node = node.NextVisibleNode)
+                    yield return node;
+            }
+        }
+
+        [Browsable(true)]
+        public bool AutoExpandSingleNodes { get; set; }
+
+        protected void TreeViewMS_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+        {
+            if (!IsInUpdate)
+            {
+                TreeNode nodeTree = e.Node;
+                if (IsParentNode(nodeTree))
+                {
+                    // Save and restore top node to keep from scrolling
+                    TreeNode nodeTop = TopNode;
+
+                    int children = EnsureChildren(nodeTree);
+
+                    // Do the Windows explorer thing of expanding single node children.
+                    if (AutoExpandSingleNodes && children == 1)
+                        nodeTree.Nodes[0].Expand();
+
+                    TopNode = nodeTop;
+                }
+            }
+        }
+
+	    protected abstract bool IsParentNode(TreeNode node);
+
+	    protected abstract int EnsureChildren(TreeNode node);
 
         protected override void OnMouseDown(MouseEventArgs e)
         {

@@ -146,12 +146,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool HasPersistableLayout()
-        {
-            var settings = DocumentUI.Settings;
-            return settings.HasResults || settings.PeptideSettings.Libraries.HasLibraries;
-        }
-
         private void UpdateGraphUI(SrmSettings settingsOld, bool docIdChanged)
         {
             SrmSettings settingsNew = DocumentUI.Settings;
@@ -434,6 +428,12 @@ namespace pwiz.Skyline
                 DestroyGraphChrom(graphChrom);
             _listGraphChrom.Clear();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
+            
+            // SequenceTree resizes often prior to display, so we must restore its scrolling after
+            // all resizing has occured
+            if (SequenceTree != null)
+                SequenceTree.UpdateTopNode();
+
             EnsureFloatingWindowsVisible();
         }
 
@@ -472,9 +472,9 @@ namespace pwiz.Skyline
 
         private IDockableForm DeserializeForm(string persistentString)
         {
-            if (Equals(persistentString, typeof(SequenceTreeForm).ToString()))
+            if (persistentString.StartsWith(typeof(SequenceTreeForm).ToString()))
             {
-                return _sequenceTreeForm ?? CreateSequenceTreeForm();
+                return _sequenceTreeForm ?? CreateSequenceTreeForm(persistentString);
             }
             else if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
             {

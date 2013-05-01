@@ -36,15 +36,13 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <summary>
         /// Peptide
         /// </summary>
-        public static string TITLE { get { return Resources.PeptideTreeNode_Heading_Title; } }    
-       
-        public static bool ExpandDefault { get { return Settings.Default.SequenceTreeExpandPeptides; } }
+        public static string TITLE { get { return Resources.PeptideTreeNode_Heading_Title; } }
 
         public static PeptideTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             Debug.Assert(nodeDoc is PeptideDocNode);
             var nodeTree = new PeptideTreeNode(tree, (PeptideDocNode)nodeDoc);
-            if (ExpandDefault)
+            if (tree.ExpandPeptides)
                 nodeTree.Expand();
            return nodeTree;
         }
@@ -92,7 +90,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             _textSequences = null;
 
             // Make sure children are up to date
-            OnUpdateChildren(ExpandDefault);
+            OnUpdateChildren(SequenceTree.ExpandPeptides);
         }
 
         public override bool CanShow

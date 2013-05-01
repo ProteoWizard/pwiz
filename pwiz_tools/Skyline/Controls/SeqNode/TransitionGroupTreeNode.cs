@@ -42,14 +42,12 @@ namespace pwiz.Skyline.Controls.SeqNode
             get { return Resources.TransitionGroupTreeNode_Title; }
         }
 
-        public static bool ExpandDefault { get { return Settings.Default.SequenceTreeExpandPrecursors; } }
-
         public static TransitionGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             Debug.Assert(nodeDoc is TransitionGroupDocNode);
             var nodeTree = new TransitionGroupTreeNode(tree, (TransitionGroupDocNode) nodeDoc);
 
-            if (ExpandDefault)
+            if (tree.ExpandPrecursors)
                 nodeTree.Expand();
 
             return nodeTree;
@@ -102,7 +100,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 Text = label;
 
             // Make sure children are up to date
-            OnUpdateChildren(ExpandDefault);
+            OnUpdateChildren(SequenceTree.ExpandPrecursors);
         }
 
         public int TypeImageIndex

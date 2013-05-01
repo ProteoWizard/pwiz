@@ -223,8 +223,9 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (SequenceTree != null && SequenceTree.Nodes.Count > 0)
+            if (SequenceTree != null && SequenceTree.Nodes.Count > 0 && !SequenceTree.RestoredFromPersistentString)
                 SequenceTree.SelectedNode = SequenceTree.Nodes[0];
+
 
             return true;
         }
@@ -723,20 +724,14 @@ namespace pwiz.Skyline
 
         private void SaveLayout(string fileName)
         {
-            string fileNameView = GetViewFile(fileName);
-            if (!HasPersistableLayout())
-                FileEx.SafeDelete(fileNameView);    // caller will handle exception
-            else
+            using (var saverUser = new FileSaver(GetViewFile(fileName)))
             {
-                using (var saverUser = new FileSaver(GetViewFile(fileName)))
+                if (saverUser.CanSave())
                 {
-                    if (saverUser.CanSave())
-                    {
-                        dockPanel.SaveAsXml(saverUser.SafeName);
-                        saverUser.Commit();
-                    }
+                    dockPanel.SaveAsXml(saverUser.SafeName);
+                    saverUser.Commit();
                 }
-            }            
+            }
         }
 
         private void SetActiveFile(string path)
