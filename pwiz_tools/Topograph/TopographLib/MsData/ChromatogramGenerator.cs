@@ -200,6 +200,10 @@ namespace pwiz.Topograph.MsData
                             {
                                 continue;
                             }
+                            if (_workspace.IsRejected(fileAnalysis.MsDataFile))
+                            {
+                                continue;
+                            }
                             if (null == msDataFileId)
                             {
                                 msDataFileId = fileAnalysis.MsDataFile.Id;
