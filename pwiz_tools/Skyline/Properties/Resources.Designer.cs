@@ -8431,6 +8431,122 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to comma.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_comma {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_comma", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to find the necessary headers {0} in the first line.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first" +
+                        "_line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to read the first line of the file.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line {0} field count {1} differs from the first line, which has {2}.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line_" +
+                        "_which_has__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to semicolon.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_semicolon {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_semicolon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} on line {1} has not been imported into this document..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_t" +
+                        "his_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The first line does not contain any of the possible separators {0}, tab or space.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_s" +
+                        "eparators__0___tab_or_space", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The modified state {0} on line {1} does not match any modified state in the document for the peptide {2}..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any" +
+                        "_modified_state_in_the_document_for_the_peptide__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The peptide sequence {0} on line {1} does not match any of the peptides in the document..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_a" +
+                        "ny_of_the_peptides_in_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; on line {1} is not a valid charge state..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_sta" +
+                        "te_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; on line {1} is not a valid end time..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; on line {1} is not a valid start time..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to On line {0}, {1}.
         /// </summary>
         public static string PeakCalculatorGridViewDriver_ValidateRow_On_line__0____1_ {
@@ -11331,6 +11447,33 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_importMassListMenuItem_Click_Transition_List {
             get {
                 return ResourceManager.GetString("SkylineWindow_importMassListMenuItem_Click_Transition_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Peak Boundaries.
+        /// </summary>
+        public static string SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected Document Change During Operation..
+        /// </summary>
+        public static string SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed Reading the File..
+        /// </summary>
+        public static string SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_", resourceCulture);
             }
         }
         

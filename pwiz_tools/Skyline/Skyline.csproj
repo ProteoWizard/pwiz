@@ -496,6 +496,7 @@
     <Compile Include="Model\Esp\PiCalc.cs" />
     <Compile Include="Model\DocSettings\IsolationScheme.cs" />
     <Compile Include="Model\DocSettings\IsolationWindow.cs" />
+    <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\Lib\AlignedRetentionTimes.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />

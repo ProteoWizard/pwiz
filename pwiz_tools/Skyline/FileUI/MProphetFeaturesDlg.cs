@@ -195,7 +195,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     writer.Write(separator);
                     if (float.IsNaN(featureColumn))
-                        writer.Write("#N/A");
+                        writer.Write(TextUtil.EXCEL_NA);
                     else
                         writer.Write(featureColumn);
                 }

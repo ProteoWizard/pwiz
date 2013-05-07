@@ -949,6 +949,69 @@ namespace pwiz.Skyline
             }
         }
 
+        
+        private void peakBoundariesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog
+            {
+                Title = Resources.SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries,
+                CheckPathExists = true
+            })
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    ImportPeakBoundariesFile(dlg.FileName);
+                }
+            }
+        }
+
+        public void ImportPeakBoundariesFile(string peakBoundariesFile)
+        {
+            try
+            {
+                long lineCount = Helpers.CountLinesInFile(peakBoundariesFile);
+                using (var readerPeakBoundaries = new StreamReader(peakBoundariesFile))
+                {
+                    ImportPeakBoundaries(readerPeakBoundaries, lineCount, Resources.SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries);
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(this,
+                                string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_,
+                                              peakBoundariesFile, x.Message));
+            }         
+        }
+
+        private void ImportPeakBoundaries(TextReader reader, long lineCount, string description)
+        {
+            var docCurrent = DocumentUI;
+            var longWaitDlg = new LongWaitDlg(this)
+            {
+                Text = description,
+            };
+            SrmDocument docNew = null;
+            var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
+            longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                       docNew = peakBoundaryImporter.Import(reader, longWaitBroker, lineCount));
+
+
+            if (docNew == null)
+                return;
+
+            if (longWaitDlg.IsDocumentChanged(docCurrent))
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
+                return;
+            }
+            ModifyDocument(description, doc =>
+            {
+                if (!ReferenceEquals(doc, docCurrent))
+                    throw new InvalidDataException(Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
+                return docNew;
+            });
+        }
+
         private void importFASTAMenuItem_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog dlg = new OpenFileDialog

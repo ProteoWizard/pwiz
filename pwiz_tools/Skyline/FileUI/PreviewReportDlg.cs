@@ -21,6 +21,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.FileUI
                                                        };
                 if (columnInfo.IsNumeric)
                 {
-                    column.DefaultCellStyle.NullValue = "#N/A"; // Not L10N - TODO: Check Excel to see if this changes, CONSIDER: Constant somewhere?
+                    column.DefaultCellStyle.NullValue = TextUtil.EXCEL_NA; // Not L10N
                 }
                 dataGridView.Columns.Add(column);
             }

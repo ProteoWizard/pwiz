@@ -134,6 +134,7 @@
     <Compile Include="MProphetScoringModelTest.cs" />
     <Compile Include="MQuestScoringTest.cs" />
     <Compile Include="PasteTest.cs" />
+    <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublishDocAddSubfolderTest.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
@@ -190,6 +191,7 @@
     <None Include="FullScanPrecursor.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="MProphetScoringModelTest.zip" />
+    <None Include="PeakBoundaryTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="modmatch.sky" />
     <None Include="ModMatch.zip" />

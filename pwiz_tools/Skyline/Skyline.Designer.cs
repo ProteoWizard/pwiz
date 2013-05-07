@@ -223,6 +223,7 @@ namespace pwiz.Skyline
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importMassListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peakBoundariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportIsolationListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1717,6 +1718,7 @@ namespace pwiz.Skyline
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.importResultsMenuItem,
             this.importPeptideSearchMenuItem,
+            this.peakBoundariesToolStripMenuItem,
             this.importFASTAMenuItem,
             this.importMassListMenuItem,
             this.importDocumentMenuItem});
@@ -1752,6 +1754,12 @@ namespace pwiz.Skyline
             this.importDocumentMenuItem.Name = "importDocumentMenuItem";
             resources.ApplyResources(this.importDocumentMenuItem, "importDocumentMenuItem");
             this.importDocumentMenuItem.Click += new System.EventHandler(this.importDocumentMenuItem_Click);
+            // 
+            // peakBoundariesToolStripMenuItem
+            // 
+            this.peakBoundariesToolStripMenuItem.Name = "peakBoundariesToolStripMenuItem";
+            resources.ApplyResources(this.peakBoundariesToolStripMenuItem, "peakBoundariesToolStripMenuItem");
+            this.peakBoundariesToolStripMenuItem.Click += new System.EventHandler(this.peakBoundariesToolStripMenuItem_Click);
             // 
             // exportToolStripMenuItem
             // 
@@ -3201,6 +3209,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem groupReplicatesByContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupByReplicateContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mProphetFeaturesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem peakBoundariesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorTran;
         private System.Windows.Forms.ToolStripMenuItem basePeakContextMenuItem;

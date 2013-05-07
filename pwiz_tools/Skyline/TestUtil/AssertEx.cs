@@ -45,13 +45,13 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void ThrowsException<TEx>(Action throwEx)
+        public static void ThrowsException<TEx>(Action throwEx, string message = null)
             where TEx : Exception
         {
-            ThrowsException<TEx>(() => { throwEx(); return null; });
+            ThrowsException<TEx>(() => { throwEx(); return null; }, message);
         }
 
-        public static void ThrowsException<TEx>(Func<object> throwEx)
+        public static void ThrowsException<TEx>(Func<object> throwEx, string message = null)
             where TEx : Exception
         {
             try
@@ -59,8 +59,10 @@ namespace pwiz.SkylineTestUtil
                 throwEx();
                 Assert.Fail("Exception expected");
             }
-            catch (TEx)
+            catch (TEx x)
             {
+                if (message != null)
+                    AreComparableStrings(message, x.Message);
             }            
         }
 
@@ -468,12 +470,15 @@ namespace pwiz.SkylineTestUtil
             Cloned(target, copy);
         }
 
-        public static void AreComparableStrings(string expected, string actual, int replacements)
+        public static void AreComparableStrings(string expected, string actual, int? replacements = null)
         {
             // Split strings on placeholders
             string[] expectedParts = Regex.Split(expected,@"{\d}");
-            Assert.AreEqual(replacements, expectedParts.Length - 1,
-                "Expected {0} replacements in string resource '{1}'", replacements, expected);
+            if (replacements.HasValue)
+            {
+                Assert.AreEqual(replacements, expectedParts.Length - 1,
+                    "Expected {0} replacements in string resource '{1}'", replacements, expected);
+            }
 
             int startIndex = 0;
             foreach (var expectedPart in expectedParts)

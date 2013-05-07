@@ -5158,4 +5158,49 @@ Are you sure you want to continue?</value>
   <data name="GraphChromatogram_UpdateUI_No_TIC_chromatogram_found" xml:space="preserve">
     <value>No TIC chromatogram found</value>
   </data>
+  <data name="SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_" xml:space="preserve">
+    <value>Failed Reading the File.</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries" xml:space="preserve">
+    <value>Import Peak Boundaries</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation" xml:space="preserve">
+    <value>Unexpected Document Change During Operation.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file" xml:space="preserve">
+    <value>Failed to read the first line of the file</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space" xml:space="preserve">
+    <value>The first line does not contain any of the possible separators {0}, tab or space</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line" xml:space="preserve">
+    <value>Failed to find the necessary headers {0} in the first line</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_" xml:space="preserve">
+    <value>Line {0} field count {1} differs from the first line, which has {2}</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_" xml:space="preserve">
+    <value>The value '{0}' on line {1} is not a valid charge state.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_" xml:space="preserve">
+    <value>The value '{0}' on line {1} is not a valid start time.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_" xml:space="preserve">
+    <value>The value '{0}' on line {1} is not a valid end time.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_" xml:space="preserve">
+    <value>The file {0} on line {1} has not been imported into this document.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__" xml:space="preserve">
+    <value>The modified state {0} on line {1} does not match any modified state in the document for the peptide {2}.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
+    <value>The peptide sequence {0} on line {1} does not match any of the peptides in the document.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_comma" xml:space="preserve">
+    <value>comma</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
+    <value>semicolon</value>
+  </data>
 </root>

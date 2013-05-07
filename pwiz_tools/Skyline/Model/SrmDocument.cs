@@ -884,11 +884,43 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Transition transition, double startTime, double endTime, PeakIdentification identified)
+            Transition transition, double startTime, double endTime, PeakIdentification? identified=null)
         {
+            // If a null identification is passed in (currently only happens from the PeakBoundaryImport function),
+            // look up the identification status directly
+            if (!identified.HasValue)
+            {
+                IdentityPath peptidePath = groupPath.Parent;
+                var nodePepGroup = (PeptideDocNode) FindNode(peptidePath);
+                var nodeGroup = (TransitionGroupDocNode) FindNode(groupPath);
+                if (nodeGroup == null)
+                    throw new IdentityNotFoundException(groupPath.Child);
+                IsotopeLabelType labelType;
+                double[] retentionTimes;
+                Settings.TryGetRetentionTimes(nodeGroup.TransitionGroup.Peptide.Sequence,
+                                              nodeGroup.TransitionGroup.PrecursorCharge,
+                                              nodePepGroup.ExplicitMods, filePath, out labelType, out retentionTimes);
+                if(ContainsTime(retentionTimes, startTime, endTime))
+                {
+                    identified = PeakIdentification.TRUE;
+                }
+                else
+                {
+                    var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(filePath,
+                        nodeGroup.TransitionGroup.Peptide.Sequence, nodePepGroup.ExplicitMods);
+                    identified = ContainsTime(alignedRetentionTimes, startTime, endTime)
+                        ? PeakIdentification.ALIGNED
+                        : PeakIdentification.FALSE;
+                }
+            }
             return ChangePeak(groupPath, nameSet, filePath, true,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime, identified));
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime, identified.Value));
+        }
+
+        private bool ContainsTime(double[] times, double startTime, double endTime)
+        {
+            return times != null && times.Any(time => startTime <= time && time <= endTime);
         }
 
         private delegate DocNode ChangeNodePeak(TransitionGroupDocNode nodeGroup,

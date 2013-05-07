@@ -104,11 +104,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryC)));
 
             // Test peptide filter
-            const string filterList = "ADRDESSPYAAM[+16.0]IAAQDVAQR\n" +
-                                      "ACARPIISVYSEK\n" +
+            const string filterList = "ACARPIISVYSEK\n" +
+                                      // TODO: Having the modified sequence as the first line causes an error with European number formats
+                                      "ADRDESSPYAAM[+{0:F01}]IAAQDVAQR\n" +
                                       "ADAIQAGASQFETSAAK";
 
-            PastePeptideList(filterList, true, 0, 3, true);
+            PastePeptideList(string.Format(filterList, 16.0), true, 0, 3, true);
 
             _libraryName = libraryBaseName + "filter";
             string libraryFilter = _libraryName + BiblioSpecLiteSpec.EXT;
