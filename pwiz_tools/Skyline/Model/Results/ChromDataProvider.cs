@@ -350,15 +350,14 @@ namespace pwiz.Skyline.Model.Results
                 var demultiplexer = dataFile.IsMsx ? new MsxDemultiplexer(dataFile, filter) : null;
 
                 // If possible, find the maximum retention time in order to scale the chromatogram graph.
-                LoadingStatus.Transitions.MaxRetentionTimeKnown = false;
-                if (filter.EnabledMsMs || filter.EnabledMs)
+                if (allChromData != null && (filter.EnabledMsMs || filter.EnabledMs))
                 {
                     var dataSpectrum = dataFile.GetSpectrum(lenSpectra - 1);
-                    if (dataSpectrum.RetentionTime.HasValue && allChromData != null)
+                    if (dataSpectrum.RetentionTime.HasValue)
                     {
                         allChromData.MaxRetentionTime = (float) dataSpectrum.RetentionTime.Value;
-                        allChromData.Progressive = true;
                         allChromData.MaxRetentionTimeKnown = true;
+                        allChromData.Progressive = true;
                     }
                 }
 

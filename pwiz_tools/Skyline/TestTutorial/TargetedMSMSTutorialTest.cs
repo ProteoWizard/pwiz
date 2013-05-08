@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -163,6 +164,12 @@ namespace pwiz.SkylineTestTutorial
                         OkDialog(picklist, picklist.OnOk);
                     }
                 }
+            }
+
+            WaitForDocumentLoaded();
+            foreach (var nodeGroup in SkylineWindow.Document.TransitionGroups)
+            {
+                Assert.IsFalse(nodeGroup.HasLibInfo && nodeGroup.Transitions.All(nodeTran => !nodeTran.HasLibInfo));
             }
 
             // All transition groups should now have a precursor transition
@@ -605,7 +612,7 @@ namespace pwiz.SkylineTestTutorial
         private void WaitForDotProducts()
         {
             WaitForGraphs();
-            WaitForConditionUI(() => AreaGraphDotProducts.Length > 0);
+            WaitForConditionUI(() => AreaGraphDotProducts.Any(p => p != 0));
         }
 
         private void VerifyDotProducts(params double[] dotpExpects)

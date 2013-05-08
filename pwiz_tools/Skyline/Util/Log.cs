@@ -237,4 +237,12 @@ namespace pwiz.Skyline.Util
             new Log<T>().Fatal(message);
         }
     }
+
+    public class DebugLog
+    {
+        public static void Info(string format, params object[] args)
+        {
+            new Log("DebugLog").InfoFormat(format, args);   // Not L10N
+        }
+    }
 }

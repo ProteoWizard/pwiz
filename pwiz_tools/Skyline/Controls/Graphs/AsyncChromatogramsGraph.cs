@@ -121,11 +121,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _status = _newStatus;
                     _newStatus = null;
-                    if (!_status.Transitions.FromCache)
-                    {
-                        _status.Transitions.MaxIntensity = 0;
-                        _status.Transitions.MaxRetentionTime = 0;
-                    }
                     string sampleName = SampleHelp.GetPathSampleNamePart(_status.FilePath);
                     string filePath = SampleHelp.GetFileName(_status.FilePath);
                     var fileName = !string.IsNullOrEmpty(sampleName)

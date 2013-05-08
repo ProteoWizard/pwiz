@@ -403,11 +403,6 @@ namespace pwiz.Skyline.Controls
             return GetVisibleChoice(i).Label;
         }
 
-        public void SetItemChecked(int i, bool checkItem)
-        {
-            GetVisibleChoice(i).Chosen = checkItem;
-        }
-
         public bool SelectAll
         {
             get { return cbItems.Checked; }
@@ -441,7 +436,7 @@ namespace pwiz.Skyline.Controls
 
             bool checkAll = cbItems.Checked;
             for (int i = 0; i < pickListMulti.Items.Count; i++)
-                SetItemChecked(i, checkAll);
+                SetItemCheckedInternal(i, checkAll);
             AutoManageChildren = false;
             pickListMulti.Focus();
         }
@@ -487,11 +482,21 @@ namespace pwiz.Skyline.Controls
         public void ToggleItem(int iChange)
         {
             SetItemChecked(iChange, !GetItemChecked(iChange));
-            pickListMulti.Invalidate(pickListMulti.GetItemRectangle(iChange));
+        }
+
+        public void SetItemChecked(int i, bool checkItem)
+        {
+            SetItemCheckedInternal(i, checkItem);
+            pickListMulti.Invalidate(pickListMulti.GetItemRectangle(i));
 
             UpdateSelectAll();
 
             AutoManageChildren = false;
+        }
+
+        public void SetItemCheckedInternal(int i, bool checkItem)
+        {
+            GetVisibleChoice(i).Chosen = checkItem;
         }
 
         private const int MARGIN_LEFT_CHECKBOX = 1;

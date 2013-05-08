@@ -98,6 +98,9 @@ namespace pwiz.Skyline
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
 
+        // Set false to disable the "Loading chromatograms" progress window.
+        private static bool SHOW_LOADING_CHROMATOGRAMS { get { return true; }}
+
         private static readonly Log LOG = new Log<SkylineWindow>();
 
         /// <summary>
@@ -130,7 +133,7 @@ namespace pwiz.Skyline
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
             _backgroundProteomeManager.Register(this);
-            _chromatogramManager = new ChromatogramManager { SupportAllGraphs = true };
+            _chromatogramManager = new ChromatogramManager { SupportAllGraphs = SHOW_LOADING_CHROMATOGRAMS };
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
             _irtDbManager = new IrtDbManager();
@@ -3251,9 +3254,12 @@ namespace pwiz.Skyline
                 statusProgress.Visible = true;
                 statusGeneral.Text = status.Message;
 
+                if (!SHOW_LOADING_CHROMATOGRAMS)
+                    return;
+
                 // Update chromatogram graph if we are importing a data file.
                 var loadingStatus = status as ChromatogramLoadingStatus;
-                if (loadingStatus != null)
+                if (loadingStatus != null && loadingStatus.Importing)
                 {
                     buttonShowAllChromatograms.Visible = true;
                     if (_allChromatogramsGraph == null)

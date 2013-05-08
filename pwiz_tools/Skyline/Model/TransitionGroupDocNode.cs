@@ -756,6 +756,9 @@ namespace pwiz.Skyline.Model
                         if (!ReferenceEquals(info, nodeTransition.LibInfo))
                             dotProductChange = true;
 
+                        // Avoid overwriting valid transition lib info before the libraries are loaded
+                        if (libInfo != null && info == null && !settingsNew.PeptideSettings.Libraries.IsLoaded)
+                            info = nodeTransition.LibInfo;
                         var nodeNew = new TransitionDocNode(tran, annotations, losses,
                             massH, isotopeDistInfo, info, results);
 

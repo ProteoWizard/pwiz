@@ -1615,6 +1615,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 // loaded before or differs from the previously loaded library,
                 // then peptides must be updated.
                 if (oldLibrary == null ||
+                    newLibrary == null ||
+                    oldLibrary.IsLoaded != newLibrary.IsLoaded ||
                     !oldLibrary.IsSameLibrary(newLibrary) ||
                     oldLibrary.CompareRevisions(newLibrary) != 0)
                 {

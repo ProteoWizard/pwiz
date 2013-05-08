@@ -43,10 +43,16 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionData Transitions { get; private set; }
         public string FilePath { get; private set; }
+        public bool Importing { get; private set; }
 
         public ChromatogramLoadingStatus ChangeFilePath(string filePath)
         {
             return ChangeProp(ImClone(this), s => s.FilePath = filePath);
+        }
+
+        public ChromatogramLoadingStatus ChangeImporting(bool importing)
+        {
+            return ChangeProp(ImClone(this), s => s.Importing = importing);
         }
 
         /// <summary>

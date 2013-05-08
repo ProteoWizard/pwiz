@@ -192,7 +192,12 @@ namespace pwiz.Skyline.Model.Results
                 string message = string.Format(format, SampleHelp.GetFileSampleName(dataFilePath));
                 int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
-                _status = ((ChromatogramLoadingStatus) _status).ChangeFilePath(dataFilePath);
+                _status = LoadingStatus.ChangeFilePath(dataFilePath).ChangeImporting(true);
+                var allChromData = LoadingStatus.Transitions;
+                allChromData.FromCache = false;
+                allChromData.MaxIntensity = 0;
+                allChromData.MaxRetentionTime = 0;
+                allChromData.MaxRetentionTimeKnown = false;
                 _loader.UpdateProgress(_status);
             }
 
@@ -244,16 +249,16 @@ namespace pwiz.Skyline.Model.Results
 
                     _currentFileInfo = GetRecalcFileBuildInfo(dataFilePathRecalc) ?? new FileBuildInfo(inFile);
                     _libraryRetentionTimes = null;
-                    LoadingStatus.Transitions.FromCache = false;
 
                     // Read and write the mass spec data)
                     if (dataFilePathRecalc != null)
                     {
                         provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
-                        LoadingStatus.Transitions.FromCache = true;
-                        LoadingStatus.Transitions.MaxIntensity = (float)(provider.MaxIntensity ?? 0);
-                        LoadingStatus.Transitions.MaxRetentionTime = (float)(provider.MaxRetentionTime ?? 0);
-                        LoadingStatus.Transitions.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
+                        var allChromData = LoadingStatus.Transitions;
+                        allChromData.FromCache = true;
+                        allChromData.MaxIntensity = (float)(provider.MaxIntensity ?? 0);
+                        allChromData.MaxRetentionTime = (float)(provider.MaxRetentionTime ?? 0);
+                        allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
                     }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
                         provider = CreateChromatogramProvider(inFile, fileInfo, _tempFileSubsitute == null);
