@@ -179,7 +179,10 @@ namespace pwiz.Skyline.FileUI
 
                 // User can only upload to folders where TargetedMS is an active module.
                 JToken modules = subFolder["activeModules"]; // Not L10N
-                bool canUpload = ContainsTargetedMSModule(modules) && Equals(userPermissions & 2, 2);
+                string folderType = (string) subFolder["folderType"];
+                bool canUpload = ContainsTargetedMSModule(modules) &&
+                                 Equals(folderType, "Targeted MS") &&
+                                 Equals(userPermissions & 2, 2);
 
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.

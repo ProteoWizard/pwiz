@@ -214,34 +214,27 @@ namespace pwiz.SkylineTestFunctional
         {
             public JToken GetInfoForFolders(Server server)
             {
-                JObject child1 = new JObject();
-                child1["name"] = NO_WRITE_NO_TARGETED;
-                child1["userPermissions"] = 1;
-                child1["children"] = new JArray();
-                child1["activeModules"] = new JArray("MS0", "MS1", "MS3");
-
-                JObject child2 = new JObject();
-                child2["name"] = NO_WRITE_TARGETED;
-                child2["userPermissions"] = 1;
-                child2["children"] = new JArray();
-                child2["activeModules"] = new JArray("MS0", "MS1", "TargetedMS", "MS3");
-
-                JObject child3 = new JObject();
-                child3["name"] = WRITE_TARGETED;
-                child3["userPermissions"] = 3;
-                child3["children"] = new JArray();
-                child3["activeModules"] = new JArray("MS0", "MS1", "TargetedMS", "MS3");
-
-                JObject child4 = new JObject();
-                child4["name"] = WRITE_NO_TARGETED;
-                child4["userPermissions"] = 3;
-                child4["children"] = new JArray();
-                child4["activeModules"] = new JArray("MS0", "MS1", "MS3");
-
                 JObject testFolders = new JObject();
-                testFolders["children"] = new JArray(child1,child2,child3,child4);
+                testFolders["children"] = new JArray(
+                    CreateFolder(NO_WRITE_NO_TARGETED, false, false),
+                    CreateFolder(NO_WRITE_TARGETED, false, true),
+                    CreateFolder(WRITE_TARGETED, true, true),
+                    CreateFolder(WRITE_NO_TARGETED, true, false));
 
                 return testFolders;
+            }
+
+            private JObject CreateFolder(string name, bool write, bool targeted)
+            {
+                JObject obj = new JObject();
+                obj["name"] = name;
+                obj["userPermissions"] = write ? 3 : 1;
+                obj["children"] = new JArray();
+                obj["folderType"] = targeted ? "Targeted MS" : "Collaboration";
+                obj["activeModules"] = targeted
+                    ? new JArray("MS0", "MS1", "TargetedMS", "MS3")
+                    : new JArray("MS0", "MS1", "MS3");
+                return obj;
             }
 
             public void SendZipFile(Server server, string folderPath, string zipFilePath, ILongWaitBroker longWaitBroker)
