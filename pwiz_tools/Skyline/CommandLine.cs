@@ -50,6 +50,7 @@ namespace pwiz.Skyline
         public bool ImportAppend { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
+        public DateTime RemoveBeforeDate { get; private set; }
 
 
         public bool ImportingResults
@@ -64,6 +65,8 @@ namespace pwiz.Skyline
         {
             get { return !string.IsNullOrEmpty(ImportSourceDirectory); }
         }
+
+        public bool RemovingResults { get; private set; }
 
         public string SaveFile { get; private set; }
         private bool _saving;
@@ -532,6 +535,26 @@ namespace pwiz.Skyline
                     }
                 }
 
+                else if (IsNameValue(pair, "remove-before"))
+                {
+                    var removeBeforeDate = pair.Value;
+                    RemovingResults = true;
+                    RequiresSkylineDocument = true;
+                    if (removeBeforeDate != null)
+                    {
+                        try
+                        {
+                            RemoveBeforeDate = Convert.ToDateTime(removeBeforeDate);
+                        }
+                        catch (Exception e)
+                        {
+                            _out.WriteLine("Error: Date {0} cannot be parsed.", removeBeforeDate);
+                            _out.WriteLine(e.Message);
+                            return false;
+                        }
+                    }
+                }
+
                 else if (IsNameValue(pair, "report-name"))
                 {
                     ReportName = pair.Value;
@@ -883,7 +906,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine("Exiting...");
                 return;
-            }           
+            }
 
             if (commandArgs.ImportingResults)
             {   
@@ -899,8 +922,21 @@ namespace pwiz.Skyline
                 {
                     // If expected results are not imported successfully, terminate
                     if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern))
-                    	return;
+                        return;
                 }
+            }
+
+            if (_doc != null && !_doc.Settings.IsLoaded)
+            {
+                IProgressMonitor progressMonitor = new CommandWaitBroker(_out, new ProgressStatus(string.Empty));
+                var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor };
+                docContainer.SetDocument(_doc, null, true);
+                _doc = docContainer.Document;
+            }
+
+            if (commandArgs.RemovingResults)
+            {
+                RemoveResults(commandArgs.RemoveBeforeDate);
             }
 
             if (commandArgs.Saving)
@@ -1377,6 +1413,31 @@ namespace pwiz.Skyline
             _out.WriteLine("Results added from {0} to replicate {1}.", Path.GetFileName(replicateFile), replicateName);
             //the file was imported successfully
             return true;
+        }
+
+        public void RemoveResults(DateTime removeBefore)
+        {
+            _out.WriteLine("Removing results before " + removeBefore.ToShortDateString() + "...");
+            var filteredChroms = new List<ChromatogramSet>();
+            foreach (var chromSet in _doc.Settings.MeasuredResults.Chromatograms)
+            {
+                var listFileInfos = chromSet.MSDataFileInfos.Where(fileInfo =>
+                    fileInfo.RunStartTime == null || fileInfo.RunStartTime >= removeBefore).ToArray();
+                if (ArrayUtil.ReferencesEqual(listFileInfos, chromSet.MSDataFileInfos))
+                    filteredChroms.Add(chromSet);
+                else
+                {
+                    foreach (var fileInfo in chromSet.MSDataFileInfos.Except(listFileInfos))
+                        _out.WriteLine("Removed {0}.", fileInfo.FilePath);
+                    if (listFileInfos.Any())
+                        filteredChroms.Add(chromSet.ChangeMSDataFileInfos(listFileInfos));
+                }
+            }
+            if (!ArrayUtil.ReferencesEqual(filteredChroms, _doc.Settings.MeasuredResults.Chromatograms))
+            {
+                MeasuredResults newMeasuredResults = _doc.Settings.MeasuredResults.ChangeChromatograms(filteredChroms);
+                _doc = _doc.ChangeMeasuredResults(newMeasuredResults);
+            }
         }
 
         
