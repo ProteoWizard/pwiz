@@ -1435,7 +1435,9 @@ namespace pwiz.Skyline
             }
             if (!ArrayUtil.ReferencesEqual(filteredChroms, _doc.Settings.MeasuredResults.Chromatograms))
             {
-                MeasuredResults newMeasuredResults = _doc.Settings.MeasuredResults.ChangeChromatograms(filteredChroms);
+                MeasuredResults newMeasuredResults = filteredChroms.Any() ?
+                    _doc.Settings.MeasuredResults.ChangeChromatograms(filteredChroms) : null;
+
                 _doc = _doc.ChangeMeasuredResults(newMeasuredResults);
             }
         }

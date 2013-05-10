@@ -102,6 +102,18 @@ namespace pwiz.SkylineTestA
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("Remove_Test.sky");
             string outPath = testFilesDir.GetTestPath("Remove_Test_Out.sky");
+            string[] allFiles = new[]
+                {
+                    "FT_2012_0311_RJ_01.raw",
+                    "FT_2012_0311_RJ_02.raw",
+                    "FT_2012_0311_RJ_07.raw",
+                    "FT_2012_0316_RJ_01_120316125013.raw",
+                    "FT_2012_0316_RJ_01_120316131853.raw",
+                    "FT_2012_0316_RJ_01_120316132340.raw",
+                    "FT_2012_0316_RJ_02.raw",
+                    "FT_2012_0316_RJ_09.raw",
+                    "FT_2012_0316_RJ_10.raw",
+                };
             string[] removedFiles = new[]
                 {
                     "FT_2012_0311_RJ_01.raw",
@@ -123,6 +135,20 @@ namespace pwiz.SkylineTestA
 
             AssertEx.IsDocumentState(doc, 0, 1, 5, 5, 15);
             Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
+
+            // try to remove all
+            output = RunCommand("--in=" + docPath,
+                                "--remove-before=3/16/2013",
+                                "--out=" + outPath);
+
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.IsFalse(output.Contains("Error"));
+            Assert.IsFalse(output.Contains("Warning"));
+
+            Assert.AreEqual(allFiles.Count(), Regex.Matches(output, "\nRemoved").Count);
+            AssertEx.Contains(output, allFiles);
+
+            Assert.IsNull(doc.Settings.MeasuredResults);
         }
 
         [TestMethod]
