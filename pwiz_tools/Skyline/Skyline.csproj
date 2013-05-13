@@ -353,6 +353,7 @@
     <Compile Include="Controls\TreeViewMS.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\TreeViewStateRestorer.cs" />
     <Compile Include="Controls\WizardPages.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -1821,6 +1822,8 @@
     <EmbeddedResource Include="Resources\TransitionGroupLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\FragmentLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\AllIonsStatusButton.bmp" />
+    <EmbeddedResource Include="Resources\LabKey.bmp" />
+    <EmbeddedResource Include="Resources\Panorama.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

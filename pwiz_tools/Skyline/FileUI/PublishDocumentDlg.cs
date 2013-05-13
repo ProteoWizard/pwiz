@@ -44,6 +44,16 @@ namespace pwiz.Skyline.FileUI
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public bool IsLoaded { get; set; }
 
+         /// <summary>
+        /// Enum of images used in the server tree, in index order.
+        /// </summary>
+        public enum ImageId
+         {
+            panorama,
+            labkey,
+            folder
+         }
+        
         public PublishDocumentDlg(SettingsList<Server> servers, string fileName)
         {
             IsLoaded = false;
@@ -52,6 +62,13 @@ namespace pwiz.Skyline.FileUI
 
             _panoramaServers = servers;
             tbFilePath.Text = GetTimeStampedFileName(fileName);
+            
+            treeViewFolders.ImageList = new ImageList();
+            treeViewFolders.ImageList.Images.Add(Resources.Panorama);
+            treeViewFolders.ImageList.Images.Add(Resources.LabKey);
+            treeViewFolders.ImageList.Images.Add(Resources.Folder);
+
+            ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
         }
 
         public string FileName { get { return tbFilePath.Text; } }
@@ -95,6 +112,10 @@ namespace pwiz.Skyline.FileUI
                 if (serverFolder.Value != null)
                     AddSubFolders(server, treeNode, serverFolder.Value);
             }
+
+            ServerTreeStateRestorer.RestoreExpansionAndSelection(Settings.Default.PanoramaServerExpansion);
+            ServerTreeStateRestorer.UpdateTopNode();
+
             IsLoaded = true;
         }
 
@@ -128,6 +149,13 @@ namespace pwiz.Skyline.FileUI
         private string ServersToString(IEnumerable<Server> servers)
         {
             return TextUtil.LineSeparate(servers.Select(s => s.URI.ToString()));
+        }
+
+        private TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
+
+        private void SaveServerTreeExpansion()
+        {
+            Settings.Default.PanoramaServerExpansion = ServerTreeStateRestorer.GetPersistentString();
         }
 
         private class FolderInformation
@@ -195,7 +223,14 @@ namespace pwiz.Skyline.FileUI
 
                 // User cannot upload files to folder
                 if (!canUpload)
+                {
                     folderNode.ForeColor = Color.Gray;
+                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int) ImageId.folder;
+                }
+                else
+                {
+                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int) ImageId.labkey;
+                }
 
                 folderNode.Tag = new FolderInformation(server, canUpload);
             } 
@@ -339,6 +374,11 @@ namespace pwiz.Skyline.FileUI
         private void treeViewFolders_DoubleClick(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void PublishDocumentDlg_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            SaveServerTreeExpansion();
         }
     }
 

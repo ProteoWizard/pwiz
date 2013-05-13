@@ -129,6 +129,7 @@ namespace pwiz.Skyline.FileUI
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Publish Document";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PublishDocumentDlg_FormClosing);
             this.Load += new System.EventHandler(this.PublishDocumentDlg_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

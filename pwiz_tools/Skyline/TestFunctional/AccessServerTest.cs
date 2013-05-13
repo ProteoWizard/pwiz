@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -180,6 +181,8 @@ namespace pwiz.SkylineTestFunctional
 
         private class TestPanoramaClient : IPanoramaClient
         {
+            public Uri ServerUri { get;  private set; }
+            
             public ServerState GetServerState()
             {
                 if (Server.Contains(VALID_PANORAMA_SERVER) ||

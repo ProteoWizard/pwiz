@@ -98,12 +98,6 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
 
-            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(uriServer,server.URI)))
-            {
-                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, uriServer.Host);
-                return;
-            }
-
             var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer);
 
             var waitDlg = new LongWaitDlg { Text = Resources.EditServerDlg_OkDialog_Verifying_server_information };
@@ -117,7 +111,15 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
 
-            _server = new Server(uriServer, Username, Password);
+            Uri updatedUri = panoramaClient.ServerUri ?? uriServer;
+
+            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(updatedUri, server.URI)))
+            {
+                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, uriServer.Host);
+                return;
+            }
+
+            _server = new Server(updatedUri, Username, Password);
             DialogResult = DialogResult.OK;
         }
 
@@ -324,6 +326,7 @@ namespace pwiz.Skyline.ToolsUI
 
     public interface IPanoramaClient
     {
+        Uri ServerUri { get; }
         ServerState GetServerState();
         PanoramaState IsPanorama();
         UserState IsValidUser(string username, string password);
@@ -331,11 +334,11 @@ namespace pwiz.Skyline.ToolsUI
 
     class WebPanoramaClient: IPanoramaClient
     {
-        private readonly Uri _server;
+        public Uri ServerUri { get;  private set;}
 
         public WebPanoramaClient(Uri server)
         {
-            _server = server;
+            ServerUri = server;
         }
 
         public ServerState GetServerState()
@@ -344,7 +347,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 using (var webClient = new WebClient())
                 {
-                    webClient.DownloadString(_server);
+                    webClient.DownloadString(ServerUri);
                     return ServerState.available;
                 }
             }
@@ -357,16 +360,35 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
+                    if (TryNewProtocol(() => GetServerState() == ServerState.available))
+                        return ServerState.available;
+
                     return ServerState.unknown;
                 }
             }
+        }
+
+        // This function must be true/false returning; no exceptions can be thrown
+        private bool TryNewProtocol(Func<bool> testFunc)
+        {
+            Uri currentUri = ServerUri;
+
+            // try again using https
+            if (!ServerUri.AbsoluteUri.StartsWith("https"))
+            {
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace("http", "https"));
+                return testFunc();
+            }
+
+            ServerUri = currentUri;
+            return false;
         }
 
         public PanoramaState IsPanorama()
         {
             try
             {
-                Uri uri = new Uri(_server, "/labkey/project/home/getContainers.view"); // Not L10N
+                Uri uri = new Uri(ServerUri, "/labkey/project/home/getContainers.view"); // Not L10N
                 using (var webClient = new WebClient())
                 {
                     string response = webClient.UploadString(uri, "POST", string.Empty); // Not L10N
@@ -392,13 +414,14 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
+                    if (TryNewProtocol(() => IsPanorama() == PanoramaState.panorama))
+                        return PanoramaState.panorama;
+
                     return PanoramaState.unknown;
                 }
-                
             }
-            catch (Exception ex)
+            catch
             {
-                Console.Write(ex.Message);
                 return PanoramaState.unknown;
             }
         }
@@ -410,7 +433,7 @@ namespace pwiz.Skyline.ToolsUI
                 byte[] authBytes = Encoding.UTF8.GetBytes(String.Format("{0}:{1}", username, password)); // Not L10N
                 var authHeader = "Basic " + Convert.ToBase64String(authBytes); // Not L10N
 
-                Uri uri = new Uri(_server, "/labkey/security/home/ensureLogin.view"); // Not L10N
+                Uri uri = new Uri(ServerUri, "/labkey/security/home/ensureLogin.view"); // Not L10N
 
                 using (WebClient webClient = new WebClient())
                 {

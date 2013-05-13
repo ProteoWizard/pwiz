@@ -2528,8 +2528,9 @@ namespace pwiz.Skyline
             _sequenceTreeForm.SequenceTree.DragOver += sequenceTree_DragOver;
             _sequenceTreeForm.SequenceTree.DragEnter += sequenceTree_DragDrop;
             _sequenceTreeForm.SequenceTree.UseKeysOverride = _useKeysOverride;
-            _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;            
-            _sequenceTreeForm.SequenceTree.RestoreExpansionAndSelection(persistentString);
+            _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;
+            if (persistentString != null)
+                _sequenceTreeForm.SequenceTree.RestoreExpansionAndSelection(persistentString.Substring(persistentString.IndexOf('|') + 1));
             return _sequenceTreeForm;
         }
 
