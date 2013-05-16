@@ -407,11 +407,8 @@ namespace BuildAnalystFullScanMethod
                     experiment.CopyDataFrom(templateExperiment);
                 }
 
-                // sort by mass
-                var massRtList = assignedCandidateMassToRT.ToList();
-                massRtList.Sort((firstPair, nextPair) => firstPair.Key.CompareTo(nextPair.Key));
-                // sort by RT
-                massRtList.Sort((firstPair, nextPair) => firstPair.Value.CompareTo(nextPair.Value));
+                // sort by mass then by RT
+                var massRtList = assignedCandidateMassToRT.OrderBy(c => c.Value).ThenBy(c => c.Key).ToList();
 
                 foreach (var transition in transitions.Transitions)
                 {
