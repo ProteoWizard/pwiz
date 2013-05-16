@@ -80,7 +80,16 @@ namespace pwiz.Skyline
             // For testing and debugging Skyline command-line interface
             if (args != null && args.Length > 0)
             {
-                CommandLineRunner.RunCommand(args, new CommandStatusWriter(new DebugWriter()));
+                if (!CommandLineRunner.HasCommandPrefix(args[0]))
+                {
+                    CommandLineRunner.RunCommand(args, new CommandStatusWriter(new DebugWriter()));
+                }
+                else
+                {
+                    // For testing SkylineRunner without installation
+                    CommandLineRunner clr = new CommandLineRunner();
+                    clr.Start(args[0]);
+                }
 
                 return;
             }
@@ -88,10 +97,10 @@ namespace pwiz.Skyline
             else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0].StartsWith("CMD")) // Not L10N
+                CommandLineRunner.HasCommandPrefix(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0])) // Not L10N
             {
                 CommandLineRunner clr = new CommandLineRunner();
-                clr.Start(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0].Substring(3));
+                clr.Start(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]);
 
                 // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
                 Process.GetCurrentProcess().Kill();
@@ -269,6 +278,19 @@ namespace pwiz.Skyline
 
     public class CommandLineRunner
     {
+        private const string COMMAND_PREFIX = "CMD";
+
+        public static bool HasCommandPrefix(string arg)
+        {
+            return arg.StartsWith(COMMAND_PREFIX);
+        }
+
+        private static string RemoveCommandPrefix(string arg)
+        {
+            // Remove prefix and potential trailing dash
+            return arg.Length > COMMAND_PREFIX.Length ? arg.Substring(COMMAND_PREFIX.Length) : string.Empty;
+        }
+
         private static readonly object SERVER_CONNECTION_LOCK = new object();
         private bool _connected;
 
@@ -287,8 +309,10 @@ namespace pwiz.Skyline
         /// the function will print each line received from the pipe
         /// out to the console and then wait for a newline from the user.
         /// </summary>
-        public void Start(string guidSuffix)
+        public void Start(string arg0)
         {
+            string guidSuffix = RemoveCommandPrefix(arg0);
+
             List<string> args = new List<string>();
             using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe" + guidSuffix)) // Not L10N
             {

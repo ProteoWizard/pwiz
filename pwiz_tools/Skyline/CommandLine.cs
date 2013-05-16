@@ -51,6 +51,8 @@ namespace pwiz.Skyline
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
         public DateTime RemoveBeforeDate { get; private set; }
+        public DateTime? ImportBeforeDate { get; private set; }
+        public DateTime? ImportOnOrAfterDate { get; private set; }
 
 
         public bool ImportingResults
@@ -304,6 +306,9 @@ namespace pwiz.Skyline
             PrimaryTransitionCount = AbstractMassListExporter.PRIMARY_COUNT_DEFAULT;
             DwellTime = AbstractMassListExporter.DWELL_TIME_DEFAULT;
             RunLength = AbstractMassListExporter.RUN_LENGTH_DEFAULT;
+
+            ImportBeforeDate = null;
+            ImportOnOrAfterDate = null;
         }
 
         public struct NameValuePair
@@ -530,6 +535,42 @@ namespace pwiz.Skyline
                             _out.WriteLine(
                                 "       that matches the first group in the regular expression is used as");
                             _out.WriteLine("       the replicate name.");
+                            return false;
+                        }
+                    }
+                }
+
+                else if (IsNameValue(pair, "import-before"))
+                {
+                    var importBeforeDate = pair.Value;
+                    if (importBeforeDate != null)
+                    {
+                        try
+                        {
+                            ImportBeforeDate = Convert.ToDateTime(importBeforeDate);
+                        }
+                        catch (Exception e)
+                        {
+                            _out.WriteLine("Error: Date {0} cannot be parsed.", importBeforeDate);
+                            _out.WriteLine(e.Message);
+                            return false;
+                        }
+                    }
+                }
+
+                else if (IsNameValue(pair, "import-on-or-after"))
+                {
+                    var importAfterDate = pair.Value;
+                    if (importAfterDate != null)
+                    {
+                        try
+                        {
+                            ImportOnOrAfterDate = Convert.ToDateTime(importAfterDate);
+                        }
+                        catch (Exception e)
+                        {
+                            _out.WriteLine("Error: Date {0} cannot be parsed.", importAfterDate);
+                            _out.WriteLine(e.Message);
                             return false;
                         }
                     }
@@ -921,7 +962,8 @@ namespace pwiz.Skyline
                 else if(commandArgs.ImportingSourceDirectory)
                 {
                     // If expected results are not imported successfully, terminate
-                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern))
+                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern,
+                                           commandArgs.ImportBeforeDate, commandArgs.ImportOnOrAfterDate))
                         return;
                 }
             }
@@ -1125,7 +1167,7 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, Regex namingPattern)
+        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, DateTime? importBefore, DateTime? importOnOrAfter)
         {
             var listNamedPaths = GetDataSources(sourceDir, namingPattern);
             if (listNamedPaths == null)
@@ -1139,6 +1181,21 @@ namespace pwiz.Skyline
                 string[] files = namedPaths.Value;
                 foreach (var file in files)
                 {
+                    // Skip if file write time is after importBefore or before importAfter
+                    try
+                    {
+                        var fileInfo = new FileInfo(file);
+                        if ((importBefore != null && importBefore < fileInfo.LastWriteTime) ||
+                            (importOnOrAfter != null && importOnOrAfter >= fileInfo.LastWriteTime))
+                            continue;
+                    }
+                    catch (Exception e)
+                    {
+                        _out.WriteLine("Error: Could not get last write time for file {0}", file);
+                        _out.WriteLine(e);
+                        return false;
+                    }
+
                     if (!ImportResultsFile(file, replicateName))
                         return false;
                 }
