@@ -1405,8 +1405,9 @@ namespace pwiz.Skyline
                     (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products))
                 displayType = DisplayTypeChrom.all;
 
-            // Only show all ions chromatogram options when at least on chromatogram of this type exists
-            bool showAllIonsOptions = DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
+            // Only show all ions chromatogram options when at least one chromatogram of this type exists
+            bool showAllIonsOptions = DocumentUI.Settings.HasResults &&
+                DocumentUI.Settings.MeasuredResults.HasAllIonsChromatograms;
             basePeakMenuItem.Visible =
                 basePeakContextMenuItem.Visible =
                 ticMenuItem.Visible =
