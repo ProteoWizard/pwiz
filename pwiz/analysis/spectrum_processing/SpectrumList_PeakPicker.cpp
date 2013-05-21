@@ -105,6 +105,18 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("ABI/DataExplorer peak picking"));
     //else
     //    method.userParams.push_back(algorithm->name());
+    if (preferVendorPeakPicking && !mode_)
+    {
+        cerr << "Warning: vendor peakPicking was requested, but is unavailable";
+#ifdef WIN32
+        cerr << " for this input data. ";
+        if (method.order > 1)
+            cerr << "Note: for native (vendor) input data formats, peakPicking needs to be the first filter applied since the vendor DLL only operates on untransformed raw data.  " << endl;
+#else
+        cerr << " as it depends on Windows DLLs.  ";
+#endif
+        cerr << "Using ProteoWizard centroiding algorithm instead." << endl;
+    }
     dp_->processingMethods.push_back(method);
 }
 

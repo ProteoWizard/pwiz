@@ -161,7 +161,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
 UsageInfo usage_nativeCentroid = {"<prefer_vendor> <ms_levels>","This filter performs centroiding on spectra with the "
     "selected <ms_levels>, expressed as an int_set.  The value for <prefer_vendor> must be \"True\" or \"False\": when "
     "True, vendor (Windows DLL) code is used if available.  IMPORTANT NOTE: since this filter operates on the raw "
-    "data through the vendor DLLs, IT MUST BE THE FIRST FILTER IN ANY LIST OF FILTERS."
+	"data through the vendor DLLs, IT MUST BE THE FIRST FILTER IN ANY LIST OF FILTERS when <prefer_vendor> is set to \"True\"."
 };
 
 /**
