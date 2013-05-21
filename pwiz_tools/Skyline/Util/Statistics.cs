@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Util
             return new Statistics(s._list.Select(v => Z(v, mean, stdev)));
         }
 
-        private double Z(double value, double mean, double stdev)
+        public static double Z(double value, double mean, double stdev)
         {
             try
             {
@@ -467,6 +467,11 @@ namespace pwiz.Skyline.Util
             {
                 return double.NaN;
             }
+        }
+
+        public static double DNorm(double value, double mean = 0, double stdev = 1)
+        {
+            return (1/(Math.Sqrt(2*Math.PI)*stdev))*Math.Pow(Math.E, -Math.Pow(value - mean, 2)/(2*Math.Pow(stdev, 2)));
         }
 
         /// <summary>
@@ -1250,7 +1255,8 @@ namespace pwiz.Skyline.Util
             if (sumLeft == 0 || sumRight == 0)
                 return sumLeft == 0 && sumRight == 0 ? 1 : 0;
 
-            return sumCross/Math.Sqrt(sumLeft*sumRight);
+            // Rounding error can cause values slightly larger than 1.
+            return Math.Min(1.0, sumCross/Math.Sqrt(sumLeft*sumRight));
         }
 
         /// <summary>

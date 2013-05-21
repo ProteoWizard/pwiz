@@ -50,6 +50,9 @@ namespace pwiz.Skyline.Model.Find
 
         static Finders()
         {
+            AddFinder(new MissingLibraryDataFinder());
+            AddFinder(new MissingAllResultsFinder());
+            AddFinder(new MissingAnyResultsFinder());
             AddFinder(new UnintegratedTransitionFinder());
             AddFinder(new ManuallyIntegratedPeakFinder());
             AddFinder(new TruncatedPeakFinder());

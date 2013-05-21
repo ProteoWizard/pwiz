@@ -1293,6 +1293,7 @@ namespace pwiz.Skyline.Model
             private readonly IonType _ionType;
             private readonly int _ionOrdinal;
             private readonly int _massIndex;
+            private readonly int? _decoyMassShift;
             private readonly int _charge;
             private readonly int _precursorCharge;
             private readonly TransitionLosses _losses;
@@ -1309,6 +1310,7 @@ namespace pwiz.Skyline.Model
                 _ionType = transition.IonType;
                 _ionOrdinal = transition.Ordinal;
                 _massIndex = transition.MassIndex;
+                _decoyMassShift = transition.DecoyMassShift;
                 _charge = transition.Charge;
                 _precursorCharge = transition.Group.PrecursorCharge;
                 _losses = tranLossKey.Losses;
@@ -1320,6 +1322,7 @@ namespace pwiz.Skyline.Model
                 _ionType = key._ionType;
                 _ionOrdinal = key._ionOrdinal;
                 _massIndex = key._massIndex;
+                _decoyMassShift = key._decoyMassShift;
                 _charge = key._charge;
                 _precursorCharge = key._precursorCharge;
                 _losses = key._losses;
@@ -1336,6 +1339,7 @@ namespace pwiz.Skyline.Model
                 return Equals(other._ionType, _ionType) &&
                        other._ionOrdinal == _ionOrdinal &&
                        other._massIndex == _massIndex &&
+                       Equals(other._decoyMassShift, _decoyMassShift) &&
                        other._charge == _charge &&
                        other._precursorCharge == _precursorCharge &&
                        Equals(other._losses, _losses) &&
@@ -1356,6 +1360,7 @@ namespace pwiz.Skyline.Model
                     int result = _ionType.GetHashCode();
                     result = (result*397) ^ _ionOrdinal;
                     result = (result*397) ^ _massIndex;
+                    result = (result*397) ^ (_decoyMassShift.HasValue ? _decoyMassShift.Value : 0);
                     result = (result*397) ^ _charge;
                     result = (result*397) ^ _precursorCharge;
                     result = (result*397) ^ (_losses != null ? _losses.GetHashCode() : 0);

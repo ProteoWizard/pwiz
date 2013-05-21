@@ -370,7 +370,13 @@ namespace pwiz.Skyline.Model.Results
 //                Console.WriteLine("Issue");
 
             // First use Crawdad to find the peaks
-            _listChromData.ForEach(chromData => chromData.FindPeaks(retentionTimes));
+            // If any chromatograms have an associated transition, then only find peaks
+            // in chromatograms with transitions.  It is too confusing to the user to
+            // score peaks based on chromatograms for hidden transitions.
+            bool hasDocNode = _listChromData.Any(chromData => chromData.DocNode != null);
+            _listChromData.ForEach(chromData => chromData.FindPeaks(retentionTimes,
+                // But only for fragment ions to allow hidden MS1 isotopes to participate
+                hasDocNode && chromData.Key.Source == ChromSource.fragment));
 
             // Merge sort all peaks into a single list
             IList<ChromDataPeak> allPeaks = MergePeaks();

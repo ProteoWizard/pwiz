@@ -226,11 +226,22 @@ namespace pwiz.Skyline.Model
                 if (line == null)
                     throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
                 string[] fields = line.ParseDsvFields(Separator);
+                string[] headers = fields.All(field => GetColumnType(field.Trim(), FormatProvider) != typeof (double))
+                                       ? fields
+                                       : null;
+                int decoyColumn = -1;
+                if (headers != null)
+                {
+                    decoyColumn = headers.IndexOf(col => Equals(col.ToLowerInvariant(), "decoy"));   // Not L10N
+                    line = reader.ReadLine();
+                    fields = line != null ? line.ParseDsvFields(Separator) : new string[0];
+                }
                 if (fields.Length < 3)
                     throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
                 lines.Add(line);
 
-                rowReader = ExPeptideRowReader.Create(lines, FormatProvider, Separator, Settings);
+                // If no numeric columns in the first row
+                rowReader = ExPeptideRowReader.Create(lines, decoyColumn, FormatProvider, Separator, Settings);
                 if (rowReader == null)
                 {
                     for (int i = 1; i < INSPECT_LINES; i++)
@@ -240,16 +251,16 @@ namespace pwiz.Skyline.Model
                             break;
                         lines.Add(line);
                     }
-                    rowReader = GeneralRowReader.Create(lines, null, FormatProvider, Separator, Settings);
-                    if (rowReader == null)
+                    rowReader = GeneralRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings);
+                    if (rowReader == null && headers == null)
                     {
                         // Check for a possible header row
-                        string[] headers = lines[0].Split(Separator);
+                        headers = lines[0].Split(Separator);
                         lines.RemoveAt(0);
-                        rowReader = GeneralRowReader.Create(lines, headers, FormatProvider, Separator, Settings);
-                        if (rowReader == null)
-                            throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+                        rowReader = GeneralRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings);
                     }
+                    if (rowReader == null)
+                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
                 }
             }
 
@@ -300,6 +311,8 @@ namespace pwiz.Skyline.Model
         {
             var info = rowReader.TransitionInfo;
             string name = info.ProteinName;
+            if (info.TransitionExps.Any(t => t.IsDecoy))
+                name = PeptideGroup.DECOYS;
             if (seqBuilder == null || (name != null && !Equals(name, seqBuilder.BaseName)))
             {
                 if (seqBuilder != null)
@@ -359,6 +372,11 @@ namespace pwiz.Skyline.Model
             protected double PrecursorMz { get { return ColumnMz(Fields, PrecursorColumn, FormatProvider); } }
             private int ProductColumn { get { return Indices.ProductColumn; } }
             private double ProductMz { get { return ColumnMz(Fields, ProductColumn, FormatProvider); } }
+            private int DecoyColumn { get { return Indices.DecoyColumn; } }
+            protected bool IsDecoy
+            {
+                get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), "true"); } // Not L10N
+            }
 
             private double MzMatchTolerance { get { return Settings.TransitionSettings.Instrument.MzMatchTolerance; } }
 
@@ -403,21 +421,23 @@ namespace pwiz.Skyline.Model
 
             private ExTransitionInfo CalcPrecursorExplanations(ExTransitionInfo info, long lineNum)
             {
-                var peptideMods = Settings.PeptideSettings.Modifications;
-
                 // Enumerate all possible variable modifications looking for an explanation
                 // for the precursor information
                 double precursorMz = info.PrecursorMz;
                 double nearestMz = double.MaxValue;
+                var peptideMods = Settings.PeptideSettings.Modifications;
                 foreach (var nodePep in Peptide.CreateAllDocNodes(Settings, info.PeptideSequence))
                 {
                     var variableMods = nodePep.ExplicitMods;
                     var defaultLabelType = info.DefaultLabelType;
                     double precursorMassH = Settings.GetPrecursorMass(defaultLabelType, info.PeptideSequence, variableMods);
-                    int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
+                    int precursorMassShift;
+                    int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance,
+                                                              info.IsDecoy, out precursorMassShift);
                     if (precursorCharge > 0)
                     {
-                        info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, defaultLabelType));
+                        info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, defaultLabelType,
+                                                                  precursorMassShift));
                     }
                     else
                     {
@@ -430,10 +450,12 @@ namespace pwiz.Skyline.Model
                     foreach (var labelType in peptideMods.GetHeavyModifications().Select(typeMods => typeMods.LabelType))
                     {
                         precursorMassH = Settings.GetPrecursorMass(labelType, info.PeptideSequence, variableMods);
-                        precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
+                        precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance,
+                                                              info.IsDecoy, out precursorMassShift);
                         if (precursorCharge > 0)
                         {
-                            info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, labelType));
+                            info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, labelType,
+                                                                      precursorMassShift));
                         }
                         else
                         {
@@ -474,9 +496,13 @@ namespace pwiz.Skyline.Model
                             : nearestMz;
             }
 
-            private static int CalcPrecursorCharge(double precursorMassH, double precursorMz, double tolerance)
+            private static int CalcPrecursorCharge(double precursorMassH,
+                                                   double precursorMz,
+                                                   double tolerance,
+                                                   bool isDecoy,
+                                                   out int massShift)
             {
-                return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
+                return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isDecoy, out massShift);
             }
 
             private ExTransitionInfo CalcTransitionExplanations(ExTransitionInfo info, long lineNum)
@@ -496,13 +522,23 @@ namespace pwiz.Skyline.Model
                     IonType? ionType;
                     int? ordinal;
                     TransitionLosses losses;
+                    int massShift;
                     int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass,
-                        transitionExp.Precursor.PrecursorCharge, productMasses, potentialLosses, productMz,
-                        MzMatchTolerance, calc.MassType, out ionType, out ordinal, out losses);
+                                                                         transitionExp.Precursor.PrecursorCharge,
+                                                                         productMasses,
+                                                                         potentialLosses,
+                                                                         productMz,
+                                                                         MzMatchTolerance,
+                                                                         calc.MassType,
+                                                                         transitionExp.ProductShiftType,
+                                                                         out ionType,
+                                                                         out ordinal,
+                                                                         out losses,
+                                                                         out massShift);
 
                     if (productCharge > 0 && ionType.HasValue && ordinal.HasValue)
                     {
-                        transitionExp.Product = new ProductExp(productCharge, ionType.Value, ordinal.Value, losses);
+                        transitionExp.Product = new ProductExp(productCharge, ionType.Value, ordinal.Value, losses, massShift);
                     }
                     else
                     {
@@ -549,6 +585,7 @@ namespace pwiz.Skyline.Model
                                                string sequence,
                                                IsotopeLabelType labelType,
                                                int iSequence,
+                                               int iDecoy,
                                                double tolerance,
                                                IFormatProvider provider,
                                                SrmSettings settings,
@@ -564,7 +601,7 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     double precursorMassH = calc.GetPrecursorMass(sequence);
-
+                    bool isDecoy = iDecoy != -1 && Equals(fields[iDecoy].ToLowerInvariant(), "true");   // Not L10N
                     for (int i = 0; i < fields.Length; i++)
                     {
                         if (indexPrec != -1 && i != indexPrec)
@@ -576,11 +613,12 @@ namespace pwiz.Skyline.Model
                         if (precursorMz == 0)
                             continue;
 
-                        int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
+                        int massShift;
+                        int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isDecoy, out massShift);
                         if (charge > 0)
                         {
                             indexPrec = i;
-                            transitionExps.Add(new TransitionExp(mods, charge, labelType));
+                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift));
                         }
                     }
                 }
@@ -611,6 +649,7 @@ namespace pwiz.Skyline.Model
                         IonType? ionType;
                         int? ordinal;
                         TransitionLosses losses;
+                        int massShift;
                         int charge = TransitionCalc.CalcProductCharge(productPrecursorMass,
                                                                       transitionExp.Precursor.PrecursorCharge,
                                                                       productMasses,
@@ -618,9 +657,11 @@ namespace pwiz.Skyline.Model
                                                                       productMz,
                                                                       tolerance,
                                                                       calc.MassType,
+                                                                      transitionExp.ProductShiftType,
                                                                       out ionType,
                                                                       out ordinal,
-                                                                      out losses);
+                                                                      out losses,
+                                                                      out massShift);
                         if (charge > 0)
                             return i;
                     }
@@ -651,7 +692,7 @@ namespace pwiz.Skyline.Model
                 if (ProteinColumn != -1)
                     proteinName = Fields[ProteinColumn];
                 string peptideSequence = RemoveSequenceNotes(Fields[PeptideColumn]);
-                var info = new ExTransitionInfo(proteinName, peptideSequence, PrecursorMz);
+                var info = new ExTransitionInfo(proteinName, peptideSequence, PrecursorMz, IsDecoy);
 
                 if (LabelTypeColumn != -1)
                 {
@@ -662,7 +703,7 @@ namespace pwiz.Skyline.Model
                 return info;
             }
 
-            public static GeneralRowReader Create(IList<string> lines, IList<string> headers,
+            public static GeneralRowReader Create(IList<string> lines, IList<string> headers, int iDecoy,
                 IFormatProvider provider, char separator, SrmSettings settings)
             {
                 // Split the first line into fields.
@@ -695,8 +736,8 @@ namespace pwiz.Skyline.Model
                     IsotopeLabelType labelType = IsotopeLabelType.light;
                     if (iLabelType != -1)
                         labelType = GetLabelType(fields[iLabelType]);
-                    iPrecursor = FindPrecursor(fields, sequence, labelType, iSequence,
-                        tolerance, provider, settings, out transitionExps);
+                    iPrecursor = FindPrecursor(fields, sequence, labelType, iSequence, iDecoy,
+                                               tolerance, provider, settings, out transitionExps);
                     // If no match, and no specific label type, then try heavy.
                     if (settings.PeptideSettings.Modifications.HasHeavyModifications &&
                             iPrecursor == -1 && iLabelType == -1)
@@ -706,8 +747,8 @@ namespace pwiz.Skyline.Model
                         {
                             if (settings.GetPrecursorCalc(labelType, null) != null)
                             {
-                                iPrecursor = FindPrecursor(fields, sequence, typeMods.LabelType, iSequence,
-                                    tolerance, provider, settings, out transitionExps);
+                                iPrecursor = FindPrecursor(fields, sequence, typeMods.LabelType, iSequence, iDecoy,
+                                                           tolerance, provider, settings, out transitionExps);
                             }
                         }
                     }
@@ -721,7 +762,7 @@ namespace pwiz.Skyline.Model
 
                 int iProtein = FindProtein(fields, iSequence, lines, headers, provider, separator);
 
-                var indices = new ColumnIndices(iProtein, iSequence, iPrecursor, iProduct, iLabelType);
+                var indices = new ColumnIndices(iProtein, iSequence, iPrecursor, iProduct, iLabelType, iDecoy);
 
                 return new GeneralRowReader(provider, separator, indices, settings);
             }
@@ -872,7 +913,8 @@ namespace pwiz.Skyline.Model
 
         private class ExPeptideRowReader : MassListRowReader
         {
-            private const string REGEX_PEPTIDE_FORMAT =@"([^. ]+)\.([A-Z0-9_+\-\[\]]+)\.[^. ]+\.(light|{0})"; // Not L10N
+            // Protein.Peptide.+.Label
+            private const string REGEX_PEPTIDE_FORMAT = @"^([^. ]+)\.([A-Z0-9_+\-\[\]]+)\..+\.(light|{0})$"; // Not L10N
 
             private ExPeptideRowReader(IFormatProvider provider,
                                        char separator,
@@ -898,7 +940,7 @@ namespace pwiz.Skyline.Model
                     string proteinName = GetProteinName(match);
                     string peptideSequence = GetSequence(match);
 
-                    var info = new ExTransitionInfo(proteinName, peptideSequence, PrecursorMz)
+                    var info = new ExTransitionInfo(proteinName, peptideSequence, PrecursorMz, IsDecoy)
                         {
                             DefaultLabelType = GetLabelType(match, Settings),
                             IsExplicitLabelType = true
@@ -915,7 +957,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public static ExPeptideRowReader Create(IList<string> lines,
+            public static ExPeptideRowReader Create(IList<string> lines, int iDecoy,
                 IFormatProvider provider, char separator, SrmSettings settings)
             {
                 // Split the first line into fields.
@@ -947,8 +989,8 @@ namespace pwiz.Skyline.Model
 
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
                 IList<TransitionExp> transitionExps;
-                int iPrecursor = FindPrecursor(fields, sequence, labelType, iExPeptide,
-                    tolerance, provider, settings, out transitionExps);
+                int iPrecursor = FindPrecursor(fields, sequence, labelType, iExPeptide, iDecoy,
+                                               tolerance, provider, settings, out transitionExps);
                 if (iPrecursor == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_precursor_m_z_column_found, 1, -1);
 
@@ -957,7 +999,7 @@ namespace pwiz.Skyline.Model
                 if (iProduct == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
-                var indices = new ColumnIndices(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide);
+                var indices = new ColumnIndices(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iDecoy);
                 return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings);
             }
 
@@ -1099,29 +1141,35 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ColumnIndices
     {
-        public ColumnIndices(int proteinColumn, int peptideColumn, int precursorColumn, int productColumn)
-            : this(proteinColumn, peptideColumn, precursorColumn, productColumn, -1)            
-        {
-        }
-
-        public ColumnIndices(int proteinColumn, int peptideColumn, int precursorColumn, int productColumn, int labelTypeColumn)
+        public ColumnIndices(int proteinColumn,
+            int peptideColumn,
+            int precursorColumn,
+            int productColumn,
+            int labelTypeColumn = -1,
+            int decoyColumn = -1)
         {
             ProteinColumn = proteinColumn;
             PeptideColumn = peptideColumn;
             PrecursorColumn = precursorColumn;
             ProductColumn = productColumn;
             LabelTypeColumn = labelTypeColumn;
+            DecoyColumn = decoyColumn;
         }
 
-        public int ProteinColumn { get; set; }
-        public int PeptideColumn { get; set; }
-        public int PrecursorColumn { get; set; }
-        public int ProductColumn { get; set; }
+        public int ProteinColumn { get; private set; }
+        public int PeptideColumn { get; private set; }
+        public int PrecursorColumn { get; private set; }
+        public int ProductColumn { get; private set; }
 
         /// <summary>
         /// A column specifying the <see cref="IsotopeLabelType"/> (optional)
         /// </summary>
-        public int LabelTypeColumn { get; set; }
+        public int LabelTypeColumn { get; private set; }
+
+        /// <summary>
+        /// A column specifying whether a decoy is expected (optional)
+        /// </summary>
+        public int DecoyColumn { get; set; }
     }
 
     /// <summary>
@@ -1129,11 +1177,12 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ExTransitionInfo
     {
-        public ExTransitionInfo(string proteinName, string peptideSequence, double precursorMz)
+        public ExTransitionInfo(string proteinName, string peptideSequence, double precursorMz, bool isDecoy)
         {
             ProteinName = proteinName;
             PeptideSequence = peptideSequence;
             PrecursorMz = precursorMz;
+            IsDecoy = isDecoy;
             DefaultLabelType = IsotopeLabelType.light;
             TransitionExps = new List<TransitionExp>();
         }
@@ -1141,6 +1190,8 @@ namespace pwiz.Skyline.Model
         public string ProteinName { get; private set; }
         public string PeptideSequence { get; private set; }
         public double PrecursorMz { get; private set; }
+
+        public bool IsDecoy { get; private set; }
 
         /// <summary>
         /// The first label type to try in explaining the precursor m/z value
@@ -1168,9 +1219,20 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class TransitionExp
     {
-        public TransitionExp(ExplicitMods mods, int precursorCharge, IsotopeLabelType labelType)
+        public TransitionExp(ExplicitMods mods, int precursorCharge, IsotopeLabelType labelType, int precursorMassShift)
         {
-            Precursor = new PrecursorExp(mods, precursorCharge, labelType);
+            Precursor = new PrecursorExp(mods, precursorCharge, labelType, precursorMassShift);
+        }
+
+        public bool IsDecoy { get { return Precursor.MassShift.HasValue; } }
+        public TransitionCalc.MassShiftType ProductShiftType
+        {
+            get
+            {
+                return IsDecoy && !Precursor.LabelType.IsLight
+                           ? TransitionCalc.MassShiftType.either
+                           : TransitionCalc.MassShiftType.none;
+            }
         }
 
         public PrecursorExp Precursor { get; private set; }
@@ -1179,16 +1241,20 @@ namespace pwiz.Skyline.Model
 
     public sealed class PrecursorExp
     {
-        public PrecursorExp(ExplicitMods mods, int precursorCharge, IsotopeLabelType labelType)
+        public PrecursorExp(ExplicitMods mods, int precursorCharge, IsotopeLabelType labelType, int massShift)
         {
             VariableMods = mods;
             PrecursorCharge = precursorCharge;
             LabelType = labelType;
+            MassShift = null;
+            if (massShift != 0)
+                MassShift = massShift;
         }
 
         public ExplicitMods VariableMods { get; private set; }
         public int PrecursorCharge { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
+        public int? MassShift { get; private set; }
 
         #region object overrides
 
@@ -1225,18 +1291,22 @@ namespace pwiz.Skyline.Model
 
     public sealed class ProductExp
     {
-        public ProductExp(int productCharge, IonType ionType, int fragmentOrdinal, TransitionLosses losses)
+        public ProductExp(int productCharge, IonType ionType, int fragmentOrdinal, TransitionLosses losses, int massShift)
         {
             Charge = productCharge;
             IonType = ionType;
             FragmentOrdinal = fragmentOrdinal;
             Losses = losses;
+            MassShift = null;
+            if (massShift != 0)
+                MassShift = massShift;
         }
 
         public int Charge { get; private set; }
         public IonType IonType { get; private set; }
         public int FragmentOrdinal { get; private set; }
         public TransitionLosses Losses { get; private set; }
+        public int? MassShift { get; private set; }
     }
 
     public class MzMatchException : LineColNumberedIoException
@@ -1492,7 +1562,7 @@ namespace pwiz.Skyline.Model
                     }
                     end = begin + sequence.Length;
                 }
-                _activePeptide = new Peptide(_activeFastaSeq, sequence, begin, end, _enzyme.CountCleavagePoints(sequence));
+                _activePeptide = new Peptide(_activeFastaSeq, sequence, begin, end, _enzyme.CountCleavagePoints(sequence), info.TransitionExps[0].IsDecoy);
                 _activePrecursorMz = info.PrecursorMz;
                 _activeVariableMods = new List<ExplicitMods>(info.PotentialVarMods.Distinct());
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
@@ -1544,7 +1614,8 @@ namespace pwiz.Skyline.Model
                                              _activePeptide.Sequence,
                                              _activePeptide.Begin,
                                              _activePeptide.End,
-                                             _activePeptide.MissedCleavages);
+                                             _activePeptide.MissedCleavages,
+                                             _transitionGroups.Any(nodeGroup => nodeGroup.IsDecoy));
             }
         }
 
@@ -1582,14 +1653,20 @@ namespace pwiz.Skyline.Model
             // Just use the first precursor explanation, even if there are multiple
             var precursorExp = _activePrecursorExps[0];
             var transitionGroup = new TransitionGroup(_activePeptide,
-                precursorExp.PrecursorCharge, precursorExp.LabelType);
+                                                      precursorExp.PrecursorCharge,
+                                                      precursorExp.LabelType,
+                                                      false,
+                                                      precursorExp.MassShift);
             var transitions = _activeTransitionInfos.ConvertAll(info =>
                 {
                     var productExp = info.TransitionExps.Single(exp => Equals(precursorExp, exp.Precursor)).Product;
                     var ionType = productExp.IonType;
                     var ordinal = productExp.FragmentOrdinal;
                     int offset = Transition.OrdinalToOffset(ionType, ordinal, _activePeptide.Sequence.Length);
-                    var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Charge);
+                    int? massShift = productExp.MassShift;
+                    if (massShift == null && precursorExp.MassShift.HasValue)
+                        massShift = 0;
+                    var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Charge, massShift);
                     // m/z and library info calculated later
                     return new TransitionDocNode(tran, productExp.Losses, 0, null, null);
                 });
@@ -1615,7 +1692,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideGroupDocNode ToDocNode()
         {
-            PeptideGroupDocNode nodeGroup;
+            PeptideGroupDocNode nodePepGroup;
             SrmSettingsDiff diff = SrmSettingsDiff.ALL;
             if (PeptideList)
             {
@@ -1624,26 +1701,26 @@ namespace pwiz.Skyline.Model
                     CompletePeptide(true);
                     diff = SrmSettingsDiff.PROPS;
                 }
-                nodeGroup = new PeptideGroupDocNode(_activeFastaSeq ?? new PeptideGroup(),
+                nodePepGroup = new PeptideGroupDocNode(_activeFastaSeq ?? new PeptideGroup(_peptides.Any(p => p.IsDecoy)),
                     Name, Description, _peptides.ToArray());
             }
             else if (_customName)
             {
-                nodeGroup = new PeptideGroupDocNode(
+                nodePepGroup = new PeptideGroupDocNode(
                     new FastaSequence(null, null, Alternatives, _sequence.ToString()),
                     Name, Description, new PeptideDocNode[0]);
             }
             else
             {
-                nodeGroup = new PeptideGroupDocNode(
+                nodePepGroup = new PeptideGroupDocNode(
                     new FastaSequence(Name, Description, Alternatives, _sequence.ToString()),
                     null, null, new PeptideDocNode[0]);
             }
             if (_hasExplicitMods)
-                nodeGroup = (PeptideGroupDocNode) nodeGroup.ChangeAutoManageChildren(false);
+                nodePepGroup = (PeptideGroupDocNode) nodePepGroup.ChangeAutoManageChildren(false);
             // Materialize children, so that we have accurate accounting of
             // peptide and transition counts.
-            return nodeGroup.ChangeSettings(_settings, diff);
+            return nodePepGroup.ChangeSettings(_settings, diff);
         }
     }
 

@@ -63,13 +63,13 @@ namespace pwiz.Skyline.Model.Results
             RawMassErrors = massErrors;
         }
 
-        public void FindPeaks(double[] retentionTimes)
+        public void FindPeaks(double[] retentionTimes, bool requireDocNode)
         {
             Finder = new CrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
             // Don't find peaks for optimization data.  Optimization data will
             // have its peak extents set based on the primary data.
-            if (IsOptimizationData)
+            if (IsOptimizationData || (requireDocNode && DocNode == null))
                 RawPeaks = new CrawdadPeak[0];
             else
             {

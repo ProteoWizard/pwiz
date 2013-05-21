@@ -34,6 +34,8 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideGroup : Identity
     {
+        public const string DECOYS = "Decoys"; // Not L10N
+
         public virtual string Name { get { return null; } }
         public virtual string Description { get { return null; } }
         public virtual string Sequence { get { return null; } }

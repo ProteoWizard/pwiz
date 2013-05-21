@@ -59,6 +59,32 @@ namespace pwiz.Skyline.Model
         public const int MAX_PRODUCT_DECOY_MASS_SHIFT = 5;
 
         /// <summary>
+        /// MProphet reverse decoy algorithm requires these mass shifts for
+        /// singly charged product ions
+        /// </summary>
+        private static readonly int[] MPROPHET_REVERSED_MASS_SHIFTS = new[] {8, -8, 10, -10};
+
+        public static ICollection<int> MassShifts { get { return MASS_SHIFTS; } }
+
+        private static readonly HashSet<int> MASS_SHIFTS = new HashSet<int>(MassShiftEnum);
+
+        private static IEnumerable<int> MassShiftEnum
+        {
+            get
+            {
+                for (int i = MIN_PRODUCT_DECOY_MASS_SHIFT; i <= MAX_PRODUCT_DECOY_MASS_SHIFT; i++)
+                {
+                    if (i != 0)
+                        yield return i;
+                }
+                foreach (var i in MPROPHET_REVERSED_MASS_SHIFTS)
+                {
+                    yield return i;
+                }
+            }
+        }
+
+        /// <summary>
         /// Prioritized list of all possible product ion charges
         /// </summary>
         public static readonly int[] ALL_CHARGES = { 1, 2, 3 };
@@ -277,7 +303,8 @@ namespace pwiz.Skyline.Model
 
             if (DecoyMassShift.HasValue)
             {
-                if (DecoyMassShift < MIN_PRODUCT_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRODUCT_DECOY_MASS_SHIFT)
+                if ((DecoyMassShift.Value < MIN_PRODUCT_DECOY_MASS_SHIFT || DecoyMassShift.Value > MAX_PRODUCT_DECOY_MASS_SHIFT) &&
+                        !MPROPHET_REVERSED_MASS_SHIFTS.Contains(i => i == DecoyMassShift.Value))
                 {
                     throw new InvalidDataException(
                         string.Format(Resources.Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__,
@@ -295,7 +322,11 @@ namespace pwiz.Skyline.Model
             return Equals(obj.IonType, IonType) &&
                 obj.CleavageOffset == CleavageOffset &&
                 obj.Charge == Charge &&
-                obj.DecoyMassShift.Equals(DecoyMassShift);
+                (obj.DecoyMassShift.Equals(DecoyMassShift) || 
+                // Deal with strange case of mProphet golden standard data set
+                (obj.DecoyMassShift.HasValue && DecoyMassShift.HasValue &&
+                    (obj.Group.LabelType.IsLight && obj.DecoyMassShift == 0 && !Group.LabelType.IsLight && DecoyMassShift != 0) ||
+                    (!obj.Group.LabelType.IsLight && obj.DecoyMassShift != 0 && Group.LabelType.IsLight && DecoyMassShift == 0)));
         }
 
         #region object overrides

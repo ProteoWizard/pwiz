@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4490</ApplicationRevision>
-    <ApplicationVersion>1.4.1.4490</ApplicationVersion>
+    <ApplicationRevision>4551</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4551</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -497,6 +497,10 @@
     <Compile Include="Model\Esp\PiCalc.cs" />
     <Compile Include="Model\DocSettings\IsolationScheme.cs" />
     <Compile Include="Model\DocSettings\IsolationWindow.cs" />
+    <Compile Include="Model\Find\AbstractDocNodeFinder.cs" />
+    <Compile Include="Model\Find\MissingAnyResultsFinder.cs" />
+    <Compile Include="Model\Find\MissingLibraryDataFinder.cs" />
+    <Compile Include="Model\Find\MissingAllResultsFinder.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\Lib\AlignedRetentionTimes.cs" />
     <Compile Include="Model\OptimizationStep.cs" />

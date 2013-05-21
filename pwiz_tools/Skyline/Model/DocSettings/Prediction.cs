@@ -92,6 +92,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsAutoCalculated { get { return Conversion == null || _listFileIdToConversion != null; } }
 
+        public bool IsStandardPeptide(PeptideDocNode nodePep)
+        {
+            return _dictStandardPeptides != null && _dictStandardPeptides.ContainsKey(nodePep.Peptide.GlobalIndex);
+        }
+
         public IList<MeasuredRetentionTime> PeptideTimes
         {
             get { return _peptidesTimes; }

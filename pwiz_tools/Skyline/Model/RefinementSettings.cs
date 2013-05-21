@@ -559,6 +559,11 @@ namespace pwiz.Skyline.Model
         private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, bool multiCycle,
                                                       Func<SequenceMods, SequenceMods> genDecoySequence)
         {
+            // Exclude RT standard peptides
+            RetentionTimeRegression rtRegression = null;
+            if (document.Settings.PeptideSettings.Prediction.RetentionTime != null)
+                rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
+
             // Loop through the existing tree in random order creating decoys
             var decoyNodePepList = new List<PeptideDocNode>();
             var setDecoyKeys = new HashSet<PeptideModKey>();
@@ -569,6 +574,9 @@ namespace pwiz.Skyline.Model
                 {
                     if (numDecoys == 0)
                         break;
+
+                    if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
+                        continue;
 
                     var seqMods = new SequenceMods(nodePep);
                     if (genDecoySequence != null)
@@ -598,7 +606,7 @@ namespace pwiz.Skyline.Model
                 if (!multiCycle || startDecoys == numDecoys)
                     break;
             }
-            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys", // Not L10N
+            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, PeptideGroup.DECOYS,
                                                             null, decoyNodePepList.ToArray(), false);
             decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
 
@@ -627,6 +635,10 @@ namespace pwiz.Skyline.Model
                 else if (shiftMass)
                 {
                     precursorMassShift = GetPrecursorMassShift();
+                }
+                else
+                {
+                    precursorMassShift = TransitionGroup.ALTERED_SEQUENCE_DECOY_MZ_SHIFT;
                 }
 
                 var decoyGroup = new TransitionGroup(decoyPeptide, transGroup.PrecursorCharge,

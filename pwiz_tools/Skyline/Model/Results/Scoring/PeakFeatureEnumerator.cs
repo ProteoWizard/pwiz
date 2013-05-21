@@ -36,10 +36,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
             int totalPeptides = document.PeptideCount;
             int currentPeptide = 0;
             var status = new ProgressStatus(string.Empty);
+
+            // Exclude RT standard peptides
+            RetentionTimeRegression rtRegression = null;
+            if (document.Settings.PeptideSettings.Prediction.RetentionTime != null)
+                rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
+
             foreach (var nodePepGroup in document.PeptideGroups)
             {
                 foreach (var nodePep in nodePepGroup.Peptides)
                 {
+                    if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
+                        continue;
+
                     int percentComplete = currentPeptide++*100/totalPeptides;
                     if (percentComplete < 100)
                     {
@@ -113,6 +122,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                     while (summaryPeakData.NextPeakIndex())
                     {
+                        if (!summaryPeakData.HasArea)
+                            continue;
+
                         var listFeatures = new List<float>();
 
                         foreach (var calc in calcs)
@@ -158,6 +170,21 @@ namespace pwiz.Skyline.Model.Results.Scoring
             public ChromFileInfo FileInfo { get; private set; }
 
             public IList<ITransitionGroupPeakData<ISummaryPeakData>> TransitionGroupPeakData { get; private set; }
+
+            private IEnumerable<ITransitionPeakData<ISummaryPeakData>> TransitionPeakData
+            {
+                get { return TransitionGroupPeakData.SelectMany(pd => pd.TranstionPeakData); }
+            }
+
+            /// <summary>
+            /// Due to an problem with Crawdad peak finding and ChromDataPeakSet.Extend(), it used
+            /// to be possible to end up with peaks that had the same start and end time boundaries
+            /// and zero area.  This function helps to keep such peaks from being enumerated.
+            /// </summary>
+            public bool HasArea
+            {
+                get { return TransitionPeakData.FirstOrDefault(pd => pd.PeakData != null && pd.PeakData.Area != 0) != null; }
+            }
 
             public bool NextPeakIndex()
             {
@@ -208,6 +235,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 {
                     foreach (var peakData in groupPeakData.TranstionPeakData)
                     {
+                        if (peakData.PeakData == null)
+                            return false;
+
                         float widthNext = peakData.PeakData.EndTime - peakData.PeakData.StartTime;
                         if (width == 0)
                         {
@@ -306,15 +336,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             public bool SetPeakIndex(int peakIndex)
             {
-                if (0 > peakIndex || peakIndex >= _chromGroupInfo.NumPeaks)
-                    return false;
+                if (_chromGroupInfo == null || 0 > peakIndex || peakIndex >= _chromGroupInfo.NumPeaks)
+                {
+                    PeakIndex = -1;
+                    return false;                    
+                }
                 PeakIndex = peakIndex;
                 return true;
             }
 
             public void SetBestIndex()
             {
-                PeakIndex = _chromGroupInfo.BestPeakIndex;
+                PeakIndex = _chromGroupInfo != null ? _chromGroupInfo.BestPeakIndex : -1;
             }
 
             public int PeakIndex
@@ -323,9 +356,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 private set
                 {
                     _peakIndex = value;
-                    foreach (SummaryTransitionPeakData tranPeakData in TranstionPeakData)
+                    if (TranstionPeakData != null)
                     {
-                        tranPeakData.PeakIndex = _peakIndex;
+                        foreach (SummaryTransitionPeakData tranPeakData in TranstionPeakData)
+                        {
+                            tranPeakData.PeakIndex = _peakIndex;
+                        }
                     }
                 }
             }
@@ -356,7 +392,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 set
                 {
                     _peakIndex = value;
-                    PeakData = _chromInfo.GetPeak(_peakIndex);
+                    PeakData = null;
+                    if (_peakIndex != -1 && _chromInfo != null)
+                        PeakData = _chromInfo.GetPeak(_peakIndex);
                 }
             }
             public TransitionDocNode NodeTran { get; private set; }

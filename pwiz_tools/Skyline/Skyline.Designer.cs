@@ -220,10 +220,10 @@ namespace pwiz.Skyline
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importPeptideSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peakBoundariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importMassListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.peakBoundariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportIsolationListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1737,6 +1737,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.importPeptideSearchMenuItem, "importPeptideSearchMenuItem");
             this.importPeptideSearchMenuItem.Click += new System.EventHandler(this.importPeptideSearchMenuItem_Click);
             // 
+            // peakBoundariesToolStripMenuItem
+            // 
+            this.peakBoundariesToolStripMenuItem.Name = "peakBoundariesToolStripMenuItem";
+            resources.ApplyResources(this.peakBoundariesToolStripMenuItem, "peakBoundariesToolStripMenuItem");
+            this.peakBoundariesToolStripMenuItem.Click += new System.EventHandler(this.peakBoundariesToolStripMenuItem_Click);
+            // 
             // importFASTAMenuItem
             // 
             this.importFASTAMenuItem.Name = "importFASTAMenuItem";
@@ -1754,12 +1760,6 @@ namespace pwiz.Skyline
             this.importDocumentMenuItem.Name = "importDocumentMenuItem";
             resources.ApplyResources(this.importDocumentMenuItem, "importDocumentMenuItem");
             this.importDocumentMenuItem.Click += new System.EventHandler(this.importDocumentMenuItem_Click);
-            // 
-            // peakBoundariesToolStripMenuItem
-            // 
-            this.peakBoundariesToolStripMenuItem.Name = "peakBoundariesToolStripMenuItem";
-            resources.ApplyResources(this.peakBoundariesToolStripMenuItem, "peakBoundariesToolStripMenuItem");
-            this.peakBoundariesToolStripMenuItem.Click += new System.EventHandler(this.peakBoundariesToolStripMenuItem_Click);
             // 
             // exportToolStripMenuItem
             // 

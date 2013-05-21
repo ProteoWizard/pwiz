@@ -28,6 +28,108 @@ namespace pwiz.SkylineTestA
     [TestClass]
     public class MoreStatisticsTest : AbstractUnitTest
     {
+        [TestMethod]
+        public void DNormTest()
+        {
+            for (int i = 0; i < UNIT_NORMAL_DENSITY_FROM_R.Length; i+=2)
+            {
+                VerifyNormal(i, 0, 1, UNIT_NORMAL_DENSITY_FROM_R);
+            }
+            for (int i = 0; i < NON_UNIT_NORMAL_DENSITY_FROM_R.Length; i += 2)
+            {
+                VerifyNormal(i, 1, 0.5, NON_UNIT_NORMAL_DENSITY_FROM_R);
+            }
+        }
+
+        private void VerifyNormal(int i, double mean, double stdev, double[] normalDensities)
+        {
+            double expected = normalDensities[i + 1];
+            double actual = Statistics.DNorm(normalDensities[i], mean, stdev);
+            double precistion = MatchPrecision(expected);
+            Assert.AreEqual(expected, actual, precistion);
+        }
+
+        private double MatchPrecision(double value)
+        {
+            double match = 0.000001;
+            while (value < 1)
+            {
+                match /= 10;
+                value *= 10;
+            }
+            return match;
+        }
+
+        private static readonly double[] UNIT_NORMAL_DENSITY_FROM_R =
+            {
+                -3.0, 0.004431848,
+                -2.8, 0.007915452,
+                -2.6, 0.01358297,
+                -2.4, 0.02239453,
+                -2.2, 0.03547459,
+                -2.0, 0.05399097,
+                -1.8, 0.07895016,
+                -1.6, 0.1109208,
+                -1.4, 0.1497275,
+                -1.2, 0.1941861,
+                -1.0, 0.2419707,
+                -0.8, 0.2896916,
+                -0.6, 0.3332246,
+                -0.4, 0.3682701,
+                -0.2, 0.3910427,
+                 0.0, 0.3989423,
+                 0.2, 0.3910427,
+                 0.4, 0.3682701,
+                 0.6, 0.3332246,
+                 0.8, 0.2896916,
+                 1.0, 0.2419707,
+                 1.2, 0.1941861,
+                 1.4, 0.1497275,
+                 1.6, 0.1109208,
+                 1.8, 0.07895016,
+                 2.0, 0.05399097,
+                 2.2, 0.03547459,
+                 2.4, 0.02239453,
+                 2.6, 0.01358297,
+                 2.8, 0.007915452,
+                 3.0, 0.004431848
+            };
+
+        private static readonly double[] NON_UNIT_NORMAL_DENSITY_FROM_R =
+            {
+                -3.0, 1.010454e-14,
+                -2.8, 2.288313e-13,
+                -2.6, 4.41598e-12,
+                -2.4, 7.261923e-11,
+                -2.2, 1.017628e-09,
+                -2.0, 1.215177e-08,
+                -1.8, 1.236524e-07,
+                -1.6, 1.072207e-06,
+                -1.4, 7.922598e-06,
+                -1.2, 4.988494e-05,
+                -1.0, 0.0002676605,
+                -0.8, 0.001223804,
+                -0.6, 0.004768176,
+                -0.4, 0.0158309,
+                -0.2, 0.04478906,
+                 0.0, 0.1079819,
+                 0.2, 0.2218417,
+                 0.4, 0.3883721,
+                 0.6, 0.5793831,
+                 0.8, 0.7365403,
+                 1.0, 0.7978846,
+                 1.2, 0.7365403,
+                 1.4, 0.5793831,
+                 1.6, 0.3883721,
+                 1.8, 0.2218417,
+                 2.0, 0.1079819,
+                 2.2, 0.04478906,
+                 2.4, 0.0158309,
+                 2.6, 0.004768176,
+                 2.8, 0.001223804,
+                 3.0, 0.0002676605
+            };
+
         /// <summary>
         /// A test for dot-product scores
         /// </summary>

@@ -34,9 +34,26 @@ namespace pwiz.Skyline.Model
         public const int MAX_PRECURSOR_CHARGE = 20;
         public const int MAX_PRECURSOR_CHARGE_PICK = 6;
 
+        /// <summary>
+        /// From mProphet paper: shift precursor m/z by 10
+        /// </summary>
+        public const int ALTERED_SEQUENCE_DECOY_MZ_SHIFT = 10;
         public const int MIN_PRECURSOR_DECOY_MASS_SHIFT = -10;
         public const int MAX_PRECURSOR_DECOY_MASS_SHIFT = -3;
 
+        public static ICollection<int> MassShifts { get { return MASS_SHIFTS; } }
+
+        private static readonly HashSet<int> MASS_SHIFTS = new HashSet<int>(MassShiftEnum);
+        
+        private static IEnumerable<int> MassShiftEnum
+        {
+            get
+            {
+                yield return ALTERED_SEQUENCE_DECOY_MZ_SHIFT;
+                for (int i = MIN_PRECURSOR_DECOY_MASS_SHIFT; i < MAX_PRECURSOR_DECOY_MASS_SHIFT; i++)
+                    yield return i;
+            }
+        }
 
         private readonly Peptide _peptide;
 
@@ -559,6 +576,8 @@ namespace pwiz.Skyline.Model
                         {
                             Debug.Assert(!transitionRanks.ContainsKey(rmi.PredictedMz));
                             transitionRanks.Add(rmi.PredictedMz, rmi);
+                            if (!useFilter && rmi.PredictedMz2 != 0 && !transitionRanks.ContainsKey(rmi.PredictedMz2))
+                                transitionRanks.Add(rmi.PredictedMz2, rmi);
                         }
                     }
                 }
@@ -592,7 +611,9 @@ namespace pwiz.Skyline.Model
             }
             if (DecoyMassShift.HasValue)
             {
-                if ((DecoyMassShift != 0) && (DecoyMassShift < MIN_PRECURSOR_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRECURSOR_DECOY_MASS_SHIFT))
+                if ((DecoyMassShift != 0) &&
+                    (DecoyMassShift != ALTERED_SEQUENCE_DECOY_MZ_SHIFT) &&
+                    (DecoyMassShift < MIN_PRECURSOR_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRECURSOR_DECOY_MASS_SHIFT))
                 {
                     throw new InvalidDataException(
                         string.Format(Resources.TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__,

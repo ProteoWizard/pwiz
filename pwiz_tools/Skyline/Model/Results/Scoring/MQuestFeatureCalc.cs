@@ -257,7 +257,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
-            return (float) statValues.Mean(statWeigths);
+            double result = statValues.Mean(statWeigths);
+            if (double.IsNaN(result))
+                return 0;
+            return (float) result;
         }
 
         protected override double GetValue(MQuestCrossCorrelation xcorr)
@@ -287,7 +290,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
-            return (float) (statValues.Mean(statWeigths) + statValues.StdDev(statWeigths));
+            double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
+            if (double.IsNaN(result))
+                return 0;
+            return (float) result;
         }
 
         protected override double GetValue(MQuestCrossCorrelation xcorr)
@@ -423,7 +429,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
-            return (float) statValues.Mean(statWeigths);
+            double result = statValues.Mean(statWeigths);
+            if (double.IsNaN(result))
+                return 0;
+            return (float) result;
         }
 
         protected override double GetValue(MQuestCrossCorrelation xcorr)
@@ -455,7 +464,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
-            return (float) (statValues.Mean(statWeigths) + statValues.StdDev(statWeigths));
+            double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
+            if (double.IsNaN(result))
+                return 0;
+            return (float) result;
         }
 
         protected override double GetValue(MQuestCrossCorrelation xcorr)
