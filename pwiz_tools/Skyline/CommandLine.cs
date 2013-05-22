@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -53,6 +54,9 @@ namespace pwiz.Skyline
         public DateTime RemoveBeforeDate { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
+        public string FastaPath { get; private set; }
+        public string LibraryName { get; private set; }
+        public string LibraryPath { get; private set; }
 
 
         public bool ImportingResults
@@ -69,6 +73,16 @@ namespace pwiz.Skyline
         }
 
         public bool RemovingResults { get; private set; }
+
+        public bool ImportingFasta
+        {
+            get { return !string.IsNullOrWhiteSpace(FastaPath); }
+        }
+
+        public bool SettingLibraryPath
+        {
+            get { return !string.IsNullOrWhiteSpace(LibraryName) || !string.IsNullOrWhiteSpace(LibraryPath); }
+        }
 
         public string SaveFile { get; private set; }
         private bool _saving;
@@ -481,6 +495,24 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, "out"))
                 {
                     SaveFile = GetFullPath(pair.Value);
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, "add-library-name"))
+                {
+                    LibraryName = pair.Value;
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, "add-library-path"))
+                {
+                    LibraryPath = GetFullPath(pair.Value);
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, "import-fasta"))
+                {
+                    FastaPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
@@ -979,6 +1011,24 @@ namespace pwiz.Skyline
             if (commandArgs.RemovingResults)
             {
                 RemoveResults(commandArgs.RemoveBeforeDate);
+            }
+
+            if (commandArgs.ImportingFasta)
+            {
+                try
+                {
+                    ImportFasta(commandArgs.FastaPath);
+                }
+                catch (Exception x)
+                {
+                    _out.WriteLine("Error: Failed importing the file {0}. {1}", commandArgs.FastaPath, x.Message);
+                }
+            }
+
+            if (commandArgs.SettingLibraryPath)
+            {
+                if (!SetLibrary(commandArgs.LibraryName, commandArgs.LibraryPath))
+                    _out.WriteLine("Not setting library.");
             }
 
             if (commandArgs.Saving)
@@ -1497,6 +1547,78 @@ namespace pwiz.Skyline
 
                 _doc = _doc.ChangeMeasuredResults(newMeasuredResults);
             }
+        }
+
+        public void ImportFasta(string path)
+        {
+            _out.WriteLine("Importing FASTA file {0}...", Path.GetFileName(path));
+            using (var readerFasta = new StreamReader(path))
+            {
+                IProgressMonitor progressMonitor = new NoMessageCommandWaitBroker(_out, new ProgressStatus(string.Empty));
+                IdentityPath selectPath;
+                long lines = Helpers.CountLinesInFile(path);
+                _doc = _doc.ImportFasta(readerFasta, progressMonitor, lines, false, null, out selectPath);
+            }
+        }
+
+        public bool SetLibrary(string name, string path, bool append = true)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                _out.WriteLine("Error: Cannot set library name without path.");
+                return false;
+            }
+            else if (!File.Exists(path))
+            {
+                _out.WriteLine("Error: The file {0} does not exist.", path);
+                return false;
+            }
+            else if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
+            {
+                _out.WriteLine("Error: The file {0} appears to be a redundant library.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(name))
+                name = Path.GetFileNameWithoutExtension(path);
+
+            LibrarySpec librarySpec;
+
+            string ext = Path.GetExtension(path);
+            if (Equals(ext, BiblioSpecLiteSpec.EXT))
+                librarySpec = new BiblioSpecLiteSpec(name, path);
+            else if (Equals(ext, BiblioSpecLibSpec.EXT))
+                librarySpec = new BiblioSpecLibSpec(name, path);
+            else if (Equals(ext, XHunterLibSpec.EXT))
+                librarySpec = new XHunterLibSpec(name, path);
+            else if (Equals(ext, NistLibSpec.EXT))
+                librarySpec = new NistLibSpec(name, path);
+            else if (Equals(ext, SpectrastSpec.EXT))
+                librarySpec = new SpectrastSpec(name, path);
+            else
+            {
+                _out.WriteLine("Error: The file {0} is not a supported spectral library file format.", path);
+                return false;
+            }
+
+            // Check for conflicting names
+            foreach (var docLibrarySpec in _doc.Settings.PeptideSettings.Libraries.LibrarySpecs)
+            {
+                if (docLibrarySpec.Name == librarySpec.Name || docLibrarySpec.FilePath == librarySpec.FilePath)
+                {
+                    _out.WriteLine("Error: The library you are trying to add conflicts with a library already in the file.");
+                    return false;
+                }
+            }
+
+            var librarySpecs = append ?
+                new List<LibrarySpec>(_doc.Settings.PeptideSettings.Libraries.LibrarySpecs) { librarySpec } :
+                new List<LibrarySpec>{ librarySpec };
+
+            SrmSettings newSettings = _doc.Settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(librarySpecs));
+            _doc = _doc.ChangeSettings(newSettings);
+
+            return true;
         }
 
         
@@ -2340,11 +2462,20 @@ namespace pwiz.Skyline
         }
     }
 
+    internal class NoMessageCommandWaitBroker : CommandWaitBroker
+    {
+        public NoMessageCommandWaitBroker(TextWriter outWriter, ProgressStatus status) : base(outWriter, status)
+        {
+        }
+
+        protected override void WriteStatusMessage(string message)
+        {
+            // Do nothing
+        }
+    }
 
     internal class CommandWaitBroker : IProgressMonitor
     {
-        #region Implementation of ILongWaitBroker
-
         private ProgressStatus _currentProgress;
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
@@ -2371,12 +2502,17 @@ namespace pwiz.Skyline
 
         public bool HasUI { get { return false; } }
 
+        protected virtual void WriteStatusMessage(string message)
+        {
+            _out.WriteLine(message);
+        }
+
         private void UpdateProgress(ProgressStatus status)
         {
             if (!string.IsNullOrEmpty(status.Message) &&
                 (_currentProgress == null || !ReferenceEquals(status.Message, _currentProgress.Message)))
             {
-                _out.WriteLine(status.Message);
+                WriteStatusMessage(status.Message);
             }
             if (_currentProgress != null && status.PercentComplete != _currentProgress.PercentComplete)
             {
@@ -2391,7 +2527,5 @@ namespace pwiz.Skyline
             }
             _currentProgress = status;
         }
-
-        #endregion
     }
 }

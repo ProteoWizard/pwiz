@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument Document { get; private set; }
         public bool PeptideList { get; private set; }
 
-        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader, ILongWaitBroker longWaitBroker, long lineCount)
+        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount)
         {
             // Set starting values for limit counters
             _countPeptides = Document.PeptideCount;
@@ -74,16 +75,20 @@ namespace pwiz.Skyline.Model
             int progressPercent = -1;
 
             string line;
+            var status = new ProgressStatus(string.Empty);
             while ((line = reader.ReadLine()) != null)
             {
                 linesRead++;
-                if (longWaitBroker != null)
+                if (progressMonitor != null)
                 {
-                    if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(Document))
+                    // TODO when changing from ILongWaitBroker to IProgressMonitor, the old code was:
+                    // if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(Document))
+                    // IProgressMonitor does not have IsDocumentChangesd.
+                    if (progressMonitor.IsCanceled)
                         return new PeptideGroupDocNode[0];
                     int progressNew = (int) (linesRead*100/lineCount);
                     if (progressPercent != progressNew)
-                        longWaitBroker.ProgressValue = progressPercent = progressNew;
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressPercent = progressNew));
                 }
 
                 if (line.StartsWith(">")) // Not L10N
@@ -98,8 +103,8 @@ namespace pwiz.Skyline.Model
                     seqBuilder = _modMatcher == null
                         ? new PeptideGroupBuilder(line, PeptideList, Document.Settings)
                         : new PeptideGroupBuilder(line, _modMatcher, Document.Settings);
-                    if (longWaitBroker != null)
-                        longWaitBroker.Message = string.Format(Resources.FastaImporter_Import_Adding_protein__0__, seqBuilder.Name);
+                    if (progressMonitor != null)
+                        progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.FastaImporter_Import_Adding_protein__0__, seqBuilder.Name)));
                 }
                 else if (seqBuilder == null)
                 {

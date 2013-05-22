@@ -152,6 +152,105 @@ namespace pwiz.SkylineTestA
         }
 
         [TestMethod]
+        public void ConsoleSetLibraryTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("SetLib_Out.sky");
+            string libPath = testFilesDir.GetTestPath("sample.blib");
+            string libPath2 = testFilesDir.GetTestPath("sample2.blib");
+            const string libName = "namedlib";
+            string fakePath = docPath + ".fake";
+            string libPathRedundant = testFilesDir.GetTestPath("sample.redundant.blib");
+
+            // Test error (name without path)
+            string output = RunCommand("--in=" + docPath,
+                                "--add-library-name=" + libName,
+                                "--out=" + outPath);
+            Assert.IsTrue(output.Contains("Error"));
+
+            // Test error (file does not exist)
+            output = RunCommand("--in=" + docPath,
+                                "--add-library-path=" + fakePath,
+                                "--out=" + outPath);
+            Assert.IsTrue(output.Contains("Error"));
+
+            // Test error (file does not exist)
+            output = RunCommand("--in=" + docPath,
+                                "--add-library-path=" + libPathRedundant,
+                                "--out=" + outPath);
+            Assert.IsTrue(output.Contains("Error"));
+
+            // Test error (unsupported library format)
+            output = RunCommand("--in=" + docPath,
+                                "--add-library-path=" + docPath,
+                                "--out=" + outPath);
+            Assert.IsTrue(output.Contains("Error"));
+
+            // Test add library without name
+            output = RunCommand("--in=" + docPath,
+                                "--add-library-path=" + libPath,
+                                "--out=" + outPath);
+
+            SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.IsFalse(output.Contains("Error"));
+            Assert.IsFalse(output.Contains("Warning"));
+
+            AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
+            Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
+                doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
+            Assert.AreEqual(1, doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
+            Assert.AreEqual(libPath, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].FilePath);
+
+            // Add another library with name
+            output = RunCommand("--in=" + outPath,
+                                "--add-library-name=" + libName,
+                                "--add-library-path=" + libPath2,
+                                "--save");
+
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.IsFalse(output.Contains("Error"));
+            Assert.IsFalse(output.Contains("Warning"));
+
+            AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
+            Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
+                doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
+            Assert.AreEqual(2, doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
+            Assert.AreEqual(libPath, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].FilePath);
+            Assert.AreEqual(libName, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
+            Assert.AreEqual(libPath2, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[1].FilePath);
+
+            // Test error (library with conflicting name)
+            output = RunCommand("--in=" + outPath,
+                                "--add-library-path=" + libPath,
+                                "--out=" + outPath);
+            Assert.IsTrue(output.Contains("Error"));
+        }
+
+        [TestMethod]
+        public void ConsoleAddFastaTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("AddFasta_Out.sky");
+            string fastaPath = testFilesDir.GetTestPath("sample.fasta");
+
+
+            string output = RunCommand("--in=" + docPath,
+                                       "--import-fasta=" + fastaPath,
+                                       "--out=" + outPath);
+
+            SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.IsFalse(output.Contains("Error"));
+            Assert.IsFalse(output.Contains("Warning"));
+
+            // Before import, there are 2 peptides. 3 peptides after
+            AssertEx.IsDocumentState(doc, 0, 3, 7, 7, 49);
+        }
+
+        [TestMethod]
         public void ConsoleReportExportTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);

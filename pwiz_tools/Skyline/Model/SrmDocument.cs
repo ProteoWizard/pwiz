@@ -30,6 +30,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -671,26 +672,26 @@ namespace pwiz.Skyline.Model
             return ImportFasta(reader, null, -1, peptideList, to, out firstAdded);
         }
 
-        public SrmDocument ImportFasta(TextReader reader, ILongWaitBroker longWaitBroker, long lines, bool peptideList,
+        public SrmDocument ImportFasta(TextReader reader, IProgressMonitor progressMonitor, long lines, bool peptideList,
                 IdentityPath to, out IdentityPath firstAdded)
         {
             FastaImporter importer = new FastaImporter(this, peptideList);
             IdentityPath nextAdd;
-            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), peptideList,
+            return AddPeptideGroups(importer.Import(reader, progressMonitor, lines), peptideList,
                 to, out firstAdded, out nextAdd);
         }
 
-        public SrmDocument ImportFasta(TextReader reader, ILongWaitBroker longWaitBroker, long lines, 
+        public SrmDocument ImportFasta(TextReader reader, IProgressMonitor progressMonitor, long lines, 
             ModificationMatcher matcher, IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdded)
         {
             if (matcher == null)
             {
                 nextAdded = null;
-                return ImportFasta(reader, longWaitBroker, lines, false, to, out firstAdded);
+                return ImportFasta(reader, progressMonitor, lines, false, to, out firstAdded);
             }
 
             FastaImporter importer = new FastaImporter(this, matcher);
-            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), true, to, out firstAdded, out nextAdded);
+            return AddPeptideGroups(importer.Import(reader, progressMonitor, lines), true, to, out firstAdded, out nextAdded);
         }
 
         public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,
