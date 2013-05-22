@@ -85,8 +85,8 @@ namespace pwiz.SkylineTestA
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (1)"" precursor_filter=""1""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
             // Filter and special handling
-            AssertEx.DeserializeError<IsolationScheme>(
-                @"<isolation_scheme name=""Invalid (2)"" precursor_filter=""1"" special_handling=""MSe""/>");
+            //AssertEx.DeserializeError<IsolationScheme>(
+            //    @"<isolation_scheme name=""Invalid (2)"" precursor_filter=""1"" special_handling=""MSe""/>");
             // Filter and windows per scan
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (3)"" precursor_filter=""1"" windows_per_scan=""3""/>");

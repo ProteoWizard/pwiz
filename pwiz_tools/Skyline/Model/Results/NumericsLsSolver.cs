@@ -95,12 +95,14 @@ namespace pwiz.Skyline.Model.Results
         void Solve(DeconvBlock db);
     }
 
+
+
     public class WeightedConditioner : IBlockConditioner
     {
         private readonly double[] _smoothCoefs;
         public WeightedConditioner()
         {
-           _smoothCoefs = new[]{-0.086, 0.343, 0.486, 0.343, -0.086 };
+            _smoothCoefs = new[]{-0.086, 0.343, 0.486, 0.343, -0.086 };
         }
         public WeightedConditioner(double[] smoothCoefs)
         {
@@ -114,9 +116,12 @@ namespace pwiz.Skyline.Model.Results
                 int rowsPerSection = numRows/5;
                 for (int i = 0; i < numRows; ++i)
                 {
-                    int smoothCoefIndex = i / rowsPerSection;
+                    int smoothCoefIndex = i/rowsPerSection;
                     // boundary scenario
-                    if (smoothCoefIndex == 5) { smoothCoefIndex = 4; }
+                    if (smoothCoefIndex >= 5)
+                    {
+                        smoothCoefIndex = 4;
+                    }
                     double smoothCoef = _smoothCoefs[smoothCoefIndex];
                     for (int j = 0; j < db.Masks.NumCols; ++j)
                         db.Masks.Matrix[i, j] *= smoothCoef;
@@ -195,12 +200,29 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+
+    public class OverlapLsSolver : NonNegLsSolver
+    {
+        public OverlapLsSolver(int numIsos, int maxRow, int maxTransitions):
+            base(numIsos,maxRow,maxTransitions)
+        {
+            double[] smoothCoefs = new[] { 1.0, 1.0, 1.0, 1.0, 1.0 };
+            _conditioner = new WeightedConditioner(smoothCoefs);
+        }
+
+        protected override void SetTolerance(DeconvBlock db)
+        {
+            base.SetTolerance(db);
+            _tol = 1e-8;
+        }
+    }
+
     /// <summary>
     /// implementation of the non negative least squares algorithm implemented in matlab
     /// </summary>
     public class NonNegLsSolver : ILsSolver
     {
-        private IBlockConditioner _conditioner;
+        protected IBlockConditioner _conditioner;
 
         // data structures to reuse
         private Matrix<double> _firstGuess;
@@ -221,8 +243,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly Matrix<double> _matrixDiff;
         private readonly Matrix<double> _matrixDiffBig;
 
-        private double? _tol;
-        private int? _maxIter;
+        protected double? _tol;
+        protected int? _maxIter;
 
         public NonNegLsSolver(int numIsos, int maxRows, int maxTransitions)
         {
@@ -280,7 +302,7 @@ namespace pwiz.Skyline.Model.Results
             MathNet.Numerics.Control.LinearAlgebraProvider = new LinProvider();
         }
 
-        public void Solve (DeconvBlock db)
+        protected virtual void ClearMatrices()
         {
             _firstGuess.Clear();
             _matrixAx.Clear();
@@ -292,14 +314,24 @@ namespace pwiz.Skyline.Model.Results
             _binnedDataCol.Clear();
             _matrixAxCol.Clear();
             _matrixWsCol.Clear();
+        }
 
+        protected virtual void SetTolerance(DeconvBlock db)
+        {
+            // Number of blocks of scans that you average over
+            int maxCount = db.Masks.NumRows;
+            _tol = db.Masks.Matrix.L1Norm() * 10.0 * double.Epsilon * maxCount;
+            _maxIter = db.Masks.NumCols * 3;
+        }
+
+        public virtual void Solve (DeconvBlock db)
+        {
+            ClearMatrices();
             _conditioner.Condition(db);
 
             if (!_tol.HasValue)
             {
-                int maxCount = db.Masks.NumRows;
-                _tol = db.Masks.Matrix.L1Norm()*10.0*double.Epsilon*maxCount;
-                _maxIter = db.Masks.NumCols*3;
+                SetTolerance(db);
             }
             var matrixAt = db.Masks.Matrix.Transpose();
             FindFirstGuess(db.Masks.Matrix, db.BinnedData.Matrix, ref _firstGuess);
@@ -314,6 +346,8 @@ namespace pwiz.Skyline.Model.Results
                 _initializeCol.Clear();
                 _firstGuess.Column(colNum, _initializeCol);
                 db.BinnedData.Matrix.Column(colNum, _binnedDataCol);
+                _matrixAxCol.Clear();
+                _matrixWsCol.Clear();
                 _matrixAx.Column(colNum, _matrixAxCol);
                 _matrixWs.Column(colNum, _matrixWsCol);
                 if (SolveColumn(db.Masks.Matrix, _binnedDataCol,
@@ -372,11 +406,22 @@ namespace pwiz.Skyline.Model.Results
                 w[i, 0] = wFullVector[i];
             int iter = 0;
             x.Column(0, solution);
-            while ((zSet.Count > 0) && zSet.Any(item => w[item, 0] > _tol))
+            // The initialized variable keeps track of whether we're on the first iteration,
+            // which needs to be treated specially
+            bool initialized = false;
+            // Move the nonzero variables to the non-active set
+            var initialMove = zSet.Where(item => initialize[item] > _tol);
+            foreach (var index in initialMove)
+            {
+                zSet.Remove(index);
+                pSet.Add(index);
+            }
+            while (((zSet.Count > 0) && zSet.Any(item => w[item, 0] > _tol)) ||
+                    !initialized)
             {
                 int maxW = 0;
                 double maxVal = double.MinValue;
-                foreach (var activeIndex in zSet) 
+                foreach (var activeIndex in zSet)
                 {
                     if (w[activeIndex, 0] > maxVal)
                     {
@@ -384,10 +429,12 @@ namespace pwiz.Skyline.Model.Results
                         maxW = activeIndex;
                     }
                 }
-
+                // Handles the case where initialization is zero and it happens to be an optimum
+                if (maxVal <= _tol && pSet.Count == 0 && !initialized)
+                    break;
+                initialized = true;
                 zSet.Remove(maxW);
                 pSet.Add(maxW);
-
                 // compute the intermediate solution with only the non-active columns
                 Matrix<double> intermediateA = GetMatrixColumns(matrixA, pSet);
                 Matrix<double> intermediateZ;
@@ -421,7 +468,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     // create a set of indices from the non active set where z[index]<= tolerance
                     var qSet = pSet.Where(item => z[item, 0] <= _tol);
-                    double alpha = qSet.Min(item => x[item, 0] / (x[item, 0] - z[item, 0]));
+                    double alpha = qSet.Min(item => (x[item, 0] == z[item, 0]) ? double.MaxValue : x[item, 0] / (x[item, 0] - z[item, 0]));
                     
                     x = (x + alpha * (z - x));
                     Matrix<double> x1 = x;
@@ -501,7 +548,7 @@ namespace pwiz.Skyline.Model.Results
 
         private Matrix<double> GetMatrixColumns(Matrix<double> input, SizedSet columns)
         {
-            double[,] matrixData = new double[input.RowCount, columns.Count()]; 
+            double[,] matrixData = new double[input.RowCount, columns.Count]; 
             for (int row = 0; row <input.RowCount; ++row)
             {
                 int destColumn = 0;

@@ -347,8 +347,6 @@ namespace pwiz.Skyline.Model.Results
 
                 var dictPrecursorMzToIndex = new Dictionary<double, int>(); // For SRM processing
 
-                var demultiplexer = dataFile.IsMsx ? new MsxDemultiplexer(dataFile, filter) : null;
-
                 // If possible, find the maximum retention time in order to scale the chromatogram graph.
                 if (allChromData != null && (filter.EnabledMsMs || filter.EnabledMs))
                 {
@@ -361,6 +359,23 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
+                // Determine what type of demultiplexer, if any, to use based on settings in the
+                // IsolationScheme menu
+                IsolationScheme isoScheme = document.Settings.TransitionSettings.FullScan.IsolationScheme;
+                var handlingType = isoScheme == null
+                                        ? IsolationScheme.SpecialHandlingType.NONE
+                                        : isoScheme.SpecialHandling;
+                bool isOverlap = Equals(handlingType, IsolationScheme.SpecialHandlingType.OVERLAP);
+                bool isMultiplexed = Equals(handlingType, IsolationScheme.SpecialHandlingType.MULTIPLEXED);
+                IDemultiplexer demultiplexer = null;
+                if (isOverlap)
+                {
+                    demultiplexer = new OverlapDemultiplexer(dataFile, filter);
+                }
+                else if (isMultiplexed)
+                {
+                   demultiplexer = new MsxDemultiplexer(dataFile, filter);
+                }
                 for (int i = 0; i < lenSpectra; i++)
                 {
                     // Update progress indicator

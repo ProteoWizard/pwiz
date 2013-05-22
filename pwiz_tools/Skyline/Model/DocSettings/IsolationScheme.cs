@@ -40,13 +40,15 @@ namespace pwiz.Skyline.Model.DocSettings
             public static string MULTIPLEXED { get { return "Multiplexed"; } }  // Not L10N : Used only in XML and in memory
             public const string MS_E = "MSe"; // Not L10N : This is a Waters trademark, and probably not localizable
             public const string ALL_IONS = "All Ions";    // TODO: Need to come up with a way of localizing XmlNamedElement names that appear in UI
+            public const string OVERLAP = "Overlap";
 
             public static void Validate(string specialHandling)
             {
                 if (!Equals(specialHandling, NONE) &&
                     !Equals(specialHandling, MULTIPLEXED) &&
                     !Equals(specialHandling, MS_E) &&
-                    !Equals(specialHandling, ALL_IONS))
+                    !Equals(specialHandling, ALL_IONS) &&
+                    !Equals(specialHandling, OVERLAP))
                 {
                     throw new InvalidDataException(string.Format(
                         Resources.SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling, specialHandling));
@@ -66,14 +68,19 @@ namespace pwiz.Skyline.Model.DocSettings
         public string SpecialHandling { get; private set; }
         public int? WindowsPerScan { get; private set; }
 
-        public IsolationScheme(string name, double? precursorFilter, double? precursorRightFilter = null)
+        public IsolationScheme(string name, string specialHandling, double? precursorFilter, double? precursorRightFilter = null)
             : base(name)
         {
             PrecursorFilter = precursorFilter;
             PrecursorRightFilter = precursorRightFilter;
-            SpecialHandling = SpecialHandlingType.NONE;
+            SpecialHandling = specialHandling;
             PrespecifiedIsolationWindows = new IsolationWindow[0];
             DoValidate();
+        }
+
+        public IsolationScheme(string name, double? precursorFilter, double? precursorRightFilter = null)
+            : this(name,SpecialHandlingType.NONE,precursorFilter, precursorRightFilter)
+        {
         }
 
         public IsolationScheme(string name, IList<IsolationWindow> isolationWindows)
@@ -144,10 +151,6 @@ namespace pwiz.Skyline.Model.DocSettings
                                                      TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER,
                                                      TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
                                                      Resources.IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_);
-                }
-                if (!Equals(SpecialHandling, SpecialHandlingType.NONE))
-                {
-                    throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Special_handling_applies_only_to_prespecified_isolation_windows);
                 }
                 if (WindowsPerScan.HasValue)
                 {

@@ -38,24 +38,26 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.rbUseResultsData = new System.Windows.Forms.RadioButton();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.labelDeconvolution = new System.Windows.Forms.Label();
+            this.comboDeconv = new System.Windows.Forms.ComboBox();
+            this.btnCalculate = new System.Windows.Forms.Button();
+            this.btnGraph = new System.Windows.Forms.Button();
+            this.labelMargins = new System.Windows.Forms.Label();
+            this.comboMargins = new System.Windows.Forms.ComboBox();
+            this.textWindowsPerScan = new System.Windows.Forms.TextBox();
+            this.labelWindowsPerScan = new System.Windows.Forms.Label();
+            this.cbSpecifyTarget = new System.Windows.Forms.CheckBox();
+            this.textName = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.rbPrespecified = new System.Windows.Forms.RadioButton();
             this.textRightPrecursorFilterMz = new System.Windows.Forms.TextBox();
             this.cbAsymIsolation = new System.Windows.Forms.CheckBox();
             this.labelTh = new System.Windows.Forms.Label();
             this.textPrecursorFilterMz = new System.Windows.Forms.TextBox();
             this.labelIsolationWidth = new System.Windows.Forms.Label();
-            this.rbPrespecified = new System.Windows.Forms.RadioButton();
-            this.textName = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.cbSpecifyTarget = new System.Windows.Forms.CheckBox();
-            this.labelWindowsPerScan = new System.Windows.Forms.Label();
-            this.textWindowsPerScan = new System.Windows.Forms.TextBox();
-            this.comboMargins = new System.Windows.Forms.ComboBox();
-            this.labelMargins = new System.Windows.Forms.Label();
-            this.btnGraph = new System.Windows.Forms.Button();
-            this.btnCalculate = new System.Windows.Forms.Button();
+            this.rbUseResultsData = new System.Windows.Forms.RadioButton();
             this.gridIsolationWindows = new pwiz.Skyline.Controls.DataGridViewEx();
             this.startDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -63,17 +65,9 @@
             this.startMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.cbMultiplexed = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.gridIsolationWindows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.editIsolationWindowBindingSource)).BeginInit();
             this.SuspendLayout();
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
@@ -82,14 +76,84 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // rbUseResultsData
+            // btnCancel
             // 
-            resources.ApplyResources(this.rbUseResultsData, "rbUseResultsData");
-            this.rbUseResultsData.Checked = true;
-            this.rbUseResultsData.Name = "rbUseResultsData";
-            this.rbUseResultsData.TabStop = true;
-            this.rbUseResultsData.UseVisualStyleBackColor = true;
-            this.rbUseResultsData.CheckedChanged += new System.EventHandler(this.rbFromResultsData_CheckedChanged);
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // labelDeconvolution
+            // 
+            resources.ApplyResources(this.labelDeconvolution, "labelDeconvolution");
+            this.labelDeconvolution.Name = "labelDeconvolution";
+            // 
+            // comboDeconv
+            // 
+            this.comboDeconv.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboDeconv.FormattingEnabled = true;
+            resources.ApplyResources(this.comboDeconv, "comboDeconv");
+            this.comboDeconv.Name = "comboDeconv";
+            this.comboDeconv.SelectedIndexChanged += new System.EventHandler(this.comboDeconv_SelectedIndexChanged);
+            // 
+            // btnCalculate
+            // 
+            resources.ApplyResources(this.btnCalculate, "btnCalculate");
+            this.btnCalculate.Name = "btnCalculate";
+            this.btnCalculate.UseVisualStyleBackColor = true;
+            this.btnCalculate.Click += new System.EventHandler(this.btnCalculate_Click);
+            // 
+            // btnGraph
+            // 
+            resources.ApplyResources(this.btnGraph, "btnGraph");
+            this.btnGraph.Name = "btnGraph";
+            this.btnGraph.UseVisualStyleBackColor = true;
+            // 
+            // labelMargins
+            // 
+            resources.ApplyResources(this.labelMargins, "labelMargins");
+            this.labelMargins.Name = "labelMargins";
+            // 
+            // comboMargins
+            // 
+            resources.ApplyResources(this.comboMargins, "comboMargins");
+            this.comboMargins.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboMargins.FormattingEnabled = true;
+            this.comboMargins.Name = "comboMargins";
+            this.comboMargins.SelectedIndexChanged += new System.EventHandler(this.comboMargins_SelectedIndexChanged);
+            // 
+            // textWindowsPerScan
+            // 
+            resources.ApplyResources(this.textWindowsPerScan, "textWindowsPerScan");
+            this.textWindowsPerScan.Name = "textWindowsPerScan";
+            // 
+            // labelWindowsPerScan
+            // 
+            resources.ApplyResources(this.labelWindowsPerScan, "labelWindowsPerScan");
+            this.labelWindowsPerScan.Name = "labelWindowsPerScan";
+            // 
+            // cbSpecifyTarget
+            // 
+            resources.ApplyResources(this.cbSpecifyTarget, "cbSpecifyTarget");
+            this.cbSpecifyTarget.Name = "cbSpecifyTarget";
+            this.cbSpecifyTarget.UseVisualStyleBackColor = true;
+            this.cbSpecifyTarget.CheckedChanged += new System.EventHandler(this.cbSpecifyTarget_CheckedChanged);
+            // 
+            // textName
+            // 
+            resources.ApplyResources(this.textName, "textName");
+            this.textName.Name = "textName";
+            // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
+            // 
+            // rbPrespecified
+            // 
+            resources.ApplyResources(this.rbPrespecified, "rbPrespecified");
+            this.rbPrespecified.Name = "rbPrespecified";
+            this.rbPrespecified.UseVisualStyleBackColor = true;
             // 
             // textRightPrecursorFilterMz
             // 
@@ -118,64 +182,14 @@
             resources.ApplyResources(this.labelIsolationWidth, "labelIsolationWidth");
             this.labelIsolationWidth.Name = "labelIsolationWidth";
             // 
-            // rbPrespecified
+            // rbUseResultsData
             // 
-            resources.ApplyResources(this.rbPrespecified, "rbPrespecified");
-            this.rbPrespecified.Name = "rbPrespecified";
-            this.rbPrespecified.UseVisualStyleBackColor = true;
-            // 
-            // textName
-            // 
-            resources.ApplyResources(this.textName, "textName");
-            this.textName.Name = "textName";
-            // 
-            // label4
-            // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
-            // 
-            // cbSpecifyTarget
-            // 
-            resources.ApplyResources(this.cbSpecifyTarget, "cbSpecifyTarget");
-            this.cbSpecifyTarget.Name = "cbSpecifyTarget";
-            this.cbSpecifyTarget.UseVisualStyleBackColor = true;
-            this.cbSpecifyTarget.CheckedChanged += new System.EventHandler(this.cbSpecifyTarget_CheckedChanged);
-            // 
-            // labelWindowsPerScan
-            // 
-            resources.ApplyResources(this.labelWindowsPerScan, "labelWindowsPerScan");
-            this.labelWindowsPerScan.Name = "labelWindowsPerScan";
-            // 
-            // textWindowsPerScan
-            // 
-            resources.ApplyResources(this.textWindowsPerScan, "textWindowsPerScan");
-            this.textWindowsPerScan.Name = "textWindowsPerScan";
-            // 
-            // comboMargins
-            // 
-            resources.ApplyResources(this.comboMargins, "comboMargins");
-            this.comboMargins.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboMargins.FormattingEnabled = true;
-            this.comboMargins.Name = "comboMargins";
-            this.comboMargins.SelectedIndexChanged += new System.EventHandler(this.comboMargins_SelectedIndexChanged);
-            // 
-            // labelMargins
-            // 
-            resources.ApplyResources(this.labelMargins, "labelMargins");
-            this.labelMargins.Name = "labelMargins";
-            // 
-            // btnGraph
-            // 
-            resources.ApplyResources(this.btnGraph, "btnGraph");
-            this.btnGraph.Name = "btnGraph";
-            this.btnGraph.UseVisualStyleBackColor = true;
-            // 
-            // btnCalculate
-            // 
-            resources.ApplyResources(this.btnCalculate, "btnCalculate");
-            this.btnCalculate.Name = "btnCalculate";
-            this.btnCalculate.UseVisualStyleBackColor = true;
-            this.btnCalculate.Click += new System.EventHandler(this.btnCalculate_Click);
+            resources.ApplyResources(this.rbUseResultsData, "rbUseResultsData");
+            this.rbUseResultsData.Checked = true;
+            this.rbUseResultsData.Name = "rbUseResultsData";
+            this.rbUseResultsData.TabStop = true;
+            this.rbUseResultsData.UseVisualStyleBackColor = true;
+            this.rbUseResultsData.CheckedChanged += new System.EventHandler(this.rbFromResultsData_CheckedChanged);
             // 
             // gridIsolationWindows
             // 
@@ -261,24 +275,14 @@
             resources.ApplyResources(this.endMarginDataGridViewTextBoxColumn, "endMarginDataGridViewTextBoxColumn");
             this.endMarginDataGridViewTextBoxColumn.Name = "endMarginDataGridViewTextBoxColumn";
             // 
-            // editIsolationWindowBindingSource
-            // 
-            this.editIsolationWindowBindingSource.DataSource = typeof(pwiz.Skyline.SettingsUI.EditIsolationWindow);
-            // 
-            // cbMultiplexed
-            // 
-            resources.ApplyResources(this.cbMultiplexed, "cbMultiplexed");
-            this.cbMultiplexed.Name = "cbMultiplexed";
-            this.cbMultiplexed.UseVisualStyleBackColor = true;
-            this.cbMultiplexed.CheckedChanged += new System.EventHandler(this.cbMultiplexed_CheckedChanged);
-            // 
             // EditIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbMultiplexed);
+            this.Controls.Add(this.labelDeconvolution);
+            this.Controls.Add(this.comboDeconv);
             this.Controls.Add(this.btnCalculate);
             this.Controls.Add(this.btnGraph);
             this.Controls.Add(this.labelMargins);
@@ -336,6 +340,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn targetDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn startMarginDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn endMarginDataGridViewTextBoxColumn;
-        private System.Windows.Forms.CheckBox cbMultiplexed;
+        private System.Windows.Forms.ComboBox comboDeconv;
+        private System.Windows.Forms.Label labelDeconvolution;
     }
 }

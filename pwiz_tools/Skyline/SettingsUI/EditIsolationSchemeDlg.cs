@@ -58,6 +58,15 @@ namespace pwiz.Skyline.SettingsUI
             public static string ASYMMETRIC { get { return Resources.WindowMargin_ASYMMETRIC_Asymmetric; } }
         };
 
+        public static class DeconvolutionMethod
+        {
+            public static string NONE { get { return Resources.DoconvolutionMethod_NONE_None; } }
+
+            public static string MSX { get { return Resources.DoconvolutionMethod_MSX_Msx; } }
+
+            public static string OVERLAP { get { return Resources.DoconvolutionMethod_OVERLAP_Overlap; } }
+        };
+
         public EditIsolationSchemeDlg(IEnumerable<IsolationScheme> existing)
         {
             _existing = existing;
@@ -68,6 +77,16 @@ namespace pwiz.Skyline.SettingsUI
 
             // Fix-up isolation width edit controls
             UpdateIsolationWidths();
+
+            // Initialize deconvolution combo box.
+            comboDeconv.Items.AddRange(
+                new object[]
+                    {
+                        DeconvolutionMethod.NONE,
+                        DeconvolutionMethod.MSX,
+                        DeconvolutionMethod.OVERLAP
+                    });
+            comboDeconv.SelectedItem = DeconvolutionMethod.NONE;
 
             // Initialize margins combo box.
             comboMargins.Items.AddRange(
@@ -151,12 +170,15 @@ namespace pwiz.Skyline.SettingsUI
                     comboMargins.SelectedItem = showStartMargin 
                         ? (showEndMargin ? WindowMargin.ASYMMETRIC : WindowMargin.SYMMETRIC) 
                         : WindowMargin.NONE;
-                    cbMultiplexed.Checked = Equals(_isolationScheme.SpecialHandling,
-                                                   IsolationScheme.SpecialHandlingType.MULTIPLEXED);
                     textWindowsPerScan.Text = _isolationScheme.WindowsPerScan.HasValue
                                                   ? _isolationScheme.WindowsPerScan.Value.ToString(CultureInfo.CurrentCulture)
                                                   : string.Empty;
                 }
+                comboDeconv.SelectedItem = Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.OVERLAP)
+                               ? DeconvolutionMethod.OVERLAP
+                               : Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
+                                     ? DeconvolutionMethod.MSX
+                                     : DeconvolutionMethod.NONE;
             }
         }
 
@@ -179,11 +201,10 @@ namespace pwiz.Skyline.SettingsUI
             btnGraph.Enabled = !fromResults;
             gridIsolationWindows.Enabled = !fromResults;
             cbSpecifyTarget.Enabled = !fromResults;
-            cbMultiplexed.Enabled = !fromResults;
             comboMargins.Enabled = !fromResults;
             labelMargins.Enabled = !fromResults;
             labelWindowsPerScan.Enabled =
-                textWindowsPerScan.Enabled = !fromResults && Equals(SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED);
+                textWindowsPerScan.Enabled = (!fromResults && Equals(comboDeconv.SelectedItem, DeconvolutionMethod.MSX));
         }
 
         private void cbAsymIsolation_CheckedChanged(object sender, EventArgs e)
@@ -258,7 +279,7 @@ namespace pwiz.Skyline.SettingsUI
                         return;
                     precursorRightFilter = precFilt;
                 }
-                _isolationScheme = new IsolationScheme(name, precursorFilter, precursorRightFilter);
+                _isolationScheme = new IsolationScheme(name,SpecialHandling, precursorFilter, precursorRightFilter);
             }
             else
             {
@@ -409,9 +430,11 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
-        private void cbMultiplexed_CheckedChanged(object sender, EventArgs e)
+        private void comboDeconv_SelectedIndexChanged(object sender, EventArgs e)
         {
-            EnableControls();
+            bool fromResults = rbUseResultsData.Checked;
+            labelWindowsPerScan.Enabled =
+               textWindowsPerScan.Enabled = (!fromResults && Equals(comboDeconv.SelectedItem, DeconvolutionMethod.MSX));
         }
 
         private void comboMargins_SelectedIndexChanged(object sender, EventArgs e)
@@ -481,12 +504,11 @@ namespace pwiz.Skyline.SettingsUI
                     // Copy multiplexed windows settings.
                     if (calculateDlg.Multiplexed)
                     {
-                        cbMultiplexed.Checked = true;
+                        comboDeconv.SelectedItem = DeconvolutionMethod.MSX;
                         textWindowsPerScan.Text = calculateDlg.WindowsPerScan.ToString(CultureInfo.CurrentCulture);
                     }
                     else
                     {
-                        cbMultiplexed.Checked = false;
                         textWindowsPerScan.Text = string.Empty;
                     }
                 }
@@ -728,13 +750,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return cbMultiplexed.Checked
-                    ? IsolationScheme.SpecialHandlingType.MULTIPLEXED
-                    : IsolationScheme.SpecialHandlingType.NONE;
+                return Equals(comboDeconv.SelectedItem, DeconvolutionMethod.OVERLAP) ? IsolationScheme.SpecialHandlingType.OVERLAP :
+                    Equals(comboDeconv.SelectedItem, DeconvolutionMethod.MSX) ? IsolationScheme.SpecialHandlingType.MULTIPLEXED :
+                    IsolationScheme.SpecialHandlingType.NONE;
             }
             set
             {
-                cbMultiplexed.Checked = Equals(value, IsolationScheme.SpecialHandlingType.MULTIPLEXED);
+                comboDeconv.SelectedItem = Equals(value, IsolationScheme.SpecialHandlingType.OVERLAP)
+                                               ? DeconvolutionMethod.OVERLAP
+                                               : Equals(value, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
+                                                     ? DeconvolutionMethod.MSX
+                                                     : DeconvolutionMethod.NONE;
             }
         }
 

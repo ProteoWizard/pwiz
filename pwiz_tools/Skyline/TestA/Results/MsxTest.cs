@@ -29,26 +29,85 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA.Results
 {
+    // TODO: add tests for:
+    // 1. TryGetAllWindowsFromMz
+    // 2. Mulitple isolation windows in transition binner
+    // 3. Add final result check to Msx test
     [TestClass]
     public class MsxTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\Results\MsxTest.zip";
 
         private const int TEST_SPECTRUM = 105;
+        private const int TEST_SPECTRUM_OVERLAP = 67;
 
         [TestMethod]
-        public void TestMsx()
+        public void TestDemux()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("MsxTest.sky");
-            var dataPath = testFilesDir.GetTestPath("MsxTest.mzML");
+            string dataPathMsx = testFilesDir.GetTestPath("MsxTest.mzML");
+            string dataPathOverlap = testFilesDir.GetTestPath("OverlapTest.mzML");
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitial.IsEnabledMsMs);
+            
+            TestMsx(doc,dataPathMsx);
+            TestOverlap(doc,dataPathOverlap);
+        }
 
-            // load the file and check MsDataFileImpl
+        public void TestOverlap(SrmDocument doc, string dataPath)
+        {
+            // Load the file and check MsDataFileImpl
+            var file = new MsDataFileImpl(dataPath, 0);
+            var filter = new SpectrumFilter(doc, null);
+            Assert.IsTrue(filter.EnabledMsMs);
+            var demultiplexer = new OverlapDemultiplexer(file, filter);
+            demultiplexer.ForceInitializeFile();
+
+            // Check that the demultiplexer found the correct multiplexing parameters
+            Assert.AreEqual(1, demultiplexer.IsoWindowsPerScan);
+            Assert.AreEqual(40, demultiplexer.NumIsoWindows);
+            Assert.AreEqual(41, demultiplexer.NumDeconvRegions);
+
+            var isoMapper = demultiplexer.IsoMapperTest;
+
+            // Basic checks of IsolationWindowMapper
+            TestIsolationWindowMapper(isoMapper, file, 20.009);
+            // Checks of overlap-specific functionality in IsolationWindowMapper
+            TestOverlapIsolationWindowMapper(isoMapper, file);
+            var transBinner = new TransitionBinner(filter, isoMapper);
+
+            // Test creation of a transition binner from a spectrum filter
+            TestTransitionBinnerFromFilter(transBinner, isoMapper);
+            var testSpectrum = file.GetSpectrum(TEST_SPECTRUM_OVERLAP);
+            // Generate a transition binner containing a lot of tough cases with
+            // overlapping transitions and test
+            double[] binnedExpected = new[] 
+                                        {
+                                            0.0, 0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0
+                                        };
+            var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
+
+            TestSpectrumProcessor(transBinnerOverlap, isoMapper, file, TEST_SPECTRUM_OVERLAP);
+            int[] intensityIndices = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296};
+            double[] intensityValues = new[]
+                {
+                    0.0, 0.0, 0.0, 0.0, 4545.85, 15660.49, 
+                    35050.01, 56321.66, 62715.75, 43598.31, 23179.42,
+                    1227.37, 1730.05, 1814.80, 1407.17, 740.37,
+                    0.0, 0.0
+                };
+            // Test demultiplexing of a real spectrum
+            TestFullDemultiplex(demultiplexer, TEST_SPECTRUM_OVERLAP, testSpectrum, intensityIndices, intensityValues, 0);
+        }
+
+        public void TestMsx(SrmDocument doc, string dataPath)
+        {
+            // Load the file and check MsDataFileImpl
             var file = new MsDataFileImpl(dataPath, 0);
             Assert.IsTrue(file.IsMsx);
 
@@ -57,42 +116,64 @@ namespace pwiz.SkylineTestA.Results
             var demultiplexer = new MsxDemultiplexer(file, filter);
             demultiplexer.ForceInitializeFile();
 
-            // check that the demultiplexer found the correct multiplexing parameters
+            // Check that the demultiplexer found the correct multiplexing parameters
             Assert.AreEqual(5, demultiplexer.IsoWindowsPerScan);
             Assert.AreEqual(100, demultiplexer.NumIsoWindows);
             Assert.AreEqual(20, demultiplexer.DutyCycleLength);
 
             var isoMapper = demultiplexer.IsoMapperTest;
+            Assert.AreEqual(100, isoMapper.NumWindows);
 
-            // check the isolation window mapper responsible for mapping each unique isolation
+            // Check the isolation window mapper responsible for mapping each unique isolation
             // window detected in the file to a unique index
-            TestIsolationWindowMapper(isoMapper, file);
+            TestIsolationWindowMapper(isoMapper, file, 4.00182);
 
             var transBinner = new TransitionBinner(filter, isoMapper);
 
-            // test creation of a transition binner from a spectrum filter
+            // Test creation of a transition binner from a spectrum filter
             TestTransitionBinnerFromFilter(transBinner, isoMapper);
             var testSpectrum = file.GetSpectrum(TEST_SPECTRUM);
-            // generate a transition binner containing a lot of tough cases with
-            // overlapping transitions and test
-            var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper);
+            // Generate a transition binner containing a lot of tough cases with
+            // overlapping transitions and test    
+            double[] binnedExpected = new[] 
+                                        {
+                                            0.0, 25160.11261, 18254.06375, 18254.06375, 18254.06375,
+                                            11090.00577, 19780.18628,  19780.18628
+                                        };
+            var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
 
-            TestSpectrumProcessor(transBinnerOverlap, isoMapper, file);
+            TestSpectrumProcessor(transBinnerOverlap, isoMapper, file,TEST_SPECTRUM);
 
             TestPeakIntensityCorrection(testSpectrum, isoMapper,
                 demultiplexer);
         }
 
-        private static void TestIsolationWindowMapper(IsolationWindowMapper isoMapper, MsDataFileImpl file)
+        private static void TestOverlapIsolationWindowMapper(AbstractIsoWindowMapper isoMapper, MsDataFileImpl file)
         {
-            Assert.AreEqual(100, isoMapper.NumWindows);
-            // check the first five spectra in the file
+            Assert.AreEqual(40,isoMapper.NumWindows);
+            Assert.AreEqual(41,isoMapper.NumDeconvRegions);
+            // Check that each isolation window has two overlap regions with mz values that are contained in it
+            for (int i = 0; i < isoMapper.NumWindows; ++i)
+            {
+                IsoWin isoWin = isoMapper.GetIsolationWindow(i);
+                Assert.AreEqual(2, isoWin.DeconvRegions.Count);
+                foreach (var deconvRegion in isoWin.DeconvRegions)
+                {
+                    Assert.IsTrue(isoWin.Contains(deconvRegion));
+                    Assert.IsTrue(isoWin.Start <= deconvRegion.Start && isoWin.Stop >= deconvRegion.Stop);
+                }
+            }
+        }
+
+        private static void TestIsolationWindowMapper(AbstractIsoWindowMapper isoMapper, MsDataFileImpl file, double width)
+        {
+            // Check the first five spectra in the file
             for (int checkIndex = 0 ; checkIndex < 5; ++checkIndex)
             {
                 var spectrum = file.GetSpectrum(checkIndex);
                 var precursors = spectrum.Precursors;
                 List<int> isoIndices = new List<int>();
-                // make sure that each precursor read from the file is included in the isolation
+                // Make sure that each precursor read from the file is included in the isolation
                 // window mapper
                 foreach (var precursor in precursors)
                 {
@@ -102,10 +183,17 @@ namespace pwiz.SkylineTestA.Results
                     isoIndices.Add(index);
                 }
                 int[] isoIndicesFromMapper;
+                int[] overlapIndicesFromMapper;
                 double[] mask = new double[isoMapper.NumWindows];
-                // make sure the isolation windows called from GetWindowMask match those
+                // Make sure the isolation windows called from GetWindowMask match those
                 // extracted from the spectrum manually above using TryGetWindowIndex
-                isoMapper.GetWindowMask(spectrum, out isoIndicesFromMapper, ref mask);
+                isoMapper.GetWindowMask(spectrum, out isoIndicesFromMapper, out overlapIndicesFromMapper, ref mask);
+                Assert.AreEqual(isoIndices.Count,isoIndicesFromMapper.Length);
+                foreach (int index in isoIndicesFromMapper)
+                {
+                    Assert.IsTrue(isoIndices.Contains(index));
+                }
+                // Make sure the overlapIndicesFromMapper matches the mask
                 for (int i = 0; i < mask.Length; ++i)
                 {
                     if (mask[i] < 0.5)
@@ -113,14 +201,13 @@ namespace pwiz.SkylineTestA.Results
                     else
                     {
                         Assert.AreEqual(1.0, mask[i]);
-                        Assert.IsTrue(isoIndices.Contains(i));
-                        Assert.IsTrue(isoIndicesFromMapper.Contains(i));
+                        Assert.IsTrue(overlapIndicesFromMapper.Contains(i));
                     }
                 }
             }
 
             var testMzs = new[] {553.49, 623.7, 859, 658.55, 768.7, 621.52};
-            // for each test m/z, get the matching isolation window from isoMapper and
+            // For each test m/z, get the matching isolation window from isoMapper and
             // make sure the m/z does indeed fall within the window
             foreach (var checkMz in testMzs)
             {
@@ -128,11 +215,11 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(isoMapper.TryGetWindowFromMz(checkMz, out windowIndex));
                 var matchWindowCenterMz = isoMapper.GetPrecursor(windowIndex);
                 Assert.IsTrue(matchWindowCenterMz.IsolationMz.HasValue);
-                // Check that mz is within window (width/2 = 2.00091)
-                Assert.IsTrue(Math.Abs(matchWindowCenterMz.IsolationMz.Value - checkMz) < 2.00091);
+                // Check that mz is within window (width/2 )
+                Assert.IsTrue(Math.Abs(matchWindowCenterMz.IsolationMz.Value - checkMz) < width/2);
             }
 
-            // test out of range precursors
+            // Test out of range precursors
             int dummyIndex;
             Assert.IsFalse(isoMapper.TryGetWindowFromMz(315.25, out dummyIndex));
             Assert.AreEqual(-1, dummyIndex);
@@ -141,9 +228,9 @@ namespace pwiz.SkylineTestA.Results
         }
 
         private static void TestTransitionBinnerFromFilter(TransitionBinner transBinner, 
-            IsolationWindowMapper isoMapper)
+            AbstractIsoWindowMapper isoMapper)
         {
-            // test that the transition binner interpreted the spectrum filter correctly
+            // Test that the transition binner interpreted the spectrum filter correctly
             // here are the expected precursor -> transition pairs (precursors[0] has
             // transitions in transitions[0])
             double[] precursors = new[] {586.8479, 602.6211};
@@ -161,39 +248,39 @@ namespace pwiz.SkylineTestA.Results
                     }
                 };
 
-            // test the mapping of precursor -> transitions
+            // Test the mapping of precursor -> transitions
             for (int testIndex = 0; testIndex < precursors.Length; ++testIndex)
             {
                 var precursor = precursors[testIndex];
                 int precursorIndex;
-                // make sure the isolation mapper has this precursor
+                // Make sure the isolation mapper has this precursor
                 Assert.IsTrue(isoMapper.TryGetWindowFromMz(precursor, out precursorIndex));
                 Assert.AreNotEqual(-1, precursorIndex);
                 var expectedTransitions = transitions[testIndex];
-                // transitionBinsFromBinner is a list of indices for transitions stored by transBinner
+                // TransitionBinsFromBinner is a list of indices for transitions stored by transBinner
                 // that map to the precursor
                 var transitionBinsFromBinner = transBinner.BinsForPrecursors(new[] { precursorIndex });
                 Assert.AreEqual(expectedTransitions.Length, transitionBinsFromBinner.Count);
-                // this will be populated with bins for the transitions we know should be in this
+                // This will be populated with bins for the transitions we know should be in this
                 // precursor as explicitly defined above in precursors[] and transitions[][]
                 var expectedTransitionBins = new HashSet<int>();
                 var binIndicesSet = new HashSet<int>(transitionBinsFromBinner);
-                // for each transitions center m/z that's supposed to map to this precursor
+                // For each transitions center m/z that's supposed to map to this precursor
                 foreach (var transition in expectedTransitions)
                 {
-                    // what bin does this transition fall into?
+                    // What bin does this transition fall into?
                     var bins = transBinner.BinsFromValues(new[]{transition}, true).ToArray();
 
-                    // each transition maps to a single transition bin in this test
+                    // Each transition maps to a single transition bin in this test
                     // m/z values mapping to multiple (overlapping) transitions is tested in
                     // TestTransitionBinnerOverlap
                     Assert.AreEqual(1,bins.Length);
                     var bin = bins[0].Value;
-                    // does this transition actually fall into the returned bin?
+                    // Does this transition actually fall into the returned bin?
                     Assert.IsTrue(transBinner.TransInfoFromBin(bin).ContainsMz(transition));
-                    // was this bin correctly mapped to the precursor?
+                    // Was this bin correctly mapped to the precursor?
                     Assert.IsTrue(transitionBinsFromBinner.Contains(bin));
-                    // this transition falls into this bin, and we expected this bin to map to the precursor
+                    // This transition falls into this bin, and we expected this bin to map to the precursor
                     // being tested so add it to expectedTransitionBins
                     expectedTransitionBins.Add(bin);
                 }
@@ -201,9 +288,9 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(setComparer.Equals(expectedTransitionBins, binIndicesSet));
             }
 
-            // check BinInPrecursor
-            // positive control
-            // bin for 1465.6376 is in precursor 602.6211
+            // Check BinInPrecursor
+            // Positive control
+            // Bin for 1465.6376 is in precursor 602.6211
             var binsFromValue = transBinner.BinsFromValues(new[] { 1465.6376 }, true).ToArray();
             Assert.AreEqual(binsFromValue.Length, 1);
             var binTwo = binsFromValue[0].Value;
@@ -211,15 +298,15 @@ namespace pwiz.SkylineTestA.Results
             Assert.IsTrue(isoMapper.TryGetWindowFromMz(602.6211, out precursorIndexTwo));
             Assert.IsTrue(transBinner.BinInPrecursor(binTwo, precursorIndexTwo));
 
-            // negative control: and is not in precursor 586.8479
+            // Negative control: and is not in precursor 586.8479
             Assert.IsTrue(isoMapper.TryGetWindowFromMz(586.8479, out precursorIndexTwo));
             Assert.IsFalse(transBinner.BinInPrecursor(binTwo, precursorIndexTwo));
         }
 
         private static TransitionBinner TestTransitionBinnerOverlap(MsDataSpectrum spectrum, 
-            IsolationWindowMapper isoMapper)
+            AbstractIsoWindowMapper isoMapper, double[] binnedIntensities)
         {
-            // multiple transitions overlapping the same peak from the same precursor
+            // Multiple transitions overlapping the same peak from the same precursor
             var precursorList = new List<double>();
             var transitionList = new List<KeyValuePair<double, double>>();
             precursorList.Add(710.5);                                 //transition: start - stop     index
@@ -228,14 +315,14 @@ namespace pwiz.SkylineTestA.Results
             transitionList.Add(new KeyValuePair<double, double>(380.44,1.0));   // 379.94-380.94     Bin4
             precursorList.Add(710.5);
             transitionList.Add(new KeyValuePair<double, double>(380.49,0.6));   // 380.19-380.79     Bin5
-            // and a non-overlapping transition for good measure
+            // And a non-overlapping transition for good measure
             precursorList.Add(710.5);
             transitionList.Add(new KeyValuePair<double, double>(389.19,0.3));   // 389.04 - 389.34   Bin7 
-            // and a transition that won't have any peaks in the spectrum
+            // And a transition that won't have any peaks in the spectrum
             precursorList.Add(710.5);
             transitionList.Add(new KeyValuePair<double, double>(377.0,0.7));    // 376.65-377.35     Bin0
 
-            // and now another precursor with some of the transitions overlapping the first
+            // And now another precursor with some of the transitions overlapping the first
             precursorList.Add(595.0);
             transitionList.Add(new KeyValuePair<double, double>(380.0,1.0));    // 379.5 - 380.5     Bin2
             precursorList.Add(595.0);
@@ -248,28 +335,23 @@ namespace pwiz.SkylineTestA.Results
             double[] binnedData = new double[transitionList.Count];
             transitionBinner.BinData(spectrum.Mzs, spectrum.Intensities, ref binnedData);
 
-            // test that m/z, intensity pairs were binned correctly into their transitions
-            double[] binnedExpected = new[] 
-                                        {
-                                            0.0, 25160.11261, 18254.06375, 18254.06375, 18254.06375,
-                                            11090.00577, 19780.18628,  19780.18628
-                                        };
+            // Test that m/z, intensity pairs were binned correctly into their transitions
             for (int i = 0; i< binnedData.Length; ++i)
             {
-                Assert.AreEqual(binnedExpected[i], binnedData[i], 0.001);
+                Assert.AreEqual(binnedIntensities[i], binnedData[i], 0.001);
             }
 
-            // get the precursor index for this precursor
+            // Get the precursor index for this precursor
             // make sure the precursor -> transition mapping is working for the first precursor
             int windowIndexOne;
             Assert.IsTrue(isoMapper.TryGetWindowFromMz(710.5, out windowIndexOne));
-            // use the precursor index to get the bins mapping to this precursor
+            // Use the precursor index to get the bins mapping to this precursor
             var precursorBins = new HashSet<int>(transitionBinner.BinsForPrecursors(new[] {windowIndexOne}));
             var expectedPrecursorBins = new HashSet<int>(new[]{0,3,4,5,7});
             var setComparer = HashSet<int>.CreateSetComparer();
             Assert.IsTrue(setComparer.Equals(expectedPrecursorBins, precursorBins));
 
-            // make sure the precursor -> transition mapping is working for the second precursor
+            // Make sure the precursor -> transition mapping is working for the second precursor
             int windowIndexTwo;
             Assert.IsTrue(isoMapper.TryGetWindowFromMz(595.0, out windowIndexTwo));
             precursorBins = new HashSet<int>(transitionBinner.BinsForPrecursors(new[]{windowIndexOne, windowIndexTwo}));
@@ -298,14 +380,14 @@ namespace pwiz.SkylineTestA.Results
             return transitionBinner;
         }
 
-        private static void TestSpectrumProcessor(TransitionBinner transBinner, IsolationWindowMapper isoMapper, 
-            MsDataFileImpl file)
+        private static void TestSpectrumProcessor(TransitionBinner transBinner,AbstractIsoWindowMapper isoMapper, 
+            MsDataFileImpl file, int testSpectrumNum)
         {
-            const int lastSpectrum = TEST_SPECTRUM + 60;
-            const int firstSpectrum = TEST_SPECTRUM - 60;
+            int lastSpectrum = testSpectrumNum + 60;
+            int firstSpectrum = testSpectrumNum - 60;
             var spectrumProcessor = new SpectrumProcessor(lastSpectrum + 1, isoMapper, transBinner);
 
-            // make a new spectrum processor using the testing constructor that takes in
+            // Make a new spectrum processor using the testing constructor that takes in
             // a TransitionBinner, which will be the one used for overlap
             // Add the spectra to the cache +/- 60 from the spectrum of interest
             for (int i = firstSpectrum; i <= lastSpectrum; ++i)
@@ -314,19 +396,19 @@ namespace pwiz.SkylineTestA.Results
                 spectrumProcessor.AddSpectrum(i, spectrum);
             }
 
-            // check that the caching worked correctly
+            // Check that the caching worked correctly
             for (int spectrumIndex = firstSpectrum; spectrumIndex <= lastSpectrum; ++spectrumIndex)
             {
-                SingleScanCache specData;
+                ScanCached specData;
                 Assert.IsTrue(spectrumProcessor.TryGetSpectrum(spectrumIndex, out specData));
 
-                // check that the cached processing results match the output of
+                // Check that the cached processing results match the output of
                 // redoing the processing manually by extracting the spectrum from
                 // the file again and using transBinner to bin the data
                 var testSpectrum = file.GetSpectrum(spectrumIndex);
                 double[] expectedBinnedData = new double[transBinner.NumBins];
                 transBinner.BinData(testSpectrum.Mzs, testSpectrum.Intensities, ref expectedBinnedData);
-                SingleScanCache testSpecData;
+                ScanCached testSpecData;
                 spectrumProcessor.TryGetSpectrum(spectrumIndex, out testSpecData);
                 var seenBinnedData = testSpecData.Data;
                 Assert.AreEqual(expectedBinnedData.Length, seenBinnedData.Length);
@@ -344,23 +426,24 @@ namespace pwiz.SkylineTestA.Results
         /// correctly to scale peaks in the test spectrum
         /// </summary>
         private static void TestPeakIntensityCorrection(MsDataSpectrum testSpectrum,
-            IsolationWindowMapper isoMapper,
-            MsxDemultiplexer demultiplexer)
+            AbstractIsoWindowMapper isoMapper,
+            AbstractDemultiplexer demultiplexer)
         {
-            // store a reference to the old spectrum processor
+            // Store a reference to the old spectrum processor
             var oldProcessor = demultiplexer.SpectrumProcessor;
             DeconvBlock db = new DeconvBlock(100, 120, 35);
             int[] isoIndices;
+            int[] deconvIndices;
             double[] mask = new double[100];
-            isoMapper.GetWindowMask(testSpectrum, out isoIndices, ref mask);
-            Assert.IsTrue(isoIndices.Contains(50));
-            Assert.IsTrue(isoIndices.Contains(47));
-            Assert.IsTrue(isoIndices.Contains(15));
-            Assert.IsTrue(isoIndices.Contains(17));
-            Assert.IsTrue(isoIndices.Contains(74));
-            Assert.AreEqual(5, isoIndices.Length);
+            isoMapper.GetWindowMask(testSpectrum, out isoIndices, out deconvIndices, ref mask);
+            Assert.IsTrue(deconvIndices.Contains(50));
+            Assert.IsTrue(deconvIndices.Contains(47));
+            Assert.IsTrue(deconvIndices.Contains(15));
+            Assert.IsTrue(deconvIndices.Contains(17));
+            Assert.IsTrue(deconvIndices.Contains(74));
+            Assert.AreEqual(5, deconvIndices.Length);
 
-            // prepare the transition binner with a precursor containing transitions overlapping
+            // Prepare the transition binner with a precursor containing transitions overlapping
             // peaks in the test spectrum
             List<double> precursors = new List<double>();
             List<KeyValuePair<double, double>> transitions = new List<KeyValuePair<double, double>>();
@@ -381,10 +464,10 @@ namespace pwiz.SkylineTestA.Results
             var transBinner = new TransitionBinner(precursors, transitions, isoMapper);
             var binIndicesSet = new HashSet<int>(transBinner.BinsForPrecursors(isoIndices));
 
-            double[][] deconvIntensities = new double[isoIndices.Length][];
-            double[][] deconvMzs = new double[isoIndices.Length][];
+            double[][] deconvIntensities = new double[deconvIndices.Length][];
+            double[][] deconvMzs = new double[deconvIndices.Length][];
 
-            for (int i = 0; i < isoIndices.Length; ++i)
+            for (int i = 0; i < deconvIndices.Length; ++i)
             {
                 deconvIntensities[i] = new double[testSpectrum.Mzs.Length];
                 deconvMzs[i] = new double[testSpectrum.Mzs.Length];
@@ -393,14 +476,14 @@ namespace pwiz.SkylineTestA.Results
             List<int> binIndicesList = binIndicesSet.ToList();
             binIndicesList.Sort();
 
-            // use each transition bin index to test a different possible
+            // Use each transition bin index to test a different possible
             // type of demultiplexed solution
             int numDeMultiplexedTrans = binIndicesSet.Count;
             double[] peakSums = new double[numDeMultiplexedTrans];
-            // initialize the deconvBlock
+            // Initialize the deconvBlock
             db.Solution.Resize(100, binIndicesList.Count);
             db.Solution.Clear();
-            // transition index 0, each row is a precursor
+            // Transition index 0, each row is a precursor
             // the values for each precursor are the relative contribution
             // of that precursor to the observed (convolved) intensity of the peak
             db.Solution.Matrix[15, 0] = 0.0;
@@ -409,28 +492,28 @@ namespace pwiz.SkylineTestA.Results
             db.Solution.Matrix[17, 0] = 0.0;
             db.Solution.Matrix[75, 0] = 0.0;
             peakSums[0] = 0.0;
-            // transition index 1, each row is a precursor
+            // Transition index 1, each row is a precursor
             db.Solution.Matrix[15, 1] = 1.0;
             db.Solution.Matrix[47, 1] = 1.0;
             db.Solution.Matrix[50, 1] = 2.0;
             db.Solution.Matrix[17, 1] = 1.0;
             db.Solution.Matrix[75, 1] = 1.0;
             peakSums[1] = 6.0;
-            // transition index 2, each row is a precursor
+            // Transition index 2, each row is a precursor
             db.Solution.Matrix[15, 2] = 2.0;
             db.Solution.Matrix[47, 2] = 1.0;
             db.Solution.Matrix[50, 2] = 3.0;
             db.Solution.Matrix[17, 2] = 3.0;
             db.Solution.Matrix[75, 2] = 1.0;
             peakSums[2] = 10.0;
-            // transition index 3, each row is a precursor
+            // Transition index 3, each row is a precursor
             db.Solution.Matrix[15, 3] = 0.0;
             db.Solution.Matrix[47, 3] = 0.0;
             db.Solution.Matrix[50, 3] = 1.0;
             db.Solution.Matrix[17, 3] = 0.0;
             db.Solution.Matrix[75, 3] = 0.0;
             peakSums[3] = 1.0;
-            // transition index 4, each row is a precursor
+            // Transition index 4, each row is a precursor
             db.Solution.Matrix[15, 4] = 1.0;
             db.Solution.Matrix[47, 4] = 1.0;
             db.Solution.Matrix[50, 4] = 1.0;
@@ -438,7 +521,7 @@ namespace pwiz.SkylineTestA.Results
             db.Solution.Matrix[75, 4] = 1.0;
             peakSums[4] = 5.0;
 
-            // transition bin index (in transBinner) -> solution transition index (0-4 above), needed for
+            // Transition bin index (in transBinner) -> solution transition index (0-4 above), needed for
             // CorrectPeakIntensities call
             Dictionary<int, int> binToDeconvIndex = new Dictionary<int, int>(numDeMultiplexedTrans);
             int numBinIndices = binIndicesList.Count;
@@ -446,22 +529,22 @@ namespace pwiz.SkylineTestA.Results
                 binToDeconvIndex[binIndicesList[i]] = i;
             var queryBinEnumerator = transBinner.BinsFromValues(testSpectrum.Mzs, true);
             demultiplexer.SpectrumProcessor = new SpectrumProcessor(165, isoMapper, transBinner);
-            // apply the peak intensity correction
-            demultiplexer.CorrectPeakIntensitiesTest(testSpectrum, binIndicesSet, isoIndices,
+            // Apply the peak intensity correction
+            demultiplexer.CorrectPeakIntensitiesTest(testSpectrum, binIndicesSet, isoIndices, deconvIndices,
                                                      peakSums, binToDeconvIndex, queryBinEnumerator, db,
                                                      ref deconvIntensities, ref deconvMzs);
 
-            // check that the five solutions defined above were applied correctly
+            // Check that the five solutions defined above were applied correctly
             // by CorrectPeakIntensities
 
-            // if all precursors contribute 0 intensity, the peak should be zero for every
+            // If all precursors contribute 0 intensity, the peak should be zero for every
             // deconvolved spectrum
-            for (int i = 0; i < isoIndices.Length; ++i)
+            for (int i = 0; i < deconvIndices.Length; ++i)
             {
                 Assert.AreEqual(deconvIntensities[i][binToDeconvIndex[0]], 0.0);
             }
 
-            // find the index of the demultiplexed spectrum corresponding to the precursor
+            // Find the index of the demultiplexed spectrum corresponding to the precursor
             // at 710.57 m/z for which we generated the dummy demultiplexing solution for
             int windowIndex;
             isoMapper.TryGetWindowFromMz(710.57, out windowIndex);
@@ -469,24 +552,24 @@ namespace pwiz.SkylineTestA.Results
             int isoIndex = isoIndices.IndexOf(i => i == windowIndex);
             Assert.AreNotEqual(-1 , isoIndex);
 
-            // this peak falls in one transition bin (transition index 1)
+            // This peak falls in one transition bin (transition index 1)
             // 47 is the index of a peak in the test spectrum
             var originalIntensity = testSpectrum.Intensities[47];
             var expectedIntensity = originalIntensity*(2.0/6.0);
             Assert.AreEqual(deconvIntensities[isoIndex][47], expectedIntensity, 0.00001);
 
-            // this peak falls in one transitions bin (transition index 2)
+            // This peak falls in one transitions bin (transition index 2)
             originalIntensity = testSpectrum.Intensities[50];
             expectedIntensity = originalIntensity*(3.0/10.0);
             Assert.AreEqual(deconvIntensities[isoIndex][50], expectedIntensity, 0.00001);
 
-            // this peak falls in both transition indices 1 and 2, the expected adjusted
+            // This peak falls in both transition indices 1 and 2, the expected adjusted
             // intensity should be the average of the solution from each transition bin
             originalIntensity = testSpectrum.Intensities[49];
             expectedIntensity = originalIntensity*(19.0/60.0);
             Assert.AreEqual(deconvIntensities[isoIndex][49], expectedIntensity, 0.00001);
 
-            // this peak falls in transition index 3, and the demultiplexing spectra
+            // This peak falls in transition index 3, and the demultiplexing spectra
             // indicates that all of the intensity of teh original peak comes from
             // the precursor window at isoIndex that's being queried.  The peak intensity
             // should not change
@@ -494,14 +577,49 @@ namespace pwiz.SkylineTestA.Results
             expectedIntensity = originalIntensity;
             Assert.AreEqual(deconvIntensities[isoIndex][108], expectedIntensity, 0.00001);
 
-            // this peak falls in one transition bin (transition index 5)
+            // This peak falls in one transition bin (transition index 5)
             originalIntensity = testSpectrum.Intensities[149];
             expectedIntensity = originalIntensity * (1.0/5.0);
             Assert.AreEqual(deconvIntensities[isoIndex][149], expectedIntensity, 0.00001);
 
-            // undo changes to the spectrum processor in case this demultiplexer object is
+            // Undo changes to the spectrum processor in case this demultiplexer object is
             // reused
             demultiplexer.SpectrumProcessor = oldProcessor;
+        }
+
+        /// <summary> 
+        /// Demultiplexes a real .mxML file in a case where the answer is simple, and checks the answer is correct.
+        /// </summary>
+        private static void TestFullDemultiplex(AbstractDemultiplexer demultiplexer, 
+                                                int spectrumIndex,
+                                                MsDataSpectrum originalSpectrum,
+                                                int[] intensityIndices,
+                                                double[] intensityValues,
+                                                int deconvIndex)
+        {
+            var deconvSpectra = demultiplexer.GetDeconvolvedSpectra(spectrumIndex, originalSpectrum);
+            int numberMzPoints = originalSpectrum.Intensities.Length;
+            double[] peakSums = new double[numberMzPoints];
+            for (int i = 0; i < numberMzPoints; ++i)
+            {
+                peakSums[i] = 0.0;
+            }
+            foreach (var deconvSpectrum in deconvSpectra)
+            {
+                Assert.AreEqual(deconvSpectrum.Intensities.Length, originalSpectrum.Intensities.Length);
+                for (int i = 0; i < numberMzPoints; ++i)
+                {
+                    peakSums[i] += deconvSpectrum.Intensities[i];
+                }
+            }
+            for (int i = 0; i < numberMzPoints; ++i)
+            {
+                Assert.AreEqual(peakSums[i], originalSpectrum.Intensities[i], 0.01);
+            }
+            for (int i = 0; i < intensityIndices.Length ; ++i)
+            {
+                Assert.AreEqual(deconvSpectra[deconvIndex].Intensities[intensityIndices[i]], intensityValues[i], 0.1);
+            }
         }
    }
 }

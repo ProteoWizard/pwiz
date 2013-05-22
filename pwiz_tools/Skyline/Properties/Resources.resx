@@ -5140,8 +5140,8 @@ Are you sure you want to continue?</value>
   <data name="AllIonsStatusButton" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AllIonsStatusButton.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType">
-    <value xml:space="preserve">Invalid RetentionTimeFilterType</value>
+  <data name="FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType" xml:space="preserve">
+    <value>Invalid RetentionTimeFilterType</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
     <value>Select a peptide, precursor or transition to view its chromatograms</value>
@@ -5208,5 +5208,47 @@ Are you sure you want to continue?</value>
   </data>
   <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OverlapDemultiplexer_GetDeconvolvedSpectra_OverlapDemultiplexer__GetDeconvolvedSpectra__Index__0__is_out_of_range" xml:space="preserve">
+    <value>OverlapDemultiplexer: GetDeconvolvedSpectra: Index {0} is out of range</value>
+  </data>
+  <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
+    <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
+  </data>
+  <data name="OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_center" xml:space="preserve">
+    <value>OverlapIsolationWindowMapper: Tried to add an isolation window with no center</value>
+  </data>
+  <data name="OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_upper_boundary" xml:space="preserve">
+    <value>OverlapIsolationWindowMapper: Tried to add an isolation window with no upper boundary</value>
+  </data>
+  <data name="OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolatio_window_with_no_lower_boundary" xml:space="preserve">
+    <value>OverlapIsolationWindowMapper: Tried to add an isolation window with no lower boundary</value>
+  </data>
+  <data name="SavitzkyGolaySmoother_WindowSize_SavitzkyGolaySmoother__Invalid_window_size___0____argument_must_be_positive_and_odd" xml:space="preserve">
+    <value>SavitzkyGolaySmoother: Invalid window size ({0}): argument must be positive and odd</value>
+  </data>
+  <data name="DoconvolutionMethod_MSX_Msx" xml:space="preserve">
+    <value>Msx</value>
+  </data>
+  <data name="DoconvolutionMethod_NONE_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
+    <value>Overlap</value>
+  </data>
+  <data name="Demultiplexer_GetDeconvRegionsForMz_TheIsolationSchemeIsInconsistentlySpecified" xml:space="preserve">
+    <value>The Isolation Scheme in Full Scan Settings is Inconsistently Specified.</value>
+  </data>
+  <data name="OverlapDemultiplexer_attempt_to_insert_slice_of_deconvolution_matrix_failed_out_of_range" xml:space="preserve">
+    <value>Attempt to insert slice of deconvolution matrix failed due to out of range error.</value>
+  </data>
+  <data name="OverlapDemultiplexer_attempt_to_take_slice_of_deconvolution_matrix_failed_out_of_range" xml:space="preserve">
+    <value>Attempt to take slice of deconvolution matrix failed due to out of range error.</value>
+  </data>
+  <data name="OverlapDemultiplexer_the_isolation_window_overlap_scheme_does_not_cover_all_isolation_windows" xml:space="preserve">
+    <value>The overlapiIsolation window scheme is missing some contiguous isolation windows.</value>
+  </data>
+  <data name="OverlapDemultiplexer_RowStart_Number_of_regions__0__in_overlap_demultiplexer_approximation_must_be_less_than_number_of_scans__1__" xml:space="preserve">
+    <value>Number of regions {0} in overlap demultiplexer approximation must be less than number of scans {1}.</value>
   </data>
 </root>
