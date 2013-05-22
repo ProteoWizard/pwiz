@@ -74,6 +74,7 @@ enum PSM_SCORE_TYPE {
     PROTEIN_PROSPECTOR_EXPECT,// pepxml with expectation score
     SEQUEST_XCORR,            // sequest (no percolator) .sqt files
     MAXQUANT_SCORE,           // maxquant msms.txt files
+    MORPHEUS_SCORE,           // pepxml files with morpehus scores
 
     NUM_PSM_SCORE_TYPES
 };

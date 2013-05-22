@@ -216,6 +216,19 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-pep-proph
   : check-pep-proph ;
 
+make output/morpheus.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/test-morpheus.pep.xml output/morpheus.blib
+  : 
+  : build-morpheus ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/morpheus.blib reference/morpheus.check
+  : $(compare-reqs)
+    <dependency>build-morpheus
+  : check-morpheus ;
+
 make output/prospector.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o

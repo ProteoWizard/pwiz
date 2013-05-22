@@ -53,7 +53,7 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
     probCutOff = getScoreThreshold(PEPXML);
     dirs.push_back("../");   // look in parent dir in addition to cwd
     dirs.push_back("../../");  // look in grandparent dir in addition to cwd
-    extensions.push_back(".mzML"); // look for spec in mzXML files
+    extensions.push_back(".mzML"); // look for spec in mzML files
     extensions.push_back(".mzXML"); // look for spec in mzXML files
 }
 
@@ -112,9 +112,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
    else if(isElement("search_summary",name)) {
        if (analysisType_ == UNKNOWN_ANALYSIS ||
            analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
-           const char* search_engine = getAttrValue("search_engine",attr);
-           if(strncmp("Spectrum Mill", search_engine,
-                      strlen("Spectrum Mill")) == 0 ) {
+           string search_engine = getAttrValue("search_engine", attr);
+           if(search_engine.find("Spectrum Mill") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
                analysisType_ = SPECTRUM_MILL_ANALYSIS;
                scoreType_ = SPECTRUM_MILL;
@@ -122,30 +121,36 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
                lookUpBy_ = INDEX_ID; 
                specReader_->setIdType(INDEX_ID);
-           } else if(strncmp("OMSSA", search_engine, strlen("OMSAA")) == 0) {
+           } else if(search_engine.find("OMSSA") == 0) {
                Verbosity::debug("Pepxml file is from OMSAA.");
                analysisType_ = OMSSA_ANALYSIS;
                scoreType_ = OMSSA_EXPECTATION_SCORE;
                probCutOff = getScoreThreshold(OMSSA);
-           } else if(strncmp("Protein Prospector Search Compare", search_engine,
-                             strlen("Protein Prospector Search Compare")) == 0) {
+           } else if(search_engine.find("Protein Prospector Search Compare") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Protein Prospector.");
                analysisType_ = PROTEIN_PROSPECTOR_ANALYSIS;
                scoreType_ = PROTEIN_PROSPECTOR_EXPECT;
                probCutOff = getScoreThreshold(PROT_PROSPECT);
-           } else if(strncmp("SEQUEST", search_engine,
-                              strlen("SEQUEST")) == 0 && analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
+           } else if(search_engine.find("Morpheus") == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Morpheus.");
+               analysisType_ = MORPHEUS_ANALYSIS;
+               scoreType_ = MORPHEUS_SCORE;
+               probCutOff = getScoreThreshold(MORPHEUS);
+
+               lookUpBy_ = NAME_ID;
+               specReader_->setIdType(NAME_ID);
+           } else if(search_engine.find("SEQUEST") == 0 &&
+                     analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from SEQUEST Proteome Discoverer.");
                scoreType_ = PERCOLATOR_QVALUE;
                probCutOff = getScoreThreshold(SQT);
-           } else if(strncmp("MASCOT", search_engine,
-                              strlen("MASCOT")) == 0 && analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
+           } else if(search_engine.find("MASCOT") == 0 &&
+                     analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Mascot Proteome Discoverer.");
                scoreType_ = MASCOT_IONS_SCORE;
                probCutOff = getScoreThreshold(MASCOT);
-           } else if(analysisType_ != PEPTIDE_PROPHET_ANALYSIS &&
-                   strncmp("X! Tandem", search_engine,
-                           strlen("X! Tandem")) == 0) {
+           } else if(search_engine.find("X! Tandem") == 0 &&
+                     analysisType_ != PEPTIDE_PROPHET_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
                analysisType_ = XTANDEM_ANALYSIS;
                scoreType_ = TANDEM_EXPECTATION_VALUE;
@@ -191,12 +196,17 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan",attr);
        }
        // if spectrum mill type
-       if( analysisType_ == SPECTRUM_MILL_ANALYSIS ) {
+       else if( analysisType_ == SPECTRUM_MILL_ANALYSIS ) {
            spectrumName = getRequiredAttrValue("spectrum",attr);
            scanNumber = -1;
            minCharge = 0;
            // In case this is necessary for calculating charge
            precursorMZ = atof(getAttrValue("precursor_m_over_z",attr));
+       }
+       // if morpheus type
+       else if (analysisType_ == MORPHEUS_ANALYSIS) {
+           scanNumber = getIntRequiredAttrValue("start_scan", attr);
+           spectrumName = getRequiredAttrValue("spectrum", attr);
        }
        charge = getIntRequiredAttrValue("assumed_charge",attr, minCharge, 20);
    } else if(isElement("search_hit", name)) {
@@ -250,18 +260,19 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        }
        
        mods.push_back(curmod);
-   } else if(analysisType_ == PEPTIDE_PROPHET_ANALYSIS && isElement("peptideprophet_result", name)) {
-       pepProb = getDoubleRequiredAttrValue("probability",attr);      
-   } else if(analysisType_ == INTER_PROPHET_ANALYSIS && isElement("interprophet_result", name)) {
-       pepProb = getDoubleRequiredAttrValue("probability",attr);      
+   } else if((analysisType_ == PEPTIDE_PROPHET_ANALYSIS && isElement("peptideprophet_result", name)) ||
+             (analysisType_ == INTER_PROPHET_ANALYSIS && isElement("interprophet_result", name))) {
+       pepProb = getDoubleRequiredAttrValue("probability",attr);
    } else if(state == STATE_SEARCH_HIT_BEST && isElement("search_score", name)) {
        string score_name = getAttrValue("name", attr);
 	   bal::to_lower(score_name);
 
-       if ((analysisType_ != PROTEOME_DISCOVERER_ANALYSIS && strcmp(score_name.c_str(), "expect") == 0) ||
-               (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == PERCOLATOR_QVALUE && strcmp(score_name.c_str(), "q-value") == 0) ||
-               (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && strcmp(score_name.c_str(), "exp value") == 0)) {
-            pepProb = getDoubleRequiredAttrValue("value", attr);
+       if (score_name == "expect" ||
+           (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
+           (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
+           (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value"))
+       {
+               pepProb = getDoubleRequiredAttrValue("value", attr);
        }
    }
    // no score for spectrum mill
@@ -378,6 +389,7 @@ bool PepXMLreader::scorePasses(double score){
     case PROTEIN_PROSPECTOR_ANALYSIS:
     case PROTEOME_DISCOVERER_ANALYSIS:
     case XTANDEM_ANALYSIS:
+    case MORPHEUS_ANALYSIS:
         if(score < probCutOff){
             return true;
         }

@@ -70,6 +70,7 @@ enum BUILD_INPUT
     OMSSA,
     PROT_PROSPECT,
     MAXQUANT,
+    MORPHEUS,
 
     // Keep this last
     NUM_BUILD_INPUTS
