@@ -843,7 +843,7 @@ namespace IDPicker.Forms
                 // otherwise add a single column for each source
 
                 var column = new DataGridViewTextBoxColumn() { HeaderText = uniqueSubstring, FillWeight = 1 };
-                column.Tag = statsBySpectrumSource[sourceId];
+                column.Tag = new Pair<bool, Map<long, PivotData>>(false, statsBySpectrumSource[sourceId]);
 
                 var newProperties = new ColumnProperty()
                 {
@@ -899,7 +899,7 @@ namespace IDPicker.Forms
 
                 // otherwise add a single column for each group
                 var column = new DataGridViewTextBoxColumn() { HeaderText = groupById[groupId].Name.TrimEnd('/') + '/', FillWeight = 1 };
-                column.Tag = statsBySpectrumSourceGroup[groupId];
+                column.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
 
                 var newProperties = new ColumnProperty()
                 {
