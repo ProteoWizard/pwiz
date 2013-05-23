@@ -79,14 +79,15 @@ namespace pwiz.Skyline.SettingsUI
             UpdateIsolationWidths();
 
             // Initialize deconvolution combo box.
-            comboDeconv.Items.AddRange(
-                new object[]
-                    {
-                        DeconvolutionMethod.NONE,
-                        DeconvolutionMethod.MSX,
-                        DeconvolutionMethod.OVERLAP
-                    });
+            var deconvOptions = new object[]
+                {
+                    DeconvolutionMethod.NONE,
+                    DeconvolutionMethod.MSX,
+                    DeconvolutionMethod.OVERLAP
+                };
+            comboDeconv.Items.AddRange(deconvOptions);
             comboDeconv.SelectedItem = DeconvolutionMethod.NONE;
+            comboDeconvPre.Items.AddRange(deconvOptions);
 
             // Initialize margins combo box.
             comboMargins.Items.AddRange(
@@ -140,6 +141,7 @@ namespace pwiz.Skyline.SettingsUI
                         precursorFilter = _isolationScheme.PrecursorFilter.Value;
                     }
                     textPrecursorFilterMz.Text = precursorFilter.ToString(CultureInfo.CurrentCulture);
+                    UpdateDeconvCombo(comboDeconv);
                 }
 
                 // Handle predetermined isolation scheme.
@@ -173,13 +175,19 @@ namespace pwiz.Skyline.SettingsUI
                     textWindowsPerScan.Text = _isolationScheme.WindowsPerScan.HasValue
                                                   ? _isolationScheme.WindowsPerScan.Value.ToString(CultureInfo.CurrentCulture)
                                                   : string.Empty;
+                    UpdateDeconvCombo(comboDeconvPre);
                 }
-                comboDeconv.SelectedItem = Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.OVERLAP)
-                               ? DeconvolutionMethod.OVERLAP
-                               : Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
-                                     ? DeconvolutionMethod.MSX
-                                     : DeconvolutionMethod.NONE;
             }
+        }
+
+        private void UpdateDeconvCombo(ComboBox combo)
+        {
+            combo.SelectedItem =
+                Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.OVERLAP)
+                    ? DeconvolutionMethod.OVERLAP
+                    : Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
+                          ? DeconvolutionMethod.MSX
+                          : DeconvolutionMethod.NONE;
         }
 
         private void rbFromResultsData_CheckedChanged(object sender, EventArgs e)
@@ -191,11 +199,19 @@ namespace pwiz.Skyline.SettingsUI
         {
             bool fromResults = rbUseResultsData.Checked;
 
+            object deconvItem = null;
             textPrecursorFilterMz.Enabled = fromResults;
             textRightPrecursorFilterMz.Enabled = fromResults;
             cbAsymIsolation.Enabled = fromResults;
             labelIsolationWidth.Enabled = fromResults;
             labelTh.Enabled = fromResults;
+            labelDeconvolution.Enabled = fromResults;
+            if (comboDeconv.Enabled != fromResults)
+            {
+                comboDeconv.Enabled = fromResults;
+                deconvItem = comboDeconv.SelectedItem;
+                comboDeconv.SelectedItem = comboDeconvPre.SelectedItem;
+            }
 
             btnCalculate.Enabled = !fromResults;
             btnGraph.Enabled = !fromResults;
@@ -203,8 +219,14 @@ namespace pwiz.Skyline.SettingsUI
             cbSpecifyTarget.Enabled = !fromResults;
             comboMargins.Enabled = !fromResults;
             labelMargins.Enabled = !fromResults;
+            labelDeconvPre.Enabled = !fromResults;
+            if (comboDeconvPre.Enabled == fromResults)
+            {
+                comboDeconvPre.Enabled = !fromResults;
+                comboDeconvPre.SelectedItem = deconvItem;
+            }
             labelWindowsPerScan.Enabled =
-                textWindowsPerScan.Enabled = (!fromResults && Equals(comboDeconv.SelectedItem, DeconvolutionMethod.MSX));
+                textWindowsPerScan.Enabled = (!fromResults && Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX));
         }
 
         private void cbAsymIsolation_CheckedChanged(object sender, EventArgs e)
@@ -434,7 +456,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             bool fromResults = rbUseResultsData.Checked;
             labelWindowsPerScan.Enabled =
-               textWindowsPerScan.Enabled = (!fromResults && Equals(comboDeconv.SelectedItem, DeconvolutionMethod.MSX));
+               textWindowsPerScan.Enabled = (!fromResults && Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX));
         }
 
         private void comboMargins_SelectedIndexChanged(object sender, EventArgs e)
@@ -504,7 +526,7 @@ namespace pwiz.Skyline.SettingsUI
                     // Copy multiplexed windows settings.
                     if (calculateDlg.Multiplexed)
                     {
-                        comboDeconv.SelectedItem = DeconvolutionMethod.MSX;
+                        comboDeconvPre.SelectedItem = DeconvolutionMethod.MSX;
                         textWindowsPerScan.Text = calculateDlg.WindowsPerScan.ToString(CultureInfo.CurrentCulture);
                     }
                     else
@@ -750,17 +772,21 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return Equals(comboDeconv.SelectedItem, DeconvolutionMethod.OVERLAP) ? IsolationScheme.SpecialHandlingType.OVERLAP :
-                    Equals(comboDeconv.SelectedItem, DeconvolutionMethod.MSX) ? IsolationScheme.SpecialHandlingType.MULTIPLEXED :
-                    IsolationScheme.SpecialHandlingType.NONE;
+                var combo = rbPrespecified.Checked ? comboDeconvPre : comboDeconv;
+                return Equals(combo.SelectedItem, DeconvolutionMethod.OVERLAP)
+                           ? IsolationScheme.SpecialHandlingType.OVERLAP
+                           : Equals(combo.SelectedItem, DeconvolutionMethod.MSX)
+                                 ? IsolationScheme.SpecialHandlingType.MULTIPLEXED
+                                 : IsolationScheme.SpecialHandlingType.NONE;
             }
             set
             {
-                comboDeconv.SelectedItem = Equals(value, IsolationScheme.SpecialHandlingType.OVERLAP)
-                                               ? DeconvolutionMethod.OVERLAP
-                                               : Equals(value, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
-                                                     ? DeconvolutionMethod.MSX
-                                                     : DeconvolutionMethod.NONE;
+                var combo = rbPrespecified.Checked ? comboDeconvPre : comboDeconv;
+                combo.SelectedItem = Equals(value, IsolationScheme.SpecialHandlingType.OVERLAP)
+                                         ? DeconvolutionMethod.OVERLAP
+                                         : Equals(value, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
+                                               ? DeconvolutionMethod.MSX
+                                               : DeconvolutionMethod.NONE;
             }
         }
 

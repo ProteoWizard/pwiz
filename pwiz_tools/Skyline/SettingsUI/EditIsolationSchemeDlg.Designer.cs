@@ -65,6 +65,8 @@
             this.startMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.labelDeconvPre = new System.Windows.Forms.Label();
+            this.comboDeconvPre = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.gridIsolationWindows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.editIsolationWindowBindingSource)).BeginInit();
             this.SuspendLayout();
@@ -275,12 +277,27 @@
             resources.ApplyResources(this.endMarginDataGridViewTextBoxColumn, "endMarginDataGridViewTextBoxColumn");
             this.endMarginDataGridViewTextBoxColumn.Name = "endMarginDataGridViewTextBoxColumn";
             // 
+            // labelDeconvPre
+            // 
+            resources.ApplyResources(this.labelDeconvPre, "labelDeconvPre");
+            this.labelDeconvPre.Name = "labelDeconvPre";
+            // 
+            // comboDeconvPre
+            // 
+            resources.ApplyResources(this.comboDeconvPre, "comboDeconvPre");
+            this.comboDeconvPre.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboDeconvPre.FormattingEnabled = true;
+            this.comboDeconvPre.Name = "comboDeconvPre";
+            this.comboDeconvPre.SelectedIndexChanged += new System.EventHandler(this.comboDeconv_SelectedIndexChanged);
+            // 
             // EditIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelDeconvPre);
+            this.Controls.Add(this.comboDeconvPre);
             this.Controls.Add(this.labelDeconvolution);
             this.Controls.Add(this.comboDeconv);
             this.Controls.Add(this.btnCalculate);
@@ -342,5 +359,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn endMarginDataGridViewTextBoxColumn;
         private System.Windows.Forms.ComboBox comboDeconv;
         private System.Windows.Forms.Label labelDeconvolution;
+        private System.Windows.Forms.Label labelDeconvPre;
+        private System.Windows.Forms.ComboBox comboDeconvPre;
     }
 }

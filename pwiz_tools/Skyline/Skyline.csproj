@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4551</ApplicationRevision>
-    <ApplicationVersion>1.4.1.4551</ApplicationVersion>
+    <ApplicationRevision>4555</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4555</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -742,7 +742,6 @@
     </Compile>
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
-    <Compile Include="Model\Results\SavitzkyGolaySmoother.cs" />
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\LegacyFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\LegacyScoringModel.cs" />
@@ -1960,6 +1959,9 @@
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">
+  </Target>
+  <Target Name="BeforePublish">
+    <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)MacCossLabUW-new.p12&quot; /p password /v &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\$(TargetFileName)&quot;" />
   </Target>
   -->
   <PropertyGroup>

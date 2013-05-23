@@ -151,7 +151,8 @@ namespace pwiz.SkylineTestA
             Assert.IsNull(doc.Settings.MeasuredResults);
         }
 
-        [TestMethod]
+        // TODO: Enable this again once file locking issues have been resolved
+        //[TestMethod]
         public void ConsoleSetLibraryTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
