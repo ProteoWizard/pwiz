@@ -521,6 +521,12 @@ namespace pwiz.Topograph.Model
         {
             _chromatogramGenerator.GetProgress(out dataFileName, out progress);
         }
+        public bool HasAnyChromatograms()
+        {
+            return PeptideAnalyses.Any(
+                peptideAnalysis => peptideAnalysis.FileAnalyses.Any(
+                    fileAnalysis => fileAnalysis.ChromatogramSetId.HasValue));
+        }
         public bool Save(ILongOperationUi longOperationUi)
         {
             var broker = new LongOperationBroker(Save, longOperationUi);

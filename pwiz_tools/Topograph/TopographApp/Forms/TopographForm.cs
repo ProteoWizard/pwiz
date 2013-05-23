@@ -254,7 +254,8 @@ namespace pwiz.Topograph.ui.Forms
             var text = Path.GetFileName(_workspace.DatabasePath);
             if (_workspace.IsLoaded)
             {
-                if (!_workspace.SavedWorkspaceChange.HasSettingChange)
+                var savedWorkspaceChange = _workspace.SavedWorkspaceChange;
+                if (!savedWorkspaceChange.HasSettingChange)
                 {
                     if (_workspace.IsDirty)
                     {
@@ -263,7 +264,19 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 else
                 {
-                    text += "(settings changed)";
+                    bool anyChromatograms = _workspace.HasAnyChromatograms();
+                    if (savedWorkspaceChange.HasChromatogramMassChange && anyChromatograms)
+                    {
+                        text += "(settings changed; chromatograms need regenerating)";
+                    }
+                    else if (savedWorkspaceChange.HasPeakPickingChange && anyChromatograms)
+                    {
+                        text += "(settings changed; results need recalculating)";
+                    }
+                    else
+                    {
+                        text += "(settings changed)";
+                    }
                 }
                 halfLivesToolStripMenuItem.Enabled =
                     precursorEnrichmentsToolStripMenuItem.Enabled = _workspace.GetTracerDefs().Count > 0;
@@ -537,6 +550,26 @@ namespace pwiz.Topograph.ui.Forms
 
         private bool SaveWorkspace()
         {
+            if ((Workspace.SavedWorkspaceChange.HasChromatogramMassChange || Workspace.SavedWorkspaceChange.HasPeakPickingChange) 
+                && Workspace.HasAnyChromatograms())
+            {
+                string message;
+                if (Workspace.SavedWorkspaceChange.HasChromatogramMassChange)
+                {
+                    message =
+                        "You have made changes to the settings which affect the calculated mass of peptides.  When you save this workspace, the chromatograms which have already been generated will be deleted, and will need to be regenerated.  Are you sure you want to save this workspace now?";
+                }
+                else
+                {
+                    message =
+                        "You have made changes the the settings which affect how Topograph integrates peaks.  When you save this workspace, the results which Topograph has already calculated will be deleted, and they will need to be recalculated.  Are you sure you want to save this workspace now?";
+                }
+                if (MessageBox.Show(this, message, Program.AppName, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
+
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Saving Workspace"))
             {
                 return Workspace.Save(longWaitDialog);
