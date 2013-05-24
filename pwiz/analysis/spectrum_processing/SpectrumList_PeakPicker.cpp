@@ -110,8 +110,6 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         cerr << "Warning: vendor peakPicking was requested, but is unavailable";
 #ifdef WIN32
         cerr << " for this input data. ";
-        if (method.order > 1)
-            cerr << "Note: for native (vendor) input data formats, peakPicking needs to be the first filter applied since the vendor DLL only operates on untransformed raw data.  " << endl;
 #else
         cerr << " as it depends on Windows DLLs.  ";
 #endif
@@ -163,20 +161,30 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         return s;
 
     vector<CVParam>& cvParams = s->cvParams;
-    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
+    vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_centroid_spectrum);
 
     // return non-profile spectra as-is
     // (could have been acquired as centroid, or vendor may have done the centroiding)
-    if (itr == cvParams.end())
+    if (itr != cvParams.end())
+    {
+        this->warn_once("[SpectrumList_PeakPicker]: one or more spectra are already centroided, no processing needed");
         return s;
+    }
+
+    // is this declared as profile?
+    itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
+    if (cvParams.end() == itr)
+    {
+        this->warn_once("[SpectrumList_PeakPicker]: one or more spectra have undeclared profile/centroid status, assuming profile data and that peakpicking is needed");
+        itr = std::find(cvParams.begin(), cvParams.end(), MS_spectrum_representation); // this should be there if nothing else
+    }
 
     // make sure the spectrum has binary data
     if (!s->getMZArray().get() || !s->getIntensityArray().get())
         s = inner_->spectrum(index, true);
 
-    // replace profile term with centroid term
-    vector<CVParam>& cvParams2 = s->cvParams;
-    *(std::find(cvParams2.begin(), cvParams2.end(), MS_profile_spectrum)) = MS_centroid_spectrum;
+    // replace profile or nonspecific term with centroid term
+    *itr = MS_centroid_spectrum;
 
     try
     {

@@ -513,7 +513,7 @@ PWIZ_API_DECL string value(const string& id, const string& name)
 
 PWIZ_API_DECL CVID getDefaultNativeIDFormat(const MSData& msd)
 {
-	CVID result = CVID_Unknown;
+    CVID result = CVID_Unknown;
     if (msd.run.defaultSourceFilePtr.get())
         result = msd.run.defaultSourceFilePtr->cvParamChild(MS_nativeID_format).cvid;
     else if (!msd.fileDescription.sourceFilePtrs.empty())
@@ -1039,6 +1039,14 @@ PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumList::dataProcessin
     return shared_ptr<const DataProcessing>();
 }
 
+PWIZ_API_DECL void SpectrumList::warn_once(const char *msg) const
+{
+    std::hash<const char*> H;
+    if (warn_msg_hashes.insert(H(msg)).second) // .second is true iff value is new
+    {
+        cerr << msg << endl;
+    }
+}
 
 //
 // SpectrumListSimple
@@ -1151,7 +1159,7 @@ PWIZ_API_DECL bool Run::empty() const
 //
 
 
-PWIZ_API_DECL MSData::MSData() : version_("1.1.0") {}
+PWIZ_API_DECL MSData::MSData() : version_("1.1.0"),nFiltersApplied_(0) {}
 PWIZ_API_DECL MSData::~MSData() {}
 
 

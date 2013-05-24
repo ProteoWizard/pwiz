@@ -32,13 +32,14 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 
 namespace pwiz {
 namespace msdata {
 
 
-	using namespace pwiz::data;
+    using namespace pwiz::data;
 
 
 PWIZ_API_DECL std::vector<CV> defaultCVList();
@@ -477,7 +478,7 @@ struct PWIZ_API_DECL SpectrumIdentity
     std::string spotID;
 
     /// for file-based MSData implementations, this attribute may refer to the spectrum's position in the file
-	boost::iostreams::stream_offset sourceFilePosition;
+    boost::iostreams::stream_offset sourceFilePosition;
 
  
     SpectrumIdentity() : index(IDENTITY_INDEX_NONE), sourceFilePosition((boost::iostreams::stream_offset)-1) {}
@@ -493,7 +494,7 @@ struct PWIZ_API_DECL ChromatogramIdentity
     std::string id;
 
     /// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
-	boost::iostreams::stream_offset sourceFilePosition;
+    boost::iostreams::stream_offset sourceFilePosition;
 
     ChromatogramIdentity() : index(IDENTITY_INDEX_NONE), sourceFilePosition(-1) {}
 };
@@ -620,7 +621,7 @@ class IndexList : public std::vector<size_t> {};
 
 enum DetailLevel
 {
-	DetailLevel_InstantMetadata,
+    DetailLevel_InstantMetadata,
     DetailLevel_FastMetadata,
     DetailLevel_FullMetadata,
     DetailLevel_FullData
@@ -686,19 +687,25 @@ class PWIZ_API_DECL SpectrumList
     /// - detailLevel determines what fields are guaranteed present on the spectrum after the call
     /// - client may assume the underlying Spectrum* is valid 
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const
-	{
-		// By default faster metadeta access is not implemented
-		if (detailLevel == DetailLevel_FastMetadata || detailLevel == DetailLevel_InstantMetadata)
-			return SpectrumPtr(new Spectrum);
+    {
+        // By default faster metadeta access is not implemented
+        if (detailLevel == DetailLevel_FastMetadata || detailLevel == DetailLevel_InstantMetadata)
+            return SpectrumPtr(new Spectrum);
 
-		return spectrum(index, detailLevel == DetailLevel_FullData);
-	}
+        return spectrum(index, detailLevel == DetailLevel_FullData);
+    }
 
     /// returns the data processing affecting spectra retrieved through this interface
     /// - may return a null shared pointer
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 
+    /// makes it easy to issue simple warnings without repeats (based on string hash)
+    void warn_once(const char *msg) const; 
+
     virtual ~SpectrumList(){} 
+
+private:
+    mutable std::set<size_t> warn_msg_hashes; // for warn_once use
 };
 
 
@@ -888,6 +895,10 @@ struct PWIZ_API_DECL MSData
     /// for a document created from a file/stream, the version is the schema version read from the file/stream
     const std::string& version() const;
 
+    // for detecting out of order filters
+    void filterApplied() {nFiltersApplied_++;};
+    int countFiltersApplied() const {return nFiltersApplied_;};
+
     private:
     // no copying
     MSData(const MSData&);
@@ -896,6 +907,7 @@ struct PWIZ_API_DECL MSData
     protected:
     std::string version_; // schema version read from the file/stream
     friend struct IO::HandlerMSData;
+    int nFiltersApplied_; // useful for flagging filters that need to be first, like vendor centroiding
 };
 
 

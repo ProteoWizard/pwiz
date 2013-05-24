@@ -144,13 +144,18 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
     istringstream parser(arg);
     string preferVendorPeakPicking;
     parser >> preferVendorPeakPicking;
-    bool preferVendor = preferVendorPeakPicking == "true" ? true : false;
+    bool preferVendor = boost::iequals(preferVendorPeakPicking , "true");
 
     string msLevelSets;
     getline(parser, msLevelSets);
 
     IntegerSet msLevelsToCentroid;
     msLevelsToCentroid.parse(msLevelSets);
+
+    if (preferVendor && msd.countFiltersApplied())
+    {
+        cerr << "[SpectrumList_PeakPicker] Warning: vendor peakPicking requested, but peakPicking is not the first filter.  Since the vendor DLLs can only operate directly on raw data, this filter will likely not have any effect." << endl;
+    }
 
     return SpectrumListPtr(new 
         SpectrumList_PeakPicker(msd.run.spectrumListPtr,
@@ -161,7 +166,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
 UsageInfo usage_nativeCentroid = {"<prefer_vendor> <ms_levels>","This filter performs centroiding on spectra with the "
     "selected <ms_levels>, expressed as an int_set.  The value for <prefer_vendor> must be \"True\" or \"False\": when "
     "True, vendor (Windows DLL) code is used if available.  IMPORTANT NOTE: since this filter operates on the raw "
-	"data through the vendor DLLs, IT MUST BE THE FIRST FILTER IN ANY LIST OF FILTERS when <prefer_vendor> is set to \"True\"."
+    "data through the vendor DLLs, IT MUST BE THE FIRST FILTER IN ANY LIST OF FILTERS when <prefer_vendor> is set to \"True\"."
 };
 
 /**
@@ -929,6 +934,7 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
     }
 
     SpectrumListPtr filter = entry->creator(msd, arg);
+    msd.filterApplied(); // increase the filter count
 
     if (!filter.get())
     {
