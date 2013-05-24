@@ -26,7 +26,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/lexical_cast.hpp>
 #include "Diff.hpp"
-
+#include <boost/functional/hash.hpp>
 
 namespace pwiz {
 namespace msdata {
@@ -1041,7 +1041,7 @@ PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumList::dataProcessin
 
 PWIZ_API_DECL void SpectrumList::warn_once(const char *msg) const
 {
-    std::hash<const char*> H;
+    boost::hash<const char*> H;
     if (warn_msg_hashes.insert(H(msg)).second) // .second is true iff value is new
     {
         cerr << msg << endl;
