@@ -2514,7 +2514,14 @@ namespace pwiz.Skyline
         private SequenceTreeForm CreateSequenceTreeForm(string persistentString)
         {
             // Initialize sequence tree control
-            _sequenceTreeForm = new SequenceTreeForm(this, persistentString != null);
+            string expansionAndSelection = null;
+            if (persistentString != null)
+            {
+                int sepIndex = persistentString.IndexOf('|');
+                if (sepIndex != -1)
+                    expansionAndSelection = persistentString.Substring(sepIndex + 1);
+            }             
+            _sequenceTreeForm = new SequenceTreeForm(this, expansionAndSelection != null);
             _sequenceTreeForm.FormClosed += sequenceTreeForm_FormClosed;
             _sequenceTreeForm.VisibleChanged += sequenceTreeForm_VisibleChanged;
             _sequenceTreeForm.SequenceTree.SelectedNodeChanged += sequenceTree_SelectedNodeChanged;
@@ -2529,8 +2536,8 @@ namespace pwiz.Skyline
             _sequenceTreeForm.SequenceTree.DragEnter += sequenceTree_DragDrop;
             _sequenceTreeForm.SequenceTree.UseKeysOverride = _useKeysOverride;
             _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;
-            if (persistentString != null)
-                _sequenceTreeForm.SequenceTree.RestoreExpansionAndSelection(persistentString.Substring(persistentString.IndexOf('|') + 1));
+            if (expansionAndSelection != null)
+                _sequenceTreeForm.SequenceTree.RestoreExpansionAndSelection(expansionAndSelection);
             return _sequenceTreeForm;
         }
 
