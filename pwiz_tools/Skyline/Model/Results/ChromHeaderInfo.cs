@@ -1516,7 +1516,7 @@ namespace pwiz.Skyline.Model.Results
         {
             int scoreIndex;
             if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
-                return 0;
+                return float.NaN;
             return _allScores[_groupHeaderInfo.StartScoreIndex + peakIndex*_scoreTypeIndices.Count + scoreIndex];
         }
 
