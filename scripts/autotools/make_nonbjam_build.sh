@@ -66,7 +66,7 @@ sed -i 's#boost_$1$boost_tag_$boost_ver_#boost_$1$boost_tag_$boost_ver_ boost_$1
 sed -i 's#"$with_boost" C:/Boost/lib /lib\*#"$with_boost" C:/Boost/lib /lib\* $with_boost/lib64#g' boost.m4
 
 echo "do autoconf stuff..."
-export PWIZ_VER_DOTTED=`grep "ProteoWizard " $TMPDIR/build.log | cut -f 2 -d " "`
+export PWIZ_VER_DOTTED=`grep "ProteoWizard " $TMPDIR/build.log | grep "last committed change" | cut -f 2 -d " "`
 export PWIZ_VER=`echo $PWIZ_VER_DOTTED | sed s/\\\\./_/g`
 # assume this as a directory where we can drop the tarball
 # TODO this assumes a particular TC build config, could pull from log if needed
