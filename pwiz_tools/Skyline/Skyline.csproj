@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4555</ApplicationRevision>
-    <ApplicationVersion>1.4.1.4555</ApplicationVersion>
+    <ApplicationRevision>4582</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4582</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1960,10 +1960,10 @@
   </Target>
   <Target Name="AfterBuild">
   </Target>
-  <Target Name="BeforePublish">
-    <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)MacCossLabUW-new.p12&quot; /p password /v &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\$(TargetFileName)&quot;" />
-  </Target>
   -->
+  <Target Name="BeforePublish">
+    <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; /p Skyline! /v &quot;$(ProjectDir)obj\$(Platform)\$(ConfigurationName)\$(TargetFileName)&quot;" />
+  </Target>
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
