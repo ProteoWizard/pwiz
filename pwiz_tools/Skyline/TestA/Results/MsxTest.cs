@@ -33,6 +33,7 @@ namespace pwiz.SkylineTestA.Results
     // 1. TryGetAllWindowsFromMz
     // 2. Mulitple isolation windows in transition binner
     // 3. Add final result check to Msx test
+    // 4. Figure out why Debug.Assert() (now commented out) fires when test is run in debug build
     [TestClass]
     public class MsxTest : AbstractUnitTest
     {
