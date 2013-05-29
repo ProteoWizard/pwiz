@@ -135,7 +135,7 @@ namespace pwiz.Skyline
                 Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC, SrmDocumentSharing.FILTER_SHARING)
             })
             {
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
 
@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline
                         using (var dlg = new MultiButtonMsgDlg(
                             string.Format(message), Resources.SkylineWindow_ImportFasta_OK))
                         {
-                            if (dlg.ShowDialog() == DialogResult.Cancel)
+                            if (dlg.ShowDialog(this) == DialogResult.Cancel)
                                 return;
                         }
                     }
@@ -1555,7 +1555,7 @@ namespace pwiz.Skyline
 
             using (ManageResultsDlg dlg = new ManageResultsDlg(this))
             {
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     // Remove from the cache chromatogram data to be reimported.  This done before changing
                     // anything else to avoid making other changes to the results cause cache changes before
@@ -1699,7 +1699,7 @@ namespace pwiz.Skyline
                     Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
                     Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue, true))
                 {
-                    DialogResult buttonPress = dlg.ShowDialog();
+                    DialogResult buttonPress = dlg.ShowDialog(this);
                     if (buttonPress == DialogResult.Cancel)
                         return;
 

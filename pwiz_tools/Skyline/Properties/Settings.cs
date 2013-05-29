@@ -1542,7 +1542,7 @@ namespace pwiz.Skyline.Properties
         {
             using (EditRTDlg editRT = new EditRTDlg(existing ?? this) { Regression = item })
             {
-                if (editRT.ShowDialog() == DialogResult.OK)
+                if (editRT.ShowDialog(owner) == DialogResult.OK)
                     return editRT.Regression;
             }
 
@@ -1583,7 +1583,7 @@ namespace pwiz.Skyline.Properties
         {
             using (EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this) { MeasuredIon = item })
             {
-                if (editIon.ShowDialog() == DialogResult.OK)
+                if (editIon.ShowDialog(owner) == DialogResult.OK)
                     return editIon.MeasuredIon;
             }
 
@@ -1617,7 +1617,7 @@ namespace pwiz.Skyline.Properties
         {
             using (EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this) { Enrichments = item })
             {
-                if (editEnrichment.ShowDialog() == DialogResult.OK)
+                if (editEnrichment.ShowDialog(owner) == DialogResult.OK)
                     return editEnrichment.Enrichments;
             }
 
@@ -1648,7 +1648,7 @@ namespace pwiz.Skyline.Properties
         {
             using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this) { IsolationScheme = item })
             {
-                if (editIsolationScheme.ShowDialog() == DialogResult.OK)
+                if (editIsolationScheme.ShowDialog(owner) == DialogResult.OK)
                     return editIsolationScheme.IsolationScheme;
             }
 

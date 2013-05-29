@@ -281,7 +281,7 @@ namespace pwiz.Skyline.EditUI
                                                         string.Empty, strNameMatches);
                 using (var dlg = new MultiButtonMsgDlg(message, Resources.PasteDlg_AddPeptides_OK))
                 {
-                    if (dlg.ShowDialog() == DialogResult.Cancel)
+                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
                         return null;
                 }
             }

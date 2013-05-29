@@ -163,7 +163,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB) 
             })
             {
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
 
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
             })
             {
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
 

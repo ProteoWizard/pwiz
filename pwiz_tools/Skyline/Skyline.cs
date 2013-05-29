@@ -2702,7 +2702,7 @@ namespace pwiz.Skyline
                                         string.Format(TextUtil.LineSeparate(Resources.SkylineWindow_sequenceTree_AfterLabelEdit_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,string.Empty,
                                             strNameMatches)), Resources.OK))
                                     {
-                                        if (dlg.ShowDialog() == DialogResult.Cancel)
+                                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
                                         {
                                             e.Node.Text = EmptyNode.TEXT_EMPTY;
                                             e.Node.EnsureVisible();

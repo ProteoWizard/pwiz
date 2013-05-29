@@ -599,33 +599,35 @@ namespace pwiz.Skyline.ToolsUI
         private void btnFindCommand_Click(object sender, EventArgs e)
         {
             int i = 0;
-            var dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog
+                {
+                    Filter = TextUtil.FileDialogFiltersAll(
+                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, EXTENSIONS[i++]),
+                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, EXTENSIONS[i++]),
+                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, EXTENSIONS[i++]),
+                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i++]),
+                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, EXTENSIONS[i++]),
+                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, EXTENSIONS[i])
+                                   ),
+                    FilterIndex = 1,
+                    Multiselect = false
+                })
             {
-                Filter = TextUtil.FileDialogFiltersAll(
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, EXTENSIONS[i])
-                               ),
-                FilterIndex = 1,
-                Multiselect = false
-            };
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                textCommand.Text = dlg.FileName;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    textCommand.Text = dlg.FileName;
+                }
             }
         }
 
         private void btnInitialDirectory_Click(object sender, EventArgs e)
         {
-            var dlg = new FolderBrowserDialog();
-            DialogResult result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
+            using (var dlg = new FolderBrowserDialog())
             {
-                textInitialDirectory.Text = dlg.SelectedPath;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    textInitialDirectory.Text = dlg.SelectedPath;
+                }
             }
         }
 

@@ -497,7 +497,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             using (var calculateDlg = new CalculateIsolationSchemeDlg())
             {
-                if (calculateDlg.ShowDialog() == DialogResult.OK)
+                if (calculateDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     // Get calculated isolation windows from Calculate dialog.
                     _gridViewDriver.Items.Clear();

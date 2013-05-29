@@ -139,17 +139,19 @@ namespace pwiz.Skyline.SettingsUI
             string fileName;
             if (BuildNew)
             {
-                var saveFileDialog = new SaveFileDialog
+                using (var saveFileDialog = new SaveFileDialog
+                    {
+                        Filter = filterProtDb,
+                        InitialDirectory = Settings.Default.ProteomeDbDirectory,
+                        Title = Resources.BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome,
+                        OverwritePrompt = true,
+                    })
                 {
-                    Filter = filterProtDb,
-                    InitialDirectory = Settings.Default.ProteomeDbDirectory,
-                    Title = Resources.BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome,
-                    OverwritePrompt = true,
-                };
-                if (saveFileDialog.ShowDialog() == DialogResult.Cancel)
-                    return;
+                    if (saveFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                        return;
 
-                fileName = saveFileDialog.FileName;
+                    fileName = saveFileDialog.FileName;
+                }
 
                 // If the file exists, then the user chose to overwrite,
                 // so delete the existing file.
@@ -165,17 +167,19 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                var openFileDialog = new OpenFileDialog
+                using (var openFileDialog = new OpenFileDialog
+                    {
+                        Filter = filterProtDb,
+                        InitialDirectory = Settings.Default.ProteomeDbDirectory,
+                        Title = Resources.BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme,
+                        CheckFileExists = true,
+                    })
                 {
-                    Filter = filterProtDb,
-                    InitialDirectory = Settings.Default.ProteomeDbDirectory,
-                    Title = Resources.BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme,
-                    CheckFileExists = true,
-                };
-                if (openFileDialog.ShowDialog() == DialogResult.Cancel)
-                    return;
+                    if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                        return;
 
-                fileName = openFileDialog.FileName;
+                    fileName = openFileDialog.FileName;
+                }
             }
             Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(fileName);
 

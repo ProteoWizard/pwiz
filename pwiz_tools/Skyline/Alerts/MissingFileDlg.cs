@@ -77,19 +77,21 @@ namespace pwiz.Skyline.Alerts
 
         private void btnBrowse_Click(object sender, System.EventArgs e)
         {
-            var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog
+                {
+                    Filter = Filter,
+                    InitialDirectory = FileDlgInitialPath,
+                    Title = Title,
+                    CheckFileExists = true,
+                    FileName = FileHint
+                })
             {
-                Filter = Filter,
-                InitialDirectory = FileDlgInitialPath,
-                Title = Title,
-                CheckFileExists = true,
-                FileName = FileHint
-            };
-            if (openFileDialog.ShowDialog() == DialogResult.Cancel)
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                    return;
 
-            FilePath = openFileDialog.FileName;
-            OkDialog();
+                FilePath = openFileDialog.FileName;
+                OkDialog();
+            }
         }
     }
 }
