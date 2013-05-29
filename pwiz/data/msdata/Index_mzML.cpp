@@ -185,7 +185,8 @@ class HandlerIndexList : public SAXParser::Handler
     : spectrumCount_(spectrumCount),
       spectrumIndex_(spectrumIndex),
       chromatogramCount_(chromatogramCount),
-      chromatogramIndex_(chromatogramIndex)
+      chromatogramIndex_(chromatogramIndex),
+      validIndexOffset_(false)
     {
         handlerOffset_.version = schemaVersion_;
         handlerOffset_.legacyIdRefToNativeId = &legacyIdRefToNativeId;
@@ -197,8 +198,11 @@ class HandlerIndexList : public SAXParser::Handler
     {
         if (name == "indexList")
         {
+            validIndexOffset_ = true; // looks like indexOffset landed us in the right place
             return Status::Ok;
         }
+        else if (!validIndexOffset_) // "indexList" should have been first element
+            throw runtime_error("[Index_mzML::HandlerIndex] element \"indexList\" not found at expected offset - bad indexOffset value, probably");
         else if (name == "index")
         {
             string indexName;
@@ -242,6 +246,7 @@ class HandlerIndexList : public SAXParser::Handler
     size_t& chromatogramCount_;
     vector<ChromatogramIdentity>& chromatogramIndex_;
 
+    bool validIndexOffset_;
     bool inSpectrumIndex_;
     HandlerOffset handlerOffset_;
 };
