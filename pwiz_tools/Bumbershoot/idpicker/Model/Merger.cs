@@ -353,7 +353,8 @@ namespace IDPicker.DataModel
             var queriedGroups = conn.ExecuteQuery("SELECT * FROM SpectrumSourceGroup");
             var usedGroupQuerey = conn.ExecuteQuery("SELECT DISTINCT group_ FROM SpectrumSource");
             foreach (var group in usedGroupQuerey)
-                usedGroups.Add((int)group[0]);
+                if (group[0] != null)
+                    usedGroups.Add((int)group[0]);
             foreach (var group in queriedGroups)
             {
                 var idBase = group[0].ToString();
