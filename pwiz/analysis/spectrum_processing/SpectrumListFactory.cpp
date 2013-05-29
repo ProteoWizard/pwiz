@@ -294,10 +294,21 @@ SpectrumListPtr filterCreator_MS2Denoise(const MSData& msd, const string& arg)
                                    filter));
 }
 UsageInfo usage_MS2Denoise = {"[<peaks_in_window> [<window_width_Da> [multicharge_fragment_relaxation]]]",
-    "A moving window filter for MS2.\n"
-    "   <peaks_in_window> - the number peaks to select in window, default is 6.\n"
+    "Noise peak removal for spectra with precursor ions.\n"
+    "   <peaks_in_window> - the number peaks to select in moving window, default is 6.\n"
     "   <window_width_Da> - the width of the window in Da, default is 30.\n"
-    "   <multicharge_fragment_relaxation> - if \"true\" (the default), allows more data below multiply charged precursors."
+    "   <multicharge_fragment_relaxation> - if \"true\" (the default), allows more data below multiply charged precursors.\n"
+    "The filter first removes any m/z values above the precursor mass minus the mass of glycine.\n"
+    "It then removes any m/z values within .5 Da of the unfragmented precursor mass.\n"
+    "Finally it retains only the <peaks_in_window> most intense ions within a "
+    "sliding window of <window_width_Da>.\n"
+    "If <multicharge_fragment_relaxation> is true, allows more peaks at lower mass (i.e. below precursor).\n"
+    "If <window_width_Da> is set to 0, the window size defaults to the highest observed mass in the spectrum "
+    "(this leaving only <peaks_in_window> ions in the output spectrum).\n"
+    "Reference: \"When less can yield more - Computational preprocessing of MS/MS spectra for peptide "
+    "identification\", Bernhard Y. Renard, Marc Kirchner, Flavio Monigatti, Alexander R. Ivanov, "
+    "Juri Rappsilber, Dominic Winter, Judith A. J. Steen, Fred A. Hamprecht and Hanno Steen  "
+    "Proteomics, 9, 4978-4984, 2009.\n"
 };
 
 SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg)
