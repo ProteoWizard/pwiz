@@ -187,13 +187,15 @@ namespace pwiz.Skyline.Controls
                 // check that the .view file will have the necessary information to rebuild the tree
                 if (stateStrings.Length > 2)
                 {
+                    TreeViewMS treeMS = null;
                     try
                     {
-                        var treeMS = _tree as TreeViewMS;
-                        
+                        _tree.BeginUpdate();
+
+                        treeMS = _tree as TreeViewMS;
                         if (treeMS != null)
                             treeMS.AutoExpandSingleNodes = false;
-                        
+
                         ExpandTreeFromString(stateStrings[0]);
 
                         if (treeMS != null)
@@ -201,13 +203,19 @@ namespace pwiz.Skyline.Controls
 
                         SelectTreeFromString(stateStrings[1]);
                         NextTopNode = GetTopNodeFromString(stateStrings[2]);
-                        
+
                         if (treeMS != null)
                             treeMS.RestoredFromPersistentString = true;
                     }
                     catch (FormatException)
                     {
                         // Ignore and give up
+                    }
+                    finally
+                    {
+                        _tree.EndUpdate();
+                        if (treeMS != null)
+                            treeMS.AutoExpandSingleNodes = true;
                     }
                 }
             }
