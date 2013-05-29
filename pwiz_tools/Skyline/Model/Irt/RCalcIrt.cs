@@ -100,7 +100,11 @@ namespace pwiz.Skyline.Model.Irt
                     string modifiedSeq = document.Settings.GetModifiedSequence(nodePep);
                     DbIrtPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
+                    {
                         persistPeptides.Add(NewPeptide(dbPeptide));
+                        // Only add once
+                        dictPeptides.Remove(modifiedSeq);
+                    }
                 }
 
                 irtDbMinimal.UpdatePeptides(persistPeptides, new DbIrtPeptide[0]);
