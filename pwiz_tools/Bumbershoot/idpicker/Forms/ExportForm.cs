@@ -897,11 +897,23 @@ namespace IDPicker.Forms
                                                                        {'V', 99.068414}
                                                                    };
 
+        public struct LibraryExportOptions
+        {
+            public int minimumSpectra { get; set; }
+            public double precursorMzTolerance { get; set; }
+            public double fragmentMzTolerance { get; set; }
+            public string method { get; set; }
+            public string outputFormat { get; set; }
+            public bool decoys { get; set; }
+            public bool crossPeptide { get; set; }
+
+            public static string DOT_PRODUCT_METHOD = "Dot Product Compare";
+        };
+
         private string _exportLocation;
         private IDPickerForm _owner;
         private ISession _session;
-        private int _minimumSpectra;
-        private double _fragmentMzTolerance;
+        private LibraryExportOptions _libraryExportSettings;
 
         public void toLibrary(IDPickerForm ownerInput, ISession sessionInput)
         {
@@ -923,10 +935,72 @@ namespace IDPicker.Forms
             }
 
             Text = "Export Library";
-            LibraryOptionsPanel.Visible = true;
-            progressBar.Visible = false;
-            Size = new Size(297, 140);
+            var settingsDialog = new ExportLibrarySettings();
+            if (settingsDialog.ShowDialog() == DialogResult.OK)
+            {
+                _libraryExportSettings = settingsDialog.GetSettings();
+
+                _exportLocation = string.Empty;
+                var sfd = new SaveFileDialog
+                              {
+                                  AddExtension = true,
+                                  DefaultExt = ".sptxt",
+                                  Filter = "Spectral Library|*.sptxt"
+                              };
+                if (sfd.ShowDialog() == DialogResult.OK)
+                    _exportLocation = sfd.FileName;
+                else
+                    return;
+
+                string database = _session.Connection.GetDataSource();
+                if (MessageBox.Show("Back up database?", "Backup?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    var backupNumber = 1;
+                    string dbBackupFile = Path.ChangeExtension(database, ".backup.idpDB");
+                    while (File.Exists(dbBackupFile))
+                    {
+                        backupNumber++;
+                        dbBackupFile = Path.ChangeExtension(database, ".backup" + backupNumber + ".idpDB");
+                    }
+                    Text = (string.Format("Backing up idpDB to {0} ... ", dbBackupFile));
+                    File.Copy(database, dbBackupFile, true);
+                }
+
+                Text = "Progress";
+                progressBar.Visible = true;
+                var timer = new System.Diagnostics.Stopwatch();
+                timer.Start();
+
+                var bg = new BackgroundWorker {WorkerReportsProgress = true};
+                bg.DoWork += (x, y) => CreateNewLibrary((BackgroundWorker) x);
+                bg.ProgressChanged += (x, y) =>
+                                          {
+                                              if (y.ProgressPercentage < 0)
+                                                  progressBar.Style = ProgressBarStyle.Marquee;
+                                              else
+                                              {
+                                                  progressBar.Style = ProgressBarStyle.Continuous;
+                                                  progressBar.Value = y.ProgressPercentage;
+                                              }
+                                              if (y.UserState != null && y.UserState.ToString().Length > 0)
+                                                  Text = y.UserState.ToString();
+                                          };
+                bg.RunWorkerCompleted += (x, y) =>
+                                             {
+                                                 timer.Stop();
+                                                 MessageBox.Show(string.Format("Finished, {0:00}:{1:00}:{2:00} elapsed",
+                                                                               timer.Elapsed.Hours,
+                                                                               timer.Elapsed.Minutes,
+                                                                               timer.Elapsed.Seconds));
+                                                 Close();
+                                             };
+
+                bg.RunWorkerAsync();
+            }
+            else
+                Close();
         }
+        
 
         private void CreateNewLibrary(BackgroundWorker bg)
         {
@@ -936,7 +1010,7 @@ namespace IDPicker.Forms
                 queryRows = _session.CreateSQLQuery(@"SELECT s.Id, source.Name, NativeID, PrecursorMZ
                                                         FROM UnfilteredSpectrum s
                                                         JOIN SpectrumSource source ON s.Source = source.Id
-                                                        JOIN UnfilteredPeptideSpectrumMatch psm ON s.Id = psm.Spectrum
+                                                        JOIN UnfilterePeptideSpectrumMatch psm ON s.Id = psm.Spectrum
                                                         JOIN Peptide p ON p.Id = psm.Peptide
                                                         JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
                                                         JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
@@ -970,7 +1044,7 @@ namespace IDPicker.Forms
             //// create a temp table to store clustered spectrum IDs
             _session.CreateSQLQuery(@"DROP TABLE IF EXISTS SpectralPeaks").ExecuteUpdate();
             _session.CreateSQLQuery(
-                @"CREATE TABLE IF NOT EXISTS SpectralPeaks (Id INTEGER PRIMARY KEY, spectra INTEGER, mz STRING, intensity STRING, mods STRING, charge INTEGER, mass REAL, preAA STRING, postAA STRING, sequence STRING, protein STRING, origPeptide STRING)
+                @"CREATE TABLE IF NOT EXISTS SpectralPeaks (Id INTEGER PRIMARY KEY, spectra INTEGER, mz STRING, intensity STRING, mods STRING, charge INTEGER, mass REAL, preAA STRING, postAA STRING, sequence STRING, protein STRING, origPeptide STRING, annotations STRING)
                                     ").ExecuteUpdate();
             var peaklist = new List<object[]>();
             var currentSource = string.Empty;
@@ -1075,7 +1149,7 @@ namespace IDPicker.Forms
             newTransaction.Commit();
 
             bg.ReportProgress(-1, string.Format("Indexing peaks for {0} spectra ... ", spectrumRowsCount));
-            _session.CreateSQLQuery("Create index if not exists SpecraPeakIndex on SpectralPeaks (spectra)")
+            _session.CreateSQLQuery("Create index if not exists SpecraPeakIndex on SpectralPeaks (spectra, mass)")
                    .ExecuteUpdate();
 
             var peptideList = _session.QueryOver<Peptide>().List();
@@ -1084,14 +1158,15 @@ namespace IDPicker.Forms
 
             var insertDecoyCmd = _session.Connection.CreateCommand();
             insertDecoyCmd.CommandText =
-                "INSERT INTO SpectralPeaks (spectra, mz, intensity,mods,charge,mass,preAA,postAA,sequence,protein,origPeptide) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                "INSERT INTO SpectralPeaks (spectra, mz, intensity,mods,charge,mass,preAA,postAA,sequence,protein,origPeptide, annotations) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
             var insertDecoyParameters = new List<System.Data.IDbDataParameter>();
-            for (int x = 0; x < 11; ++x)
+            for (int x = 0; x < 12; ++x)
             {
                 insertDecoyParameters.Add(insertDecoyCmd.CreateParameter());
                 insertDecoyCmd.Parameters.Add(insertDecoyParameters[x]);
             }
             insertDecoyCmd.Prepare();
+            var annotations = new Dictionary<long, string>();
 
             for (var peptideNum = 0; peptideNum < peptideList.Count; peptideNum++)
             {
@@ -1122,8 +1197,12 @@ namespace IDPicker.Forms
                             matchSet.Add(modListString, new List<PeptideSpectrumMatch>());
                         matchSet[modListString].Add(match);
                     }
+
                     foreach (var distinctMatch in matchSet)
                     {
+                        long bestSpectra = -100;
+                        double bestScore = -100;
+                        
                         //get list of spectra in peptide
                         var spectraList = new List<long>();
                         var scoreKeeper = new Dictionary<long, List<double>>();
@@ -1133,16 +1212,32 @@ namespace IDPicker.Forms
                                 spectraList.Add(psm.Spectrum.Id ?? -1);
                                 scoreKeeper.Add(psm.Spectrum.Id ?? -1, new List<double>());
                             }
-                        if (spectraList.Count < _minimumSpectra)
+                        if (spectraList.Count < _libraryExportSettings.minimumSpectra)
                             continue;
                         if (spectraList.Count(x => !acceptedSpectra.Contains(x)) == 0)
                             continue;
 
+                        //get list of spectra with similar precursor mass
+                        var extraList = new List<long>();
+                        if (_libraryExportSettings.crossPeptide)
+                        {
+                            var minValue = distinctMatch.Value[0].ObservedNeutralMass -
+                                           _libraryExportSettings.precursorMzTolerance;
+                            var maxValue = distinctMatch.Value[0].ObservedNeutralMass +
+                                           _libraryExportSettings.precursorMzTolerance;
+
+                            var extraListObj = _session.CreateSQLQuery(string.Format(
+                                "SELECT spectra FROM SpectralPeaks WHERE spectra NOT IN ({0}) AND mass > {1} AND Mass < {2} AND spectra > 0",
+                                string.Join(",", spectraList), minValue, maxValue)).List<object>();
+                            foreach (var item in extraListObj)
+                                extraList.Add((long)item);
+                        }
+
                         //get spectra peaks
                         var peakList = _session.CreateSQLQuery(string.Format(
                             "SELECT spectra, mz, intensity FROM SpectralPeaks WHERE spectra IN ({0})",
-                            string.Join(",", spectraList))).List<object[]>();
-                        if (peakList.Count < _minimumSpectra)
+                            string.Join(",", spectraList.Concat(extraList)))).List<object[]>();
+                        if (peakList.Count < _libraryExportSettings.minimumSpectra)
                             continue;
 
                         //for some reason not all spectra have peaks available
@@ -1164,41 +1259,53 @@ namespace IDPicker.Forms
                             peakInfo.Add((long)entry[0], new Peaks(mzValues, intensityValues));
                         }
 
-
-                        //compare spectra in peptide
-                        for (var x = 0; x < spectraList.Count; x++)
+                        if (_libraryExportSettings.method == LibraryExportOptions.DOT_PRODUCT_METHOD)
                         {
-                            for (var y = x + 1; y < spectraList.Count; y++)
+                            //compare spectra in peptide
+                            for (var x = 0; x < spectraList.Count; x++)
                             {
-                                var similarityScore = ClusteringAnalysis.DotProductCompareTo(peakInfo[spectraList[x]],
-                                                                                             peakInfo[spectraList[y]],
-                                                                                             _fragmentMzTolerance);
-                                scoreKeeper[spectraList[x]].Add(similarityScore);
-                                scoreKeeper[spectraList[y]].Add(similarityScore);
-                            }
-                        }
-                        long bestSpectra = -100;
-                        double bestScore = -100;
-                        spectraList = spectraList.Where(x => !acceptedSpectra.Contains(x)).ToList();
-                        if (spectraList.Count == 1)
-                            bestSpectra = spectraList.First();
-                        else if (spectraList.Count == 2)
-                        {
-                            if (peakInfo[spectraList[0]].OriginalIntensities.Average() > peakInfo[spectraList[1]].OriginalIntensities.Average())
-                                bestSpectra = spectraList[0];
-                            else
-                                bestSpectra = spectraList[1];
-                        }
-                        else
-                            foreach (var spectra in spectraList)
-                            {
-                                var avg = scoreKeeper[spectra].Average();
-                                if (avg > bestScore)
+                                for (var y = x + 1; y < spectraList.Count; y++)
                                 {
-                                    bestScore = avg;
-                                    bestSpectra = spectra;
+                                    var similarityScore = ClusteringAnalysis.DotProductCompareTo(peakInfo[spectraList[x]],
+                                                                                                 peakInfo[spectraList[y]],
+                                                                                                 _libraryExportSettings.fragmentMzTolerance);
+                                    scoreKeeper[spectraList[x]].Add(similarityScore);
+                                    scoreKeeper[spectraList[y]].Add(similarityScore);
+                                }
+
+                                if (_libraryExportSettings.crossPeptide)
+                                {
+                                    for (var y = 0; y < extraList.Count; y++)
+                                    {
+                                        var similarityScore = ClusteringAnalysis.DotProductCompareTo(peakInfo[spectraList[x]],
+                                                                                                     peakInfo[extraList[y]],
+                                                                                                     _libraryExportSettings.fragmentMzTolerance);
+                                        scoreKeeper[spectraList[x]].Add(similarityScore);
+                                    }
                                 }
                             }
+                            
+                            spectraList = spectraList.Where(x => !acceptedSpectra.Contains(x)).ToList();
+                            if (spectraList.Count == 1)
+                                bestSpectra = spectraList.First();
+                            else if (spectraList.Count == 2)
+                            {
+                                if (peakInfo[spectraList[0]].OriginalIntensities.Average() > peakInfo[spectraList[1]].OriginalIntensities.Average())
+                                    bestSpectra = spectraList[0];
+                                else
+                                    bestSpectra = spectraList[1];
+                            }
+                            else
+                                foreach (var spectra in spectraList)
+                                {
+                                    var avg = scoreKeeper[spectra].Average();
+                                    if (avg > bestScore)
+                                    {
+                                        bestScore = avg;
+                                        bestSpectra = spectra;
+                                    }
+                                }
+                        }
 
                         if (bestSpectra >= 0)
                         {
@@ -1227,52 +1334,73 @@ namespace IDPicker.Forms
                                 }
                             }
 
+                            //set up annotations
                             string peptideName = insertModsInPeptideString(peptide.Sequence,
                                                                            distinctMatch.Value[0].Modifications);
-                            string decoyPeptideName = createDecoyPeptideString(peptide.Sequence,
-                                                                               distinctMatch.Value[0].Modifications);
-                            string annotatedDecoyPeptideName = insertModsInPeptideString(decoyPeptideName,
-                                                                                         distinctMatch.Value[0]
-                                                                                             .Modifications);
-                            if (decoyPeptideName == string.Empty || peptideName.Length != annotatedDecoyPeptideName.Length)
-                                continue;
-                            object[] decoyPeaks = createDecoyPeaks(peptide.Sequence, decoyPeptideName,
-                                                                   peakInfo[bestSpectra].OriginalMZs.ToList(),
-                                                                   peakInfo[bestSpectra].OriginalIntensities.ToList(),
-                                                                   distinctMatch.Value[0].Modifications, charge);
-
-
                             var proteinString = proteinNames.Count + "/" + string.Join(",1/", proteinNames) +
-                                                (proteinNames.Count > 1 ? ",1" : string.Empty);
-                            var decoyProteinString = proteinNames.Count + "/DECOY_" + string.Join(",1/DECOY_", proteinNames) +
-                                                     (proteinNames.Count > 1 ? ",1" : string.Empty);
+                                                    (proteinNames.Count > 1 ? ",1" : string.Empty);
+                            var modDict = new Dictionary<int, double>();
+                            foreach (var mod in distinctMatch.Value[0].Modifications)
+                                modDict.Add(mod.Offset, mod.Modification.MonoMassDelta);
+                            var splitPeptide = peptide.Sequence.Select(letter => letter.ToString()).ToList();
+                            var FragmentList = CreateFragmentMassReference(splitPeptide, modDict);
+                            Dictionary<double, FragmentPeakInfo> annotatedList = AnnotatePeaks(peakInfo[bestSpectra].OriginalMZs.ToList().OrderBy(x => x).ToList(), FragmentList, charge);
+                            if (!annotations.ContainsKey(bestSpectra))
+                            {
+                                var orderedMZs = peakInfo[bestSpectra].OriginalMZs.OrderBy(x => x).ToList();
+                                var tempList = new List<string>();
+                                foreach (var mz in orderedMZs)
+                                {
+                                    var tempstring = annotatedList[mz].fragmentID;
+                                    var closestModValue = Math.Round(annotatedList[mz].relativePosition);
+                                    if (closestModValue < 0)
+                                        tempstring += closestModValue.ToString();
+                                    else if (closestModValue > 0)
+                                        tempstring += "+" + closestModValue.ToString();
+                                    if (annotatedList[mz].fragmentCharge > 1)
+                                        tempstring += "^" + annotatedList[mz].fragmentCharge;
+                                    tempList.Add(tempstring);
+                                }
+                                annotations.Add(bestSpectra, string.Join("|", tempList));
+                            }
 
-                            insertDecoyParameters[0].Value = -bestSpectra;
-                            insertDecoyParameters[1].Value = string.Join("|", (List<double>)decoyPeaks[0]);
-                            insertDecoyParameters[2].Value = string.Join("|", (List<double>)decoyPeaks[1]);
-                            insertDecoyParameters[3].Value = modstring;
-                            insertDecoyParameters[4].Value = charge;
-                            insertDecoyParameters[5].Value = mass;
-                            insertDecoyParameters[6].Value = preAA;
-                            insertDecoyParameters[7].Value = postAA;
-                            insertDecoyParameters[8].Value = annotatedDecoyPeptideName;
-                            insertDecoyParameters[9].Value = decoyProteinString;
-                            insertDecoyParameters[10].Value = preAA + "." + peptideName + "." + postAA;
-                            insertDecoyCmd.ExecuteNonQuery();
+                            //add decoys
+                            if (_libraryExportSettings.decoys)
+                            {
+                                string decoyPeptideName = createDecoyPeptideString(peptide.Sequence,
+                                                                                   distinctMatch.Value[0].Modifications);
+                                string annotatedDecoyPeptideName = insertModsInPeptideString(decoyPeptideName,
+                                                                                             distinctMatch.Value[0]
+                                                                                                 .Modifications);
+                                if (decoyPeptideName == string.Empty || peptideName.Length != annotatedDecoyPeptideName.Length)
+                                    continue;
+                                object[] decoyPeaks = createDecoyPeaks(peptide.Sequence, decoyPeptideName, annotatedList,
+                                                                       peakInfo[bestSpectra].OriginalMZs.ToList(),
+                                                                       peakInfo[bestSpectra].OriginalIntensities.ToList(),
+                                                                       modDict, charge);
 
-                            //session.CreateSQLQuery(
-                            //        string.Format(
-                            //            "INSERT INTO SpectralPeaks (spectra, mz, intensity,mods,charge,mass,preAA,postAA,sequence,protein) VALUES ({0},{1},{2},{3},{4},{5},{6},{7},{8},{9})",
-                            //            -bestSpectra, string.Join("|", decoyPeaks[0]),
-                            //            string.Join("|", decoyPeaks[1]), modstring, charge, mass, "X", "X", decoyPeptideName,
-                            //                        decoyProteinString)).ExecuteUpdate();
+
+                                var decoyProteinString = proteinNames.Count + "/DECOY_" + string.Join(",1/DECOY_", proteinNames) +
+                                                         (proteinNames.Count > 1 ? ",1" : string.Empty);
+                                var spectraAnnotations = string.Join("|", (List<string>)decoyPeaks[2]);
+
+                                insertDecoyParameters[0].Value = -bestSpectra;
+                                insertDecoyParameters[1].Value = string.Join("|", (List<double>)decoyPeaks[0]);
+                                insertDecoyParameters[2].Value = string.Join("|", (List<double>)decoyPeaks[1]);
+                                insertDecoyParameters[3].Value = modstring;
+                                insertDecoyParameters[4].Value = charge;
+                                insertDecoyParameters[5].Value = mass;
+                                insertDecoyParameters[6].Value = preAA;
+                                insertDecoyParameters[7].Value = postAA;
+                                insertDecoyParameters[8].Value = annotatedDecoyPeptideName;
+                                insertDecoyParameters[9].Value = decoyProteinString;
+                                insertDecoyParameters[10].Value = preAA + "." + peptideName + "." + postAA;
+                                insertDecoyParameters[11].Value = spectraAnnotations;
+                                insertDecoyCmd.ExecuteNonQuery();
+                            }
+
                             spectraInfo.Add(bestSpectra,
                                             new object[] { charge, mass, modstring, preAA, postAA, peptideName, proteinString });
-                            //decoyInfo.Add(bestSpectra, new object[] { decoyPeptideName, annotatedDecoyPeptideName, decoyProteinString, decoyPeaks });
-                            //session.CreateSQLQuery(
-                            //    String.Format(
-                            //        "UPDATE SpectralPeaks SET charge={0}, mass={1}, mods={2}, preAA={3}, postAA={4}, sequence={5}, protein={6} where id={7}",
-                            //        charge, mass, modstring, preAA, postAA, peptideName, proteinNames, bestSpectra));
 
                             acceptedSpectra.Add(bestSpectra);
                         }
@@ -1284,9 +1412,9 @@ namespace IDPicker.Forms
             bg.ReportProgress(-1, "Adding detailed peak data... ");
             var insertPeakInfocmd = _session.Connection.CreateCommand();
             insertPeakInfocmd.CommandText =
-                "UPDATE SpectralPeaks SET charge=?, mass=?, mods=?, preAA=?, postAA=?, sequence=?, protein=? where spectra=?";
+                "UPDATE SpectralPeaks SET charge=?, mass=?, mods=?, preAA=?, postAA=?, sequence=?, protein=?, annotations=? where spectra=?";
             var insertPeakInfoParameters = new List<System.Data.IDbDataParameter>();
-            for (int x = 0; x < 8; ++x)
+            for (int x = 0; x < 9; ++x)
             {
                 insertPeakInfoParameters.Add(insertPeakInfocmd.CreateParameter());
                 insertPeakInfocmd.Parameters.Add(insertPeakInfoParameters[x]);
@@ -1303,13 +1431,21 @@ namespace IDPicker.Forms
                 insertPeakInfoParameters[4].Value = spectraInfo[item][4];
                 insertPeakInfoParameters[5].Value = spectraInfo[item][5];
                 insertPeakInfoParameters[6].Value = spectraInfo[item][6];
-                insertPeakInfoParameters[7].Value = item;
+                insertPeakInfoParameters[7].Value = annotations[item];
+                insertPeakInfoParameters[8].Value = item;
                 insertPeakInfocmd.ExecuteNonQuery();
             }
 
             addInfo.Commit();
-            bg.ReportProgress(-1, "Compressing database... ");
-            _session.CreateSQLQuery("VACUUM").ExecuteUpdate();
+            try
+            {
+                bg.ReportProgress(-1, "Compressing database... ");
+                _session.CreateSQLQuery("VACUUM").ExecuteUpdate();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Could not compress database");
+            }
 
             bg.ReportProgress(-1, string.Format("Exporting to {0}... ", _exportLocation));
             ExportLibrary(_exportLocation);
@@ -1324,23 +1460,17 @@ namespace IDPicker.Forms
             public int fragmentCharge;
         };
 
-        private object[] createDecoyPeaks(string peptideName, string decoyPeptideName, List<double> mzValues, List<double> intensities, IList<PeptideModification> modifications, int charge)
+        private object[] createDecoyPeaks(string peptideName, string decoyPeptideName, Dictionary<double, FragmentPeakInfo> annotatedList , List<double> mzValues, List<double> intensities, Dictionary<int,double> modDict, int charge)
         {
-            var modDict = new Dictionary<int, double>();
-            foreach (var mod in modifications)
-                modDict.Add(mod.Offset, mod.Modification.MonoMassDelta);
-
-            var splitPeptide = peptideName.Select(letter => letter.ToString()).ToList();
             var splitDecoy = decoyPeptideName.Select(letter => letter.ToString()).ToList();
             var originalPeaks = new Dictionary<double, double>();
             for (var x = 0; x < mzValues.Count; x++)
                 originalPeaks.Add(mzValues[x], intensities[x]);
-            var FragmentList = CreateFragmentMassReference(splitPeptide, modDict);
             var DecoyList = CreateFragmentMassReference(splitDecoy, modDict);
             var newPeaks = new Dictionary<double, double>();
             var peakLocations = new List<double>();
-
-            Dictionary<double, FragmentPeakInfo> annotatedList = AnnotatePeaks(mzValues.OrderBy(x => x).ToList(), FragmentList, charge);
+            
+            var newAnnotations = new Dictionary<double, string>();
 
             foreach (var peak in annotatedList)
             {
@@ -1353,6 +1483,18 @@ namespace IDPicker.Forms
                 else
                     newPeaks.Add(mzValue, intensity);
                 peakLocations.Add(mzValue);
+                if (!newAnnotations.ContainsKey(mzValue))
+                {
+                    var tempstring = peak.Value.fragmentID;
+                    var closestModValue = Math.Round(peak.Value.relativePosition);
+                    if (closestModValue < 0)
+                        tempstring += closestModValue.ToString();
+                    else if (closestModValue > 0)
+                        tempstring += "+" + closestModValue.ToString();
+                    if (peak.Value.fragmentCharge > 1)
+                        tempstring += "^" + peak.Value.fragmentCharge;
+                    newAnnotations.Add(mzValue, tempstring);
+                }
             }
 
             for (var x = 1; x < peakLocations.Count - 1; x++)
@@ -1362,10 +1504,10 @@ namespace IDPicker.Forms
                 var closeBehind = false;
                 var closeAhead = false;
                 if (newPeaks[peakLocations[x - 1]] > 0 &&
-                    Math.Abs(peakLocations[x] - peakLocations[x - 1]) < (_fragmentMzTolerance / 2))
+                    Math.Abs(peakLocations[x] - peakLocations[x - 1]) < (_libraryExportSettings.fragmentMzTolerance / 2))
                     closeBehind = true;
                 if (newPeaks[peakLocations[x + 1]] > 0 &&
-                    Math.Abs(peakLocations[x] - peakLocations[x + 1]) < (_fragmentMzTolerance / 2))
+                    Math.Abs(peakLocations[x] - peakLocations[x + 1]) < (_libraryExportSettings.fragmentMzTolerance / 2))
                     closeAhead = true;
                 if (closeBehind)
                 {
@@ -1382,15 +1524,17 @@ namespace IDPicker.Forms
 
             var newPeakMz = new List<double>();
             var newPeakIntensity = new List<double>();
+            var possibleAnnotations = new List<string>();
             foreach (var kvp in newPeaks.OrderBy(x => x.Key))
             {
                 if (kvp.Value <= 0)
                     continue;
                 newPeakMz.Add(kvp.Key);
                 newPeakIntensity.Add(kvp.Value);
+                possibleAnnotations.Add(newAnnotations[kvp.Key]);
             }
 
-            return new object[] {newPeakMz, newPeakIntensity};
+            return new object[] { newPeakMz, newPeakIntensity, possibleAnnotations };
         }
 
         private Dictionary<double, FragmentPeakInfo> AnnotatePeaks(List<double> originalMZs, Dictionary<string, double> fragmentList, int charge)
@@ -1403,7 +1547,7 @@ namespace IDPicker.Forms
                 var peak1 = peak;
                 var closestMatch = 0.0;
                 var peakExplanationList =
-                    annotationList.Where(x => x < peak1 + _fragmentMzTolerance && x > peak1 - _fragmentMzTolerance).ToList();
+                    annotationList.Where(x => x < peak1 + _libraryExportSettings.fragmentMzTolerance && x > peak1 - _libraryExportSettings.fragmentMzTolerance).ToList();
                 if (peakExplanationList.Any())
                 {
                     var explanationList = availableAnnotations.Where(x => peakExplanationList.Contains(x.Key)).ToList();
@@ -1610,6 +1754,7 @@ namespace IDPicker.Forms
                 var sequence = resultList[x][9].ToString();
                 var proteinString = resultList[x][10].ToString();
                 var origPeptide = resultList[x][11] == null ? string.Empty : resultList[x][11].ToString();
+                var annotationList = (resultList[x][12].ToString()).Split("|".ToCharArray());
 
                 if (mzList.Length != intensityList.Length)
                     continue;
@@ -1625,7 +1770,7 @@ namespace IDPicker.Forms
                 fileout.WriteLine("NumPeaks: {0}", mzList.Length);
                 for (var y = 0; y < mzList.Length; y++)
                 {
-                    fileout.WriteLine("{0:f4}\t{1:f1}\t?", decimal.Parse(mzList[y]), decimal.Parse(intensityList[y]));
+                    fileout.WriteLine("{0:f4}\t{1:f1}\t{2}", decimal.Parse(mzList[y]), decimal.Parse(intensityList[y]), annotationList[y]);
                 }
                 fileout.WriteLine(string.Empty);
                 if (x % 1000 == 0)
@@ -1655,65 +1800,6 @@ namespace IDPicker.Forms
                 brokenSequence[site] = brokenSequence[site] + "[" + combinedMass + "]";
             }
             return prefix + string.Join(string.Empty, brokenSequence);
-        }
-
-        private void StartLibraryButton_Click(object sender, EventArgs e)
-        {
-            _fragmentMzTolerance = (double)Math.Round(FragmentNumBox.Value*2)/2;
-            _minimumSpectra = (int)Math.Round(SpectrumNumBox.Value);
-
-            _exportLocation = string.Empty;
-            var sfd = new SaveFileDialog { AddExtension = true, DefaultExt = ".sptxt",Filter="Spectral Library|*.sptxt" };
-            if (sfd.ShowDialog() == DialogResult.OK)
-                _exportLocation = sfd.FileName;
-            else
-                return;
-
-            string database = _session.Connection.GetDataSource();
-            if (MessageBox.Show("Back up database?", "Backup?", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            {
-                var backupNumber = 1;
-                string dbBackupFile = Path.ChangeExtension(database, ".backup.idpDB");
-                while (File.Exists(dbBackupFile))
-                {
-                    backupNumber++;
-                    dbBackupFile = Path.ChangeExtension(database, ".backup" + backupNumber + ".idpDB");
-                }
-                Text = (string.Format("Backing up idpDB to {0} ... ", dbBackupFile));
-                File.Copy(database, dbBackupFile, true);
-            }
-
-            Text = "Progress";
-            Size = new Size(526, 60);
-            LibraryOptionsPanel.Visible = false;
-            progressBar.Visible = true;
-            var timer = new System.Diagnostics.Stopwatch();
-            timer.Start();
-
-            var bg = new BackgroundWorker { WorkerReportsProgress = true };
-            bg.DoWork += (x, y) => CreateNewLibrary((BackgroundWorker)x);
-            bg.ProgressChanged += (x, y) =>
-            {
-                if (y.ProgressPercentage < 0)
-                    progressBar.Style = ProgressBarStyle.Marquee;
-                else
-                {
-                    progressBar.Style = ProgressBarStyle.Continuous;
-                    progressBar.Value = y.ProgressPercentage;
-                }
-                if (y.UserState != null && y.UserState.ToString().Length > 0)
-                    Text = y.UserState.ToString();
-            };
-            bg.RunWorkerCompleted += (x, y) =>
-            {
-                timer.Stop();
-                MessageBox.Show(string.Format("Finished, {0:00}:{1:00}:{2:00} elapsed",
-                                              timer.Elapsed.Hours, timer.Elapsed.Minutes,
-                                              timer.Elapsed.Seconds));
-                Close();
-            };
-
-            bg.RunWorkerAsync();
         }
     }
 }

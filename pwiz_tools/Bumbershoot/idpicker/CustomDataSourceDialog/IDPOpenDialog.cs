@@ -860,11 +860,7 @@ namespace CustomDataSourceDialog
         
         private void SearchBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar == '\\' || e.KeyChar == '/' ||
-                e.KeyChar == ':' || e.KeyChar == '"' ||
-                e.KeyChar == '|')
-                e.Handled = true;
-            else if (e.KeyChar == (char)Keys.Return)
+            if (e.KeyChar == (char)Keys.Return)
             {
                 ApplyFilters();
                 e.Handled = true;
@@ -878,12 +874,28 @@ namespace CustomDataSourceDialog
             if (FileTreeView.Nodes.Count < 1)
                 return;
 
-            Regex regexConversion;
-            if (SearchBox.Text == string.Empty || SearchBox.ForeColor == SystemColors.GrayText)
-                regexConversion = new Regex(string.Empty);
-            else
-                regexConversion = new Regex("^" + SearchBox.Text.ToLower().Replace("+", "\\+")
-                                                      .Replace(".", "\\.").Replace('?', '.').Replace("*", ".*") + "$");
+            var regexConversion = new Regex(string.Empty);
+            if (SearchBox.Text != string.Empty && SearchBox.ForeColor != SystemColors.GrayText)
+            {
+                try
+                {
+                    regexConversion = new Regex(SearchBox.Text.ToLower(), RegexOptions.IgnoreCase);
+                    SearchBox.BackColor = SystemColors.Window;
+                }
+                catch
+                {
+                    try
+                    {
+                        regexConversion = new Regex("^" + SearchBox.Text.ToLower().Replace("+", "\\+")
+                                                      .Replace(".", "\\.").Replace('?', '.').Replace("*", ".*") + "$",RegexOptions.IgnoreCase);
+                        SearchBox.BackColor = SystemColors.Window;
+                    }
+                    catch
+                    {
+                        SearchBox.BackColor = Color.LightSalmon;
+                    }
+                }
+            }
             var errorNode = FileTreeView.Nodes.Cast<TreeNode>().SingleOrDefault(o => o.Name == "IDPDBErrorNode");
             FileTreeView.Nodes.Clear();
             FileTreeView.Nodes.Add(FilterNode(_unfilteredNode, regexConversion));

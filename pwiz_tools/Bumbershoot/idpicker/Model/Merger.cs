@@ -253,6 +253,7 @@ namespace IDPicker.DataModel
                         addNewQonverterSettings(conn);
 
                         conn.ExecuteNonQuery("INSERT INTO merged.MergedFiles VALUES ('" + mergeSourceFilepath.Replace("'", "''") + "')");
+                        PruneGroupTree(conn);
                     }
                     catch(Exception ex)
                     {
@@ -326,6 +327,8 @@ namespace IDPicker.DataModel
                     addIntegerSet(conn);
                     conn.ExecuteNonQuery("UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL");
 
+                    PruneGroupTree(conn);
+
                     transaction.Commit();
 
                     conn.ExecuteNonQuery("DETACH DATABASE merged");
@@ -339,6 +342,44 @@ namespace IDPicker.DataModel
             // if merging to a temporary file, move it back to the real target
             if (tempMergeTargetFilepath != mergeTargetFilepath)
                 File.Move(tempMergeTargetFilepath, mergeTargetFilepath);
+        }
+
+        private void PruneGroupTree(SQLiteConnection conn)
+        {
+            var groupNameToID = new Dictionary<string, int>();
+            var groupsToRemove = new HashSet<string>();
+            var usedGroups = new HashSet<int>();
+
+            var queriedGroups = conn.ExecuteQuery("SELECT * FROM SpectrumSourceGroup");
+            var usedGroupQuerey = conn.ExecuteQuery("SELECT DISTINCT group_ FROM SpectrumSource");
+            foreach (var group in usedGroupQuerey)
+                usedGroups.Add((int)group[0]);
+            foreach (var group in queriedGroups)
+            {
+                var idBase = group[0].ToString();
+                var id = int.Parse(idBase);
+                var name = group[1].ToString();
+                if (groupNameToID.ContainsKey(name))
+                    continue;
+                groupNameToID.Add(name,id);
+                groupsToRemove.Add(name);
+            }
+            foreach (var group in queriedGroups)
+            {
+                var idBase = group[0].ToString();
+                var id = int.Parse(idBase);
+                var name = group[1].ToString();
+
+                if (usedGroups.Contains(id))
+                {
+                    var validGroup = groupsToRemove.Where(item => name.Contains(item)).ToList();
+                    foreach (var item in validGroup)
+                        groupsToRemove.Remove(item);
+                }
+            }
+            var idsToRemove = groupsToRemove.Select(item => groupNameToID[item]).ToList();
+            conn.ExecuteQuery("DELETE FROM spectrumSourceGroup WHERE id in (" + string.Join(",", idsToRemove) + ")");
+            conn.ExecuteQuery("DELETE FROM spectrumSourceGroupLink WHERE group_ in (" + string.Join(",", idsToRemove) + ")");
         }
 
         static string mergeProteinsSql =

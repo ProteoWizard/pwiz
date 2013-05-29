@@ -538,8 +538,11 @@ namespace IDPicker.Forms
             }
             if (e.DataObject.GetType().ToString() == "System.Windows.Forms.DataObject")
             {
-                var sources = from ListViewItem item in lvNonGroupedFiles.SelectedItems
-                              select (tlvBranch) item.Tag;
+                var sources = new List<tlvBranch>();
+                foreach (ListViewItem item in lvNonGroupedFiles.SelectedItems)
+                    sources.Add((tlvBranch)item.Tag);
+                //var sources = from ListViewItem item in lvNonGroupedFiles.SelectedItems
+                //              select (tlvBranch) item.Tag;
 
                 foreach (var source in sources)
                 {
@@ -681,7 +684,14 @@ namespace IDPicker.Forms
             // add ungrouped sources
             foreach (var ss in session.Query<SpectrumSource>().Where(g => g.Group == null))
             {
-                var lvi = new ListViewItem { Text = ss.Name, Tag = ss };
+                var lvTag = new tlvBranch
+                {
+                    Text = ss.Name,
+                    Parent = new tlvBranch { Text = null },
+                    Children = new List<tlvBranch>(),
+                    Data = ss
+                };
+                var lvi = new ListViewItem { Text = ss.Name, Tag = lvTag };
                 lvNonGroupedFiles.Items.Add(lvi);
             }
         }
