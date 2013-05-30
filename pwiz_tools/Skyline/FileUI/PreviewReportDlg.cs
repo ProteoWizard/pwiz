@@ -30,6 +30,7 @@ namespace pwiz.Skyline.FileUI
     /// </summary>
     public partial class PreviewReportDlg : FormEx
     {
+        private const float FILL_WEIGHT = 1;
         public PreviewReportDlg()
         {
             InitializeComponent();
@@ -60,7 +61,8 @@ namespace pwiz.Skyline.FileUI
                 DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn
                                                        {
                                                            HeaderText = columnInfo.Caption,
-                                                           DefaultCellStyle = {Format = columnInfo.Format}
+                                                           DefaultCellStyle = {Format = columnInfo.Format},
+                                                           FillWeight = FILL_WEIGHT
                                                        };
                 if (columnInfo.IsNumeric)
                 {

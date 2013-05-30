@@ -310,11 +310,18 @@ namespace pwiz.Skyline.Model.DocSettings
         private static IList<ReportColumn> ReadColumns(XmlReader reader, Enum elGroup, IDictionary<string, Type> dictAliasTable)
         {
             if (!reader.IsStartElement(elGroup))
+            {
                 return null;
+            }
 
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return new ReportColumn[0];
+            }
             reader.Read();
-
             List<ReportColumn> identifiers = new List<ReportColumn>();
+
             while (reader.IsStartElement(EL.column))
             {
                 string alias = reader.GetAttribute(ATTR.name);
@@ -342,7 +349,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 identifiers.Add(new ReportColumn(table, colId));
                 reader.ReadEndElement();
             }
-
             reader.ReadEndElement();
 
             return new ReadOnlyCollection<ReportColumn>(identifiers);

@@ -389,15 +389,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             SimpleReport simpleReport = (SimpleReport) report;
             columnInfos = new List<NodeData>();
-            if (simpleReport.Columns.Count == 0)
-            {
-                return;
-            }
             var allColumns = new List<ReportColumn>(simpleReport.Columns);
             var pivotReport = simpleReport as PivotReport;
             if (pivotReport != null)
             {
                 allColumns.AddRange(pivotReport.CrossTabValues);
+            }
+            if (allColumns.Count == 0)
+            {
+                return;
             }
             var allTables = new HashSet<Type>(from reportColumn in allColumns
                                               select reportColumn.Table);
