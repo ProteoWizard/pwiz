@@ -2148,6 +2148,13 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap ChromLib {
+            get {
+                object obj = ResourceManager.GetObject("ChromLib", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to ClipboardEx implementation problem.
         /// </summary>

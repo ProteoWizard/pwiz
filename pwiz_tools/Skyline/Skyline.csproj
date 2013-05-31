@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4597</ApplicationRevision>
-    <ApplicationVersion>1.4.1.4597</ApplicationVersion>
+    <ApplicationRevision>4600</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4600</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1834,8 +1834,9 @@
     <EmbeddedResource Include="Resources\TransitionGroupLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\FragmentLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\AllIonsStatusButton.bmp" />
-    <EmbeddedResource Include="Resources\LabKey.bmp" />
     <EmbeddedResource Include="Resources\Panorama.bmp" />
+    <EmbeddedResource Include="Resources\ChromLib.bmp" />
+    <EmbeddedResource Include="Resources\LabKey.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

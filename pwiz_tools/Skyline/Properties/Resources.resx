@@ -5251,4 +5251,7 @@ Are you sure you want to continue?</value>
   <data name="OverlapDemultiplexer_RowStart_Number_of_regions__0__in_overlap_demultiplexer_approximation_must_be_less_than_number_of_scans__1__" xml:space="preserve">
     <value>Number of regions {0} in overlap demultiplexer approximation must be less than number of scans {1}.</value>
   </data>
+  <data name="ChromLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ChromLib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

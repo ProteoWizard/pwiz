@@ -51,6 +51,7 @@ namespace pwiz.Skyline.FileUI
          {
             panorama,
             labkey,
+            chrom_lib,
             folder
          }
         
@@ -66,6 +67,7 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.ImageList = new ImageList();
             treeViewFolders.ImageList.Images.Add(Resources.Panorama);
             treeViewFolders.ImageList.Images.Add(Resources.LabKey);
+            treeViewFolders.ImageList.Images.Add(Resources.ChromLib);
             treeViewFolders.ImageList.Images.Add(Resources.Folder);
 
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);

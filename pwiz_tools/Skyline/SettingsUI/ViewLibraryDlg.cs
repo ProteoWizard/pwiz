@@ -910,7 +910,11 @@ namespace pwiz.Skyline.SettingsUI
                     sb.Append(sequence[i]);
                     inMod = isMod;
                     if (isMod)
+                    {
                         i = sequence.IndexOf(']', i);
+                        if (i == -1)
+                            i = sequence.Length;
+                    }
                 }
                 textSequences.Add(CreateTextSequence(sb.ToString(), inMod));
             }
