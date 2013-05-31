@@ -24,6 +24,8 @@
  * xml output from percolator, versions 1.15 and later.
  */
 
+#include <cctype>
+
 #include "PercolatorXmlReader.h"
 #include "BlibMaker.h"
 
@@ -252,8 +254,57 @@ void PercolatorXmlReader::parseSequence(const XML_Char** attributes){
                             "spectrum to assign it to.");
     }
 
-    // for now store the modified sequence in the unmod seq slot
-    curPSM_->unmodSeq = getRequiredAttrValue("seq", attributes);
+    string seq = getRequiredAttrValue("seq", attributes);
+    curPSM_->unmodSeq.clear();
+    // consume all bracketed mods and add them as SeqMods to the PSM
+    int aaCount = 0;
+    for (size_t i = 0; i < seq.length(); ++i)
+    {
+        char cur = seq[i];
+        switch (cur)
+        {
+        case '[':
+            {
+                size_t modClose = seq.find("]", ++i);
+                if (modClose == string::npos)
+                {
+                    throw BlibException(false, "Sequence '%s' has opening bracket "
+                                        "with no closing bracket.", seq.c_str());
+                }
+                // get delta mass
+                double deltaMass;
+                try
+                {
+                    deltaMass = boost::lexical_cast<double>(seq.substr(i, modClose - i));
+                }
+                catch (boost::bad_lexical_cast& e)
+                {
+                    throw BlibException(false, "Sequence '%s' has an unreadable modification.",
+                                        seq.c_str());
+                }
+                // add seqmod to psm
+                curPSM_->mods.push_back(SeqMod(aaCount, deltaMass));
+
+                i = modClose;
+            }
+            break;
+        case ']':
+            {
+                throw BlibException(false, "Sequence '%s' has closing bracket with no "
+                                           "opening bracket.", seq.c_str());
+            }
+            break;
+        default:
+            {
+                if (isalpha(cur))
+                {
+                    ++aaCount;
+                }
+                curPSM_->unmodSeq += toupper(cur);
+            }
+            break;
+        }
+    }
 }
 
 /**

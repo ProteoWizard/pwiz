@@ -188,6 +188,21 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-perc-xml
   : check-perc-xml ;
 
+# Test building with percolator XML files (bracketed modifications)
+
+make output/perc-bracket.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/bracket.perc.xml output/perc-bracket.blib
+  : 
+  : build-perc-bracket-xml ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/perc-bracket.blib reference/perc-bracket-xml.check
+  : $(compare-reqs)
+    <dependency>build-perc-bracket-xml
+  : check-perc-bracket-xml ;
+
 # Test building with .pep.xml from various pipelines
 
 make output/omssa.blib : inputs/empty : @common.copy : $(test_output_req) ;
