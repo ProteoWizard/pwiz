@@ -122,7 +122,7 @@ namespace pwiz.SkylineTestA
                 };
 
             string output = RunCommand("--in=" + docPath,
-                                       "--remove-before=3/16/2012",
+                                       "--remove-before=" + DateTime.Parse("3/16/2012", CultureInfo.InvariantCulture),
                                        "--out=" + outPath);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
@@ -138,7 +138,7 @@ namespace pwiz.SkylineTestA
 
             // try to remove all
             output = RunCommand("--in=" + docPath,
-                                "--remove-before=3/16/2013",
+                                "--remove-before=" + DateTime.Parse("3/16/2013", CultureInfo.InvariantCulture),
                                 "--out=" + outPath);
 
             doc = ResultsUtil.DeserializeDocument(outPath);

@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
 
             AbiTofTest();
 
-            AgilentThermoTriggeredTest();
+            AgilentThermoABSciexTriggeredTest();
 
             ABSciexShortNameTest();
         }
@@ -317,8 +317,8 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<MessageDlg>(() => exportMethodDlg.MethodType = ExportMethodType.Triggered,
                     dlg =>
                     {
-                        AssertEx.AreComparableStrings(Resources.ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_,
-                            dlg.Message, 1);
+                        AssertEx.AreComparableStrings(Resources.ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_,
+                            dlg.Message);
                         dlg.OkDialog();
                     });
                 RunUI(exportMethodDlg.CancelButton.PerformClick);
@@ -397,7 +397,7 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
-        private void AgilentThermoTriggeredTest()
+        private void AgilentThermoABSciexTriggeredTest()
         {
             // Failure trying to export to file with a peptide lacking results or library match
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-missing.sky")));
@@ -428,6 +428,8 @@ namespace pwiz.SkylineTestFunctional
             string agilentActual = TestFilesDir.GetTestPath("TranListTriggered-actual.csv");
             string thermoExpected = TestFilesDir.GetTestPath("TranListIsrm.csv");
             string thermoActual = TestFilesDir.GetTestPath("TranListIsrm-actual.csv");
+            string abSciexExpected = TestFilesDir.GetTestPath("TranListAbSciexTriggered.csv");
+            string abSciexActual = TestFilesDir.GetTestPath("TranListAbSciexTriggered-actual.csv");
             string agilentActualMeth = TestFilesDir.GetTestPath("TranListTriggered-actual.m");
             string agilentTemplateMeth = TestFilesDir.GetTestPath("cm-HSA-2_1mm-tMRM-TH100B.m");
             // Agilent transition list
@@ -451,6 +453,26 @@ namespace pwiz.SkylineTestFunctional
             }
 
             AssertEx.NoDiff(File.ReadAllText(agilentExpected), File.ReadAllText(agilentActual));
+
+            // AB Sciex transition list no previous results
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.ABI;
+                    exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+
+                    // change Method type to "Triggered"
+                    exportMethodDlg.MethodType = ExportMethodType.Triggered;
+                    Assert.IsTrue(exportMethodDlg.IsPrimaryCountVisible);
+                    Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
+                    exportMethodDlg.PrimaryCount = 2;
+                });
+                RunDlg<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(abSciexActual),
+                                          dlg => dlg.Btn0Click());
+                WaitForClosedForm(exportMethodDlg);
+            }
+            AssertEx.NoDiff(File.ReadAllText(abSciexExpected), File.ReadAllText(abSciexActual));
 
             // Thermo transition list
             {
@@ -490,6 +512,29 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(exportMethodDlg);
             }
             Assert.IsTrue(Directory.Exists(agilentActualMeth));
+
+
+            // AB Sciex transition list with previous results
+            string abSciexWithResultsExpected = TestFilesDir.GetTestPath("TranListAbSciexWithResultsTriggered.csv");
+            string abSciexWithResultsActual = TestFilesDir.GetTestPath("TranListAbSciexWithResultsTriggered-actual.csv");
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MRM Triggered MRM data imported.sky")));
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));              
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.ABI;
+                    exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+
+                    // change Method type to "Triggered"
+                    exportMethodDlg.MethodType = ExportMethodType.Triggered;
+                    Assert.IsTrue(exportMethodDlg.IsPrimaryCountVisible);
+                    Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
+                    exportMethodDlg.PrimaryCount = 2;
+                    exportMethodDlg.OkDialog(abSciexWithResultsActual);
+                });
+                WaitForClosedForm(exportMethodDlg);
+            }
+            AssertEx.NoDiff(File.ReadAllText(abSciexWithResultsExpected), File.ReadAllText(abSciexWithResultsActual));
         }
 
         private void ABSciexShortNameTest()

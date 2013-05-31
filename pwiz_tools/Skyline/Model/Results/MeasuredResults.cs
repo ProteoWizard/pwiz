@@ -207,7 +207,8 @@ namespace pwiz.Skyline.Model.Results
                 string fileBasename = Path.GetFileNameWithoutExtension(filePathFind);
                 foreach (string filePath in chromSet.MSDataFilePaths)
                 {
-                    if (IsBaseNameMatch(Path.GetFileNameWithoutExtension(filePath), fileBasename))
+                    string filePathPart = SampleHelp.GetPathFilePart(filePath);
+                    if (IsBaseNameMatch(Path.GetFileNameWithoutExtension(filePathPart), fileBasename))
                         return new ChromSetFileMatch(chromSet, filePath, fileOrder);
                     fileOrder++;
                 }

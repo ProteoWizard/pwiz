@@ -1734,6 +1734,7 @@ namespace pwiz.Skyline.Properties {
                 this["AutoShowAllChromatogramsGraph"] = value;
             }
         }
+
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1744,6 +1745,23 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["PanoramaServerExpansion"] = value;
+            }
+        }
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.8")]
+        public double FractionOfRtWindowAtWhichVariableSizeIsTriggered {
+            get {
+                return ((double)(this["FractionOfRtWindowAtWhichVariableSizeIsTriggered"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.2")]
+        public double VariableRtWindowIncreaseFraction {
+            get {
+                return ((double)(this["VariableRtWindowIncreaseFraction"]));
             }
         }
     }

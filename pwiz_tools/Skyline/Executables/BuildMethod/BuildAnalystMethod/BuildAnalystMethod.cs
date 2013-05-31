@@ -69,10 +69,31 @@ namespace BuildAnalystMethod
                 Label = values[i++];
                 DP = double.Parse(values[i++], CultureInfo.InvariantCulture);
                 CE = double.Parse(values[i++], CultureInfo.InvariantCulture);
-                if(i < values.Length)
-                    PrecursorWindow = double.Parse(values[i++], CultureInfo.InvariantCulture);
                 if (i < values.Length)
-                    ProductWindow = double.Parse(values[i], CultureInfo.InvariantCulture);
+                    PrecursorWindow = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
+                    ProductWindow = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
+                    Group = values[i++];
+
+                if (i < values.Length)
+                    AveragePeakArea = string.IsNullOrEmpty(values[i]) ? (float?)null : float.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
+                    VariableRtWindow = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
+                    Threshold = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
+                    Primary = string.IsNullOrEmpty(values[i]) ? 1 : int.Parse(values[i], CultureInfo.InvariantCulture);
             }
             catch (FormatException)
             {
@@ -88,6 +109,11 @@ namespace BuildAnalystMethod
         public double DP { get; private set; }
         public double? PrecursorWindow { get; private set; }
         public double? ProductWindow { get; private set; }
+        public double? Threshold { get; private set; }
+        public int? Primary { get; private set; }
+        public string Group { get; private set; }
+        public float? AveragePeakArea { get; private set; }
+        public double? VariableRtWindow { get; private set; }
 
         public int ExperimentIndex { get; set; }
     }
@@ -246,11 +272,6 @@ namespace BuildAnalystMethod
             if (!string.IsNullOrEmpty(outputMethodCurrent))
             {
                 MethodTrans.Add(new MethodTransitions(outputMethodCurrent, finalMethod, sb.ToString()));
-            }
-
-            // Read remaining contents of stream, in case it is stdin
-            while (instream.ReadLine() != null)
-            {
             }
         }
 

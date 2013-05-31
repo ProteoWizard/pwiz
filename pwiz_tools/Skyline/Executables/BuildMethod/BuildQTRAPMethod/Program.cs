@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using System.IO;
 using Interop.AcqMethodSvr;
@@ -264,7 +265,32 @@ namespace BuildQTRAPMethod
             var period = (Period)method.GetPeriod(method.PeriodCount - 1);
             var msExperiment = (Experiment)period.GetExperiment(0);
 
+            double? triggerThreshold = transitions.Transitions[0].Threshold;
+            bool analystSupportsEnhancedScheduledMrm = AnalystSupportsEnhancedScheduledMrm(msExperiment);
+            if (triggerThreshold.HasValue && analystSupportsEnhancedScheduledMrm)
+            {
+                IExperiment8 experimentEnhanced = (IExperiment8)msExperiment;
+                experimentEnhanced.IsEnhancedsMRM = 1;
+            }
+            
+            if (!triggerThreshold.HasValue && msExperiment.MassRangesCount > 0 && analystSupportsEnhancedScheduledMrm && ((IMassRange4)msExperiment.GetMassRange(0)).TriggerThreshold > 0)
+            {
+                triggerThreshold = ((IMassRange4)msExperiment.GetMassRange(0)).TriggerThreshold;
+            }
+
             msExperiment.DeleteAllMasses();
+
+            float? medianArea = null;
+            float? minArea = null;
+            int count = transitions.Transitions.Count();
+            if (count >= 2)
+            {
+                var orderedTransitions = transitions.Transitions.OrderBy(t => t.AveragePeakArea);
+                medianArea = orderedTransitions.ElementAt((int)(count * Properties.Settings.Default.FractionOfTranstionsToUseDwellWeighting)).AveragePeakArea 
+                    + orderedTransitions.ElementAt((int)((count - 1) * Properties.Settings.Default.FractionOfTranstionsToUseDwellWeighting)).AveragePeakArea;
+                medianArea /= 2;
+                minArea = transitions.Transitions.Min(t => t.AveragePeakArea);
+            }
 
             foreach (var transition in transitions.Transitions)
             {
@@ -279,13 +305,44 @@ namespace BuildQTRAPMethod
                 short s;
                 massRangeParams.Description = transition.Label;
                 massRangeParams.AddSetParameter("DP", (float) transition.DP, (float) transition.DP, 0, out s);
-                massRangeParams.AddSetParameter("EP", 10, 10, 0, out s);
                 massRangeParams.AddSetParameter("CE", (float) transition.CE, (float) transition.CE, 0, out s);
-                massRangeParams.AddSetParameter("CXP", 15, 15, 0, out s);
+
+                if (analystSupportsEnhancedScheduledMrm)
+                {
+                    var msMassRange4 = (IMassRange4)msMassRange;
+                    msMassRange4.GroupID = transition.Group;
+                    msMassRange4.IsPrimary = transition.Primary.HasValue && transition.Primary.Value == 2 ? 0 : 1;
+                    msMassRange4.TriggerThreshold = triggerThreshold.HasValue ? triggerThreshold.Value : Properties.Settings.Default.MinTriggerThreshold;
+                    msMassRange4.DetectionWindow = transition.VariableRtWindow.HasValue ? transition.VariableRtWindow.Value * 60 : msMassRange4.DetectionWindow;
+                    if (medianArea.HasValue && minArea.HasValue && minArea != medianArea && transition.AveragePeakArea.HasValue && transition.AveragePeakArea < medianArea)
+                    {
+                        double averageArea = transition.AveragePeakArea.HasValue && transition.AveragePeakArea >= 1 ? (double)transition.AveragePeakArea : 1.0;
+                        double scaledArea = (Math.Log(averageArea - minArea.Value + 1) / Math.Log((double)medianArea)) 
+                            * (Properties.Settings.Default.MaxDwellWeightingForTargets - Properties.Settings.Default.MinDwellWeightingForTargets);
+                        msMassRange4.DwellWeighting = Properties.Settings.Default.MaxDwellWeightingForTargets - scaledArea;
+                    }
+                    else
+                    {
+                        msMassRange4.DwellWeighting = 1.0;
+                    }
+                }
             }
 
             acqMethod.SaveAcqMethodToFile(transitions.OutputMethod, 1);
             
+        }
+
+        private bool AnalystSupportsEnhancedScheduledMrm(Experiment msExperiment)
+        {
+            try
+            {
+                IMassRange4 templateMassRage = (IMassRange4)msExperiment.GetMassRange(0);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
     }

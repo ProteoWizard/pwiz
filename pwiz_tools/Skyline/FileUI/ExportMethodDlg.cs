@@ -1018,9 +1018,6 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            comboOptimizing.Enabled = !IsFullScanInstrument;
-            OptimizeType = ExportOptimize.NONE;
-
             if (wasFullScanInstrument != IsFullScanInstrument)
                 UpdateMaxTransitions();
 
@@ -1072,9 +1069,19 @@ namespace pwiz.Skyline.FileUI
         {
             bool standard = (targetType == ExportMethodType.Standard);
             bool triggered = (targetType == ExportMethodType.Triggered);
-            comboOptimizing.Enabled = !triggered && !IsFullScanInstrument;
-            if (triggered)
+
+            if (triggered && !(InstrumentType == ExportInstrumentType.ABI || InstrumentType == ExportInstrumentType.ABI_QTRAP))
+            {
+                comboOptimizing.Enabled = false;
+            }
+            else
+            {
+                comboOptimizing.Enabled = !IsFullScanInstrument;
+            }
+            if (!comboOptimizing.Enabled)
+            {
                 OptimizeType = ExportOptimize.NONE;
+            }
 
             UpdateTriggerControls(targetType);
             UpdateDwellControls(standard);

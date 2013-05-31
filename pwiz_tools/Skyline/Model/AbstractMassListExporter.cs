@@ -279,21 +279,7 @@ namespace pwiz.Skyline.Model
                                                        ? peptide.GetPrimaryResultsGroup(group)
                                                        : null;
 
-                            foreach (TransitionDocNode transition in group.Children)
-                            {
-                                if (OptimizeType == null)
-                                    fileIterator.WriteTransition(this, seq, peptide, group, groupPrimary, transition, 0);
-                                else
-                                {
-                                    // -step through step
-                                    for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
-                                    {
-                                        // But avoid writing zero or negative CE values, which will just mess up actuisition
-                                        if (GetCollisionEnergy(peptide, group, transition, i) > 0)
-                                            fileIterator.WriteTransition(this, seq, peptide, group, groupPrimary, transition, i);
-                                    }
-                                }
-                            }
+                            WriteTransitions(fileIterator, seq, peptide, group, groupPrimary);
                         }
                     }
                 }
@@ -511,20 +497,34 @@ namespace pwiz.Skyline.Model
                 if (groupTransitions < MinTransitions)
                     continue;
 
-                foreach (TransitionDocNode transition in nodeGroup.Children)
-                {
-                    if (OptimizeType == null)
-                        fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, transition, 0);
-                    else
-                    {
-                        // -step through step
-                        for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
-                            fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, transition, i);
-                    }
-                }
+                WriteTransitions(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary);
             }
             fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
         }
+
+        private void WriteTransitions(FileIterator fileIterator, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
+        {
+            // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
+            var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
+            foreach (DocNode transition in reorderedTransitions)
+            {
+                if (OptimizeType == null)
+                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, (TransitionDocNode)transition, 0);
+                else
+                {
+                    // -step through step
+                    for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
+                    {
+                        // But avoid writing zero or negative CE values, which will just mess up actuisition
+                        if (GetCollisionEnergy(nodePep, nodeGroup, (TransitionDocNode)transition, i) > 0)
+                        {
+                            fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, (TransitionDocNode)transition, i);
+                        }
+                    }
+                }
+            }
+        }
+
 
         private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
         {
@@ -726,12 +726,18 @@ namespace pwiz.Skyline.Model
             return nodeGroup.GetRank(nodeGroupPrimary, nodeTran, SchedulingReplicateIndex);
         }
 
-        protected bool IsPrimary(TransitionGroupDocNode nodeGroup,
+        protected virtual bool IsPrimary(TransitionGroupDocNode nodeGroup,
                                 TransitionGroupDocNode nodeGroupPrimary,
                                 TransitionDocNode nodeTran)
         {
             int? rank = GetRank(nodeGroup, nodeGroupPrimary, nodeTran);
             return (rank.HasValue && rank.Value <= PrimaryTransitionCount);
+        }
+
+        protected virtual IEnumerable<DocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
+        {
+            // most instruments do not care about the order of transitions, just return them in the same order
+            return nodeGroup.Children;
         }
 
         private bool ExceedsMax(int count)

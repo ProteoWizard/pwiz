@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -232,7 +233,9 @@ namespace pwiz.Skyline.Model
         {
             return Equals(type, AGILENT) ||
                    Equals(type, AGILENT6400) ||
-                   Equals(type, THERMO)
+                   Equals(type, THERMO) ||
+                   Equals(type, ABI_QTRAP) ||
+                   Equals(type, ABI)
                 // TODO: TSQ Method writing API does not yet support triggered methods
                 // || Equals(type, THERMO_TSQ)
                    ;
@@ -246,9 +249,7 @@ namespace pwiz.Skyline.Model
 
         public static bool IsSingleWindowInstrumentType(string type)
         {
-            return Equals(type, ABI) ||
-                   Equals(type, ABI_QTRAP) ||
-                   Equals(type, WATERS) ||
+            return Equals(type, WATERS) ||
                    Equals(type, WATERS_XEVO) ||
                    Equals(type, WATERS_QUATTRO_PREMIER);
         }
@@ -755,11 +756,68 @@ namespace pwiz.Skyline.Model
         protected double? RTWindow { get; private set; }
 
         private bool HasResults { get { return Document.Settings.HasResults; } }
+        private int OptimizeStepIndex { get; set; }
 
         protected override string InstrumentType
         {
             get { return ExportInstrumentType.ABI; }
         }
+
+        protected override IEnumerable<DocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
+        {
+            if(MethodType != ExportMethodType.Triggered)
+            {
+                return nodeGroup.Children;
+            }
+
+            IComparer<TransitionOrdered> comparer = TransitionOrdered.TransitionComparerInstance;
+            var sortedByPrimaryTransitions = new SortedDictionary<TransitionOrdered, TransitionDocNode>(comparer);
+            foreach (TransitionDocNode transition in nodeGroup.Children)
+            {
+                int? rank = GetRank(nodeGroup, nodeGroupPrimary, transition);
+                sortedByPrimaryTransitions.Add(new TransitionOrdered { Mz = transition.Mz, Rank = rank }, transition);
+            }
+            return sortedByPrimaryTransitions.Values;
+        }
+
+        private struct TransitionOrdered
+        {
+            public int? Rank { private get; set; }
+            public double Mz { private get; set; }
+
+            private sealed class TransitionComparer : IComparer<TransitionOrdered>
+            {
+                public int Compare(TransitionOrdered x, TransitionOrdered y)
+                {
+                    int c = Comparer.Default.Compare(x.Rank, y.Rank);
+                    if (c != 0)
+                        return c;
+                    c = Comparer.Default.Compare(x.Mz, y.Mz);
+                    if (c != 0)
+                        return c;
+
+                    return 1;
+                }
+            }
+
+            private static readonly IComparer<TransitionOrdered> PRECURSOR_MOD_SEQ_COMPARER_INSTANCE = new TransitionComparer();
+
+            public static IComparer<TransitionOrdered> TransitionComparerInstance
+            {
+                get { return PRECURSOR_MOD_SEQ_COMPARER_INSTANCE; }
+            }
+        }
+
+        protected override bool IsPrimary(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
+        {
+            if (OptimizeType == null || OptimizeType == ExportOptimize.NONE)
+            {
+                return base.IsPrimary(nodeGroup, nodeGroupPrimary, nodeTran);
+            }
+
+            return ((OptimizeStepIndex + OptimizeStepCount) < PrimaryTransitionCount);
+        }
+
 
         protected override void WriteTransition(TextWriter writer,
                                                 PeptideGroupDocNode nodePepGroup,
@@ -769,6 +827,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            OptimizeStepIndex = step;
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
@@ -786,6 +845,10 @@ namespace pwiz.Skyline.Model
                     RTWindow = windowRT; // Store for later use
                     writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
                 }
+                else
+                {
+                    writer.Write(0);
+                }
             }
             writer.Write(FieldSeparator);
 
@@ -794,12 +857,37 @@ namespace pwiz.Skyline.Model
             // because AB uses periods as field separators
             string modifiedPepSequence = GetSequenceWithModsString(nodePep, Document.Settings); // Not L10N;
 
-            string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
-                                                nodePepGroup.Name,
-                                                modifiedPepSequence,
-                                                GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
-                                                                     nodeTran.Transition),
-                                                nodeTranGroup.TransitionGroup.LabelType);
+            string extPeptideId;
+            string extGroupId ;
+            if (OptimizeType == null)
+            {
+                extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
+                                                    nodePepGroup.Name,
+                                                    modifiedPepSequence,
+                                                    GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
+                                                                         nodeTran.Transition),
+                                                    nodeTranGroup.TransitionGroup.LabelType);
+                extGroupId = string.Format("{0}.{1}.{2}", // Not L10N
+                                                    nodePepGroup.Name,
+                                                    modifiedPepSequence,
+                                                    nodeTranGroup.TransitionGroup.LabelType);
+            }
+            else
+            {
+                extPeptideId = string.Format("{0}.{1}.{2}.CE_{3}.{4}", // Not L10N
+                                                    nodePepGroup.Name,
+                                                    modifiedPepSequence,
+                                                    GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
+                                                                         nodeTran.Transition),
+                                                    GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture),
+                                                    nodeTranGroup.TransitionGroup.LabelType);
+                extGroupId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
+                                                    nodePepGroup.Name,
+                                                    modifiedPepSequence,
+                                                    GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
+                                                                         nodeTran.Transition),
+                                                    nodeTranGroup.TransitionGroup.LabelType);
+            }
             writer.WriteDsvField(extPeptideId, FieldSeparator);
             writer.Write(FieldSeparator);
 
@@ -814,6 +902,76 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz));
             }
+            else
+            {
+                // blanks for full scan window sizes
+                writer.Write(FieldSeparator);
+                writer.Write(string.Empty);
+                writer.Write(FieldSeparator);
+                writer.Write(string.Empty);
+            }
+
+            writer.Write(FieldSeparator);
+            writer.Write(extGroupId);
+
+            writer.Write(FieldSeparator);
+            writer.Write(nodeTran.AveragePeakArea);
+
+            double maxRtDiff = 0;
+            if (nodeTran.Results != null)
+            {
+                for (int resultIdx = 0; resultIdx < nodeTran.Results.Count; resultIdx++)
+                {
+                    if (SchedulingAlgorithm == ExportSchedulingAlgorithm.Single && SchedulingReplicateIndex != resultIdx)
+                        continue;
+
+                    var result = nodeTran.Results[resultIdx];
+                    if (result == null) 
+                        continue;
+
+                    foreach (var chromInfo in result)
+                    {
+                        if (nodePep != null && nodePep.AverageMeasuredRetentionTime.HasValue)
+                        {
+                            double rtDiff = nodePep.AverageMeasuredRetentionTime.Value - chromInfo.StartRetentionTime;
+                            if (rtDiff > maxRtDiff)
+                                maxRtDiff = rtDiff;
+                        }
+                    }
+                }
+            }
+
+            // increase window size if observed data goes close to window edge
+            double maxWindowObservedInData = (maxRtDiff * 2);
+            double? measuredWindow = Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
+            double triggerFraction = Settings.Default.FractionOfRtWindowAtWhichVariableSizeIsTriggered;
+            double? variableRtWindow = null;
+            if (measuredWindow.HasValue && maxWindowObservedInData > triggerFraction*measuredWindow.Value)
+            {
+                variableRtWindow = maxWindowObservedInData +
+                                   (Settings.Default.VariableRtWindowIncreaseFraction*measuredWindow);
+            }
+            writer.Write(FieldSeparator);
+            writer.Write(variableRtWindow);
+
+            if (MethodType == ExportMethodType.Triggered)
+            {
+                if (IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran))
+                {
+                    writer.Write(FieldSeparator);
+                    writer.Write(String.Empty);  // Trigger Threshold (placeholder)
+                    writer.Write(FieldSeparator);
+                    writer.Write(1);     // Primary
+                }
+                else
+                {
+                    writer.Write(FieldSeparator);
+                    writer.Write(String.Empty);  // Trigger Threshold (placeholder)
+                    writer.Write(FieldSeparator);
+                    writer.Write(2);          // Secondary
+                }
+            }
+
             writer.WriteLine();
         }
 
@@ -1677,7 +1835,8 @@ namespace pwiz.Skyline.Model
         public static UIntPtr HKEY_LOCAL_MACHINE = new UIntPtr(0x80000002u);
         public static UIntPtr HKEY_CURRENT_USER = new UIntPtr(0x80000001u);
 
-        public const int KEY_READ = 0x20019;  
+        public const int KEY_READ = 0x20019;
+        public const int KEY_WOW64_32KEY = 0x0200;
 
         public const int REG_SZ = 1;
 // ReSharper restore InconsistentNaming
@@ -1699,7 +1858,10 @@ namespace pwiz.Skyline.Model
         {
             UIntPtr hKeyQuery;
             if (RegOpenKeyEx(hKey, path, 0, KEY_READ, out hKeyQuery) != 0)
-                return null;
+            {
+                if (RegOpenKeyEx(hKey, path, 0, KEY_READ | KEY_WOW64_32KEY, out hKeyQuery) != 0)
+                    return null;
+            }
 
             uint size = 1024;
             StringBuilder sb = new StringBuilder(1024);
