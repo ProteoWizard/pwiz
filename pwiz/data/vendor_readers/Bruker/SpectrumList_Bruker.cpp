@@ -47,6 +47,74 @@ namespace msdata {
 namespace detail {
 
 
+const char* parameterAlternativeNames[] =
+{
+    "IsolationWidth:MS(n) Isol Width;Isolation Resolution FWHM",
+    "ChargeState:Trigger Charge MS(2);Trigger Charge MS(3);Trigger Charge MS(4);Trigger Charge MS(5);Precursor Charge State"
+};
+
+size_t parameterAlternativeNamesSize = sizeof(parameterAlternativeNames) / sizeof(const char*);
+
+
+PWIZ_API_DECL
+string SpectrumList_Bruker::ParameterCache::get(const string& parameterName, MSSpectrumParameterList& parameters)
+{
+    map<string, size_t>::const_iterator findItr = parameterIndexByName_.find(parameterName);
+
+    if (findItr == parameterIndexByName_.end())
+    {
+        update(parameters);
+
+        // if still not found, return empty string
+        findItr = parameterIndexByName_.find(parameterName);
+        if (findItr == parameterIndexByName_.end())
+            return string();
+    }
+
+    const MSSpectrumParameter& parameter = parameters[findItr->second];
+    map<string, string>::const_iterator alternativeNameItr = parameterAlternativeNameMap_.find(parameter.name);
+
+    if (parameter.name != parameterName && alternativeNameItr == parameterAlternativeNameMap_.end())
+    {
+        // if parameter name doesn't match, invalidate the cache and try again
+        update(parameters);
+        return get(parameterName, parameters);
+    }
+
+    return parameter.value;
+}
+
+PWIZ_API_DECL
+void SpectrumList_Bruker::ParameterCache::update(MSSpectrumParameterList& parameters)
+{
+    parameterIndexByName_.clear();
+    parameterAlternativeNameMap_.clear();
+
+    vector<string> tokens;
+    for (size_t i=0; i < parameterAlternativeNamesSize; ++i)
+    {
+        bal::split(tokens, parameterAlternativeNames[i], bal::is_any_of(":;"));
+        for (size_t j=1; j < tokens.size(); ++j)
+            parameterAlternativeNameMap_[tokens[j]] = tokens[0];
+    }
+
+    size_t i = 0;
+    BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
+    {
+        map<string, string>::const_iterator findItr = parameterAlternativeNameMap_.find(p.name);
+        if (findItr != parameterAlternativeNameMap_.end())
+        {   
+            //cout << p.name << ": " << p.value << "\n";
+            parameterIndexByName_[findItr->second] = i;
+        }
+        else
+            parameterIndexByName_[p.name] = i;
+
+        ++i;
+    }
+}
+
+
 PWIZ_API_DECL
 SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
                                          const string& rootpath,
@@ -85,15 +153,15 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 }
 
 
-MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t scan) const
+MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t scan, vendor_api::Bruker::DetailLevel detailLevel) const
 {
     if (format_ == Reader_Bruker_Format_FID)
     {
         compassDataPtr_ = CompassData::create(sourcePaths_[scan].string());
-        return compassDataPtr_->getMSSpectrum(1);
+        return compassDataPtr_->getMSSpectrum(1, detailLevel);
     }
 
-    return compassDataPtr_->getMSSpectrum(scan);
+    return compassDataPtr_->getMSSpectrum(scan, detailLevel);
 }
 
 
@@ -102,8 +170,18 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     return spectrum(index, getBinaryData, pwiz::util::IntegerSet());
 }
 
+PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel) const 
+{
+    return spectrum(index, detailLevel, pwiz::util::IntegerSet());
+}
+
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const
 {
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, msLevelsToCentroid);
+}
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
+{ 
     if (index >= size_)
         throw runtime_error(("[SpectrumList_Bruker::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -112,6 +190,24 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     SpectrumPtr result(new Spectrum);
     if (!result.get())
         throw runtime_error("[SpectrumList_Bruker::spectrum()] Allocation error.");
+
+    vendor_api::Bruker::DetailLevel brukerDetailLevel;
+    switch (detailLevel)
+    {
+        case DetailLevel_InstantMetadata:
+        case DetailLevel_FastMetadata:
+            brukerDetailLevel = vendor_api::Bruker::DetailLevel_InstantMetadata;
+            break;
+
+        case DetailLevel_FullMetadata:
+            brukerDetailLevel = vendor_api::Bruker::DetailLevel_FullMetadata;
+            break;
+
+        default:
+        case DetailLevel_FullData:
+            brukerDetailLevel = vendor_api::Bruker::DetailLevel_FullData;
+            break;
+    }
 
     const IndexEntry& si = index_[index];
     result->index = si.index;
@@ -146,7 +242,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
             vector<double> lcX;
             source->getXAxis(lcX);
 
-            if (getBinaryData)
+            if (detailLevel == DetailLevel_FullData)
             {
                 result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
                 result->defaultArrayLength = lcX.size();
@@ -168,7 +264,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         }
 
         // get the spectrum from MS interface; for FID formats scan is 0-based, else it's 1-based
-        MSSpectrumPtr spectrum = getMSSpectrumPtr(si.scan);
+        MSSpectrumPtr spectrum = getMSSpectrumPtr(si.scan, brukerDetailLevel);
 
         int msLevel = spectrum->getMSMSStage();
         result->set(MS_ms_level, msLevel);
@@ -195,6 +291,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
                 break;
         }
 
+        // Enumerating the parameter list is not instant.
+        if (detailLevel == DetailLevel_InstantMetadata)
+            return result;
+
         /*sd.set(MS_base_peak_m_z, pScanStats_->BPM);
         sd.set(MS_base_peak_intensity, pScanStats_->BPI);
         sd.set(MS_total_ion_current, pScanStats_->TIC);*/
@@ -202,22 +302,23 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
-        string scanBegin, scanEnd, triggerCharge, isolationWidth;
+        MSSpectrumParameterListPtr parametersPtr = spectrum->parameters();
+        MSSpectrumParameterList& parameters = *parametersPtr;
 
-        MSSpectrumParameterListPtr parameters = spectrum->parameters();
-        BOOST_FOREACH(const MSSpectrumParameter& p, *parameters)
-        {
-            if (p.name == "Scan Begin") scanBegin = p.value;
-            else if (p.name == "Scan End") scanEnd = p.value;
-            else if (p.name == "MS(n) Isol Width") isolationWidth = p.value;
-            else if (bal::starts_with(p.name, "Trigger Charge")) triggerCharge = p.value;
-        }
+        // cache parameter indexes for this msLevel if they aren't already cached
+        ParameterCache& parameterCache = parameterCacheByMsLevel_[msLevel];
+
+        string scanBegin = parameterCache.get("Scan Begin", parameters);
+        string scanEnd = parameterCache.get("Scan End", parameters);
 
         if (!scanBegin.empty() && !scanEnd.empty())
             scan.scanWindows.push_back(ScanWindow(lexical_cast<double>(scanBegin), lexical_cast<double>(scanEnd), MS_m_z));
 
         if (msLevel > 1)
         {
+            string isolationWidth = parameterCache.get("IsolationWidth", parameters);
+            string triggerCharge = parameterCache.get("ChargeState", parameters);
+
             Precursor precursor;
 
             vector<double> fragMZs, isolMZs;
@@ -242,6 +343,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
                             else if (triggerCharge == "double") selectedIon.set(MS_charge_state, 2);
                             else if (triggerCharge == "triple") selectedIon.set(MS_charge_state, 3);
                             else if (triggerCharge == "quad") selectedIon.set(MS_charge_state, 4);
+                            else
+                            {
+                                try
+                                {
+                                    int charge = lexical_cast<int>(triggerCharge);
+                                    if (charge > 0)
+                                        selectedIon.set(MS_charge_state, charge);
+                                }
+                                catch (bad_lexical_cast&) {}
+                            }
                         }
 
                         switch (fragModes[i])
@@ -314,7 +425,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         }
 
 
-        if (getBinaryData)
+        if (detailLevel == DetailLevel_FullData)
         {
             result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
 	        automation_vector<double> mzArray, intensityArray;
@@ -371,6 +482,13 @@ void addSource(MSData& msd, const bfs::path& sourcePath, const bfs::path& rootPa
 } // namespace
 
 
+#if BOOST_FILESYSTEM_VERSION == 2
+# define NATIVE_PATH_SLASH "/"
+#else
+# define NATIVE_PATH_SLASH "\\"
+#endif
+
+
 PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 {
     switch (format_)
@@ -384,7 +502,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 // in "/foo/bar/1/1SRef/fid", replace "/foo/bar/" with "" so relativePath is "1/1SRef/fid"
                 bfs::path relativePath = sourcePaths_[i] / "fid";
                 if (rootpath_.has_branch_path())
-                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + "/", "");
+                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_nativeID_format);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_file);
@@ -434,7 +552,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 // in "/foo/bar.d/bar.u2", replace "/foo/" with "" so relativePath is "bar.d/bar.u2"
                 bfs::path relativePath = sourcePaths_.back();
                 if (rootpath_.has_branch_path())
-                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + "/", "");
+                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
@@ -447,7 +565,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 // in "/foo/bar.d/bar.u2", replace "/foo/" with "" so relativePath is "bar.d/bar.u2"
                 bfs::path relativePath = sourcePaths_.back();
                 if (rootpath_.has_branch_path())
-                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + "/", "");
+                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);

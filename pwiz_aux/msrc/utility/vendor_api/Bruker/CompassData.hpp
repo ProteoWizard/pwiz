@@ -25,11 +25,6 @@
 #define _COMPASSDATA_HPP_
 
 
-#ifndef BOOST_DATE_TIME_NO_LIB
-#define BOOST_DATE_TIME_NO_LIB // prevent MSVC auto-link
-#endif
-
-
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
 #include <string>
@@ -102,6 +97,13 @@ PWIZ_API_DECL enum LCUnit
     LCUnit_Unknown = 7
 };
 
+PWIZ_API_DECL enum DetailLevel
+{
+    DetailLevel_InstantMetadata,
+    DetailLevel_FullMetadata,
+    DetailLevel_FullData
+};
+
 struct PWIZ_API_DECL MSSpectrumParameter
 {
     std::string group;
@@ -114,11 +116,11 @@ struct MSSpectrumParameterList;
 class PWIZ_API_DECL MSSpectrumParameterIterator
     : public boost::iterator_facade<MSSpectrumParameterIterator,
                                     const MSSpectrumParameter,
-                                    boost::forward_traversal_tag>
+                                    boost::random_access_traversal_tag>
 {
     public:
     MSSpectrumParameterIterator();
-    explicit MSSpectrumParameterIterator(const MSSpectrumParameterList& pl);
+    explicit MSSpectrumParameterIterator(const MSSpectrumParameterList& pl, size_t index = 0);
 
     MSSpectrumParameterIterator(const MSSpectrumParameterIterator& other);
     ~MSSpectrumParameterIterator();
@@ -126,12 +128,10 @@ class PWIZ_API_DECL MSSpectrumParameterIterator
     private:
     friend class boost::iterator_core_access;
     void increment();
+    void decrement();
+    void advance(difference_type n);
     bool equal(const MSSpectrumParameterIterator& that) const;
     const MSSpectrumParameter& dereference() const;
-
-    // HACK: why does link=shared require this?
-    void decrement() {}
-    void advance(difference_type n) {}
 
     struct Impl;
     boost::scoped_ptr<Impl> impl_;
@@ -144,7 +144,9 @@ struct PWIZ_API_DECL MSSpectrumParameterList
     typedef const value_type& const_reference;
     typedef MSSpectrumParameterIterator iterator;
     typedef MSSpectrumParameterIterator const_iterator;
-
+    
+    virtual size_t size() const = 0;
+    virtual value_type operator[] (size_t index) const = 0;
     virtual const_iterator begin() const = 0;
     virtual const_iterator end() const = 0;
 };
@@ -220,7 +222,7 @@ struct PWIZ_API_DECL CompassData
     virtual size_t getMSSpectrumCount() const = 0;
 
     /// returns a spectrum from the MS source
-    virtual MSSpectrumPtr getMSSpectrum(int scan) const = 0;
+    virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel = DetailLevel_FullMetadata) const = 0;
 
     /// returns the number of sources available from the LC system
     virtual size_t getLCSourceCount() const = 0;

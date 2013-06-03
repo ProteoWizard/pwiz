@@ -786,6 +786,24 @@ rule wiff-dll-location ( api-path : properties * )
     }
 }
 
+rule bruker-dll-location ( api-path : properties * )
+{
+    local result ;
+    if ( [ MATCH (x64) : $(PLATFORM) ] )
+    {
+        result = $(api-path)\\x64 ;
+    }
+    else
+    {
+        result = $(api-path)\\x86 ;
+    }
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       [ path.exists $(result)\\CompassXtractMS.dll ]            
+    {
+        return $(result) ;
+    }
+}
+
 rule mhdac-dll-location ( api-path : properties * )
 {
     local result ;

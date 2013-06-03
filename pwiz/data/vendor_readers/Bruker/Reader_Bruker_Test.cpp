@@ -20,11 +20,11 @@
 //
 
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "Reader_Bruker.hpp"
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/Std.hpp"
 
 struct IsDirectory : public pwiz::util::TestPathPredicate
 {

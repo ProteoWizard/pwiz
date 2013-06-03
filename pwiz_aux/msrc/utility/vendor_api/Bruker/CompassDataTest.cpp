@@ -61,6 +61,11 @@ void test(const string& rawpath)
         if (sMSMS->getMSMSStage() == 1)
             continue;
 
+        MSSpectrumParameterListPtr parameterListPtr = sMSMS->parameters();
+        MSSpectrumParameterList& parameterList = *parameterListPtr;
+        BOOST_FOREACH(const MSSpectrumParameter& p, parameterList)
+            cout << p.name << ": " << p.value << endl;
+
         std::vector<double> mzs;
         std::vector<IsolationMode> isolationModes;
         sMSMS->getIsolationData(mzs, isolationModes);

@@ -40,19 +40,13 @@ constant READER_PATH : "pwiz/data/vendor_readers/Bruker" ;
 constant READER_NAME : "Reader_Bruker" ;
 
 
-if [ path.exists $(API_PATH)/Interop.EDAL.dll ]
-{
-    .hasDLLs = true ;
-}
-
-
 rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ! ( <address-model>64 in $(properties) ) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs) && ! [ without-binary-msdata ]
+       [ bruker-dll-location $(API_PATH) : $(properties) ] &&
+       ! [ without-binary-msdata ]
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_bruker ;
         result += <define>PWIZ_READER_BRUKER ;
@@ -61,22 +55,18 @@ rule vendor-api-requirements ( properties * )
     {
         .warn-once = true ;
         if  [ without-binary-msdata ] 
-		{
+        {
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
-		}
+        }
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
-        }
-        else if <address-model>64 in $(properties)
-        {
-            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ bruker-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -138,22 +128,18 @@ rule test-requirements ( properties * )
             result += <build>no ;
         }
         else if  [ without-binary-msdata ] 
-		{
+        {
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-		}
+        }
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
-        else if <address-model>64 in $(properties)
-        {
-            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ bruker-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }

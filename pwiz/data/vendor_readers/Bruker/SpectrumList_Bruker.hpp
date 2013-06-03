@@ -50,7 +50,9 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
-    SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
 #ifdef PWIZ_READER_BRUKER
     SpectrumList_Bruker(MSData& msd,
@@ -58,14 +60,26 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
                         Reader_Bruker_Format format,
                         CompassDataPtr compassDataPtr);
 
-    MSSpectrumPtr getMSSpectrumPtr(size_t index) const;
+    MSSpectrumPtr getMSSpectrumPtr(size_t index, vendor_api::Bruker::DetailLevel detailLevel) const;
 
     private:
+
+    struct ParameterCache
+    {
+        string get(const string& parameterName, MSSpectrumParameterList& parameters);
+        size_t size() { return parameterIndexByName_.size(); }
+
+        private:
+        void update(MSSpectrumParameterList& parameters);
+        map<string, size_t> parameterIndexByName_;
+        map<string, string> parameterAlternativeNameMap_;
+    };
 
     MSData& msd_;
     bfs::path rootpath_;
     Reader_Bruker_Format format_;
     mutable CompassDataPtr compassDataPtr_;
+    mutable map<int, ParameterCache> parameterCacheByMsLevel_;
     size_t size_;
     vector<bfs::path> sourcePaths_;
 

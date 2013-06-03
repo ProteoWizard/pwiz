@@ -356,13 +356,13 @@ namespace pwiz.Skyline.Model.Results
 
         private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, bool enableSimSpectrum)
         {
-            if (Directory.Exists(dataFilePathPart))
-            {
-                DirectoryInfo directoryInfo = new DirectoryInfo(dataFilePathPart);
-                var type = DataSourceUtil.GetSourceType(directoryInfo);
-                if (type == DataSourceUtil.TYPE_BRUKER)
-                    throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.bruker_conversion, _status, 0, 0);
-            }
+//            if (Directory.Exists(dataFilePathPart))
+//            {
+//                DirectoryInfo directoryInfo = new DirectoryInfo(dataFilePathPart);
+//                var type = DataSourceUtil.GetSourceType(directoryInfo);
+//                if (type == DataSourceUtil.TYPE_BRUKER)
+//                    throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.bruker_conversion, _status, 0, 0);
+//            }
             return new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum);
         }
 

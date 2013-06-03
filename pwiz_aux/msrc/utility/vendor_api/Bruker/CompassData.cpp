@@ -28,7 +28,6 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "CompassData.hpp"
 
-
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 using namespace pwiz::util;
@@ -56,8 +55,11 @@ struct MSSpectrumParameterListImpl : public MSSpectrumParameterList
 {
     MSSpectrumParameterListImpl(EDAL::MSSpectrumParameterCollection^ parameterCollection)
         : parameterCollection_(parameterCollection)
-    {}
+    {
+    }
 
+    virtual size_t size() const {return parameterCollection_->Count;}
+    virtual value_type operator[] (size_t index) const {return *const_iterator(*this, index);}
     virtual const_iterator begin() const {return const_iterator(*this);}
     virtual const_iterator end() const {return const_iterator();}
 
@@ -70,8 +72,8 @@ struct MSSpectrumParameterIterator::Impl
     Impl(EDAL::MSSpectrumParameterCollection^ parameterCollection, int index)
     {
         parameterCollection_ = parameterCollection;
-        index_ = index;
-        increment();
+        index_ = index+1;
+        set();
     }
 
     Impl(const MSSpectrumParameterIterator::Impl& p)
@@ -81,30 +83,34 @@ struct MSSpectrumParameterIterator::Impl
           cur_(p.cur_)
     {}
 
-    void increment()
+    void increment() {++index_; set();}
+    void decrement() {--index_; set();}
+    void advance(difference_type n) {index_ += n; set();}
+
+    gcroot<EDAL::MSSpectrumParameterCollection^> parameterCollection_;
+    gcroot<EDAL::MSSpectrumParameter^> parameter_;
+    int index_; // index is one-based
+    MSSpectrumParameter cur_;
+
+    private:
+    void set()
     {
-        ++index_;
         if (index_ < 1 || index_ > parameterCollection_->Count) return;
         parameter_ = parameterCollection_->default[index_];
         cur_.group = ToStdString(parameter_->GroupName);
         cur_.name = ToStdString(parameter_->ParameterName);
         cur_.value = ToStdString(parameter_->ParameterValue->ToString());
     }
-
-    gcroot<EDAL::MSSpectrumParameterCollection^> parameterCollection_;
-    gcroot<EDAL::MSSpectrumParameter^> parameter_;
-    int index_; // index is one-based
-    MSSpectrumParameter cur_;
 };
 
 PWIZ_API_DECL MSSpectrumParameterIterator::MSSpectrumParameterIterator() {}
 
-PWIZ_API_DECL MSSpectrumParameterIterator::MSSpectrumParameterIterator(const MSSpectrumParameterList& pl)
+PWIZ_API_DECL MSSpectrumParameterIterator::MSSpectrumParameterIterator(const MSSpectrumParameterList& pl, size_t index)
 {
     const MSSpectrumParameterListImpl* plImpl = dynamic_cast<const MSSpectrumParameterListImpl*>(&pl);
     if (!plImpl)
         throw std::runtime_error("[MSSpectrumParameterIterator] invalid MSSpectrumParameterList subclass");
-    try {impl_.reset(new Impl(plImpl->parameterCollection_, 0));} CATCH_AND_FORWARD
+    try {impl_.reset(new Impl(plImpl->parameterCollection_, index));} CATCH_AND_FORWARD
 }
 
 PWIZ_API_DECL MSSpectrumParameterIterator::MSSpectrumParameterIterator(const MSSpectrumParameterIterator& other)
@@ -117,6 +123,17 @@ PWIZ_API_DECL void MSSpectrumParameterIterator::increment()
 {
     if (!impl_.get()) return;
     impl_->increment();
+}
+
+PWIZ_API_DECL void MSSpectrumParameterIterator::decrement()
+{
+    if (!impl_.get()) return;
+    impl_->decrement();
+}
+PWIZ_API_DECL void MSSpectrumParameterIterator::advance(difference_type n)
+{
+    if (!impl_.get()) return;
+    impl_->advance(n);
 }
 
 PWIZ_API_DECL bool MSSpectrumParameterIterator::equal(const MSSpectrumParameterIterator& that) const
@@ -143,16 +160,32 @@ PWIZ_API_DECL const MSSpectrumParameter& MSSpectrumParameterIterator::dereferenc
 
 struct MSSpectrumImpl : public MSSpectrum
 {
-    MSSpectrumImpl(EDAL::IMSSpectrum^ spectrum) : spectrum_(spectrum)
+    MSSpectrumImpl(EDAL::IMSSpectrum^ spectrum, DetailLevel detailLevel)
+        : spectrum_(spectrum), lineDataSize_(0), profileDataSize_(0)
     {
+        if (detailLevel == DetailLevel_InstantMetadata)
+            return;
+
         try
         {
             System::Object^ massArray, ^intensityArray;
             spectrum->GetMassIntensityValues((EDAL::SpectrumTypes) SpectrumType_Line, massArray, intensityArray);
             lineDataSize_ = ((cli::array<double>^) massArray)->Length;
 
+            if (detailLevel == DetailLevel_FullData)
+            {
+                lineMzArray_ = (cli::array<double>^) massArray;
+                lineIntensityArray_ = (cli::array<double>^) intensityArray;
+            }
+
             spectrum->GetMassIntensityValues((EDAL::SpectrumTypes) SpectrumType_Profile, massArray, intensityArray);
             profileDataSize_ = ((cli::array<double>^) massArray)->Length;
+
+            if (detailLevel == DetailLevel_FullData)
+            {
+                profileMzArray_ = (cli::array<double>^) massArray;
+                profileIntensityArray_ = (cli::array<double>^) intensityArray;
+            }
         }
         CATCH_AND_FORWARD
     }
@@ -167,40 +200,64 @@ struct MSSpectrumImpl : public MSSpectrum
 
     virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
     {
-        if (!hasLineData())
-        {
-            mz.clear();
-            intensities.clear();
-            return;
-        }
-
         try
         {
-            // we always get a copy of the arrays because they can be modified by the client
             System::Object^ massArray, ^intensityArray;
-            spectrum_->GetMassIntensityValues((EDAL::SpectrumTypes) SpectrumType_Line, massArray, intensityArray);
-            ToAutomationVector((cli::array<double>^) massArray, mz);
-            ToAutomationVector((cli::array<double>^) intensityArray, intensities);
+
+            if ((System::Object^) lineMzArray_ == nullptr)
+            {
+                spectrum_->GetMassIntensityValues((EDAL::SpectrumTypes) SpectrumType_Line, massArray, intensityArray);
+                lineMzArray_ = (cli::array<double>^) massArray;
+                lineIntensityArray_ = (cli::array<double>^) intensityArray;
+                lineDataSize_ = lineMzArray_->Length;
+            }
+
+            if (!hasLineData())
+            {
+                mz.clear();
+                intensities.clear();
+                return;
+            }
+
+            // we always get a copy of the arrays because they can be modified by the client
+            ToAutomationVector((cli::array<double>^) lineMzArray_, mz);
+            ToAutomationVector((cli::array<double>^) lineIntensityArray_, intensities);
+
+            // the automation vectors now own the arrays, so nullify the cached versions
+            lineMzArray_ = nullptr;
+            lineIntensityArray_ = nullptr;
         }
         CATCH_AND_FORWARD
     }
 
     virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
     {
-        if (!hasProfileData())
-        {
-            mz.clear();
-            intensities.clear();
-            return;
-        }
-
         try
         {
-            // we always get a copy of the arrays because they can be modified by the client
             System::Object^ massArray, ^intensityArray;
-            spectrum_->GetMassIntensityValues((EDAL::SpectrumTypes) SpectrumType_Profile, massArray, intensityArray);
-            ToAutomationVector((cli::array<double>^) massArray, mz);
-            ToAutomationVector((cli::array<double>^) intensityArray, intensities);
+
+            if ((System::Object^) profileMzArray_ == nullptr)
+            {
+                spectrum_->GetMassIntensityValues((EDAL::SpectrumTypes) SpectrumType_Profile, massArray, intensityArray);
+                profileMzArray_ = (cli::array<double>^) massArray;
+                profileIntensityArray_ = (cli::array<double>^) intensityArray;
+                profileDataSize_ = profileMzArray_->Length;
+            }
+
+            if (!hasProfileData())
+            {
+                mz.clear();
+                intensities.clear();
+                return;
+            }
+
+            // we always get a copy of the arrays because they can be modified by the client
+            ToAutomationVector((cli::array<double>^) profileMzArray_, mz);
+            ToAutomationVector((cli::array<double>^) profileIntensityArray_, intensities);
+
+            // the automation vectors now own the arrays, so nullify the cached versions
+            profileMzArray_ = nullptr;
+            profileIntensityArray_ = nullptr;
         }
         CATCH_AND_FORWARD
     }
@@ -257,7 +314,9 @@ struct MSSpectrumImpl : public MSSpectrum
 
     private:
     gcroot<EDAL::IMSSpectrum^> spectrum_;
-    size_t lineDataSize_, profileDataSize_;
+    mutable size_t lineDataSize_, profileDataSize_;
+    mutable gcroot<cli::array<double>^> lineMzArray_, lineIntensityArray_;
+    mutable gcroot<cli::array<double>^> profileMzArray_, profileIntensityArray_;
 };
 
 
@@ -310,7 +369,7 @@ struct CompassDataImpl : public CompassData
             else
                 hasMSData_ = false;
             
-            if (format_ == Reader_Bruker_Format_U2 ||
+            /*if (format_ == Reader_Bruker_Format_U2 ||
                 format_ == Reader_Bruker_Format_BAF_and_U2)
             {
                 BDal::CxT::Lc::AnalysisFactory^ factory = gcnew BDal::CxT::Lc::AnalysisFactory();
@@ -318,7 +377,7 @@ struct CompassDataImpl : public CompassData
                 lcSources_ = lcAnalysis_->GetSpectrumSourceDeclarations();
                 hasLCData_ = lcSources_->Length > 0;
             }
-            else
+            else*/
                 hasLCData_ = false;
         }
         CATCH_AND_FORWARD
@@ -339,13 +398,13 @@ struct CompassDataImpl : public CompassData
         try {return msSpectrumCollection_->Count;} CATCH_AND_FORWARD
     }
 
-    virtual MSSpectrumPtr getMSSpectrum(int scan) const
+    virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel) const
     {
         if (!hasMSData_) throw runtime_error("[CompassData::getMSSpectrum] No MS data.");
         if (scan < 1 || scan > (int) getMSSpectrumCount())
             throw out_of_range("[CompassData::getMSSpectrum] Scan number " + lexical_cast<string>(scan) + " is out of range.");
 
-        try {return MSSpectrumPtr(new MSSpectrumImpl(msSpectrumCollection_->default[scan]));} CATCH_AND_FORWARD
+        try {return MSSpectrumPtr(new MSSpectrumImpl(msSpectrumCollection_->default[scan], detailLevel));} CATCH_AND_FORWARD
     }
 
     virtual size_t getLCSourceCount() const
@@ -449,7 +508,7 @@ struct CompassDataImpl : public CompassData
 PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
                                                  msdata::detail::Reader_Bruker_Format format)
 {
-    return CompassDataPtr(new CompassDataImpl(rawpath, format));
+    try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }
 
 } // namespace Bruker

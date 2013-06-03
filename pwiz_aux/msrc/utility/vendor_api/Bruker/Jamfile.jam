@@ -40,9 +40,11 @@ if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 
 rule vendor-api-requirements ( properties * )
 {
+    path-constant PLATFORM_API_PATH : [ bruker-dll-location $(API_PATH) : $(properties) ] ;
+
     local result ;
     if <toolset>msvc in $(properties) &&
-       [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+       [ path.exists $(PLATFORM_API_PATH)/Interop.EDAL.dll ]
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
@@ -53,27 +55,55 @@ rule vendor-api-requirements ( properties * )
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
-        result += <assembly>$(API_PATH)/Interop.EDAL.dll ;
-        result += <assembly>$(API_PATH)/Interop.HSREADWRITELib.dll ;
-        result += <assembly>$(API_PATH)/BDal.CXt.Lc.dll ;
-        result += <assembly>$(API_PATH)/BDal.CXt.Lc.Factory.dll ;
-        result += <assembly>$(API_PATH)/BDal.CXt.Lc.Interfaces.dll ;
-        result += <assembly>$(API_PATH)/BDal.CXt.Lc.UntU2.dll ;
-        result += <assembly-dependency>$(API_PATH)/CompassXtractMS.dll ;
-        result += <assembly-dependency>$(API_PATH)/boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll ;
-        result += <assembly-dependency>$(API_PATH)/boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll ;
-        result += <assembly-dependency>$(API_PATH)/boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll ;
-        result += <assembly-dependency>$(API_PATH)/libfftw3-3.dll ;
-        result += <assembly-dependency>$(API_PATH)/libfftw3f-3.dll ;
-        result += <assembly-dependency>$(API_PATH)/NTB-vc80-mt-1_5_97.dll ;
-        result += <assembly-dependency>$(API_PATH)/HSReadWrite.dll ;
-        result += <manifest-dependency>$(API_PATH)/Interop.EDAL.dll ;
-        result += <manifest-dependency>$(API_PATH)/Interop.HSREADWRITELib.dll ;
-        result += <assembly-dependency>$(API_PATH)/Interop.EDAL.SxS.manifest ;
-        result += <assembly-dependency>$(API_PATH)/Interop.HSREADWRITELib.SxS.manifest ;
-        result += <assembly-dependency>$(API_PATH)/FlexVariableTable.xml ;
-        result += <assembly-dependency>$(API_PATH)/ICRVariableTable.xml ;
+        result += <assembly>$(PLATFORM_API_PATH)/Interop.EDAL.dll ;
+        result += <assembly>$(PLATFORM_API_PATH)/Interop.HSREADWRITELib.dll ;
+        result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.dll ;
+        result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.Factory.dll ;
+        result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.Interfaces.dll ;
+        result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.UntU2.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.Interfaces.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Interfaces.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Calibration.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.TemperatureCompensation.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Transformation.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Utilities.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/CompassXtractMS.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_4F1EA0CB-5A6A-43ED-9562-D6D873034577.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_6BB2E64A-27A0-4575-A66A-4E312C8B9AD7.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_6EEE649E-09AA-4332-8E82-8188652E8AB5.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_7F88E97F-2038-40ba-8F3A-FCA9A9719569.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_382D5134-9727-4be6-B6F8-754F577426D6.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_12451AC8-3BF1-48e1-8E66-DA05BF3852A0.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/mkl_sequential.dll ;
+        result += <manifest-dependency>$(PLATFORM_API_PATH)/Interop.EDAL.dll ;
+        result += <manifest-dependency>$(PLATFORM_API_PATH)/Interop.HSREADWRITELib.dll ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Interop.EDAL.SxS.manifest ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/Interop.HSREADWRITELib.SxS.manifest ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/FlexVariableTable.xml ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/ICRVariableTable.xml ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.Constants.xml ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Constants.xml ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.Objects.xml ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Objects.xml ;
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/HSReadWrite.dll ;
         result += <linkflags>/CLRTHREADATTRIBUTE:STA ; # required by HSReadWrite.dll
+
+        if <address-model>64 in $(properties)
+        {
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_date_time-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+        }
+        else
+        {
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_regex-vc90-mt-1_37-BDAL_20091123.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_thread-vc90-mt-1_37-BDAL_20091123.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_date_time-vc90-mt-1_37-BDAL_20091123.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_system-vc90-mt-1_37-BDAL_20091123.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/msvcr71.dll ;
+        }
     }
     return $(result) ;
 }
@@ -100,23 +130,58 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             <conditional>@msvc-requirement
             <toolset>msvc:<using-clr>true # requires hacked msvc.jam
             <link>static # <using-clr>true and <link>shared don't mix
-            <address-model>64:<build>no
         : # default-build
         : # usage-requirements
             <conditional>@vendor-api-requirements
         ;
 
     # a test utility, not a unit test
-    exe CompassDataTest
-        : CompassDataTest.cpp
-          pwiz_vendor_api_bruker
-        ;
+    #exe CompassDataTest
+    #    : CompassDataTest.cpp
+    #      pwiz_vendor_api_bruker
+    #    ;
 
-    explicit CompassDataTest ;
+    #explicit CompassDataTest ;
+    
+    path-constant TEST_DATA_PATH : $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data ;
+
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : <location>$(TEST_DATA_PATH)/.. : : check-last-file-only ;
+    }
+
+    run-if-exists CompassDataTest.cpp
+        : # args
+            \"$(TEST_DATA_PATH)/100 fmol BSA\" # if you comment out, the test will pass (could be finicky heap corruption or something instrument/format specific)
+            \"$(TEST_DATA_PATH)/CsI_Pos_0_G1_000003.d\"
+            \"$(TEST_DATA_PATH)/Sample_1-A,1_01_985.d\"
+        : # input-files
+        : # requirements
+            <library>pwiz_vendor_api_bruker
+        : # target name
+            CompassDataTest 
+        : # default-build
+        ;
+}
+
+rule install-requirements ( properties * )
+{
+    local result ;
+    local dll_location = [ bruker-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
+    {
+        for file in [ glob $(dll_location)\\*.dll ] [ glob $(dll_location)\\*.xml ] [ glob $(dll_location)\\*.manifest ]
+        {
+            result += <source>$(file) ;
+        }
+    }
+    return $(result) ;
 }
 
 install install_pwiz_vendor_api_bruker
-    : [ path.glob $(API_PATH) : *.dll *.manifest *.xml ]
+    : : <conditional>@install-requirements
     ;
 
 explicit install_pwiz_vendor_api_bruker ;
