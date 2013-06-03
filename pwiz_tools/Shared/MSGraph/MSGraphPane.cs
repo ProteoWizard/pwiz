@@ -45,7 +45,6 @@ namespace pwiz.MSGraph
 
             _currentItemType = MSGraphItemType.unknown;
             _pointAnnotations = new GraphObjList();
-            _manualLabels = new HashSet<TextObj>();
         }
 
         public bool AllowCurveOverlap { get; set; }
@@ -90,34 +89,12 @@ namespace pwiz.MSGraph
             base.Draw( g );
         }
 
-        private struct BoundingBox
-        {
-            public bool IsClosed { get { return Top.HasValue && Bottom.HasValue && Left.HasValue && Right.HasValue; } }
-            public float? Top { get; set; }
-            public float? Bottom { get; set; }
-            public float? Left { get; set; }
-            public float? Right { get; set; }
-
-            public float? Width
-            {
-                get { return Right != null && Left != null ? Right - Left : null; }
-            }
-
-            public float? Height
-            {
-                get { return Top != null && Bottom != null ? Bottom - Top : null; }
-            }
-        }
-
         protected GraphObjList _pointAnnotations;
-        protected HashSet<TextObj> _manualLabels;
-
         private void drawLabels( Graphics g )
         {
             foreach( GraphObj pa in _pointAnnotations )
                 GraphObjList.Remove( pa );
             _pointAnnotations.Clear();
-            _manualLabels.Clear();
 
             Axis xAxis = XAxis;
             Axis yAxis = YAxis;
@@ -179,7 +156,7 @@ namespace pwiz.MSGraph
             double yMin = yAxis.Scale.Min;
             double yMax = yAxis.Scale.Max;
 
-            // add manual annotations with TextObj priority over curve annotations
+            // add manual annotations with TextObj priority over curve annoations
             foreach (CurveItem item in CurveList)
             {
                 var info = item.Tag as IMSGraphItemExtended;
@@ -292,93 +269,31 @@ namespace pwiz.MSGraph
                 if( info == null || points == null )
                     continue;
 
-                info.AddAnnotations( this, g,  points, _pointAnnotations );
+                info.AddAnnotations(this, g,  points, _pointAnnotations);
                 AddAnnotations(g, item, clipRegion);
             }
-
-            setAxisGraceForManualLabels(g);
         }
 
         private void AddAnnotations(Graphics g, CurveItem item, Region clipRegion)
         {
             foreach (GraphObj obj in _pointAnnotations)
             {
-                TextObj text = obj as TextObj;
-                if (text != null)
+                if (!GraphObjList.Contains(obj))
                 {
-                    Region textBoundsRegion;
-                    if (detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem))
-                        continue;
+                    TextObj text = obj as TextObj;
+                    if (text != null)
+                    {
+                        Region textBoundsRegion;
+                        if (detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem))
+                            continue;
 
-                    _manualLabels.Add(text);
-                    clipRegion.Union(textBoundsRegion);
-                    g.SetClip(clipRegion, CombineMode.Replace);
-                }
-                else // always add non-text annotations
+                        clipRegion.Union(textBoundsRegion);
+                        g.SetClip(clipRegion, CombineMode.Replace);
+                    }
+
                     GraphObjList.Add(obj);
-            }
-        }
-
-        /// <summary>
-        /// We know which labels are overlapping the data points, but we need to make sure the labels that will be
-        /// displayed can fit in the scale using the Min/MaxGrace properties and adjusting the label fractions if appropriate:
-        /// TextObjs with CoordType.AxisXYScale coordinates will move proportionally with Min/MaxGrace, but ChartFraction
-        /// coordinates will not.
-        /// </summary>
-        protected void setAxisGraceForManualLabels(Graphics g)
-        {
-            var labelBoundingBox = new BoundingBox();
-            Axis xAxis = XAxis;
-            Axis yAxis = YAxis;
-
-            foreach (TextObj text in _manualLabels)
-            {
-                if (!GraphObjList.Contains(text))
-                {
-                    PointF[] pts = text.FontSpec.GetBox(g, text.Text, 0, 0, AlignH.Center, AlignV.Bottom, 1.0f, new SizeF());
-                    double labelHeight = yAxis.Scale.ReverseTransform(pts[0].Y) - yAxis.Scale.ReverseTransform(pts[2].Y);
-                    double labelWidth = xAxis.Scale.ReverseTransform(pts[1].X) - xAxis.Scale.ReverseTransform(pts[0].X);
-                    if (labelBoundingBox.IsClosed)
-                    {
-                        labelBoundingBox.Left = Math.Min(labelBoundingBox.Left.Value, (float) text.Location.X);
-                        labelBoundingBox.Top = Math.Max(labelBoundingBox.Top.Value, (float) (text.Location.Y + labelHeight));
-                        labelBoundingBox.Right = Math.Max(labelBoundingBox.Right.Value, (float) (text.Location.X + labelWidth));
-                        labelBoundingBox.Bottom = Math.Min(labelBoundingBox.Bottom.Value, (float) text.Location.Y);
-                    }
-                    else
-                    {
-                        labelBoundingBox.Left = (float) text.Location.X; // FIXME: not quite right, should be adjusted by transformed pts
-                        labelBoundingBox.Top = (float) (text.Location.Y + labelHeight);
-                        labelBoundingBox.Right = (float) (text.Location.X + labelWidth);
-                        labelBoundingBox.Bottom = (float) text.Location.Y;
-                    }
-
-                    GraphObjList.Add(text);
                 }
             }
-
-            var chartBoundingBox = new BoundingBox()
-                                       {
-                                           Left = (float) xAxis.Scale.Min,
-                                           Right = (float) xAxis.Scale.Max,
-                                           Bottom = (float) yAxis.Scale.Max,
-                                           Top = (float) yAxis.Scale.Min
-                                       };
-
-            var chartRect = new RectangleF(chartBoundingBox.Left.Value, chartBoundingBox.Top.Value, chartBoundingBox.Width.Value, chartBoundingBox.Height.Value);
-
-            if (labelBoundingBox.IsClosed &&
-                (!chartRect.Contains(labelBoundingBox.Left.Value, labelBoundingBox.Top.Value) ||
-                 !chartRect.Contains(labelBoundingBox.Right.Value, labelBoundingBox.Bottom.Value)))
-            {
-                if (labelBoundingBox.Top.Value > yAxis.Scale.Max) yAxis.Scale.MaxGrace = 1.25*labelBoundingBox.Top.Value/Math.Max(1, yAxis.Scale.Max) - 1;
-                // TODO: handle labels that fall below the Y axis minimum
-                //if (labelBoundingBox.Bottom.Value < yAxis.Scale.Min) yAxis.Scale.MinGrace = 1.5 * Math.Abs(labelBoundingBox.Bottom.Value) / Math.Max(1, Math.Abs(yAxis.Scale.Min)) - 1;
-
-                // TODO: handle labels that fall outside the X axis extrema (but make this optional)
-            }
-
-            // TODO: adjust objects with ChartFraction coordinates
         }
 
         protected bool detectLabelCurveOverlap( GraphPane pane, IPointList points, int pointIndex, bool pointsAreSticks, RectangleF labelBounds )
