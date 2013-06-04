@@ -1410,7 +1410,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Figure out whether precursor charges differ for determining
             // both peptide and transition group changes.
             bool precursorsDiff = !ArrayUtil.EqualsDeep(newTran.Filter.PrecursorCharges,
-                                                        oldTran.Filter.PrecursorCharges);
+                                                        oldTran.Filter.PrecursorCharges) ||
+                                  // Also changing auto-select could change precursors
+                                  newTran.Filter.AutoSelect != oldTran.Filter.AutoSelect;
 
             // Change peptides if enzyme, digestion or filter settings changed
             DiffPeptides = !newPep.Enzyme.Equals(oldPep.Enzyme) ||

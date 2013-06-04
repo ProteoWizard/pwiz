@@ -180,6 +180,8 @@ namespace pwiz.Skyline.Model.Results
             extracted_base_peak = 0x04,
         }
 
+        private const byte NO_MAX_PEAK = 0xFF;
+
         /// <summary>
         /// Constructs header struct with SeqIndex and SeqCount left to be initialized
         /// in a subsequent call to <see cref="CalcSeqIndex"/>.
@@ -211,10 +213,10 @@ namespace pwiz.Skyline.Model.Results
             FileIndex = CheckUShort(fileIndex);
             NumTransitions = CheckUShort(numTransitions);
             StartTransitionIndex = startTransitionIndex;
-            NumPeaks = CheckSByte(numPeaks);
+            NumPeaks = CheckByte(numPeaks);
             StartPeakIndex = startPeakIndex;
             StartScoreIndex = startScoreIndex;
-            MaxPeakIndex = CheckSByte(maxPeakIndex);
+            MaxPeakIndexInternal = maxPeakIndex != -1 ? CheckByte(maxPeakIndex, byte.MaxValue - 1) : NO_MAX_PEAK;
             NumPoints = CheckUShort(numPoints);
             CompressedSize = compressedSize;
             LocationPoints = location;
@@ -245,9 +247,9 @@ namespace pwiz.Skyline.Model.Results
             return (ushort) CheckValue(value, ushort.MinValue, ushort.MaxValue, allowNegativeOne);
         }
 
-        private static sbyte CheckSByte(int value)
+        private static byte CheckByte(int value, int maxValue = byte.MaxValue)
         {
-            return (sbyte) CheckValue(value, sbyte.MinValue, sbyte.MaxValue);
+            return (byte) CheckValue(value, byte.MinValue, maxValue);
         }
 
         private static int CheckValue(int value, int min, int max, bool allowNegativeOne = false)
@@ -275,14 +277,24 @@ namespace pwiz.Skyline.Model.Results
         public ushort FileIndex { get; private set; }
         public ushort SeqLen { get; private set; }
         public ushort NumTransitions { get; private set; }
-        public sbyte NumPeaks { get; private set; }        // The number of peaks stored per chrom should be well under 128
-        public sbyte MaxPeakIndex { get; private set; }    // and MaxPeakIndex needs to be allowed to be -1 or 0xFF
+        public byte NumPeaks { get; private set; }        // The number of peaks stored per chrom should be well under 128
+        public byte MaxPeakIndexInternal { get; private set; }    // and MaxPeakIndex needs to be allowed to be -1 or 0xFF
         public ushort Align1 { get; private set; }
         public ushort StatusId { get; private set; }
         public ushort StatusRank { get; private set; }
         public double Precursor { get; private set; }
         public long LocationPoints { get; private set; }
         /////////////////////////////////////////////////////////////////////
+
+        public short MaxPeakIndex
+        {
+            get
+            {
+                if (MaxPeakIndexInternal == NO_MAX_PEAK)
+                    return -1;
+                return MaxPeakIndexInternal;
+            }
+        }
 
         public FlagValues Flags { get { return (FlagValues) FlagBits; } }
 

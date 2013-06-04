@@ -833,7 +833,7 @@ namespace pwiz.Skyline.Model
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             if (MethodType == ExportMethodType.Standard)
-                writer.Write(Math.Round(DwellTime, 2));
+                writer.Write(Math.Round(DwellTime, 2).ToString(CultureInfo));
             else
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
@@ -897,10 +897,9 @@ namespace pwiz.Skyline.Model
             if (FullScans)
             {
                 writer.Write(FieldSeparator);
-                writer.Write(
-                    Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTranGroup.PrecursorMz));
+                writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
                 writer.Write(FieldSeparator);
-                writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz));
+                writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz).ToString(CultureInfo));
             }
             else
             {
@@ -915,7 +914,9 @@ namespace pwiz.Skyline.Model
             writer.Write(extGroupId);
 
             writer.Write(FieldSeparator);
-            writer.Write(nodeTran.AveragePeakArea);
+            var averagePeakArea = nodeTran.AveragePeakArea;
+            if (averagePeakArea.HasValue)
+                writer.Write(averagePeakArea.Value.ToString(CultureInfo));
 
             double maxRtDiff = 0;
             if (nodeTran.Results != null)
@@ -952,7 +953,8 @@ namespace pwiz.Skyline.Model
                                    (Settings.Default.VariableRtWindowIncreaseFraction*measuredWindow);
             }
             writer.Write(FieldSeparator);
-            writer.Write(variableRtWindow);
+            if (variableRtWindow.HasValue)
+                writer.Write(variableRtWindow.Value.ToString(CultureInfo));
 
             if (MethodType == ExportMethodType.Triggered)
             {
