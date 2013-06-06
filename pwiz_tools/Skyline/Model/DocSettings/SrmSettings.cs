@@ -1116,9 +1116,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 PeptideLibraries libraries = PeptideSettings.Libraries ?? defPep.Libraries;
                 BackgroundProteome backgroundProteome = PeptideSettings.BackgroundProteome ?? defPep.BackgroundProteome;
                 PeptideModifications modifications = PeptideSettings.Modifications ?? defPep.Modifications;
+                PeptideIntegration integration = PeptideSettings.Integration ?? defPep.Integration;
 
                 PeptideSettings peptideSettings = new PeptideSettings(enzyme, digestSettings, prediction, filter,
-                    libraries, modifications, backgroundProteome);
+                    libraries, modifications, integration, backgroundProteome);
                 // If the above null checks result in a changed PeptideSettings object,
                 // then use the changed version.
                 if (!Equals(PeptideSettings, peptideSettings))
@@ -1146,6 +1147,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                               PeptideSettings.Filter,
                                                               PeptideSettings.Libraries,
                                                               PeptideSettings.Modifications,
+                                                              PeptideSettings.Integration,
                                                               PeptideSettings.BackgroundProteome);
                     }
                     prediction = new TransitionPrediction(prediction);

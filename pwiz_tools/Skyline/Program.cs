@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -146,16 +145,7 @@ namespace pwiz.Skyline
 
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)
-                {
-                    var offscreenPoint = new Point(0, 0);
-                    foreach (var screen in Screen.AllScreens)
-                    {
-                        offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Right);
-                        offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
-                    }
-                    MainWindow.StartPosition = FormStartPosition.Manual;
-                    MainWindow.Location = offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
-                }
+                    FormEx.SetOffscreen(MainWindow);
 
                 Application.Run(MainWindow);
             }

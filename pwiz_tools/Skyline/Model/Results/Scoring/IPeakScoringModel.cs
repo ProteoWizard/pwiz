@@ -205,12 +205,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         private static readonly IPeakFeatureCalculator[] CALCULATORS =  new IPeakFeatureCalculator[]
             {
-                new LegacyLogUnforcedAreaCalc(),
-                new LegacyUnforcedCountScoreCalc(),
-                new LegacyUnforcedCountScoreStandardCalc(),
-                new LegacyIdentifiedCountCalc(), 
+                new MQuestIntensityCalc(),
                 new MQuestRetentionTimePredictionCalc(), 
-                new MQuestLightAreaCalc(),
                 new MQuestIntensityCorrelationCalc(), 
                 new MQuestReferenceCorrelationCalc(), 
 
@@ -223,11 +219,32 @@ namespace pwiz.Skyline.Model.Results.Scoring
 //                new MQuestReferenceShapeCalc(), 
                 new MQuestWeightedReferenceCoElutionCalc(),
 //                new MQuestReferenceCoElutionCalc(), 
+
+                // Legacy calculators
+                //new LegacyLogUnforcedAreaCalc(),  // This one produces scores that are colinear with MQuestIntensityCalc.
+                new LegacyUnforcedCountScoreCalc(),
+                new LegacyUnforcedCountScoreStandardCalc(),
+                new LegacyIdentifiedCountCalc(), 
             };
+
+        public static int CountCalculators { get { return CALCULATORS.Length; } }
 
         public static IEnumerable<IPeakFeatureCalculator> Calculators
         {
             get { return CALCULATORS; }
+        }
+
+        public static Type[] CalculatorTypes
+        {
+            get
+            {
+                var calculatorTypes = new Type[CALCULATORS.Length];
+                for (int i = 0; i < calculatorTypes.Length; i++)
+                {
+                    calculatorTypes[i] = CALCULATORS[i].GetType();
+                }
+                return calculatorTypes;
+            }
         }
 
         public static IPeakFeatureCalculator GetCalculator(Type calcType)

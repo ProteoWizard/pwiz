@@ -19,7 +19,6 @@
 
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 
@@ -30,7 +29,8 @@ namespace pwiz.Skyline.Util
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            SetLocation(this);
+            if (Program.SkylineOffscreen)
+                SetOffscreen(this);
         }
 
         public void CheckDisposed()
@@ -41,24 +41,16 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public static void SetLocation(Form form)
+        public static void SetOffscreen(Form form)
         {
-            // Avoid breaking forms in Visual Studio designer
-            if (Program.MainWindow != null)
+            var offscreenPoint = new Point(0, 0);
+            foreach (var screen in Screen.AllScreens)
             {
-                // move offscreen if main window is offscreen
-                var mainWindowBounds = Program.MainWindow.DesktopBounds;
-                if (!IntersectsAnyScreen(mainWindowBounds))
-                {
-                    form.StartPosition = FormStartPosition.Manual;
-                    form.Location = mainWindowBounds.Location;
-                }
+                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Right);
+                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
             }
-        }
-
-        private static bool IntersectsAnyScreen(Rectangle rectangle)
-        {
-            return Screen.AllScreens.Any(screen => screen.WorkingArea.IntersectsWith(rectangle));
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
         }
 
         public static Form GetParentForm(Control control)
@@ -86,9 +78,9 @@ namespace pwiz.Skyline.Util
         protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);
-            if (ParentForm != null)
+            if (Program.SkylineOffscreen && ParentForm != null)
             {
-                FormEx.SetLocation(ParentForm);
+                FormEx.SetOffscreen(ParentForm);
             }
         }
 

@@ -525,11 +525,11 @@ namespace pwiz.Skyline.Model.Results
             UpdateCombinedScore();
         }
 
-        public void Extend()
+        public bool Extend()
         {
             // Only extend for peak groups with at least one peak
             if (Count < 1)
-                return;
+                return true;
 
             var peakPrimary = this[0];
 
@@ -540,6 +540,8 @@ namespace pwiz.Skyline.Model.Results
             int endIndex = peakPrimary.Peak.EndIndex;
             peakPrimary.Peak.ResetBoundaries(ExtendBoundary(peakPrimary, startIndex, endIndex, -1, toleranceLen),
                                              ExtendBoundary(peakPrimary, endIndex, startIndex, 1, toleranceLen));
+            // Convex peaks can result in single point peaks after boundaries are extended
+            return peakPrimary.Peak.StartIndex < peakPrimary.Peak.EndIndex;
         }
 
         private int ExtendBoundary(ChromDataPeak peakPrimary, int indexBoundary, int indexOpposite,

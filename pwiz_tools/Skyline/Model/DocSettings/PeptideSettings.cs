@@ -30,6 +30,7 @@ using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                PeptideFilter filter,
                                PeptideLibraries libraries,
                                PeptideModifications modifications,
+                               PeptideIntegration integration,
                                BackgroundProteome backgroundProteome
                                )
         {
@@ -53,6 +55,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Filter = filter;
             Libraries = libraries;
             Modifications = modifications;
+            Integration = integration;
             BackgroundProteome = backgroundProteome;
         }
 
@@ -69,6 +72,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideLibraries Libraries { get; private set; }
 
         public PeptideModifications Modifications { get; private set; }
+
+        public PeptideIntegration Integration { get; private set; }
 
         #region Property change methods
 
@@ -145,6 +150,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Filter = reader.DeserializeElement<PeptideFilter>();
                 Libraries = reader.DeserializeElement<PeptideLibraries>();
                 Modifications = reader.DeserializeElement<PeptideModifications>();
+                Integration = reader.DeserializeElement<PeptideIntegration>();
                 reader.ReadEndElement();
             }
 
@@ -162,6 +168,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(Filter);
             writer.WriteElement(Libraries);
             writer.WriteElement(Modifications);
+            if (Integration.IsSerializable)
+                writer.WriteElement(Integration);
         }
 
         #endregion
@@ -178,6 +186,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Filter, Filter) &&
                    Equals(obj.Libraries, Libraries) &&
                    Equals(obj.Modifications, Modifications) &&
+                   Equals(obj.Integration, Integration) &&
                    Equals(obj.BackgroundProteome, BackgroundProteome);
         }
 
@@ -199,6 +208,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ Filter.GetHashCode();
                 result = (result*397) ^ Libraries.GetHashCode();
                 result = (result*397) ^ Modifications.GetHashCode();
+                result = (result*397) ^ Integration.GetHashCode();
                 result = (result*397) ^ BackgroundProteome.GetHashCode();
                 return result;
             }
@@ -2027,6 +2037,96 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (PeptideCount.HasValue ? PeptideCount.Value : 0);
                 return result;
             }
+        }
+
+        #endregion
+    }
+
+
+    [XmlRoot("peptide_integration")]
+    public sealed class PeptideIntegration : Immutable, IValidating, IXmlSerializable
+    {
+        public PeptideIntegration(PeakScoringModelSpec peakScoringModel)
+        {
+            PeakScoringModel = peakScoringModel ?? new LegacyScoringModel();
+        }
+
+        public PeakScoringModelSpec PeakScoringModel { get; private set; }
+        public bool IsSerializable { get { return PeakScoringModel.GetType() != typeof(LegacyScoringModel); } }
+
+        #region Implementation of IXmlSerializable
+
+        void IValidating.Validate()
+        {
+        }
+
+        // Support for serializing multiple peak scoring models
+        private static readonly IXmlElementHelper<PeakScoringModelSpec>[] PEAK_SCORING_MODEL_SPEC_HELPERS =
+        {
+            new XmlElementHelperSuper<MProphetPeakScoringModel, PeakScoringModelSpec>(),                 
+            new XmlElementHelperSuper<LegacyScoringModel, PeakScoringModelSpec>(),                 
+        };
+
+        public static PeptideIntegration Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new PeptideIntegration(null));
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            // Consume tag
+            if (reader.IsEmptyElement)
+                reader.Read();
+            else
+            {
+                reader.ReadStartElement();
+                // Read child element
+                var helperSpec = reader.FindHelper(PEAK_SCORING_MODEL_SPEC_HELPERS);
+                if (helperSpec != null)
+                    PeakScoringModel = helperSpec.Deserialize(reader);
+                reader.ReadEndElement();
+            }
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            // Write child elements
+            if (PeakScoringModel.GetType() != typeof(LegacyScoringModel))
+            {
+                var helper = XmlUtil.FindHelper(PeakScoringModel, PEAK_SCORING_MODEL_SPEC_HELPERS);
+                if (helper == null)
+                    throw new InvalidOperationException(Resources.PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
+                writer.WriteElement(helper.ElementNames[0], PeakScoringModel);                            
+            }
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(PeptideIntegration other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return other.PeakScoringModel.Equals(PeakScoringModel);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (PeptideIntegration)) return false;
+            return Equals((PeptideIntegration) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return PeakScoringModel.GetHashCode();
         }
 
         #endregion

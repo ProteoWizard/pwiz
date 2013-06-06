@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
@@ -109,10 +110,10 @@ namespace pwiz.SkylineTestA
                     peakFeatureCalculators[i] = typeof(LegacyLogUnforcedAreaCalc);    // doesn't matter what this is as long as it implement IPeakFeatureCalculator
 
                 // Calculate weights for peak features.
-                var scoringModel = new MProphetPeakScoringModel("mProphet", peakFeatureCalculators);    // Not L10N
+                var scoringModel = new MProphetPeakScoringModel("mProphet", peakFeatureCalculators, fileWeights._weights);    // Not L10N
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList());
-                Assert.AreEqual(scoringModel.Weights.Length, fileWeights._weights.Length);
-                for (int i = 0; i < scoringModel.Weights.Length; i++)
+                Assert.AreEqual(scoringModel.Weights.Count, fileWeights._weights.Length);
+                for (int i = 0; i < scoringModel.Weights.Count; i++)
                     Assert.AreEqual(fileWeights._weights[i], scoringModel.Weights[i], 1e-7);
             }
         }
@@ -147,15 +148,15 @@ namespace pwiz.SkylineTestA
         {
             // Good validation.
             AssertEx.NoExceptionThrown<Exception>(new Action(() =>
-                new MProphetPeakScoringModel("GoodModel", new[] {typeof(LegacyLogUnforcedAreaCalc)})));   // Not L10N
+                new MProphetPeakScoringModel("GoodModel", new[] {typeof(LegacyLogUnforcedAreaCalc)}, new[] {0.0})));   // Not L10N
 
             // Bad calculator type.
             AssertEx.ThrowsException<InvalidDataException>(new Action(() =>
-                new MProphetPeakScoringModel("BadType", new[] { typeof(int) })));   // Not L10N
+                new MProphetPeakScoringModel("BadType", new[] {typeof(int)}, new[] {0.0})));   // Not L10N
 
             // No calculator.
             AssertEx.ThrowsException<InvalidDataException>(new Action(() =>
-                new MProphetPeakScoringModel("NoCalculator", new Type[0])));   // Not L10N
+                new MProphetPeakScoringModel("NoCalculator", new Type[0], new double[0])));   // Not L10N
         }
 
         [TestMethod]
@@ -175,7 +176,7 @@ namespace pwiz.SkylineTestA
             // No peak calculators.
             const string testNoCalculators = @"
                 <mprophet_peak_scoring_model name=""TestNoCalculators"" decoy_mean=""11.11"" decoy_stdev=""0.22""/>";
-            AssertEx.DeserializeError<MProphetPeakScoringModel, InvalidDataException>(testNoCalculators);
+            AssertEx.DeserializeError<MProphetPeakScoringModel, XmlException>(testNoCalculators);
 
             // Bad calculator type.
             const string testBadType = @"

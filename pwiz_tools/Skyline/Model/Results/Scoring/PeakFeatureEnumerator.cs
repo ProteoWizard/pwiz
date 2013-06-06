@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
                                                                                IList<IPeakFeatureCalculator> calcs,
-                                                                               IProgressMonitor progressMonitor)
+                                                                               IProgressMonitor progressMonitor = null)
         {
             // Get features for each peptide
             int totalPeptides = document.PeptideCount;
@@ -49,12 +49,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
                         continue;
 
-                    int percentComplete = currentPeptide++*100/totalPeptides;
-                    if (percentComplete < 100)
+                    if (progressMonitor != null)
                     {
-                        progressMonitor.UpdateProgress(status =
-                            status.ChangeMessage(string.Format("Calculating peak group scores for {0}", nodePep.ModifiedSequenceDisplay))
-                                  .ChangePercentComplete(percentComplete));
+                        int percentComplete = currentPeptide++*100/totalPeptides;
+                        if (percentComplete < 100)
+                        {
+                            progressMonitor.UpdateProgress(status =
+                                status.ChangeMessage(string.Format("Calculating peak group scores for {0}",
+                                    nodePep.ModifiedSequenceDisplay))
+                                      .ChangePercentComplete(percentComplete));
+                        }
                     }
 
                     foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, calcs))
@@ -64,7 +68,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 }
             }
 
-            progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
+            if (progressMonitor != null)
+                progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
         }
 
         private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,

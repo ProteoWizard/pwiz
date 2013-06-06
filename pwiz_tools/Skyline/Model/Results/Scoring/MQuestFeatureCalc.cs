@@ -112,15 +112,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates summed areas of light transitions
     /// </summary>
-    class MQuestLightAreaCalc : SummaryPeakFeatureCalculator
+    class MQuestIntensityCalc : SummaryPeakFeatureCalculator
     {
-        public MQuestLightAreaCalc() : base(Resources.MQuestLightAreaCalc_MQuestLightAreaCalc_mQuest_light_area) { }
+        public MQuestIntensityCalc() : base(Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            return MQuestHelpers.GetAnalyteGroups(summaryPeakData)
+            double lightArea = MQuestHelpers.GetAnalyteGroups(summaryPeakData)
                                 .SelectMany(pd => pd.TranstionPeakData)
                                 .Sum(p => p.PeakData.Area);
+            return (float)Math.Max(0, Math.Log10(lightArea));
         }
     }
 
@@ -424,7 +425,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference) {}
+        public MQuestWeightedReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape) {}
         protected MQuestWeightedReferenceShapeCalc(string name) : base(name) {}
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
@@ -446,7 +447,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestReferenceShapeCalc : MQuestWeightedReferenceShapeCalc
     {
-        public MQuestReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference) {}
+        public MQuestReferenceShapeCalc() : base(Resources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference) {}
 
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {

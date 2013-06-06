@@ -98,9 +98,6 @@
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
             this.tabFullScan = new System.Windows.Forms.TabPage();
-            this.tabPeaks = new System.Windows.Forms.TabPage();
-            this.comboPeakScoringModel = new System.Windows.Forms.ComboBox();
-            this.label36 = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
@@ -109,7 +106,6 @@
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
-            this.tabPeaks.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -134,7 +130,6 @@
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
             this.tabControl1.Controls.Add(this.tabFullScan);
-            this.tabControl1.Controls.Add(this.tabPeaks);
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
@@ -601,28 +596,6 @@
             this.tabFullScan.Name = "tabFullScan";
             this.tabFullScan.UseVisualStyleBackColor = true;
             // 
-            // tabPeaks
-            // 
-            this.tabPeaks.Controls.Add(this.comboPeakScoringModel);
-            this.tabPeaks.Controls.Add(this.label36);
-            resources.ApplyResources(this.tabPeaks, "tabPeaks");
-            this.tabPeaks.Name = "tabPeaks";
-            this.tabPeaks.UseVisualStyleBackColor = true;
-            // 
-            // comboPeakScoringModel
-            // 
-            this.comboPeakScoringModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboPeakScoringModel.FormattingEnabled = true;
-            resources.ApplyResources(this.comboPeakScoringModel, "comboPeakScoringModel");
-            this.comboPeakScoringModel.Name = "comboPeakScoringModel";
-            this.helpTip.SetToolTip(this.comboPeakScoringModel, resources.GetString("comboPeakScoringModel.ToolTip"));
-            this.comboPeakScoringModel.SelectedIndexChanged += new System.EventHandler(this.comboPeakScoringModel_SelectedIndexChanged);
-            // 
-            // label36
-            // 
-            resources.ApplyResources(this.label36, "label36");
-            this.label36.Name = "label36";
-            // 
             // helpTip
             // 
             this.helpTip.AutoPopDelay = 15000;
@@ -656,8 +629,6 @@
             this.panelPick.PerformLayout();
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
-            this.tabPeaks.ResumeLayout(false);
-            this.tabPeaks.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -733,8 +704,5 @@
         private System.Windows.Forms.TextBox textMinTime;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.TextBox textMaxInclusions;
-        private System.Windows.Forms.TabPage tabPeaks;
-        private System.Windows.Forms.Label label36;
-        private System.Windows.Forms.ComboBox comboPeakScoringModel;
     }
 }

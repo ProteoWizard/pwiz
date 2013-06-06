@@ -59,6 +59,10 @@ namespace pwiz.SkylineTestTutorial
         {
             var folderMs1Filtering = ExtensionTestContext.CanImportAbWiff ? "Ms1Filtering" : "Ms1FilteringMzml"; // Not L10N
 
+            // Clean-up before running the test
+            RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
+                            d => d.ChangeSettings(SrmSettingsList.GetDefault())));
+
             SrmDocument doc = SkylineWindow.Document;
 
             // Configure the peptide settings for your new document.

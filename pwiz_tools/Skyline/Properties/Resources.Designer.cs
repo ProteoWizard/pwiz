@@ -3616,11 +3616,74 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak count.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_InitGraphPane_Peak_count {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_InitGraphPane_Peak_count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_InitGraphPane_Score {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_InitGraphPane_Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The model must be trained first..
+        /// </summary>
+        public static string EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_ {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The peak scoring model {0} already exists.
         /// </summary>
         public static string EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists {
             get {
                 return ResourceManager.GetString("EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to unknown.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Decoy norm.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Decoy_norm {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Decoy_norm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Decoys.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Decoys {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Targets {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Targets", resourceCulture);
             }
         }
         
@@ -6745,7 +6808,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Legacy identified count.
+        ///   Looks up a localized string similar to Identified count.
         /// </summary>
         public static string LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count {
             get {
@@ -7578,6 +7641,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Intensity.
+        /// </summary>
+        public static string MQuestIntensityCalc_MQuestIntensityCalc_Intensity {
+            get {
+                return ResourceManager.GetString("MQuestIntensityCalc_MQuestIntensityCalc_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library intensity dot-product.
         /// </summary>
         public static string MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation {
@@ -7588,21 +7660,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Light area.
-        /// </summary>
-        public static string MQuestLightAreaCalc_MQuestLightAreaCalc_mQuest_light_area {
-            get {
-                return ResourceManager.GetString("MQuestLightAreaCalc_MQuestLightAreaCalc_mQuest_light_area", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Reference intensity dot-product.
         /// </summary>
         public static string MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation {
             get {
                 return ResourceManager.GetString("MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_co" +
                         "rrelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mProphet weighted reference.
+        /// </summary>
+        public static string MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference {
+            get {
+                return ResourceManager.GetString("MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference", resourceCulture);
             }
         }
         
@@ -7637,12 +7709,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to mProphet weighted reference.
+        ///   Looks up a localized string similar to mProphet weighted reference shape.
         /// </summary>
-        public static string MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference {
+        public static string MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape {
             get {
-                return ResourceManager.GetString("MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted" +
-                        "_reference", resourceCulture);
+                return ResourceManager.GetString("MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weight" +
+                        "ed_reference_shape", resourceCulture);
             }
         }
         

@@ -828,7 +828,7 @@ namespace pwiz.Skyline.Model.Results
                     outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(ushort));
                     outStream.Write(BitConverter.GetBytes(info.SeqLen), 0, sizeof(ushort));
                     outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(ushort));
-                    outStream.Write(new[] {(byte)info.NumPeaks, (byte)info.MaxPeakIndex}, 0, 2);
+                    outStream.Write(new[] {info.NumPeaks, (byte)info.MaxPeakIndex}, 0, 2);
                     outStream.Write(BitConverter.GetBytes(info.Align1), 0, sizeof(ushort));
                     if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_5)
                     {

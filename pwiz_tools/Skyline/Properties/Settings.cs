@@ -1701,6 +1701,7 @@ namespace pwiz.Skyline.Properties
                         new[] {new TypedModifications(IsotopeLabelType.heavy, HeavyModList.GetDefaultsOn())},
                         new[] {IsotopeLabelType.heavy}
                     ),
+                    new PeptideIntegration(null), 
                     BackgroundProteome.NONE
                 ),
                 new TransitionSettings

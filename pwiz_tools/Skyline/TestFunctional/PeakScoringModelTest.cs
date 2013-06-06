@@ -17,16 +17,12 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -37,28 +33,33 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestPeakScoringModel()
         {
+            TestFilesZip = @"TestFunctional\PeakScoringModelTest.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            // Display full scan tab.
-            var fullScanDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            var documentFile = TestFilesDir.GetTestPath("MProphetGold-rescore2.sky");
+            RunUI(() => SkylineWindow.OpenFile(documentFile));
+            WaitForDocumentLoaded();
+
+            // Display integration tab.
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
             {
-                fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.Peaks;
+                peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration;
             });
 
             int calculatorCount = PeakFeatureCalculator.Calculators.Count();
             {
-                var editDlg = ShowDialog<EditPeakScoringModelDlg>(fullScanDlg.AddPeakScoringModel);
+                var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
 
                 // Check default values.
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, string.Empty);
-                    Assert.AreEqual(editDlg.Mean, string.Empty);
-                    Assert.AreEqual(editDlg.Stdev, string.Empty);
+                    Assert.AreEqual(editDlg.Mean, null);
+                    Assert.AreEqual(editDlg.Stdev, null);
                     var rows = editDlg.PeakCalculatorsGrid.RowCount;
                     Assert.AreEqual(calculatorCount, rows, "Unexpected count of peak calculators");  // Not L10N
                     for (int i = 0; i < rows; i++)
@@ -79,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     editDlg.PeakScoringModelName = "test1"; // Not L10N
-                    editDlg.Stdev = "2"; // Not L10N
+                    editDlg.Stdev = 2; // Not L10N
                 });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                 {
@@ -90,8 +91,8 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty stdev.
                 RunUI(() =>
                 {
-                    editDlg.Mean = "1"; // Not L10N
-                    editDlg.Stdev = string.Empty;
+                    editDlg.Mean = 1; // Not L10N
+                    editDlg.Stdev = null;
                 });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                 {
@@ -102,156 +103,64 @@ namespace pwiz.SkylineTestFunctional
                 // Create a model with default values.
                 RunUI(() =>
                 {
-                    editDlg.Mean = "1";
-                    editDlg.Stdev = "2";
-                    editDlg.OkDialog();
+                    editDlg.Mean = 1;
+                    editDlg.Stdev = 2;
                 });
+                RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
+                {
+                    AssertEx.AreComparableStrings(Resources.EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_, messageDlg.Message);
+                    messageDlg.OkDialog();
+                });
+
+                RunUI(() =>
+                    {
+                        editDlg.TrainModel();
+                        Assert.AreEqual(1.376, editDlg.Mean);
+                        Assert.AreEqual(0.088, editDlg.Stdev);
+                        for (int i = 0; i < editDlg.PeakCalculatorsGrid.RowCount; i++)
+                        {
+                            editDlg.PeakCalculatorsGrid.SelectRow(i);
+                        }
+                        editDlg.OkDialog();
+                    });
                 WaitForClosedForm(editDlg);
             }
 
             var editList =
                 ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
-                    fullScanDlg.EditPeakScoringModel);
+                    peptideSettingsDlg.EditPeakScoringModel);
 
             RunUI(() => editList.SelectItem("test1")); // Not L10N
+
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
 
-                // Edit weights, change name.
+                // Verify weights, change name.
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
-                    Assert.AreEqual("1", editDlg.Mean); // Not L10N
-                    Assert.AreEqual("2", editDlg.Stdev); // Not L10N
-                    var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                    Assert.AreEqual(calculatorCount, rows, "Unexpected count of peak calculators");  // Not L10N
-                    for (int i = 0; i < rows; i++)
-                    {
-                        var cellValue = editDlg.PeakCalculatorsGrid.GetCellValue(1, i);
-                        Assert.AreEqual("0", cellValue); // Not L10N
-                        editDlg.PeakCalculatorsGrid.SelectCell(1, i);
-                        editDlg.PeakCalculatorsGrid.SetCellValue(i.ToString(CultureInfo.CurrentCulture));
-                    }
+                    Assert.AreEqual(1.376, editDlg.Mean);
+                    Assert.AreEqual(0.088, editDlg.Stdev);
+                    var calculators = PeakFeatureCalculator.Calculators.ToArray();
+                    var format = editDlg.PeakCalculatorWeightFormat;
+                    VerifyCellValues(editDlg, new[]
+                        {
+                            new[] {calculators[0].Name, (0.0428).ToString(format)},
+                            new[] {calculators[1].Name, string.Empty},
+                            new[] {calculators[2].Name, (0.2340).ToString(format)},
+                            new[] {calculators[3].Name, (0.3759).ToString(format)},
+                            new[] {calculators[4].Name, (0.1320).ToString(format)},
+                            new[] {calculators[5].Name, (-0.0256).ToString(format)},
+                            new[] {calculators[6].Name, (0.8841).ToString(format)},
+                            new[] {calculators[7].Name, (0.0234).ToString(format)},
+                            new[] {calculators[8].Name, (0.0397).ToString(format)},
+                            new[] {calculators[9].Name, (0.0169).ToString(format)},
+                            new[] {calculators[10].Name, string.Empty},
+                        });
                     editDlg.PeakScoringModelName = "test2"; // Not L10N
                     editDlg.OkDialog();
                 });
                 WaitForClosedForm(editDlg);
-            }
-
-            var listValues = new List<string>();
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
-            {
-                var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
-
-                // Verify saved weights.
-                RunUI(() =>
-                {
-                    Assert.AreEqual(editDlg.PeakScoringModelName, "test2"); // Not L10N
-                    Assert.AreEqual("1", editDlg.Mean); // Not L10N
-                    Assert.AreEqual("2", editDlg.Stdev); // Not L10N
-                    var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                    Assert.AreEqual(calculatorCount, rows, "Unexpected count of peak calculators");  // Not L10N
-                    for (int i = 0; i < rows; i++)
-                    {
-                        var cellValue = editDlg.PeakCalculatorsGrid.GetCellValue(1, i);
-                        string expectedValue = i.ToString(CultureInfo.CurrentCulture);
-                        Assert.AreEqual(expectedValue, cellValue); // Not L10N
-                        listValues.Add(expectedValue);
-                    }
-                    editDlg.OkDialog();
-                });
-                WaitForClosedForm(editDlg);
-            }
-
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
-            {
-                var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
-
-                // Paste one number.
-                var pasteValue = 173.6789.ToString(CultureInfo.CurrentCulture);
-                ClipboardEx.SetText(pasteValue);
-                listValues[0] = pasteValue;
-                RunUI(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    Assert.IsTrue(editDlg.PeakCalculatorsGrid.HandleKeyDown(Keys.V, true));
-                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
-                });
-
-                // Paste weights only list.
-                listValues.Clear();
-                for (int i = 0; i < calculatorCount; i++)
-                {
-                    listValues.Insert(0, i.ToString(CultureInfo.CurrentCulture));
-                }
-                ClipboardEx.SetText(string.Join("\n", listValues)); // Not L10N
-                RunUI(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
-                });
-
-                // Paste weights list by name.
-                var arrayCalc = PeakFeatureCalculator.Calculators.ToArray();
-                string unforcedCountName = Resources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count;
-                string weightedReferenceName = Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference;
-                ClipboardEx.SetText(string.Format("{0}\t-1\n{1}\t-99\n", unforcedCountName, weightedReferenceName)); // Not L10N
-                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, unforcedCountName))] = "-1";
-                listValues[arrayCalc.IndexOf(c => string.Equals(c.Name, weightedReferenceName))] = "-99";
-                RunUI(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
-                });
-
-                // Paste unknown name.
-                ClipboardEx.SetText("UNKNOWN NAME\t-1\n"); // Not L10N
-                RunDlg<MessageDlg>(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    editDlg.PeakCalculatorsGrid.OnPaste();
-                },
-                messageDlg =>
-                {
-                    AssertEx.AreComparableStrings(Resources.PeakCalculatorWeight_Validate___0___is_not_a_known_name_for_a_peak_feature_calculator, messageDlg.Message, 1);
-                    messageDlg.OkDialog();
-                });
-
-                // Paste too many columns.
-                ClipboardEx.SetText("1\t2\t3\n"); // Not L10N
-                RunDlg<MessageDlg>(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    editDlg.PeakCalculatorsGrid.OnPaste();
-                },
-                messageDlg =>
-                {
-                    AssertEx.AreComparableStrings(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__, messageDlg.Message, 2);
-                    messageDlg.OkDialog();
-                });
-
-                // Paste single bad value.
-                ClipboardEx.SetText("x"); // Not L10N
-                RunUI(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
-                });
-
-                // Paste bad weight by name.
-                ClipboardEx.SetText(string.Format("{0}\tx\n", unforcedCountName)); // Not L10N
-                RunUI(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    editDlg.PeakCalculatorsGrid.OnPaste();
-                    VerifyCellValues(editDlg, listValues.ToArray()); // Not L10N
-                });
-
-
-                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             {
@@ -271,49 +180,10 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
-            {
-                var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
-
-                // Test buttons.
-                RunUI(() =>
-                {
-                    editDlg.AddResults();
-                    editDlg.ShowGraph();
-                    editDlg.OkDialog();
-                });
-                WaitForClosedForm(editDlg);
-            }
-
-            RunUI(() => editList.SelectItem("test2")); // Not L10N
-            {
-                var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
-
-                // Test non-numeric input in grid cell.
-                RunDlg<MessageDlg>(() =>
-                {
-                    editDlg.PeakCalculatorsGrid.SelectCell(1, 0);
-                    editDlg.PeakCalculatorsGrid.SetCellValue("x");
-                },
-                    messageDlg =>
-                    {
-                        AssertEx.AreComparableStrings(Resources.GridViewDriver_GridView_DataError__0__must_be_a_valid_number, messageDlg.Message, 1);
-                        messageDlg.OkDialog();
-                    });
-                OkDialog(editDlg, editDlg.OkDialog);
-            }
-
             OkDialog(editList, editList.OkDialog);
-            OkDialog(fullScanDlg, fullScanDlg.OkDialog);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
         }
 
-        private static void VerifyCellValues(EditPeakScoringModelDlg editDlg, string[] expectedValues)
-        {
-            var array = new string[expectedValues.Length][];
-            for (int i = 0; i < expectedValues.Length; i++)
-                array[i] = new[] {null, expectedValues[i]};
-            VerifyCellValues(editDlg, array);
-        }
         private static void VerifyCellValues(EditPeakScoringModelDlg editDlg, string[][] expectedValues)
         {
             // Verify expected number of rows.
@@ -332,6 +202,8 @@ namespace pwiz.SkylineTestFunctional
 
                     // Verify cell value.
                     var actualValue = editDlg.PeakCalculatorsGrid.GetCellValue(col, row);
+                    if (col == 1 && !string.IsNullOrEmpty(actualValue))
+                        actualValue = double.Parse(actualValue).ToString(editDlg.PeakCalculatorWeightFormat);
                     Assert.AreEqual(expectedValue, actualValue);
                 }
             }

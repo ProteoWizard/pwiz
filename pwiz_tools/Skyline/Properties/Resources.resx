@@ -4975,9 +4975,6 @@ Are you sure you want to continue?</value>
   <data name="LegacyScoringModel_LegacyScoringModel_Skyline_Legacy" xml:space="preserve">
     <value>Skyline Legacy</value>
   </data>
-  <data name="MQuestLightAreaCalc_MQuestLightAreaCalc_mQuest_light_area" xml:space="preserve">
-    <value>Light area</value>
-  </data>
   <data name="MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation" xml:space="preserve">
     <value>Library intensity dot-product</value>
   </data>
@@ -4989,9 +4986,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution" xml:space="preserve">
     <value>mProphet weighted coelution</value>
-  </data>
-  <data name="MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mQuest_weighted_reference" xml:space="preserve">
-    <value>mProphet weighted reference</value>
   </data>
   <data name="MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution" xml:space="preserve">
     <value>mProphet weighted reference coelution</value>
@@ -5054,7 +5048,7 @@ Are you sure you want to continue?</value>
     <value>Align Times To {0}</value>
   </data>
   <data name="LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count" xml:space="preserve">
-    <value>Legacy identified count</value>
+    <value>Identified count</value>
   </data>
   <data name="MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference" xml:space="preserve">
     <value>Retention time difference</value>
@@ -5253,5 +5247,35 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ChromLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ChromLib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
+    <value>Intensity</value>
+  </data>
+  <data name="MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape" xml:space="preserve">
+    <value>mProphet weighted reference shape</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_" xml:space="preserve">
+    <value>The model must be trained first.</value>
+  </data>
+  <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
+    <value>mProphet weighted reference</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_InitGraphPane_Score" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_InitGraphPane_Peak_count" xml:space="preserve">
+    <value>Peak count</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoys" xml:space="preserve">
+    <value>Decoys</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_norm" xml:space="preserve">
+    <value>Decoy norm</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown" xml:space="preserve">
+    <value>unknown</value>
   </data>
 </root>

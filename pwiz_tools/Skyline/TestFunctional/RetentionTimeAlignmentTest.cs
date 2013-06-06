@@ -173,8 +173,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(editListUI);
             WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Contains(libName));
             RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libName });
-            RunUI(peptideSettingsUI.OkDialog);
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            WaitForDocumentLoaded();
         }
 
         private void SetTransitionSettings()
@@ -198,12 +198,14 @@ namespace pwiz.SkylineTestFunctional
             var peptides = new[] { "HLVDEPQNLIK", "AEFVEVTK", "AADALLLK", "TFAEALR" };
             var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
 
+            var doc = SkylineWindow.Document;
             RunUI(()=>
                       {
                           SetClipboardText(string.Join("\n\n", peptides));
                           insertPeptidesDlg.PastePeptides();
                       });
             OkDialog(insertPeptidesDlg, insertPeptidesDlg.OkDialog);
+            WaitForDocumentChange(doc);
         }
     }
 }

@@ -577,7 +577,8 @@ namespace pwiz.Skyline.Model.Results
             var listExtendedSets = new List<ChromDataPeakList>();
             foreach (var peakSet in listPeakSets)
             {
-                peakSet.Extend();
+                if (!peakSet.Extend())
+                    continue;
                 peakSet.SetIdentified(retentionTimes, isAlignedTimes);
                 if (!PeaksRedundant(peakSet, listExtendedSets))
                     listExtendedSets.Add(peakSet);

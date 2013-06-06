@@ -97,6 +97,9 @@ namespace pwiz.Skyline.SettingsUI
             this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tabIntegration = new System.Windows.Forms.TabPage();
+            this.comboPeakScoringModel = new System.Windows.Forms.ComboBox();
+            this.label36 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -105,6 +108,7 @@ namespace pwiz.Skyline.SettingsUI
             this.panelPick.SuspendLayout();
             this.tabModifications.SuspendLayout();
             this.contextMenuCalculator.SuspendLayout();
+            this.tabIntegration.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOk
@@ -144,7 +148,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboStandardType.Size = new System.Drawing.Size(177, 21);
             this.comboStandardType.TabIndex = 13;
             this.helpTip.SetToolTip(this.comboStandardType, "The type to use as the internal stadard, or the denomenator\r\nin peak area ratios." +
-                    "");
+        "");
             // 
             // comboLabelType
             // 
@@ -155,7 +159,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboLabelType.Size = new System.Drawing.Size(177, 21);
             this.comboLabelType.TabIndex = 8;
             this.helpTip.SetToolTip(this.comboLabelType, "The currently active isotope label type for which isotope\r\nmodifications are bein" +
-                    "g chosen.");
+        "g chosen.");
             this.comboLabelType.SelectedIndexChanged += new System.EventHandler(this.comboLabelType_SelectedIndexChanged);
             // 
             // listHeavyMods
@@ -167,8 +171,8 @@ namespace pwiz.Skyline.SettingsUI
             this.listHeavyMods.Size = new System.Drawing.Size(177, 94);
             this.listHeavyMods.TabIndex = 10;
             this.helpTip.SetToolTip(this.listHeavyMods, "Modifications applied to any of the heavy forms of the peptides,\r\nwhich are typic" +
-                    "ally changes to the isotopic make-up of the\r\nmolecules, with no impact on struct" +
-                    "ure.");
+        "ally changes to the isotopic make-up of the\r\nmolecules, with no impact on struct" +
+        "ure.");
             // 
             // listStaticMods
             // 
@@ -179,7 +183,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listStaticMods.Size = new System.Drawing.Size(177, 94);
             this.listStaticMods.TabIndex = 1;
             this.helpTip.SetToolTip(this.listStaticMods, "Modifications applied to the light form of the peptides\r\nwhich are typically due " +
-                    "to changes in the molecular\r\nstructure of the peptide.");
+        "to changes in the molecular\r\nstructure of the peptide.");
             // 
             // listStandardTypes
             // 
@@ -190,7 +194,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listStandardTypes.Size = new System.Drawing.Size(177, 49);
             this.listStandardTypes.TabIndex = 14;
             this.helpTip.SetToolTip(this.listStandardTypes, "The types to use as internal stadards, or the denomenators\r\nin peak area ratios c" +
-                    "alculated for other types.");
+        "alculated for other types.");
             // 
             // textMaxVariableMods
             // 
@@ -199,7 +203,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxVariableMods.Size = new System.Drawing.Size(90, 20);
             this.textMaxVariableMods.TabIndex = 4;
             this.helpTip.SetToolTip(this.textMaxVariableMods, "The maximum number of variable modifications allowed\r\nto occur in combination on " +
-                    "any peptide instance.");
+        "any peptide instance.");
             // 
             // textMaxNeutralLosses
             // 
@@ -208,7 +212,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxNeutralLosses.Size = new System.Drawing.Size(90, 20);
             this.textMaxNeutralLosses.TabIndex = 6;
             this.helpTip.SetToolTip(this.textMaxNeutralLosses, "The maximum number of neutral loss events allowed\r\nto occur in combination on any" +
-                    " fragment instance.");
+        " fragment instance.");
             // 
             // cbMissedCleavages
             // 
@@ -230,7 +234,7 @@ namespace pwiz.Skyline.SettingsUI
             this.cbMissedCleavages.Size = new System.Drawing.Size(44, 21);
             this.cbMissedCleavages.TabIndex = 3;
             this.helpTip.SetToolTip(this.cbMissedCleavages, "The maximum number of missed cleavages allowed in a peptide when\r\nconsidering pro" +
-                    "tein digestion.");
+        "tein digestion.");
             // 
             // comboEnzyme
             // 
@@ -241,7 +245,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboEnzyme.Size = new System.Drawing.Size(169, 21);
             this.comboEnzyme.TabIndex = 1;
             this.helpTip.SetToolTip(this.comboEnzyme, "The protease enzyme used for digesting proteins into peptides prior\r\nto injection" +
-                    " into the mass spectrometer\r\n");
+        " into the mass spectrometer\r\n");
             this.comboEnzyme.SelectedIndexChanged += new System.EventHandler(this.enzyme_SelectedIndexChanged);
             // 
             // comboBackgroundProteome
@@ -253,7 +257,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboBackgroundProteome.Size = new System.Drawing.Size(169, 21);
             this.comboBackgroundProteome.TabIndex = 5;
             this.helpTip.SetToolTip(this.comboBackgroundProteome, "Processed FASTA sequence information specifying the full\r\nset of proteins that ma" +
-                    "y be present in the sample matrix to be\r\ninjected into the mass spectrometer.");
+        "y be present in the sample matrix to be\r\ninjected into the mass spectrometer.");
             this.comboBackgroundProteome.SelectedIndexChanged += new System.EventHandler(this.comboBackgroundProteome_SelectedIndexChanged);
             // 
             // textMeasureRTWindow
@@ -263,7 +267,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMeasureRTWindow.Size = new System.Drawing.Size(100, 20);
             this.textMeasureRTWindow.TabIndex = 5;
             this.helpTip.SetToolTip(this.textMeasureRTWindow, "Time window in minutes around a measured peak center (i.e. (start + end)/2)\r\nused" +
-                    " in scheduling future peptide measurements.");
+        " in scheduling future peptide measurements.");
             // 
             // cbUseMeasuredRT
             // 
@@ -274,7 +278,7 @@ namespace pwiz.Skyline.SettingsUI
             this.cbUseMeasuredRT.TabIndex = 3;
             this.cbUseMeasuredRT.Text = "&Use measured retention times when present";
             this.helpTip.SetToolTip(this.cbUseMeasuredRT, "If checked, then previously measured retention times will be used\r\nto predict ret" +
-                    "ention times for scheduling of future peptide measurements.");
+        "ention times for scheduling of future peptide measurements.");
             this.cbUseMeasuredRT.UseVisualStyleBackColor = true;
             this.cbUseMeasuredRT.CheckedChanged += new System.EventHandler(this.cbUseMeasuredRT_CheckedChanged);
             // 
@@ -287,7 +291,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRetentionTime.Size = new System.Drawing.Size(169, 21);
             this.comboRetentionTime.TabIndex = 1;
             this.helpTip.SetToolTip(this.comboRetentionTime, "Specifies a linear equation that may be used to predict retention\r\ntimes from a p" +
-                    "eptide specific hydrophobicity score.");
+        "eptide specific hydrophobicity score.");
             this.comboRetentionTime.SelectedIndexChanged += new System.EventHandler(this.comboRetentionTime_SelectedIndexChanged);
             // 
             // cbAutoSelect
@@ -299,8 +303,8 @@ namespace pwiz.Skyline.SettingsUI
             this.cbAutoSelect.TabIndex = 12;
             this.cbAutoSelect.Text = "&Auto-select all matching peptides";
             this.helpTip.SetToolTip(this.cbAutoSelect, "If checked, peptides are automatically chosen from proteins\r\nusing specified filt" +
-                    "er and library settings.  Otherwise, all peptide\r\nselection must be done by manu" +
-                    "al document editing.");
+        "er and library settings.  Otherwise, all peptide\r\nselection must be done by manu" +
+        "al document editing.");
             this.cbAutoSelect.UseVisualStyleBackColor = true;
             // 
             // textExcludeAAs
@@ -320,7 +324,7 @@ namespace pwiz.Skyline.SettingsUI
             this.cbRaggedEnds.TabIndex = 8;
             this.cbRaggedEnds.Text = "Exclude potential &ragged ends";
             this.helpTip.SetToolTip(this.cbRaggedEnds, "Exclude peptides resulting from cleavage sites with immediate\r\npreceding or follo" +
-                    "wing cleavage sites.  e.g.  RR, KK, RK, KR for trypsin");
+        "wing cleavage sites.  e.g.  RR, KK, RK, KR for trypsin");
             this.cbRaggedEnds.UseVisualStyleBackColor = true;
             // 
             // btnEditExlusions
@@ -379,7 +383,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnBuildLibrary.TabIndex = 4;
             this.btnBuildLibrary.Text = "&Build...";
             this.helpTip.SetToolTip(this.btnBuildLibrary, "Build a MS/MS spectral library from peptide search results\r\nfrom various peptide " +
-                    "search engines.");
+        "search engines.");
             this.btnBuildLibrary.UseVisualStyleBackColor = true;
             this.btnBuildLibrary.Click += new System.EventHandler(this.btnBuildLibrary_Click);
             // 
@@ -392,8 +396,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRank.Size = new System.Drawing.Size(143, 21);
             this.comboRank.TabIndex = 3;
             this.helpTip.SetToolTip(this.comboRank, "Specifies a value associated with each spectrum in a library that may\r\nbe used to" +
-                    " rank matching peptides.  Not all library formats provide the\r\nsame values for r" +
-                    "anking.");
+        " rank matching peptides.  Not all library formats provide the\r\nsame values for r" +
+        "anking.");
             this.comboRank.SelectedIndexChanged += new System.EventHandler(this.comboRank_SelectedIndexChanged);
             // 
             // textPeptideCount
@@ -430,7 +434,7 @@ namespace pwiz.Skyline.SettingsUI
             this.cbLimitPeptides.TabIndex = 4;
             this.cbLimitPeptides.Text = "&Limit peptides per protein";
             this.helpTip.SetToolTip(this.cbLimitPeptides, "If checked, only a specified number of top ranking peptides are\r\npicked for each " +
-                    "protein.");
+        "protein.");
             this.cbLimitPeptides.UseVisualStyleBackColor = true;
             this.cbLimitPeptides.CheckedChanged += new System.EventHandler(this.cbLimitPeptides_CheckedChanged);
             // 
@@ -469,14 +473,15 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabControl1
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabDigestion);
             this.tabControl1.Controls.Add(this.tabPrediction);
             this.tabControl1.Controls.Add(this.tabFilter);
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabModifications);
+            this.tabControl1.Controls.Add(this.tabIntegration);
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "PeptideSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
@@ -820,6 +825,40 @@ namespace pwiz.Skyline.SettingsUI
             this.editCalculatorListContextMenuItem.Text = "Edit List...";
             this.editCalculatorListContextMenuItem.Click += new System.EventHandler(this.editCalculatorListContextMenuItem_Click);
             // 
+            // tabIntegration
+            // 
+            this.tabIntegration.Controls.Add(this.comboPeakScoringModel);
+            this.tabIntegration.Controls.Add(this.label36);
+            this.tabIntegration.Location = new System.Drawing.Point(4, 22);
+            this.tabIntegration.Name = "tabIntegration";
+            this.tabIntegration.Padding = new System.Windows.Forms.Padding(3);
+            this.tabIntegration.Size = new System.Drawing.Size(363, 460);
+            this.tabIntegration.TabIndex = 5;
+            this.tabIntegration.Text = "Integration";
+            this.tabIntegration.UseVisualStyleBackColor = true;
+            // 
+            // comboPeakScoringModel
+            // 
+            this.comboPeakScoringModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPeakScoringModel.FormattingEnabled = true;
+            this.comboPeakScoringModel.Location = new System.Drawing.Point(22, 36);
+            this.comboPeakScoringModel.Name = "comboPeakScoringModel";
+            this.comboPeakScoringModel.Size = new System.Drawing.Size(169, 21);
+            this.comboPeakScoringModel.TabIndex = 4;
+            this.helpTip.SetToolTip(this.comboPeakScoringModel, "Specifies a linear equation that may be used to predict retention\r\ntimes from a p" +
+        "eptide specific hydrophobicity score.");
+            this.comboPeakScoringModel.SelectedIndexChanged += new System.EventHandler(this.comboPeakScoringModel_SelectedIndexChanged);
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.label36.Location = new System.Drawing.Point(19, 20);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(103, 13);
+            this.label36.TabIndex = 3;
+            this.label36.Text = "&Peak scoring model:";
+            // 
             // PeptideSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -851,6 +890,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.ResumeLayout(false);
             this.tabModifications.PerformLayout();
             this.contextMenuCalculator.ResumeLayout(false);
+            this.tabIntegration.ResumeLayout(false);
+            this.tabIntegration.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -922,5 +963,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem addCalculatorContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editCalculatorCurrentContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editCalculatorListContextMenuItem;
+        private System.Windows.Forms.TabPage tabIntegration;
+        private System.Windows.Forms.ComboBox comboPeakScoringModel;
+        private System.Windows.Forms.Label label36;
     }
 }

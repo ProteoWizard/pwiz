@@ -623,7 +623,7 @@ namespace pwiz.Skyline.Model
             {
                 var transGroup = nodeGroup.TransitionGroup;
 
-                int precursorMassShift = 0;
+                int precursorMassShift;
                 TransitionGroupDocNode nodeGroupPrimary = null;
 
                 var primaryPrecursor = chargeToPrecursor[nodeGroup.TransitionGroup.PrecursorCharge];

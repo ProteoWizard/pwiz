@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
-        public enum TABS { Digest, Prediction, Filter, Library, Modifications }
+        public enum TABS { Digest, Prediction, Filter, Library, Modifications, Integration }
 // ReSharper restore UnusedMember.Local
 // ReSharper restore InconsistentNaming
 
@@ -59,6 +60,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         private readonly SettingsListBoxDriver<StaticMod> _driverStaticMod;
         private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
+        private readonly SettingsListComboDriver<PeakScoringModelSpec> _driverPeakScoringModel;
         private readonly LabelTypeComboDriver _driverLabelType;
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager)
@@ -123,6 +125,12 @@ namespace pwiz.Skyline.SettingsUI
             textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(CultureInfo.CurrentCulture);
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(CultureInfo.CurrentCulture);
 
+            // Initialize peak scoring settings.
+            tabControl1.TabPages.Remove(tabIntegration);  // TODO: Remove this line when the Integration tab is ready
+            _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
+            var peakScoringModel = _peptideSettings.Integration.PeakScoringModel;
+            _driverPeakScoringModel.LoadList(peakScoringModel != null ? peakScoringModel.Name : null);
+
             IsShowLibraryExplorer = false;
         }
 
@@ -131,6 +139,7 @@ namespace pwiz.Skyline.SettingsUI
         public PeptideFilter Filter { get { return _peptideSettings.Filter; } }
         public PeptideLibraries Libraries { get { return _peptideSettings.Libraries; } }
         public PeptideModifications Modifications { get { return _peptideSettings.Modifications; } }
+        public PeptideIntegration Integration { get { return _peptideSettings.Integration; } }
         public bool IsShowLibraryExplorer { get; set; }
         public TABS? TabControlSel { get; set; }
 
@@ -157,9 +166,7 @@ namespace pwiz.Skyline.SettingsUI
             DigestSettings digest = new DigestSettings(maxMissedCleavages, excludeRaggedEnds);
             Helpers.AssignIfEquals(ref digest, Digest);
 
-            var backgroundProteomeSpec =
-                Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(
-                    (string)_driverBackgroundProteome.Combo.SelectedItem);
+            var backgroundProteomeSpec = _driverBackgroundProteome.SelectedItem;
             BackgroundProteome backgroundProteome = BackgroundProteome.NONE;
             if (!backgroundProteomeSpec.IsNone)
             {
@@ -314,8 +321,12 @@ namespace pwiz.Skyline.SettingsUI
             modifications = modifications.DeclareExplicitMods(_parent.DocumentUI,
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             Helpers.AssignIfEquals(ref modifications, _peptideSettings.Modifications);
+
+            PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem);
+            Helpers.AssignIfEquals(ref integration, Integration);
+
             return new PeptideSettings(enzyme, digest, prediction,
-                    filter, libraries, modifications, backgroundProteome);
+                    filter, libraries, modifications, integration, backgroundProteome);
         }
 
         public void OkDialog()
@@ -728,6 +739,11 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
+        private void comboPeakScoringModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
+        }
+
         #region Functional testing support
 
         public TABS SelectedTab
@@ -855,6 +871,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return Convert.ToInt32(textMeasureRTWindow.Text); }
             set { textMeasureRTWindow.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public void AddPeakScoringModel()
+        {
+            _driverPeakScoringModel.AddItem();
+        }
+
+        public void EditPeakScoringModel()
+        {
+            _driverPeakScoringModel.EditList();
         }
 
         #endregion
