@@ -281,11 +281,6 @@ namespace pwiz.Skyline.FileUI
             get { return ExportInstrumentType.IsFullScanInstrumentType(InstrumentType);  }
         }
 
-        public bool IsPrecursorOnlyInstrument
-        {
-            get { return ExportInstrumentType.IsPrecursorOnlyInstrumentType(InstrumentType); }
-        }
-
         public ExportStrategy ExportStrategy
         {
             get { return _exportProperties.ExportStrategy; }
@@ -497,7 +492,8 @@ namespace pwiz.Skyline.FileUI
                     helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method);
                     return;
                 }
-                if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ?
+                if ((Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ||
+                    Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF)) ?
                                                                                  !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist, templateName);
@@ -508,6 +504,14 @@ namespace pwiz.Skyline.FileUI
                 {
                     helper.ShowTextBoxError(textTemplateFile,
                                             Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd,
+                                            templateName);
+                    return;
+                }
+                if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
+                    !BrukerMethodExporter.IsBrukerMethodPath(templateName))
+                {
+                    helper.ShowTextBoxError(textTemplateFile,
+                                            Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_,
                                             templateName);
                     return;
                 }
@@ -568,7 +572,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             // Full-scan method building ignores CE and DP regression values
-            if (!ExportInstrumentType.IsFullScanInstrumentType(InstrumentType))
+            if (!IsFullScanInstrument)
             {
                 // Check to make sure CE and DP match chosen instrument, and offer to use
                 // the correct version for the instrument, if not.
@@ -1175,13 +1179,13 @@ namespace pwiz.Skyline.FileUI
         {
             if (standard)
             {
-                labelMaxTransitions.Text = IsPrecursorOnlyInstrument
+                labelMaxTransitions.Text = IsFullScanInstrument
                     ? PREC_PER_SAMPLE_INJ_TXT
                     : TRANS_PER_SAMPLE_INJ_TXT;
             }
             else
             {
-                labelMaxTransitions.Text = IsPrecursorOnlyInstrument
+                labelMaxTransitions.Text = IsFullScanInstrument
                     ? CONCUR_PREC_TXT
                     : CONCUR_TRANS_TXT;
             }
@@ -1296,7 +1300,8 @@ namespace pwiz.Skyline.FileUI
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
             string templateName = textTemplateFile.Text;
-            if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400))
+            if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ||
+                Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))
             {
                 var chooseDirDialog = new FolderBrowserDialog
                                           {
@@ -1311,9 +1316,16 @@ namespace pwiz.Skyline.FileUI
                 if (chooseDirDialog.ShowDialog(this) == DialogResult.OK)
                 {
                     templateName = chooseDirDialog.SelectedPath;
-                    if (!AgilentMethodExporter.IsAgilentMethodPath(templateName))
+                    if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) &&
+                        !AgilentMethodExporter.IsAgilentMethodPath(templateName))
                     {
                         MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd);
+                        return;
+                    }
+                    else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
+                             !BrukerMethodExporter.IsBrukerMethodPath(templateName))
+                    {
+                        MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_);
                         return;
                     }
                     textTemplateFile.Text = templateName;
@@ -1325,7 +1337,7 @@ namespace pwiz.Skyline.FileUI
             var openFileDialog = new OpenFileDialog
                                      {
                                          Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
-                                         // Extension based on currently selecte type
+                                         // Extension based on currently selected type
                                          CheckPathExists = true
                                      };
 

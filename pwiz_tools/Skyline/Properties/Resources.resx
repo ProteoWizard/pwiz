@@ -5278,4 +5278,10 @@ Are you sure you want to continue?</value>
   <data name="EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown" xml:space="preserve">
     <value>unknown</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
+    <value>The folder {0} does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
+  </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
+    <value>The chosen folder does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
+  </data>
 </root>

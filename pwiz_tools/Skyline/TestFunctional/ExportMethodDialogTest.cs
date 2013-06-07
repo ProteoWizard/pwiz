@@ -61,6 +61,8 @@ namespace pwiz.SkylineTestFunctional
 
             AgilentThermoABSciexTriggeredTest();
 
+            BrukerTOFMethodTest();
+
             ABSciexShortNameTest();
         }
 
@@ -535,6 +537,31 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(exportMethodDlg);
             }
             AssertEx.NoDiff(File.ReadAllText(abSciexWithResultsExpected), File.ReadAllText(abSciexWithResultsActual));
+        }
+
+        private void BrukerTOFMethodTest()
+        {
+            const string brukerOutputMethodFilename = "RetTimeMassListFile.Method";
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-trigger.sky")));
+            string brukerActualMeth = TestFilesDir.GetTestPath("brukermethodexport.m");
+            string brukerExpectedMeth = TestFilesDir.GetTestPath("BrukerExpected.Method");
+            string brukerTemplateMeth = TestFilesDir.GetTestPath("Bruker Template Scheduled Precursor List.m");
+
+            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    exportMethodDlg =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.BRUKER_TOF;
+                        exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                        exportMethodDlg.SetTemplateFile(brukerTemplateMeth);
+                        exportMethodDlg.MethodType = ExportMethodType.Standard;
+                        Assert.IsTrue(exportMethodDlg.IsDwellTimeVisible);
+                        Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                        exportMethodDlg.DwellTime = 20;
+                        exportMethodDlg.OkDialog(brukerActualMeth);
+                    });
+
+            Assert.IsTrue(Directory.Exists(brukerActualMeth));
+            AssertEx.NoDiff(File.ReadAllText(brukerExpectedMeth), File.ReadAllText(Path.Combine(brukerActualMeth, brukerOutputMethodFilename)));
         }
 
         private void ABSciexShortNameTest()

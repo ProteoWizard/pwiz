@@ -1,0 +1,609 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        "BDal.Submethod.Wrapper"
+    </assembly>
+    <members>
+        <member name="D:BDAL.UInt_Fast8_t">
+\ingroup types
+\brief Typedef for the fastest unsigned integer with at least 8 bit.
+
+</member>
+        <member name="D:BDAL.Int_Fast8_t">
+\ingroup types
+\brief Typedef for the fastest signed integer with at least 8 bit.
+
+</member>
+        <member name="D:BDAL.UInt_Least8_t">
+\ingroup types
+\brief Typedef for an unsigned integer with at least 8 bit.
+
+</member>
+        <member name="D:BDAL.Int_Least8_t">
+\ingroup types
+\brief Typedef for a signed integer with at least 8 bit.
+
+</member>
+        <member name="D:BDAL.UInt8_t">
+\ingroup types
+\brief Typedef for an unsigned integer with exactly 8 bit.
+
+</member>
+        <member name="D:BDAL.Int8_t">
+\ingroup types
+\brief Typedef for a signed integer with exactly 8 bit.
+
+</member>
+        <member name="M:BDAL.MethodManagement.MaldiMethodManagement.OpenMethod(System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.MALDIMethodFilterType,CWnd*)">
+            <summary> display open method dialog with Maldi specific filtering</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MaldiMethodManagement.OpenMethod(System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.MALDIMethodFilterType,System.IntPtr)">
+            <summary> display open method dialog with Maldi specific filtering</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MaldiMethodManagement.OpenMethod(System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.MALDIMethodFilterType,System.Windows.Forms.Form)">
+            <summary> display open method dialog with Maldi specific filtering</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.MethodSetExists(System.String)">
+            <summary>test if Method set does exist</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.MethodSetHasErrors(System.String)">
+            <summary>test if Method set does exist and has no errors</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.CopySubMethodToSupermethod(BDAL.MethodManagement.SubmethodType,System.String,System.String)">
+            <summary>
+Copies an existing submethod from one method set to the other
+</summary>
+            <param name="type">type of the submethod</param>
+            <param name="source">path to source method directory</param>
+            <param name="destination">path to destination method directory</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.CopyCompleteMethodSet(System.String,System.String)">
+            <summary>
+copies a complete method set directory with all submethods and files
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.AddSubmethod(BDAL.MethodManagement.SubmethodType,System.String,System.Collections.Generic.IDictionary`2{System.String^,BDAL.MethodManagement.ISubmethodBlob^})">
+            <summary>
+add submethod name to methodset and set the content
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+            <exception cref="T:System.ArgumentNullException">name</exception>
+            <exception cref="T:System.ArgumentNullException">contents</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.AddSubmethod(BDAL.MethodManagement.SubmethodType,System.String)">
+            <summary>
+add submethod name to methodset, but don't copy any files. Will delete all files if submethod allready exists!
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+            <exception cref="T:System.ArgumentNullException">name</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.AddSubmethod(BDAL.MethodManagement.ISubmethod)">
+            <summary>
+add submethod from another methodset Delete old files if this submethod allready was included
+</summary>
+            <param name="newSubmethod">source submethod (of another methodset)</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method management</exception>
+            <exception cref="T:System.ArgumentNullException">newSubmethod is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.AddSubmethodMetaData(BDAL.MethodManagement.SubmethodType,System.String,System.Collections.Generic.IList`1{System.String^},System.Boolean)">
+            <summary>only adds metadata without copying any content files. if </summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.AddSubmethod(BDAL.MethodManagement.SubmethodType,System.String,System.Collections.Generic.IList`1{System.String^})">
+            <summary>
+add submethod name to methodset. Delete old files if this submethod allready was included
+</summary>
+            <param name="files">list with path to files which will be copied to the method set directory</param>
+            <param name="name">name of the submethod entry (displayed in MethodDialog)</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+            <exception cref="T:System.ArgumentNullException">files or name is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.GetSubMethods">
+            <summary>
+get a all submethods
+</summary>
+            <returns>dictionary with all included submethods</returns>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.GetBFLSubMethods">
+            <summary>get the list of submethods from C++ method management
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.DeleteSubmethod(BDAL.MethodManagement.SubmethodType)">
+            <summary>
+deletes submethod from xml file and deletes all files for this submethod
+</summary>
+            <param name="type">type of the submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.GetSubmethod(BDAL.MethodManagement.SubmethodType)">
+            <summary>
+get one submethod
+</summary>
+            <returns>the submethod</returns>
+            <param name="type">type of the submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.set_IsSOP(System.Boolean)">
+            <summary />
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.get_IsSOP">
+            <summary />
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.set_Comment(System.String)">
+            <summary>set a new comment</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+            <exception cref="T:System.ArgumentNullException">comment is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.get_Comment">
+            <summary>get comment</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.set_IsReadOnly(System.Boolean)">
+            <summary />
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.get_IsReadOnly">
+            <summary />
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.OpenOrCreateMethodSet(System.String)">
+            <summary>tries to open methodset at given path, non existing methodsets will be created on disk after something is set (comment / Submethod)
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+            <exception cref="T:System.ArgumentNullException">path</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.OpenExistingMethodSet(System.String)">
+            <summary>tries to open methodset at given path, does throw if methodset is invalid/not existing
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+            <exception cref="T:System.ArgumentNullException">path</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.#ctor(System.String)">
+            <exception cref="T:System.ArgumentNullException">path</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.SubMethodDialogs.SaveMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,BDAL.MethodManagement.SubmethodType,System.String)">
+            <summary>Display a file save dialog. 
+<para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <param name="parent">the parent form for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <param name="submethodDefaultname">default submethod name. <para>If this is not empty, or the user sets a name a new Submethod for the program type will be created if there is not allready one! This is so that the submethod name can be quieried.</para></param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.SubMethodDialogs.SaveMethodDialog(System.IntPtr,System.String,System.String,System.String,BDAL.MethodManagement.SubmethodType,System.String)">
+            <summary>Display a file save dialog. 
+<para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <param name="parent">the parent handle for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <param name="submethodDefaultname">default submethod name. <para>If this is not empty, or the user sets a name a new Submethod for the program type will be created if there is not allready one! This is so that the submethod name can be quieried.</para></param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.SubMethodDialogs.OpenMethodDialog(System.IntPtr,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.SubmethodType)">
+            <summary>
+Display a file open dialog.
+</summary>
+            <param name="parent">the parent handle for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="mustExist">only allow selection of existing items (so typing in a new name is not possible)</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.SubMethodDialogs.OpenMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.SubmethodType)">
+            <summary>
+Display a file open dialog.
+</summary>
+            <param name="parent">the parent form</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="mustExist">only allow selection of existing items (so typing in a new name is not possible)</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="P:BDAL.MethodManagement.SubMethodDialogs.ShowReplaceEntireMethod">
+            <summary>when true: choice to save whole or just the current part of a method</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.SubMethodDialogs.OpeningProgramID">
+            <summary>if not "unknown": submethod default</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.SubMethodDialogs">
+            <summary>open and save dialogs for submethods</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.OpenMaldiMethodDialog(System.IntPtr,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.MALDIMethodFilterType)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.OpenMaldiMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,BDAL.MethodManagement.MALDIMethodFilterType)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.OpenMaldiMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.MALDIMethodFilterType)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.SaveMethodDialog(System.IntPtr,System.String,System.String,System.String)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.SaveMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.OpenMethodDialog(System.IntPtr,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.SubmethodType)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.OpenMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.SubmethodType)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.OpenMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.MfcHost.MfcAppAdapter.AlternateNames">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.CreateInstance(System.IntPtr)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MfcHost.MfcAppAdapter.CreateInstance(System.Windows.Forms.Form)">
+            <summary>this class is deprecated: use MethodDialogs instead</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.MfcHost.MfcAppAdapter">
+            <summary>this class is deprecated!: use MethodDialogs instead. We no longer need the complicated initialization.</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.OpenMaldiMethodDialog(System.IntPtr,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.MALDIMethodFilterType)">
+            <summary>
+Display a file open dialog.
+</summary>
+            <param name="parentHandle">the parent handle for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="mustExist">only allow selection of existing items (so typing in a new name is not possible)</param>
+            <param name="type">MALDI specific filter</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.OpenMaldiMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,BDAL.MethodManagement.MALDIMethodFilterType)">
+            <summary>
+Display a file open dialog.
+</summary>
+            <param name="parent">the parent form for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="type">MALDI specific filter</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.OpenMaldiMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.MALDIMethodFilterType)">
+            <summary>
+Display a file open dialog for maldi.
+</summary>
+            <param name="parent">the parent form for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="mustExist">only allow selection of existing items (so typing in a new name is not possible)</param>
+            <param name="type">MALDI specific filter</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.SaveMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,BDAL.MethodManagement.SubmethodType)">
+            <summary>Display a file save dialog. 
+<para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <param name="parent">the parent form for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.SaveMethodDialog(System.IntPtr,System.String,System.String,System.String,BDAL.MethodManagement.SubmethodType)">
+            <summary>Display a file save dialog. 
+<para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <param name="parent">the parent handle for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.SaveMethodDialog(System.IntPtr,System.String,System.String,System.String)">
+            <summary>Display a file save dialog. 
+<para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <param name="parent">the parent handle for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.SaveMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String)">
+            <summary>Display a file save dialog. 
+<para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <param name="parent">the parent form for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.OpenMethodDialog(System.IntPtr,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.SubmethodType)">
+            <summary>
+Display a file open dialog.
+</summary>
+            <param name="parent">the parent handle for dialog</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="mustExist">only allow selection of existing items (so typing in a new name is not possible)</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.OpenMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String,System.Boolean,BDAL.MethodManagement.SubmethodType)">
+            <summary>
+Display a file open dialog.
+</summary>
+            <param name="parent">the parent form</param>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="mustExist">only allow selection of existing items (so typing in a new name is not possible)</param>
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodDialogs.OpenMethodDialog(System.Windows.Forms.Form,System.String,System.String,System.String)">
+            <summary>
+Display a file open dialog. Path must not exist, no filter is set, and no old hystar methods will be displayed
+</summary>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="P:BDAL.MethodManagement.MethodDialogs.FilterName">
+            <summary>
+set the name of the filter
+</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.MethodDialogs.AlternateNames">
+            <summary>
+set a dictionary with replacement names to show instead of the default method part type name
+</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.MethodDialogs">
+            <summary>open and save dialogs for methods</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodManagementHelper.SaveMethodDialog(System.String,System.String,System.String,System.String,CWnd*,BDAL.MethodManagement.SubmethodType,BDAL.MethodManagement.SubmethodType,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary`2{BDAL.MethodManagement.SubmethodType,System.String^},System.String)">
+            <summary>Display a file save dialog. <para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <remarks> this will assert, if no valid form parent if found</remarks>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="parent">parent</param>
+            <param name="alternateNames">dictionary with alternative names, can be null</param>
+            <param name="openingProgramID">The name of the program from which the part name should be taken as default part name. If unknown, the method name will be used.</param>
+            <param name="filterName">name to display for the filter. If empty, the default name for programId will be used</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodManagementHelper.SaveMethodDialog(System.String,System.String,System.String,System.String,System.IntPtr,BDAL.MethodManagement.SubmethodType,BDAL.MethodManagement.SubmethodType,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary`2{BDAL.MethodManagement.SubmethodType,System.String^},System.String)">
+            <summary>Display a file save dialog. <para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <remarks> this will assert, if no valid form parent if found</remarks>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="parent">parent</param>
+            <param name="alternateNames">dictionary with alternative names, can be null</param>
+            <param name="openingProgramID">The name of the program from which the part name should be taken as default part name. If unknown, the method name will be used.</param>
+            <param name="filterName">name to display for the filter. If empty, the default name for programId will be used</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodManagementHelper.SaveMethodDialog(System.String,System.String,System.String,System.String,System.Windows.Forms.Form,BDAL.MethodManagement.SubmethodType,BDAL.MethodManagement.SubmethodType,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary`2{BDAL.MethodManagement.SubmethodType,System.String^},System.String)">
+            <summary>Display a file save dialog. <para>Will create the methodset directory and set comment, readonly, SOP flags</para></summary>
+            <remarks> this will assert, if no valid form parent if found</remarks>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="parent">parent</param>
+            <param name="alternateNames">dictionary with alternative names, can be null</param>
+            <param name="openingProgramID">The name of the program from which the part name should be taken as default part name. If unknown, the method name will be used.</param>
+            <param name="filterName">name to display for the filter. If empty, the default name for programId will be used</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodManagementHelper.OpenMethodDialog(System.String,System.String,System.String,System.Windows.Forms.Form,System.Boolean,BDAL.MethodManagement.SubmethodType,BDAL.MethodManagement.SubmethodType,System.Collections.Generic.IDictionary`2{BDAL.MethodManagement.SubmethodType,System.String^},System.String)">
+            <summary>
+Display a file open dialog.
+</summary>
+            <remarks> this will assert, if no valid form parent if found</remarks>
+            <param name="path">initial path</param>
+            <param name="defaultName">default name of the methodset</param>
+            <param name="title">dialog caption</param>
+            <param name="parent">parent</param>
+            <param name="mustExist" />
+            <param name="submethodfilter">if not "unknown": show only method sets which contain this submethod</param>
+            <param name="alternateNames">dictionary with alternative names, can be null</param>
+            <param name="openingProgramID">The name of the program from which the part name should be taken as default part name. If unknown, the method name will be used.</param>
+            <param name="filterName">name to display for the filter. If empty, the default name for programId will be used</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in submethod management</exception>
+            <exception cref="T:System.ArgumentNullException">one of the arguments is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodManagementHelper.GetProgramID(BDAL.MethodManagement.SubmethodType)">
+            <summary>Get the submethods ID as used in the Method management and the program ID
+</summary>
+            <param> name="type" the submethod type</param>
+            <returns>legacy c++ object</returns>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodManagementHelper.GetErrorString(BDAL.SUBMETHODS.ErrorCode)">
+            <summary>translates error codes to string. see ErrorCode.h</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.MethodSet.OpenMethodSet(System.String)">
+            <summary>creates methodset object with given path, does not test if the method is valid, so will not throw on invalid path
+</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.IMethodSet.HasErrors">
+            <summary>
+return true if method has any errors (missing submethods, files, etc)
+</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.IMethodSet.AddSubmethod(BDAL.MethodManagement.SubmethodType,System.String,System.Collections.Generic.IDictionary`2{System.String^,BDAL.MethodManagement.ISubmethodBlob^})">
+            <summary>
+add submethod name to methodset and set the content
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+            <exception cref="T:System.ArgumentNullException">name</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.IMethodSet.AddSubmethod(BDAL.MethodManagement.ISubmethod)">
+            <summary>
+add submethod from another methodset Delete old files if this submethod allready was included
+</summary>
+            <param name="newSubmethod">source submethod (of another methodset)</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method management</exception>
+            <exception cref="T:System.ArgumentNullException">newSubmethod is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.IMethodSet.AddSubmethod(BDAL.MethodManagement.SubmethodType,System.String)">
+            <summary>
+add submethod name to methodset, but don't copy any files. Will delete all contained files if submethod allready exists!
+</summary>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+            <exception cref="T:System.ArgumentNullException">name</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.IMethodSet.AddSubmethodMetaData(BDAL.MethodManagement.SubmethodType,System.String,System.Collections.Generic.IList`1{System.String^})">
+            <summary>add submethod entry and file names, does not copy any files. If there is allready metadata for this submethod, it will be delete (ALONG WITH EXISTING FILES!)</summary>
+            <param name="fileNames">list with file names which will be added to the method metadata</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+            <exception cref="T:System.ArgumentNullException">files or name is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.IMethodSet.AddSubmethod(BDAL.MethodManagement.SubmethodType,System.String,System.Collections.Generic.IList`1{System.String^})">
+            <summary>add submethod, copies given files into the method set. Delete old files if this submethod allready was included</summary>
+            <param name="files">list with path to files which will be copied to the method set directory</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+            <exception cref="T:System.ArgumentNullException">files or name is null</exception>
+        </member>
+        <member name="M:BDAL.MethodManagement.IMethodSet.DeleteSubmethod(BDAL.MethodManagement.SubmethodType)">
+            <summary>
+deletes submethod from xml file and deletes all files for this submethod
+</summary>
+            <param name="type">type of the submethod</param>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">when error in method managemen</exception>
+        </member>
+        <member name="P:BDAL.MethodManagement.IMethodSet.Submethod(BDAL.MethodManagement.SubmethodType)">
+            <summary>access to one submethod by its type</summary>
+            <returns>null if there is no submethod for this type</returns>
+        </member>
+        <member name="M:BDAL.MethodManagement.IMethodSet.GetSubMethods">
+            <summary>
+get a all submethods
+</summary>
+            <returns>dictionary with all included submethods</returns>
+            <exception cref="T:BDAL.MethodManagement.MethodManagementException">throws</exception>
+        </member>
+        <member name="P:BDAL.MethodManagement.IMethodSet.Comment">
+            <summary>a comment</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.IMethodSet.Name">
+            <summary>name of the method set</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.IMethodSet.Path">
+            <summary>full path to the method set (.M) directory</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.IMethodSet.IsSOP">
+            <summary>has the SOP flag set</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.IMethodSet.IsReadOnly">
+            <summary>has readonly flag set</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.IMethodSet">
+            <summary>one method set</summary>
+        </member>
+        <member name="F:BDAL.MethodManagement.Submethod.m_Files">
+contains only the filename, not the full path!
+</member>
+        <member name="P:BDAL.MethodManagement.Submethod.Files">
+list with the names of files. they only contain the Name and extension, not a full path!
+</member>
+        <member name="P:BDAL.MethodManagement.Submethod.Name">
+            <summary>
+this returns the cached Name and does not query the SMM again, so if someone else changed the Name we will not notice!
+</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.Submethod.Path">
+            <summary>path of the containing method set (.M) directory</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.SubmethodCopyException">
+            <summary>something went wrong copying the files for a submethod</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.MethodCopyException">
+            <summary>copying a whole methodset or parts of a methodset to a target failed</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.MethodIsLockedException">
+            <summary>tried to change a SOP method</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.MethodIsReadonlyException">
+            <summary>tried to change a method with readonly flag</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.MethodManagementException">
+            <summary>base class for al SMM exceptions</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethod.Revision">
+            <summary>gets revision counter for this submethod</summary>
+        </member>
+        <member name="M:BDAL.MethodManagement.ISubmethod.IncrementRevision">
+            <summary>increment revision counter for this submethod</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethod.default(System.String)">
+            <summary>gets container for data by name. Will accept the name of a not existing content, which will then be created if one of its setters was called</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethod.Item(System.Int32)">
+            <summary>gets container for data by its index.
+will throw if there is no content with this index exisiting.
+</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethod.Files">
+            <summary>list of names for the contained files. 
+</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethod.Path">
+            <summary>full path to the containing method set folder</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethod.Name">
+            <summary>name of the submethod</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethod.Type">
+            <summary>the submethod type (HyStar, DA, etc.</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.ISubmethod">
+            <summary>one submethod inside of a method set</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethodBlob.StringContents">
+            <summary>submethod contents in textual form.</summary>
+        </member>
+        <member name="P:BDAL.MethodManagement.ISubmethodBlob.BinaryContents">
+            <summary>submethod contents in binary form.</summary>
+        </member>
+        <member name="T:BDAL.MethodManagement.ISubmethodBlob">
+            <summary>submethod contents encapsulation.</summary>
+        </member>
+    </members>
+</doc>

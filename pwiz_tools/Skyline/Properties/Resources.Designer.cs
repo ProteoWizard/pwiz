@@ -4217,6 +4217,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
+                        "ain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension" +
+                        "__and_contain_the_file_submethods_xml_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
@@ -4479,6 +4490,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_" +
                         "standard_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_m" +
+                        "ethod_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_" +
+                        "file_submethods_xml_", resourceCulture);
             }
         }
         

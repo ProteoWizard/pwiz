@@ -16,6 +16,10 @@
     <!-- Vendor method building -->
     <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
     <DeploymentItem filename="Method\Agilent\MethodCreator.dll" outputDirectory="Method\Agilent" />
+    <DeploymentItem filename="Method\Bruker\BuildBrukerMethod.exe" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Bruker\BdalRetentionTimeMassList.dll" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Bruker\BDal.Submethod.Wrapper.xml" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Bruker\BDal.Submethod.Wrapper.dll" outputDirectory="Method\Bruker" />
     <DeploymentItem filename="Method\Thermo\BuildLTQMethod.exe" outputDirectory="Method\Thermo" />
     <!-- BiblioSpec library building -->
     <DeploymentItem filename="BlibBuild.exe" />
