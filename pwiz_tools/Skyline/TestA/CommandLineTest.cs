@@ -241,6 +241,7 @@ namespace pwiz.SkylineTestA
 
             string output = RunCommand("--in=" + docPath,
                                        "--import-fasta=" + fastaPath,
+                                       "--keep-empty-proteins",
                                        "--out=" + outPath);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
@@ -249,6 +250,17 @@ namespace pwiz.SkylineTestA
 
             // Before import, there are 2 peptides. 3 peptides after
             AssertEx.IsDocumentState(doc, 0, 3, 7, 7, 49);
+
+            // Test without keep empty proteins
+            output = RunCommand("--in=" + docPath,
+                                "--import-fasta=" + fastaPath,
+                                "--out=" + outPath);
+
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.IsFalse(output.Contains("Error"));
+            Assert.IsFalse(output.Contains("Warning"));
+
+            AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
         }
 
         [TestMethod]

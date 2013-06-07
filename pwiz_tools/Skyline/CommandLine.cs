@@ -55,6 +55,7 @@ namespace pwiz.Skyline
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
         public string FastaPath { get; private set; }
+        public bool KeepEmptyProteins { get; private set; }
         public string LibraryName { get; private set; }
         public string LibraryPath { get; private set; }
 
@@ -514,6 +515,11 @@ namespace pwiz.Skyline
                 {
                     FastaPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameOnly(pair, "keep-empty-proteins"))
+                {
+                    KeepEmptyProteins = true;
                 }
 
                 else if (IsNameValue(pair, "import-file"))
@@ -1017,7 +1023,7 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    ImportFasta(commandArgs.FastaPath);
+                    ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins);
                 }
                 catch (Exception x)
                 {
@@ -1549,7 +1555,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportFasta(string path)
+        public void ImportFasta(string path, bool keepEmptyProteins)
         {
             _out.WriteLine("Importing FASTA file {0}...", Path.GetFileName(path));
             using (var readerFasta = new StreamReader(path))
@@ -1559,6 +1565,10 @@ namespace pwiz.Skyline
                 long lines = Helpers.CountLinesInFile(path);
                 _doc = _doc.ImportFasta(readerFasta, progressMonitor, lines, false, null, out selectPath);
             }
+            
+            // Remove all empty proteins unless otherwise specified
+            if (!keepEmptyProteins)
+                _doc = new RefinementSettings { MinPeptidesPerProtein = 1 }.Refine(_doc);
         }
 
         public bool SetLibrary(string name, string path, bool append = true)
