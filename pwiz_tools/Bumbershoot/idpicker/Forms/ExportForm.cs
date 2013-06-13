@@ -988,10 +988,24 @@ namespace IDPicker.Forms
                 bg.RunWorkerCompleted += (x, y) =>
                                              {
                                                  timer.Stop();
-                                                 MessageBox.Show(string.Format("Finished, {0:00}:{1:00}:{2:00} elapsed",
+                                                 var failMessage = string.Empty;
+                                                 if (_retrievalFails > 0)
+                                                     failMessage += Environment.NewLine + _retrievalFails +
+                                                                    " spectra lost from reader error";
+                                                 if (_minSpectraFails > 0)
+                                                     failMessage += Environment.NewLine + _minSpectraFails +
+                                                                    " matches fell below minimum spectra threshhold";
+                                                 if (_overlapFails > 0)
+                                                     failMessage += Environment.NewLine + _overlapFails +
+                                                                    " matches lost due to spectra overlap";
+                                                 if (_decoyFails > 0)
+                                                     failMessage += Environment.NewLine + _decoyFails +
+                                                                    " matches found unsuitable for decoying and were dropped";
+                                                 MessageBox.Show(string.Format("Finished, {0:00}:{1:00}:{2:00} elapsed{3}",
                                                                                timer.Elapsed.Hours,
                                                                                timer.Elapsed.Minutes,
-                                                                               timer.Elapsed.Seconds));
+                                                                               timer.Elapsed.Seconds,
+                                                                               failMessage));
                                                  Close();
                                              };
 
@@ -1002,6 +1016,10 @@ namespace IDPicker.Forms
         }
         
 
+        int _retrievalFails;
+        int _minSpectraFails;
+        int _overlapFails;
+        int _decoyFails;
         private void CreateNewLibrary(BackgroundWorker bg)
         {
             bg.ReportProgress(-1, "Querying spectra...");
@@ -1010,7 +1028,7 @@ namespace IDPicker.Forms
                 queryRows = _session.CreateSQLQuery(@"SELECT s.Id, source.Name, NativeID, PrecursorMZ
                                                         FROM UnfilteredSpectrum s
                                                         JOIN SpectrumSource source ON s.Source = source.Id
-                                                        JOIN UnfilterePeptideSpectrumMatch psm ON s.Id = psm.Spectrum
+                                                        JOIN UnfilteredPeptideSpectrumMatch psm ON s.Id = psm.Spectrum
                                                         JOIN Peptide p ON p.Id = psm.Peptide
                                                         JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
                                                         JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
@@ -1167,6 +1185,10 @@ namespace IDPicker.Forms
             }
             insertDecoyCmd.Prepare();
             var annotations = new Dictionary<long, string>();
+            _retrievalFails = 0;
+            _minSpectraFails = 0;
+            _overlapFails = 0;
+            _decoyFails = 0;
 
             for (var peptideNum = 0; peptideNum < peptideList.Count; peptideNum++)
             {
@@ -1200,118 +1222,157 @@ namespace IDPicker.Forms
 
                     foreach (var distinctMatch in matchSet)
                     {
-                        long bestSpectra = -100;
-                        double bestScore = -100;
-                        
                         //get list of spectra in peptide
-                        var spectraList = new List<long>();
-                        var scoreKeeper = new Dictionary<long, List<double>>();
+                        var chargedSpectraList = new Dictionary<int, List<long>>();
+                        var chargedScoreKeeper = new Dictionary<int,Dictionary<long, List<double>>>();
+                        var charges = new HashSet<int>();
                         foreach (var psm in distinctMatch.Value.Where(x => x.Spectrum.Id != null))
-                            if (!spectraList.Contains(psm.Spectrum.Id ?? -1))
+                        {
+                            if (psm.Spectrum.Id == null)
+                                continue;
+                            var charge = psm.Charge;
+                            charges.Add(charge);
+                            if (!chargedSpectraList.ContainsKey(charge))
                             {
-                                spectraList.Add(psm.Spectrum.Id ?? -1);
-                                scoreKeeper.Add(psm.Spectrum.Id ?? -1, new List<double>());
+                                chargedSpectraList.Add(charge, new List<long>());
+                                chargedScoreKeeper.Add(charge, new Dictionary<long, List<double>>());
                             }
-                        if (spectraList.Count < _libraryExportSettings.minimumSpectra)
-                            continue;
-                        if (spectraList.Count(x => !acceptedSpectra.Contains(x)) == 0)
-                            continue;
-
-                        //get list of spectra with similar precursor mass
-                        var extraList = new List<long>();
-                        if (_libraryExportSettings.crossPeptide)
-                        {
-                            var minValue = distinctMatch.Value[0].ObservedNeutralMass -
-                                           _libraryExportSettings.precursorMzTolerance;
-                            var maxValue = distinctMatch.Value[0].ObservedNeutralMass +
-                                           _libraryExportSettings.precursorMzTolerance;
-
-                            var extraListObj = _session.CreateSQLQuery(string.Format(
-                                "SELECT spectra FROM SpectralPeaks WHERE spectra NOT IN ({0}) AND mass > {1} AND Mass < {2} AND spectra > 0",
-                                string.Join(",", spectraList), minValue, maxValue)).List<object>();
-                            foreach (var item in extraListObj)
-                                extraList.Add((long)item);
-                        }
-
-                        //get spectra peaks
-                        var peakList = _session.CreateSQLQuery(string.Format(
-                            "SELECT spectra, mz, intensity FROM SpectralPeaks WHERE spectra IN ({0})",
-                            string.Join(",", spectraList.Concat(extraList)))).List<object[]>();
-                        if (peakList.Count < _libraryExportSettings.minimumSpectra)
-                            continue;
-
-                        //for some reason not all spectra have peaks available
-                        for (var x = spectraList.Count - 1; x >= 0; x--)
-                        {
-                            var found = false;
-                            foreach (var peak in peakList)
-                                if ((long)peak[0] == spectraList[x])
-                                    found = true;
-                            if (!found)
-                                spectraList.RemoveAt(x);
-                        }
-
-                        var peakInfo = new Dictionary<long, Peaks>();
-                        foreach (var entry in peakList)
-                        {
-                            var mzValues = entry[1].ToString().Split('|').Select(double.Parse).ToList();
-                            var intensityValues = entry[2].ToString().Split('|').Select(double.Parse).ToList();
-                            peakInfo.Add((long)entry[0], new Peaks(mzValues, intensityValues));
-                        }
-
-                        if (_libraryExportSettings.method == LibraryExportOptions.DOT_PRODUCT_METHOD)
-                        {
-                            //compare spectra in peptide
-                            for (var x = 0; x < spectraList.Count; x++)
+                            if (!chargedSpectraList[charge].Contains(psm.Spectrum.Id ?? -1))
                             {
-                                for (var y = x + 1; y < spectraList.Count; y++)
-                                {
-                                    var similarityScore = ClusteringAnalysis.DotProductCompareTo(peakInfo[spectraList[x]],
-                                                                                                 peakInfo[spectraList[y]],
-                                                                                                 _libraryExportSettings.fragmentMzTolerance);
-                                    scoreKeeper[spectraList[x]].Add(similarityScore);
-                                    scoreKeeper[spectraList[y]].Add(similarityScore);
-                                }
+                                chargedSpectraList[charge].Add(psm.Spectrum.Id ?? -1);
+                                chargedScoreKeeper[charge].Add(psm.Spectrum.Id ?? -1, new List<double>());
+                            }
+                        }
+                        var chargesToRemove = new HashSet<int>();
+                        foreach (var charge in charges)
+                        {
+                            if (chargedSpectraList[charge].Count < _libraryExportSettings.minimumSpectra)
+                            {
+                                _minSpectraFails++;
+                                chargesToRemove.Add(charge);
+                            }
+                            if (chargedSpectraList[charge].Count(x => !acceptedSpectra.Contains(x)) == 0)
+                            {
+                                _overlapFails++;
+                                chargesToRemove.Add(charge);
+                            }
+                        }
+                        foreach (var charge in chargesToRemove)
+                            charges.Remove(charge);
+                        if (charges.Count <1)
+                            continue;
 
-                                if (_libraryExportSettings.crossPeptide)
+                        foreach (var charge in charges)
+                        {
+                            long bestSpectra = -100;
+                            double bestScore = -100;
+                            var spectraList = chargedSpectraList[charge];
+
+                            //get list of spectra with similar precursor mass
+                            var extraList = new List<long>();
+                            if (_libraryExportSettings.crossPeptide)
+                            {
+                                var minValue = distinctMatch.Value[0].ObservedNeutralMass -
+                                               _libraryExportSettings.precursorMzTolerance;
+                                var maxValue = distinctMatch.Value[0].ObservedNeutralMass +
+                                               _libraryExportSettings.precursorMzTolerance;
+
+                                var extraListObj = _session.CreateSQLQuery(string.Format(
+                                    "SELECT spectra FROM SpectralPeaks WHERE spectra NOT IN ({0}) AND mass > {1} AND Mass < {2} AND spectra > 0",
+                                    string.Join(",", spectraList), minValue, maxValue)).List<object>();
+                                foreach (var item in extraListObj)
+                                    extraList.Add((long) item);
+                            }
+
+                            //get spectra peaks
+                            var peakList = _session.CreateSQLQuery(string.Format(
+                                "SELECT spectra, mz, intensity FROM SpectralPeaks WHERE spectra IN ({0})",
+                                string.Join(",", spectraList.Concat(extraList)))).List<object[]>();
+                            if (peakList.Count < _libraryExportSettings.minimumSpectra)
+                                continue;
+
+                            //for some reason not all spectra have peaks available
+                            for (var x = spectraList.Count - 1; x >= 0; x--)
+                            {
+                                var found = false;
+                                foreach (var peak in peakList)
+                                    if ((long) peak[0] == spectraList[x])
+                                        found = true;
+                                if (!found)
                                 {
-                                    for (var y = 0; y < extraList.Count; y++)
-                                    {
-                                        var similarityScore = ClusteringAnalysis.DotProductCompareTo(peakInfo[spectraList[x]],
-                                                                                                     peakInfo[extraList[y]],
-                                                                                                     _libraryExportSettings.fragmentMzTolerance);
-                                        scoreKeeper[spectraList[x]].Add(similarityScore);
-                                    }
+                                    _retrievalFails++;
+                                    spectraList.RemoveAt(x);
                                 }
                             }
-                            
-                            spectraList = spectraList.Where(x => !acceptedSpectra.Contains(x)).ToList();
-                            if (spectraList.Count == 1)
-                                bestSpectra = spectraList.First();
-                            else if (spectraList.Count == 2)
+
+                            var peakInfo = new Dictionary<long, Peaks>();
+                            foreach (var entry in peakList)
                             {
-                                if (peakInfo[spectraList[0]].OriginalIntensities.Average() > peakInfo[spectraList[1]].OriginalIntensities.Average())
-                                    bestSpectra = spectraList[0];
+                                var mzValues = entry[1].ToString().Split('|').Select(double.Parse).ToList();
+                                var intensityValues = entry[2].ToString().Split('|').Select(double.Parse).ToList();
+                                peakInfo.Add((long) entry[0], new Peaks(mzValues, intensityValues));
+                            }
+
+                            if (_libraryExportSettings.method == LibraryExportOptions.DOT_PRODUCT_METHOD)
+                            {
+                                var scoreKeeper = chargedScoreKeeper[charge];
+                                spectraList = spectraList.Where(x => !acceptedSpectra.Contains(x)).ToList();
+                                if (spectraList.Count == 1)
+                                    bestSpectra = spectraList.First();
+                                else if (spectraList.Count == 2)
+                                {
+                                    if (peakInfo[spectraList[0]].OriginalIntensities.Average() >
+                                        peakInfo[spectraList[1]].OriginalIntensities.Average())
+                                        bestSpectra = spectraList[0];
+                                    else
+                                        bestSpectra = spectraList[1];
+                                }
                                 else
-                                    bestSpectra = spectraList[1];
-                            }
-                            else
-                                foreach (var spectra in spectraList)
                                 {
-                                    var avg = scoreKeeper[spectra].Average();
-                                    if (avg > bestScore)
+                                    //compare spectra in peptide
+                                    for (var x = 0; x < spectraList.Count; x++)
                                     {
-                                        bestScore = avg;
-                                        bestSpectra = spectra;
+                                        for (var y = x + 1; y < spectraList.Count; y++)
+                                        {
+                                            var similarityScore =
+                                                ClusteringAnalysis.DotProductCompareTo(peakInfo[spectraList[x]],
+                                                                                       peakInfo[spectraList[y]],
+                                                                                       _libraryExportSettings
+                                                                                           .fragmentMzTolerance);
+                                            scoreKeeper[spectraList[x]].Add(similarityScore);
+                                            scoreKeeper[spectraList[y]].Add(similarityScore);
+                                        }
+
+                                        if (_libraryExportSettings.crossPeptide)
+                                        {
+                                            for (var y = 0; y < extraList.Count; y++)
+                                            {
+                                                var similarityScore =
+                                                    ClusteringAnalysis.DotProductCompareTo(peakInfo[spectraList[x]],
+                                                                                           peakInfo[extraList[y]],
+                                                                                           _libraryExportSettings
+                                                                                               .fragmentMzTolerance);
+                                                scoreKeeper[spectraList[x]].Add(similarityScore);
+                                            }
+                                        }
+                                    }
+
+                                    foreach (var spectra in spectraList)
+                                    {
+                                        var avg = scoreKeeper[spectra].Average();
+                                        if (avg > bestScore)
+                                        {
+                                            bestScore = avg;
+                                            bestSpectra = spectra;
+                                        }
                                     }
                                 }
-                        }
+                            }
 
-                        if (bestSpectra >= 0)
-                        {
+                            if (bestSpectra < 0)
+                                continue;
                             var modstring = distinctMatch.Key;
                             var mass = Math.Round(distinctMatch.Value[0].ObservedNeutralMass, 4);
-                            var charge = distinctMatch.Value[0].Charge;
                             var proteinNames = new List<string>();
                             var preAA = "X";
                             var postAA = "X";
@@ -1329,7 +1390,8 @@ namespace IDPicker.Forms
                                                 ? instance.Protein.Sequence[instance.Offset - 1].ToString()
                                                 : "X";
                                     postAA = instance.Offset + instance.Length < instance.Protein.Sequence.Length
-                                                 ? instance.Protein.Sequence[instance.Offset + instance.Length].ToString()
+                                                 ? instance.Protein.Sequence[instance.Offset + instance.Length]
+                                                       .ToString()
                                                  : "X";
                                 }
                             }
@@ -1338,13 +1400,15 @@ namespace IDPicker.Forms
                             string peptideName = insertModsInPeptideString(peptide.Sequence,
                                                                            distinctMatch.Value[0].Modifications);
                             var proteinString = proteinNames.Count + "/" + string.Join(",1/", proteinNames) +
-                                                    (proteinNames.Count > 1 ? ",1" : string.Empty);
+                                                (proteinNames.Count > 1 ? ",1" : string.Empty);
                             var modDict = new Dictionary<int, double>();
                             foreach (var mod in distinctMatch.Value[0].Modifications)
                                 modDict.Add(mod.Offset, mod.Modification.MonoMassDelta);
                             var splitPeptide = peptide.Sequence.Select(letter => letter.ToString()).ToList();
                             var FragmentList = CreateFragmentMassReference(splitPeptide, modDict);
-                            Dictionary<double, FragmentPeakInfo> annotatedList = AnnotatePeaks(peakInfo[bestSpectra].OriginalMZs.ToList().OrderBy(x => x).ToList(), FragmentList, charge);
+                            Dictionary<double, FragmentPeakInfo> annotatedList =
+                                AnnotatePeaks(peakInfo[bestSpectra].OriginalMZs.ToList().OrderBy(x => x).ToList(),
+                                              FragmentList, charge);
                             if (!annotations.ContainsKey(bestSpectra))
                             {
                                 var orderedMZs = peakInfo[bestSpectra].OriginalMZs.OrderBy(x => x).ToList();
@@ -1368,25 +1432,33 @@ namespace IDPicker.Forms
                             if (_libraryExportSettings.decoys)
                             {
                                 string decoyPeptideName = createDecoyPeptideString(peptide.Sequence,
-                                                                                   distinctMatch.Value[0].Modifications);
+                                                                                   distinctMatch.Value[0]
+                                                                                       .Modifications);
                                 string annotatedDecoyPeptideName = insertModsInPeptideString(decoyPeptideName,
                                                                                              distinctMatch.Value[0]
                                                                                                  .Modifications);
-                                if (decoyPeptideName == string.Empty || peptideName.Length != annotatedDecoyPeptideName.Length)
+                                if (decoyPeptideName == string.Empty ||
+                                    peptideName.Length != annotatedDecoyPeptideName.Length)
+                                {
+                                    _decoyFails++;
                                     continue;
-                                object[] decoyPeaks = createDecoyPeaks(peptide.Sequence, decoyPeptideName, annotatedList,
+                                }
+                                object[] decoyPeaks = createDecoyPeaks(peptide.Sequence, decoyPeptideName,
+                                                                       annotatedList,
                                                                        peakInfo[bestSpectra].OriginalMZs.ToList(),
-                                                                       peakInfo[bestSpectra].OriginalIntensities.ToList(),
+                                                                       peakInfo[bestSpectra].OriginalIntensities
+                                                                                            .ToList(),
                                                                        modDict, charge);
 
 
-                                var decoyProteinString = proteinNames.Count + "/DECOY_" + string.Join(",1/DECOY_", proteinNames) +
+                                var decoyProteinString = proteinNames.Count + "/DECOY_" +
+                                                         string.Join(",1/DECOY_", proteinNames) +
                                                          (proteinNames.Count > 1 ? ",1" : string.Empty);
-                                var spectraAnnotations = string.Join("|", (List<string>)decoyPeaks[2]);
+                                var spectraAnnotations = string.Join("|", (List<string>) decoyPeaks[2]);
 
                                 insertDecoyParameters[0].Value = -bestSpectra;
-                                insertDecoyParameters[1].Value = string.Join("|", (List<double>)decoyPeaks[0]);
-                                insertDecoyParameters[2].Value = string.Join("|", (List<double>)decoyPeaks[1]);
+                                insertDecoyParameters[1].Value = string.Join("|", (List<double>) decoyPeaks[0]);
+                                insertDecoyParameters[2].Value = string.Join("|", (List<double>) decoyPeaks[1]);
                                 insertDecoyParameters[3].Value = modstring;
                                 insertDecoyParameters[4].Value = charge;
                                 insertDecoyParameters[5].Value = mass;
@@ -1400,7 +1472,8 @@ namespace IDPicker.Forms
                             }
 
                             spectraInfo.Add(bestSpectra,
-                                            new object[] { charge, mass, modstring, preAA, postAA, peptideName, proteinString });
+                                            new object[]
+                                                {charge, mass, modstring, preAA, postAA, peptideName, proteinString});
 
                             acceptedSpectra.Add(bestSpectra);
                         }
@@ -1448,6 +1521,9 @@ namespace IDPicker.Forms
             }
 
             bg.ReportProgress(-1, string.Format("Exporting to {0}... ", _exportLocation));
+
+            var fails = new int[] {_retrievalFails, _minSpectraFails, _overlapFails, _decoyFails};
+
             ExportLibrary(_exportLocation);
         }
 
@@ -1699,6 +1775,7 @@ namespace IDPicker.Forms
             var nonTermMods = (from x in mods where x.Offset >= 0 select x).ToList();
             var endingAA = peptide[peptide.Length - 1].ToString();
 
+            var originalSplitPeptide = peptide.Select(letter => letter.ToString()).ToList();
             var splitPeptide = peptide.Select(letter => letter.ToString()).ToList();
             var orderedMods = mods.OrderBy(x => x.Offset).ToList();
             foreach (var mod in orderedMods)
@@ -1732,7 +1809,10 @@ namespace IDPicker.Forms
             for (var x = 0; x < orderedMods.Count(); x++)
                 if (orderedMods[x].Offset >= 0 && orderedMods[x].Offset < scrambledPeptide.Count)
                     scrambledPeptide.Insert(orderedMods[x].Offset, orderedMods[x].Site.ToString());
-            scrambledPeptide.Add(endingAA);
+                else if (orderedMods[x].Offset >= 0 && orderedMods[x].Offset == scrambledPeptide.Count)
+                    scrambledPeptide.Add(orderedMods[x].Site.ToString());
+            if (scrambledPeptide.Count < originalSplitPeptide.Count) //in odd cases ending AA has already been added back
+                scrambledPeptide.Add(endingAA);
             return string.Join(string.Empty, scrambledPeptide);
         }
 
