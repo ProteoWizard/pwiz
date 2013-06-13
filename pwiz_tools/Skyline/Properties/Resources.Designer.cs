@@ -6839,7 +6839,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Log unforced area.
+        ///   Looks up a localized string similar to Log coeluting area.
         /// </summary>
         public static string LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area {
             get {
@@ -6857,7 +6857,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unforced count.
+        ///   Looks up a localized string similar to Coelution count.
         /// </summary>
         public static string LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count {
             get {
@@ -6866,7 +6866,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unforced reference count.
+        ///   Looks up a localized string similar to Reference coelution count.
         /// </summary>
         public static string LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard {
             get {
@@ -7663,6 +7663,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Coelution.
+        /// </summary>
+        public static string MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution {
+            get {
+                return ResourceManager.GetString("MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Intensity.
         /// </summary>
         public static string MQuestIntensityCalc_MQuestIntensityCalc_Intensity {
@@ -7678,6 +7687,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_co" +
                         "rrelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reference coelution.
+        /// </summary>
+        public static string MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution {
+            get {
+                return ResourceManager.GetString("MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution", resourceCulture);
             }
         }
         
@@ -7701,6 +7719,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reference shape.
+        /// </summary>
+        public static string MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape {
+            get {
+                return ResourceManager.GetString("MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retention time difference.
         /// </summary>
         public static string MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference {
@@ -7711,7 +7738,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to mProphet weighted coelution.
+        ///   Looks up a localized string similar to Shape.
+        /// </summary>
+        public static string MQuestShapeCalc_MQuestShapeCalc_Shape {
+            get {
+                return ResourceManager.GetString("MQuestShapeCalc_MQuestShapeCalc_Shape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coelution (weighted).
         /// </summary>
         public static string MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution {
             get {
@@ -7721,7 +7757,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to mProphet weighted reference coelution.
+        ///   Looks up a localized string similar to Reference coelution (weighted).
         /// </summary>
         public static string MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution {
             get {
@@ -7731,7 +7767,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to mProphet weighted reference shape.
+        ///   Looks up a localized string similar to Reference shape (weighted).
         /// </summary>
         public static string MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape {
             get {
@@ -7741,7 +7777,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to mProphet weighted shape.
+        ///   Looks up a localized string similar to Shape (weighted).
         /// </summary>
         public static string MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape {
             get {

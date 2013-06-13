@@ -117,7 +117,6 @@
             this.zedGraphMProphet.IsEnableVPan = false;
             this.zedGraphMProphet.IsEnableVZoom = false;
             this.zedGraphMProphet.IsEnableWheelZoom = false;
-            this.zedGraphMProphet.IsShowContextMenu = false;
             this.zedGraphMProphet.IsShowCopyMessage = false;
             this.zedGraphMProphet.Name = "zedGraphMProphet";
             this.zedGraphMProphet.ScrollGrace = 0D;
@@ -127,6 +126,7 @@
             this.zedGraphMProphet.ScrollMinX = 0D;
             this.zedGraphMProphet.ScrollMinY = 0D;
             this.zedGraphMProphet.ScrollMinY2 = 0D;
+            this.zedGraphMProphet.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraph_ContextMenuBuilder);
             // 
             // btnUpdateGraphs
             // 
@@ -198,7 +198,6 @@
             this.zedGraphSelectedCalculator.IsEnableVPan = false;
             this.zedGraphSelectedCalculator.IsEnableVZoom = false;
             this.zedGraphSelectedCalculator.IsEnableWheelZoom = false;
-            this.zedGraphSelectedCalculator.IsShowContextMenu = false;
             this.zedGraphSelectedCalculator.IsShowCopyMessage = false;
             this.zedGraphSelectedCalculator.Name = "zedGraphSelectedCalculator";
             this.zedGraphSelectedCalculator.ScrollGrace = 0D;
@@ -208,6 +207,7 @@
             this.zedGraphSelectedCalculator.ScrollMinX = 0D;
             this.zedGraphSelectedCalculator.ScrollMinY = 0D;
             this.zedGraphSelectedCalculator.ScrollMinY2 = 0D;
+            this.zedGraphSelectedCalculator.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraph_ContextMenuBuilder);
             // 
             // label3
             // 

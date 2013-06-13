@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedShapeCalc : MQuestWeightedLightCalc
     {
-        public MQuestWeightedShapeCalc() : base(Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape) {}
+        public MQuestWeightedShapeCalc(string name = null) : base(name ?? Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -275,6 +275,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestShapeCalc : MQuestWeightedShapeCalc
     {
+        public MQuestShapeCalc() : base(Resources.MQuestShapeCalc_MQuestShapeCalc_Shape)
+        {
+        }
+
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {
             // Use weights of 1.0 for unweighted mean
@@ -287,7 +291,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedCoElutionCalc : MQuestWeightedLightCalc
     {
-        public MQuestWeightedCoElutionCalc() : base(Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution) { }
+        public MQuestWeightedCoElutionCalc(string name = null) : base(name ?? Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -308,6 +312,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestCoElutionCalc : MQuestWeightedCoElutionCalc
     {
+        public MQuestCoElutionCalc() : base(Resources.MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution)
+        {
+        }
+
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {
             // Use weights of 1.0 for unweighted mean
@@ -425,8 +433,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape) {}
-        protected MQuestWeightedReferenceShapeCalc(string name) : base(name) {}
+        public MQuestWeightedReferenceShapeCalc(string name = null) : base(name ?? Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape) {}
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -447,7 +454,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestReferenceShapeCalc : MQuestWeightedReferenceShapeCalc
     {
-        public MQuestReferenceShapeCalc() : base(Resources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference) {}
+        public MQuestReferenceShapeCalc() : base(Resources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape) {}
 
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {
@@ -461,7 +468,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestWeightedReferenceCoElutionCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceCoElutionCalc() : base(Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution) { }
+        public MQuestWeightedReferenceCoElutionCalc(string name = null) : base(name ?? Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -482,6 +489,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestReferenceCoElutionCalc : MQuestWeightedReferenceCoElutionCalc
     {
+        public MQuestReferenceCoElutionCalc() : base(Resources.MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution)
+        {
+        }
+
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {
             // Use weights of 1.0 for unweighted mean

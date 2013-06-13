@@ -4964,13 +4964,13 @@ Are you sure you want to continue?</value>
     <value>Peak Scoring Models</value>
   </data>
   <data name="LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area" xml:space="preserve">
-    <value>Log unforced area</value>
+    <value>Log coeluting area</value>
   </data>
   <data name="LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count" xml:space="preserve">
-    <value>Unforced count</value>
+    <value>Coelution count</value>
   </data>
   <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
-    <value>Unforced reference count</value>
+    <value>Reference coelution count</value>
   </data>
   <data name="LegacyScoringModel_LegacyScoringModel_Skyline_Legacy" xml:space="preserve">
     <value>Skyline Legacy</value>
@@ -4982,13 +4982,13 @@ Are you sure you want to continue?</value>
     <value>Reference intensity dot-product</value>
   </data>
   <data name="MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape" xml:space="preserve">
-    <value>mProphet weighted shape</value>
+    <value>Shape (weighted)</value>
   </data>
   <data name="MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution" xml:space="preserve">
-    <value>mProphet weighted coelution</value>
+    <value>Coelution (weighted)</value>
   </data>
   <data name="MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution" xml:space="preserve">
-    <value>mProphet weighted reference coelution</value>
+    <value>Reference coelution (weighted)</value>
   </data>
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__" xml:space="preserve">
     <value>Attempt to serialize list containing invalid type {0}.</value>
@@ -5252,7 +5252,7 @@ Are you sure you want to continue?</value>
     <value>Intensity</value>
   </data>
   <data name="MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape" xml:space="preserve">
-    <value>mProphet weighted reference shape</value>
+    <value>Reference shape (weighted)</value>
   </data>
   <data name="EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_" xml:space="preserve">
     <value>The model must be trained first.</value>
@@ -5283,5 +5283,17 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>The chosen folder does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
+  </data>
+  <data name="MQuestShapeCalc_MQuestShapeCalc_Shape" xml:space="preserve">
+    <value>Shape</value>
+  </data>
+  <data name="MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution" xml:space="preserve">
+    <value>Coelution</value>
+  </data>
+  <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape" xml:space="preserve">
+    <value>Reference shape</value>
+  </data>
+  <data name="MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution" xml:space="preserve">
+    <value>Reference coelution</value>
   </data>
 </root>

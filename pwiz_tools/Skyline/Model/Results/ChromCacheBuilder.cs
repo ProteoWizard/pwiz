@@ -350,7 +350,9 @@ namespace pwiz.Skyline.Model.Results
             if (i == -1)
                 throw new ArgumentException(string.Format(Resources.ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_, dataFilePathRecalc));
             var cachedFile = _cacheRecalc.CachedFiles[i];
-            return new FileBuildInfo(cachedFile.RunStartTime, cachedFile.InstrumentInfoList,
+            return new FileBuildInfo(cachedFile.RunStartTime,
+                                     cachedFile.FileWriteTime,
+                                     cachedFile.InstrumentInfoList,
                                      cachedFile.IsSingleMatchMz);
         }
 
@@ -878,12 +880,10 @@ namespace pwiz.Skyline.Model.Results
                                 if (_currentFileIndex != currentFileIndex)
                                     return;
 
-                                string dataFilePath = MSDataFilePaths[_currentFileIndex];
-                                DateTime fileWriteTime = ChromCachedFile.GetLastWriteTime(dataFilePath);
-                                DateTime? runStartTime = _currentFileInfo.StartTime;
-                                var flags = _currentFileInfo.Flags;
-                                _listCachedFiles.Add(new ChromCachedFile(dataFilePath, flags,
-                                                                         fileWriteTime, runStartTime,
+                                _listCachedFiles.Add(new ChromCachedFile(MSDataFilePaths[_currentFileIndex],
+                                                                         _currentFileInfo.Flags,
+                                                                         _currentFileInfo.LastWriteTime,
+                                                                         _currentFileInfo.StartTime,
                                                                          LoadingStatus.Transitions.MaxRetentionTime,
                                                                          LoadingStatus.Transitions.MaxIntensity,
                                                                          _currentFileInfo.InstrumentInfoList));
@@ -1040,19 +1040,26 @@ namespace pwiz.Skyline.Model.Results
     internal sealed class FileBuildInfo
     {
         public FileBuildInfo(MsDataFileImpl file)
-            : this(file.RunStartTime, file.GetInstrumentConfigInfoList(), null)
+            : this(file.RunStartTime,
+                   ChromCachedFile.GetLastWriteTime(file.FilePath),
+                   file.GetInstrumentConfigInfoList(),
+                   null)
         {
         }
 
-        public FileBuildInfo(DateTime? startTime, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList,
+        public FileBuildInfo(DateTime? startTime,
+            DateTime lastWriteTime,
+            IEnumerable<MsInstrumentConfigInfo> instrumentInfoList,
             bool? isSingleMatchMz)
         {
             StartTime = startTime;
+            LastWriteTime = lastWriteTime;
             InstrumentInfoList = instrumentInfoList;
             IsSingleMatchMz = isSingleMatchMz;
         }
 
         public DateTime? StartTime { get; private set; }
+        public DateTime LastWriteTime { get; private set; }
         public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; }
         public ChromCachedFile.FlagValues Flags { get; private set; }
 
