@@ -466,6 +466,7 @@ namespace pwiz.SkylineTestUtil
 
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+//                Settings.Default.MainWindowMaximized = true;
                 var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread", CurrentUICulture = Thread.CurrentThread.CurrentCulture }; // Not L10N
                 threadTest.Start();
                 Program.Main();

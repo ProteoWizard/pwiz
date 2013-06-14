@@ -164,9 +164,6 @@ namespace TestRunner
             }
             var context = new object[] { testContext };
 
-            // Sort tests alphabetically.
-            _testList.Sort((x, y) => String.CompareOrdinal(x._testMethod.Name, y._testMethod.Name));
-
             // Filter test list.
             if (CommandLineArgs.HasArg("filter"))
             {
@@ -359,6 +356,12 @@ namespace TestRunner
         {
             // Load lists of tests to run.
             var testList = LoadList("test");
+            // Maintain order in list of explicitly specified tests
+            var testDict = new Dictionary<string, int>();
+            for (int i = 0; i < testList.Count; i++)
+                testDict.Add(testList[i], i);
+            var testArray = new TestInfo[testList.Count];
+
             var skipList = LoadList("skip");
 
             // Find tests in the test dlls.
@@ -380,12 +383,26 @@ namespace TestRunner
                             {
                                 if (!skipList.Contains(testName) && !skipList.Contains(method.Name))
                                 {
-                                    _testList.Add(new TestInfo(type, method));
+                                    var testInfo = new TestInfo(type, method);
+                                    if (testList.Count == 0)
+                                        _testList.Add(testInfo);
+                                    else
+                                    {
+                                        string lookup = testList.Contains(testName) ? testName : method.Name;
+                                        testArray[testDict[lookup]] = testInfo;
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
+            if (testList.Count > 0)
+                _testList.AddRange(testArray.Where(testInfo => testInfo != null));
+            else
+            {
+                // Sort tests alphabetically.
+                _testList.Sort((x, y) => String.CompareOrdinal(x._testMethod.Name, y._testMethod.Name));
             }
         }
 

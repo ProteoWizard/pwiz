@@ -49,16 +49,26 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ? @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
-                : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip";
+            TestFilesZipPaths = new[]
+                {
+                    ExtensionTestContext.CanImportThermoRaw
+                        ? @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
+                        : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip",
+                    @"TestTutorial\CEOptimizationViews.zip"
+                };
             RunFunctionalTest();
+        }
+
+        private string GetTestPath(string relativePath)
+        {
+            var folderOptimizeCE = ExtensionTestContext.CanImportThermoRaw ? "OptimizeCE" : "OptimizeCEMzml"; // Not L10N
+            return TestFilesDirs[0].GetTestPath(Path.Combine(folderOptimizeCE, relativePath));
         }
 
         protected override void DoTest()
         {
             // Skyline Collision Energy Optimization
-            var folderOptimizeCE = ExtensionTestContext.CanImportThermoRaw ? "OptimizeCE" : "OptimizeCEMzml"; // Not L10N
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath("CE_Vantage_15mTorr.sky"))); // Not L10N
 
             // Deriving a New Linear Equation, p. 2
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -96,11 +106,11 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot();   // Export Transition List form
 
-                RunUI(() => exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
+                RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            string filePathTemplate = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"); // Not L10N
+            string filePathTemplate = GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"); // Not L10N
             CheckTransitionList(filePathTemplate, 1, 6);
 
             const string unscheduledName = "Unscheduled"; // Not L10N
@@ -112,7 +122,7 @@ namespace pwiz.SkylineTestTutorial
                         // This is not actually a valid file path (missing OptimizeCE)
                         // but Skyline should correctly find the file in the same folder
                         // as the document.
-                        new[] { TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw)})}; // Not L10N
+                        new[] { GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw)})}; // Not L10N
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
@@ -148,14 +158,14 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot();   // Export Transition List form
 
-                RunUI(() => exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.csv"))); // Not L10N
+                RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr.csv"))); // Not L10N
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            string filePathTemplate1 = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_000{0}.csv"); // Not L10N
+            string filePathTemplate1 = GetTestPath("CE_Vantage_15mTorr_000{0}.csv"); // Not L10N
             CheckTransitionList(filePathTemplate1, 5, 9);
 
-            var filePath = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_0001.csv"); // Not L10N
+            var filePath = GetTestPath("CE_Vantage_15mTorr_0001.csv"); // Not L10N
             CheckCEValues(filePath, 11);
            
             // Analyze Optimization Data, p. 7
@@ -175,6 +185,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
             FindNode("IHGFDLAAINLQR");
+            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p8.view"), FileMode.Open)));
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
 
             PauseForScreenShot();   // Skyline window
@@ -243,10 +254,10 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
             {
                 exportMethodDlg.ExportStrategy = ExportStrategy.Single;
-                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv")); // Not L10N
+                exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_optimized.csv")); // Not L10N
             });
 
-            var filePathTemplate2 = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv"); // Not L10N
+            var filePathTemplate2 = GetTestPath("CE_Vantage_15mTorr_optimized.csv"); // Not L10N
 
             CheckTransitionList(filePathTemplate2, 1, 9);
 
@@ -263,7 +274,7 @@ namespace pwiz.SkylineTestTutorial
         {
             for (int i = 1; i <= transitionCount; i++)
             {
-                string filePath = TestFilesDir.GetTestPath(string.Format(templatePath, i));
+                string filePath = TestFilesDirs[0].GetTestPath(string.Format(templatePath, i));
                 Assert.IsTrue(File.Exists(filePath));
                 string[] lines = File.ReadAllLines(filePath);
                 string[] line = lines[0].Split(',');
@@ -274,7 +285,7 @@ namespace pwiz.SkylineTestTutorial
             // If there are multiple file possibilities, make sure there are
             // not more files than expected by checking count+1
             if (templatePath.Contains("{0}")) // Not L10N
-                Assert.IsFalse(File.Exists(TestFilesDir.GetTestPath(string.Format(templatePath, transitionCount+1))));
+                Assert.IsFalse(File.Exists(TestFilesDirs[0].GetTestPath(string.Format(templatePath, transitionCount+1))));
 
         }
 

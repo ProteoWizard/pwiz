@@ -56,10 +56,12 @@ namespace pwiz.SkylineTestTutorial
                 @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplement.zip" : // Not L10N
                 @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplementMzml.zip"); // Not L10N
 
-            TestFilesZipPaths = new[] { supplementZip, ExtensionTestContext.CanImportThermoRaw ?
+            TestFilesZipPaths = new[] { supplementZip,
+                ExtensionTestContext.CanImportThermoRaw ?
                     @"https://skyline.gs.washington.edu/tutorials/MethodRefine.zip" : // Not L10N
-                    @"https://skyline.gs.washington.edu/tutorials/MethodRefineMzml.zip" // Not L10N
-                 };
+                    @"https://skyline.gs.washington.edu/tutorials/MethodRefineMzml.zip", // Not L10N
+                @"TestTutorial\MethodRefinementViews.zip",                     
+            };
 
          
             RunFunctionalTest();
@@ -180,6 +182,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg => editRTDlg.OkDialog());
 
+            RunUI(() => SkylineWindow.ShowGraphRetentionTime(false));
             RunUI(SkylineWindow.AutoZoomNone);
             PauseForScreenShot("page 10"); // Not L10N
 
@@ -389,12 +392,17 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.AutoZoomNone();
                 SkylineWindow.AutoZoomBestPeak();
-                SkylineWindow.ShowRTSchedulingGraph();
             });
-            WaitForCondition(() => SkylineWindow.GraphRetentionTime != null);
             FindNode("FWEVISDEHGIQPDGTFK");
 
-            PauseForScreenShot("page 19, (fig. 1 and 2)"); // Not L10N
+            PauseForScreenShot("page 19, (fig. 1)"); // Not L10N
+
+            RunUI(() => SkylineWindow.ShowRTSchedulingGraph());
+            WaitForCondition(() => SkylineWindow.GraphRetentionTime != null);
+
+            PauseForScreenShot("page 19, (fig. 2)"); // Not L10N
+
+            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[2].GetTestPath(@"p24.view"), FileMode.Open)));
 
             // Creating a Scheduled Transition List, p. 20 
             {

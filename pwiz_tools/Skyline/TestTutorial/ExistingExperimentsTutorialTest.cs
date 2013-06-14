@@ -19,6 +19,7 @@
 
 using System.Globalization;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -51,9 +52,13 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            TestFilesZip = ExtensionTestContext.CanImportAbWiff
-                               ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
-                               : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip";
+            TestFilesZipPaths = new[]
+                {
+                    ExtensionTestContext.CanImportAbWiff
+                        ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
+                        : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip",
+                    @"TestTutorial\ExistingExperimentsViews.zip"
+                };
             RunFunctionalTest();
         }
 
@@ -64,7 +69,7 @@ namespace pwiz.SkylineTestTutorial
         private string GetTestPath(string relativePath)
         {
             var folderExistQuant = ExtensionTestContext.CanImportAbWiff ? "ExistingQuant" : "ExistingQuantMzml"; // Not L10N
-            return TestFilesDir.GetTestPath(folderExistQuant + "\\" + relativePath);
+            return TestFilesDirs[0].GetTestPath(folderExistQuant + "\\" + relativePath);
         }
 
         private bool IsFullData { get { return IsPauseForScreenShots; } }
@@ -334,6 +339,7 @@ namespace pwiz.SkylineTestTutorial
             }
             WaitForCondition(() =>
                 SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p25.view"), FileMode.Open)));
 
             // Inspecting and Adjusting Peak Integration, p. 24.
             RunUI(() =>
@@ -385,6 +391,7 @@ namespace pwiz.SkylineTestTutorial
             // Data Inspection with Peak Areas View, p. 27.
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(NormalizeGraphToHeavy);
+            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p28.view"), FileMode.Open)));
             PauseForScreenShot();
 
             FindNode((564.7746).ToString(CultureInfo.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
@@ -398,9 +405,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
             PauseForScreenShot();
 
+            RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_03"));
             PauseForScreenShot();
 
+            RunUI(() => SkylineWindow.ShowGraphPeakArea(true));
             RunUI(() =>
             {
                 SkylineWindow.ShowPeakAreaPeptideGraph();
@@ -505,6 +514,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             PauseForScreenShot();
 
+            RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
             WaitForGraphs();
             PauseForScreenShot();            
