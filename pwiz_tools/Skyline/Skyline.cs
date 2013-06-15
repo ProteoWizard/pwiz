@@ -825,13 +825,14 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private void cutMenuItem_Click(object sender, EventArgs e)
+        private void cutMenuItem_Click(object sender, EventArgs e) { Cut(); }
+        public void Cut()
         {
             if (StatementCompletionAction(textBox => textBox.Cut()))
                 return;
 
-            copyMenuItem_Click(sender, e);
-            deleteMenuItem_Click(sender, e);
+            Copy();
+            EditDelete();
         }
 
         private static int CompareNodeBounds(TreeNode x, TreeNode y)

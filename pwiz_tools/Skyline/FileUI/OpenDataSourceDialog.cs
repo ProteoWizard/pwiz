@@ -125,12 +125,15 @@ namespace pwiz.Skyline.FileUI
 
         public string[] DataSources { get; private set; }
 
-        public void SelectAllFileType(string extension)
+        public void SelectAllFileType(string extension, Func<string, bool> accept = null)
         {
             foreach(ListViewItem item in listView.Items)
             {
-                if (item.Text.ToLower().EndsWith(extension.ToLower()))
+                if (item.Text.ToLower().EndsWith(extension.ToLower()) &&
+                    (accept == null || accept(item.Text)))
+                {
                     listView.SelectedIndices.Add(item.Index);
+                }
             }
         }
 

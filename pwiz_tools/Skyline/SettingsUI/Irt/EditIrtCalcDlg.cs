@@ -1242,6 +1242,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             _gridViewStandardDriver.OnPaste();
         }
 
+        public void DoPasteLibrary()
+        {
+            _gridViewLibraryDriver.OnPaste();
+        }
+
         #endregion
 
         private sealed class CurrentCalculator : RetentionScoreCalculatorSpec

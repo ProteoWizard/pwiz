@@ -115,6 +115,7 @@
     <Compile Include="CEOptimizationTutorialTest.cs" />
     <Compile Include="CustomReportsTutorialTest.cs" />
     <Compile Include="ExistingExperimentsTutorialTest.cs" />
+    <Compile Include="GroupedStudiesTutorialTest.cs" />
     <Compile Include="ImportPeptideSearchWizardTest.cs" />
     <Compile Include="IrtTutorialTest.cs" />
     <Compile Include="LibraryExplorerTutorialTest.cs" />
@@ -185,6 +186,9 @@
     <None Include="CEOptimizationViews.zip" />
     <None Include="ExistingExperimentsViews.zip" />
     <None Include="MethodRefinementViews.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GroupedStudiesViews.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
