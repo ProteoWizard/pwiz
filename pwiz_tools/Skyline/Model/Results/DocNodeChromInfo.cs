@@ -409,6 +409,29 @@ namespace pwiz.Skyline.Model.Results
                    Equals(peak.Identified, Identified);
         }
 
+        public bool EquivalentTolerant(ChromFileInfoId fileId, int step, ChromPeak peak)
+        {
+            const double tol = 1e-4;
+            return ReferenceEquals(fileId, FileId) &&
+                   step == OptimizationStep &&
+                   Equals(peak.MassError, MassError) &&
+                   IsEqualTolerant(peak.RetentionTime, RetentionTime, tol) &&
+                   IsEqualTolerant(peak.StartTime, StartRetentionTime, tol) &&
+                   IsEqualTolerant(peak.EndTime, EndRetentionTime, tol) &&
+                   IsEqualTolerant(peak.Area, Area, tol * Area)  &&
+                   IsEqualTolerant(peak.BackgroundArea, BackgroundArea, tol * BackgroundArea) &&
+                   IsEqualTolerant(peak.Height, Height, tol * Height)  &&
+                   (IsEqualTolerant(peak.Fwhm, Fwhm, tol * Fwhm)  || Equals(peak.Fwhm,Fwhm)) &&
+                   Equals(peak.IsFwhmDegenerate, IsFwhmDegenerate) &&
+                   Equals(peak.IsTruncated, IsTruncated) &&
+                   Equals(peak.Identified, Identified);
+        }
+
+        public bool IsEqualTolerant(double a, double b, double tol)
+        {
+            return Math.Abs(a - b) <= tol;
+        }
+
         #region Property change methods
 
         public TransitionChromInfo ChangePeak(ChromPeak peak, bool userSet)

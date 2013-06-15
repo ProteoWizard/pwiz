@@ -885,8 +885,11 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Transition transition, double startTime, double endTime, PeakIdentification? identified=null)
+            Transition transition, double? startTime, double? endTime, PeakIdentification? identified=null)
         {
+            // If start or end time is null, just assign an arbitrary value to identified -- peak will be deleted anyway
+            if (!startTime.HasValue || !endTime.HasValue)
+                identified = PeakIdentification.FALSE;
             // If a null identification is passed in (currently only happens from the PeakBoundaryImport function),
             // look up the identification status directly
             if (!identified.HasValue)
@@ -901,7 +904,7 @@ namespace pwiz.Skyline.Model
                 Settings.TryGetRetentionTimes(nodeGroup.TransitionGroup.Peptide.Sequence,
                                               nodeGroup.TransitionGroup.PrecursorCharge,
                                               nodePepGroup.ExplicitMods, filePath, out labelType, out retentionTimes);
-                if(ContainsTime(retentionTimes, startTime, endTime))
+                if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
                 {
                     identified = PeakIdentification.TRUE;
                 }
@@ -909,7 +912,7 @@ namespace pwiz.Skyline.Model
                 {
                     var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(filePath,
                         nodeGroup.TransitionGroup.Peptide.Sequence, nodePepGroup.ExplicitMods);
-                    identified = ContainsTime(alignedRetentionTimes, startTime, endTime)
+                    identified = ContainsTime(alignedRetentionTimes, startTime.Value, endTime.Value)
                         ? PeakIdentification.ALIGNED
                         : PeakIdentification.FALSE;
                 }

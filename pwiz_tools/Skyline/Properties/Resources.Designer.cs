@@ -8746,6 +8746,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing end time on line {0}.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_Missing_end_time_on_line__0_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_Missing_end_time_on_line__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing start time on line {0}.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_Missing_start_time_on_line__0_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_Missing_start_time_on_line__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to semicolon.
         /// </summary>
         public static string PeakBoundaryImporter_Import_semicolon {
@@ -13764,6 +13782,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Duplicate or out of order peak in transition {0}.
+        /// </summary>
+        public static string TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_ {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 1 ion.
         /// </summary>
         public static string TransitionFilter_FragmentEndFinders_1_ion {
@@ -14215,6 +14242,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroupDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing End Time In Change Peak.
+        /// </summary>
+        public static string TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing Start Time in Change Peak.
+        /// </summary>
+        public static string TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak", resourceCulture);
             }
         }
         

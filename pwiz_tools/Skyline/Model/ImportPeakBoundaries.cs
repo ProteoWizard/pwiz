@@ -51,6 +51,10 @@ namespace pwiz.Skyline.Model
                 "PrecursorCharge"
             };
 
+        private string FormatMods(string modifiedPeptideSequence)
+        {
+            return modifiedPeptideSequence.Replace(".0]", "]");
+        }
 
         public SrmDocument Import(TextReader reader, ILongWaitBroker longWaitBroker, long lineCount)
         {
@@ -65,7 +69,8 @@ namespace pwiz.Skyline.Model
                 IdentityPath peptidePath = Document.GetPathTo((int) SrmDocument.Level.Peptides, i);
                 PeptideDocNode peptideNode = (PeptideDocNode) Document.FindNode(peptidePath);
                 var peptidePair = new KeyValuePair<IdentityPath, PeptideDocNode>(peptidePath, peptideNode);
-                sequenceToNode.Add(Document.Settings.GetModifiedSequence(peptideNode), peptidePair);
+                string formattedModifiedSeq = FormatMods(Document.Settings.GetModifiedSequence(peptideNode));
+                sequenceToNode.Add(formattedModifiedSeq, peptidePair);
             }
             string line = reader.ReadLine();
             if (line == null)
@@ -145,29 +150,38 @@ namespace pwiz.Skyline.Model
                     throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_,
                         linesRead, dataFields.Length, fieldsTotal));
                 }
-                string modifiedPeptideString = dataFields[fieldIndices[(int) Field.modified_peptide]];
+                string modifiedPeptideString = FormatMods(dataFields[fieldIndices[(int) Field.modified_peptide]]);
                 string fileName = dataFields[fieldIndices[(int) Field.filename]];
                 int charge;
-                double startTime, endTime;
-                // Ignore #N/A and other empty or non-numeric entries for peak boundaries
+                double startTimeTemp, endTimeTemp;
+                double? startTime, endTime;
                 string chargeString = dataFields[fieldIndices[(int) Field.charge]];
                 if (!int.TryParse(chargeString, out charge))
                 {
                     throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_, chargeString, linesRead));
                 }
                 string startTimeString = dataFields[fieldIndices[(int) Field.start_time]];
-                if (!double.TryParse(startTimeString, out startTime))
-                {
-                    if (startTimeString.Equals(TextUtil.EXCEL_NA) || string.IsNullOrEmpty(startTimeString))
-                        continue;
+                if (double.TryParse(startTimeString, out startTimeTemp))
+                    startTime = startTimeTemp;
+                // #N/A means remove the peak
+                else if (startTimeString.Equals(TextUtil.EXCEL_NA))
+                    startTime = null;
+                else
                     throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_, startTimeString, linesRead));
-                }
-                if (!double.TryParse(dataFields[fieldIndices[(int) Field.end_time]], out endTime))
-                {
-                    if (startTimeString.Equals(TextUtil.EXCEL_NA) || string.IsNullOrEmpty(startTimeString))
-                        continue;
-                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, startTimeString, linesRead));
-                }
+
+                string endTimeString = dataFields[fieldIndices[(int)Field.end_time]];
+                if(double.TryParse(endTimeString, out endTimeTemp))
+                    endTime = endTimeTemp;
+                else if (endTimeString.Equals(TextUtil.EXCEL_NA))
+                    endTime = null;
+                else
+                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, endTimeString, linesRead));
+                    
+                // Error if only one of startTime and endTime is null
+                if (startTime == null && endTime != null)
+                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_start_time_on_line__0_, linesRead));
+                if (startTime != null && endTime == null)
+                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_, linesRead));
                 // Add filename to second dictionary if not yet encountered
                 if (!fileNameToFileMatch.ContainsKey(fileName))
                 {

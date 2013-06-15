@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -1922,16 +1923,20 @@ namespace pwiz.Skyline.Model
                                   ChromFileInfoId fileId,
                                   OptimizableRegression regression,
                                   Transition transition,
-                                  double startTime,
-                                  double endTime,
+                                  double? startTime,
+                                  double? endTime,
                                   PeakIdentification identified)
         {
+            // Error if only one of startTime and endTime is null
+            if (startTime == null && endTime != null)
+                throw new ArgumentException(string.Format(Resources.TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak));
+            if (startTime != null && endTime == null)
+                throw new ArgumentException(string.Format(Resources.TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak));
+
             int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
 
             // Recalculate peaks based on new boundaries
             var listChildrenNew = new List<DocNode>();
-            int startIndex = chromGroupInfo.IndexOfNearestTime((float)startTime);
-            int endIndex = chromGroupInfo.IndexOfNearestTime((float)endTime);
             ChromPeak.FlagValues flags = 0;
             if (settings.MeasuredResults.IsTimeNormalArea)
                 flags |= ChromPeak.FlagValues.time_normalized;
@@ -1949,12 +1954,15 @@ namespace pwiz.Skyline.Model
                         (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
 
                     // Shouldn't need to update a transition with no chrom info
-                    if (chromInfoArray.Length == 0)
+                    // Also if startTime is null, remove the peak
+                    if (chromInfoArray.Length == 0 || startTime==null)
                         listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId));
                     else
                     {
                         // CONSIDER: Do this more efficiently?  Only when there is opimization
                         //           data will the loop execute more than once.
+                        int startIndex = chromGroupInfo.IndexOfNearestTime((float)startTime);
+                        int endIndex = chromGroupInfo.IndexOfNearestTime((float)endTime);
                         int numSteps = chromInfoArray.Length/2;
                         var nodeTranNew = nodeTran;
                         for (int i = 0; i < chromInfoArray.Length; i++)

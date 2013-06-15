@@ -5296,4 +5296,19 @@ Are you sure you want to continue?</value>
   <data name="MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution" xml:space="preserve">
     <value>Reference coelution</value>
   </data>
+  <data name="TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_" xml:space="preserve">
+    <value>Duplicate or out of order peak in transition {0}</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Missing_start_time_on_line__0_" xml:space="preserve">
+    <value>Missing start time on line {0}</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Missing_end_time_on_line__0_" xml:space="preserve">
+    <value>Missing end time on line {0}</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak" xml:space="preserve">
+    <value>Missing Start Time in Change Peak</value>
+  </data>
+  <data name="TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak" xml:space="preserve">
+    <value>Missing End Time In Change Peak</value>
+  </data>
 </root>

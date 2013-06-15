@@ -25,7 +25,10 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -43,25 +46,25 @@ namespace pwiz.SkylineTestA
         
         const string TEST_ZIP_PATH = @"TestA\PeakBoundaryTest.zip";
         
-        private readonly double?[] _tsvMinTime1 = { 34.13, 26.17, null, 53.3, 52.90, 51.66 };
-        private readonly double?[] _tsvMaxTime1 = { 34.72, 26.92, null, 54.06, 53.77, 52.45 };
+        private readonly double?[] _tsvMinTime1 = { 34.13, 26.17, null, 53.3, null, 51.66 };
+        private readonly double?[] _tsvMaxTime1 = { 34.72, 26.92, null, 54.06, null, 52.45 };
         private readonly PeakIdentification[] _tsvIdentified1 = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};
-        private readonly double?[] _tsvAreas1 = { 6.682e10,2.421e10,null,1.012e11,3.196e7,4.677e10 };
+        private readonly double?[] _tsvAreas1 = { 6.682e10,2.421e10,null,1.012e11,null,4.677e10 };
 
-        private readonly double?[] _tsvMinTime2 = { 33.88, 25.89, null, 53.09, 52.73, 51.46 };
-        private readonly double?[] _tsvMaxTime2 = { 34.49, 26.68, null, 53.84, 54.23, 52.25 };
+        private readonly double?[] _tsvMinTime2 = { 33.88, 25.89, null, 53.09, null, 51.46 };
+        private readonly double?[] _tsvMaxTime2 = { 34.49, 26.68, null, 53.84, null, 52.25 };
         private readonly PeakIdentification[] _tsvIdentified2 = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
-        private readonly double?[] _tsvAreas2 = { 1.990e11, 8.593e10, null, 3.209e11, 7.46e6, 1.332e11 };
+        private readonly double?[] _tsvAreas2 = { 1.990e11, 8.593e10, null, 3.209e11, null, 1.332e11 };
 
-        private readonly double?[] _csvMinTime1 = { 35.13, 27.17, null, 54.3, 52.90, 52.66 };        
-        private readonly double?[] _csvMaxTime1 = { 35.92, 28.12, null, 55.26, 53.77, 53.65 };
+        private readonly double?[] _csvMinTime1 = { 35.13, 27.17, null, 54.3, null, 52.66 };        
+        private readonly double?[] _csvMaxTime1 = { 35.92, 28.12, null, 55.26, null, 53.65 };
         private readonly PeakIdentification[] _csvIdentified1 = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
-        private readonly double?[] _csvAreas1 = { 1.044e9, 4.711e8, null, 3.330e8, 3.196e7, 5.523e9 };
+        private readonly double?[] _csvAreas1 = { 1.044e9, 4.711e8, null, 3.330e8, null, 5.523e9 };
 
-        private readonly double?[] _csvMinTime2 = { 34.88, 26.89, null, 54.09, 52.73, 52.46 };
-        private readonly double?[] _csvMaxTime2 = { 35.69, 27.88, null, 55.04, 54.23, 53.45 };
+        private readonly double?[] _csvMinTime2 = { 34.88, 26.89, null, 54.09, null, 52.46 };
+        private readonly double?[] _csvMaxTime2 = { 35.69, 27.88, null, 55.04, null, 53.45 };
         private readonly PeakIdentification[] _csvIdentified2 = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
-        private readonly double?[] _csvAreas2 = { 1.586e9, 6.603e8, null, 9.978e8, 7.46e6, 1.853e10 };
+        private readonly double?[] _csvAreas2 = { 1.586e9, 6.603e8, null, 9.978e8, null, 1.853e10 };
 
         private readonly double?[] _idMinTime1 = { 32.25,33.02,37.68,21.19,35.93, 33.85,29.29,31.55,37.21,27.02, 25.41,29.55,29.60,25.07,23.14, 29.11 };
         private readonly double?[] _idMaxTime1 = { 33.53,33.90,38.90,22.23,37.43, 35.35,30.86,31.66,37.81,28.68, 26.20,31.13,30.32,26.08,24.92, 29.58 };
@@ -71,7 +74,9 @@ namespace pwiz.SkylineTestA
                                                                    FALSE,  TRUE,  TRUE,  TRUE,  TRUE,
                                                                    TRUE
                                                                };
-        private readonly double?[] _idAreas1 = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+
+        private readonly double?[] _idAreas1 = {4060, 1927, 16954, 16314, 4188, 23038, 28701, 354,
+                                               2063, 21784, 8775, 18019, 19579, 11013, 58116, 26262};
 
         private readonly string[] _peptides = { "VLVLDTDYK", "TPEVDDEALEK", "FFVAPFPEVFGK", "YLGYLEQLLR" };
         private readonly string[] _peptidesId ={ "LGGLRPESPESLTSVSR", "ALVEFESNPEETREPGSPPSVQR", "YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR",
@@ -120,6 +125,20 @@ namespace pwiz.SkylineTestA
                 _csvMinTime1, _csvMaxTime1,_csvIdentified1,_csvAreas1, _peptides, 0);
             DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
                 _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1);
+
+            // Test that importing same file twice leads to no change to document the second time
+            var docNew = ImportFileToDoc(docResults, peakBoundaryFileTsv);
+            var docNewSame = ImportFileToDoc(docNew, peakBoundaryFileTsv);
+            Assert.AreSame(docNew, docNewSame);
+            Assert.AreNotSame(docNew, docResults);
+
+            // Test that exporting peak boundaries and then importing them leads to no change
+            string peakBoundaryExport = testFilesDir.GetTestPath("TestRoundTrip.csv");
+            ReportSpec reportSpec = MakeReportSpec();
+            ReportToCsv(reportSpec, docNew, peakBoundaryExport);
+            var docRoundTrip = ImportFileToDoc(docNew, peakBoundaryExport);
+            Assert.AreSame(docNew, docRoundTrip);
+
 
             var cult = CultureInfo.CurrentCulture;
             var cultI = CultureInfo.InvariantCulture;
@@ -172,13 +191,24 @@ namespace pwiz.SkylineTestA
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
                 Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_);
 
-            // #N/A and empty in times okay
+            // #N/A in times ok
             valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
                 valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = TextUtil.EXCEL_NA;
             ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)));
+            // If only start time #N/A throws exception
+            valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] = (3.5).ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_);
+            // If only end time #N/A throws exception
+            valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] = TextUtil.EXCEL_NA;
+            valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = (3.5).ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_Missing_start_time_on_line__0_);
+            // Empty times throws exception
             valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
                 valuesBadTime[(int)PeakBoundaryImporter.Field.end_time] = string.Empty;
-            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)));
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
             
             // 8. Not imported file
             string[] valuesBadFile = new List<string>(values).ToArray();
@@ -196,7 +226,7 @@ namespace pwiz.SkylineTestA
             valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "PEPTIDER";
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)),
                 Resources.PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_);
-            
+
             // Now check a file that has peptide ID's, and see that they're properly ported
             var peptideIdDoc = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
             SrmDocument docId = ResultsUtil.DeserializeDocument(peptideIdDoc);
@@ -220,6 +250,24 @@ namespace pwiz.SkylineTestA
                 _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
         }
 
+        private ReportSpec MakeReportSpec()
+        {
+            Type tableTran = typeof(DbTransition);
+            Type tableTranRes = typeof (DbTransitionResult);
+            return new ReportSpec("PeakBoundaries", new QueryDef
+                                              {
+                                                  Select = new[]
+                                                               {
+                                        new ReportColumn(tableTran, "Precursor", "Charge"),
+                                        new ReportColumn(tableTranRes, "ResultFile", "FileName"),
+                                        new ReportColumn(tableTranRes, "PrecursorResult", "MinStartTime"),
+                                        new ReportColumn(tableTranRes, "PrecursorResult", "MaxEndTime"),
+                                        new ReportColumn(tableTran, "Precursor", "Peptide", "ModifiedSequence"),
+                                                               }
+                                              });
+
+        }
+
         private void ImportThrowsException(SrmDocument docResults, string importText, string message)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
@@ -236,6 +284,32 @@ namespace pwiz.SkylineTestA
             AssertEx.NoExceptionThrown<Exception>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount));
         }
 
+        private SrmDocument ImportFileToDoc(SrmDocument docOld, string importFile)
+        {
+            var peakBoundaryImporter = new PeakBoundaryImporter(docOld);
+            var readerPeakBoundaries = new StreamReader(importFile);
+            long lineCount = Helpers.CountLinesInFile(importFile);
+            SrmDocument docNew = peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount);
+            return docNew;
+        }
+
+        public void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName)
+        {
+            Report report = Report.Load(reportSpec);
+            using (var saver = new FileSaver(fileName))
+            using (var writer = new StreamWriter(saver.SafeName))
+            using (var database = new Database(doc.Settings))
+            {
+                database.AddSrmDocument(doc);
+                var resultSet = report.Execute(database);
+                char separator = TextUtil.CsvSeparator;
+                ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo.CurrentCulture);
+                writer.Flush();
+                writer.Close();
+                saver.Commit();
+            }
+        }
+
         private void DoFileImportTests(SrmDocument docResults,
                                        string importFile,
                                        int[] chargeList,
@@ -246,10 +320,7 @@ namespace pwiz.SkylineTestA
                                        string[] peptides,
                                        int fileId)
         {
-            var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
-            var readerPeakBoundaries = new StreamReader(importFile);
-            long lineCount = Helpers.CountLinesInFile(importFile);
-            SrmDocument docNew = peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount);
+            SrmDocument docNew = ImportFileToDoc(docResults, importFile);
             int i = 0;
             // Check peptide nodes are correct
             foreach (PeptideDocNode peptideNode in docNew.Peptides)
@@ -266,7 +337,8 @@ namespace pwiz.SkylineTestA
                 Assert.IsTrue(ApproxEqualNullable(groupNode.ChromInfos.ToList()[fileId].StartRetentionTime, minTime[j], RT_TOLERANCE));
                 Assert.IsTrue(ApproxEqualNullable(groupNode.ChromInfos.ToList()[fileId].EndRetentionTime, maxTime[j], RT_TOLERANCE));
                 // Check that peak areas are updated correctly
-//                Assert.IsTrue(ApproxEqualNullable(groupNode.ChromInfos.ToList()[fileId].Area, peakAreas[j], RT_TOLERANCE*1e10));
+                double peakArea = peakAreas[j] ?? 0;
+                Assert.IsTrue(ApproxEqualNullable(groupNode.ChromInfos.ToList()[fileId].Area, peakAreas[j], RT_TOLERANCE * peakArea));
                 // Check that identified values are preserved/updated appropriately
                 Assert.IsTrue(groupNode.ChromInfos.ToList()[fileId].Identified == identified[j],
                     string.Format("No identification match for {0}  ({1})", groupNode.TransitionGroup.Peptide, j));
