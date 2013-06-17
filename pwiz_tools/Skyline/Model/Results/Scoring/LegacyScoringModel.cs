@@ -30,14 +30,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     [XmlRoot("legacy_peak_scoring_model")] // Not L10N
     public class LegacyScoringModel : PeakScoringModelSpec
     {
-        private static readonly double LOG10 = Math.Log(10.0);
-
         public static double Score(double logUnforcedArea,
                                    double unforcedCountScore,
                                    double unforcedCountScoreStandard,
                                    double identifiedCount)
         {
-            return logUnforcedArea + LOG10*unforcedCountScore + LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER*LOG10*unforcedCountScoreStandard + 1000*identifiedCount;
+            return logUnforcedArea + unforcedCountScore + LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER*unforcedCountScoreStandard + 20*identifiedCount;
         }
 
         private readonly ReadOnlyCollection<Type> _calculators;

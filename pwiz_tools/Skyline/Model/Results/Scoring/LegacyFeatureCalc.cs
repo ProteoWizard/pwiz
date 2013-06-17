@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public static float Score(double area, double areaStandard)
         {
             area += Math.Pow(areaStandard, STANDARD_MULTIPLIER);
-            return (float) Math.Max(0, Math.Log(area));
+            return (float) Math.Max(0, Math.Log10(area));
         }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
