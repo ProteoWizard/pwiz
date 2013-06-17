@@ -211,14 +211,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 new MQuestReferenceCorrelationCalc(), 
 
                 // Detail feature calculators
-//                new MQuestWeightedShapeCalc(), 
-                new MQuestShapeCalc(), 
-//                new MQuestWeightedCoElutionCalc(), 
-                new MQuestCoElutionCalc(), 
-//                new MQuestWeightedReferenceShapeCalc(), 
-                new MQuestReferenceShapeCalc(), 
-//                new MQuestWeightedReferenceCoElutionCalc(),
-                new MQuestReferenceCoElutionCalc(), 
+                new MQuestWeightedShapeCalc(), 
+//                new MQuestShapeCalc(), 
+                new MQuestWeightedCoElutionCalc(), 
+//                new MQuestCoElutionCalc(), 
+                new MQuestWeightedReferenceShapeCalc(), 
+//                new MQuestReferenceShapeCalc(), 
+                new MQuestWeightedReferenceCoElutionCalc(),
+//                new MQuestReferenceCoElutionCalc(), 
 
                 // Legacy calculators
                 //new LegacyLogUnforcedAreaCalc(),  // This one produces scores that are colinear with MQuestIntensityCalc.

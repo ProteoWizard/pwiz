@@ -115,8 +115,8 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.TrainModel();
-                        Assert.AreEqual(1.669, editDlg.Mean);
-                        Assert.AreEqual(0.170, editDlg.Stdev);
+                        Assert.AreEqual(1.376, editDlg.Mean);
+                        Assert.AreEqual(0.088, editDlg.Stdev);
                         for (int i = 0; i < editDlg.PeakCalculatorsGrid.RowCount; i++)
                         {
                             editDlg.PeakCalculatorsGrid.SelectRow(i);
@@ -139,22 +139,22 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
-                    Assert.AreEqual(1.669, editDlg.Mean);
-                    Assert.AreEqual(0.170, editDlg.Stdev);
+                    Assert.AreEqual(1.376, editDlg.Mean);
+                    Assert.AreEqual(0.088, editDlg.Stdev);
                     var calculators = PeakFeatureCalculator.Calculators.ToArray();
                     var format = editDlg.PeakCalculatorWeightFormat;
                     VerifyCellValues(editDlg, new[]
                         {
-                            new[] {calculators[0].Name, (0.1219).ToString(format)},
+                            new[] {calculators[0].Name, (0.0428).ToString(format)},
                             new[] {calculators[1].Name, string.Empty},
-                            new[] {calculators[2].Name, (0.4269).ToString(format)},
-                            new[] {calculators[3].Name, (0.3378).ToString(format)},
-                            new[] {calculators[4].Name, (0.1832).ToString(format)},
-                            new[] {calculators[5].Name, (-0.0665).ToString(format)},
-                            new[] {calculators[6].Name, (0.8034).ToString(format)},
-                            new[] {calculators[7].Name, (0.0261).ToString(format)},
-                            new[] {calculators[8].Name, (0.0277).ToString(format)},
-                            new[] {calculators[9].Name, (0.0623).ToString(format)},
+                            new[] {calculators[2].Name, (0.2340).ToString(format)},
+                            new[] {calculators[3].Name, (0.3759).ToString(format)},
+                            new[] {calculators[4].Name, (0.1320).ToString(format)},
+                            new[] {calculators[5].Name, (-0.0256).ToString(format)},
+                            new[] {calculators[6].Name, (0.8841).ToString(format)},
+                            new[] {calculators[7].Name, (0.0234).ToString(format)},
+                            new[] {calculators[8].Name, (0.0397).ToString(format)},
+                            new[] {calculators[9].Name, (0.0169).ToString(format)},
                             new[] {calculators[10].Name, string.Empty},
                         });
                     editDlg.PeakScoringModelName = "test2"; // Not L10N
