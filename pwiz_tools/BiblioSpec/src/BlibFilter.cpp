@@ -46,6 +46,7 @@
 #include "BlibUtils.h"
 #include "Verbosity.h"
 #include "CommandLine.h"
+#include "SqliteRoutine.h"
 #include "boost/program_options.hpp"
 
 using namespace std;
@@ -198,7 +199,7 @@ void BlibFilter::attachAll()
 {
     Verbosity::status("Filtering redundant library '%s'.",
                       redundantFileName_.c_str());
-    sprintf(zSql, "ATTACH DATABASE '%s' as %s", redundantFileName_.c_str(), 
+    sprintf(zSql, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(), 
             redundantDbName_);
     sql_stmt(zSql);
 }

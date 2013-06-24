@@ -24,6 +24,7 @@
 
 #include "zlib.h"
 #include "BlibMaker.h"
+#include "SqliteRoutine.h"
 
 namespace BiblioSpec {
 
@@ -497,9 +498,11 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
     rc = sqlite3_step(pStmt);
     while( rc == SQLITE_ROW ){
         // if fileName doesn't exist in main db...
+        string fileName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 1)));
+        fileName = SqliteRoutine::ESCAPE_APOSTROPHES(fileName);
         sprintf(zSql, 
                 "INSERT INTO SpectrumSourceFiles (fileName) VALUES ('%s')",
-                sqlite3_column_text(pStmt, 1));
+                fileName.c_str());
         sql_stmt(zSql);
 
         // map old id (looked up) to new (current row number)
