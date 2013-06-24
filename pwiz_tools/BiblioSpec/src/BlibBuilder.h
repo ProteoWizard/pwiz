@@ -71,6 +71,7 @@ enum BUILD_INPUT
     PROT_PROSPECT,
     MAXQUANT,
     MORPHEUS,
+    MSGF,
 
     // Keep this last
     NUM_BUILD_INPUTS

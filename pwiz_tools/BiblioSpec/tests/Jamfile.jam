@@ -244,6 +244,19 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-morpheus
   : check-morpheus ;
 
+make output/msgfdb.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/ms-gfdb.pepXML output/msgfdb.blib
+  : 
+  : build-msgfdb ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/msgfdb.blib reference/msgfdb.check
+  : $(compare-reqs)
+    <dependency>build-msgfdb
+  : check-msgfdb ;
+
 make output/prospector.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o

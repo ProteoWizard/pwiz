@@ -91,6 +91,7 @@ id	scoreType
 12	SEQUEST XCORR
 13	MAXQUANT SCORE
 14	MORPHEUS SCORE
+15	MSGF+ SCORE
 RefSpectraID	RedundantRefSpectraID	SpectrumSourceID	retentionTime	bestSpectrum
 1	170	3	18.081833	1
 2	169	3	18.036833	1

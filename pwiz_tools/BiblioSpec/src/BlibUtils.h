@@ -75,6 +75,7 @@ enum PSM_SCORE_TYPE {
     SEQUEST_XCORR,            // sequest (no percolator) .sqt files
     MAXQUANT_SCORE,           // maxquant msms.txt files
     MORPHEUS_SCORE,           // pepxml files with morpehus scores
+    MSGF_SCORE,            // pepxml files with ms-gfdb scores
 
     NUM_PSM_SCORE_TYPES
 };

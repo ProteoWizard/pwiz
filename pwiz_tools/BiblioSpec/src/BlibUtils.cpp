@@ -46,7 +46,8 @@ const char* scoreTypeNames[NUM_PSM_SCORE_TYPES] = {
     "PROTEIN PROSPECTOR EXPECTATION SCORE",
     "SEQUEST XCORR",
     "MAXQUANT SCORE",
-    "MORPHEUS SCORE"
+    "MORPHEUS SCORE",
+    "MSGF+ SCORE"
 };
 
 /**

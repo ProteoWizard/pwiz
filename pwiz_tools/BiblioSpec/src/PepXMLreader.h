@@ -65,6 +65,7 @@ class PepXMLreader : public BuildParser{
                   OMSSA_ANALYSIS,
                   PROTEIN_PROSPECTOR_ANALYSIS,
                   MORPHEUS_ANALYSIS,
+                  MSGF_ANALYSIS,
                   PROTEOME_DISCOVERER_ANALYSIS,
                   XTANDEM_ANALYSIS};
 

@@ -74,8 +74,9 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        analysisType_ = PEPTIDE_PROPHET_ANALYSIS;
        state = STATE_PROPHET_SUMMARY;
    } else if(isElement("analysis_summary", name)) {
-       if (strncmp("interprophet", getAttrValue("analysis",attr),
-                    strlen("interprophet")) == 0) {
+       string analysis = getAttrValue("analysis", attr);
+       
+       if (analysis.find("interprophet") == 0) {
            analysisType_ = INTER_PROPHET_ANALYSIS;
            // Unfortunately, there is no way to get a file count
            // from this element.
@@ -136,6 +137,14 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                analysisType_ = MORPHEUS_ANALYSIS;
                scoreType_ = MORPHEUS_SCORE;
                probCutOff = getScoreThreshold(MORPHEUS);
+
+               lookUpBy_ = NAME_ID;
+               specReader_->setIdType(NAME_ID);
+           } else if(search_engine.find("MS-GFDB") == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from MS-GFDB.");
+               analysisType_ = MSGF_ANALYSIS;
+               scoreType_ = MSGF_SCORE;
+               probCutOff = getScoreThreshold(MSGF);
 
                lookUpBy_ = NAME_ID;
                specReader_->setIdType(NAME_ID);
@@ -208,6 +217,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            spectrumName = getRequiredAttrValue("spectrum", attr);
        }
+       else if (analysisType_ == MSGF_ANALYSIS) {
+           scanNumber = getIntRequiredAttrValue("start_scan", attr);
+           spectrumName = getRequiredAttrValue("spectrumNativeID", attr);
+       }
        charge = getIntRequiredAttrValue("assumed_charge",attr, minCharge, 20);
    } else if(isElement("search_hit", name)) {
        // Only use this search hit, if rank is 1 or missing (zero)
@@ -270,7 +283,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        if (score_name == "expect" ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
-           (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value"))
+           (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
+           (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue"))
        {
                pepProb = getDoubleRequiredAttrValue("value", attr);
        }
@@ -293,7 +307,7 @@ void PepXMLreader::endElement(const XML_Char* name)
             throw BlibException(false, "The .pep.xml file is not from one of "
                                 "the recognized sources (PeptideProphet, "
                                 "iProphet, SpectrumMill, OMSSA, Protein Prospector, "
-                                "X! Tandem, Proteome Discoverer).");
+                                "X! Tandem, Proteome Discoverer, Morpheus, MSGF+).");
         }
         // if we are using pep.xml from Spectrum mill, we still don't have
         // scan numbers/indexes, here's a hack to get them
@@ -325,7 +339,6 @@ void PepXMLreader::endElement(const XML_Char* name)
         // no prob for spectrum mill
         // if prob not found for pep proph or mascot, default value is -1 and the psm will quietly be ignored
         // mascot has spectra with no peptides, but could report warning if spectrum mill or peptide prophet don't have a peptide sequence
-        
         if( scorePasses(pepProb) && (int)strlen(pepSeq) > 0) {
             curPSM_ = new PSM();
             curPSM_->charge = charge;
@@ -390,6 +403,7 @@ bool PepXMLreader::scorePasses(double score){
     case PROTEOME_DISCOVERER_ANALYSIS:
     case XTANDEM_ANALYSIS:
     case MORPHEUS_ANALYSIS:
+    case MSGF_ANALYSIS:
         if(score < probCutOff){
             return true;
         }
