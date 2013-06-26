@@ -360,12 +360,22 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Log some interesting stats.
+                //LogStats();
+
+                _buffers = null;
+                _collectors = null;
+            }
+
+// ReSharper disable UnusedMember.Local
+            private void LogStats()
+// ReSharper restore UnusedMember.Local
+            {
                 var memoryUsedForBuffers = 0;
                 foreach (var buffer in _buffers)
                     memoryUsedForBuffers += (buffer != null) ? _bufferSize : 0;
-                LOG.Info(String.Format("Length of buffers for chrom data: {0:0.0} MB", (double) memoryUsedForBuffers * sizeof(float) / MEGABYTES)); // Not L10N
-                LOG.Info(String.Format("Length of paging file: {0:0.0} MB", (double)_fileLength / MEGABYTES)); // Not L10N
-                
+                LOG.InfoFormat("Length of buffers for chrom data: {0:0.0} MB", (double) memoryUsedForBuffers*sizeof (float)/MEGABYTES); // Not L10N
+                LOG.InfoFormat("Length of paging file: {0:0.0} MB", (double) _fileLength/MEGABYTES); // Not L10N
+
                 var collectorCount = 0;
                 var maxCollectorLength = 0;
                 var averageCollectorLength = 0;
@@ -385,14 +395,11 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                LOG.Info(String.Format("Collector count: {0}", collectorCount)); // Not L10N
-                LOG.Info(String.Format("Average collector length: {0}", collectorCount == 0 ? 0 : averageCollectorLength / collectorCount)); // Not L10N
-                LOG.Info(String.Format("Max. collector length: {0}", maxCollectorLength)); // Not L10N
-                LOG.Info(String.Format("Collector buffer length (in floats) at end: {0}", _blockSize)); // Not L10N
-                LOG.Info(String.Format("Average size of block write to paging file: {0} bytes", AverageBytesPerPagedBlock)); // Not L10N
-
-                _buffers = null;
-                _collectors = null;
+                LOG.InfoFormat("Collector count: {0}", collectorCount); // Not L10N
+                LOG.InfoFormat("Average collector length: {0}", collectorCount == 0 ? 0 : averageCollectorLength/collectorCount);   // Not L10N
+                LOG.InfoFormat("Max. collector length: {0}", maxCollectorLength); // Not L10N
+                LOG.InfoFormat("Collector buffer length (in floats) at end: {0}", _blockSize); // Not L10N
+                LOG.InfoFormat("Average size of block write to paging file: {0} bytes", AverageBytesPerPagedBlock); // Not L10N
             }
 
             public long Write(float[] data, int index, int length)

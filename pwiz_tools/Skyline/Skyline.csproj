@@ -735,6 +735,7 @@
     <Compile Include="Model\Results\Demultiplexer.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\Exception.cs" />
+    <Compile Include="Model\Results\ExtractedSpectrum.cs" />
     <Compile Include="Model\Results\IsotopeDistInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
     <Compile Include="Model\Results\MsxDemultiplexer.cs">
@@ -745,6 +746,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Model\Results\PeptideChromData.cs" />
+    <Compile Include="Model\Results\PrecursorModSeq.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
     <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
@@ -756,6 +758,9 @@
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaksSet.cs" />
     <Compile Include="Model\Results\Scoring\ScoredPeak.cs" />
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaks.cs" />
+    <Compile Include="Model\Results\SpectraChromDataProvider.cs" />
+    <Compile Include="Model\Results\SpectrumFilter.cs" />
+    <Compile Include="Model\Results\SpectrumFilterPair.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />

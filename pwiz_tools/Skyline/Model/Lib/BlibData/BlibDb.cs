@@ -530,8 +530,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
-            if (peaksInfo == null || peaksInfo.Peaks == null)
-                Console.WriteLine("Problem");
 
             refSpectra.Copies = copies;
             refSpectra.NumPeaks = (ushort) peaksInfo.Peaks.Length;
