@@ -329,14 +329,14 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddFile_Click(object sender, EventArgs e)
         {
-            string[] addFiles = ShowAddFile(this);
+            string[] addFiles = ShowAddFile(this, Settings.Default.LibraryResultsDirectory);
             if (addFiles != null)
             {
                 AddInputFiles(addFiles);
             }
         }
 
-        public static string[] ShowAddFile(Form parent)
+        public static string[] ShowAddFile(Form parent, String initialDirectory)
         {
             var wildExts = new string[RESULTS_EXTS.Length];
             for (int i = 0; i < wildExts.Length; i++)
@@ -345,7 +345,7 @@ namespace pwiz.Skyline.SettingsUI
             OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
-                InitialDirectory = Settings.Default.LibraryResultsDirectory,
+                InitialDirectory = initialDirectory,
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 Multiselect = true,

@@ -81,6 +81,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasLibraries { get { return PeptideSettings.Libraries.HasLibraries; } }
 
+        public bool HasDocumentLibrary { get { return PeptideSettings.Libraries.HasDocumentLibrary; } }
+
         public bool HasRTPrediction { get { return PeptideSettings.Prediction.RetentionTime != null; } }
 
         public bool HasRTCalcPersisted
@@ -829,7 +831,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             // If this document has a document library, add it to the specs list
-            if (PeptideSettings.Libraries.DocumentLibrary)
+            if (PeptideSettings.Libraries.HasDocumentLibrary)
             {
                 string outputPath = Path.ChangeExtension(documentFilePath, BiblioSpecLiteSpec.EXT);
                 if (File.Exists(outputPath))
@@ -838,7 +840,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     var documentLibSpec = new BiblioSpecLibSpec(docFileName, outputPath);
                     if (!defSet.SpectralLibraryList.Contains(documentLibSpec))
                     {
-                        defSet.SpectralLibraryList.Add(documentLibSpec.ChangeDocumentLocal(true));
+                        defSet.SpectralLibraryList.Add(documentLibSpec.ChangeDocumentLibrary(true));
                     }
                 }
             }
@@ -917,14 +919,17 @@ namespace pwiz.Skyline.Model.DocSettings
                     : null));
         }
 
-        public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec> findLibrarySpec)
+        public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec> findLibrarySpec, string docLibPath = null)
         {
             var libraries = PeptideSettings.Libraries;
-            if (!libraries.HasLibraries)
+            bool hasDocLib = libraries.HasDocumentLibrary && null != docLibPath;
+            if (!libraries.HasLibraries && !hasDocLib)
                 return this;
 
-            LibrarySpec[] librarySpecs = new LibrarySpec[libraries.Libraries.Count];
-            for (int i = 0; i < librarySpecs.Length; i++)
+            int len = libraries.Libraries.Count;
+            int docLibShift = hasDocLib ? 1 : 0;
+            LibrarySpec[] librarySpecs = new LibrarySpec[len + docLibShift];
+            for (int i = docLibShift; i < len + docLibShift; i++)
             {
                 var library = libraries.Libraries[i];
                 if (library == null)
@@ -944,6 +949,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     // specified.
                     return ChangePeptideSettings(PeptideSettings.ChangeLibraries(libraries.Disconnect()));
                 }
+            }
+
+            if (hasDocLib)
+            {
+                string docLibName = Path.GetFileNameWithoutExtension(docLibPath);
+                librarySpecs[0] = new BiblioSpecLiteSpec(docLibName, docLibPath).ChangeDocumentLibrary(true);
             }
 
             if (ArrayUtil.EqualsDeep(librarySpecs, libraries.LibrarySpecs))

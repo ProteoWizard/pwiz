@@ -1077,6 +1077,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removing library runs from document library..
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_ {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Building binary cache for {0} library.
         /// </summary>
         public static string BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library {
@@ -6127,12 +6137,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Some results files are still missing. Are you sure you want to continue?.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sur" +
+                        "e_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document specific spectral library does not have valid retention times..
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_h" +
                         "ave_valid_retention_times_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Peptide Search.
+        /// </summary>
+        public static string ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search {
+            get {
+                return ResourceManager.GetString("ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search", resourceCulture);
             }
         }
         
@@ -7061,6 +7090,15 @@ namespace pwiz.Skyline.Properties {
         public static string LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity {
             get {
                 return ResourceManager.GetString("LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document library specs cannot be persisted to XML..
+        /// </summary>
+        public static string LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_ {
+            get {
+                return ResourceManager.GetString("LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_", resourceCulture);
             }
         }
         
@@ -11867,11 +11905,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to remove library runs from the document library..
+        /// </summary>
+        public static string SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_libra" +
+                        "ry_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Manage results.
         /// </summary>
         public static string SkylineWindow_ManageResults_Manage_results {
             get {
                 return ResourceManager.GetString("SkylineWindow_ManageResults_Manage_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must contain mass spec data to manage results..
+        /// </summary>
+        public static string SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_results_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_re" +
+                        "sults_", resourceCulture);
             }
         }
         

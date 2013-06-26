@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestTutorial
             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
             Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-            Assert.IsTrue(librarySettings.DocumentLibrary);
+            Assert.IsTrue(librarySettings.HasDocumentLibrary);
         }
     }
 }

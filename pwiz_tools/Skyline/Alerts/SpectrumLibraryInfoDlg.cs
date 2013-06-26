@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Lib;
@@ -81,7 +82,7 @@ namespace pwiz.Skyline.Alerts
             var fileList = new StringBuilder();
             foreach (var filename in libraryDetails.DataFiles)
             {
-                fileList.AppendLine(filename);
+                fileList.AppendLine(Path.GetFileName(filename));
             }
             textBoxDataFiles.Text = fileList.ToString();
         }

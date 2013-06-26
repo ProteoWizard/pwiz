@@ -96,8 +96,9 @@ namespace pwiz.SkylineTestFunctional
             Share(shareMinPath, false, origFileSet, newFileSet, docName);
             Assert.AreEqual(origFileSet[blibName].UncompressedSize,
                             newFileSet[blibName].UncompressedSize);
-            Assert.AreEqual(origFileSet[redundantBlibName].UncompressedSize,
-                            newFileSet[redundantBlibName].UncompressedSize);
+            // Schema changed to support document libraries, adding information
+            long newSize = newFileSet[redundantBlibName].UncompressedSize;
+            Assert.IsTrue(origFileSet[redundantBlibName].UncompressedSize < newSize);
             WaitForLibraries();
 
             // Remove the last peptide in the document.
@@ -107,7 +108,7 @@ namespace pwiz.SkylineTestFunctional
             Share(shareMinPath2, false, origFileSet, newFileSet, docName);
             Assert.IsTrue(origFileSet[blibName].UncompressedSize >
                           newFileSet[blibName].UncompressedSize);
-            Assert.IsTrue(origFileSet[redundantBlibName].UncompressedSize >
+            Assert.IsTrue(newSize >
                           newFileSet[redundantBlibName].UncompressedSize);
             WaitForLibraries();
 
@@ -123,7 +124,7 @@ namespace pwiz.SkylineTestFunctional
                                                  var chromatograms =
                                                      doc1.Settings.MeasuredResults.Chromatograms;
                                                  dlg.SelectedChromatograms = new[] { chromatograms[1] };
-                                                 dlg.Remove();
+                                                 dlg.RemoveReplicates();
                                                  dlg.OkDialog();
                                              });
             }

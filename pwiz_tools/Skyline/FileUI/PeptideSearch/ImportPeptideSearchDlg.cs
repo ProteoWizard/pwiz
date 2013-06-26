@@ -146,6 +146,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             CloseWizard(DialogResult.Cancel);
                         }
 
+                        if (ImportResultsControl.MissingResultsFiles.Count > 0)
+                        {
+                            if (MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
+                                Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                            {
+                                return;
+                            }
+                        }
+
                         // Todo: This needs to be moved under Pages.match_modifications_page when that page is finally enabled!
                         // The next page is going to be the MS1 Full-Scan Settings
                         // page, so initialize it.
@@ -316,7 +325,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void ImportResultsControl_OnResultsFilesChanged(object sender,
             ImportResultsControl.ResultsFilesEventArgs e)
         {
-            btnNext.Enabled = e.NumMissingFiles == 0;
+            btnNext.Enabled = e.NumFoundFiles > 0;
         }
 
         #region Modifications page

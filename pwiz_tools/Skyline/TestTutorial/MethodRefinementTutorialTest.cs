@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
             {
-                manageResultsDlg.Remove();
+                manageResultsDlg.RemoveReplicates();
                 Assert.AreEqual(manageResultsDlg.Chromatograms.ToArray().Length, 0);
                 manageResultsDlg.OkDialog();
             });
@@ -350,7 +350,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Where(
                         set => Equals("Unrefined", set.Name)); // Not L10N
 
-                mResults.Remove();
+                mResults.RemoveReplicates();
 
                 Assert.AreEqual(0, mResults.Chromatograms.Count());
                 mResults.OkDialog();
@@ -433,7 +433,7 @@ namespace pwiz.SkylineTestTutorial
             // Reviewing Multi-Replicate Data, p. 22
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
             {
-                manageResultsDlg.RemoveAll();
+                manageResultsDlg.RemoveAllReplicates();
                 manageResultsDlg.OkDialog();
             });
             var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);

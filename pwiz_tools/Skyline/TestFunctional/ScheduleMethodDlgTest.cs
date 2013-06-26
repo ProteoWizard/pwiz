@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var chromatograms = document.Settings.MeasuredResults.Chromatograms;
                 dlg.SelectedChromatograms = new[] { chromatograms[ chromatograms.Count - 2 ] };
-                dlg.Remove();
+                dlg.RemoveReplicates();
                 dlg.OkDialog();
             });
 
@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
                 for (int i = chromatograms.Count - 1; i > 0;  i--)
                 {
                     dlg.SelectedChromatograms = new[] { chromatograms[i] };
-                    dlg.Remove();
+                    dlg.RemoveReplicates();
                 }
                 dlg.OkDialog();
             });

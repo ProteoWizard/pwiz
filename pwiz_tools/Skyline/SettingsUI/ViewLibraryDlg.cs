@@ -693,7 +693,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         // Update file and retention time indicators
                         var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
-                            IsotopeLabelType.light, true).FirstOrDefault();
+                            IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
                         if (bestSpectrum != null)
                         {
                             double? rt = bestSpectrum.RetentionTime;

@@ -1111,9 +1111,10 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath)
         {
-            if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.DocumentLibrary)
+            string docLibFile = null;
+            if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.HasDocumentLibrary)
             {
-                string docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
+                docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
                 if (!File.Exists(docLibFile))
                 {
                     _out.WriteLine("Error: Could not find the spectral library {0} for this document.", docLibFile);
@@ -1141,7 +1142,7 @@ namespace pwiz.Skyline
                 }
                 _out.WriteLine("Warning: Could not find the spectral library {0}", library.Name);
                 return library.CreateSpec(null);
-            });
+            }, docLibFile);
 
             if (ReferenceEquals(settings, document.Settings))
                 return document;

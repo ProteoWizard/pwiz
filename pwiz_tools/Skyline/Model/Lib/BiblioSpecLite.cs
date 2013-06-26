@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -54,6 +55,12 @@ namespace pwiz.Skyline.Model.Lib
         public static string GetLibraryFileName(string documentPath)
         {
             return Path.ChangeExtension(documentPath, EXT);
+        }
+
+        public static BiblioSpecLiteSpec GetDocumentLibrarySpec(string documentPath)
+        {
+            var spec = new BiblioSpecLiteSpec(Path.GetFileNameWithoutExtension(documentPath), GetLibraryFileName(documentPath));
+            return (BiblioSpecLiteSpec) spec.ChangeDocumentLibrary(true);
         }
 
         public static string GetRedundantName(string libraryPath)
@@ -110,6 +117,11 @@ namespace pwiz.Skyline.Model.Lib
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
 
+        public static string GetLibraryCachePath(string libraryPath)
+        {
+            return Path.ChangeExtension(libraryPath, EXT_CACHE);
+        }
+
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
             var library = new BiblioSpecLiteLibrary(spec);
@@ -126,9 +138,7 @@ namespace pwiz.Skyline.Model.Lib
             : base(spec)
         {
             FilePath = spec.FilePath;
-
-            string baseName = Path.GetFileNameWithoutExtension(FilePath);
-            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? string.Empty, baseName + EXT_CACHE);
+            CachePath = GetLibraryCachePath(FilePath);
         }
 
         /// <summary>
@@ -203,7 +213,7 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 var dataFiles = (from sourceFile in _librarySourceFiles
-                                 let fileName = sourceFile.FileName
+                                 let fileName = sourceFile.FilePath
                                  where fileName != null
                                  select fileName).ToArray();
 
@@ -270,7 +280,11 @@ namespace pwiz.Skyline.Model.Lib
                 var pool = streamManager.ConnectionPool;
                 _sqliteConnection = new PooledSqliteConnection(pool, FilePath);
                 if (File.Exists(FilePathRedundant))
-                    _sqliteConnectionRedundant = new PooledSqliteConnection(pool, FilePathRedundant);                
+                {
+                    if (_sqliteConnectionRedundant != null)
+                        _sqliteConnectionRedundant.CloseStream();
+                    _sqliteConnectionRedundant = new PooledSqliteConnection(pool, FilePathRedundant);
+                }
             }
         }
 
@@ -591,7 +605,11 @@ namespace pwiz.Skyline.Model.Lib
             if (cached)
             {
                 // Reset readStream so we don't read corrupt file.
-                _sqliteConnection = null;
+                if (_sqliteConnection != null)
+                {
+                    _sqliteConnection.CloseStream();
+                    _sqliteConnection = null;
+                }
                 if (Load(loader, status, false))
                     return true;
             }
@@ -603,18 +621,14 @@ namespace pwiz.Skyline.Model.Lib
         {
             try
             {
-                int loadPercent = 100;
-                
+                int loadPercent = 100;                
                 if (!cached)
                 {
-
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
-
                     status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library,
                                                            Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
-
                     loader.UpdateProgress(status);
 
                     if (!CreateCache(loader, status, 100 - loadPercent))
@@ -626,7 +640,6 @@ namespace pwiz.Skyline.Model.Lib
                 loader.UpdateProgress(status);
 
                 var sm = loader.StreamManager;
-
                 using (Stream stream = sm.CreateStream(CachePath, FileMode.Open, true))
                 {
                     // Read library header from the end of the cache
@@ -769,7 +782,13 @@ namespace pwiz.Skyline.Model.Lib
         {
             var spectrumLiteKey = spectrumKey as SpectrumLiteKey;
             if (spectrumLiteKey != null)
-                return new SpectrumPeaksInfo(ReadRedundantSpectrum(spectrumLiteKey.RedundantId));
+            {
+                if (!spectrumLiteKey.IsBest)
+                    return new SpectrumPeaksInfo(ReadRedundantSpectrum(spectrumLiteKey.RedundantId));
+
+                // Always get the best spectrum from the non-redundant library
+                spectrumKey = spectrumLiteKey.NonRedundantId;
+            }
                 
             return base.LoadSpectrum(spectrumKey);
         }
@@ -1022,27 +1041,27 @@ namespace pwiz.Skyline.Model.Lib
             return i;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
+        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
-            if (bestMatch && SchemaVersion < 1)
+            if (redundancy == LibraryRedundancy.best && SchemaVersion < 1)
             {
                 // Retention time information is not available for schema (minor version) < 1
-                return base.GetSpectra(key, labelType, true);
+                return base.GetSpectra(key, labelType, redundancy);
             }
 
             try
             {
-                return GetRedundantSpectra(key, labelType, !bestMatch);
+                return GetRedundantSpectra(key, labelType, redundancy);
             }
             // In case there is no RetentionTimes table
             // CONSIDER: Could also be a failure to read the SQLite file
             catch (SQLiteException)
             {
-                return base.GetSpectra(key, labelType, true);
+                return base.GetSpectra(key, labelType, redundancy);
             }
         }
 
-        private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, bool getAll)
+        private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // No redundant spectra before schema version 1
             if (SchemaVersion == 0)
@@ -1058,7 +1077,7 @@ namespace pwiz.Skyline.Model.Lib
                     "SELECT * " + // Not L10N
                     "FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " + // Not L10N
                     "WHERE t.[RefSpectraID] = ?"; // Not L10N
-                if (!getAll)
+                if (redundancy == LibraryRedundancy.best)
                     select.CommandText += " AND t.[bestSpectrum] = 1"; // Not L10N
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
@@ -1085,8 +1104,8 @@ namespace pwiz.Skyline.Model.Lib
                         // the id of this spectrum in the cache.
                         // Look at the LoadSpectrum method to see how spectrumKey is used.
                         object spectrumKey = i;
-                        if (!isBest)
-                            spectrumKey = new SpectrumLiteKey(redundantId);
+                        if (!isBest || redundancy == LibraryRedundancy.all_redundant)
+                            spectrumKey = new SpectrumLiteKey(i, redundantId, isBest);
                         listSpectra.Add(new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
                                                          spectrumKey)
                                             {
@@ -1134,6 +1153,93 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
         }
+
+        private bool HasRedundanModificationsTable()
+        {
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
+            {
+                select.CommandText = "SELECT count(*) FROM [sqlite_master] WHERE type='table' AND name='Modifications'"; // Not L10N
+
+                try
+                {
+                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    {
+                        reader.Read();
+                        int modTableCount = reader.GetInt32(0);
+                        return modTableCount > 0;
+                    }
+                }
+                catch (SQLiteException)
+                {
+                    return false;
+                }
+            }
+        }
+
+        public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)
+        {
+            string inList = GetInList(filenames);
+            bool hasModsTable = HasRedundanModificationsTable();
+ 
+            // Make the changes to the redundant library and then use BlibFilter
+            using (var myTrans = _sqliteConnectionRedundant.Connection.BeginTransaction(IsolationLevel.ReadCommitted))
+            using (var sqCommand = _sqliteConnectionRedundant.Connection.CreateCommand())
+            {
+                if (hasModsTable)
+                {
+                    sqCommand.CommandText = "DELETE FROM [Modifications] WHERE id IN " + "" +
+                                                "(SELECT m.id FROM [Modifications] as m " + 
+                                                    "INNER JOIN [RefSpectra] as s ON m.RefSpectraId = s.id " +
+                                                    "INNER JOIN [SpectrumSourceFiles] as f ON s.fileId = f.id " +
+                                                    "WHERE f.fileName IN " + inList + ")";
+                    sqCommand.ExecuteNonQuery();
+                }
+
+                sqCommand.CommandText = "DELETE FROM [RefSpectraPeaks] WHERE RefSpectraId IN " + 
+                                            "(SELECT p.RefSpectraId FROM [RefSpectraPeaks] as p " +
+                                                "INNER JOIN [RefSpectra] as s ON p.RefSpectraId = s.id " +
+                                                "INNER JOIN [SpectrumSourceFiles] as f ON s.fileId = f.id " +
+                                                "WHERE f.fileName IN " + inList + ")";
+                sqCommand.ExecuteNonQuery();
+
+                sqCommand.CommandText = "DELETE FROM [RefSpectra] WHERE id IN " + 
+                                            "(SELECT s.id FROM [RefSpectra] as s " + 
+                                                "INNER JOIN [SpectrumSourceFiles] as f ON s.fileId = f.id " +
+                                                "WHERE f.fileName IN " + inList + ")";
+                sqCommand.ExecuteNonQuery();
+
+                sqCommand.CommandText = "DELETE FROM SpectrumSourceFiles WHERE fileName IN " + inList;
+                sqCommand.ExecuteNonQuery();
+
+                myTrans.Commit();
+            }
+
+            // Write the non-redundant library to a temporary file first
+            using (var saver = new FileSaver(FilePath))
+            {
+                var blibFilter = new BlibFilter();
+                var status = new ProgressStatus(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_);
+                if (!blibFilter.Filter(FilePathRedundant, saver.SafeName, monitor, ref status))
+                    throw new IOException(string.Format("Failed attempting to filter redundant library {0} to {1}", FilePathRedundant, FilePath));
+
+                _sqliteConnectionRedundant.CloseStream();
+                _sqliteConnection.CloseStream();
+                saver.Commit();
+            }
+        }
+
+        private string GetInList(string[] filenames)
+        {
+            var sb = new StringBuilder();
+            foreach (string filename in filenames)
+            {
+                if (sb.Length > 0)
+                    sb.Append(',');
+                sb.Append('\'').Append(filename).Append('\'');
+            }
+            return "(" + sb + ")";
+        }
+
 
         #region Implementation of IXmlSerializable
         
@@ -1281,32 +1387,21 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
             }
-
-            public string FileName
-            {
-                get
-                {
-                    try
-                    {
-                        return Path.GetFileName(FilePath);
-                    }
-                    catch (Exception)
-                    {
-                        return null;
-                    }
-                }
-            }
         }
     }
 
     public sealed class SpectrumLiteKey
     {
-        public SpectrumLiteKey(int redundantId)
+        public SpectrumLiteKey(int nonRedundantId, int redundantId, bool isBest)
         {
+            NonRedundantId = nonRedundantId;
             RedundantId = redundantId;
+            IsBest = isBest;
         }
 
+        public int NonRedundantId { get; private set; }
         public int RedundantId { get; private set; }
+        public bool IsBest { get; private set; }
     }
 
     public struct IndexedRetentionTimes

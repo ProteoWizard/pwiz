@@ -125,7 +125,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnAddFile_Click(object sender, EventArgs e)
         {
-            string[] addFiles = BuildLibraryDlg.ShowAddFile(WizardForm);
+            string[] addFiles = BuildLibraryDlg.ShowAddFile(WizardForm, Path.GetDirectoryName(SkylineWindow.DocumentFilePath));
             if (addFiles != null)
             {
                 AddSearchFiles(addFiles);
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-            DocLibrarySpec = builder.LibrarySpec.ChangeDocumentLocal(true);
+            DocLibrarySpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
 
             Settings.Default.SpectralLibraryList.Insert(0, DocLibrarySpec);
 

@@ -281,7 +281,7 @@ namespace pwiz.Skyline.SettingsUI
                         librariesLoaded = Libraries.Libraries;
                     }
 
-                    documentLibrary = Libraries.DocumentLibrary;
+                    documentLibrary = Libraries.HasDocumentLibrary;
                     // Otherwise, leave the list of loaded libraries empty,
                     // and let the LibraryManager refill it.  This ensures a
                     // clean save of library specs only in the user config, rather

@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4600</ApplicationRevision>
-    <ApplicationVersion>1.4.1.4600</ApplicationVersion>
+    <ApplicationRevision>4646</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4646</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -503,6 +503,10 @@
     <Compile Include="Model\Find\MissingAllResultsFinder.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\Lib\AlignedRetentionTimes.cs" />
+    <Compile Include="Model\Lib\BlibData\DbModificationRedundant.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundantPeaks.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundant.cs" />
+    <Compile Include="Model\Lib\BlibData\DbScoreTypes.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />

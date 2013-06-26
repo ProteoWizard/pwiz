@@ -242,9 +242,10 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath)
         {
-            if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.DocumentLibrary)
+            string docLibFile = null;
+            if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.HasDocumentLibrary)
             {
-                string docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
+                docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
                 if (!File.Exists(docLibFile))
                 {
                     MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_, docLibFile));
@@ -293,8 +294,8 @@ namespace pwiz.Skyline
                     }
 
                     return null;
-                });
-            
+                }, docLibFile);
+
             if (settings == null)
                 return null; // User cancelled
 
@@ -581,12 +582,7 @@ namespace pwiz.Skyline
             return false;
         }
 
-        public bool SaveDocument(string fileName)
-        {
-            return SaveDocument(fileName, true);
-        }
-
-        public bool SaveDocument(String fileName, bool includingCacheFile)
+        public bool SaveDocument(String fileName, bool includingCacheFile = true)
         {
             SrmDocument document = DocumentUI;
             try
@@ -691,7 +687,7 @@ namespace pwiz.Skyline
             // If the document has a document-specific library, and the files for it
             // exist on disk
             var document = DocumentUI;
-            if (document.Settings.PeptideSettings.Libraries.DocumentLibrary
+            if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
                 && File.Exists(oldDocLibFile) && File.Exists(oldRedundantDocLibFile))
             {
                 string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
@@ -707,6 +703,16 @@ namespace pwiz.Skyline
                     saverLib.Commit();
                     saverRedundant.Commit();
                 }
+
+                // Update the document library settings to point to the new library.
+                SrmDocument docOriginal, docNew;
+                do
+                {
+                    docOriginal = Document;
+                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangePeptideLibraries(libraries =>
+                        libraries.ChangeDocumentLibraryPath(newDocFilePath)));                        
+                }
+                while (!SetDocument(docNew, docOriginal));
             }
 
             return true;
@@ -1550,10 +1556,13 @@ namespace pwiz.Skyline
         public void ManageResults()
         {
             var documentUI = DocumentUI;
-            if (!documentUI.Settings.HasResults)
-                return;
+            if (!documentUI.Settings.HasResults && !documentUI.Settings.HasDocumentLibrary)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_results_);
+                return;                
+            }
 
-            using (ManageResultsDlg dlg = new ManageResultsDlg(this))
+            using (ManageResultsDlg dlg = new ManageResultsDlg(this, _libraryManager))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -1572,6 +1581,41 @@ namespace pwiz.Skyline
                     // And update the document to reflect real changes to the results structure
                     ModifyDocument(Resources.SkylineWindow_ManageResults_Manage_results, doc =>
                     {
+                        if (dlg.IsRemoveAllLibraryRuns)
+                        {
+                            doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib =>
+                                {
+                                    var libSpecs = new List<LibrarySpec>(lib.LibrarySpecs);
+                                    var libs = new List<Library>(lib.Libraries);
+                                    for (int i = 0; i < libSpecs.Count; i++)
+                                    {
+                                        if (libSpecs[i].IsDocumentLibrary)
+                                        {
+                                            libSpecs.RemoveAt(i);
+                                            libs.RemoveAt(i);
+                                        }
+                                    }
+                                    return lib.ChangeDocumentLibrary(false)
+                                              .ChangeLibraries(libSpecs.ToArray(), libs.ToArray());
+                                }));
+                        }
+                        else if (dlg.LibraryRunsRemovedList.Count > 0)
+                        {
+                            BiblioSpecLiteLibrary docBlib;
+                            if (DocumentUI.Settings.PeptideSettings.Libraries.TryGetDocumentLibrary(out docBlib))
+                            {
+                                try
+                                {
+                                    docBlib.DeleteDataFiles(dlg.LibraryRunsRemovedList.ToArray(), this);
+                                    _libraryManager.ReloadLibrary(this, dlg.DocumentLibrarySpec);
+                                }
+                                catch (Exception x)
+                                {
+                                    throw new IOException(TextUtil.LineSeparate(Resources.SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_, x.Message));
+                                }
+                            }
+                        }
+ 
                         var results = doc.Settings.MeasuredResults;
                         if (results == null)
                             return doc;
@@ -1581,8 +1625,22 @@ namespace pwiz.Skyline
                         results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
                         doc = doc.ChangeMeasuredResults(results);
                         doc.ValidateResults();
+
                         return doc;
                     });
+
+                    // Modify document will have closed the streams by now.  So, it is safe to delete the files.
+                    if (dlg.IsRemoveAllLibraryRuns)
+                    {
+                        string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+                        FileEx.SafeDelete(docLibPath);
+
+                        string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+                        FileEx.SafeDelete(redundantDocLibPath);
+
+                        string docLibCachePath = BiblioSpecLiteLibrary.GetLibraryCachePath(docLibPath);
+                        FileEx.SafeDelete(docLibCachePath);
+                    }
                 }
             }
         }

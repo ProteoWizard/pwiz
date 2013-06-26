@@ -18,11 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -32,7 +35,13 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ManageResultsDlg : FormEx
     {
-        public ManageResultsDlg(IDocumentUIContainer documentUIContainer)
+        // ReSharper disable InconsistentNaming
+        // ReSharper disable UnusedMember.Local
+        public enum TABS { Replicates, Libraries }
+        // ReSharper restore UnusedMember.Local
+        // ReSharper restore InconsistentNaming
+
+        public ManageResultsDlg(IDocumentUIContainer documentUIContainer, LibraryManager libraryManager)
         {
             InitializeComponent();
 
@@ -48,9 +57,52 @@ namespace pwiz.Skyline.FileUI
                 }
                 listResults.SelectedIndices.Add(0);
             }
+
+            var libraries = settings.PeptideSettings.Libraries;
+            if (libraries.HasLibraries && libraries.HasDocumentLibrary)
+            {
+                DocumentLibrarySpec = libraries.LibrarySpecs.First(x => x.IsDocumentLibrary);
+                if (null != DocumentLibrarySpec)
+                {
+                    DocumentLibrary = libraryManager.TryGetLibrary(DocumentLibrarySpec);
+                    if (null != DocumentLibrary)
+                    {
+                        foreach (var dataFile in DocumentLibrary.LibraryDetails.DataFiles)
+                        {
+                            listLibraries.Items.Add(dataFile);
+                        }
+                        listLibraries.SelectedIndices.Add(0);
+                    }
+                }
+            }
+            if (listLibraries.Items.Count == 0)
+            {
+                checkBoxRemoveLibraryRuns.Visible = false;
+                int heightTabPage = manageResultsTabControl.TabPages[(int) TABS.Replicates].Height;
+                int changeHeight = heightTabPage - listResults.Bottom - btnRemove.Top;
+                listResults.Height += changeHeight;
+                Height -= changeHeight;
+                manageResultsTabControl.TabPages.RemoveAt((int)TABS.Libraries);
+            }
+            else if (listResults.Items.Count == 0)
+            {
+                checkBoxRemoveReplicates.Visible = false;
+                int heightTabPage = manageResultsTabControl.TabPages[(int)TABS.Libraries].Height;
+                int changeHeight = heightTabPage - listLibraries.Bottom - btnRemoveLibRun.Top;
+                listLibraries.Height += changeHeight;
+                Height -= changeHeight;
+                manageResultsTabControl.TabPages.RemoveAt((int)TABS.Replicates);
+            }
+
+            LibraryRunsRemovedList = new List<string>();
+            ChromatogramsRemovedList = new List<ChromatogramSet>();
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
+        public LibrarySpec DocumentLibrarySpec { get; private set; }
+        public Library DocumentLibrary { get; private set; }
+        public List<string> LibraryRunsRemovedList { get; private set; }
+        public IEnumerable<ChromatogramSet> ChromatogramsRemovedList { get; private set; } 
 
         public IEnumerable<ChromatogramSet> Chromatograms
         {
@@ -70,7 +122,7 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                return SelectedIndices.Select(i => listResults.Items[i])
+                return SelectedIndices(listResults).Select(i => listResults.Items[i])
                     .Cast<ManageResultsAction>().Select(a => a.Chromatograms);
             }
 
@@ -85,21 +137,106 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public int[] SelectedIndices
+        public IEnumerable<string> LibraryRuns
+        {
+            get { return listLibraries.Items.Cast<string>(); }
+        }
+
+        public IEnumerable<string> SelectedLibraryRuns
         {
             get
             {
-                var listSelectedIndices = new List<int>();
-                var selectedIndices = listResults.SelectedIndices;
-                for (int i = 0; i < selectedIndices.Count; i++)
-                    listSelectedIndices.Add(selectedIndices[i]);
-                return listSelectedIndices.ToArray();
+                return SelectedIndices(listLibraries).Select(i => listLibraries.Items[i])
+                    .Cast<string>().Select(a => a.ToString(CultureInfo.InvariantCulture));
             }
+
+            set
+            {
+                listLibraries.SelectedItems.Clear();
+                foreach (var action in listLibraries.Items.Cast<string>()
+                        .Where(action => value.Contains(action.ToString(CultureInfo.InvariantCulture))).ToArray())
+                {
+                    listLibraries.SelectedItems.Add(action);
+                }
+            }
+        }
+
+        public bool IsRemoveAllLibraryRuns
+        {
+            get { return listLibraries.Items.Count == 0 && LibraryRunsRemovedList.Count > 0; }
+        }
+        
+        private int[] SelectedIndices(ListBox list)
+        {
+            var listSelectedIndices = new List<int>();
+            var selectedIndices = list.SelectedIndices;
+            for (int i = 0; i < selectedIndices.Count; i++)
+                listSelectedIndices.Add(selectedIndices[i]);
+            return listSelectedIndices.ToArray();
         }
 
         public void OkDialog()
         {
+            if (IsRemoveCorrespondingLibraries)
+                RemoveCorrespondingLibraryRunsForReplicates();
+
+            if (IsRemoveCorrespondingReplicates)
+                RemoveCorrespondingReplicatesForLibraryRuns();
+
             DialogResult = DialogResult.OK;
+        }
+
+        private void RemoveCorrespondingLibraryRunsForReplicates()
+        {
+            if (listLibraries.Items.Count != 0)
+            {
+                foreach (var chrom in ChromatogramsRemovedList)
+                {
+                    foreach (var chromFileInfo in chrom.MSDataFileInfos)
+                    {
+                        foreach (var dataFile in DocumentLibrary.LibraryDetails.DataFiles)
+                        {
+                            if (MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(chromFileInfo.FilePath),
+                                                            Path.GetFileNameWithoutExtension(dataFile)))
+                            {
+                                int foundIndex = listLibraries.FindString(dataFile);
+                                if (ListBox.NoMatches != foundIndex)
+                                {
+                                    LibraryRunsRemovedList.Add(dataFile);
+                                    listLibraries.Items.RemoveAt(foundIndex);
+                                    if (listLibraries.Items.Count == 0)
+                                        return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void RemoveCorrespondingReplicatesForLibraryRuns()
+        {
+            if (listResults.Items.Count != 0)
+            {
+                var newChromRemList = new List<ChromatogramSet>(ChromatogramsRemovedList);
+                foreach (var dataFile in LibraryRunsRemovedList)
+                {
+                    var matchingFile =
+                        DocumentUIContainer.Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFile);
+                    if (null != matchingFile)
+                    {
+                        int foundIndex = listResults.FindString(matchingFile.Chromatograms.Name);
+                        if (ListBox.NoMatches != foundIndex)
+                        {
+                            newChromRemList.Add(matchingFile.Chromatograms);
+                            listResults.Items.RemoveAt(foundIndex);
+                            if (listResults.Items.Count == 0)
+                                break;
+                        }
+                    }
+                }
+                ChromatogramsRemovedList = newChromRemList;
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -109,14 +246,15 @@ namespace pwiz.Skyline.FileUI
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            Remove();
+            RemoveReplicates();
         }
 
-        public void Remove()
+        public void RemoveReplicates()
         {
-            using (new UpdateList(this))
+            using (new UpdateList(this, listResults))
             {
-                RemoveSelected();
+                var removedList = RemoveSelected(listResults);
+                ChromatogramsRemovedList = removedList.Cast<ManageResultsAction>().Select(a => a.Chromatograms);
             }
         }
 
@@ -124,23 +262,23 @@ namespace pwiz.Skyline.FileUI
         /// Removes all selected items from the list.
         /// </summary>
         /// <returns>A list containing the removed items in reverse order</returns>
-        private List<object> RemoveSelected()
+        private List<object> RemoveSelected(ListBox list)
         {
             // Remove all selected items
             var listRemovedItems = new List<object>();
-            var selectedIndices = SelectedIndices;
+            var selectedIndices = SelectedIndices(list);
             for (int i = selectedIndices.Length - 1; i >= 0; i--)
             {
                 int iRemove = selectedIndices[i];
-                listRemovedItems.Add(listResults.Items[iRemove]);
-                listResults.Items.RemoveAt(iRemove);
+                listRemovedItems.Add(list.Items[iRemove]);
+                list.Items.RemoveAt(iRemove);
             }
             // Select the same position that had the focus, unless it was beyond
             // the end of the remaining items
-            if (listResults.Items.Count > 0)
+            if (list.Items.Count > 0)
             {
                 int iNext = selectedIndices[selectedIndices.Length - 1] - selectedIndices.Length + 1;
-                listResults.SelectedIndices.Add(Math.Min(iNext, listResults.Items.Count - 1));
+                list.SelectedIndices.Add(Math.Min(iNext, list.Items.Count - 1));
             }
 
             return listRemovedItems;
@@ -148,16 +286,17 @@ namespace pwiz.Skyline.FileUI
 
         private void btnRemoveAll_Click(object sender, EventArgs e)
         {
-            RemoveAll();
+            RemoveAllReplicates();
         }
 
-        public void RemoveAll()
+        public void RemoveAllReplicates()
         {
-            using (new UpdateList(this))
+            using (new UpdateList(this, listResults))
             {
+                ChromatogramsRemovedList = listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms);
                 listResults.Items.Clear();
             }
-            UpdateButtons();
+            UpdateReplicatesButtons();
         }
 
 
@@ -168,7 +307,7 @@ namespace pwiz.Skyline.FileUI
 
         public void MoveUp()
         {
-            using (new UpdateList(this))
+            using (new UpdateList(this, listResults))
             {
                 MoveSelected(-1);
             }
@@ -181,7 +320,7 @@ namespace pwiz.Skyline.FileUI
 
         public void MoveDown()
         {
-            using (new UpdateList(this))
+            using (new UpdateList(this, listResults))
             {
                 MoveSelected(1);
             }
@@ -189,14 +328,14 @@ namespace pwiz.Skyline.FileUI
 
         private void MoveSelected(int increment)
         {
-            var selectedIndices = SelectedIndices;
+            var selectedIndices = SelectedIndices(listResults);
             if (selectedIndices.Length == 0)
                 return;
 
             listResults.BeginUpdate();
 
             // Remove currently selected items
-            var listRemovedItems = RemoveSelected();
+            var listRemovedItems = RemoveSelected(listResults);
             // Insert them in their new location in reverse
             int iInsert;
             if (increment < 0)
@@ -232,11 +371,12 @@ namespace pwiz.Skyline.FileUI
         public void RenameResult()
         {
             CheckDisposed();
-            var selectedIndices = SelectedIndices;
+            var selectedIndices = SelectedIndices(listResults);
             if (selectedIndices.Length == 0)
                 return;
 
-            int iFirst = SelectedIndices[0];
+            int[] listResultsSelectedIndices = SelectedIndices(listResults);
+            int iFirst = listResultsSelectedIndices[0];
             listResults.SelectedIndices.Clear();
             listResults.SelectedIndices.Add(iFirst);
 
@@ -282,9 +422,10 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            using(new UpdateList(this))
+            using(new UpdateList(this, listResults))
             {
-                foreach (int selectedIndex in SelectedIndices)
+                int[] selectedIndices = SelectedIndices(listResults);
+                foreach (int selectedIndex in selectedIndices)
                 {
                     var selected = (ManageResultsAction) listResults.Items[selectedIndex];
                     selected.IsReimport = true;
@@ -358,10 +499,10 @@ namespace pwiz.Skyline.FileUI
         private void listResults_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!InListUpdate)
-                UpdateButtons();
+                UpdateReplicatesButtons();
         }
 
-        private void UpdateButtons()
+        private void UpdateReplicatesButtons()
         {
             bool enable = listResults.SelectedIndices.Count > 0;
             btnRemove.Enabled = enable;
@@ -369,25 +510,27 @@ namespace pwiz.Skyline.FileUI
             btnUp.Enabled = enable;
             btnDown.Enabled = enable;
             btnRename.Enabled = enable;
-            btnRemoveAll.Enabled = btnMinimize.Enabled = listResults.Items.Count > 0;            
+            btnRemoveAll.Enabled = btnMinimize.Enabled = listResults.Items.Count > 0;
         }
 
         private sealed class UpdateList : IDisposable
         {
             private readonly ManageResultsDlg _dlg;
+            private readonly ListBox _list;
 
-            public UpdateList(ManageResultsDlg dlg)
+            public UpdateList(ManageResultsDlg dlg, ListBox list)
             {
                 _dlg = dlg;
+                _list = list;
                 _dlg.InListUpdate = true;
-                _dlg.listResults.BeginUpdate();
+                _list.BeginUpdate();
             }
 
             public void Dispose()
             {
-                _dlg.listResults.EndUpdate();
+                _list.EndUpdate();
                 _dlg.InListUpdate = false;
-                _dlg.listResults.Focus();
+                _list.Focus();
             }
         }
 
@@ -409,6 +552,78 @@ namespace pwiz.Skyline.FileUI
                     return string.Empty;
                 return (IsReimport ? "*" : string.Empty) + Chromatograms.Name; // Not L10N
             }
+        }
+
+        private void btnRemoveLibRun_Click(object sender, EventArgs e)
+        {
+            RemoveLibraryRuns();
+        }
+
+        public void RemoveLibraryRuns()
+        {
+            using (new UpdateList(this, listLibraries))
+            {
+                var removedList = RemoveSelected(listLibraries);
+                foreach (var item in removedList)
+                {
+                    LibraryRunsRemovedList.Add(item.ToString());
+                }
+            }
+
+            UpdateLibraryRunButtons();
+        }
+
+        private void listLibraries_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!InListUpdate)
+                UpdateLibraryRunButtons();
+        }
+
+        private void UpdateLibraryRunButtons()
+        {
+            bool enable = listLibraries.SelectedIndices.Count > 0;
+            btnRemoveLibRun.Enabled = enable;
+            btnRemoveAllLibs.Enabled = enable;
+        }
+
+        private void btnRemoveAllLibs_Click(object sender, EventArgs e)
+        {
+            RemoveAllLibraryRuns();
+        }
+
+        public void RemoveAllLibraryRuns()
+        {
+            using (new UpdateList(this, listLibraries))
+            {
+                foreach (var item in listLibraries.Items)
+                {
+                    LibraryRunsRemovedList.Add(item.ToString());
+                }
+                listLibraries.Items.Clear();
+            }
+            UpdateLibraryRunButtons();
+        }
+
+        public void SelectLibraryRunsTab()
+        {
+            manageResultsTabControl.SelectTab(libRunsTab);
+        }
+
+        public void SelectReplicatesTab()
+        {
+            manageResultsTabControl.SelectTab(replicatesTab);
+        }
+
+        public bool IsRemoveCorrespondingReplicates
+        {
+            get { return checkBoxRemoveReplicates.Checked; }
+            set { checkBoxRemoveReplicates.Checked = value; }
+        }
+
+        public bool IsRemoveCorrespondingLibraries
+        {
+            get { return checkBoxRemoveLibraryRuns.Checked; }
+            set { checkBoxRemoveLibraryRuns.Checked = value; }
         }
     }
 }

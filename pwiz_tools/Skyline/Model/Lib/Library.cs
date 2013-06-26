@@ -159,6 +159,17 @@ namespace pwiz.Skyline.Model.Lib
             return LoadLibrary(spec, () => new LoadMonitor(this, container, spec));
         }
 
+        public void ReloadLibrary(IDocumentContainer container, LibrarySpec spec)
+        {
+            lock (_loadedLibraries)
+            {
+                string name = spec.Name;
+                _loadedLibraries.Remove(name);
+
+                ForDocumentLibraryReload(container, name);
+            }
+        }
+
         public Library TryGetLibrary(LibrarySpec spec)
         {
             lock (_loadedLibraries)
@@ -292,6 +303,8 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         LibrarySpec LibrarySpec { get; }
     }
+
+    public enum LibraryRedundancy { best, all, all_redundant }
 
     public abstract class Library : XmlNamedElement
     {
@@ -453,10 +466,10 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="key">The sequence, charge pair requested</param>
         /// <param name="labelType">An <see cref="IsotopeLabelType"/> for which to get spectra</param>
-        /// <param name="bestMatch">True if only the non-redundant best-match spectrum is requested</param>
+        /// <param name="redundancy">Level of redundancy requested in returned values</param>
         /// <returns>An enumeration of <see cref="SpectrumInfo"/></returns>
         public abstract IEnumerable<SpectrumInfo> GetSpectra(LibKey key,
-            IsotopeLabelType labelType, bool bestMatch);
+            IsotopeLabelType labelType, LibraryRedundancy redundancy);
 
         /// <summary>
         /// Returns the number of files or mass spec runs for which this library
@@ -676,10 +689,10 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
+        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // This base class only handles best match spectra
-            if (bestMatch)
+            if (redundancy == LibraryRedundancy.best)
             {
                 int i = FindEntry(key);
                 if (i != -1)
@@ -849,6 +862,12 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public bool IsDocumentLocal { get; private set; }
 
+        /// <summary>
+        /// True if this the document-specific library spec, and should not be stored 
+        /// in the global settings.
+        /// </summary>
+        public bool IsDocumentLibrary { get; private set; }
+
         public abstract Library LoadLibrary(ILoadMonitor loader);
 
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
@@ -863,8 +882,12 @@ namespace pwiz.Skyline.Model.Lib
         public LibrarySpec ChangeDocumentLocal(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.IsDocumentLocal = prop);
-        }        
+        }
 
+        public LibrarySpec ChangeDocumentLibrary(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsDocumentLibrary = prop).ChangeDocumentLocal(prop);
+        }        
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -895,6 +918,9 @@ namespace pwiz.Skyline.Model.Lib
             if (IsDocumentLocal)
                 throw new InvalidOperationException(Resources.LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML);
 
+            if (IsDocumentLibrary)
+                throw new InvalidOperationException(Resources.LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_);
+
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.file_path, FilePath);
@@ -910,7 +936,8 @@ namespace pwiz.Skyline.Model.Lib
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
                 Equals(other.FilePath, FilePath) &&
-                other.IsDocumentLocal.Equals(IsDocumentLocal);
+                other.IsDocumentLocal.Equals(IsDocumentLocal) &&
+                other.IsDocumentLibrary.Equals(IsDocumentLibrary);
         }
 
         public override bool Equals(object obj)
@@ -927,6 +954,7 @@ namespace pwiz.Skyline.Model.Lib
                 int result = base.GetHashCode();
                 result = (result*397) ^ FilePath.GetHashCode();
                 result = (result*397) ^ IsDocumentLocal.GetHashCode();
+                result = (result*397) ^ IsDocumentLibrary.GetHashCode();
                 return result;
             }
         }

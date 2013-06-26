@@ -1689,7 +1689,7 @@ namespace pwiz.Skyline.Properties
                         PeptidePick.library,    // PeptidePick
                         null,                   // PeptideRankId
                         null,                   // PeptideCount
-                        false,                  // DocumentLibrary
+                        false,                  // HasDocumentLibrary
                         new LibrarySpec[0],     // LibrarySpecs
                         new Library[0]          // Libraries
                     ), 

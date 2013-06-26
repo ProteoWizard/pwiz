@@ -165,12 +165,17 @@ namespace pwiz.Skyline.Controls.Graphs
             Hide();
         }
 
-        // Cancel all files.
+        // Cancel all uncached files.
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Hide();
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
-                                              doc => FilterFiles(doc, info => info.FileWriteTime.HasValue));
+                                              doc => FilterFiles(doc, info => IsCachedFile(doc, info)));
+        }
+
+        private bool IsCachedFile(SrmDocument doc, ChromFileInfo info)
+        {
+            return doc.Settings.MeasuredResults.IsCachedFile(info.FilePath);
         }
 
         // Cancel one file.

@@ -489,7 +489,7 @@ namespace pwiz.SkylineTestTutorial
             // Import scheduled data, p. 23
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
                     {
-                        manageResultsDlg.RemoveAll();
+                        manageResultsDlg.RemoveAllReplicates();
                         manageResultsDlg.OkDialog();
                     });
 

@@ -1444,12 +1444,12 @@ namespace pwiz.Skyline.Model.DocSettings
         private ReadOnlyCollection<Library> _disconnectedLibraries;
 
         public PeptideLibraries(PeptidePick pick, PeptideRankId rankId, int? peptideCount,
-            bool docLib, IList<LibrarySpec> librarySpecs, IList<Library> libraries)
+            bool hasDocLib, IList<LibrarySpec> librarySpecs, IList<Library> libraries)
         {
             Pick = pick;
             RankId = rankId;
             PeptideCount = peptideCount;
-            DocumentLibrary = docLib;
+            HasDocumentLibrary = hasDocLib;
             LibrarySpecs = librarySpecs;
             Libraries = libraries;
 
@@ -1459,7 +1459,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptidePick Pick { get; private set; }
         public PeptideRankId RankId { get; private set; }
         public int? PeptideCount { get; private set; }
-        public bool DocumentLibrary { get; private set; }
+        public bool HasDocumentLibrary { get; private set; }
 
         public bool HasLibraries { get { return _librarySpecs.Count > 0; } }
 
@@ -1614,7 +1614,25 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             Debug.Assert(IsLoaded);
 
-            return _libraries.Where(lib => lib != null).SelectMany(lib => lib.GetSpectra(key, labelType, bestMatch));
+            var redundancy = bestMatch ? LibraryRedundancy.best : LibraryRedundancy.all;
+            return _libraries.Where(lib => lib != null).SelectMany(lib => lib.GetSpectra(key, labelType, redundancy));
+        }
+
+        public bool TryGetDocumentLibrary(out BiblioSpecLiteLibrary docLib)
+        {
+            Debug.Assert(IsLoaded);
+
+            docLib = null;
+            for (int i = 0; i < _libraries.Count; i++)
+            {
+                if (_librarySpecs[i].IsDocumentLibrary)
+                {
+                    docLib = _libraries[i] as BiblioSpecLiteLibrary;
+                    return docLib != null;
+                }
+            }
+
+            return false;
         }
 
         #region Property change methods
@@ -1641,7 +1659,27 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideLibraries ChangeDocumentLibrary(bool prop)
         {
-            return ChangeProp(ImClone(this), im => im.DocumentLibrary = prop);
+            return ChangeProp(ImClone(this), im => im.HasDocumentLibrary = prop);
+        }
+
+        public PeptideLibraries ChangeDocumentLibraryPath(string path)
+        {
+            var specs = new LibrarySpec[LibrarySpecs.Count];
+            var libs = new Library[specs.Length];
+            for (int i = 0; i < specs.Length; i++)
+            {
+                if (LibrarySpecs[i].IsDocumentLibrary)
+                {
+                    specs[i] = BiblioSpecLiteSpec.GetDocumentLibrarySpec(path);
+                    libs[i] = null;
+                }
+                else
+                {
+                    specs[i] = LibrarySpecs[i];
+                    libs[i] = Libraries[i];
+                }
+            }
+            return ChangeLibraries(specs, libs);
         }
 
         public PeptideLibraries ChangeLibrarySpecs(IList<LibrarySpec> prop)
@@ -1911,7 +1949,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             Pick = reader.GetEnumAttribute(ATTR.pick, PeptidePick.library);
             PeptideCount = reader.GetNullableIntAttribute(ATTR.peptide_count);
-            DocumentLibrary = reader.GetBoolAttribute(ATTR.document_library);
+            HasDocumentLibrary = reader.GetBoolAttribute(ATTR.document_library);
 
             _rankIdName = reader.GetAttribute(ATTR.rank_type);
 
@@ -1965,7 +2003,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttribute(ATTR.rank_type, RankId != null ? RankId.Value : _rankIdName);
                 writer.WriteAttributeNullable(ATTR.peptide_count, PeptideCount);
             }
-            writer.WriteAttribute(ATTR.document_library, DocumentLibrary);
+            writer.WriteAttribute(ATTR.document_library, HasDocumentLibrary);
 
             // Write child elements
             var libraries = (_libraries.Count > 0 || _disconnectedLibraries == null ?
@@ -1976,26 +2014,34 @@ namespace pwiz.Skyline.Model.DocSettings
                 // writer.WriteElements(_libraries, LIBRARY_HELPERS);
                 for (int i = 0; i < libraries.Count; i++)
                 {
-                    // If there is a library, write it.  Otherwise, write the
-                    // library spec.
-                    var item = libraries[i];
-                    if (item == null)
+                    // First make sure it's not the document library
+                    var spec = _librarySpecs[i];
+                    if (!spec.IsDocumentLibrary)
                     {
-                        var spec = _librarySpecs[i];
-                        if (!spec.IsDocumentLocal)
+                        // If there is a library, write it.  Otherwise, write the
+                        // library spec.
+                        var item = libraries[i];
+                        if (item == null)
                         {
-                            IXmlElementHelper<LibrarySpec> helper = XmlUtil.FindHelper(spec, LIBRARY_SPEC_HELPERS);
-                            if (helper == null)
-                                throw new InvalidOperationException(Resources.PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
-                            writer.WriteElement(helper.ElementNames[0], spec);                            
+                            if (!spec.IsDocumentLocal)
+                            {
+                                IXmlElementHelper<LibrarySpec> helper = XmlUtil.FindHelper(spec, LIBRARY_SPEC_HELPERS);
+                                if (helper == null)
+                                    throw new InvalidOperationException(
+                                        Resources.
+                                            PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
+                                writer.WriteElement(helper.ElementNames[0], spec);
+                            }
                         }
-                    }
-                    else
-                    {
-                        IXmlElementHelper<Library> helper = XmlUtil.FindHelper(item, LIBRARY_HELPERS);
-                        if (helper == null)
-                            throw new InvalidOperationException(Resources.PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
-                        writer.WriteElement(helper.ElementNames[0], item);                        
+                        else
+                        {
+                            IXmlElementHelper<Library> helper = XmlUtil.FindHelper(item, LIBRARY_HELPERS);
+                            if (helper == null)
+                                throw new InvalidOperationException(
+                                    Resources.
+                                        PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
+                            writer.WriteElement(helper.ElementNames[0], item);
+                        }
                     }
                 }
             }

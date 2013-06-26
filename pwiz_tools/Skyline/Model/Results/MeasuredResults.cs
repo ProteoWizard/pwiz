@@ -96,6 +96,11 @@ namespace pwiz.Skyline.Model.Results
             get { return Caches.SelectMany(cache => cache.CachedFiles); }
         }
 
+        public bool IsCachedFile(string filePath)
+        {
+            return CachedFilePaths.Contains(filePath);
+        }
+
         private IEnumerable<ChromatogramCache> Caches
         {
             get

@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var chromatograms = docRename.Settings.MeasuredResults.Chromatograms;
                 dlg.SelectedChromatograms = new[] { chromatograms[2], chromatograms[3] };
-                dlg.Remove();
+                dlg.RemoveReplicates();
                 dlg.OkDialog();
             });
 
@@ -258,7 +258,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var chromatograms = docRename.Settings.MeasuredResults.Chromatograms;
                 dlg.SelectedChromatograms = new[] { chromatograms[0] };
-                dlg.Remove();
+                dlg.RemoveReplicates();
                 dlg.OkDialog();
             });
 
@@ -297,7 +297,7 @@ namespace pwiz.SkylineTestFunctional
             // Remove the last replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
-                dlg.RemoveAll();
+                dlg.RemoveAllReplicates();
                 dlg.OkDialog();
             });
 

@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
             }
             // Use a very specific LSID, since it really only matches this document.
-            string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:minimal:{1}:{2}:{3}.{4}", // Not L10N
+            string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}", // Not L10N
                 libAuthority, libId, Guid.NewGuid(), majorVer, minorVer);
 
             var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
@@ -190,6 +190,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             // Hash table to store the database IDs of any source files in the library
             // Source file information is available only in Bibliospec libraries, schema version >= 1
             var dictFiles = new Dictionary<string, long>();
+            var dictFilesRedundant = new Dictionary<string, long>();
 
             ISession redundantSession = null;
             ITransaction redundantTransaction = null;
@@ -233,7 +234,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             if (!saveRetentionTimes)
                             {
                                 // get the best spectra
-                                foreach (var spectrumInfo in library.GetSpectra(libKey, labelType, true))
+                                foreach (var spectrumInfo in library.GetSpectra(libKey, labelType, LibraryRedundancy.best))
                                 {
                                     DbRefSpectra refSpectra = MakeRefSpectrum(spectrumInfo,
                                                                               peptideSeq,
@@ -246,7 +247,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     dictLibrary.Add(libKey,
                                                     new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
                                                                                refSpectra.NumPeaks,
-                                                                               (int) (refSpectra.Id ?? 0), default(IndexedRetentionTimes)));
+                                                                               (int) (refSpectra.Id ?? 0),
+                                                                               default(IndexedRetentionTimes)));
                                 }
 
                                 session.Flush();
@@ -256,7 +258,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             else
                             {
                                 // get all the spectra, including the redundant ones if this library has any
-                                IEnumerable<SpectrumInfo> spectra = library.GetSpectra(libKey, labelType, false);
+                                var spectra = library.GetSpectra(libKey, labelType, LibraryRedundancy.all_redundant);
 
                                 DbRefSpectra refSpectra = new DbRefSpectra
                                                               {
@@ -270,10 +272,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 // For BiblioSpec (schema ver >= 1), this can include retention time information 
                                 // for this spectrum as well as any redundant spectra for the peptide.
                                 // Ids of spectra in the redundant library, where available, are also returned.
-                                List<SpectrumLiteKey> redundantSpectraKeys = new List<SpectrumLiteKey>();
-                                BuildRefSpectra(document, session, refSpectra, spectra, dictFiles,
-                                                ref redundantSpectraKeys);
-
+                                var redundantSpectraKeys = new List<SpectrumKeyTime>();
+                                BuildRefSpectra(document, session, refSpectra, spectra, dictFiles, redundantSpectraKeys);
 
                                 session.Save(refSpectra);
                                 session.Flush();
@@ -282,7 +282,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 // TODO(nicksh): preserve retention time information.
                                 var retentionTimesByFileId = default(IndexedRetentionTimes);
                                 dictLibrary.Add(libKey,
-                                                new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
+                                                new BiblioLiteSpectrumInfo(libKey,
+                                                                           refSpectra.Copies,
                                                                            refSpectra.NumPeaks,
                                                                            (int) (refSpectra.Id ?? 0), 
                                                                            retentionTimesByFileId));
@@ -295,7 +296,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                         redundantSession = OpenWriteSession_Redundant();
                                         redundantTransaction = redundantSession.BeginTransaction();
                                     }
-                                    SaveRedundantSpectra(redundantSession, redundantSpectraKeys, refSpectra, library);
+                                    SaveRedundantSpectra(redundantSession, redundantSpectraKeys, dictFilesRedundant, refSpectra, library);
                                     redundantSpectraCount += redundantSpectraKeys.Count;
                                 }
                             }
@@ -325,9 +326,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                     if (redundantTransaction != null)
                     {
+                        var scoreType = new DbScoreTypes {Id = 0, ScoreType = "UNKNOWN"};
+                        redundantSession.Save(scoreType);
+
                         libInfo = new DbLibInfo
                                       {
-                                          LibLSID = libLsid,
+                                          LibLSID = libLsid.Replace(":nr:", ":redundant:"),
                                           CreateTime = createTime,
                                           NumSpecs = redundantSpectraCount,
                                           MajorVersion = majorVer,
@@ -386,25 +390,34 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return true;
         }
 
-        private static void SaveRedundantSpectra(ISession sessionRedundant, IEnumerable<SpectrumLiteKey> redundantSpectraIds, 
-                                          DbRefSpectra refSpectra, Library library)
+        private static void SaveRedundantSpectra(ISession sessionRedundant,
+                                                 IEnumerable<SpectrumKeyTime> redundantSpectraIds,
+                                                 IDictionary<string, long> dictFiles,
+                                                 DbRefSpectra refSpectra,
+                                                 Library library)
         {
-            foreach (SpectrumLiteKey specLiteKey in redundantSpectraIds)
+            foreach (var specLiteKey in redundantSpectraIds)
             {
+                // If this source file has already been saved, get its database Id.
+                // Otherwise, save it.
+                long spectrumSourceId = GetSpecturmSourceId(sessionRedundant, specLiteKey.FilePath, dictFiles);
+
                 // Get peaks for the redundant spectrum
-                var peaksInfo = library.LoadSpectrum(specLiteKey);
-                var redundantSpectra = new DbRefSpectra
+                var peaksInfo = library.LoadSpectrum(specLiteKey.Key);
+                var redundantSpectra = new DbRefSpectraRedundant
                                            {
-                                               Id = specLiteKey.RedundantId,
+                                               Id = specLiteKey.Key.RedundantId,
                                                PeptideSeq = refSpectra.PeptideSeq,
                                                PrecursorMZ = refSpectra.PrecursorMZ,
                                                PrecursorCharge = refSpectra.PrecursorCharge,
                                                PeptideModSeq = refSpectra.PeptideModSeq,
                                                NumPeaks = (ushort) peaksInfo.Peaks.Count(),
-                                               Copies = refSpectra.Copies
+                                               Copies = refSpectra.Copies,
+                                               RetentionTime = specLiteKey.Time.RetentionTime,
+                                               FileId = spectrumSourceId
                                            };
 
-                var peaks = new DbRefSpectraPeaks
+                var peaks = new DbRefSpectraRedundantPeaks
                                 {
                                     RefSpectra = redundantSpectra,
                                     PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
@@ -423,8 +436,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                      ISession session,
                                      DbRefSpectra refSpectra,
                                      IEnumerable<SpectrumInfo> spectra,
-                                     Dictionary<string, long> dictFiles,
-                                     ref List<SpectrumLiteKey> redundantSpectraKeys)
+                                     IDictionary<string, long> dictFiles,
+                                     ICollection<SpectrumKeyTime> redundantSpectraKeys)
         {
             bool foundBestSpectrum = false;
 
@@ -457,19 +470,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
-                long spectrumSourceId;
-                if (!dictFiles.TryGetValue(spectrum.FilePath, out spectrumSourceId))
-                {
-                    spectrumSourceId = SaveSourceFile(session, spectrum.FilePath);
-                    if (spectrumSourceId == 0)
-                    {
-                        throw new SQLiteException(
-                            String.Format(Resources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__,
-                                          spectrum.FilePath));
-                    }
-
-                    dictFiles.Add(spectrum.FilePath, spectrumSourceId);
-                }
+                long spectrumSourceId = GetSpecturmSourceId(session, spectrum.FilePath, dictFiles);
 
                 // spectrumKey in the SpectrumInfo is an integer for reference(best) spectra,
                 // or object of type SpectrumLiteKey for redundant spectra
@@ -488,13 +489,26 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     refSpectra.RetentionTimes = new List<DbRetentionTimes>();
 
                 refSpectra.RetentionTimes.Add(dbRetentionTimes);
-
                
                 if (specLiteKey != null)
                 {
-                    redundantSpectraKeys.Add(specLiteKey);
+                    redundantSpectraKeys.Add(new SpectrumKeyTime(specLiteKey, dbRetentionTimes, spectrum.FilePath));
                 }
             }
+        }
+
+        private class SpectrumKeyTime
+        {
+            public SpectrumKeyTime(SpectrumLiteKey key, DbRetentionTimes time, string filePath)
+            {
+                Key = key;
+                Time = time;
+                FilePath = filePath;
+            }
+
+            public SpectrumLiteKey Key { get; private set; }
+            public DbRetentionTimes Time { get; private set; }
+            public string FilePath { get; private set; }
         }
 
         private static DbRefSpectra MakeRefSpectrum(SpectrumInfo spectrum, string peptideSeq, string modifiedPeptideSeq, double precMz, int precChg)
@@ -516,6 +530,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
+            if (peaksInfo == null || peaksInfo.Peaks == null)
+                Console.WriteLine("Problem");
 
             refSpectra.Copies = copies;
             refSpectra.NumPeaks = (ushort) peaksInfo.Peaks.Length;
@@ -528,6 +544,25 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                    };
 
             ModsFromModifiedSequence(refSpectra);
+        }
+
+        private static long GetSpecturmSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles)
+        {
+            long spectrumSourceId;
+            if (!dictFiles.TryGetValue(filePath, out spectrumSourceId))
+            {
+                spectrumSourceId = SaveSourceFile(session, filePath);
+                if (spectrumSourceId == 0)
+                {
+                    throw new SQLiteException(
+                        String.Format(Resources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__,
+                                      filePath));
+                }
+
+                dictFiles.Add(filePath, spectrumSourceId);
+            }
+
+            return spectrumSourceId;
         }
 
         private static long SaveSourceFile(ISession session, string filePath)
@@ -651,12 +686,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     using (var blibDb = CreateBlibDb(Path.Combine(pathDirectory, fileName)))
                     {
                         blibDb.WaitBroker = waitBroker;
-                        string nameMin = librarySpec.Name;
-                        // Avoid adding the modifier a second time, if it has
-                        // already been done once.
-                        if (!nameMin.EndsWith(nameModifier + ")")) // Not L10N
-                            nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier); // Not L10N
-                        var librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
+                        var librarySpecMin = librarySpec as BiblioSpecLiteSpec;
+                        if (librarySpecMin == null || !librarySpecMin.IsDocumentLibrary)
+                        {
+                            string nameMin = librarySpec.Name;
+                            // Avoid adding the modifier a second time, if it has
+                            // already been done once.
+                            if (!nameMin.EndsWith(nameModifier + ")")) // Not L10N
+                                nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier); // Not L10N
+                            librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
+                        }
 
                         listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
                             pepLibraries.Libraries[i], document));
@@ -677,7 +716,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             return node;
 
                         string libName = nodeGroup.LibInfo.LibraryName;
-                        var libInfo = nodeGroup.LibInfo.ChangeLibraryName(dictOldNameToNew[libName]);
+                        string libNameNew = dictOldNameToNew[libName];
+                        if (Equals(libName, libNameNew))
+                            return node;
+                        var libInfo = nodeGroup.LibInfo.ChangeLibraryName(libNameNew);
                         return nodeGroup.ChangeLibInfo(libInfo);
                     },
                     (int) SrmDocument.Level.TransitionGroups);

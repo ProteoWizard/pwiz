@@ -100,6 +100,64 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                doc => SkylineWindow.ImportResults(doc, namedResults.ToArray(), ExportOptimize.NONE));
         }
 
+        private void browseToResultsFileButton_Click(object sender, EventArgs e)
+        {
+            OpenDataSourceDialog dlgOpen = new OpenDataSourceDialog
+                                               {
+                                                   Text =
+                                                       Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search
+                                               };
+
+            // The dialog expects null to mean no directory was supplied, so don't assign
+            // an empty string.
+            string initialDir = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
+            dlgOpen.InitialDirectory = initialDir;
+
+            // Use saved source type, if there is one.
+            string sourceType = Settings.Default.SrmResultsSourceType;
+            if (!string.IsNullOrEmpty(sourceType))
+                dlgOpen.SourceTypeName = sourceType;
+
+            if (dlgOpen.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            string[] dataSources = dlgOpen.DataSources;
+
+            if (dataSources == null || dataSources.Length == 0)
+            {
+                MessageBox.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen,
+                                Program.Name);
+                return;
+            }
+
+            foreach (var dataSource in dataSources)
+            {
+                string dataSourceFileName = Path.GetFileName(dataSource);
+                foreach (var item in MissingResultsFiles)
+                {
+                    if (null != item)
+                    {
+                        if (Equals(item, dataSource) ||
+                            MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(item),
+                                                            Path.GetFileNameWithoutExtension(dataSourceFileName)))
+                        {
+                            FoundResultsFiles.Add(dataSource);
+                            MissingResultsFiles.Remove(item);
+                            break;
+                        }
+                    }
+                }
+
+                if (MissingResultsFiles.Count == 0)
+                {
+                    break;
+                }
+            }
+
+            UpdateResultsFilesUI(MissingResultsFiles.Count == 0);
+            FireResultsFilesChanged(new ResultsFilesEventArgs(FoundResultsFiles.Count));
+        }
+
         private void findResultsFilesButton_Click(object sender, EventArgs e)
         {
             // Ask the user for the directory to search
@@ -141,7 +199,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             UpdateResultsFilesUI(allFilesFound);
 
-            FireResultsFilesChanged(new ResultsFilesEventArgs(listResultsFilesMissing.Items.Count));
+            FireResultsFilesChanged(new ResultsFilesEventArgs(listResultsFilesFound.Items.Count));
             return allFilesFound;
         }
 
@@ -276,12 +334,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class ResultsFilesEventArgs : EventArgs
         {
 
-            public ResultsFilesEventArgs(int numMissingFiles)
+            public ResultsFilesEventArgs(int numFoundFiles)
             {
-                NumMissingFiles = numMissingFiles;
+                NumFoundFiles = numFoundFiles;
             }
 
-            public int NumMissingFiles { get; private set; }
+            public int NumFoundFiles { get; private set; }
         }
     }
 }

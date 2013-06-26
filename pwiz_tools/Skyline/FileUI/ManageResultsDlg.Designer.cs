@@ -31,7 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ManageResultsDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.btnDown = new System.Windows.Forms.Button();
             this.btnUp = new System.Windows.Forms.Button();
             this.btnRemove = new System.Windows.Forms.Button();
@@ -41,6 +40,17 @@
             this.btnReimport = new System.Windows.Forms.Button();
             this.btnMinimize = new System.Windows.Forms.Button();
             this.btnRescore = new System.Windows.Forms.Button();
+            this.manageResultsTabControl = new System.Windows.Forms.TabControl();
+            this.replicatesTab = new System.Windows.Forms.TabPage();
+            this.checkBoxRemoveLibraryRuns = new System.Windows.Forms.CheckBox();
+            this.libRunsTab = new System.Windows.Forms.TabPage();
+            this.checkBoxRemoveReplicates = new System.Windows.Forms.CheckBox();
+            this.btnRemoveLibRun = new System.Windows.Forms.Button();
+            this.btnRemoveAllLibs = new System.Windows.Forms.Button();
+            this.listLibraries = new System.Windows.Forms.ListBox();
+            this.manageResultsTabControl.SuspendLayout();
+            this.replicatesTab.SuspendLayout();
+            this.libRunsTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -56,11 +66,6 @@
             this.btnOk.Name = "btnOk";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
             // 
             // btnDown
             // 
@@ -127,30 +132,93 @@
             this.btnRescore.UseVisualStyleBackColor = true;
             this.btnRescore.Click += new System.EventHandler(this.btnRescore_Click);
             // 
+            // manageResultsTabControl
+            // 
+            resources.ApplyResources(this.manageResultsTabControl, "manageResultsTabControl");
+            this.manageResultsTabControl.Controls.Add(this.replicatesTab);
+            this.manageResultsTabControl.Controls.Add(this.libRunsTab);
+            this.manageResultsTabControl.Name = "manageResultsTabControl";
+            this.manageResultsTabControl.SelectedIndex = 0;
+            // 
+            // replicatesTab
+            // 
+            this.replicatesTab.Controls.Add(this.checkBoxRemoveLibraryRuns);
+            this.replicatesTab.Controls.Add(this.listResults);
+            this.replicatesTab.Controls.Add(this.btnRescore);
+            this.replicatesTab.Controls.Add(this.btnRemove);
+            this.replicatesTab.Controls.Add(this.btnMinimize);
+            this.replicatesTab.Controls.Add(this.btnUp);
+            this.replicatesTab.Controls.Add(this.btnReimport);
+            this.replicatesTab.Controls.Add(this.btnDown);
+            this.replicatesTab.Controls.Add(this.btnRename);
+            this.replicatesTab.Controls.Add(this.btnRemoveAll);
+            resources.ApplyResources(this.replicatesTab, "replicatesTab");
+            this.replicatesTab.Name = "replicatesTab";
+            this.replicatesTab.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxRemoveLibraryRuns
+            // 
+            resources.ApplyResources(this.checkBoxRemoveLibraryRuns, "checkBoxRemoveLibraryRuns");
+            this.checkBoxRemoveLibraryRuns.Name = "checkBoxRemoveLibraryRuns";
+            this.checkBoxRemoveLibraryRuns.UseVisualStyleBackColor = true;
+            // 
+            // libRunsTab
+            // 
+            this.libRunsTab.Controls.Add(this.checkBoxRemoveReplicates);
+            this.libRunsTab.Controls.Add(this.btnRemoveLibRun);
+            this.libRunsTab.Controls.Add(this.btnRemoveAllLibs);
+            this.libRunsTab.Controls.Add(this.listLibraries);
+            resources.ApplyResources(this.libRunsTab, "libRunsTab");
+            this.libRunsTab.Name = "libRunsTab";
+            this.libRunsTab.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxRemoveReplicates
+            // 
+            resources.ApplyResources(this.checkBoxRemoveReplicates, "checkBoxRemoveReplicates");
+            this.checkBoxRemoveReplicates.Name = "checkBoxRemoveReplicates";
+            this.checkBoxRemoveReplicates.UseVisualStyleBackColor = true;
+            // 
+            // btnRemoveLibRun
+            // 
+            resources.ApplyResources(this.btnRemoveLibRun, "btnRemoveLibRun");
+            this.btnRemoveLibRun.Name = "btnRemoveLibRun";
+            this.btnRemoveLibRun.UseVisualStyleBackColor = true;
+            this.btnRemoveLibRun.Click += new System.EventHandler(this.btnRemoveLibRun_Click);
+            // 
+            // btnRemoveAllLibs
+            // 
+            resources.ApplyResources(this.btnRemoveAllLibs, "btnRemoveAllLibs");
+            this.btnRemoveAllLibs.Name = "btnRemoveAllLibs";
+            this.btnRemoveAllLibs.UseVisualStyleBackColor = true;
+            this.btnRemoveAllLibs.Click += new System.EventHandler(this.btnRemoveAllLibs_Click);
+            // 
+            // listLibraries
+            // 
+            resources.ApplyResources(this.listLibraries, "listLibraries");
+            this.listLibraries.FormattingEnabled = true;
+            this.listLibraries.Name = "listLibraries";
+            this.listLibraries.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this.listLibraries.SelectedIndexChanged += new System.EventHandler(this.listLibraries_SelectedIndexChanged);
+            // 
             // ManageResultsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.btnRescore);
-            this.Controls.Add(this.btnMinimize);
-            this.Controls.Add(this.btnReimport);
-            this.Controls.Add(this.listResults);
-            this.Controls.Add(this.btnRename);
-            this.Controls.Add(this.btnRemoveAll);
-            this.Controls.Add(this.btnDown);
-            this.Controls.Add(this.btnUp);
-            this.Controls.Add(this.btnRemove);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.manageResultsTabControl);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ManageResultsDlg";
             this.ShowInTaskbar = false;
+            this.manageResultsTabControl.ResumeLayout(false);
+            this.replicatesTab.ResumeLayout(false);
+            this.replicatesTab.PerformLayout();
+            this.libRunsTab.ResumeLayout(false);
+            this.libRunsTab.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -158,7 +226,6 @@
 
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnDown;
         private System.Windows.Forms.Button btnUp;
         private System.Windows.Forms.Button btnRemove;
@@ -168,5 +235,13 @@
         private System.Windows.Forms.Button btnReimport;
         private System.Windows.Forms.Button btnMinimize;
         private System.Windows.Forms.Button btnRescore;
+        private System.Windows.Forms.TabControl manageResultsTabControl;
+        private System.Windows.Forms.TabPage replicatesTab;
+        private System.Windows.Forms.TabPage libRunsTab;
+        private System.Windows.Forms.CheckBox checkBoxRemoveLibraryRuns;
+        private System.Windows.Forms.Button btnRemoveLibRun;
+        private System.Windows.Forms.Button btnRemoveAllLibs;
+        private System.Windows.Forms.ListBox listLibraries;
+        private System.Windows.Forms.CheckBox checkBoxRemoveReplicates;
     }
 }
