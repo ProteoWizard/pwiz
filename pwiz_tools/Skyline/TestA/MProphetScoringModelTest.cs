@@ -96,21 +96,16 @@ namespace pwiz.SkylineTestA
             {
                 // Load transition groups from data file.
                 var filePath = testFilesDir.GetTestPath(fileWeights._fileName);
-                MProphetPeakScoringModel.TransitionGroups targetTransitionGroups;
-                MProphetPeakScoringModel.TransitionGroups decoyTransitionGroups;
+                ScoredGroupPeaksSet targetTransitionGroups;
+                ScoredGroupPeaksSet decoyTransitionGroups;
                 LoadData(filePath, out targetTransitionGroups, out decoyTransitionGroups);
 
                 // Discard half the transition groups that are used for testing.
                 targetTransitionGroups.DiscardHalf();
                 decoyTransitionGroups.DiscardHalf();
 
-                // Create some fake peak feature calculators.
-                var peakFeatureCalculators = new Type[fileWeights._weights.Length];
-                for (int i = 0; i < peakFeatureCalculators.Length; i++)
-                    peakFeatureCalculators[i] = typeof(LegacyLogUnforcedAreaCalc);    // doesn't matter what this is as long as it implement IPeakFeatureCalculator
-
                 // Calculate weights for peak features.
-                var scoringModel = new MProphetPeakScoringModel("mProphet", peakFeatureCalculators, fileWeights._weights);    // Not L10N
+                var scoringModel = new MProphetPeakScoringModel("mProphet", fileWeights._weights);    // Not L10N
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList());
                 Assert.AreEqual(scoringModel.Weights.Count, fileWeights._weights.Length);
                 for (int i = 0; i < scoringModel.Weights.Count; i++)
@@ -129,8 +124,8 @@ namespace pwiz.SkylineTestA
             {
                 // Load transition groups from data file.
                 var filePath = testFilesDir.GetTestPath(fileWeights._fileName);
-                MProphetPeakScoringModel.TransitionGroups targetTransitionGroups;
-                MProphetPeakScoringModel.TransitionGroups decoyTransitionGroups;
+                ScoredGroupPeaksSet targetTransitionGroups;
+                ScoredGroupPeaksSet decoyTransitionGroups;
                 LoadData(filePath, out targetTransitionGroups, out decoyTransitionGroups);
 
                 // Randomly discard half the transition groups that are used for testing.
@@ -148,15 +143,11 @@ namespace pwiz.SkylineTestA
         {
             // Good validation.
             AssertEx.NoExceptionThrown<Exception>(new Action(() =>
-                new MProphetPeakScoringModel("GoodModel", new[] {typeof(LegacyLogUnforcedAreaCalc)}, new[] {0.0})));   // Not L10N
-
-            // Bad calculator type.
-            AssertEx.ThrowsException<InvalidDataException>(new Action(() =>
-                new MProphetPeakScoringModel("BadType", new[] {typeof(int)}, new[] {0.0})));   // Not L10N
+                new MProphetPeakScoringModel("GoodModel", new[] {0.0}, new[] {new LegacyLogUnforcedAreaCalc()})));   // Not L10N
 
             // No calculator.
             AssertEx.ThrowsException<InvalidDataException>(new Action(() =>
-                new MProphetPeakScoringModel("NoCalculator", new Type[0], new double[0])));   // Not L10N
+                new MProphetPeakScoringModel("NoCalculator", new double[0], new IPeakFeatureCalculator[0])));   // Not L10N
         }
 
         [TestMethod]
@@ -165,7 +156,6 @@ namespace pwiz.SkylineTestA
             // Round-trip serialization.
             const string testRoundTrip = @"
                 <mprophet_peak_scoring_model name=""TestRoundTrip"" decoy_mean=""11.11"" decoy_stdev=""0.22"">
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyLogUnforcedAreaCalc"" weight=""3.33""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc"" weight=""4.44""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
@@ -181,7 +171,6 @@ namespace pwiz.SkylineTestA
             // Bad calculator type.
             const string testBadType = @"
                 <mprophet_peak_scoring_model name=""TestBadType"" decoy_mean=""11.11"" decoy_stdev=""0.22"">
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyLogUnforcedAreaCalc"" weight=""3.33""/>
                     <peak_feature_calculator type=""System.Double"" weight=""4.44""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
@@ -192,8 +181,8 @@ namespace pwiz.SkylineTestA
 
         private void LoadData(
             string filePath,
-            out MProphetPeakScoringModel.TransitionGroups targetTransitionGroups,
-            out MProphetPeakScoringModel.TransitionGroups decoyTransitionGroups)
+            out ScoredGroupPeaksSet targetTransitionGroups,
+            out ScoredGroupPeaksSet decoyTransitionGroups)
         {
             var data = new Data(filePath);
 
@@ -221,15 +210,15 @@ namespace pwiz.SkylineTestA
             Assert.AreNotEqual(0, varColumns.Count);
 
             // Create transition groups to be filled from data file.
-            targetTransitionGroups = new MProphetPeakScoringModel.TransitionGroups();
-            decoyTransitionGroups = new MProphetPeakScoringModel.TransitionGroups();
+            targetTransitionGroups = new ScoredGroupPeaksSet();
+            decoyTransitionGroups = new ScoredGroupPeaksSet();
             var featuresCount = varColumns.Count + 1;
-            var transitionGroupDictionary = new Dictionary<string, MProphetPeakScoringModel.TransitionGroup>();
+            var transitionGroupDictionary = new Dictionary<string, ScoredGroupPeaks>();
 
             // Process each row containing features for a peak.
             for (int i = 0; i < data.Items.GetLength(0); i++)
             {
-                MProphetPeakScoringModel.TransitionGroup transitionGroup;
+                ScoredGroupPeaks transitionGroup;
                 var decoy = data.Items[i, decoyColumn].Trim().ToLower();
                 var transitionGroupId = data.Items[i, transitionGroupIdColumn] + decoy; // Append decoy to make unique groups of decoy/target peaks.
 
@@ -237,7 +226,7 @@ namespace pwiz.SkylineTestA
                 if (!transitionGroupDictionary.ContainsKey(transitionGroupId))
                 {
                     // Create a new transition group.
-                    transitionGroup = new MProphetPeakScoringModel.TransitionGroup { Id = transitionGroupId };
+                    transitionGroup = new ScoredGroupPeaks { Id = transitionGroupId };
                     transitionGroupDictionary[transitionGroupId] = transitionGroup;
 
                     // Add the new group to the collection of decoy or target groups.
@@ -259,7 +248,7 @@ namespace pwiz.SkylineTestA
                     features[j + 1] = double.Parse(data.Items[i, varColumns[j]], CultureInfo.InvariantCulture);
 
                 // Add the peak to its transition group.
-                transitionGroup.Add(new MProphetPeakScoringModel.Peak(features));
+                transitionGroup.Add(new ScoredPeak(features));
             }
         }
 

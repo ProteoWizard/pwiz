@@ -19,7 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -36,7 +37,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <summary>
         /// List of feature calculators used by this model in scoring.
         /// </summary>
-        IList<Type> PeakFeatureCalculators { get; }
+        IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
 
         /// <summary>
         /// Method called to train the model.  Features scores for positive and negative distributions
@@ -49,15 +50,25 @@ namespace pwiz.Skyline.Model.Results.Scoring
         IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys);
 
         /// <summary>
-        /// Calculate a single score from a set of features using the trained model.
+        /// Mean of score values for decoy data.
         /// </summary>
-        /// <param name="features">All of the features calculated for a single peak</param>
-        /// <returns>A single score value obtained by combining the input features</returns>
-        double Score(double[] features);
+        double DecoyMean { get; }
+
+        /// <summary>
+        /// Standard deviation of score values for decoy data.
+        /// </summary>
+        double DecoyStdev { get; }
+
+        /// <summary>
+        /// Weighting coefficients for each calculator in the PeakFeatureCalculators list.
+        /// </summary>
+        IList<double> Weights { get; }
     }
 
     public abstract class PeakScoringModelSpec : XmlNamedElement, IPeakScoringModel, IValidating
     {
+        private ReadOnlyCollection<double> _weights;
+
         protected PeakScoringModelSpec()
         {
         }
@@ -66,9 +77,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
         }
 
-        public abstract IList<Type> PeakFeatureCalculators { get; }
+        public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
+        public IList<double> Weights
+        {
+            get { return _weights; }
+            protected set { _weights = MakeReadOnly(value); }
+        }
         public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys);
         public abstract double Score(double[] features);
+        public double DecoyMean { get; protected set; }
+        public double DecoyStdev { get; protected set; }
 
         public virtual void Validate()
         {
@@ -227,29 +245,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 new LegacyIdentifiedCountCalc(), 
             };
 
-        public static int CountCalculators { get { return CALCULATORS.Length; } }
-
         public static IEnumerable<IPeakFeatureCalculator> Calculators
         {
             get { return CALCULATORS; }
         }
 
-        public static Type[] CalculatorTypes
-        {
-            get
-            {
-                var calculatorTypes = new Type[CALCULATORS.Length];
-                for (int i = 0; i < calculatorTypes.Length; i++)
-                {
-                    calculatorTypes[i] = CALCULATORS[i].GetType();
-                }
-                return calculatorTypes;
-            }
-        }
-
         public static IPeakFeatureCalculator GetCalculator(Type calcType)
         {
-            return CALCULATORS.FirstOrDefault(c => c.GetType() == calcType);
+            var calculator = Activator.CreateInstance(calcType) as IPeakFeatureCalculator;
+            if (calculator == null)
+                throw new InvalidDataException();
+            return calculator;
         }
     }
 

@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Properties;
@@ -30,6 +30,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     [XmlRoot("legacy_peak_scoring_model")] // Not L10N
     public class LegacyScoringModel : PeakScoringModelSpec
     {
+        public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel__defaultName_Skyline_Legacy;
+
         public static double Score(double logUnforcedArea,
                                    double unforcedCountScore,
                                    double unforcedCountScoreStandard,
@@ -38,17 +40,32 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return logUnforcedArea + unforcedCountScore + LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER*unforcedCountScoreStandard + 20*identifiedCount;
         }
 
-        private readonly ReadOnlyCollection<Type> _calculators;
+        private readonly ReadOnlyCollection<IPeakFeatureCalculator> _calculators;
 
-        public LegacyScoringModel() : base(Resources.LegacyScoringModel_LegacyScoringModel_Skyline_Legacy)
+        public LegacyScoringModel()
+            : this(DEFAULT_NAME, double.NaN, double.NaN)
         {
-            _calculators = new ReadOnlyCollection<Type>(new[]
-                             {
-                                 typeof(LegacyLogUnforcedAreaCalc),
-                                 typeof(LegacyUnforcedCountScoreCalc),
-                                 typeof(LegacyUnforcedCountScoreStandardCalc),
-                                 typeof(LegacyIdentifiedCountCalc)
-                             });
+        }
+
+        public LegacyScoringModel(string name, double decoyMean, double decoyStdev) : base(name)
+        {
+            _calculators = new ReadOnlyCollection<IPeakFeatureCalculator>(new List<IPeakFeatureCalculator>
+                {
+                    new LegacyLogUnforcedAreaCalc(),
+                    new LegacyUnforcedCountScoreCalc(),
+                    new LegacyUnforcedCountScoreStandardCalc(),
+                    new LegacyIdentifiedCountCalc()
+                });
+
+            Weights = new[]
+                {
+                    1.0, 
+                    1.0, 
+                    LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER, 
+                    20
+                };
+            DecoyMean = decoyMean;
+            DecoyStdev = decoyStdev;
         }
 
         private enum FeatureOrder
@@ -59,15 +76,33 @@ namespace pwiz.Skyline.Model.Results.Scoring
             identified_count
         };
 
-        public override IList<Type> PeakFeatureCalculators
+        public override IList<IPeakFeatureCalculator> PeakFeatureCalculators
         {
             get { return _calculators; }
         }
-        
+
         public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys)
         {
-            // No training needed, since legacy scoring was fixed
-            return this;
+            return ChangeProp(ImClone(this), im =>
+                {
+                    ScoredGroupPeaksSet decoyTransitionGroups;
+                    if (decoys.FirstOrDefault() == null)
+                    {
+                        var allTransitionGroups = new ScoredGroupPeaksSet(targets);
+                        ScoredGroupPeaksSet targetTransitionGroups;
+                        allTransitionGroups.SelectTargetsAndDecoys(out targetTransitionGroups, out decoyTransitionGroups);
+                    }
+                    else
+                    {
+                        decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
+                    }
+
+                    decoyTransitionGroups.ScorePeaks(Weights);
+
+                    im.Weights = Weights;
+                    im.DecoyMean = decoyTransitionGroups.Mean;
+                    im.DecoyStdev = decoyTransitionGroups.Stdev;
+                });
         }
 
         public override double Score(double[] features)

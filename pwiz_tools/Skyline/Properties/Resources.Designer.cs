@@ -3644,15 +3644,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The model must be trained first..
-        /// </summary>
-        public static string EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_ {
-            get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The peak scoring model {0} already exists.
         /// </summary>
         public static string EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists {
@@ -6879,9 +6870,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Skyline Legacy.
         /// </summary>
-        public static string LegacyScoringModel_LegacyScoringModel_Skyline_Legacy {
+        public static string LegacyScoringModel__defaultName_Skyline_Legacy {
             get {
-                return ResourceManager.GetString("LegacyScoringModel_LegacyScoringModel_Skyline_Legacy", resourceCulture);
+                return ResourceManager.GetString("LegacyScoringModel__defaultName_Skyline_Legacy", resourceCulture);
             }
         }
         
@@ -7687,16 +7678,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_on" +
                         "e_peak_feature_calculator_with_a_weight_value", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to MProphetScoringModel has a peak feature calculator of type {0} which does not implement IPeakFeatureCalculator.
-        /// </summary>
-        public static string MProphetPeakScoringModel_DoValidate_MProphetScoringModel_has_a_peak_feature_calculator_of_type__0__which_does_not_implement_IPeakFeatureCalculator {
-            get {
-                return ResourceManager.GetString("MProphetPeakScoringModel_DoValidate_MProphetScoringModel_has_a_peak_feature_calcu" +
-                        "lator_of_type__0__which_does_not_implement_IPeakFeatureCalculator", resourceCulture);
             }
         }
         

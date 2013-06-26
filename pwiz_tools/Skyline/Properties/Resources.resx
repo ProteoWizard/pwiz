@@ -4948,9 +4948,6 @@ Are you sure you want to continue?</value>
   <data name="NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_" xml:space="preserve">
     <value>To extract chromatograms from {0} full-scan settings must be enabled.</value>
   </data>
-  <data name="MProphetPeakScoringModel_DoValidate_MProphetScoringModel_has_a_peak_feature_calculator_of_type__0__which_does_not_implement_IPeakFeatureCalculator" xml:space="preserve">
-    <value>MProphetScoringModel has a peak feature calculator of type {0} which does not implement IPeakFeatureCalculator</value>
-  </data>
   <data name="MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value" xml:space="preserve">
     <value>MProphetPeakScoringModel requires at least one peak feature calculator with a weight value</value>
   </data>
@@ -4971,9 +4968,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
     <value>Reference coelution count</value>
-  </data>
-  <data name="LegacyScoringModel_LegacyScoringModel_Skyline_Legacy" xml:space="preserve">
-    <value>Skyline Legacy</value>
   </data>
   <data name="MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation" xml:space="preserve">
     <value>Library intensity dot-product</value>
@@ -5269,9 +5263,6 @@ Are you sure you want to continue?</value>
   <data name="MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape" xml:space="preserve">
     <value>Reference shape (weighted)</value>
   </data>
-  <data name="EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_" xml:space="preserve">
-    <value>The model must be trained first.</value>
-  </data>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphet weighted reference</value>
   </data>
@@ -5328,5 +5319,8 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_results_" xml:space="preserve">
     <value>The document must contain mass spec data to manage results.</value>
+  </data>
+  <data name="LegacyScoringModel__defaultName_Skyline_Legacy" xml:space="preserve">
+    <value>Skyline Legacy</value>
   </data>
 </root>

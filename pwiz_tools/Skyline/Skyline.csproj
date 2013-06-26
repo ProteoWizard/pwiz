@@ -746,12 +746,16 @@
     </Compile>
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\LegacyFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\LegacyScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\MProphetScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\MQuestFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\PeakFeatureEnumerator.cs" />
+    <Compile Include="Model\Results\Scoring\ScoredGroupPeaksSet.cs" />
+    <Compile Include="Model\Results\Scoring\ScoredPeak.cs" />
+    <Compile Include="Model\Results\Scoring\ScoredGroupPeaks.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />

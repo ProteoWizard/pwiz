@@ -254,7 +254,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedShapeCalc : MQuestWeightedLightCalc
     {
-        public MQuestWeightedShapeCalc(string name = null) : base(name ?? Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape) { }
+        public MQuestWeightedShapeCalc() : base(Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape) { }
+        public MQuestWeightedShapeCalc(string name) : base(name) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -291,7 +292,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedCoElutionCalc : MQuestWeightedLightCalc
     {
-        public MQuestWeightedCoElutionCalc(string name = null) : base(name ?? Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution) { }
+        public MQuestWeightedCoElutionCalc() : base(Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution) { }
+        public MQuestWeightedCoElutionCalc(string name) : base(name) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -433,7 +435,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceShapeCalc(string name = null) : base(name ?? Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape) {}
+        public MQuestWeightedReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape) {}
+        public MQuestWeightedReferenceShapeCalc(string name) : base(name) {}
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -468,7 +471,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     class MQuestWeightedReferenceCoElutionCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceCoElutionCalc(string name = null) : base(name ?? Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution) { }
+        public MQuestWeightedReferenceCoElutionCalc() : base(Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution) { }
+        public MQuestWeightedReferenceCoElutionCalc(string name) : base(name) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {

@@ -28,6 +28,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -843,6 +844,12 @@ namespace pwiz.Skyline.Model.DocSettings
                         defSet.SpectralLibraryList.Add(documentLibSpec.ChangeDocumentLibrary(true));
                     }
                 }
+            }
+
+            if (PeptideSettings.Integration.PeakScoringModel != null &&
+                !Equals(PeptideSettings.Integration.PeakScoringModel.Name, LegacyScoringModel.DEFAULT_NAME))
+            {
+                defSet.PeakScoringModelList.Add(PeptideSettings.Integration.PeakScoringModel);
             }
 
             UpdateDefaultModifications(true);

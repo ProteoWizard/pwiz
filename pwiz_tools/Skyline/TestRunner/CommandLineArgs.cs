@@ -25,54 +25,10 @@ namespace TestRunner
 {
     class CommandLineArgs
     {
-        public static bool HasArg(string argName)
-        {
-            return _originalArgs.Contains(argName);
-        }
+        private readonly Dictionary<string, string> _args;
+        private readonly List<string> _originalArgs;
 
-        public static bool ArgAsBool(string argName)
-        {
-            switch (_args[argName].ToLower())
-            {
-                case "on":
-                case "true":
-                case "1":
-                    return true;
-
-                case "off":
-                case "false":
-                case "0":
-                    return false;
-
-                default:
-                    throw new ArgumentException(string.Format("\"{0}\" is not a legal boolean value for argument \"{1}\"", _args[argName], argName));
-            }
-        }
-
-        public static string ArgAsString(string argName)
-        {
-            return _args[argName];
-        }
-
-        public static long ArgAsLong(string argName)
-        {
-            return Convert.ToInt64(_args[argName]);
-        }
-
-        public static double ArgAsDouble(string argName)
-        {
-            return Convert.ToDouble(_args[argName]);
-        }
-
-        public static string CommandLine
-        {
-            get
-            {
-                return "TestRunner " + _originalArgs.Aggregate("", (current, arg) => current + (arg + " "));
-            }
-        }
-
-        public static void ParseArgs(string[] args, string defaultArgs)
+        public CommandLineArgs(string[] args, string defaultArgs)
         {
             _originalArgs = new List<string>();
             foreach (var arg in args)
@@ -98,7 +54,54 @@ namespace TestRunner
             }
         }
 
-        private static void ParseDefaults(string defaultArgs)
+        public bool HasArg(string argName)
+        {
+            return _originalArgs.Contains(argName);
+        }
+
+        public bool ArgAsBool(string argName)
+        {
+            switch (_args[argName].ToLower())
+            {
+                case "on":
+                case "true":
+                case "1":
+                    return true;
+
+                case "off":
+                case "false":
+                case "0":
+                    return false;
+
+                default:
+                    throw new ArgumentException(string.Format("\"{0}\" is not a legal boolean value for argument \"{1}\"", _args[argName], argName));
+            }
+        }
+
+        public string ArgAsString(string argName)
+        {
+            return _args[argName];
+        }
+
+        public long ArgAsLong(string argName)
+        {
+            return Convert.ToInt64(_args[argName]);
+        }
+
+        public double ArgAsDouble(string argName)
+        {
+            return Convert.ToDouble(_args[argName]);
+        }
+
+        public string CommandLine
+        {
+            get
+            {
+                return "TestRunner " + _originalArgs.Aggregate("", (current, arg) => current + (arg + " "));
+            }
+        }
+
+        private void ParseDefaults(string defaultArgs)
         {
             if (defaultArgs == "") return;
             var args = defaultArgs.Split(';');
@@ -109,12 +112,9 @@ namespace TestRunner
             }
         }
 
-        public static string SearchArgs(string argList)
+        public string SearchArgs(string argList)
         {
             return argList.Split(';').FirstOrDefault(HasArg);
         }
-
-        private static Dictionary<string, string> _args;
-        private static List<string> _originalArgs;
     }
 }

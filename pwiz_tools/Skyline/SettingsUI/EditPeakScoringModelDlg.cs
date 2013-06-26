@@ -20,12 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -40,54 +38,103 @@ namespace pwiz.Skyline.SettingsUI
         private readonly Color _targetColor = Color.DarkBlue;
         private readonly Color _decoyColor = Color.OrangeRed;
 
+        private const int MPROPHET_MODEL_INDEX = 0;
+        private const int SKYLINE_LEGACY_MODEL_INDEX = 1;
+
         private readonly IEnumerable<IPeakScoringModel> _existing;
-        private MProphetPeakScoringModel _peakScoringModelNew;
-        private readonly TargetDecoyGenerator _targetDecoyGenerator;
+        private IPeakScoringModel _peakScoringModel;
+        private IPeakScoringModel _originalPeakScoringModel;
+        private const string UNNAMED = "<UNNAMED>"; // Not L10N
+        private string _originalName;
+        private TargetDecoyGenerator _targetDecoyGenerator;
         private readonly PeakCalculatorGridViewDriver _gridViewDriver;
         private int _selectedCalculator = -1;
+        private int _selectedIndex = -1;
+        private bool _modelTrained;
         private SortableBindingList<PeakCalculatorWeight> PeakCalculatorWeights { get { return _gridViewDriver.Items; } }
-
+        
         /// <summary>
         /// Create a new scoring model, or edit an existing model.
         /// </summary>
-        /// <param name="model">Null to create a new model</param>
         /// <param name="existing">Existing scoring models (to check for unique name)</param>
-        public EditPeakScoringModelDlg(MProphetPeakScoringModel model, IEnumerable<IPeakScoringModel> existing)
+        public EditPeakScoringModelDlg(IEnumerable<IPeakScoringModel> existing)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
+            _existing = existing;
+
             _gridViewDriver = new PeakCalculatorGridViewDriver(gridPeakCalculators, bindingPeakCalculators,
                                                             new SortableBindingList<PeakCalculatorWeight>());
-            gridPeakCalculators.CellValueChanged += DataValueChanged;
-            gridPeakCalculators.DataBindingComplete += OnDataBindingComplete;
-            textMean.TextChanged += DataValueChanged;
-            textStdev.TextChanged += DataValueChanged;
-
-            _targetDecoyGenerator = new TargetDecoyGenerator();
-
-            lblColinearWarning.Visible = false;
-            if (model != null)
-            {
-                _peakScoringModelNew = PeakScoringModel = model;
-                textName.Text = PeakScoringModel.Name;
-                textMean.Text = PeakScoringModel.DecoyMean.ToString("F3"); // Not L10N
-                textStdev.Text = PeakScoringModel.DecoyStdev.ToString("F3"); // Not L10N
-                lblColinearWarning.Visible = _peakScoringModelNew.ColinearWarning;
-                InitializeCalculatorGrid();
-            }
-
-            _existing = existing;
 
             InitGraphPane(zedGraphMProphet.GraphPane);
             InitGraphPane(zedGraphSelectedCalculator.GraphPane);
+
+            lblColinearWarning.Visible = false;
+
+            gridPeakCalculators.DataBindingComplete += OnDataBindingComplete;
+            comboModel.SelectedIndexChanged += comboModel_SelectedIndexChanged;
         }
 
         /// <summary>
         /// Get/set the peak scoring model.
         /// </summary>
-        public MProphetPeakScoringModel PeakScoringModel { get; private set; }
+        public IPeakScoringModel PeakScoringModel
+        {
+            get { return _peakScoringModel; }
+            set { SetScoringModel(value); }
+        }
+
+        private void SetScoringModel(IPeakScoringModel scoringModel, bool trainModel = false)
+        {
+            if (_originalName == null)
+                _originalName = (scoringModel != null) ? scoringModel.Name : UNNAMED;
+
+            // Scoring model is null if we're creating a new model from scratch (default to mProphet).
+            if (scoringModel == null)
+            {
+                scoringModel = new MProphetPeakScoringModel(ModelName);
+                trainModel = true;
+            }
+
+            _peakScoringModel = scoringModel;
+
+            ModelName = _peakScoringModel.Name;
+
+            _targetDecoyGenerator = new TargetDecoyGenerator(_peakScoringModel);
+
+            var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
+            if (mProphetModel != null)
+            {
+                comboModel.SelectedIndex = _selectedIndex = MPROPHET_MODEL_INDEX;
+                lblColinearWarning.Visible = mProphetModel.ColinearWarning;
+            }
+            else
+            {
+                comboModel.SelectedIndex = _selectedIndex = SKYLINE_LEGACY_MODEL_INDEX;
+            }
+
+            _modelTrained = false;
+            InitializeCalculatorGrid();
+            if (trainModel)
+                TrainModel();
+            _modelTrained = true;
+
+            if (_originalPeakScoringModel == null)
+                _originalPeakScoringModel = _peakScoringModel;
+
+            textMean.Text = DoubleToString(_peakScoringModel.DecoyMean);
+            textStdev.Text = DoubleToString(_peakScoringModel.DecoyStdev);
+
+            UpdateCalculatorGraph(0);
+            UpdateModelGraph();
+        }
+
+        private static string DoubleToString(double d)
+        {
+            return double.IsNaN(d) ? string.Empty : d.ToString("F3");   // Not L10N
+        }
 
         /// <summary>
         /// Get the number format used for displaying weights in calculator grid.
@@ -105,25 +152,31 @@ namespace pwiz.Skyline.SettingsUI
             _targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
 
             // Create new scoring model using the active calculators.
-            var modelName = _peakScoringModelNew != null ? _peakScoringModelNew.Name : "~"; // Not L10N
-            _peakScoringModelNew = new MProphetPeakScoringModel(modelName, PeakFeatureCalculator.CalculatorTypes, _targetDecoyGenerator.Weights);  
+            switch (comboModel.SelectedIndex)
+            {
+                case MPROPHET_MODEL_INDEX:
+                    _peakScoringModel = new MProphetPeakScoringModel(_peakScoringModel.Name, _targetDecoyGenerator.Weights, _peakScoringModel.PeakFeatureCalculators);  
+                    break;
+            }
 
             // Train the model.
-            _peakScoringModelNew = (MProphetPeakScoringModel)_peakScoringModelNew.Train(targetTransitionGroups, decoyTransitionGroups);
+            _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups);
 
             // Copy weights to grid.
             for (int i = 0; i < _gridViewDriver.Items.Count; i++)
             {
-                double weight = _peakScoringModelNew.Weights[i];
+                double weight = _peakScoringModel.Weights[i];
                 _gridViewDriver.Items[i].Weight = double.IsNaN(weight) ? null : (double?) weight;
+                _targetDecoyGenerator.Weights[i] = weight;
             }
             gridPeakCalculators.Invalidate();
 
             // Copy mean and stdev to text boxes.
-            textMean.Text = _peakScoringModelNew.DecoyMean.ToString("0.000");
-            textStdev.Text = _peakScoringModelNew.DecoyStdev.ToString("0.000");
-            lblColinearWarning.Visible = _peakScoringModelNew.ColinearWarning;
+            textMean.Text = DoubleToString(_peakScoringModel.DecoyMean);
+            textStdev.Text = DoubleToString(_peakScoringModel.DecoyStdev);
+            lblColinearWarning.Visible = _peakScoringModel is MProphetPeakScoringModel && ((MProphetPeakScoringModel)_peakScoringModel).ColinearWarning;
 
+            _modelTrained = true;
             UpdateModelGraph();
         }
 
@@ -140,7 +193,9 @@ namespace pwiz.Skyline.SettingsUI
             if (!helper.ValidateNameTextBox(e, textName, out name))
                 return;
 
-            if (_existing != null && _existing.Contains(r => !ReferenceEquals(PeakScoringModel, r) && Equals(name, r.Name)))
+            if (!Equals(name, _originalName) &&
+                _existing != null &&
+                _existing.Contains(r => Equals(name, r.Name)))
             {
                 helper.ShowTextBoxError(textName, Resources.EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists, name);
                 e.Cancel = true;
@@ -155,21 +210,26 @@ namespace pwiz.Skyline.SettingsUI
             if (!helper.ValidateDecimalTextBox(e, textStdev, out decoyStdev))
                 return;
 
-            if (_peakScoringModelNew == null)
+            DialogResult = DialogResult.OK;
+
+            var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
+            if (mProphetModel != null)
             {
-                MessageDlg.Show(this, Resources.EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_);
+                _peakScoringModel = new MProphetPeakScoringModel(
+                    name,
+                    mProphetModel.Weights,
+                    mProphetModel.PeakFeatureCalculators,
+                    decoyMean,
+                    decoyStdev,
+                    mProphetModel.ColinearWarning);
                 return;
             }
 
-            PeakScoringModel = new MProphetPeakScoringModel(
-                name,
-                _peakScoringModelNew.PeakFeatureCalculators,
-                _peakScoringModelNew.Weights,
-                decoyMean,
-                decoyStdev,
-                _peakScoringModelNew.ColinearWarning);
-
-            DialogResult = DialogResult.OK;
+            var legacyModel = _peakScoringModel as LegacyScoringModel;
+            if (legacyModel != null)
+            {
+                _peakScoringModel = new LegacyScoringModel(name, decoyMean, decoyStdev);
+            }
         }
 
         private static bool IsUnknown(double d)
@@ -181,9 +241,9 @@ namespace pwiz.Skyline.SettingsUI
         /// Create weights array.  The given index will have a value of 1, all the others
         /// will have a value of NaN.
         /// </summary>
-        private static double[] CreateWeightsSelect(int index)
+        private double[] CreateWeightsSelect(int index)
         {
-            var weights = new double[PeakFeatureCalculator.CountCalculators];
+            var weights = new double[_peakScoringModel.Weights.Count];
             for (int i = 0; i < weights.Length; i++)
                 weights[i] = double.NaN;
             weights[index] = 1;
@@ -206,7 +266,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Initialize the given Zedgraph pane.
         /// </summary>
-        private void InitGraphPane(GraphPane graphPane)
+        private static void InitGraphPane(GraphPane graphPane)
         {
             graphPane.Title.IsVisible = false;
             graphPane.XAxis.Title.Text = Resources.EditPeakScoringModelDlg_InitGraphPane_Score;
@@ -228,15 +288,16 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void UpdateModelGraph()
         {
-            btnUpdateGraphs.Enabled = false;
-
             var graphPane = zedGraphMProphet.GraphPane;
             graphPane.CurveList.Clear();
             graphPane.GraphObjList.Clear();
 
             // Nothing to draw if we don't have a model yet.
-            if (_peakScoringModelNew == null)
+            if (!_modelTrained)
+            {
+                zedGraphMProphet.Refresh();
                 return;
+            }
 
             // Get binned scores for targets and decoys.
             PointPairList targetPoints;
@@ -420,7 +481,7 @@ namespace pwiz.Skyline.SettingsUI
             double[] calculatorWeights;
             if (selectedCalculator == -1)
             {
-               scoringWeights =  calculatorWeights = _peakScoringModelNew.Weights.ToArray();
+                scoringWeights = calculatorWeights = _targetDecoyGenerator.Weights;
             }
             else
             {
@@ -526,45 +587,26 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Enable button to update graphs if any calculator has a defined weight.
-        /// </summary>
-        private void DataValueChanged(object sender, EventArgs e)
-        {
-            for (int i = 0; i < _gridViewDriver.Items.Count; i++)
-            {
-                if (_gridViewDriver.Items[i].Weight.HasValue)
-                {
-                    btnUpdateGraphs.Enabled = true;
-                    break;
-                }
-            }
-        }
-
-        /// <summary>
         /// Fill the data grid with calculator names and weights.
         /// </summary>
         private void InitializeCalculatorGrid()
         {
-            // Create list of calculators and their corresponding weights.  If no scoring model
-            // exists yet, the weights will be null.
+            // Create list of calculators and their corresponding weights.
             PeakCalculatorWeights.Clear();
-            foreach (var calculator in PeakFeatureCalculator.Calculators)
+            for (int i = 0; i < _peakScoringModel.PeakFeatureCalculators.Count; i++)
             {
-                for (int i = 0; i < _peakScoringModelNew.PeakFeatureCalculators.Count; i++)
-                {
-                    if (calculator.GetType() == _peakScoringModelNew.PeakFeatureCalculators[i])
-                    {
-                        var weight = _peakScoringModelNew.Weights[i];
-                        PeakCalculatorWeights.Add(new PeakCalculatorWeight(calculator.Name,
-                            double.IsNaN(weight) ? null : (double?) weight));
-                        break;
-                    }
-                }
+                var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
+                double? weight = (_peakScoringModel.Weights == null || double.IsNaN(_peakScoringModel.Weights[i]))
+                    ? (double?)null
+                    : _peakScoringModel.Weights[i];
+                PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight));
             }
         }
 
         private void gridPeakCalculators_SelectionChanged(object sender, EventArgs e)
         {
+            if (gridPeakCalculators.Rows.Count == 0)
+                return;
             var row = gridPeakCalculators.SelectedCells.Count > 0 ? gridPeakCalculators.SelectedCells[0].RowIndex : 0;
             lblSelectedGraph.Text = gridPeakCalculators.Rows[row].Cells[0].Value.ToString();
             UpdateCalculatorGraph(row);
@@ -581,15 +623,62 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnTrainModel_Click(object sender, EventArgs e)
         {
-            TrainModel();
+            
+            // We replace the original model when we retrain the mProphet model, because the list of
+            // calculators may have changed.
+            if (comboModel.SelectedIndex == MPROPHET_MODEL_INDEX)
+            {
+                SetScoringModel(null, true);
+                _originalPeakScoringModel = _peakScoringModel;
+            }
+            else
+            {
+                CreateSelectedModel();
+            }
         }
 
-        private void btnUpdateGraphs_Click(object sender, EventArgs e)
+        private void textMean_Leave(object sender, EventArgs e)
         {
             UpdateModelGraph();
-            UpdateCalculatorGraph();
         }
 
+        private void textStdev_Leave(object sender, EventArgs e)
+        {
+            UpdateModelGraph();
+        }
+
+        private void comboModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_selectedIndex != comboModel.SelectedIndex)
+            {
+                _selectedIndex = comboModel.SelectedIndex;
+                CreateSelectedModel();
+            }
+        }
+
+        private void CreateSelectedModel()
+        {
+            switch (comboModel.SelectedIndex)
+            {
+                case MPROPHET_MODEL_INDEX:
+                    SetScoringModel(_originalPeakScoringModel as MProphetPeakScoringModel); // default to mProphet
+                    break;
+
+                case SKYLINE_LEGACY_MODEL_INDEX:
+                    SetScoringModel(new LegacyScoringModel(ModelName, double.NaN, double.NaN), true);
+                    break;
+            }
+        }
+
+        private string ModelName
+        {
+            get
+            {
+                var name = textName.Text.Trim();
+                return name.Length > 0 ? name : UNNAMED;    // Not L10N
+            }
+            set { textName.Text = (value == UNNAMED) ? string.Empty : value; }
+        }
         #endregion
 
         #region Functional test support
@@ -629,11 +718,12 @@ namespace pwiz.Skyline.SettingsUI
 
             public double[] Weights { get; private set; }
 
-            public TargetDecoyGenerator()
+            public TargetDecoyGenerator(IPeakScoringModel scoringModel)
             {
                 // Determine which calculators will be used to score peaks in this document.
                 var document = Program.ActiveDocumentUI;
-                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(PeakFeatureCalculator.Calculators.ToArray()).ToArray();
+                var calculators = scoringModel.PeakFeatureCalculators.ToArray();
+                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(calculators).ToArray();
 
                 // Determine if this document contains decoys.
                 foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
@@ -646,11 +736,11 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 // Eliminate calculators/features that have no data for at least one of the transitions.
-                Weights = new double[PeakFeatureCalculator.CountCalculators];
+                Weights = new double[calculators.Length];
                 for (int i = 0; i < Weights.Length; i++)
                 {
                     // Disable calculators that have only a single score value or any unknown scores.
-                    Weights[i] = GetInitialWeight(i);
+                    Weights[i] = GetInitialWeight(i, scoringModel.Weights[i]);
                 }
             }
 
@@ -753,7 +843,7 @@ namespace pwiz.Skyline.SettingsUI
             /// Calculate scores for targets and decoys.  A transition is selected from each transition group using the
             /// scoring weights, and then its score is calculated using the calculator weights applied to each feature.
             /// </summary>
-            private double GetInitialWeight(int calculatorIndex)
+            private double GetInitialWeight(int calculatorIndex, double weightFromModel)
             {
                 double maxValue = double.MinValue;
                 double minValue = double.MaxValue;
@@ -771,13 +861,13 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
 
-                return (maxValue > minValue) ? 0 : double.NaN;
+                return (maxValue > minValue) ? weightFromModel : double.NaN;
             }
 
             /// <summary>
             /// Calculate the score of a set of features given an array of weighting coefficients.
             /// </summary>
-            private double GetScore(double[] weights, PeakGroupFeatures peakGroupFeatures)
+            private static double GetScore(double[] weights, PeakGroupFeatures peakGroupFeatures)
             {
                 double score = 0;
                 for (int i = 0; i < weights.Length; i++)
@@ -836,18 +926,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             Name = name;
             Weight = weight;
-            Validate();
-        }
-
-        public void Validate()
-        {
-            if (!PeakFeatureCalculator.Calculators.Any(calculator => Matches(calculator.Name)))
-                throw new InvalidDataException(string.Format(Resources.PeakCalculatorWeight_Validate___0___is_not_a_known_name_for_a_peak_feature_calculator, Name));
-        }
-
-        public bool Matches(string name)
-        {
-            return (String.Compare(name, Name, StringComparison.OrdinalIgnoreCase) == 0);
         }
     }
 }

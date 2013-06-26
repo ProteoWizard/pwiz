@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration;
             });
 
-            int calculatorCount = PeakFeatureCalculator.Calculators.Count();
+            var calculators = (new MProphetPeakScoringModel("dummy")).PeakFeatureCalculators.ToArray();     // Not L10N
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
 
@@ -58,15 +58,10 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, string.Empty);
-                    Assert.AreEqual(editDlg.Mean, null);
-                    Assert.AreEqual(editDlg.Stdev, null);
+                    Assert.AreEqual(1.376, editDlg.Mean);
+                    Assert.AreEqual(0.088, editDlg.Stdev);
                     var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                    Assert.AreEqual(calculatorCount, rows, "Unexpected count of peak calculators");  // Not L10N
-                    for (int i = 0; i < rows; i++)
-                    {
-                        var cellValue = editDlg.PeakCalculatorsGrid.GetCellValue(1, i);
-                        Assert.AreEqual(string.Empty, cellValue);
-                    }
+                    Assert.AreEqual(calculators.Length, rows, "Unexpected count of peak calculators");  // Not L10N
                 });
 
                 // Test empty name.
@@ -80,7 +75,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     editDlg.PeakScoringModelName = "test1"; // Not L10N
-                    editDlg.Stdev = 2; // Not L10N
+                    editDlg.Mean = null;
                 });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                 {
@@ -91,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty stdev.
                 RunUI(() =>
                 {
-                    editDlg.Mean = 1; // Not L10N
+                    editDlg.Mean = 1;
                     editDlg.Stdev = null;
                 });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -105,24 +100,15 @@ namespace pwiz.SkylineTestFunctional
                 {
                     editDlg.Mean = 1;
                     editDlg.Stdev = 2;
-                });
-                RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
-                {
-                    AssertEx.AreComparableStrings(Resources.EditPeakScoringModelDlg_OkDialog_The_model_must_be_trained_first_, messageDlg.Message);
-                    messageDlg.OkDialog();
-                });
-
-                RunUI(() =>
+                    editDlg.TrainModel();
+                    Assert.AreEqual(1.376, editDlg.Mean);
+                    Assert.AreEqual(0.088, editDlg.Stdev);
+                    for (int i = 0; i < editDlg.PeakCalculatorsGrid.RowCount; i++)
                     {
-                        editDlg.TrainModel();
-                        Assert.AreEqual(1.376, editDlg.Mean);
-                        Assert.AreEqual(0.088, editDlg.Stdev);
-                        for (int i = 0; i < editDlg.PeakCalculatorsGrid.RowCount; i++)
-                        {
-                            editDlg.PeakCalculatorsGrid.SelectRow(i);
-                        }
-                        editDlg.OkDialog();
-                    });
+                        editDlg.PeakCalculatorsGrid.SelectRow(i);
+                    }
+                    editDlg.OkDialog();
+                });
                 WaitForClosedForm(editDlg);
             }
 
@@ -141,7 +127,6 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
                     Assert.AreEqual(1.376, editDlg.Mean);
                     Assert.AreEqual(0.088, editDlg.Stdev);
-                    var calculators = PeakFeatureCalculator.Calculators.ToArray();
                     var format = editDlg.PeakCalculatorWeightFormat;
                     VerifyCellValues(editDlg, new[]
                         {
