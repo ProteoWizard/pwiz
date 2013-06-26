@@ -189,6 +189,10 @@ def updateSettings(vcprojDoc,msvcVer) :
 			for i in includes :
 				incl = incl + ";\"" + i + "\""
 			node.childNodes[0].nodeValue = incl
+		for node in vcprojDoc.getElementsByTagName("AdditionalLibraryDirectories") :
+			incl =  node.childNodes[0].nodeValue
+			incl += ";\"$(BOOST_ROOT)\lib32-msvc-%s.0\""%(msvcVer)
+			node.childNodes[0].nodeValue = incl
 		for node in vcprojDoc.getElementsByTagName("PreprocessorDefinitions") :
 			d =  node.childNodes[0].nodeValue
 			for i in defines :
@@ -206,6 +210,11 @@ def updateSettings(vcprojDoc,msvcVer) :
 				incl = toolNode.getAttribute(tag)
 				for i in includes :
 					incl = incl + ";\"" + i + "\""
+				toolNode.setAttribute(tag,incl)
+			tag="AdditionalLibraryDirectories"
+			if toolNode.hasAttribute(tag) :
+				incl = toolNode.getAttribute(tag)
+				incl = incl + ";\"$(BOOST_ROOT)\lib32-msvc-%s.0\""%str(msvcVer)
 				toolNode.setAttribute(tag,incl)
 			tag = "PreprocessorDefinitions"
 			if toolNode.hasAttribute(tag) :
