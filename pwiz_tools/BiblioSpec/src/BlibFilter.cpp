@@ -226,8 +226,16 @@ string BlibFilter::getLSID()
     check_rc(rc, zSql);
     
     string libLSID = result[1];
-    string redundant = ":redundant:";
-    libLSID.replace(libLSID.find(redundant), redundant.length(), ":nr:");
+    const string redundant = ":redundant:";
+    size_t idx = libLSID.find(redundant);
+    if (idx == string::npos)
+    {
+        Verbosity::error("The library %s does not appear to be a redundant library.\n"
+                         "'%s' was not found in LSID '%s'.",
+                         redundantFileName_.c_str(), redundant.c_str(), libLSID.c_str());
+    }
+
+    libLSID.replace(idx, redundant.length(), ":nr:");
     
     sqlite3_free_table(result);
     return libLSID;
