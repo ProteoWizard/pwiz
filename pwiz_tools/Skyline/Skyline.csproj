@@ -780,7 +780,9 @@
     <Compile Include="Model\SrmDocumentExtensions.cs" />
     <Compile Include="Model\SrmDocumentSharing.cs" />
     <Compile Include="Model\ModificationMatcher.cs" />
-    <Compile Include="Model\ToolDescription.cs" />
+    <Compile Include="Model\Tools\ToolDescription.cs" />
+    <Compile Include="Model\Tools\ToolInstaller.cs" />
+    <Compile Include="Model\Tools\ToolMacros.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionDocNode.cs" />

@@ -5494,4 +5494,7 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_" xml:space="preserve">
     <value>Do you wish to overwrite or install in parallel?</value>
   </data>
+  <data name="UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_" xml:space="preserve">
+    <value>The tool "{0}" requires report type titled "{1}" and it is not provided. Import canceled.</value>
+  </data>
 </root>

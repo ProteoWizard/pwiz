@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -342,7 +343,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
                     {
                         AssertEx.AreComparableStrings(
-                            "The tool \"{0}\" requires report type titled \"{1}\" and it is not provided. Import canceled.",
+                            Resources.UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_,
                             messageDlgReportNotProvided.Message, 2);
                         messageDlgReportNotProvided.OkDialog();
                     });
@@ -639,7 +640,7 @@ namespace pwiz.SkylineTestFunctional
             });
             string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio" // Not L10N
                 .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
-            WaitForConditionUI(() => SkylineWindow.ImmediateWindow != null);
+            WaitForConditionUI(30*1000, () => SkylineWindow.ImmediateWindow != null);
             WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
             RunUI(() =>
             {

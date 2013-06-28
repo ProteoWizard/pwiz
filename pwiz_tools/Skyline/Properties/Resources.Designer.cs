@@ -15592,6 +15592,16 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The tool &quot;{0}&quot; requires report type titled &quot;{1}&quot; and it is not provided. Import canceled..
+        /// </summary>
+        public static string UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_ {
+            get {
+                return ResourceManager.GetString("UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1_" +
+                        "__and_it_is_not_provided__Import_canceled_", resourceCulture);
+            }
+        }
+        
         public static System.Drawing.Bitmap up_pro32 {
             get {
                 object obj = ResourceManager.GetObject("up_pro32", resourceCulture);

@@ -24,8 +24,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -137,7 +137,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private string GetTitle()
         {
-            return UnpackZipToolHelper.GetUniqueVersion(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, value => !ToolList.Any(item => Equals(item.Title, value)));            
+            return ToolInstaller.GetUniqueVersion(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, value => !ToolList.Any(item => Equals(item.Title, value)));            
         }
 
         private string GetTitle(string title)
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 return title;
             }
-            return UnpackZipToolHelper.GetUniqueVersion(string.Concat(title, "{0}"), value => !ToolList.Any(item => Equals(item.Title, value)));            
+            return ToolInstaller.GetUniqueVersion(string.Concat(title, "{0}"), value => !ToolList.Any(item => Equals(item.Title, value)));            
         }
 
         private bool IsUniqueTitle(string title)
@@ -967,7 +967,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <param name="fullpath"> The full path to the ziped folder containing the tools</param>
         public void UnpackZipTool(string fullpath)
         {            
-            UnpackZipToolHelper.UnzipToolReturnAccumulator result = UnpackZipToolHelper.UnpackZipTool(fullpath, OverwriteOrInParallel, SkylineWindowParent.FindProgramPath);
+            ToolInstaller.UnzipToolReturnAccumulator result = ToolInstaller.UnpackZipTool(fullpath, OverwriteOrInParallel, SkylineWindowParent.FindProgramPath);
             
             RemoveAllTools();
             //Reload the report dropdown menu!

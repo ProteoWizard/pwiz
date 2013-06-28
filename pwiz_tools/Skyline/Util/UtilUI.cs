@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
