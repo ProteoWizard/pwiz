@@ -1510,6 +1510,34 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(ParserTestHelper(new string[] {}, test));
         }
 
+        [TestMethod]
+        public void CommandLineArrayParserTest()
+        {
+            // Test case [a,b,c] = "a b c" - a simple array with no spaces
+            Assert.AreEqual("a b c", CommandLine.ParseCommandLineArray(new [] {"a", "b", "c"}));
+
+            // Test case [a b, c, d] = ""a b" c d" - multiword string at beginning of array
+            Assert.AreEqual("\"a b\" c d", CommandLine.ParseCommandLineArray(new [] {"a b", "c", "d"}));
+
+            // Test case [a, b, c d] = "a b "c d"" - multiword string at end of array
+            Assert.AreEqual("a b \"c d\"", CommandLine.ParseCommandLineArray(new [] { "a", "b", "c d" }));
+
+            // Test case [a, b c d, e] = " a "b c d" e" - multiword string at middle of array
+            Assert.AreEqual("a \"b c d\" e", CommandLine.ParseCommandLineArray(new [] { "a", "b c d", "e" }));
+
+            // Test case [a, b c, d e f, g, h i] = "a "b c" "d e f" g "h i"" - multiple multiword strings
+            Assert.AreEqual("a \"b c\" \"d e f\" g \"h i\"", CommandLine.ParseCommandLineArray(new [] { "a", "b c", "d e f", "g" , "h i" }));
+
+            // Test case [a "b" c] = "a "b" c" - nested quotes
+            Assert.AreEqual("\"a \"b\" c\"", CommandLine.ParseCommandLineArray(new [] {"a \"b\" c"}));
+
+            // Test case [a   bc] = "a   bc" - tabbed whitespace only
+            Assert.AreEqual("\"a\tbc\"", CommandLine.ParseCommandLineArray(new [] {"a\tbc"}));
+
+            // Test case [a,,c] = "a "" c" - empty string
+            Assert.AreEqual("a \"\" c", CommandLine.ParseCommandLineArray(new [] {"a", string.Empty, "c"}));
+        }
+
         private static string GetTitleHelper()
         {
             int i = 1;

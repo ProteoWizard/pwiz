@@ -117,8 +117,12 @@ namespace pwiz.Skyline.Controls
                 if (result.IsCompleted)
                     return;
                 // Center on parent.
-                Top = (parent.Top + parent.Bottom) / 2 - Height / 2;
-                Left = (parent.Left + parent.Right) / 2 - Width / 2;
+                if (parent != null)
+                {
+                    StartPosition = FormStartPosition.Manual;
+                    Top = (parent.Top + parent.Bottom) / 2 - Height / 2;
+                    Left = (parent.Left + parent.Right) / 2 - Width / 2;
+                }
 
                 progressBar.Value = Math.Max(0, _progressValue);
                 if (_message != null)

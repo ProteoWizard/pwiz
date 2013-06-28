@@ -5323,4 +5323,175 @@ Are you sure you want to continue?</value>
   <data name="LegacyScoringModel__defaultName_Skyline_Legacy" xml:space="preserve">
     <value>Skyline Legacy</value>
   </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools" xml:space="preserve">
+    <value>Error unpacking zipped tools</value>
+  </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_" xml:space="preserve">
+    <value>Invalid file selected. No tools added.</value>
+  </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_" xml:space="preserve">
+    <value>There is a naming conflict in unpacking the zip. Tool importing cancled!</value>
+  </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_Failed_to_read_file_0_The_tool_described_failed_to_import" xml:space="preserve">
+    <value>Failed to read file {0}. The tool described failed to import.</value>
+  </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_Failed_to_process_file_0_The_tool_described_failed_to_import" xml:space="preserve">
+    <value>Failed to process file {0}. The tool described failed to import.</value>
+  </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_Invalid_Tool_Description_in_file__0__" xml:space="preserve">
+    <value>Invalid Tool Description in file {0}.</value>
+  </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required" xml:space="preserve">
+    <value>Title and Command are required</value>
+  </data>
+  <data name="ConfigureToolsDlg_unpackZipTool_skipping_that_tool_" xml:space="preserve">
+    <value>skipping that tool.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CopyinFile_Missing_the_file_0_Tool_1_Import_Failed" xml:space="preserve">
+    <value>Missing the file {0}. Tool ({1}) Import Failed</value>
+  </data>
+  <data name="ConfigureToolsDlg_CopyinFile_A_file_named_0_already_exists_that_isn_t_identical_to_the_one_for_tool__1" xml:space="preserve">
+    <value>A file named {0} already exists that isn't identical to the one for tool {1}</value>
+  </data>
+  <data name="ConfigureToolsDlg_CopyinFile_Not_importing_this_tool" xml:space="preserve">
+    <value>Not importing this tool...</value>
+  </data>
+  <data name="ToolMacros__listCommand_This_tool_requires_a_Program_Path_to_run_" xml:space="preserve">
+    <value>This tool requires a Program Path to run.</value>
+  </data>
+  <data name="ToolMacros__listCommand__No_Path_Provided__Tool_execution_cancled_" xml:space="preserve">
+    <value> No Path Provided. Tool execution cancled.</value>
+  </data>
+  <data name="ToolMacros__listCommand_Program_Path" xml:space="preserve">
+    <value>Program Path</value>
+  </data>
+  <data name="ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name" xml:space="preserve">
+    <value>ProgramPathCollectors must have a program name</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1" xml:space="preserve">
+    <value>This tool requires {0} version {1}.</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_Below_is_the_saved_value_for_the_path_to_the_executable" xml:space="preserve">
+    <value>Below is the saved value for the path to the executable.</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect" xml:space="preserve">
+    <value>Please verify and update if incorrect.</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_This_tool_requires_0" xml:space="preserve">
+    <value>This tool requires {0}.</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below" xml:space="preserve">
+    <value>If you have it installed please provide the path below.</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_then_run_the_tool_again" xml:space="preserve">
+    <value>then run the tool again.</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first" xml:space="preserve">
+    <value>Otherwise, please cancel and install {0} version {1} first</value>
+  </data>
+  <data name="LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__first" xml:space="preserve">
+    <value>Otherwise, please cancel and install {0} first</value>
+  </data>
+  <data name="LocateFileDlg_PathPasses_You_have_not_provided_a_valid_path_" xml:space="preserve">
+    <value>You have not provided a valid path.</value>
+  </data>
+  <data name="ToolMacros__listArguments_Collected_Arguments" xml:space="preserve">
+    <value>Collected Arguments</value>
+  </data>
+  <data name="ToolMacros__listArguments_Tool_Directory" xml:space="preserve">
+    <value>Tool Directory</value>
+  </data>
+  <data name="ToolMacros__listArguments_This_tool_is_not_an_istalled_toolso $(ToolDir) cannot be used as a macro. Please edit the tool." xml:space="preserve">
+    <value>This tool is not an istalled tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
+  </data>
+  <data name="ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_" xml:space="preserve">
+    <value>This tool is not an istalled tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
+  </data>
+  <data name="ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_" xml:space="preserve">
+    <value>This tool does not provide the functionality for the Collected Arguments macro. Please edit the tool.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_" xml:space="preserve">
+    <value>Tool titles must be unique, please enter a unique title for this tool.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_" xml:space="preserve">
+    <value>$(ToolDir) is not a valid macro for a tool that was not installed and therefore does not have a Tool Directory.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_" xml:space="preserve">
+    <value>$(ToolDir) is not a valid macro for a tool that was not installed and therefore does not have a Tool Directory.</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_" xml:space="preserve">
+    <value>You must save changes before installing tools. Would you like to save changes?</value>
+  </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Overwrite" xml:space="preserve">
+    <value>Overwrite</value>
+  </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_In_Parallel" xml:space="preserve">
+    <value>In Parallel</value>
+  </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_There_is_a_naming_conflict__You_already_installed_a_tool_from_a_zip_folder_with_the_name__0___Would_you_like_to_overwrite_or_install_in_parallel_" xml:space="preserve">
+    <value>There is a naming conflict. You already installed a tool from a zip folder with the name {0}. Would you like to overwrite or install in parallel?</value>
+  </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Warning__overwriting_will_delete_the_following_tools_" xml:space="preserve">
+    <value>Warning, overwriting will delete the following tools:</value>
+  </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Warning__overwriting_will_delete_the_tool__0___Do_you_want_to_continue_" xml:space="preserve">
+    <value>Warning, overwriting will delete the tool {0}. Do you want to continue?</value>
+  </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
+    <value>Error deleting the directory of the existing tool. Please close anything using that directory and try the overwriting import again later</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time" xml:space="preserve">
+    <value>Arguments collected at run time</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_File_path_to_a_temporary_report" xml:space="preserve">
+    <value>File path to a temporary report</value>
+  </data>
+  <data name="ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_" xml:space="preserve">
+    <value>Error running the installed tool {0}. It seems to be missing a file. Please reinstall the tool and try again.</value>
+  </data>
+  <data name="ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again" xml:space="preserve">
+    <value>Error running the installed tool {0}. It seems to have an error in one of its files. Please reinstall the tool and try again</value>
+  </data>
+  <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
+    <value>Copying external tools from a previous installation</value>
+  </data>
+  <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
+    <value>Source directory does not exist or could not be found: </value>
+  </data>
+  <data name="ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_" xml:space="preserve">
+    <value>The tool {0} had an error.</value>
+  </data>
+  <data name="ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_" xml:space="preserve">
+    <value>The tool {0} had an error, it returned the message:</value>
+  </data>
+  <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
+    <value>Error copying external tools from previous installation</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_N_A" xml:space="preserve">
+    <value>N/A</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_Zip_Files" xml:space="preserve">
+    <value>Zip Files</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_this_new_installation_" xml:space="preserve">
+    <value>The following tools are in conflict with this new installation:</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation" xml:space="preserve">
+    <value>The tool {0} is in conflict with the new installation</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_exist_" xml:space="preserve">
+    <value>Reports with the following names already exist:</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists_" xml:space="preserve">
+    <value>A Report with the name {1} already exists.</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_" xml:space="preserve">
+    <value>Do you wish to overwrite or install in parallel?</value>
+  </data>
 </root>

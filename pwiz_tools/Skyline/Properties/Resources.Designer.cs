@@ -2318,6 +2318,34 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string ConfigureToolsDlg_AddFromFile_Cancel {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_AddFromFile_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must save changes before installing tools. Would you like to save changes?.
+        /// </summary>
+        public static string ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Woul" +
+                        "d_you_like_to_save_changes_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Zip Files.
+        /// </summary>
+        public static string ConfigureToolsDlg_AddFromFile_Zip_Files {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_AddFromFile_Zip_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Executables.
         /// </summary>
         public static string ConfigureToolsDlg_btnFindCommand_Click_All_Executables {
@@ -2448,6 +2476,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to $(ToolDir) is not a valid macro for a tool that was not installed and therefore does not have a Tool Directory..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassToolInternal_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassToolInternal_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to $(ToolDir) is not a valid macro for a tool that was not installed and therefore does not have a Tool Directory..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool" +
+                        "_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select a report or remove {0} from arguments..
         /// </summary>
         public static string ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_ {
@@ -2467,6 +2514,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tool titles must be unique, please enter a unique title for this tool..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_" +
+                        "a_unique_title_for_this_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You have provided {0} as an argument but have not selected a report..
         /// </summary>
         public static string ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_ {
@@ -2477,11 +2534,260 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A file named {0} already exists that isn&apos;t identical to the one for tool {1}.
+        /// </summary>
+        public static string ConfigureToolsDlg_CopyinFile_A_file_named_0_already_exists_that_isn_t_identical_to_the_one_for_tool__1 {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CopyinFile_A_file_named_0_already_exists_that_isn_t_identical_t" +
+                        "o_the_one_for_tool__1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing the file {0}. Tool ({1}) Import Failed.
+        /// </summary>
+        public static string ConfigureToolsDlg_CopyinFile_Missing_the_file_0_Tool_1_Import_Failed {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CopyinFile_Missing_the_file_0_Tool_1_Import_Failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not importing this tool....
+        /// </summary>
+        public static string ConfigureToolsDlg_CopyinFile_Not_importing_this_tool {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CopyinFile_Not_importing_this_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [New Tool{0}].
         /// </summary>
         public static string ConfigureToolsDlg_GetTitle__New_Tool_0__ {
             get {
                 return ResourceManager.GetString("ConfigureToolsDlg_GetTitle__New_Tool_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A Report with the name {1} already exists..
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you wish to overwrite or install in parallel?.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_pa" +
+                        "rallel_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reports with the following names already exist:.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_exist_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_" +
+                        "exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following tools are in conflict with this new installation:.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_this_new_installation_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_" +
+                        "this_new_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tool {0} is in conflict with the new installation.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_" +
+                        "installation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Arguments collected at run time.
+        /// </summary>
+        public static string ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File path to a temporary report.
+        /// </summary>
+        public static string ConfigureToolsDlg_PopulateMacroDropdown_File_path_to_a_temporary_report {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_PopulateMacroDropdown_File_path_to_a_temporary_report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to N/A.
+        /// </summary>
+        public static string ConfigureToolsDlg_PopulateMacroDropdown_N_A {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_PopulateMacroDropdown_N_A", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        public static string ConfigureToolsDlg_UnpackZipTool_Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error deleting the directory of the existing tool. Please close anything using that directory and try the overwriting import again later.
+        /// </summary>
+        public static string ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool" +
+                        "__Please_close_anything_using_that_directory_and_try_the_overwriting_import_agai" +
+                        "n_later", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error unpacking zipped tools.
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to process file {0}. The tool described failed to import..
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_Failed_to_process_file_0_The_tool_described_failed_to_import {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_Failed_to_process_file_0_The_tool_described_faile" +
+                        "d_to_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to read file {0}. The tool described failed to import..
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_Failed_to_read_file_0_The_tool_described_failed_to_import {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_Failed_to_read_file_0_The_tool_described_failed_t" +
+                        "o_import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In Parallel.
+        /// </summary>
+        public static string ConfigureToolsDlg_UnpackZipTool_In_Parallel {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_In_Parallel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid file selected. No tools added..
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Tool Description in file {0}..
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_Invalid_Tool_Description_in_file__0__ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_Invalid_Tool_Description_in_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overwrite.
+        /// </summary>
+        public static string ConfigureToolsDlg_UnpackZipTool_Overwrite {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Overwrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to skipping that tool..
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_skipping_that_tool_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_skipping_that_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is a naming conflict. You already installed a tool from a zip folder with the name {0}. Would you like to overwrite or install in parallel?.
+        /// </summary>
+        public static string ConfigureToolsDlg_UnpackZipTool_There_is_a_naming_conflict__You_already_installed_a_tool_from_a_zip_folder_with_the_name__0___Would_you_like_to_overwrite_or_install_in_parallel_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_There_is_a_naming_conflict__You_already_installed" +
+                        "_a_tool_from_a_zip_folder_with_the_name__0___Would_you_like_to_overwrite_or_inst" +
+                        "all_in_parallel_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is a naming conflict in unpacking the zip. Tool importing cancled!.
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__" +
+                        "Tool_importing_cancled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Title and Command are required.
+        /// </summary>
+        public static string ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning, overwriting will delete the following tools:.
+        /// </summary>
+        public static string ConfigureToolsDlg_UnpackZipTool_Warning__overwriting_will_delete_the_following_tools_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Warning__overwriting_will_delete_the_following_to" +
+                        "ols_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning, overwriting will delete the tool {0}. Do you want to continue?.
+        /// </summary>
+        public static string ConfigureToolsDlg_UnpackZipTool_Warning__overwriting_will_delete_the_tool__0___Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Warning__overwriting_will_delete_the_tool__0___Do" +
+                        "_you_want_to_continue_", resourceCulture);
             }
         }
         
@@ -2746,6 +3052,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("DigestSettings_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3_" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source directory does not exist or could not be found: .
+        /// </summary>
+        public static string DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__ {
+            get {
+                return ResourceManager.GetString("DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" +
+                        "", resourceCulture);
             }
         }
         
@@ -7158,6 +7474,90 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Below is the saved value for the path to the executable..
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_Below_is_the_saved_value_for_the_path_to_the_executable {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_Below_is_the_saved_value_for_the_path_to_the_executab" +
+                        "le", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you have it installed please provide the path below..
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_belo" +
+                        "w", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Otherwise, please cancel and install {0} first.
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__first {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__first", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Otherwise, please cancel and install {0} version {1} first.
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__" +
+                        "first", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please verify and update if incorrect..
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to then run the tool again..
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_then_run_the_tool_again {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_then_run_the_tool_again", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires {0}..
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_This_tool_requires_0 {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_This_tool_requires_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires {0} version {1}..
+        /// </summary>
+        public static string LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1 {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have not provided a valid path..
+        /// </summary>
+        public static string LocateFileDlg_PathPasses_You_have_not_provided_a_valid_path_ {
+            get {
+                return ResourceManager.GetString("LocateFileDlg_PathPasses_You_have_not_provided_a_valid_path_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to canceled.
         /// </summary>
         public static string LongWaitDlg_PerformWork_canceled {
@@ -9621,6 +10021,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error copying external tools from previous installation.
+        /// </summary>
+        public static string Program_CopyOldTools_Error_copying_external_tools_from_previous_installation {
+            get {
+                return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copying external tools from a previous installation.
+        /// </summary>
+        public static string Program_Main_Copying_external_tools_from_a_previous_installation {
+            get {
+                return ResourceManager.GetString("Program_Main_Copying_external_tools_from_a_previous_installation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Install 32-bit {0}.
         /// </summary>
         public static string Program_Main_Install_32_bit__0__ {
@@ -9636,6 +10054,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Ple" +
                         "ase_install_the_32_bit_version", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ProgramPathCollectors must have a program name.
+        /// </summary>
+        public static string ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name {
+            get {
+                return ResourceManager.GetString("ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name", resourceCulture);
             }
         }
         
@@ -13442,6 +13869,46 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error running the installed tool {0}. It seems to have an error in one of its files. Please reinstall the tool and try again.
+        /// </summary>
+        public static string ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_" +
+                        "seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_ag" +
+                        "ain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error running the installed tool {0}. It seems to be missing a file. Please reinstall the tool and try again..
+        /// </summary>
+        public static string ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_see" +
+                        "ms_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tool {0} had an error..
+        /// </summary>
+        public static string ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tool {0} had an error, it returned the message:.
+        /// </summary>
+        public static string ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_th" +
+                        "e_message_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File not found..
         /// </summary>
         public static string ToolDescription_RunTool_File_not_found_ {
@@ -13503,6 +13970,15 @@ namespace pwiz.Skyline.Properties {
         public static string ToolMacros__listArguments_Active_Replicate_Name {
             get {
                 return ResourceManager.GetString("ToolMacros__listArguments_Active_Replicate_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collected Arguments.
+        /// </summary>
+        public static string ToolMacros__listArguments_Collected_Arguments {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Collected_Arguments", resourceCulture);
             }
         }
         
@@ -13598,6 +14074,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This tool does not provide the functionality for the Collected Arguments macro. Please edit the tool..
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Co" +
+                        "llected_Arguments_macro__Please_edit_the_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool is not an istalled tool so $(ToolDir) cannot be used as a macro. Please edit the tool..
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be" +
+                        "_used_as_a_macro__Please_edit_the_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This tool requires a Document Directory to run.
         /// </summary>
         public static string ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run {
@@ -13648,6 +14144,42 @@ namespace pwiz.Skyline.Properties {
         public static string ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_ {
             get {
                 return ResourceManager.GetString("ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tool Directory.
+        /// </summary>
+        public static string ToolMacros__listArguments_Tool_Directory {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Tool_Directory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  No Path Provided. Tool execution cancled..
+        /// </summary>
+        public static string ToolMacros__listCommand__No_Path_Provided__Tool_execution_cancled_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listCommand__No_Path_Provided__Tool_execution_cancled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Program Path.
+        /// </summary>
+        public static string ToolMacros__listCommand_Program_Path {
+            get {
+                return ResourceManager.GetString("ToolMacros__listCommand_Program_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Program Path to run..
+        /// </summary>
+        public static string ToolMacros__listCommand_This_tool_requires_a_Program_Path_to_run_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listCommand_This_tool_requires_a_Program_Path_to_run_", resourceCulture);
             }
         }
         

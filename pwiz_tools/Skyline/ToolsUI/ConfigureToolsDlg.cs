@@ -37,12 +37,11 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly SettingsListComboDriver<ReportSpec> _driverReportSpec;
 
-        public ConfigureToolsDlg()
+        public ConfigureToolsDlg(SkylineWindow parent)
         {
             InitializeComponent();
-
+            SkylineWindowParent = parent;
             PopulateMacroList();
-
             // Initialize the report comboBox.
             // CONSIDER: Settings list editing is currently disabled, because
             //           it had problems with the empty element added to the list.
@@ -56,26 +55,34 @@ namespace pwiz.Skyline.ToolsUI
             
             // Value for keeping track of the previously selected tool 
             // Used to check if the tool meets requirements before allowing you to navigate away from it.
-            _previouslySelectedIndex = -1;
+            PreviouslySelectedIndex = -1;
 
             ToolList = Settings.Default.ToolList
                        .Select(t => new ToolDescription(t))
                        .ToList();
 
             RefreshListBox();
-            Unsaved = false;
 
-            if (ToolList.Count == 0)           
+            if (ToolList.Count == 0)
             {
-                Add();
+                listTools.SelectedIndex = -1;
+                btnRemove.Enabled = false;
+                btnMoveUp.Enabled = false;
+                btnMoveDown.Enabled = false;
             }
             else
             {
                 listTools.SelectedIndex = 0;
             }
+            Unsaved = false;
+            Removelist = new List<ToolDescription>();
         }
 
-        public int _previouslySelectedIndex;
+        private IList<ToolDescription> Removelist { get; set; } 
+
+        private SkylineWindow SkylineWindowParent { get; set; }
+
+        public int PreviouslySelectedIndex { get; private set; }
 
         public void RefreshListBox()
         {
@@ -110,35 +117,42 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            Add();
+            contextMenuAdd.Show(btnAdd.Parent, btnAdd.Left, btnAdd.Bottom + 1);
         }
 
         public void Add()
         {
-            if (CheckPassTool(_previouslySelectedIndex))
+            if (CheckPassTool(PreviouslySelectedIndex))
             {
                 AddDialog(GetTitle(), string.Empty, string.Empty, string.Empty);
             }
             if (ToolList.Count == 1)
             {
-                _previouslySelectedIndex = 0;
+                PreviouslySelectedIndex = 0;
             }
         }
-        
+
         /// <summary>
         /// Return a unique title for a New Tool. (eg. [New Tool1])
         /// </summary>
         private string GetTitle()
         {
-            int i = 1;
-            do
+            return UnpackZipToolHelper.GetUniqueVersion(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, value => !ToolList.Any(item => Equals(item.Title, value)));            
+        }
+
+        private string GetTitle(string title)
+        {
+            if (!ToolList.Any(item => Equals(item.Title, title)))
             {
-                if (ToolList.All(item => item.Title != (string.Format(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, i))))
-                {
-                    return string.Format(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, i);
-                }
-                i++;
-            } while (true);
+                return title;
+            }
+            return UnpackZipToolHelper.GetUniqueVersion(string.Concat(title, "{0}"), value => !ToolList.Any(item => Equals(item.Title, value)));            
+        }
+
+        private bool IsUniqueTitle(string title)
+        {
+            int count = ToolList.Count(tool => tool.Title == title);
+            return count <= 1;
         }
 
 
@@ -150,20 +164,37 @@ namespace pwiz.Skyline.ToolsUI
             AddDialog(title, command, arguments, initialDirectory, false, string.Empty);
         }
 
-        public void AddDialog(string title, string command, string arguments, string initialDirectory, bool cbOutputImmediate, string selectedReport)
+        public void AddDialog(string title, string command, string arguments, string initialDirectory,
+                              bool isImmediateOutput, string selectedReport)
+        {
+            AddDialog(title, command, arguments, initialDirectory, isImmediateOutput, selectedReport,
+                      string.Empty, string.Empty, string.Empty);
+        }
+
+        public void AddDialog(string title,
+                              string command,
+                              string arguments,
+                              string initialDirectory,
+                              bool isImmediateOutput,
+                              string selectedReport,
+                              string argsCollectorDllPath,
+                              string argsCollectorType,
+                              string toolDirPath)        
         {
             ToolDescription newTool;
             if (ToolDescription.IsWebPageCommand(command))
             {
-                newTool = new ToolDescription(title, command, string.Empty, string.Empty, false, selectedReport);
+                newTool = new ToolDescription(GetTitle(title), command, string.Empty, string.Empty, false,
+                    selectedReport, argsCollectorDllPath, argsCollectorType, toolDirPath);
             }
             else
             {
-                newTool = new ToolDescription(title, command, arguments, initialDirectory, cbOutputImmediate, selectedReport);    
+                newTool = new ToolDescription(GetTitle(title), command, arguments, initialDirectory, isImmediateOutput,
+                    selectedReport, argsCollectorDllPath, argsCollectorType,toolDirPath);    
             }
             ToolList.Add(newTool);
             RefreshListBox();
-            _previouslySelectedIndex = -1;
+            PreviouslySelectedIndex = -1;
             listTools.SelectedIndex = ToolList.Count - 1;
             btnRemove.Enabled = true;            
         }
@@ -172,14 +203,14 @@ namespace pwiz.Skyline.ToolsUI
         {                        
             if (listTools.SelectedIndex != -1)
             {
-                if (listTools.SelectedIndex != _previouslySelectedIndex)
+                if (listTools.SelectedIndex != PreviouslySelectedIndex)
                 {                    
-                     if (_previouslySelectedIndex != -1 && !CheckPassTool(_previouslySelectedIndex))
+                     if (PreviouslySelectedIndex != -1 && !CheckPassTool(PreviouslySelectedIndex))
                     {
-                        listTools.SelectedIndex = _previouslySelectedIndex;
+                        listTools.SelectedIndex = PreviouslySelectedIndex;
                         return;
                     }
-                    _previouslySelectedIndex = listTools.SelectedIndex;
+                    PreviouslySelectedIndex = listTools.SelectedIndex;
                     ToolDescription highlighted = ToolList[listTools.SelectedIndex];
                     textTitle.Text = highlighted.Title;
                     textCommand.Text = highlighted.Command;
@@ -243,6 +274,14 @@ namespace pwiz.Skyline.ToolsUI
                 textTitle.Focus();
                 return false;
             }
+            //Ensure the tool Title is unique.
+            if (!IsUniqueTitle(tool.Title))
+            {
+                MessageDlg.Show(this, Resources.ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_);
+                textTitle.Focus();
+                return false;
+            }
+
             if (tool.Command == string.Empty)
             {
                 MessageDlg.Show(this, string.Format(Resources.ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_, tool.Title));
@@ -266,34 +305,53 @@ namespace pwiz.Skyline.ToolsUI
 
                 return true;
             }
-            string supportedTypes = String.Join("; ", EXTENSIONS);
-            supportedTypes = supportedTypes.Replace(".", "*.");
-            if (!CheckExtension(tool.Command))
+            //If it is not a $(ProgramPath()) macro then do other checks.
+            if (ToolMacros.IsProgramPathMacro(tool.Command) == null)
             {
-                MessageDlg.Show(this, string.Format(TextUtil.LineSeparate(
-                            Resources.ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type,
-                            Resources.ConfigureToolsDlg_CheckPassTool_Supported_Types___1_ , 
-                            Resources.ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
-                            tool.Title, supportedTypes));
-                textCommand.Focus();
-                return false;                
-            }  
-           
-            if (!File.Exists(tool.Command))
-            {
-                var dlg =
-                new MultiButtonMsgDlg(
-                    string.Format(TextUtil.LineSeparate(
-                            Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__,                            
-                            Resources.ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
-                                    tool.Title), Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, false);
-                DialogResult result = dlg.ShowDialog(this);
-                if (result == DialogResult.Yes)
+                string supportedTypes = String.Join("; ", EXTENSIONS);
+                supportedTypes = supportedTypes.Replace(".", "*.");
+                if (!CheckExtension(tool.Command))
                 {
+                    MessageDlg.Show(this, string.Format(TextUtil.LineSeparate(
+                                Resources.ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type,
+                                Resources.ConfigureToolsDlg_CheckPassTool_Supported_Types___1_,
+                                Resources.ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
+                                tool.Title, supportedTypes));
                     textCommand.Focus();
                     return false;
                 }
+                string adjustedCommand = tool.Command;
+                if (adjustedCommand.Contains(ToolMacros.TOOL_DIR))
+                {
+                    if (String.IsNullOrEmpty(tool.ToolDirPath))
+                    {
+                        MessageDlg.Show(this,
+                                        Resources.ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_);
+                        textCommand.Focus();
+                        return false;
+                    }
+                    else
+                    {
+                        adjustedCommand = adjustedCommand.Replace(ToolMacros.TOOL_DIR, tool.ToolDirPath);
+                    }
+                }
+                if (!File.Exists(adjustedCommand))
+                {
+                    var dlg =
+                    new MultiButtonMsgDlg(
+                        string.Format(TextUtil.LineSeparate(
+                                Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__,
+                                Resources.ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
+                                        tool.Title), Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, false);
+                    DialogResult result = dlg.ShowDialog(this);
+                    if (result == DialogResult.Yes)
+                    {
+                        textCommand.Focus();
+                        return false;
+                    }
+                }
             }
+            
             if (tool.Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH) && string.IsNullOrEmpty(tool.ReportTitle))
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(
@@ -302,19 +360,22 @@ namespace pwiz.Skyline.ToolsUI
                 comboReport.Focus();
                 return false;                  
             }
-
-
             return true;            
         }
 
         private void textTitle_TextChanged(object sender, EventArgs e)
         {
             int spot = listTools.SelectedIndex;
+
             if (spot != -1)
             {
+                if (textTitle.Text == ToolList[spot].Title)
+                {
+                    return;
+                }
                 ToolList[spot].Title = textTitle.Text;
                 RefreshListBox();
-                listTools.SelectedIndex = spot;
+                listTools.SelectedIndex = spot;                
                 Unsaved = true;
             }       
         }
@@ -324,10 +385,12 @@ namespace pwiz.Skyline.ToolsUI
             int spot = listTools.SelectedIndex;
             if (spot != -1)
             {
-                ToolList[spot].Command = textCommand.Text;
-                Unsaved = true;
-
-
+                if (ToolList[spot].Command != textCommand.Text)
+                {
+                    Unsaved = true;
+                    ToolList[spot].Command = textCommand.Text;
+                }
+                
                 if (ToolDescription.IsWebPageCommand(textCommand.Text) && textArguments.Enabled)
                 {                    
                     textArguments.Enabled = false;
@@ -338,7 +401,7 @@ namespace pwiz.Skyline.ToolsUI
                     btnArguments.Enabled = false;
                     btnFindCommand.Enabled = false;
                     btnInitialDirectory.Enabled = false;
-                    btnInitialDirectoryMacros.Enabled = false;
+                    btnInitialDirectoryMacros.Enabled = false;                    
                 }
                 else if (!ToolDescription.IsWebPageCommand(textCommand.Text) && !textArguments.Enabled)
                 {
@@ -350,7 +413,7 @@ namespace pwiz.Skyline.ToolsUI
                     btnArguments.Enabled = true;
                     btnFindCommand.Enabled = true;
                     btnInitialDirectory.Enabled = true;
-                    btnInitialDirectoryMacros.Enabled = true;
+                    btnInitialDirectoryMacros.Enabled = true;                    
                 }
             }
         }
@@ -360,8 +423,12 @@ namespace pwiz.Skyline.ToolsUI
             int spot = listTools.SelectedIndex;
             if (spot != -1)
             {
-                ToolList[spot].Arguments = textArguments.Text;
-                Unsaved = true;
+                if (ToolList[spot].Arguments != textArguments.Text)
+                {
+                    Unsaved = true;
+                    ToolList[spot].Arguments = textArguments.Text;
+                }
+
             }
         }
 
@@ -370,8 +437,12 @@ namespace pwiz.Skyline.ToolsUI
             int spot = listTools.SelectedIndex;
             if (spot != -1)
             {
-                ToolList[spot].InitialDirectory = textInitialDirectory.Text;
-                Unsaved = true;
+                if (ToolList[spot].InitialDirectory != textInitialDirectory.Text)
+                {
+                    Unsaved = true;
+                    ToolList[spot].InitialDirectory = textInitialDirectory.Text;
+                }
+                
             }
         }
 
@@ -380,8 +451,11 @@ namespace pwiz.Skyline.ToolsUI
             int spot = listTools.SelectedIndex;
             if (spot != -1)
             {
-                ToolList[spot].OutputToImmediateWindow = (cbOutputImmediateWindow.CheckState == CheckState.Checked);                 
-                Unsaved = true;
+                if (ToolList[spot].OutputToImmediateWindow != (cbOutputImmediateWindow.CheckState == CheckState.Checked))
+                {
+                    Unsaved = true;
+                    ToolList[spot].OutputToImmediateWindow = (cbOutputImmediateWindow.CheckState == CheckState.Checked);                    
+                }                                 
             }
         }
 
@@ -393,8 +467,11 @@ namespace pwiz.Skyline.ToolsUI
             int spot = listTools.SelectedIndex;
             if (spot != -1)
             {
-                ToolList[spot].ReportTitle = comboReport.Text;
-                Unsaved = true;
+                if (ToolList[spot].ReportTitle != comboReport.Text)
+                {
+                    Unsaved = true;
+                    ToolList[spot].ReportTitle = comboReport.Text;
+                }                
             }
         }
 
@@ -407,9 +484,9 @@ namespace pwiz.Skyline.ToolsUI
         /// Remove the currently selected value.
         /// </summary>
         public void Remove()
-        {
-            
-            int spot = listTools.SelectedIndex;
+        {            
+            int spot = listTools.SelectedIndex;         
+            Removelist.Add(ToolList[spot]);
             ToolList.RemoveAt(spot);
             RefreshListBox();
             if (ToolList.Count == 0)
@@ -419,7 +496,7 @@ namespace pwiz.Skyline.ToolsUI
                 textArguments.Text = string.Empty;
                 textInitialDirectory.Text = string.Empty;
                 btnRemove.Enabled = false;
-                _previouslySelectedIndex = -1;
+                PreviouslySelectedIndex = -1;
                 cbOutputImmediateWindow.CheckState = CheckState.Unchecked;
                 comboReport.SelectedItem = string.Empty;
             }
@@ -464,7 +541,7 @@ namespace pwiz.Skyline.ToolsUI
                 ToolList[spot] = ToolList[spot - 1];
                 ToolList[spot - 1] = temp;
                 RefreshListBox();
-                _previouslySelectedIndex = _previouslySelectedIndex - 1;
+                PreviouslySelectedIndex = PreviouslySelectedIndex - 1;
                 listTools.SelectedIndex = spot - 1;
                 Unsaved = true;
             }
@@ -486,7 +563,7 @@ namespace pwiz.Skyline.ToolsUI
                 ToolList[spot] = ToolList[spot + 1];
                 ToolList[spot + 1] = temp;
                 RefreshListBox();
-                _previouslySelectedIndex = _previouslySelectedIndex + 1;
+                PreviouslySelectedIndex = PreviouslySelectedIndex + 1;
                 listTools.SelectedIndex = spot + 1;
                 Unsaved = true;
             }
@@ -529,7 +606,7 @@ namespace pwiz.Skyline.ToolsUI
                         if (SaveTools())
                             DialogResult = DialogResult.OK;
                         break;
-                    case DialogResult.No:
+                    case DialogResult.No:                        
                         DialogResult = DialogResult.Cancel;
                         break;
                 }
@@ -538,10 +615,28 @@ namespace pwiz.Skyline.ToolsUI
 
         public bool SaveTools()
         {
-            if (CheckPassTool(_previouslySelectedIndex))
+            if (CheckPassTool(PreviouslySelectedIndex))
             {
-                Settings.Default.ToolList = CopyTools(ToolList);
+                // Figure out which tools have been removed and if a directory in the tools folder can be removed.
+                // Check if we can delete any toolDirs based on the tools on the remove list. 
+                if (Removelist.Count > 0)
+                {
+                    var referencedPaths = ToolList.Where(t => !string.IsNullOrEmpty(t.ToolDirPath))
+                                                  .Select(t => t.ToolDirPath).ToArray();
+                    foreach (var removeTool in Removelist)
+                    {
+                        if (!string.IsNullOrEmpty(removeTool.ToolDirPath) &&
+                            Directory.Exists(removeTool.ToolDirPath) &&
+                            !referencedPaths.Contains(removeTool.ToolDirPath))
+                        {
+                            DirectoryEx.SafeDelete(removeTool.ToolDirPath);                                                                            
+                        }
+                    }    
+                }                
+
+                Settings.Default.ToolList = CopyTools(ToolList); 
                 Unsaved = false;
+                Removelist = new List<ToolDescription>();
                 return true;
             }
             else
@@ -560,6 +655,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             textTitle.Enabled =
                 textCommand.Enabled =
+                textCommand.Enabled =
                 textArguments.Enabled =
                 textInitialDirectory.Enabled =
                 btnFindCommand.Enabled =
@@ -570,48 +666,55 @@ namespace pwiz.Skyline.ToolsUI
                 comboReport.Enabled = btnRemove.Enabled;
         }
 
-        #region Functional testing support
-
-        public void TestHelperIndexChange(int i)
-        {
-            listTools.SelectedIndex = i;
-        }
-
-        public void RemoveAllTools()
-        {
-            // Remove one at a time to be sure necessary events fire.
-            while (ToolList.Count > 0)
-            {
-                Remove();
-            }
-            RefreshListBox();
-        }
-
-        public string GetComboReportText(int i)
-        {
-            return (string) comboReport.Items[i];
-        }
-
-        #endregion
-
         // Cannot test methods below because of common dialogs
 
         private void btnFindCommand_Click(object sender, EventArgs e)
         {
+            ProgramPathContainer pcc = ToolMacros.IsProgramPathMacro(textCommand.Text);
+            if (pcc != null)
+            {
+                contextMenuCommand.Show(btnFindCommand.Parent, btnFindCommand.Left, btnFindCommand.Bottom + 1);
+            }
+            else
+            {
+                CommandBtnClick();    
+            }
+            
+        }
+
+        private void browseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CommandBtnClick();
+        }
+
+        private void editMacroToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            EditMacro();
+        }
+
+        public void EditMacro()
+        {
+            ProgramPathContainer pcc = ToolMacros.IsProgramPathMacro(textCommand.Text);
+            var dlg = new LocateFileDlg(pcc);
+            dlg.ShowDialog();            
+        }
+
+        public void CommandBtnClick()
+        {
             int i = 0;
             using (var dlg = new OpenFileDialog
-                {
-                    Filter = TextUtil.FileDialogFiltersAll(
-                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, EXTENSIONS[i++]),
-                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, EXTENSIONS[i++]),
-                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, EXTENSIONS[i++]),
-                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i++]),
-                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, EXTENSIONS[i++]),
-                                   TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, EXTENSIONS[i])
-                                   ),
-                    FilterIndex = 1,
-                    Multiselect = false
-                })
+            {
+                Filter = TextUtil.FileDialogFiltersAll(
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, EXTENSIONS[i])
+                               ),
+                FilterIndex = 1,
+                Multiselect = false
+            })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -650,7 +753,7 @@ namespace pwiz.Skyline.ToolsUI
             }            
         }
         
-        public class MacroMenuItem : MenuItem
+        public class MacroMenuItem : ToolStripMenuItem  
         { 
             private readonly Macro _macro; 
 
@@ -692,6 +795,10 @@ namespace pwiz.Skyline.ToolsUI
                     _targetTextBox.Text = ShortText;
                 }
             }
+            public string GetContents(ToolMacroInfo tmf)
+            {
+                return _macro.GetContents(tmf);
+            }           
         }
 
         // Used in automated testing.
@@ -709,39 +816,278 @@ namespace pwiz.Skyline.ToolsUI
         /// Show the ContextMenu full of macros next to btnArguments.
         /// </summary>
         public void btnArgumentsOpen()
-        {            
-            MacroMenuArguments.Show(btnArguments, new Point(btnArguments.Width, 0));
+        {
+            PopulateMacroDropdown(_macroListArguments, contextMenuMacroArguments);
+            contextMenuMacroArguments.Items.Insert(4, new ToolStripSeparator());
+            contextMenuMacroArguments.Items.Insert(9, new ToolStripSeparator());
+            contextMenuMacroArguments.Show(btnArguments, new Point(btnArguments.Width, 0));
         }
 
-        /// <summary>
-        /// Populate the macroMenu on popup. (Arguments)
-        /// </summary>        
-        private void MacroMenuArguments_Popup(object sender, EventArgs e)
+        //For Functional Testing.
+        public void PopulateListMacroArguments()
+        {
+            PopulateMacroDropdown(_macroListArguments, contextMenuMacroArguments);
+        }
+
+        public string GetMacroArgumentToolTip(string s)
         {
             foreach (MacroMenuItem menuItem in _macroListArguments)
-                MacroMenuArguments.MenuItems.Add(menuItem);
-        }
-
-        /// <summary>
-        /// Populate the macroMenu on popup. (initialDirectory)
-        /// </summary>        
-        private void MacroMenuInitialDirectory_Popup(object sender, EventArgs e)
-        {                            
-            foreach (MacroMenuItem menuItem in _macroListInitialDirectory)
-                MacroMenuInitialDirectory.MenuItems.Add(menuItem);                            
+            {
+                if (menuItem != null && menuItem.Text == s)
+                    return menuItem.ToolTipText;
+            }
+            return null;
         }
 
         private void btnInitialDirectoryMacros_Click(object sender, EventArgs e)
         {
             btnInitialDirectoryOpen();
         }
-       
+
+        /// <summary>
+        /// Show the ContextMenu full of macros next to btnInitialDirectory.
+        /// </summary>
         public void btnInitialDirectoryOpen()
+        {            
+            PopulateMacroDropdown(_macroListInitialDirectory, contextMenuMacroInitialDirectory);
+            contextMenuMacroInitialDirectory.Show(btnInitialDirectoryMacros, new Point(btnInitialDirectoryMacros.Width, 0));
+        }
+
+        /// <summary>
+        /// Loop through the macroList adding each to the menu and setting its ToolTip to the appropriate value.
+        /// </summary>
+        /// <param name="macroList">List of macros to add from (eg. _macroListInitialDirectory)</param>
+        /// <param name="menu">Menu to add the macros to.</param>
+        private void PopulateMacroDropdown(IEnumerable<MacroMenuItem> macroList, ToolStrip menu)
         {
-            // Show the ContextMenu full of macros next to btnInitialDirectory.
-            MacroMenuInitialDirectory.Show(btnInitialDirectoryMacros, new Point(btnInitialDirectoryMacros.Width, 0));
+            while (menu.Items.Count > 0)
+                menu.Items.RemoveAt(0);
+            
+            foreach (MacroMenuItem menuItem in macroList)
+            {
+                if (string.IsNullOrEmpty(ToolDir) && menuItem.ShortText == ToolMacros.TOOL_DIR)
+                {
+                    continue;
+                }
+                if (string.IsNullOrEmpty(ArgsCollectorPath) && menuItem.ShortText == ToolMacros.COLLECTED_ARGS)
+                {
+                    continue;
+                }
+
+                menu.Items.Add(menuItem);                
+
+                if (SkylineWindowParent != null)
+                {
+                    int spot = listTools.SelectedIndex;
+                    ToolDescription td = ToolList[spot];
+                    ToolMacroInfo tmi = new ToolMacroInfo(SkylineWindowParent, td);
+                    string content;
+                    if (menuItem.Text == Resources.ToolMacros__listArguments_Input_Report_Temp_Path)
+                    {
+                        content = Resources.ConfigureToolsDlg_PopulateMacroDropdown_File_path_to_a_temporary_report;
+                    }
+                    else if (menuItem.Text == Resources.ToolMacros__listArguments_Collected_Arguments)
+                    {
+                        content = Resources.ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time;
+                    }
+                    else
+                    {
+                        content = menuItem.GetContents(tmi);
+                    }
+
+                    if (string.IsNullOrEmpty(content))
+                        content = Resources.ConfigureToolsDlg_PopulateMacroDropdown_N_A;
+
+                    menuItem.ToolTipText = content;
+                }
+            }
+           
+           
         }
 
         #endregion // Macros
+
+        private void fromWebAddContextMenuItem_Click(object sender, EventArgs e)
+        {
+            //Curently hidden from the menu.
+        }
+
+        private void customAddContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Add();
+        }
+
+        private void fromFileAddContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFromFile();
+        }
+
+        private void AddFromFile()
+        {
+            if (CheckPassTool(PreviouslySelectedIndex))
+            {
+                if (Unsaved)
+                {
+                    //Prompt them to save first!
+                    MultiButtonMsgDlg saveDlg = new MultiButtonMsgDlg(string.Format(Resources.ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_),
+                               MultiButtonMsgDlg.BUTTON_YES, Resources.ConfigureToolsDlg_AddFromFile_Cancel , false);
+                    DialogResult toSave = saveDlg.ShowDialog(this);
+                    switch (toSave)
+                    {
+                        case (DialogResult.Yes):
+                            SaveTools();
+                            break;
+                        case (DialogResult.No):
+                            return;
+                    }                    
+                }
+
+                var dlg = new OpenFileDialog
+                {
+                    Filter = TextUtil.FileDialogFiltersAll( TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
+                    Multiselect = false
+                };
+                DialogResult result = dlg.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    UnpackZipTool(dlg.FileName);
+                }
+            }
+            if (ToolList.Count == 1)
+            {
+                PreviouslySelectedIndex = 0;
+            }
+        }
+
+        
+        /// <summary>
+        /// Copy a zip file's contents to the tools folder and loop through its .properties
+        /// files adding the tools to the tools menu.
+        /// </summary>
+        /// <param name="fullpath"> The full path to the ziped folder containing the tools</param>
+        public void UnpackZipTool(string fullpath)
+        {            
+            UnpackZipToolHelper.UnzipToolReturnAccumulator result = UnpackZipToolHelper.UnpackZipTool(fullpath, OverwriteOrInParallel, SkylineWindowParent.FindProgramPath);
+            
+            RemoveAllTools();
+            //Reload the report dropdown menu!
+            _driverReportSpec.LoadList(string.Empty);
+            comboReport.Items.Insert(0, string.Empty);
+            comboReport.SelectedItem = string.Empty;
+
+            if (result != null)
+            {
+                foreach (var message in result.MessagesThrown)
+                {
+                    MessageDlg.Show(this, message);
+                }
+            }
+
+            //Reload the tool list
+            ToolList = Settings.Default.ToolList
+           .Select(t => new ToolDescription(t))
+           .ToList();
+
+            RefreshListBox();
+
+            if (ToolList.Count == 0)
+            {
+                listTools.SelectedIndex = -1;
+                btnRemove.Enabled = false;
+                btnMoveUp.Enabled = false;
+                btnMoveDown.Enabled = false;
+            }
+            else
+            {
+                listTools.SelectedIndex = ToolList.Count-1;
+                btnRemove.Enabled = true;
+            }                
+        }
+
+        public void RemoveAllTools()
+        {
+            // Remove one at a time to be sure necessary events fire.
+            while (ToolList.Count > 0)
+            {
+                Remove();
+            }
+            RefreshListBox();
+        }
+
+        #region Functional test support
+
+        public void TestHelperIndexChange(int i)
+        {
+            listTools.SelectedIndex = i;
+        }
+
+        public string GetComboReportText(int i)
+        {
+            return (string)comboReport.Items[i];
+        }
+
+        public string ArgsCollectorPath
+        {
+            get { return SelectedTool.ArgsCollectorDllPath; }
+        }
+
+        public string ArgsCollectorType
+        {
+            get { return SelectedTool.ArgsCollectorClassName; }
+        }
+        
+        public string ToolDir
+        {
+            get { return SelectedTool.ToolDirPath; }
+        }
+
+        private ToolDescription SelectedTool
+        {
+            get { return ToolList[listTools.SelectedIndex]; }
+        }
+
+        #endregion
+
+        public static bool? OverwriteOrInParallel(List<string> toolTitles,List<ReportSpec> reportList)
+        {
+            List<string> reportTitles = reportList.Select(sp => sp.GetKey()).ToList();
+
+            string toolMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_this_new_installation_, string.Empty,
+                                                    "{0}", string.Empty); // Not L10N
+            string toolSingleMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation,string.Empty);
+
+
+            string reportMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_exist_, string.Empty,
+                                                    "{1}", string.Empty); // Not L10N
+            string reportSingleMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists_,string.Empty);
+
+            string question = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_;
+            
+            string toolMessage = string.Empty;
+            if (toolTitles.Count > 0)
+            {
+                toolMessage = toolTitles.Count == 1 ? toolSingleMessage : toolMultiMessage;
+            }
+            string reportMessage = string.Empty;
+            if (reportList.Count > 0)
+            {
+                reportMessage = reportList.Count == 1 ? reportSingleMessage : reportMultiMessage;
+            }
+
+            string messageFormat = TextUtil.LineSeparate(toolMessage, reportMessage, question);
+            
+            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(toolTitles), TextUtil.LineSeparate(reportTitles)), "Overwrite", "In Parallel", true);
+            DialogResult result = dlg.ShowDialog();
+            switch (result)
+            {
+                case DialogResult.Cancel:
+                    return null;
+                case DialogResult.Yes:
+                    return true;
+                case DialogResult.No:
+                    return false;
+            }
+            return false;
+        }
     }
 }

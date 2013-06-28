@@ -207,6 +207,25 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        //public XmlMappedList<ProgramPathContainer,string> FilePaths 
+        //public Dictionary<ProgramPathContainer,string> FilePaths
+        public SerializableDictionary<ProgramPathContainer,string> FilePaths
+        {
+            get
+            {
+                if (this["FilePaths"] == null)
+                {
+                    FilePaths = new SerializableDictionary<ProgramPathContainer, string>();
+                }
+                return (SerializableDictionary<ProgramPathContainer, string>)(this["FilePaths"]);
+            }
+            set
+            {
+                this["FilePaths"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
         public List<string> MruList
         {
             get
@@ -788,6 +807,16 @@ namespace pwiz.Skyline.Properties
         {   throw new InvalidOperationException(); }
         public override ToolDescription CopyItem(ToolDescription item)
         {   throw new InvalidOperationException(); }
+
+
+        public ToolList CopyTools(IEnumerable<ToolDescription> list)
+        {
+            var listCopy = new ToolList();
+            listCopy.AddRange(from t in list
+                              where !Equals(t, ToolDescription.EMPTY)
+                              select new ToolDescription(t));
+            return listCopy;
+        }
     }
 
     public sealed class EnzymeList : SettingsList<Enzyme>
@@ -1978,7 +2007,7 @@ namespace pwiz.Skyline.Properties
 
         public override ICollection<ReportSpec> CreateEmptyList()
         {
-            return new ReportSpecList();
+            return new ReportSpecList {RevisionIndex = RevisionIndexCurrent};
         }
     }
 
@@ -2118,7 +2147,8 @@ namespace pwiz.Skyline.Properties
             return true;
         }
 
-        private void RemoveKey(string name)
+        //Todo
+        public void RemoveKey(string name)
         {
             for (int i = 0; i < Count; i++)
             {

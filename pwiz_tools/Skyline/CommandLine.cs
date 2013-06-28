@@ -1936,6 +1936,30 @@ namespace pwiz.Skyline
             return output.ToArray();
         }
 
+        /// <summary>
+        /// A method for parsing an array of individual arguments to be passed to the command line to generate
+        /// the string that will ultimately be passed. If a argument has white space, it is surrounded by quotes 
+        /// </summary>
+        /// <param name="arguments">The arguments to parse</param>
+        /// <returns>The appropriately formatted command line argument string</returns>
+        public static string ParseCommandLineArray(string[] arguments)
+        {
+            StringBuilder commandLineArguments = new StringBuilder();
+            foreach (string argument in arguments)
+            {
+                if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty)) //Consider: Should this handle null reference?
+                {
+                    commandLineArguments.Append(" \"" + argument + "\"");
+                }
+                else
+                {
+                    commandLineArguments.Append(" " + argument);
+                }
+            }
+            commandLineArguments.Remove(0, 1);
+            return commandLineArguments.ToString();
+        }
+
         public void ImportSkyr(string path, bool? resolveSkyrConflictsBySkipping)
         {          
             if (!File.Exists(path))

@@ -117,14 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="MacroMenuArguments.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>122, 17</value>
-  </metadata>
-  <metadata name="MacroMenuInitialDirectory.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>356, 17</value>
-  </metadata>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>553, 17</value>
+    <value>828, 17</value>
   </metadata>
   <data name="comboReport.ToolTip" xml:space="preserve">
     <value>Here you select a SkylineReport to go with your tool. 
@@ -144,19 +138,17 @@ report will be passed to the executable via standard input.  </value>
   <data name="btnInitialDirectoryMacros.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABEAAAASCAYAAAC9+TVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAACbSURBVDhPY2CgEPz8+fM/hUbQWvv79+8pd+K7la3/W8++o8ygNyvigAbE/V/x5s3/N0BMls9f
-        L48FaQTi2P/LX7/+/xqISTboFdwQoEEmzf9PvHpFuiF35kRAXQJyDRAb1lDBEAZD0g25NTsc4RKDqv+7
-        b90i3ZCbs8OghoT9n33zJukGgGLh+kyQIWCDyAdXZ1RQZgD5Vg8bnQDWc1gd9fvw5QAAAABJRU5ErkJg
-        gg==
+        YQUAAACXSURBVDhPY6AU/Pz58z+UOVjB+/fvKXfiu5Wt/1vPvqPMoDcr4oAGxP1f8ebN/zdADBUmDbxe
+        HgvSCMSx/5e/fv3/NRBDZEgAr+CGALFJ8/8Tr16RbsidOREIQ0DYsIYKhjAYkm7IrdnhCAMMqv7vvnWL
+        dENuzg6DGhL2f/bNm6QbAALXZ4IMARtEPrg6o4IyA0Y8YGAAANZzWB1hZTEoAAAAAElFTkSuQmCC
 </value>
   </data>
   <data name="btnArguments.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABEAAAASCAYAAAC9+TVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAACbSURBVDhPY2CgEPz8+fM/hUbQWvv79+8pd+K7la3/W8++o8ygNyvigAbE/V/x5s3/N0BMls9f
-        L48FaQTi2P/LX7/+/xqISTboFdwQoEEmzf9PvHpFuiF35kRAXQJyDRAb1lDBEAZD0g25NTsc4RKDqv+7
-        b90i3ZCbs8OghoT9n33zJukGgGLh+kyQIWCDyAdXZ1RQZgD5Vg8bnQDWc1gd9fvw5QAAAABJRU5ErkJg
-        gg==
+        YQUAAACXSURBVDhPY6AU/Pz58z+UOVjB+/fvKXfiu5Wt/1vPvqPMoDcr4oAGxP1f8ebN/zdADBUmDbxe
+        HgvSCMSx/5e/fv3/NRBDZEgAr+CGALFJ8/8Tr16RbsidOREIQ0DYsIYKhjAYkm7IrdnhCAMMqv7vvnWL
+        dENuzg6DGhL2f/bNm6QbAALXZ4IMARtEPrg6o4IyA0Y8YGAAANZzWB1hZTEoAAAAAElFTkSuQmCC
 </value>
   </data>
   <data name="textCommand.ToolTip" xml:space="preserve">
@@ -165,4 +157,19 @@ report will be passed to the executable via standard input.  </value>
 Files types that you can launch include .exe, .bat, .com, .cmd, and .pif
 All URLs must start with http: or https: to function properly.</value>
   </data>
+  <metadata name="contextMenuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>931, 17</value>
+  </metadata>
+  <metadata name="contextMenuCommand.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>1102, 17</value>
+  </metadata>
+  <metadata name="contextMenuMacroArguments.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>339, 15</value>
+  </metadata>
+  <metadata name="contextMenuMacroInitialDirectory.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>63, 17</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>115</value>
+  </metadata>
 </root>

@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -141,6 +142,19 @@ namespace pwiz.Skyline
                     }
                 }
 
+                // If this is a new installation copy over installed external tools from previous installation location.
+                var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
+                if (!Directory.Exists(toolsDirectory))
+                {
+                    var longWaitDlg = new LongWaitDlg
+                        {
+                            Text = Name,
+                            Message = Resources.Program_Main_Copying_external_tools_from_a_previous_installation,
+                            ProgressValue = 0
+                        };
+                    longWaitDlg.PerformWork(null, 1000* 3, broker => CopyOldTools(toolsDirectory, broker));
+                }
+
                 MainWindow = new SkylineWindow();
 
                 // Position window offscreen for stress testing.
@@ -158,6 +172,52 @@ namespace pwiz.Skyline
 
             // Release main window memory during tests
             MainWindow = null;
+        }
+
+        private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
+        {
+            //Copy tools to a different folder then Directory.Move if successful.
+            string tempOutterToolsFolderPath = string.Concat(outerToolsFolderPath, "_installing"); //Not L10N
+            if (Directory.Exists(tempOutterToolsFolderPath))
+            {
+                DirectoryEx.SafeDelete(tempOutterToolsFolderPath);
+                // Not sure this is necessay, but just to be safe
+                if (Directory.Exists(tempOutterToolsFolderPath))
+                    throw new Exception(Resources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
+            }
+
+            // Must create the tools directory to avoid ending up here again next time
+            Directory.CreateDirectory(tempOutterToolsFolderPath);
+
+            ToolList toolList = Settings.Default.ToolList;
+            int numTools = toolList.Count;
+            const int endValue = 100;
+            int progressValue = 0;
+            int increment = (endValue - progressValue)/(numTools +1);
+
+            foreach (var tool in toolList)
+            {
+                if (!string.IsNullOrEmpty(tool.ToolDirPath) && Directory.Exists(tool.ToolDirPath))
+                {
+                    string foldername = Path.GetFileName(tool.ToolDirPath) ?? string.Empty;
+                    string newDir = Path.Combine(outerToolsFolderPath, foldername);
+                    string tempNewDir = Path.Combine(tempOutterToolsFolderPath, foldername);
+                    if (!Directory.Exists(tempNewDir))
+                        DirectoryEx.DirectoryCopy(tool.ToolDirPath, tempNewDir, true);
+                    tool.ToolDirPath = newDir; // Update the tool to point to its new directory.
+                }
+                if (broker.IsCanceled)
+                {
+                    // Don't leave around a corrupted directory
+                    DirectoryEx.SafeDelete(tempOutterToolsFolderPath);
+                    return;
+                }
+
+                progressValue += increment;
+                broker.ProgressValue = progressValue;                
+            }
+            Directory.Move(tempOutterToolsFolderPath, outerToolsFolderPath);
+            Settings.Default.ToolList = Settings.Default.ToolList.CopyTools(toolList);
         }
 
         public static void Init()

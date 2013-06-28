@@ -32,8 +32,6 @@ namespace pwiz.Skyline.ToolsUI
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConfigureToolsDlg));
-            this.MacroMenuArguments = new System.Windows.Forms.ContextMenu();
-            this.MacroMenuInitialDirectory = new System.Windows.Forms.ContextMenu();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.comboReport = new System.Windows.Forms.ComboBox();
             this.btnInitialDirectoryMacros = new System.Windows.Forms.Button();
@@ -59,15 +57,18 @@ namespace pwiz.Skyline.ToolsUI
             this.btnRemove = new System.Windows.Forms.Button();
             this.btnApply = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.contextMenuAdd = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.customAddContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fromFileAddContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fromWebAddContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuCommand = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.browseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editMacroToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuMacroArguments = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuMacroInitialDirectory = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuAdd.SuspendLayout();
+            this.contextMenuCommand.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // MacroMenuArguments
-            // 
-            this.MacroMenuArguments.Popup += new System.EventHandler(this.MacroMenuArguments_Popup);
-            // 
-            // MacroMenuInitialDirectory
-            // 
-            this.MacroMenuInitialDirectory.Popup += new System.EventHandler(this.MacroMenuInitialDirectory_Popup);
             // 
             // helpTip
             // 
@@ -77,13 +78,14 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // comboReport
             // 
-            this.comboReport.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboReport.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.comboReport.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboReport.FormattingEnabled = true;
-            this.comboReport.Location = new System.Drawing.Point(15, 294);
+            this.comboReport.Location = new System.Drawing.Point(20, 362);
+            this.comboReport.Margin = new System.Windows.Forms.Padding(4);
             this.comboReport.Name = "comboReport";
-            this.comboReport.Size = new System.Drawing.Size(155, 21);
+            this.comboReport.Size = new System.Drawing.Size(204, 24);
             this.comboReport.TabIndex = 19;
             this.helpTip.SetToolTip(this.comboReport, resources.GetString("comboReport.ToolTip"));
             this.comboReport.SelectedIndexChanged += new System.EventHandler(this.comboReport_SelectedIndexChanged);
@@ -92,13 +94,14 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.btnInitialDirectoryMacros.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnInitialDirectoryMacros.Image = ((System.Drawing.Image)(resources.GetObject("btnInitialDirectoryMacros.Image")));
-            this.btnInitialDirectoryMacros.Location = new System.Drawing.Point(326, 244);
+            this.btnInitialDirectoryMacros.Location = new System.Drawing.Point(434, 300);
+            this.btnInitialDirectoryMacros.Margin = new System.Windows.Forms.Padding(4);
             this.btnInitialDirectoryMacros.Name = "btnInitialDirectoryMacros";
-            this.btnInitialDirectoryMacros.Size = new System.Drawing.Size(24, 23);
+            this.btnInitialDirectoryMacros.Size = new System.Drawing.Size(32, 28);
             this.btnInitialDirectoryMacros.TabIndex = 17;
             this.btnInitialDirectoryMacros.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.helpTip.SetToolTip(this.btnInitialDirectoryMacros, "This is the list of supported Initial Directory macros. These will \r\nbe replaced " +
-        "with the appropriate value when your run the tool.\r\n");
+                    "with the appropriate value when your run the tool.\r\n");
             this.btnInitialDirectoryMacros.UseVisualStyleBackColor = true;
             this.btnInitialDirectoryMacros.Click += new System.EventHandler(this.btnInitialDirectoryMacros_Click);
             // 
@@ -106,22 +109,24 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.btnArguments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnArguments.Image = ((System.Drawing.Image)(resources.GetObject("btnArguments.Image")));
-            this.btnArguments.Location = new System.Drawing.Point(326, 215);
+            this.btnArguments.Location = new System.Drawing.Point(434, 265);
+            this.btnArguments.Margin = new System.Windows.Forms.Padding(4);
             this.btnArguments.Name = "btnArguments";
-            this.btnArguments.Size = new System.Drawing.Size(24, 23);
+            this.btnArguments.Size = new System.Drawing.Size(32, 28);
             this.btnArguments.TabIndex = 13;
             this.btnArguments.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.helpTip.SetToolTip(this.btnArguments, "This is the list of supported argument macros. These will be\r\nreplaced with the a" +
-        "ppropriate value when your run the tool.");
+                    "ppropriate value when your run the tool.");
             this.btnArguments.UseVisualStyleBackColor = true;
             this.btnArguments.Click += new System.EventHandler(this.btnArguments_Click);
             // 
             // btnInitialDirectory
             // 
             this.btnInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnInitialDirectory.Location = new System.Drawing.Point(296, 244);
+            this.btnInitialDirectory.Location = new System.Drawing.Point(394, 300);
+            this.btnInitialDirectory.Margin = new System.Windows.Forms.Padding(4);
             this.btnInitialDirectory.Name = "btnInitialDirectory";
-            this.btnInitialDirectory.Size = new System.Drawing.Size(24, 23);
+            this.btnInitialDirectory.Size = new System.Drawing.Size(32, 28);
             this.btnInitialDirectory.TabIndex = 16;
             this.btnInitialDirectory.Text = "...";
             this.helpTip.SetToolTip(this.btnInitialDirectory, "Browse");
@@ -131,9 +136,10 @@ namespace pwiz.Skyline.ToolsUI
             // btnFindCommand
             // 
             this.btnFindCommand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFindCommand.Location = new System.Drawing.Point(326, 186);
+            this.btnFindCommand.Location = new System.Drawing.Point(434, 229);
+            this.btnFindCommand.Margin = new System.Windows.Forms.Padding(4);
             this.btnFindCommand.Name = "btnFindCommand";
-            this.btnFindCommand.Size = new System.Drawing.Size(24, 23);
+            this.btnFindCommand.Size = new System.Drawing.Size(32, 28);
             this.btnFindCommand.TabIndex = 10;
             this.btnFindCommand.Text = "...";
             this.helpTip.SetToolTip(this.btnFindCommand, "Browse");
@@ -142,46 +148,50 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // textInitialDirectory
             // 
-            this.textInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textInitialDirectory.Location = new System.Drawing.Point(102, 246);
+            this.textInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.textInitialDirectory.Location = new System.Drawing.Point(136, 303);
+            this.textInitialDirectory.Margin = new System.Windows.Forms.Padding(4);
             this.textInitialDirectory.Name = "textInitialDirectory";
-            this.textInitialDirectory.Size = new System.Drawing.Size(188, 20);
+            this.textInitialDirectory.Size = new System.Drawing.Size(248, 22);
             this.textInitialDirectory.TabIndex = 15;
             this.helpTip.SetToolTip(this.textInitialDirectory, "Enter the working directory for the tool, or choose \r\nthe arrow button to select " +
-        "a predefined directory location\r\nor the browse button to select a directory.");
+                    "a predefined directory location\r\nor the browse button to select a directory.");
             this.textInitialDirectory.TextChanged += new System.EventHandler(this.textInitialDirectory_TextChanged);
             // 
             // textArguments
             // 
-            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textArguments.Location = new System.Drawing.Point(102, 217);
+            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.textArguments.Location = new System.Drawing.Point(136, 267);
+            this.textArguments.Margin = new System.Windows.Forms.Padding(4);
             this.textArguments.Name = "textArguments";
-            this.textArguments.Size = new System.Drawing.Size(218, 20);
+            this.textArguments.Size = new System.Drawing.Size(288, 22);
             this.textArguments.TabIndex = 12;
             this.helpTip.SetToolTip(this.textArguments, "Enter the arguments you wish to pass to the tool, or \r\nchoose the arrow button to" +
-        " select a predefined argument.");
+                    " select a predefined argument.");
             this.textArguments.TextChanged += new System.EventHandler(this.textArguments_TextChanged);
             // 
             // textCommand
             // 
-            this.textCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textCommand.Location = new System.Drawing.Point(102, 188);
+            this.textCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.textCommand.Location = new System.Drawing.Point(136, 231);
+            this.textCommand.Margin = new System.Windows.Forms.Padding(4);
             this.textCommand.Name = "textCommand";
-            this.textCommand.Size = new System.Drawing.Size(218, 20);
+            this.textCommand.Size = new System.Drawing.Size(288, 22);
             this.textCommand.TabIndex = 9;
             this.helpTip.SetToolTip(this.textCommand, resources.GetString("textCommand.ToolTip"));
             this.textCommand.TextChanged += new System.EventHandler(this.textCommand_TextChanged);
             // 
             // textTitle
             // 
-            this.textTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textTitle.Location = new System.Drawing.Point(102, 159);
+            this.textTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.textTitle.Location = new System.Drawing.Point(136, 196);
+            this.textTitle.Margin = new System.Windows.Forms.Padding(4);
             this.textTitle.Name = "textTitle";
-            this.textTitle.Size = new System.Drawing.Size(248, 20);
+            this.textTitle.Size = new System.Drawing.Size(328, 22);
             this.textTitle.TabIndex = 7;
             this.helpTip.SetToolTip(this.textTitle, "Enter a name for the tool that will appear on the Tools menu");
             this.textTitle.TextChanged += new System.EventHandler(this.textTitle_TextChanged);
@@ -189,11 +199,12 @@ namespace pwiz.Skyline.ToolsUI
             // btnAdd
             // 
             this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAdd.Location = new System.Drawing.Point(275, 25);
+            this.btnAdd.Location = new System.Drawing.Point(366, 31);
+            this.btnAdd.Margin = new System.Windows.Forms.Padding(4);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(75, 23);
+            this.btnAdd.Size = new System.Drawing.Size(100, 28);
             this.btnAdd.TabIndex = 2;
-            this.btnAdd.Text = "&Add";
+            this.btnAdd.Text = "&Add...";
             this.helpTip.SetToolTip(this.btnAdd, "Click here to add a new tool.");
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
@@ -201,9 +212,10 @@ namespace pwiz.Skyline.ToolsUI
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(113, 333);
+            this.btnOK.Location = new System.Drawing.Point(150, 410);
+            this.btnOK.Margin = new System.Windows.Forms.Padding(4);
             this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(75, 23);
+            this.btnOK.Size = new System.Drawing.Size(100, 28);
             this.btnOK.TabIndex = 21;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
@@ -213,9 +225,10 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 278);
+            this.label6.Location = new System.Drawing.Point(16, 342);
+            this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(69, 13);
+            this.label6.Size = new System.Drawing.Size(90, 17);
             this.label6.TabIndex = 18;
             this.label6.Text = "Input Report:";
             // 
@@ -223,9 +236,10 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.cbOutputImmediateWindow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cbOutputImmediateWindow.AutoSize = true;
-            this.cbOutputImmediateWindow.Location = new System.Drawing.Point(194, 296);
+            this.cbOutputImmediateWindow.Location = new System.Drawing.Point(265, 364);
+            this.cbOutputImmediateWindow.Margin = new System.Windows.Forms.Padding(4);
             this.cbOutputImmediateWindow.Name = "cbOutputImmediateWindow";
-            this.cbOutputImmediateWindow.Size = new System.Drawing.Size(163, 17);
+            this.cbOutputImmediateWindow.Size = new System.Drawing.Size(210, 21);
             this.cbOutputImmediateWindow.TabIndex = 20;
             this.cbOutputImmediateWindow.Text = "Output to Immediate Window";
             this.cbOutputImmediateWindow.UseVisualStyleBackColor = true;
@@ -233,13 +247,15 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // listTools
             // 
-            this.listTools.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listTools.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.listTools.FormattingEnabled = true;
-            this.listTools.Location = new System.Drawing.Point(15, 25);
+            this.listTools.ItemHeight = 16;
+            this.listTools.Location = new System.Drawing.Point(20, 31);
+            this.listTools.Margin = new System.Windows.Forms.Padding(4);
             this.listTools.Name = "listTools";
-            this.listTools.Size = new System.Drawing.Size(254, 121);
+            this.listTools.Size = new System.Drawing.Size(336, 148);
             this.listTools.TabIndex = 1;
             this.listTools.SelectedIndexChanged += new System.EventHandler(this.listTools_SelectedIndexChanged);
             // 
@@ -247,19 +263,21 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 249);
+            this.label5.Location = new System.Drawing.Point(16, 306);
+            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(74, 13);
+            this.label5.Size = new System.Drawing.Size(103, 17);
             this.label5.TabIndex = 14;
-            this.label5.Text = "&Initial directory";
+            this.label5.Text = "&Initial directory:";
             // 
             // label4
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 220);
+            this.label4.Location = new System.Drawing.Point(16, 271);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(60, 13);
+            this.label4.Size = new System.Drawing.Size(80, 17);
             this.label4.TabIndex = 11;
             this.label4.Text = "A&rguments:";
             // 
@@ -267,9 +285,10 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 191);
+            this.label3.Location = new System.Drawing.Point(16, 235);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(57, 13);
+            this.label3.Size = new System.Drawing.Size(75, 17);
             this.label3.TabIndex = 8;
             this.label3.Text = "&Command:";
             // 
@@ -277,27 +296,30 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 162);
+            this.label2.Location = new System.Drawing.Point(16, 199);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(30, 13);
+            this.label2.Size = new System.Drawing.Size(39, 17);
             this.label2.TabIndex = 6;
             this.label2.Text = "&Title:";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Location = new System.Drawing.Point(16, 11);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(81, 13);
+            this.label1.Size = new System.Drawing.Size(105, 17);
             this.label1.TabIndex = 0;
             this.label1.Text = "&Menu contents:";
             // 
             // btnMoveDown
             // 
             this.btnMoveDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMoveDown.Location = new System.Drawing.Point(274, 123);
+            this.btnMoveDown.Location = new System.Drawing.Point(366, 151);
+            this.btnMoveDown.Margin = new System.Windows.Forms.Padding(4);
             this.btnMoveDown.Name = "btnMoveDown";
-            this.btnMoveDown.Size = new System.Drawing.Size(75, 23);
+            this.btnMoveDown.Size = new System.Drawing.Size(100, 28);
             this.btnMoveDown.TabIndex = 5;
             this.btnMoveDown.Text = "M&ove Down";
             this.btnMoveDown.UseVisualStyleBackColor = true;
@@ -306,9 +328,10 @@ namespace pwiz.Skyline.ToolsUI
             // btnMoveUp
             // 
             this.btnMoveUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMoveUp.Location = new System.Drawing.Point(275, 94);
+            this.btnMoveUp.Location = new System.Drawing.Point(366, 116);
+            this.btnMoveUp.Margin = new System.Windows.Forms.Padding(4);
             this.btnMoveUp.Name = "btnMoveUp";
-            this.btnMoveUp.Size = new System.Drawing.Size(75, 23);
+            this.btnMoveUp.Size = new System.Drawing.Size(100, 28);
             this.btnMoveUp.TabIndex = 4;
             this.btnMoveUp.Text = "Move &Up";
             this.btnMoveUp.UseVisualStyleBackColor = true;
@@ -317,9 +340,10 @@ namespace pwiz.Skyline.ToolsUI
             // btnRemove
             // 
             this.btnRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRemove.Location = new System.Drawing.Point(275, 54);
+            this.btnRemove.Location = new System.Drawing.Point(366, 66);
+            this.btnRemove.Margin = new System.Windows.Forms.Padding(4);
             this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(75, 23);
+            this.btnRemove.Size = new System.Drawing.Size(100, 28);
             this.btnRemove.TabIndex = 3;
             this.btnRemove.Text = "&Remove";
             this.btnRemove.UseVisualStyleBackColor = true;
@@ -330,9 +354,10 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnApply.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.btnApply.Location = new System.Drawing.Point(274, 333);
+            this.btnApply.Location = new System.Drawing.Point(364, 410);
+            this.btnApply.Margin = new System.Windows.Forms.Padding(4);
             this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(75, 23);
+            this.btnApply.Size = new System.Drawing.Size(100, 28);
             this.btnApply.TabIndex = 23;
             this.btnApply.Text = "App&ly";
             this.btnApply.UseVisualStyleBackColor = true;
@@ -341,20 +366,84 @@ namespace pwiz.Skyline.ToolsUI
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(194, 333);
+            this.btnCancel.Location = new System.Drawing.Point(258, 410);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.Size = new System.Drawing.Size(100, 28);
             this.btnCancel.TabIndex = 22;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // contextMenuAdd
+            // 
+            this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.customAddContextMenuItem,
+            this.fromFileAddContextMenuItem,
+            this.fromWebAddContextMenuItem});
+            this.contextMenuAdd.Name = "contextMenuStrip1";
+            this.contextMenuAdd.Size = new System.Drawing.Size(157, 98);
+            // 
+            // customAddContextMenuItem
+            // 
+            this.customAddContextMenuItem.Name = "customAddContextMenuItem";
+            this.customAddContextMenuItem.Size = new System.Drawing.Size(156, 24);
+            this.customAddContextMenuItem.Text = "Custom...";
+            this.customAddContextMenuItem.Click += new System.EventHandler(this.customAddContextMenuItem_Click);
+            // 
+            // fromFileAddContextMenuItem
+            // 
+            this.fromFileAddContextMenuItem.Name = "fromFileAddContextMenuItem";
+            this.fromFileAddContextMenuItem.Size = new System.Drawing.Size(156, 24);
+            this.fromFileAddContextMenuItem.Text = "From File...";
+            this.fromFileAddContextMenuItem.Click += new System.EventHandler(this.fromFileAddContextMenuItem_Click);
+            // 
+            // fromWebAddContextMenuItem
+            // 
+            this.fromWebAddContextMenuItem.Name = "fromWebAddContextMenuItem";
+            this.fromWebAddContextMenuItem.Size = new System.Drawing.Size(156, 24);
+            this.fromWebAddContextMenuItem.Text = "From Web...";
+            this.fromWebAddContextMenuItem.Visible = false;
+            this.fromWebAddContextMenuItem.Click += new System.EventHandler(this.fromWebAddContextMenuItem_Click);
+            // 
+            // contextMenuCommand
+            // 
+            this.contextMenuCommand.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.browseToolStripMenuItem,
+            this.editMacroToolStripMenuItem});
+            this.contextMenuCommand.Name = "contextMenuCommand";
+            this.contextMenuCommand.Size = new System.Drawing.Size(160, 52);
+            // 
+            // browseToolStripMenuItem
+            // 
+            this.browseToolStripMenuItem.Name = "browseToolStripMenuItem";
+            this.browseToolStripMenuItem.Size = new System.Drawing.Size(159, 24);
+            this.browseToolStripMenuItem.Text = "Browse...";
+            this.browseToolStripMenuItem.Click += new System.EventHandler(this.browseToolStripMenuItem_Click);
+            // 
+            // editMacroToolStripMenuItem
+            // 
+            this.editMacroToolStripMenuItem.Name = "editMacroToolStripMenuItem";
+            this.editMacroToolStripMenuItem.Size = new System.Drawing.Size(159, 24);
+            this.editMacroToolStripMenuItem.Text = "Edit Macro...";
+            this.editMacroToolStripMenuItem.Click += new System.EventHandler(this.editMacroToolStripMenuItem_Click);
+            // 
+            // contextMenuMacroArguments
+            // 
+            this.contextMenuMacroArguments.Name = "contextMenuMacroArguments";
+            this.contextMenuMacroArguments.Size = new System.Drawing.Size(61, 4);
+            // 
+            // contextMenuMacroInitialDirectory
+            // 
+            this.contextMenuMacroInitialDirectory.Name = "contextMenuMacroInitialDirectory";
+            this.contextMenuMacroInitialDirectory.Size = new System.Drawing.Size(61, 4);
+            // 
             // ConfigureToolsDlg
             // 
             this.AcceptButton = this.btnOK;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(362, 368);
+            this.ClientSize = new System.Drawing.Size(482, 453);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.comboReport);
             this.Controls.Add(this.cbOutputImmediateWindow);
@@ -380,8 +469,10 @@ namespace pwiz.Skyline.ToolsUI
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(500, 498);
             this.Name = "ConfigureToolsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -389,6 +480,8 @@ namespace pwiz.Skyline.ToolsUI
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "External Tools";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ConfigureToolsDlg_KeyDown);
+            this.contextMenuAdd.ResumeLayout(false);
+            this.contextMenuCommand.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -416,12 +509,19 @@ namespace pwiz.Skyline.ToolsUI
         public System.Windows.Forms.Button btnFindCommand;
         public System.Windows.Forms.Button btnInitialDirectory;
         public System.Windows.Forms.Button btnArguments;
-        public System.Windows.Forms.ContextMenu MacroMenuArguments;
         public System.Windows.Forms.Button btnInitialDirectoryMacros;
-        private System.Windows.Forms.ContextMenu MacroMenuInitialDirectory;
         public System.Windows.Forms.CheckBox cbOutputImmediateWindow;
         public System.Windows.Forms.ComboBox comboReport;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.ContextMenuStrip contextMenuAdd;
+        private System.Windows.Forms.ToolStripMenuItem customAddContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fromFileAddContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fromWebAddContextMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuCommand;
+        private System.Windows.Forms.ToolStripMenuItem browseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem editMacroToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuMacroArguments;
+        private System.Windows.Forms.ContextMenuStrip contextMenuMacroInitialDirectory;
     }
 }

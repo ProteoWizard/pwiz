@@ -2295,7 +2295,7 @@ namespace pwiz.Skyline
 
         public void ShowConfigureToolsDlg()
         {
-            using (var dlg = new ConfigureToolsDlg())
+            using (var dlg = new ConfigureToolsDlg(this))
             {
                 dlg.ShowDialog(this);
             }
@@ -2312,12 +2312,66 @@ namespace pwiz.Skyline
             while (!ReferenceEquals(toolsMenu.DropDownItems[0], configureToolsMenuItem))
             {
                 toolsMenu.DropDownItems.RemoveAt(0);
+                //Consider: (danny) When we remove menu items do we have to dispose of them?
             }
 
             int lastInsertIndex = 0;
             var toolList = Settings.Default.ToolList;
-            foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) { Text = t.Title }))
-                toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
+            foreach (ToolDescription tool in toolList)
+            {
+                if (tool.Title.Contains('\\'))
+                {
+                    ToolStripMenuItem curent = toolsMenu;
+                    string[] spliced = tool.Title.Split('\\');
+                    for (int i = 0; i < spliced.Length-1; i++)
+                    {
+                        ToolStripMenuItem item;
+                        int index = toolExists(curent, spliced[i]);
+                        if ( index >= 0)
+                        {
+                            item = (ToolStripMenuItem) curent.DropDownItems[index];
+                        }
+                        else
+                        {
+                            item = new ToolStripMenuItem(spliced[i]);
+                            if (curent == toolsMenu)
+                            {
+                                curent.DropDownItems.Insert(lastInsertIndex++, item);
+                            }
+                            else
+                            {
+                                curent.DropDownItems.Add(item);
+                            }    
+                        }
+                        
+                        curent = item;
+                    }
+                    ToolMenuItem final = new ToolMenuItem(tool, this) { Text = spliced.Last() };
+                    curent.DropDownItems.Add(final);
+                }
+                else
+                {
+                    ToolMenuItem menuItem = new ToolMenuItem(tool, this) { Text = tool.Title };
+                    toolsMenu.DropDownItems.Insert(lastInsertIndex++ , menuItem);
+                }
+            }
+        }
+        /// <summary>
+        /// Helper Function that determines if a tool exists on a menu by it's title. 
+        /// </summary>
+        /// <param name="menu">Menu we are looking in</param>
+        /// <param name="toolTitle">Title we are looking for</param>
+        /// <returns>Index into menu if found, -1 if not found.</returns>
+        private int toolExists(ToolStripMenuItem menu, string toolTitle)
+        {
+            for (int i = 0; i < menu.DropDownItems.Count; i++)
+            {
+                if (menu.DropDownItems[i] == configureToolsMenuItem)
+                    return -1;
+                if (menu.DropDownItems[i].Text == toolTitle)
+                    return i;
+            }
+            return -1;
         }
 
         /// <summary>
@@ -2339,9 +2393,19 @@ namespace pwiz.Skyline
             return GetToolMenuItem(i).Text;
         }
 
+        public string GetTextByIndex(int i)
+        {
+            return toolsMenu.DropDownItems[i].Text;
+        }
+
         public bool ConfigMenuPresent()
         {
             return toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
+        }
+
+        public ToolStripMenuItem GetMenuItem(int index)
+        {
+            return (ToolStripMenuItem) toolsMenu.DropDownItems[index];
         }
 
         public ToolMenuItem GetToolMenuItem(int i)
@@ -3397,7 +3461,9 @@ namespace pwiz.Skyline
                            ? ComboResults.SelectedItem.ToString()
                            : null;
         }
-        }       
+        }
+
+
 
         public string SelectedPeptideSequence
         {
@@ -3417,6 +3483,21 @@ namespace pwiz.Skyline
             }
         }
 
+        public string FindProgramPath(ProgramPathContainer programPathContainer)
+        {
+            AutoResetEvent wh = new AutoResetEvent(false);
+            DialogResult result = DialogResult.No;
+            RunUIAction(() =>
+                {
+                    LocateFileDlg dlg = new LocateFileDlg(programPathContainer);
+                    result = dlg.ShowDialog(this);                    
+                    wh.Set();
+                });
+            wh.WaitOne();
+            wh.Dispose();           
+            return result == DialogResult.OK ? Settings.Default.FilePaths[programPathContainer] : null;
+        }
+
         #endregion
 
         #region Implementation of IExceptionHandler
@@ -3426,7 +3507,7 @@ namespace pwiz.Skyline
         /// </summary>
         /// <param name="e"></param>
         public void HandleException(Exception e)
-        {
+        {            
             RunUIAction(() => MessageDlg.Show(this, e.Message));
         }
 
