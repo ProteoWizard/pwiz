@@ -50,18 +50,19 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
-            SrmDocument docNew;
+            SrmDocument docNew, docOrig;
             do
             {
-                var current = container.Document;
-                var loadMonitor = new LoadMonitor(this, container, current);
-                docNew = DocumentRetentionTimes.RecalculateAlignments(current, loadMonitor);
+                docOrig = container.Document;
+                var loadMonitor = new LoadMonitor(this, container, docOrig);
+                docNew = DocumentRetentionTimes.RecalculateAlignments(docOrig, loadMonitor);
                 if (null == docNew)
                 {
-                    EndProcessing(current);
+                    EndProcessing(docOrig);
                     return false;
                 }
-            } while (!CompleteProcessing(container, docNew, docCurrent));
+            }
+            while (!CompleteProcessing(container, docNew, docOrig));
             return true;
         }
     }
