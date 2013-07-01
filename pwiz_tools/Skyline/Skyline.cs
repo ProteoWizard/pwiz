@@ -3518,6 +3518,12 @@ namespace pwiz.Skyline
         {
             return Equals(pasteMenuItem.ShortcutKeys, keys);
         }
+
+        private void showChromatogramsSpectrumContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowLibraryChromatograms = !Settings.Default.ShowLibraryChromatograms;
+            UpdateGraphPanes();
+        }
     }
 }
 

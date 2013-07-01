@@ -5218,6 +5218,9 @@ Are you sure you want to continue?</value>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
   </data>
+  <data name="ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area" xml:space="preserve">
+    <value>Peak Area</value>
+  </data>
   <data name="OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_center" xml:space="preserve">
     <value>OverlapIsolationWindowMapper: Tried to add an isolation window with no center</value>
   </data>

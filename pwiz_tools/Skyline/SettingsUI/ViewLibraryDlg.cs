@@ -35,6 +35,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.DocSettings;
@@ -115,6 +116,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private ViewLibraryPepInfo? _lastTipNode;
         private ITipProvider _lastTipProvider;
+        private bool _showChromatograms;
+        private GraphHelper _graphHelper;
 
         private ModFontHolder ModFonts { get; set; }
 
@@ -144,7 +147,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
-
+            _graphHelper = GraphHelper.Attach(graphControl);
             _libraryManager = libMgr;
             _selectedLibName = libName;
             if (string.IsNullOrEmpty(_selectedLibName) && Settings.Default.SpectralLibraryList.Count > 0)
@@ -157,11 +160,6 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries = new SettingsListComboDriver<LibrarySpec>(comboLibrary, Settings.Default.SpectralLibraryList);
             Settings.Default.SpectralLibraryList.ListChanged += SpectralLibraryList_ListChanged;
 
-            graphControl.MasterPane.Border.IsVisible = false;
-            var graphPane = GraphPane;
-            graphPane.Border.IsVisible = false;
-            graphPane.Title.IsVisible = true;
-            graphPane.AllowCurveOverlap = true;
             GraphSettings = new GraphSpectrumSettings(UpdateUI);
 
             Icon = Resources.Skyline;
@@ -188,6 +186,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             _matcher = new LibKeyModificationMatcher();
+            _showChromatograms = Settings.Default.ShowLibraryChromatograms;
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -621,7 +620,7 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             mods = nodPep.ExplicitMods;
                             // Should always be just one child.  The child that matched this spectrum.
-                            transitionGroup = ((TransitionGroupDocNode)nodPep.Children[0]).TransitionGroup;
+                            transitionGroup = nodPep.TransitionGroups.First().TransitionGroup;
                         }
                         else
                         {
@@ -674,7 +673,15 @@ namespace pwiz.Skyline.SettingsUI
                                                                           types,
                                                                           rankCharges,
                                                                           rankTypes);
-
+                        LibraryChromGroup libraryChromGroup = null;
+                        if (_showChromatograms)
+                        {
+                            var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
+                            if (null != spectrumInfo)
+                            {
+                                libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
+                            }
+                        }
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroup, _selectedLibrary)
                         {
                             ShowTypes = types,
@@ -689,8 +696,6 @@ namespace pwiz.Skyline.SettingsUI
 
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
-                        AddGraphItem(graphPane, GraphItem);
-
                         // Update file and retention time indicators
                         var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
                             IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
@@ -701,12 +706,51 @@ namespace pwiz.Skyline.SettingsUI
 
                             if (!string.IsNullOrEmpty(filename))
                             {
-                                labelFilename.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_File__0__, filename);
+                                labelFilename.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_File__0__,
+                                                                   filename);
                             }
                             if (rt.HasValue)
                             {
                                 labelRT.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_RT__0__, rt);
                             }
+                        }
+                        if (null == libraryChromGroup)
+                        {
+                            _graphHelper.ResetForSpectrum(null);
+                            _graphHelper.AddSpectrum(GraphItem);
+                            _graphHelper.ZoomSpectrumToSettings(Program.ActiveDocumentUI, null);
+                        }
+                        else
+                        {
+                            _graphHelper.ResetForChromatograms(new[]{transitionGroup});
+                            double maxHeight = libraryChromGroup.ChromDatas.Max(chromData => chromData.Height);
+                            int iChromDataPrimary = libraryChromGroup.ChromDatas.IndexOf(chromData => maxHeight == chromData.Height);
+                            for (int iChromData = 0; iChromData < libraryChromGroup.ChromDatas.Count; iChromData++)
+                            {
+                                ChromatogramInfo chromatogramInfo;
+                                TransitionChromInfo transitionChromInfo;
+                                var chromData = libraryChromGroup.ChromDatas[iChromData];
+                                GraphSpectrum.MakeChromatogramInfo(0.0, libraryChromGroup, chromData, out chromatogramInfo, out transitionChromInfo);
+                                var nodeGroup = new TransitionGroupDocNode(transitionGroup, new TransitionDocNode[0]);
+                                var color =
+                                    GraphChromatogram.COLORS_LIBRARY[iChromData%GraphChromatogram.COLORS_LIBRARY.Length];
+                                var graphItem = new ChromGraphItem(nodeGroup, null, chromatogramInfo, iChromData == iChromDataPrimary ? transitionChromInfo : null, null,
+                                   new[] { iChromData == iChromDataPrimary }, null, 0, false, false, 0,
+                                   color, Settings.Default.ChromatogramFontSize, 1);
+                                LineItem curve = (LineItem) _graphHelper.AddChromatogram(GraphHelper.PaneKey.DEFAULT, graphItem);
+                                var pointAnnotation = GraphItem.AnnotatePoint(new PointPair(chromData.Mz, 1.0));
+                                if (null != pointAnnotation)
+                                {
+                                    curve.Label.Text = pointAnnotation.Label;
+                                }
+                                else
+                                {
+                                    curve.Label.Text = chromData.Mz.ToString("0.####");
+                                }
+                                curve.Line.Width = Settings.Default.ChromatogramLineWidth;
+                                curve.Color = color;
+                            }
+                            _graphHelper.FinishedAddingChromatograms(libraryChromGroup.StartTime, libraryChromGroup.EndTime, false);
                         }
 
                         available = true;
@@ -715,21 +759,19 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (UnauthorizedAccessException)
             {
-                AddGraphItem(graphPane,
-                             new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_));
+                SetGraphItem(new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_));
                 return;
             }
             catch (IOException)
             {
-                AddGraphItem(graphPane,
-                             new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted));
+                SetGraphItem(new NoDataMSGraphItem(Resources.ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted));
                 return;
             }
 
             // Show unavailable message, if no spectrum loaded
             if (!available)
             {
-                AddGraphItem(graphPane, new UnavailableMSGraphItem());
+                SetGraphItem(new UnavailableMSGraphItem());
             }
 
             btnAIons.Checked = Settings.Default.ShowAIons;
@@ -742,11 +784,11 @@ namespace pwiz.Skyline.SettingsUI
             charge2Button.Checked = Settings.Default.ShowCharge2;
         }
 
-        private void AddGraphItem(MSGraphPane pane, IMSGraphItemInfo item)
+        private void SetGraphItem(IMSGraphItemInfo item)
         {
-            pane.Title.Text = item.Title;
-            graphControl.AddGraphItem(pane, item);
-            pane.CurveList[0].Label.IsVisible = false;
+            var curveItem = _graphHelper.SetErrorGraphItem(item);
+            graphControl.GraphPane.Title.Text = item.Title;
+            curveItem.Label.IsVisible = false;
             graphControl.Refresh();
         }
 
@@ -852,6 +894,8 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
+            showChromatogramsContextMenuItem.Checked = _showChromatograms;
+            menuStrip.Items.Insert(iInsert++, showChromatogramsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
@@ -1164,13 +1208,7 @@ namespace pwiz.Skyline.SettingsUI
         
         public void ZoomSpectrumToSettings()
         {
-            var axis = GraphPane.XAxis;
-            var instrument = Program.ActiveDocumentUI.Settings.TransitionSettings.Instrument;
-            axis.Scale.Min = instrument.MinMz;
-            axis.Scale.MinAuto = false;
-            axis.Scale.Max = instrument.MaxMz;
-            axis.Scale.MaxAuto = false;
-            graphControl.Refresh();
+            _graphHelper.ZoomSpectrumToSettings(Program.ActiveDocumentUI, null);
         }
 
         private void copyMetafileButton_Click(object sender, EventArgs e)
@@ -2022,6 +2060,12 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 return new Size((int)size.Width + 2, (int)size.Height + 2);
             }
+        }
+
+        private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _showChromatograms = !_showChromatograms;
+            UpdateUI();
         }
     }
 }

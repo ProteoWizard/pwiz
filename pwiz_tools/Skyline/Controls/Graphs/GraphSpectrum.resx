@@ -220,7 +220,7 @@
     <value>473, 386</value>
   </data>
   <data name="$this.TabText" xml:space="preserve">
-    <value>MS/MS Spectrum</value>
+    <value>Library Match</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>GraphSpectrum</value>

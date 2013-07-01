@@ -275,7 +275,9 @@
     <Compile Include="Controls\Graphs\AsyncRenderControl.Designer.cs">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\GraphHelper.cs" />
     <Compile Include="Controls\Graphs\HiLowMiddleErrorBarItem.cs" />
+    <Compile Include="Controls\Graphs\LibraryChromGraphItem.cs" />
     <Compile Include="Controls\Graphs\MeanErrorBarItem.cs" />
     <Compile Include="Controls\Graphs\GraphRegression.cs">
       <SubType>Form</SubType>
@@ -516,6 +518,18 @@
     <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundantPeaks.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundant.cs" />
     <Compile Include="Model\Lib\BlibData\DbScoreTypes.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromLibSpectrumHeaderInfo.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromLibSpectrumInfo.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromatogramLibrary.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromatogramLibrarySpec.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\ChromLibEntity.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\IsotopeModification.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Peptide.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Precursor.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\PrecursorRetentionTime.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Protein.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\SampleFile.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Transition.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />
@@ -1205,6 +1219,7 @@
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </None>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -1793,7 +1808,9 @@
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Hibernate\mapping.xml" />
+    <EmbeddedResource Include="Model\Hibernate\mapping.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Comment.bmp" />
     <EmbeddedResource Include="Resources\PeakBlank.bmp" />
     <EmbeddedResource Include="Resources\Copy.bmp" />
@@ -1884,6 +1901,7 @@
     <EmbeddedResource Include="Resources\Panorama.bmp" />
     <EmbeddedResource Include="Resources\ChromLib.bmp" />
     <EmbeddedResource Include="Resources\LabKey.bmp" />
+    <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

@@ -25,6 +25,8 @@ using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.ChromLib;
+using pwiz.Skyline.Model.Lib.ChromLib.Data;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -120,6 +122,8 @@ namespace pwiz.Skyline.SettingsUI
                 librarySpec = new BiblioSpecLiteSpec(name, path);
             else if (Equals(ext, BiblioSpecLibSpec.EXT))
                 librarySpec = new BiblioSpecLibSpec(name, path);
+            else if (Equals(ext, ChromatogramLibrarySpec.EXT))
+                librarySpec = new ChromatogramLibrarySpec(name, path);
             else if (Equals(ext, XHunterLibSpec.EXT))
                 librarySpec = new XHunterLibSpec(name, path);
             else if (Equals(ext, NistLibSpec.EXT))
@@ -167,7 +171,7 @@ namespace pwiz.Skyline.SettingsUI
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries, BiblioSpecLiteSpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT),
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries, BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT),
                                                        TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT))
             })
             {
@@ -201,11 +205,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             linkLabel.LinkVisited = true;
             WebHelpers.OpenLink(this, link);
-        }
-
-        private void EditLibraryDlg_Load(object sender, EventArgs e)
-        {
-
         }
     }
 }

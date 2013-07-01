@@ -132,7 +132,6 @@
             this.MinimizeBox = false;
             this.Name = "EditLibraryDlg";
             this.ShowInTaskbar = false;
-            this.Load += new System.EventHandler(this.EditLibraryDlg_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -824,6 +824,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
+            showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
+            menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
@@ -1215,6 +1217,8 @@ namespace pwiz.Skyline
                         toolStripSeparatorTran,
                         basePeakContextMenuItem,
                         ticContextMenuItem,
+                        toolStripSeparatorSplitGraph,
+                        splitGraphContextMenuItem,
                     });
             }
             menuStrip.Items.Insert(iInsert++, transformChromContextMenuItem);
@@ -1433,6 +1437,8 @@ namespace pwiz.Skyline
                 (displayType == DisplayTypeChrom.base_peak);
             ticMenuItem.Checked = ticContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.tic);
+            splitGraphMenuItem.Checked = splitGraphContextMenuItem.Checked
+                = Settings.Default.SplitChromatogramGraph;
         }
 
         private bool IsMultipleIonSources
@@ -2054,6 +2060,13 @@ namespace pwiz.Skyline
         {
             foreach (var graphChrom in _listGraphChrom)
                 graphChrom.UpdateUI();
+
+            // TODO(nicksh): we want to also update GraphSpectrum at this time, but there are issues with
+            // this being called reentrantly.
+//            if (null != GraphSpectrum)
+//            {
+//                GraphSpectrum.UpdateUI();
+//            }
         }
 
         private void closeAllChromatogramsMenuItem_Click(object sender, EventArgs e)
@@ -2065,6 +2078,12 @@ namespace pwiz.Skyline
         }
 
         #endregion
+
+        private void splitChromGraphMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.SplitChromatogramGraph = !Settings.Default.SplitChromatogramGraph;
+            UpdateGraphPanes();
+        }
 
         #region Retention time graph
 

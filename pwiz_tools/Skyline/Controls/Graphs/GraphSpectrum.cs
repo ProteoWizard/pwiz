@@ -24,11 +24,14 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
+using pwiz.Crawdad;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -61,10 +64,24 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class DefaultStateProvider : IStateProvider
         {
-            public TreeNodeMS SelectedNode { get { return null; } }
-            public IList<IonType> ShowIonTypes { get { return new[] { IonType.y }; } }
-            public IList<int> ShowIonCharges { get { return new[] { 1 }; } }
-            public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) { }
+            public TreeNodeMS SelectedNode
+            {
+                get { return null; }
+            }
+
+            public IList<IonType> ShowIonTypes
+            {
+                get { return new[] {IonType.y}; }
+            }
+
+            public IList<int> ShowIonCharges
+            {
+                get { return new[] {1}; }
+            }
+
+            public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+            {
+            }
         }
 
         private readonly IDocumentUIContainer _documentContainer;
@@ -72,19 +89,16 @@ namespace pwiz.Skyline.Controls.Graphs
         private TransitionGroupDocNode _nodeGroup;
         private IList<SpectrumDisplayInfo> _spectra;
         private bool _inToolbarUpdate;
+        // TODO
+        private object _spectrumKeySave;
+        private GraphHelper _graphHelper;
 
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
 
             Icon = Resources.SkylineData;
-
-            graphControl.MasterPane.Border.IsVisible = false;
-            var graphPane = GraphPane;
-            graphPane.Border.IsVisible = false;
-            graphPane.Title.IsVisible = true;
-            graphPane.AllowCurveOverlap = true;
-
+            _graphHelper = GraphHelper.Attach(graphControl);
             _documentContainer = documentUIContainer;
             _documentContainer.ListenUI(OnDocumentUIChanged);
             _stateProvider = documentUIContainer as IStateProvider ??
@@ -94,17 +108,42 @@ namespace pwiz.Skyline.Controls.Graphs
                 ZoomSpectrumToSettings();
         }
 
-        private SrmDocument DocumentUI { get { return _documentContainer.DocumentUI; } }
+        private SrmDocument DocumentUI
+        {
+            get { return _documentContainer.DocumentUI; }
+        }
 
-        private MSGraphPane GraphPane { get { return (MSGraphPane) graphControl.MasterPane[0]; } }
-        
+        private MSGraphPane GraphPane
+        {
+            get { return (MSGraphPane) graphControl.MasterPane[0]; }
+        }
+
         private SpectrumGraphItem GraphItem { get; set; }
 
-        public string LibraryName { get { return GraphItem.LibraryName; } }
-        public int PeaksCount { get { return GraphItem.PeaksCount; } }
-        public int PeaksMatchedCount { get { return GraphItem.PeaksMatchedCount; } }
-        public int PeaksRankedCount { get { return GraphItem.PeaksRankedCount; } }        
-        public IEnumerable<string> IonLabels { get { return GraphItem.IonLabels; } }
+        public string LibraryName
+        {
+            get { return GraphItem.LibraryName; }
+        }
+
+        public int PeaksCount
+        {
+            get { return GraphItem.PeaksCount; }
+        }
+
+        public int PeaksMatchedCount
+        {
+            get { return GraphItem.PeaksMatchedCount; }
+        }
+
+        public int PeaksRankedCount
+        {
+            get { return GraphItem.PeaksRankedCount; }
+        }
+
+        public IEnumerable<string> IonLabels
+        {
+            get { return GraphItem.IonLabels; }
+        }
 
         public string SelectedIonLabel
         {
@@ -229,7 +268,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Selection by file name and retention time should not select best spectrum
                 int iSpectrum = _spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest &&
-                    SpectrumMatches(spectrumInfo, spectrumIdentifier));
+                                                                 SpectrumMatches(spectrumInfo, spectrumIdentifier));
 
                 if (iSpectrum != -1)
                     comboSpectrum.SelectedIndex = iSpectrum;
@@ -280,7 +319,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             // Clear existing data from the graph pane
-            var graphPane = (MSGraphPane)graphControl.MasterPane[0];
+            var graphPane = (MSGraphPane) graphControl.MasterPane[0];
             graphPane.CurveList.Clear();
             graphPane.GraphObjList.Clear();
 
@@ -306,7 +345,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         _nodeGroup = null;
                         toolBar.Visible = false;
-                        AddGraphItem(graphPane, new NoDataMSGraphItem(Resources.GraphSpectrum_UpdateUI_Multiple_charge_states_with_library_spectra));
+                        _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
+                                         Resources.GraphSpectrum_UpdateUI_Multiple_charge_states_with_library_spectra));
                         return;
                     }
                 }
@@ -357,7 +397,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         var spectrum = SelectedSpectrum;
                         if (spectrum != null)
                         {
-                            SpectrumPeaksInfo spectrumInfo = spectrum.SpectrumPeaksInfo;
                             IsotopeLabelType typeInfo = spectrum.LabelType;
                             var types = _stateProvider.ShowIonTypes;
                             var charges = _stateProvider.ShowIonCharges;
@@ -377,6 +416,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 if (charges.Remove(charge))
                                     charges.Insert(i++, charge);
                             }
+                            SpectrumPeaksInfo spectrumInfo = spectrum.SpectrumPeaksInfo;
                             var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo,
                                                                               typeInfo,
                                                                               group,
@@ -386,28 +426,128 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                               types,
                                                                               rankCharges,
                                                                               rankTypes);
-
                             GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectrum.LibName)
+                                {
+                                    ShowTypes = types,
+                                    ShowCharges = charges,
+                                    ShowRanks = Settings.Default.ShowRanks,
+                                    ShowMz = Settings.Default.ShowIonMz,
+                                    ShowObservedMz = Settings.Default.ShowObservedMz,
+                                    ShowDuplicates = Settings.Default.ShowDuplicateIons,
+                                    FontSize = Settings.Default.SpectrumFontSize,
+                                    LineWidth = Settings.Default.SpectrumLineWidth
+                                };
+                            LibraryChromGroup chromatogramData = null;
+                            if (Settings.Default.ShowLibraryChromatograms)
                             {
-                                ShowTypes = types,
-                                ShowCharges = charges,
-                                ShowRanks = Settings.Default.ShowRanks,
-                                ShowMz = Settings.Default.ShowIonMz,
-                                ShowObservedMz = Settings.Default.ShowObservedMz,
-                                ShowDuplicates = Settings.Default.ShowDuplicateIons,
-                                FontSize = Settings.Default.SpectrumFontSize,
-                                LineWidth = Settings.Default.SpectrumLineWidth
-                            };
+                                chromatogramData = spectrum.LoadChromatogramData();
+                            }
+                            if (null == chromatogramData)
+                            {
+                                _graphHelper.ResetForSpectrum(new[] {nodeGroup.TransitionGroup});
+                                _graphHelper.AddSpectrum(GraphItem);
+                                _graphHelper.ZoomSpectrumToSettings(DocumentUI, nodeGroup);
+                            }
+                            else
+                            {
+                                _graphHelper.ResetForChromatograms(new[] {nodeGroup.TransitionGroup});
+                                IList<TransitionDocNode> displayTransitions = new TransitionDocNode[0];
+                                if (nodeGroupTree != null)
+                                {
+                                    displayTransitions =
+                                        GraphChromatogram.GetDisplayTransitions(nodeGroupTree.DocNode,
+                                                                                DisplayTypeChrom.all).ToArray();
+                                }
+                                var allChromDatas = chromatogramData.ChromDatas.ToList();
+                                var chromDatas = new List<LibraryChromGroup.ChromData>();
+                                for (int iTran = 0; iTran < displayTransitions.Count; iTran++)
+                                {
+                                    double transitionMz = displayTransitions[iTran].Mz;
+                                    var indexMatch = allChromDatas.IndexOf(chromData => MzMatches(transitionMz, chromData.Mz));
+                                    if (indexMatch >= 0)
+                                    {
+                                        chromDatas.Add(allChromDatas[indexMatch]);
+                                        allChromDatas.RemoveAt(indexMatch);
+                                    }
+                                    else
+                                    {
+                                        chromDatas.Add(null);
+                                    }
+                                }
+                                allChromDatas.Sort((chromData1, chromData2)=>chromData1.Mz.CompareTo(chromData2.Mz));
+                                chromDatas.AddRange(allChromDatas);
+                                double maxHeight = chromDatas.Max(chromData => null == chromData ? double.MinValue : chromData.Height);
+                                int iChromDataPrimary = chromDatas.IndexOf(chromData => null != chromData && maxHeight == chromData.Height);
+                                for (int iChromData = 0; iChromData < chromDatas.Count; iChromData++)
+                                {
+                                    var chromData = chromDatas[iChromData];
+                                    if (chromData == null)
+                                    {
+                                        continue;
+                                    }
+                                    string label;
+                                    var pointAnnotation = GraphItem.AnnotatePoint(new PointPair(chromData.Mz, 1.0));
+                                    if (null != pointAnnotation)
+                                    {
+                                        label = pointAnnotation.Label;
+                                    }
+                                    else
+                                    {
+                                        label = chromData.Mz.ToString("0.####");
+                                    }
+                                    TransitionDocNode matchingTransition;
+                                    Color color;
+                                    if (iChromData < displayTransitions.Count)
+                                    {
+                                        matchingTransition = displayTransitions[iChromData];
+                                        color =
+                                            GraphChromatogram.COLORS_LIBRARY[
+                                                iChromData%GraphChromatogram.COLORS_LIBRARY.Length];
+                                    }
+                                    else
+                                    {
+                                        matchingTransition = null;
+                                        color =
+                                            GraphChromatogram.COLORS_GROUPS[
+                                                iChromData%GraphChromatogram.COLORS_GROUPS.Length];
+                                    }
+
+                                    TransitionChromInfo tranPeakInfo;
+                                    ChromatogramInfo chromatogramInfo;
+                                    MakeChromatogramInfo(nodeGroup.PrecursorMz, chromatogramData, chromData, out chromatogramInfo, out tranPeakInfo);
+                                    var graphItem = new ChromGraphItem(nodeGroup, matchingTransition, chromatogramInfo, iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
+                                                                       new[] {iChromData == iChromDataPrimary}, null, 0, false, false, 0,
+                                                                       color, Settings.Default.ChromatogramFontSize, 1);
+                                    LineItem curve = (LineItem) _graphHelper.AddChromatogram(GraphHelper.PaneKey.DEFAULT, graphItem);
+                                    if (matchingTransition == null)
+                                    {
+                                        curve.Label.Text = label;
+                                    }
+                                    curve.Line.Width = Settings.Default.ChromatogramLineWidth;
+                                    if (null != transition)
+                                    {
+                                        if (MzMatches(chromData.Mz, transition.Mz))
+                                        {
+                                            color = ChromGraphItem.ColorSelected;
+                                        }
+                                    }
+                                    curve.Color = color;
+                                }
+                                graphPane.Title.IsVisible = false;
+                                graphPane.Legend.IsVisible = true;
+                                _graphHelper.FinishedAddingChromatograms(chromatogramData.StartTime, chromatogramData.EndTime, false);
+                                graphControl.Refresh();
+                            }
                             graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                         !Settings.Default.LockYAxis;
-                            AddGraphItem(graphPane, GraphItem);
                             available = true;
                         }
                     }
                 }
                 catch (Exception)
                 {
-                    AddGraphItem(graphPane, new NoDataMSGraphItem(Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
+                    _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
+                                     Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
                     return;
                 }
             }
@@ -416,8 +556,32 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 UpdateToolbar();
                 _nodeGroup = null;
-                AddGraphItem(graphPane, new UnavailableMSGraphItem());
+                _graphHelper.SetErrorGraphItem(new UnavailableMSGraphItem());
             }
+        }
+
+        private static bool MzMatches(double mz1, double mz2)
+        {
+            return (float) mz1 == (float) mz2;
+        }
+
+        private static int FindNearestIndex(IList<float> times, float time)
+        {
+            int index = CollectionUtil.BinarySearch(times, time);
+            if (index >= 0)
+            {
+                return index;
+            }
+            index = ~index;
+            if (index >= times.Count)
+            {
+                return times.Count - 1;
+            }
+            if (index > 0 && time - times[index - 1] < times[index] - time)
+            {
+                return index - 1;
+            }
+            return index;
         }
 
         private void UpdateSpectra(TransitionGroup group, ExplicitMods mods)
@@ -506,14 +670,6 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        private void AddGraphItem(MSGraphPane pane, IMSGraphItemInfo item)
-        {
-            pane.Title.Text = item.Title;
-            graphControl.AddGraphItem(pane, item);
-            pane.CurveList[0].Label.IsVisible = false;
-            pane.Legend.IsVisible = false;
-            graphControl.Refresh();
-        }
 
 // ReSharper disable SuggestBaseTypeForParameter
         private static TransitionGroupDocNode[] GetLibraryInfoChargeGroups(PeptideTreeNode nodeTree)
@@ -562,6 +718,30 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 FireSelectedSpectrumChanged(true);
             }
+        }
+
+        public static void MakeChromatogramInfo(double precursorMz, LibraryChromGroup chromGroup, LibraryChromGroup.ChromData chromData, out ChromatogramInfo chromatogramInfo, out TransitionChromInfo transitionChromInfo)
+        {
+            var crawPeakFinder = new CrawdadPeakFinder();
+            crawPeakFinder.SetChromatogram(chromGroup.Times, chromData.Intensities);
+            var crawdadPeak =
+                crawPeakFinder.GetPeak(
+                    FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
+                    FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
+            var chromPeak = new ChromPeak(crawdadPeak, 0, chromGroup.Times, chromData.Intensities, null);
+            transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak, new float?[0], Annotations.EMPTY,
+                                                            false);
+            var peaks = new BlockedArray<ChromPeak>(new[] {chromPeak}, 1, 4096);
+            var header = new ChromGroupHeaderInfo5(new ChromGroupHeaderInfo(
+              (float)precursorMz, 0, 1, 0, peaks.Length, 0, 0,
+              chromGroup.Times.Length, 0, 0));
+            chromatogramInfo = new ChromatogramInfo(header,
+                    new Dictionary<Type, int>(), 0,
+                    new ChromCachedFile[0],
+                    new[] { new ChromTransition5(chromData.Mz, 0, ChromSource.unknown), },
+                    peaks, null,
+                    chromGroup.Times, new[] { chromData.Intensities }, null);
+            
         }
     }
 
@@ -725,6 +905,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public string Identity { get { return ToString(); } }
 
         public SpectrumPeaksInfo SpectrumPeaksInfo { get { return _spectrumInfo.SpectrumPeaksInfo; } }
+        public LibraryChromGroup LoadChromatogramData() { return _spectrumInfo.LoadChromatogramData(); }
 
         public int CompareTo(SpectrumDisplayInfo other)
         {

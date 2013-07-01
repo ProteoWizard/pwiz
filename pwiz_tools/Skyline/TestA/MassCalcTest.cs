@@ -71,5 +71,11 @@ namespace pwiz.SkylineTestA
             // Test case that caused unexpected exception when O- was not parsed correctly.
             SequenceMassCalc.ParseModCounts(BioMassCalc.MONOISOTOPIC, "OO-HNHN", new Dictionary<string, int>());            
         }
+
+        [TestMethod]
+        public void TestSequenceMassCalcNormalizeModifiedSequence()
+        {
+            Assert.AreEqual("ASDF[+6.0]GHIJ", SequenceMassCalc.NormalizeModifiedSequence("ASDF[6]GHIJ"));
+        }
     }
 }

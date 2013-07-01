@@ -27,6 +27,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -426,6 +427,11 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>The requested spectrum peak information</returns>
         public abstract SpectrumPeaksInfo LoadSpectrum(object spectrumKey);
 
+        public virtual LibraryChromGroup LoadChromatogramData(object spectrumKey)
+        {
+            return null;
+        }
+
         /// <summary>
         /// Attempts to get retention time information for a specific
         /// (sequence, charge) pair and file.
@@ -667,6 +673,16 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         protected abstract SpectrumPeaksInfo.MI[] ReadSpectrum(TInfo info);
+
+        public sealed override LibraryChromGroup LoadChromatogramData(object spectrumKey)
+        {
+            return ReadChromatogram(_libraryEntries[(int) spectrumKey]);
+        }
+
+        protected virtual LibraryChromGroup ReadChromatogram(TInfo info)
+        {
+            return null;
+        }
 
         public override bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
         {
@@ -1158,10 +1174,8 @@ namespace pwiz.Skyline.Model.Lib
     /// <summary>
     /// Information required for spectrum display in a list.
     /// </summary>
-    public sealed class SpectrumInfo
+    public class SpectrumInfo
     {
-        private readonly Library _library;
-
         public SpectrumInfo(Library library, IsotopeLabelType labelType, object spectrumKey)
             : this(library, labelType, null, null, true, spectrumKey)
         {
@@ -1170,26 +1184,44 @@ namespace pwiz.Skyline.Model.Lib
         public SpectrumInfo(Library library, IsotopeLabelType labelType,
             string filePath, double? retentionTime, bool isBest, object spectrumKey)
         {
-            _library = library;
-            SpectrumKey = spectrumKey;
-
+            Library = library;
             LabelType = labelType;
+            SpectrumKey = spectrumKey;
             FilePath = filePath;
             RetentionTime = retentionTime;
             IsBest = isBest;
         }
 
-        public string LibName { get { return _library.Name; } }
+        protected Library Library { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
+        public string LibName { get { return Library.Name; } }
+        public object SpectrumKey { get; private set; }
         public string FilePath { get; private set; }
         public string FileName { get { return Path.GetFileName(FilePath); } }
         public double? RetentionTime { get; private set; }
         public bool IsBest { get; private set; }
-        public object SpectrumKey { get; private set; }
 
         public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
 
-        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return _library.LoadSpectrum(SpectrumKey); } }
+        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return Library.LoadSpectrum(SpectrumKey); } }
+        public LibraryChromGroup LoadChromatogramData() { return Library.LoadChromatogramData(SpectrumKey); }
+    }
+
+    public class LibraryChromGroup
+    {
+        private IList<ChromData> _chromDatas = ImmutableList.Empty<ChromData>();
+        public double StartTime { get; set; }
+        public double EndTime { get; set; }
+        public double RetentionTime { get; set; }
+        public float[] Times { get; set; }
+        public IList<ChromData> ChromDatas { get { return _chromDatas; } set { _chromDatas = ImmutableList.ValueOf(value); } }
+
+        public class ChromData
+        {
+            public double Mz { get; set; }
+            public double Height { get; set; }
+            public float[] Intensities { get; set; }
+        }
     }
 
     /// <summary>
@@ -1285,6 +1317,11 @@ namespace pwiz.Skyline.Model.Lib
             _key = new byte[len + 1];
             _key[0] = (byte)charge;
             Array.Copy(sequence, start, _key, 1, len);
+        }
+
+        private LibKey(byte[] key)
+        {
+            _key = key;
         }
 
         public string Sequence { get { return Encoding.Default.GetString(_key, 1, _key.Length - 1); } }
@@ -1391,6 +1428,20 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
+
+        public void Write(Stream outStream)
+        {
+            PrimitiveArrays.WriteOneValue(outStream, _key.Length);
+            outStream.Write(_key, 0, _key.Length);
+        }
+
+        public static LibKey Read(Stream inStream)
+        {
+            int length = PrimitiveArrays.ReadOneValue<int>(inStream);
+            var key = new byte[length];
+            inStream.Read(key, 0, key.Length);
+            return new LibKey(key);
+        }
     }
 
     /// <summary>

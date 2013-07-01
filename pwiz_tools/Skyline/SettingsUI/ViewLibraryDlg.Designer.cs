@@ -94,6 +94,7 @@ namespace pwiz.Skyline.SettingsUI
             this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
             this.spectrumPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showChromatogramsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
@@ -478,6 +479,7 @@ namespace pwiz.Skyline.SettingsUI
             this.lockYaxisContextMenuItem,
             this.toolStripSeparator14,
             this.spectrumPropsContextMenuItem,
+            this.showChromatogramsContextMenuItem,
             this.toolStripSeparator15,
             this.zoomSpectrumContextMenuItem,
             this.toolStripSeparator27});
@@ -628,6 +630,12 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.spectrumPropsContextMenuItem, "spectrumPropsContextMenuItem");
             this.spectrumPropsContextMenuItem.Click += new System.EventHandler(this.spectrumPropsContextMenuItem_Click);
             // 
+            // showChromatogramsContextMenuItem
+            // 
+            this.showChromatogramsContextMenuItem.Name = "showChromatogramsContextMenuItem";
+            resources.ApplyResources(this.showChromatogramsContextMenuItem, "showChromatogramsContextMenuItem");
+            this.showChromatogramsContextMenuItem.Click += new System.EventHandler(this.showChromatogramsToolStripMenuItem_Click);
+            // 
             // toolStripSeparator15
             // 
             this.toolStripSeparator15.Name = "toolStripSeparator15";
@@ -759,6 +767,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label labelRT;
         private System.Windows.Forms.Button btnLibDetails;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.ToolStripMenuItem showChromatogramsContextMenuItem;
 
 
 

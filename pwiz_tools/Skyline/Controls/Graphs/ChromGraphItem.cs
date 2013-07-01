@@ -213,6 +213,19 @@ namespace pwiz.Skyline.Controls.Graphs
             ((LineItem)curveItem).Line.Width = _width;
         }
 
+        public static string GetTitle(TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
+        {
+            if (null == transition)
+            {
+                return GetTitle(transitionGroup);
+            }
+            return string.Format("{0}{1} - {2:F04}{3}{4}", transition.FragmentIonName, // Not L10N
+                                 Transition.GetMassIndexText(transition.Transition.MassIndex),
+                                 transition.Mz,
+                                 Transition.GetChargeIndicator(transition.Transition.Charge),
+                                 transitionGroup.TransitionGroup.LabelTypeText);
+        }
+        
         public static string GetTitle(TransitionDocNode nodeTran)
         {
             var tran = nodeTran.Transition;
@@ -245,9 +258,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_step != 0)
                     return string.Format(Resources.ChromGraphItem_Title_Step__0_, _step);
 
-                return (TransitionNode == null
-                    ? GetTitle(TransitionGroupNode)
-                    : GetTitle(TransitionNode));
+                return GetTitle(TransitionGroupNode, TransitionNode);
             }
         }
 

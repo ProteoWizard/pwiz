@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphSpectrum));
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.comboSpectrum = new System.Windows.Forms.ToolStripComboBox();

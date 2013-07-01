@@ -28,6 +28,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -1899,7 +1900,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private static readonly IXmlElementHelper<Library>[] LIBRARY_HELPERS =
         {
             new XmlElementHelperSuper<BiblioSpecLibrary, Library>(),                 
-            new XmlElementHelperSuper<BiblioSpecLiteLibrary, Library>(),                 
+            new XmlElementHelperSuper<BiblioSpecLiteLibrary, Library>(),
+            new XmlElementHelperSuper<ChromatogramLibrary, Library>(),
             new XmlElementHelperSuper<XHunterLibrary, Library>(),                 
             new XmlElementHelperSuper<NistLibrary, Library>(),
             new XmlElementHelperSuper<SpectrastLibrary, Library>(),
@@ -1909,6 +1911,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             new XmlElementHelperSuper<BiblioSpecLibSpec, LibrarySpec>(),                 
             new XmlElementHelperSuper<BiblioSpecLiteSpec, LibrarySpec>(),                 
+            new XmlElementHelperSuper<ChromatogramLibrarySpec, LibrarySpec>(), 
             new XmlElementHelperSuper<XHunterLibSpec, LibrarySpec>(),                 
             new XmlElementHelperSuper<NistLibSpec, LibrarySpec>(),                 
             new XmlElementHelperSuper<SpectrastSpec, LibrarySpec>(),                 
@@ -1922,6 +1925,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private static readonly IXmlElementHelper<SpectrumHeaderInfo>[] LIBRARY_HEADER_HELPERS =
         {
             new XmlElementHelperSuper<BiblioSpecSpectrumHeaderInfo, SpectrumHeaderInfo>(),
+            new XmlElementHelperSuper<ChromLibSpectrumHeaderInfo, SpectrumHeaderInfo>(), 
             new XmlElementHelperSuper<XHunterSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
             new XmlElementHelperSuper<NistSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 
             new XmlElementHelperSuper<SpectrastSpectrumHeaderInfo, SpectrumHeaderInfo>(),                 

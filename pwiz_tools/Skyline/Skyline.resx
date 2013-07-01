@@ -371,8 +371,14 @@
   <data name="toolStripSeparator27.Size" type="System.Drawing.Size, System.Drawing">
     <value>182, 6</value>
   </data>
+  <data name="showLibraryChromatogramsSpectrumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="showLibraryChromatogramsSpectrumContextMenuItem.Text" xml:space="preserve">
+    <value>Show Chromatograms</value>
+  </data>
   <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 370</value>
+    <value>194, 414</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -535,6 +541,15 @@
   </data>
   <data name="ticContextMenuItem.Text" xml:space="preserve">
     <value>TIC</value>
+  </data>
+  <data name="toolStripSeparatorSplitGraph.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 6</value>
+  </data>
+  <data name="splitGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 22</value>
+  </data>
+  <data name="splitGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Split Graph</value>
   </data>
   <data name="transitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -1876,7 +1891,7 @@
     <value>226, 24</value>
   </data>
   <data name="graphsToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;MS/MS Spectra</value>
+    <value>Library &amp;Match</value>
   </data>
   <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>139, 24</value>
@@ -2084,6 +2099,9 @@
   </data>
   <data name="ticMenuItem.Text" xml:space="preserve">
     <value>TI&amp;C</value>
+  </data>
+  <data name="splitGraphMenuItem.Text" xml:space="preserve">
+    <value>Split &amp;Graph</value>
   </data>
   <data name="transitionsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2733,6 +2751,12 @@
   <data name="&gt;&gt;toolStripSeparator27.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;showLibraryChromatogramsSpectrumContextMenuItem.Name" xml:space="preserve">
+    <value>showLibraryChromatogramsSpectrumContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showLibraryChromatogramsSpectrumContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;removePeakGraphMenuItem.Name" xml:space="preserve">
     <value>removePeakGraphMenuItem</value>
   </data>
@@ -2899,6 +2923,18 @@
     <value>ticContextMenuItem</value>
   </data>
   <data name="&gt;&gt;ticContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorSplitGraph.Name" xml:space="preserve">
+    <value>toolStripSeparatorSplitGraph</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorSplitGraph.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitGraphContextMenuItem.Name" xml:space="preserve">
+    <value>splitGraphContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;splitGraphContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;transformChromContextMenuItem.Name" xml:space="preserve">
@@ -4183,6 +4219,18 @@
     <value>ticMenuItem</value>
   </data>
   <data name="&gt;&gt;ticMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator48.Name" xml:space="preserve">
+    <value>toolStripSeparator48</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator48.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitGraphMenuItem.Name" xml:space="preserve">
+    <value>splitGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;splitGraphMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;transformChromMenuItem.Name" xml:space="preserve">

@@ -548,6 +548,33 @@ namespace pwiz.Skyline.Model
             return sb.ToString();
         }
 
+        public static string NormalizeModifiedSequence(string rawModifiedSequence)
+        {
+            var normalizedSeq = new StringBuilder();
+            int ichLast = 0;
+            for (int ichOpenBracket = rawModifiedSequence.IndexOf('[');
+                 ichOpenBracket >= 0;
+                 ichOpenBracket = rawModifiedSequence.IndexOf('[', ichOpenBracket + 1))
+            {
+                int ichCloseBracket = rawModifiedSequence.IndexOf(']', ichOpenBracket);
+                if (ichCloseBracket < 0)
+                {
+                    continue;
+                }
+                string strMassDiff = rawModifiedSequence.Substring(ichOpenBracket + 1, ichCloseBracket - ichOpenBracket - 1);
+                double massDiff;
+                if (!double.TryParse(strMassDiff, out massDiff))
+                {
+                    continue;
+                }
+                normalizedSeq.Append(rawModifiedSequence.Substring(ichLast, ichOpenBracket - ichLast));
+                normalizedSeq.Append(GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff));
+                ichLast = ichCloseBracket + 1;
+            }
+            normalizedSeq.Append(rawModifiedSequence.Substring(ichLast));
+            return normalizedSeq.ToString();
+        }
+
         public double GetAAModMass(char aa, int seqIndex, int seqLength)
         {
             return GetAAModMass(aa, seqIndex, seqLength, null);

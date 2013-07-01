@@ -77,6 +77,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
+            this.showLibraryChromatogramsSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuChromatogram = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.removePeakGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeaksGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -106,6 +107,8 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTran = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparatorSplitGraph = new System.Windows.Forms.ToolStripSeparator();
+            this.splitGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -327,6 +330,8 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTranMain = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator48 = new System.Windows.Forms.ToolStripSeparator();
+            this.splitGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -535,7 +540,8 @@ namespace pwiz.Skyline
             this.spectrumPropsContextMenuItem,
             this.toolStripSeparator15,
             this.zoomSpectrumContextMenuItem,
-            this.toolStripSeparator27});
+            this.toolStripSeparator27,
+            this.showLibraryChromatogramsSpectrumContextMenuItem});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
             resources.ApplyResources(this.contextMenuSpectrum, "contextMenuSpectrum");
             // 
@@ -698,6 +704,12 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
+            // 
+            // showLibraryChromatogramsSpectrumContextMenuItem
+            // 
+            this.showLibraryChromatogramsSpectrumContextMenuItem.Name = "showLibraryChromatogramsSpectrumContextMenuItem";
+            resources.ApplyResources(this.showLibraryChromatogramsSpectrumContextMenuItem, "showLibraryChromatogramsSpectrumContextMenuItem");
+            this.showLibraryChromatogramsSpectrumContextMenuItem.Click += new System.EventHandler(this.showChromatogramsSpectrumContextMenuItem_Click);
             // 
             // contextMenuChromatogram
             // 
@@ -866,7 +878,9 @@ namespace pwiz.Skyline
             this.totalTranContextMenuItem,
             this.toolStripSeparatorTran,
             this.basePeakContextMenuItem,
-            this.ticContextMenuItem});
+            this.ticContextMenuItem,
+            this.toolStripSeparatorSplitGraph,
+            this.splitGraphContextMenuItem});
             this.transitionsContextMenuItem.Name = "transitionsContextMenuItem";
             resources.ApplyResources(this.transitionsContextMenuItem, "transitionsContextMenuItem");
             this.transitionsContextMenuItem.DropDownOpening += new System.EventHandler(this.transitionsMenuItem_DropDownOpening);
@@ -917,6 +931,17 @@ namespace pwiz.Skyline
             this.ticContextMenuItem.Name = "ticContextMenuItem";
             resources.ApplyResources(this.ticContextMenuItem, "ticContextMenuItem");
             this.ticContextMenuItem.Click += new System.EventHandler(this.ticMenuItem_Click);
+            // 
+            // toolStripSeparatorSplitGraph
+            // 
+            this.toolStripSeparatorSplitGraph.Name = "toolStripSeparatorSplitGraph";
+            resources.ApplyResources(this.toolStripSeparatorSplitGraph, "toolStripSeparatorSplitGraph");
+            // 
+            // splitGraphContextMenuItem
+            // 
+            this.splitGraphContextMenuItem.Name = "splitGraphContextMenuItem";
+            resources.ApplyResources(this.splitGraphContextMenuItem, "splitGraphContextMenuItem");
+            this.splitGraphContextMenuItem.Click += new System.EventHandler(this.splitChromGraphMenuItem_Click);
             // 
             // transformChromContextMenuItem
             // 
@@ -2438,7 +2463,9 @@ namespace pwiz.Skyline
             this.totalTranMenuItem,
             this.toolStripSeparatorTranMain,
             this.basePeakMenuItem,
-            this.ticMenuItem});
+            this.ticMenuItem,
+            this.toolStripSeparator48,
+            this.splitGraphMenuItem});
             resources.ApplyResources(this.transitionsMenuItem, "transitionsMenuItem");
             this.transitionsMenuItem.Name = "transitionsMenuItem";
             this.transitionsMenuItem.DropDownOpening += new System.EventHandler(this.transitionsMenuItem_DropDownOpening);
@@ -2489,6 +2516,17 @@ namespace pwiz.Skyline
             this.ticMenuItem.Name = "ticMenuItem";
             resources.ApplyResources(this.ticMenuItem, "ticMenuItem");
             this.ticMenuItem.Click += new System.EventHandler(this.ticMenuItem_Click);
+            // 
+            // toolStripSeparator48
+            // 
+            this.toolStripSeparator48.Name = "toolStripSeparator48";
+            resources.ApplyResources(this.toolStripSeparator48, "toolStripSeparator48");
+            // 
+            // splitGraphMenuItem
+            // 
+            this.splitGraphMenuItem.Name = "splitGraphMenuItem";
+            resources.ApplyResources(this.splitGraphMenuItem, "splitGraphMenuItem");
+            this.splitGraphMenuItem.Click += new System.EventHandler(this.splitChromGraphMenuItem_Click);
             // 
             // transformChromMenuItem
             // 
@@ -3222,6 +3260,11 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem idTimesAlignedContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem idTimesOtherContextMenuItem;
         private System.Windows.Forms.ToolStripSplitButton buttonShowAllChromatograms;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorSplitGraph;
+        private System.Windows.Forms.ToolStripMenuItem splitGraphContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator48;
+        private System.Windows.Forms.ToolStripMenuItem splitGraphMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showLibraryChromatogramsSpectrumContextMenuItem;
     }
 }
 

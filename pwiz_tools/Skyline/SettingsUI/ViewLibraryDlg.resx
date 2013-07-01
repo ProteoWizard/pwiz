@@ -210,6 +210,9 @@
   <data name="&gt;&gt;PeptideListPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;PeptideListPanel.Parent" xml:space="preserve">
+    <value>splitPeptideList.Panel1</value>
+  </data>
   <data name="&gt;&gt;PeptideListPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -255,6 +258,9 @@
   <data name="&gt;&gt;PageCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;PageCount.Parent" xml:space="preserve">
+    <value>splitPeptideList.Panel2</value>
+  </data>
   <data name="&gt;&gt;PageCount.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -281,6 +287,9 @@
   </data>
   <data name="&gt;&gt;PeptideCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PeptideCount.Parent" xml:space="preserve">
+    <value>splitPeptideList.Panel2</value>
   </data>
   <data name="&gt;&gt;PeptideCount.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -309,6 +318,9 @@
   <data name="&gt;&gt;NextLink.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;NextLink.Parent" xml:space="preserve">
+    <value>splitPeptideList.Panel2</value>
+  </data>
   <data name="&gt;&gt;NextLink.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
@@ -335,6 +347,9 @@
   </data>
   <data name="&gt;&gt;PreviousLink.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PreviousLink.Parent" xml:space="preserve">
+    <value>splitPeptideList.Panel2</value>
   </data>
   <data name="&gt;&gt;PreviousLink.ZOrder" xml:space="preserve">
     <value>3</value>
@@ -368,6 +383,9 @@
   </data>
   <data name="&gt;&gt;splitPeptideList.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitPeptideList.Parent" xml:space="preserve">
+    <value>splitMain.Panel1</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -536,6 +554,9 @@
   </data>
   <data name="&gt;&gt;PeptideEditPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PeptideEditPanel.Parent" xml:space="preserve">
+    <value>splitMain.Panel1</value>
   </data>
   <data name="&gt;&gt;PeptideEditPanel.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -774,6 +795,9 @@
   <data name="&gt;&gt;GraphPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;GraphPanel.Parent" xml:space="preserve">
+    <value>splitMain.Panel2</value>
+  </data>
   <data name="&gt;&gt;GraphPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -960,6 +984,9 @@
   <data name="&gt;&gt;panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
+    <value>splitMain.Panel2</value>
+  </data>
   <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -1051,49 +1078,49 @@
     <value>17, 17</value>
   </metadata>
   <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="aionsContextMenuItem.Text" xml:space="preserve">
     <value>A-ions</value>
   </data>
   <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="bionsContextMenuItem.Text" xml:space="preserve">
     <value>B-ions</value>
   </data>
   <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="cionsContextMenuItem.Text" xml:space="preserve">
     <value>C-ions</value>
   </data>
   <data name="xionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="xionsContextMenuItem.Text" xml:space="preserve">
     <value>X-ions</value>
   </data>
   <data name="yionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="yionsContextMenuItem.Text" xml:space="preserve">
     <value>Y-ions</value>
   </data>
   <data name="zionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="zionsContextMenuItem.Text" xml:space="preserve">
     <value>Z-ions</value>
   </data>
   <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
     <value>Precursor</value>
   </data>
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="charge1ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
@@ -1120,70 +1147,76 @@
     <value>4</value>
   </data>
   <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="chargesContextMenuItem.Text" xml:space="preserve">
     <value>Charges</value>
   </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="ranksContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="ranksContextMenuItem.Text" xml:space="preserve">
     <value>Ranks</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>Ion m/z Values</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>Observed m/z Values</value>
   </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="duplicatesContextMenuItem.Text" xml:space="preserve">
     <value>Duplicate Ions</value>
   </data>
   <data name="toolStripSeparator13.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="lockYaxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="lockYaxisContextMenuItem.Text" xml:space="preserve">
     <value>Auto-scale Y-axis</value>
   </data>
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
     <value>Properties...</value>
   </data>
+  <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="showChromatogramsContextMenuItem.Text" xml:space="preserve">
+    <value>Show Chromatograms</value>
+  </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>185, 22</value>
+    <value>193, 22</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Text" xml:space="preserve">
     <value>Zoom Out</value>
   </data>
   <data name="toolStripSeparator27.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 370</value>
+    <value>194, 414</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -1420,6 +1453,12 @@
     <value>spectrumPropsContextMenuItem</value>
   </data>
   <data name="&gt;&gt;spectrumPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showChromatogramsContextMenuItem.Name" xml:space="preserve">
+    <value>showChromatogramsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showChromatogramsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator15.Name" xml:space="preserve">
