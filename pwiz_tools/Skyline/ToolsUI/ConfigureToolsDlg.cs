@@ -966,9 +966,22 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         /// <param name="fullpath"> The full path to the ziped folder containing the tools</param>
         public void UnpackZipTool(string fullpath)
-        {            
-            ToolInstaller.UnzipToolReturnAccumulator result = ToolInstaller.UnpackZipTool(fullpath, OverwriteOrInParallel, SkylineWindowParent.FindProgramPath);
-            
+        {
+            ToolInstaller.UnzipToolReturnAccumulator result = null;
+            try
+            {
+                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteOrInParallel, SkylineWindowParent.InstallProgram);
+
+            }
+            catch (Exception ex)
+            {
+                if (ex is MessageException || ex is IOException)
+                {
+                    MessageDlg.Show(this, ex.Message);
+                }                
+            }
+
+
             RemoveAllTools();
             //Reload the report dropdown menu!
             _driverReportSpec.LoadList(string.Empty);

@@ -18,12 +18,13 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -35,13 +36,16 @@ namespace pwiz.Skyline.Controls
         private readonly SkylineWindow _parent;
         private readonly TextBoxStreamWriter _textBoxStreamWriter;
 
-        public ImmediateWindow(SkylineWindow parent)
+        public ImmediateWindow(SkylineWindow parent, TextBoxStreamWriterHelper writerHelper)
         {
             InitializeComponent();
             // Initializes a new TextWriter to write to the textBox instead.
-            _textBoxStreamWriter = new TextBoxStreamWriter(textImWindow, this);
+            _textBoxStreamWriter = new TextBoxStreamWriter(textImWindow, this, writerHelper);
             _parent = parent;
+            WriterHelper = writerHelper;
         }
+
+        private TextBoxStreamWriterHelper WriterHelper { get; set; }
 
         public TextWriter Writer { get { return _textBoxStreamWriter; } }
 
@@ -54,10 +58,19 @@ namespace pwiz.Skyline.Controls
                 RunLine(line);             
                 if (textBoxText != TextContent)
                 {
-                    // this supresses the newline character if RunLine modified the textBoxText
+                    // This supresses the newline character if RunLine modified the textBoxText
                     e.Handled = true;
                 }
-            }            
+            }
+        }
+
+        /// <summary>
+        /// Call before closing to stop the TextboxStreamWriter from writing to a disposed textbox.
+        /// </summary>
+        public void Cleanup()
+        {
+            _textBoxStreamWriter.Cleanup();
+
         }
 
         /// <summary>
@@ -80,8 +93,8 @@ namespace pwiz.Skyline.Controls
                     {                        
                         //CONSIDER: multiple tools running. eg. two tools titled "Tool" and "ToolTest" if you enter ToolTest then both tools will run.
                         try
-                        {
-                            tool.RunTool(_parent.Document, _parent, _textBoxStreamWriter, _parent);                                                                                                                                         
+                        {                            
+                            tool.RunTool(_parent.Document, _parent, WriterHelper, _parent);
                         }
                         catch (WebToolException er  )
                         {
@@ -185,6 +198,104 @@ namespace pwiz.Skyline.Controls
         }
     }
 
+    /// <summary>
+    /// Class that persists when ImmediateWindow is Closed so external tools can continue to write to it.
+    /// </summary>
+    public class TextBoxStreamWriterHelper : TextWriter
+    {
+        public TextBoxStreamWriterHelper()
+        {
+            Text = string.Empty;
+            _pidToSmallInt = new Dictionary<int, int>();
+            _indexesInUse = new BitArrayEx(NUM_PROC);
+        }
+
+        public string Text { get; set; }
+
+        public const int NUM_PROC = 32;
+                         // Assume they wont run more than 32 processes at the same time that output to the immediate window.          
+
+        private readonly Dictionary<int, int> _pidToSmallInt;
+        private readonly BitArrayEx _indexesInUse;
+
+
+        private int GetMapping(int pid)
+        {
+            if (_pidToSmallInt.ContainsKey(pid))
+            {
+                return _pidToSmallInt[pid];
+            }
+
+            if (_pidToSmallInt.Count == 0)
+            {
+                _pidToSmallInt.Add(pid, -1);
+                return -1;
+            }
+            if (_pidToSmallInt.Count == 1)
+            {
+                List<int> keys = new List<int>(_pidToSmallInt.Keys);
+                foreach (var key in keys)
+                {
+                    if (_pidToSmallInt[key] == -1)
+                    {
+                        _pidToSmallInt.Remove(key);
+                        _pidToSmallInt[key] = _indexesInUse.GetLowest();
+                    }
+                }
+            }
+            _pidToSmallInt[pid] = _indexesInUse.GetLowest();
+            return _pidToSmallInt[pid];
+        }
+
+        public void WriteLineWithIdentifier(int process, string s)
+        {
+            int mapping = GetMapping(process);
+            if (mapping == -1)
+            {
+                WriteLine(s);
+            }
+            else
+            {
+               WriteLine(mapping + ">" + s);
+            }
+        }
+        public void HandleProcessExit(object sender, EventArgs processExitedEventArgs, int pid)
+        {
+            if (_pidToSmallInt.ContainsKey(pid))
+            {
+                int index = _pidToSmallInt[pid];
+                _pidToSmallInt.Remove(pid);
+                if (_indexesInUse.IndexInRange(index) && _indexesInUse.Get(index))
+                    _indexesInUse.Set(index, false);                             
+            }             
+        }
+        
+        protected virtual void OnWroteLine(string args)
+        {
+            WriteLineEvent handler = Wrote;
+            if (handler != null) handler(this, args);
+        }
+        public event WriteLineEvent Wrote;
+        public override void WriteLine()
+        {
+            base.WriteLine();
+            Text += Environment.NewLine;
+            OnWroteLine(string.Empty);
+        }
+        public override void WriteLine(string value)
+        {
+            base.WriteLine(value);
+            Text += value + Environment.NewLine;
+            OnWroteLine(value);
+        }
+        public override Encoding Encoding
+        {
+            get { return Encoding.UTF8; }
+        }
+    }
+    
+    public delegate void WriteLineEvent(object sender, string args);
+
     public class TextBoxStreamWriter : TextWriter
     {
         private readonly TextBox _box;
@@ -192,10 +303,26 @@ namespace pwiz.Skyline.Controls
 
         public delegate void Del(string text);
 
-        public TextBoxStreamWriter(TextBox box, Control immediateWindow)
+        public TextBoxStreamWriter(TextBox box, Control immediateWindow, TextBoxStreamWriterHelper writerHelper)
         {
             _box = box;
+            _box.Text = writerHelper.Text;
+            writerHelper.Wrote += HandleOnWroteLine;
             _immediateWindow = immediateWindow;
+            WriterHelper = writerHelper;
+        }
+
+        private void HandleOnWroteLine(object sender, string s)
+        {
+            WriteLine(s);
+        }
+
+        private TextBoxStreamWriterHelper WriterHelper { get; set; }
+
+        public void Cleanup()
+        {
+            // Stop writing to the text box we are about to dispose of. 
+            WriterHelper.Wrote -= HandleOnWroteLine;
         }
 
         /// <summary>
@@ -207,12 +334,6 @@ namespace pwiz.Skyline.Controls
         }
         private void WriteLineHelper(string s)
         {
-            int currentline = _box.GetLineFromCharIndex((_box.SelectionStart) + 1);
-            // if there is text on the current line, write to the next one
-            if (currentline < _box.Lines.Count() && _box.Lines[currentline] != "")
-            {
-                WriteLine();
-            }
             _box.AppendText(s + Environment.NewLine);
         }
 
@@ -268,5 +389,43 @@ namespace pwiz.Skyline.Controls
         }
 
         #endregion
+    }
+
+    public class BitArrayEx
+    {
+        public BitArrayEx(int count)
+        {
+            _bitArray = new BitArray(count, false);
+            _length = count;
+        }
+        private readonly int _length;
+        private readonly BitArray _bitArray;
+
+        public int GetLowest()
+        {
+            for (int i = 0; i < _length; i ++)
+            {
+                if (!_bitArray.Get(i))
+                {
+                    _bitArray.Set(i,true);
+                    return i;
+                }                
+            }
+            return -1;
+        }
+
+        public void Set(int i, bool value)
+        {
+            _bitArray.Set(i,value);
+        }
+        public bool Get(int i)
+        {
+            return _bitArray.Get(i);
+        }
+
+        public bool IndexInRange(int index)
+        {
+            return index >= 0 && index < _length;
+        }
     }
 }

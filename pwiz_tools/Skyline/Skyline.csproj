@@ -1180,6 +1180,9 @@
     <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\RInstaller.resx">
+      <DependentUpon>RInstaller.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
@@ -1264,6 +1267,12 @@
     </Compile>
     <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\RInstaller.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\RInstaller.Designer.cs">
+      <DependentUpon>RInstaller.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\ToolOptionsUI.cs">
       <SubType>Form</SubType>

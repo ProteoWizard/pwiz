@@ -36,10 +36,10 @@ namespace pwiz.Skyline.Model.Tools
 
     public static class ToolMacros
     {
-        public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)"; //Not L10N
-        public const string PROGRAM_PATH = @"\$\(ProgramPath\((.*)\)\)"; //Not L10N
-        public const string TOOL_DIR = "$(ToolDir)"; //Not L10N
-        public const string COLLECTED_ARGS = "$(CollectedArgs)"; //Not L10N
+        public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";  //Not L10N
+        public const string PROGRAM_PATH = @"\$\(ProgramPath\((.*)\)\)";        //Not L10N
+        public const string TOOL_DIR = "$(ToolDir)";                            //Not L10N
+        public const string COLLECTED_ARGS = "$(CollectedArgs)";                //Not L10N
 
         // Macros for Arguments.
         public static Macro[] _listArguments = new[]
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         public static string ReplaceMacrosCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription toolDescription, IExceptionHandler exceptionHandler)
-        {
+        {            
             string workingString = toolDescription.Command;
             foreach (Macro macro in _listCommand)
             {
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Tools
                                                                           toolDescription.ReportTitle, doc, exceptionHandler, ppc, toolDescription.ToolDirPath));
                         if (path == null)
                         {                            
-                            exceptionHandler.HandleException(new Exception(macro.ErrorMessage));
+                            exceptionHandler.HandleException(new MessageException(macro.ErrorMessage));
                             return null;
                         }
                         workingString = path;
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Tools
                     {
                         if (string.IsNullOrEmpty(toolDescription.ToolDirPath))
                         {
-                            exceptionHandler.HandleException(new Exception(macro.ErrorMessage));
+                            exceptionHandler.HandleException(new MessageException(macro.ErrorMessage));
                             return null;
                         }
                         workingString = workingString.Replace(TOOL_DIR, toolDescription.ToolDirPath);
@@ -165,10 +165,10 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string ReplaceMacrosHelper(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IExceptionHandler exceptionHandler, string replacein, Macro[] macros)
         {
-            string wokingString = replacein;
+            string workingString = replacein;
             foreach (Macro macro in macros)
             {
-                if (wokingString.Contains(macro.ShortText))
+                if (workingString.Contains(macro.ShortText))
                 {
                     string contents;
                     if (macro.PlainText == Resources.ToolMacros__listArguments_Input_Report_Temp_Path)
@@ -198,13 +198,13 @@ namespace pwiz.Skyline.Model.Tools
                     }
                     if (contents == null)
                     {
-                        exceptionHandler.HandleException(new Exception(macro.ErrorMessage));
+                        exceptionHandler.HandleException(new MessageException(macro.ErrorMessage));
                         return null;
-                    }
-                    wokingString = wokingString.Replace(macro.ShortText, contents);
+                    }                    
+                    workingString = workingString.Replace(macro.ShortText, contents);
                 }
             }
-            return wokingString;
+            return workingString;
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private static string GetToolDirectory(ToolMacroInfo arg)
         {
-            return String.IsNullOrEmpty(arg.ToolDirPath) ? null : arg.ToolDirPath;
+            return String.IsNullOrEmpty(arg.ToolDirPath) ? null : arg.ToolDirPath; //Todo: danny escape spaces in this path.
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             // Example String "$(ProgramPath(R,2.12.2))
             // Want to extract R,2.12.2 and then separate the two things.
-            Match match = Regex.Match(command, PROGRAM_PATH);
+            Match match = Regex.Match(command, PROGRAM_PATH); // @"\$\(ProgramPath\((.*)\)\)";
             ProgramPathContainer ppc = null;
             if (match.Groups.Count == 2)
             {

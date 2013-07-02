@@ -11373,6 +11373,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This tool requires the use of R {0}. Click Install to begin the installation process..
+        /// </summary>
+        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_ {
+            get {
+                return ResourceManager.GetString("RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_" +
+                        "begin_the_installation_process_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires the use of R {0} and the following packages. Select packages to install and then click Install to begin the installation process..
+        /// </summary>
+        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_ {
+            get {
+                return ResourceManager.GetString("RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_" +
+                        "packages__Select_packages_to_install_and_then_click_Install_to_begin_the_install" +
+                        "ation_process_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process.
+        /// </summary>
+        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process {
+            get {
+                return ResourceManager.GetString("RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages" +
+                        "__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_pr" +
+                        "ocess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} aligned to {1}.
         /// </summary>
         public static string RtAlignment_AxisTitleAlignedTo {
@@ -14162,6 +14194,25 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_long" +
                         "er_exists__Please_select_a_new_report_or_import_the_report_format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error in the selected zip file..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_Error_in_the_selected_zip_file_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error_in_the_selected_zip_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected zip file does not have a required tool-inf directory at the top level..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_does_not_have_a_required_tool_inf_directory_at_the_top_level_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_does_not_have_a_required_tool_i" +
+                        "nf_directory_at_the_top_level_", resourceCulture);
             }
         }
         

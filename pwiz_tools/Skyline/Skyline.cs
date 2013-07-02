@@ -2448,7 +2448,7 @@ namespace pwiz.Skyline
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _parent.ImmediateWindow.Writer, _parent);
+                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent);
                     }
                     else
                     {
@@ -2487,9 +2487,13 @@ namespace pwiz.Skyline
             }
         }
 
+        public static TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
+
         private ImmediateWindow CreateImmediateWindow()
         {
-            _immediateWindow = new ImmediateWindow(this);
+            if (_skylineTextBoxStreamWriterHelper == null)
+                _skylineTextBoxStreamWriterHelper = new TextBoxStreamWriterHelper();
+            _immediateWindow = new ImmediateWindow(this, _skylineTextBoxStreamWriterHelper);
             return _immediateWindow;
         }
 
@@ -2497,6 +2501,7 @@ namespace pwiz.Skyline
         {
             if (_immediateWindow != null)
             {
+                _immediateWindow.Cleanup();
                 _immediateWindow.Close();
                 _immediateWindow = null;
             }
@@ -3497,6 +3502,27 @@ namespace pwiz.Skyline
             wh.WaitOne();
             wh.Dispose();           
             return result == DialogResult.OK ? Settings.Default.FilePaths[programPathContainer] : null;
+        }
+
+        // currently a work-around to get an R-installer
+        public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<string> packages)
+        {
+            if (programPathContainer.ProgramName.Equals("R"))
+            {
+                if (!RInstaller.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
+                {
+                    using (var dlg = new RInstaller(programPathContainer, packages))
+                    {
+                        if (dlg.ShowDialog(this) != DialogResult.OK)
+                            return null;
+                    }
+                }
+                return RInstaller.FindRProgramPath(programPathContainer.ProgramVersion);
+            }
+            else
+            {
+                return FindProgramPath(programPathContainer);
+            }
         }
 
         #endregion

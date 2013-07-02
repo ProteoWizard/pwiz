@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Tools
             public const string ARGS_COLLECTOR_DLL = "ArgsCollectorDll";                //Not L10N
             public const string ARGS_COLLECTOR_TYPE = "ArgsCollectorType";              //Not L10N
             public const string DESCRIPTION = "Description";                            //Not L10N
+            public const string PACKAGE = "Package{0}";
             
             // Defaults for optional values in the .properties file
             public static readonly Hashtable DEFAULTS = new Hashtable
@@ -111,6 +112,12 @@ namespace pwiz.Skyline.Model.Tools
         {
             get { return _properties.GetProperty(PropertiesConstants.DESCRIPTION); }
         }
+        public string GetPackage(int p)
+        {
+            string lookup = string.Format(PropertiesConstants.PACKAGE, p);
+            string package = _properties.GetProperty(lookup);
+            return package != null ? package.Trim() : null;
+        }
         #endregion //Accessors
     }
 
@@ -122,24 +129,24 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="pathToZip">Path to the zipped file that contains the tool and all its assicaited files.</param>        
         /// <param name="shouldOverwrite">Function that when given a list of tools and a list of reports that would be removed by an installation
         ///  it returns a bool, true for overwrite, false for in parallel and null for cancel installation</param>
-        /// <param name="findProgramPath">Function that finds a program path given a program path container, right now prompts the user for the path to a program
-        /// later will be a function that automaticall installs the external program.</param>
+        /// <param name="installProgram">Function that finds a program path given a program path container.</param>
         /// <returns></returns>
         public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip,
                                                                Func<List<string>, List<ReportSpec>, bool?> shouldOverwrite,
-                                                               Func<ProgramPathContainer,string> findProgramPath)
+                                                               Func<ProgramPathContainer, ICollection<string>,string> installProgram)
         {
             UnzipToolReturnAccumulator retval = new UnzipToolReturnAccumulator();
             string name = Path.GetFileNameWithoutExtension(pathToZip);
             if (name == null)
             {                
-                throw new Exception(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_);
+                throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_);
             }
+            name = name.Replace(' ', '_');
 
             string outerToolsFolderPath = ToolDescriptionHelpers.GetToolsDirectory();
             if (string.IsNullOrEmpty(outerToolsFolderPath))
             {
-                throw new Exception(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
+                throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
             }
             string tempFolderPath = Path.Combine(outerToolsFolderPath, "Temp"); //Not L10N
 
@@ -152,7 +159,8 @@ namespace pwiz.Skyline.Model.Tools
             
             string tempToolPath = Path.Combine(tempFolderPath, name);
             if (Directory.Exists(tempToolPath))
-                tempToolPath = GetNewDirName(tempToolPath); //This naming conflict shouldn't happen. The temp file should be empty.
+                tempToolPath = GetNewDirName(tempToolPath); 
+            //This naming conflict shouldn't happen. The temp file should be empty.
             //Consider: Try to delete the existing directory in the temp directory.
             try
             {
@@ -161,14 +169,15 @@ namespace pwiz.Skyline.Model.Tools
             catch (Exception)
             {
                 zipFile.Dispose();
-                throw new Exception(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_);
+                if (Directory.Exists(tempToolPath))
+                    DirectoryEx.SafeDelete(tempToolPath);
+                throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_);
 
             }
             zipFile.Dispose();
             
             string permToolPath = Path.Combine(outerToolsFolderPath, name);
-
-
+             
             var toolsToBeOverwrittenTitles = new List<string>();
             var toolsToBeOverwritten = new List<ToolDescription>();
             if (Directory.Exists(permToolPath))
@@ -182,7 +191,7 @@ namespace pwiz.Skyline.Model.Tools
                         toolsToBeOverwritten.Add(tool);
                     }
                 } // We have not acumulated the list of Tools that would be over written.
-            }            
+            }
 
             DirectoryInfo dirInfo = new DirectoryInfo(tempToolPath);
             if (!dirInfo.Exists) //Case where they try to load tools from an empty zipfile then the folder is never created.
@@ -190,9 +199,11 @@ namespace pwiz.Skyline.Model.Tools
 
             DirectoryInfo toolInf = new DirectoryInfo(Path.Combine(tempToolPath, "tool-inf"));
             if (!toolInf.Exists)
-                toolInf.Create();
+            {
+                DirectoryEx.SafeDelete(tempToolPath);
+                throw new MessageException(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_Error_in_the_selected_zip_file_,Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_does_not_have_a_required_tool_inf_directory_at_the_top_level_));
+            }
 
-            
             var existingReports = new List<ReportSpec>();
             var newReports = new List<ReportSpec>();
             var xmlSerializer = new XmlSerializer(typeof(ReportSpecList));
@@ -208,6 +219,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 catch (Exception exception)
                 {
+                    DirectoryEx.SafeDelete(tempToolPath);
                     throw new IOException(string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__, file.FullName), exception);
                 }
                 
@@ -223,7 +235,7 @@ namespace pwiz.Skyline.Model.Tools
                 //We now have the list of Reports that would have a naming conflict. 
             }
             bool? overwrite;
-            if (toolsToBeOverwrittenTitles.Count >0 || existingReports.Count > 0)
+            if (toolsToBeOverwrittenTitles.Count > 0 || existingReports.Count > 0)
                 overwrite = shouldOverwrite(toolsToBeOverwrittenTitles, existingReports);
             else
             {                
@@ -328,19 +340,19 @@ namespace pwiz.Skyline.Model.Tools
                     }
                     command = command.Replace(permToolPath, ToolMacros.TOOL_DIR);                    
                 }
-                else if (programPathContainer != null)
+                else if (programPathContainer != null) // If it is a ProgramPath macro
                 {
-                    string path = null;
-                    if (Settings.Default.FilePaths.ContainsKey(programPathContainer))
-                        path = Settings.Default.FilePaths[programPathContainer];
-
-                    if (path == null)
+                    List<string> packages = new List<string>();
+                    int i = 1;
+                    string package = readin.GetPackage(i);                        
+                    while (!string.IsNullOrEmpty(package))
                     {
-                        path = findProgramPath(programPathContainer);
-                        // Path gets saved in the locate file dlg.
+                        packages.Add(package);
+                        package = readin.GetPackage(++i);
                     }
-                    if (path == null)
-                        return null;
+
+                    if (!Settings.Default.FilePaths.ContainsKey(programPathContainer) || packages.Count > 0)
+                        retval.AddInstallation(programPathContainer,packages);
                 }
 
                 string reportTitle = readin.Input_Report_Name;
@@ -413,20 +425,40 @@ namespace pwiz.Skyline.Model.Tools
                 retval.AddTool(new ToolDescription(uniqueTitle, command, args, readin.Initial_Directory,
                                                    readin.Output_to_Immediate_Window.Contains("True"), reportTitle, dllPath, readin.Args_Collector_Type, permToolPath)); //Not L10N
                                 
-                Settings.Default.ToolList.Add(new ToolDescription(uniqueTitle, command, args,
-                                                                  readin.Initial_Directory,
-                                                                  readin.Output_to_Immediate_Window.Contains("True"), //Not L10N
-                                                                  reportTitle, dllPath,
-                                                                  readin.Args_Collector_Type, permToolPath));                                  
+                //Settings.Default.ToolList.Add(new ToolDescription(uniqueTitle, command, args,
+                //                                                  readin.Initial_Directory,
+                //                                                  readin.Output_to_Immediate_Window.Contains("True"), //Not L10N
+                //                                                  reportTitle, dllPath,
+                //                                                  readin.Args_Collector_Type, permToolPath));                                  
                 
                 fileStream.Close();
 
             } // Done looping through .properties files.
-
+            
             // Remove the folder in tempfolder.
             if (tempToolPath.Contains("Temp")) // Minor sanity check //Not L10N
             {
                 DirectoryEx.SafeDelete(tempToolPath);
+            }
+
+            //Check if we need to install a program
+            if (retval.Installations.Count > 0)
+            {
+                foreach (var ppc in retval.Installations.Keys)
+                {
+                    string path = installProgram(ppc, retval.Installations[ppc]);
+                    if (path == null)
+                    {
+                        //Cancel installation                        
+                        DirectoryEx.SafeDelete(permToolPath);
+                        return null;
+                    }
+                }
+            }
+
+            foreach (var tool in retval.ValidToolsFound)
+            {
+                Settings.Default.ToolList.Add(tool);
             }
 
             if (retval.ValidToolsFound.Count == 0)
@@ -482,17 +514,19 @@ namespace pwiz.Skyline.Model.Tools
             }
             string formatstring = string.Concat(permToolPath, "{0}");
             return GetUniqueVersion(formatstring, value => !Directory.Exists(value));
-        }        
+        }
 
         public class UnzipToolReturnAccumulator
         {
             public List<ToolDescription> ValidToolsFound { get; private set; }
             public List<string> MessagesThrown { get; private set; }
-
+            public Dictionary<ProgramPathContainer,List<string>> Installations { get; private set; }
+            
             public UnzipToolReturnAccumulator()
             {
                 ValidToolsFound = new List<ToolDescription>();
                 MessagesThrown = new List<string>();
+                Installations = new Dictionary<ProgramPathContainer, List<string>>();
             }
 
             public void AddMessage(string s)
@@ -504,6 +538,19 @@ namespace pwiz.Skyline.Model.Tools
             {
                 ValidToolsFound.Add(t);
             }
+
+            public void AddInstallation(ProgramPathContainer ppc, List<string> packages )
+            {
+                List<string> listPackages;
+                if (!Installations.TryGetValue(ppc, out listPackages))
+                {
+                    Installations.Add(ppc,packages);
+                }
+                else
+                {
+                    listPackages.AddRange(packages.Where(p => !listPackages.Contains(p)));
+                }
+            }
         }
 
         private static string CopyinFile(string filename, string filedir, string desdir, string toolTitle)
@@ -512,7 +559,7 @@ namespace pwiz.Skyline.Model.Tools
 
             if (!File.Exists(filescr))
             {                
-                throw new Exception(string.Format(Resources.ConfigureToolsDlg_CopyinFile_Missing_the_file_0_Tool_1_Import_Failed, filename, toolTitle));             
+                throw new MessageException(string.Format(Resources.ConfigureToolsDlg_CopyinFile_Missing_the_file_0_Tool_1_Import_Failed, filename, toolTitle));             
             }
             string filedest = Path.Combine(desdir, filename);
             try
@@ -526,7 +573,7 @@ namespace pwiz.Skyline.Model.Tools
 
                 if (!FilesAreEqual_OneByte(dest, src))
                 {                    
-                    throw new Exception(string.Format(TextUtil.LineSeparate(
+                    throw new MessageException(string.Format(TextUtil.LineSeparate(
                         Resources.ConfigureToolsDlg_CopyinFile_A_file_named_0_already_exists_that_isn_t_identical_to_the_one_for_tool__1,
                         Resources.ConfigureToolsDlg_CopyinFile_Not_importing_this_tool),
                                                       filename, toolTitle));

@@ -108,5 +108,5 @@ cat("\n Saved SampleSizePlot.pdf \n")
 #=====================
 tryCatch({runDSS()}, 
 finally = {
-cat("Finished!")
+cat("Finished.")
 })
