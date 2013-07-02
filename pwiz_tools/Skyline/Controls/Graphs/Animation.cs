@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="steps">Number of steps in the animation.</param>
         /// <param name="updateMsec">Expected update interval in milliseconds.</param>
         /// <param name="acceleration">Acceleration rate (how fast the animation speeds up and slows down).</param>
-        public Animation(double startValue, double endValue, int steps = 10, int updateMsec = 200, double acceleration = 1.4)
+        public Animation(double startValue, double endValue, int steps, int updateMsec = 200, double acceleration = 1.4)
         {
             _startValue = startValue;
             _endValue = endValue;

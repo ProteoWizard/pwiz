@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Show multi-file progress bar if we have more than one file to import.
             if (fileCount != 1)
             {
-                if (!panelMultifileProgress.Visible)
+                if (Visible && !panelMultifileProgress.Visible)
                 {
                     panelMultifileProgress.Visible = true;
                     panelFileProgress.Top -= _adjustLayoutForMultifile;

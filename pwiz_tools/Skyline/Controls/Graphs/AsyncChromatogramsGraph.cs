@@ -32,15 +32,17 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     class AsyncChromatogramsGraph : AsyncRenderControl
     {
-        private const int MAX_FRAMES_PER_SECOND = 10;
-        private const double MINUTES_PER_BIN = 0.5;
-        private const int MAX_PEAKS_PER_BIN = 4;
-        private const double DISPLAY_FILTER_PERCENT = 0.005;
+        private const int MAX_FRAMES_PER_SECOND = 10;           // target animation speed
+        private const int STEPS_FOR_INTENSITY_ANIMATION = 5;    // half a second for growing peaks and adjusting intensity axis
+        private const int STEPS_FOR_TIME_AXIS_ANIMATION = 10;   // one second for adjusting time axis
+        private const double MINUTES_PER_BIN = 0.5;             // resolution for intensity averaging
+        private const int MAX_PEAKS_PER_BIN = 4;                // how many peaks to graph per bin
+        private const double DISPLAY_FILTER_PERCENT = 0.005;    // filter peaks less than this percentage of maximum intensity
         
-        private const float CURVE_LINE_WIDTH = 1.0f;
-        private const float PROGRESS_LINE_WIDTH = 2.0f;
-        private const double X_AXIS_START = 1.0;
-        private const double Y_AXIS_START = 1.0;
+        private const float CURVE_LINE_WIDTH = 1.0f;            // width of line used to graph peaks
+        private const float PROGRESS_LINE_WIDTH = 2.0f;         // width of line to show current progress for progressive graphs
+        private const double X_AXIS_START = 1.0;                // initial value for time axis
+        private const double Y_AXIS_START = 1.0;                // initial value for intensity axis
 
         private readonly Color _backgroundGradientColor1 = Color.FromArgb(240, 250, 250);
         private readonly Color _backgroundGradientColor2 = Color.FromArgb(250, 250, 210);
@@ -348,7 +350,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Add new peak to display list.
-            var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0) };
+            var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0, STEPS_FOR_INTENSITY_ANIMATION, 1000 / MAX_FRAMES_PER_SECOND) };
             peak.CurveInfo = curveInfo;
             _animatingCurves.Add(curveInfo);
             NewCurve(curveInfo, zIndex);
@@ -534,7 +536,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax);
+                    _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax, STEPS_FOR_TIME_AXIS_ANIMATION, 1000 / MAX_FRAMES_PER_SECOND);
                 }
 
                 render = true;
@@ -553,7 +555,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    _yAxisAnimation = new Animation(_graphPane.YAxis.Scale.Max, _yMax);
+                    _yAxisAnimation = new Animation(_graphPane.YAxis.Scale.Max, _yMax, STEPS_FOR_INTENSITY_ANIMATION, 1000 / MAX_FRAMES_PER_SECOND);
                 }
 
                 render = true;
