@@ -80,11 +80,11 @@ namespace pwiz.SkylineTestFunctional
 
             TestCascadingMenuItems();
 
-            ZipTestGoodImport(); //Imports MSstats report.
+            //ZipTestGoodImport(); //Imports MSstats report.
 
             ZipTestInvalidToolDescription();
 
-            ZipTestAllCommandTypes();
+            //ZipTestAllCommandTypes();
 
             ZipTestSkylineReports();
 
