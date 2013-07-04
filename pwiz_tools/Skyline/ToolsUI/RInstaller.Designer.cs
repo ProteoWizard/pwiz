@@ -48,16 +48,20 @@
             // 
             // checkedListBoxPackages
             // 
+            this.checkedListBoxPackages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkedListBoxPackages.CheckOnClick = true;
             this.checkedListBoxPackages.FormattingEnabled = true;
             this.checkedListBoxPackages.Location = new System.Drawing.Point(12, 62);
             this.checkedListBoxPackages.Name = "checkedListBoxPackages";
-            this.checkedListBoxPackages.Size = new System.Drawing.Size(287, 94);
+            this.checkedListBoxPackages.Size = new System.Drawing.Size(287, 199);
             this.checkedListBoxPackages.TabIndex = 4;
             // 
             // btnInstall
             // 
             this.btnInstall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnInstall.Location = new System.Drawing.Point(143, 179);
+            this.btnInstall.Location = new System.Drawing.Point(143, 280);
             this.btnInstall.Name = "btnInstall";
             this.btnInstall.Size = new System.Drawing.Size(75, 23);
             this.btnInstall.TabIndex = 5;
@@ -69,7 +73,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(224, 179);
+            this.btnCancel.Location = new System.Drawing.Point(224, 280);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 6;
@@ -82,7 +86,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(311, 214);
+            this.ClientSize = new System.Drawing.Size(311, 315);
             this.ControlBox = false;
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnInstall);

@@ -65,7 +65,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 labelMessage.Text = string.Format(
                     Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_, Version);
-                int shift = checkedListBoxPackages.Height;
+                int shift = btnCancel.Top - checkedListBoxPackages.Top;
                 checkedListBoxPackages.Visible = checkedListBoxPackages.Enabled = false;
                 Height -= shift;
             }
@@ -106,8 +106,13 @@ namespace pwiz.Skyline.ToolsUI
                 Installed = InstallR();
 
             // once R is installed, install Packages, if necessary
-            if (Installed && checkedListBoxPackages.SelectedIndices.Count != 0)
+            if (Installed && checkedListBoxPackages.CheckedIndices.Count != 0)
                 GetPackages();
+
+            if (checkedListBoxPackages.CheckedIndices.Count == 0)
+            {
+                PackagesInstalled = true;
+            }
 
             // if R is successfully installed, return OK for a successful installation, regardless
             // of how the package installation turned out
@@ -120,7 +125,7 @@ namespace pwiz.Skyline.ToolsUI
             // First, download the executable installer
             try
             {
-                using (var dlg = new LongWaitDlg { Message = "Downloading R" }) // Not L10N
+                using (var dlg = new LongWaitDlg { Message = Resources.RInstaller_InstallR_Downloading_R }) // Not L10N
                 {
                     dlg.PerformWork(this, 500, DownloadR);
                 }
@@ -130,13 +135,13 @@ namespace pwiz.Skyline.ToolsUI
                 MessageDlg.Show(this, ex.Message);
                 return false;
             }
-            MessageDlg.Show(this, "Download succeeded."); // Not L10N
+            MessageDlg.Show(this, Resources.RInstaller_InstallR_Download_succeeded); // Not L10N
 
             // Then run the installer
             bool successfulInstall = RunInstaller();
             if (!successfulInstall)
             {
-                MessageDlg.Show(this, "Installation was not completed. Cancelling tool installation."); // Not L10N
+                MessageDlg.Show(this, Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_); // Not L10N
                 return false;
             }
             return true;
@@ -150,7 +155,7 @@ namespace pwiz.Skyline.ToolsUI
             const string baseUri = "http://cran.r-project.org/bin/windows/base/";
 
             // format the file name, e.g. R-2.15.2-win.exe
-            string exe = "R-" + Version + "-win.exe";
+            string exe = "R-" + Version + "-win.exe"; // Not L10N
 
             // create the download path for the file
             DownloadPath = Path.GetTempPath() + exe;
@@ -167,11 +172,11 @@ namespace pwiz.Skyline.ToolsUI
                 return;
 
             // otherwise, check and see if it is an older release
-            versionUri = new Uri(baseUri + "old/" + Version + "/" + exe);
+            versionUri = new Uri(baseUri + "old/" + Version + "/" + exe); // Not L10N
             successfulDownload = webClient.DownloadFileAsyncWithBroker(versionUri, DownloadPath);
 
             if (!successfulDownload)
-                throw new MessageException("Download Failed"); // Not L10N
+                throw new MessageException(Resources.RInstaller_DownloadR_Download_failed);
         }
 
         // The asynchronous download client links a webclient to a longwaitbroker; it supports
@@ -204,14 +209,14 @@ namespace pwiz.Skyline.ToolsUI
                 SuccessfulDownload = false;
 
                 Match file = Regex.Match(address.AbsolutePath, @"[^/]*$"); // Not L10N
-                _longWaitBroker.Message = "Downloading: " + file; // Not L10N
+                _longWaitBroker.Message = string.Format(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Downloading__0_, file);
                 DownloadFileAsync(address, fileName);
                 while (!DownloadComplete)
                 {
                     if (_longWaitBroker.IsCanceled)
                     {
                         CancelAsync();
-                        throw new MessageException("Download Canceled"); // Not L10N
+                        throw new MessageException(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled);
                     }
                 }
                 return SuccessfulDownload;
@@ -247,7 +252,7 @@ namespace pwiz.Skyline.ToolsUI
             if (packagesToDownload.Count != 0)
             {
                 string packagePaths = null;
-                using (var dlg = new LongWaitDlg { Text = "Downloading Packages" }) // Not L10N
+                using (var dlg = new LongWaitDlg { Message = Resources.RInstaller_GetPackages_Downloading_packages })
                 {
                     dlg.PerformWork(this, 1000, longWaitBroker => packagePaths = DownloadPackages(packagesToDownload, longWaitBroker));
                 }
@@ -295,15 +300,15 @@ namespace pwiz.Skyline.ToolsUI
             string programPath = FindRProgramPath(Version);
             if (programPath == null)
             {
-                MessageDlg.Show(this, "Unknown error installing packages");
+                MessageDlg.Show(this, Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
                 return;
             }
 
             // run installer
-            var startInfo = new ProcessStartInfo("CMD.exe")
+            var startInfo = new ProcessStartInfo("CMD.exe")  // Not L10N
             {
-                Verb = "runas",
-                Arguments = "/K \"" + programPath + "\" CMD INSTALL " + packagePaths
+                Verb = "runas",  // Not L10N
+                Arguments = "/K \"" + programPath + "\" CMD INSTALL " + packagePaths  // Not L10N
             };
 
             try
@@ -311,21 +316,12 @@ namespace pwiz.Skyline.ToolsUI
                 Process packageInstall = new Process { StartInfo = startInfo };
                 packageInstall.Start();
                 packageInstall.WaitForExit();
-                int exitCode = packageInstall.ExitCode;
-                if (exitCode != 0)
-                {
-                    MessageDlg.Show(this, "Package installation failed"); // Not L10N
-                    PackagesInstalled = false;
-                }
-                else
-                {
-                    MessageDlg.Show(this, "Tool installation completed"); // Not L10N
-                    PackagesInstalled = true;
-                }
+                MessageDlg.Show(this, Resources.RInstaller_InstallPackages_Tool_installation_completed);
+                PackagesInstalled = true;
             }
             catch (Exception ex)
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate("An error occurred installing packages.", ex.Message)); // Not L10N
+                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_An_error_occurred_installing_packages, ex.Message));
                 PackagesInstalled = false;
             }
         }

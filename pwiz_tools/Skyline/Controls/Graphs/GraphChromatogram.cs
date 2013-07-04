@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
-        private GraphHelper _graphHelper;
+        private readonly GraphHelper _graphHelper;
 
         public static ShowRTChrom ShowRT
         {
@@ -607,13 +607,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Check for appropriate chromatograms to load
             bool changedGroups = false;
-            bool changedGroupIds = false;
 
             try
             {
                 // Make sure all the chromatogram info for the relevant transition groups is present.
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
                 var displayType = GetDisplayType(DocumentUI);
+                bool changedGroupIds;
                 if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic)
                 {
                     var extractor = displayType == DisplayTypeChrom.base_peak
@@ -701,6 +701,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var nodeGroup = _nodeGroups[i];
                             var chromGroupInfo = ChromGroupInfos[i];
+                            if (chromGroupInfo == null)
+                                continue;
                             if (!_graphHelper.AllowSplitGraph || nodeGroupsInSeparatePanes)
                             {
                                 DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms,
@@ -708,20 +710,21 @@ namespace pwiz.Skyline.Controls.Graphs
                                                    nodeGroup, chromGroupInfo,
                                                    new GraphHelper.PaneKey(nodeGroup),
                                                    DisplayType, ref bestStartTime, ref bestEndTime);
-
                             }
                             else
                             {
                                 displayType = GetDisplayType(DocumentUI, nodeGroup);
-                                if (displayType == DisplayTypeChrom.all || displayType == DisplayTypeChrom.precursors)
+                                if (displayType != DisplayTypeChrom.products)
                                 {
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance,
-                                                       nodeGroup, chromGroupInfo, GraphHelper.PaneKey.PRECURSORS, DisplayTypeChrom.precursors, ref bestStartTime, ref bestEndTime);
+                                                       nodeGroup, chromGroupInfo, GraphHelper.PaneKey.PRECURSORS, DisplayTypeChrom.precursors,
+                                                       ref bestStartTime, ref bestEndTime);
                                 }
-                                if (displayType == DisplayTypeChrom.all || displayType == DisplayTypeChrom.products)
+                                if (displayType != DisplayTypeChrom.precursors)
                                 {
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance, 
-                                                       nodeGroup, chromGroupInfo, GraphHelper.PaneKey.TRANSITIONS, DisplayTypeChrom.products, ref bestStartTime, ref bestEndTime);
+                                                       nodeGroup, chromGroupInfo, GraphHelper.PaneKey.TRANSITIONS, DisplayTypeChrom.products,
+                                                       ref bestStartTime, ref bestEndTime);
                                 }
                             }
                         }

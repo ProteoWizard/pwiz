@@ -5515,4 +5515,37 @@ Are you sure you want to continue?</value>
     <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the use of R {0} and the following packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_" xml:space="preserve">
+    <value>Failed attempting to extract the tool from {0}</value>
+  </data>
+  <data name="RInstaller_InstallR_Downloading_R" xml:space="preserve">
+    <value>Downloading R</value>
+  </data>
+  <data name="RInstaller_InstallR_Download_succeeded" xml:space="preserve">
+    <value>Download succeeded</value>
+  </data>
+  <data name="RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_" xml:space="preserve">
+    <value>R installation was not completed. Cancelling tool installation.</value>
+  </data>
+  <data name="RInstaller_DownloadR_Download_failed" xml:space="preserve">
+    <value>Download failed</value>
+  </data>
+  <data name="AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Downloading__0_" xml:space="preserve">
+    <value>Downloading {0}</value>
+  </data>
+  <data name="AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled" xml:space="preserve">
+    <value>Download canceled</value>
+  </data>
+  <data name="RInstaller_GetPackages_Downloading_packages" xml:space="preserve">
+    <value>Downloading packages</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Unknown_error_installing_packages" xml:space="preserve">
+    <value>Unknown error installing packages</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Tool_installation_completed" xml:space="preserve">
+    <value>Tool installation completed</value>
+  </data>
+  <data name="RInstaller_InstallPackages_An_error_occurred_installing_packages" xml:space="preserve">
+    <value>An error occurred installing packages</value>
+  </data>
 </root>

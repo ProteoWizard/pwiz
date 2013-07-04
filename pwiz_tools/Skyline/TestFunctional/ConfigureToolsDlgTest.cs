@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -359,16 +358,15 @@ namespace pwiz.SkylineTestFunctional
             });
             string uniqueReportPath = TestFilesDir.GetTestPath("UniqueReport.zip");
             RunUI(() => configureToolsDlg.SaveTools());
-            MultiButtonMsgDlg resolveReportConflict = ShowDialog<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath));
-            RunUI(()=>
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict =>
                     {
                         Assert.IsTrue(resolveReportConflict.Message.Contains("A Report with the name UniqueReport already exists."));
                         Assert.IsTrue(resolveReportConflict.Message.Contains("Do you wish to overwrite or install in parallel?"));
                         resolveReportConflict.CancelDialog();
                     });
-             RunUI(()=>
+            WaitForConditionUI(() => configureToolsDlg.listTools.Items.Count == 1);
+            RunUI(() =>
             {
-                Assert.AreEqual(1, configureToolsDlg.listTools.Items.Count);
                 Assert.AreEqual("HelloWorld", configureToolsDlg.textTitle.Text);
                 Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
                 Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
@@ -377,17 +375,16 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
                 configureToolsDlg.SaveTools();
             });
-            MultiButtonMsgDlg resolveReportConflict2 = ShowDialog<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath));
-            RunUI(()=>
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict2 =>
                     {
                         Assert.IsTrue(resolveReportConflict2.Message.Contains("A Report with the name UniqueReport already exists."));
                         Assert.IsTrue(resolveReportConflict2.Message.Contains("Do you wish to overwrite or install in parallel?"));                        
                         resolveReportConflict2.Btn0Click(); //Overwrite report
                     });
+            WaitForConditionUI(() => configureToolsDlg.listTools.Items.Count == 2);
             string toolDir = string.Empty;
             RunUI(()=>
             {
-                Assert.AreEqual(2, configureToolsDlg.listTools.Items.Count);
                 Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
                 Assert.AreEqual("HelloWorld1", configureToolsDlg.textTitle.Text);
                 Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
@@ -398,17 +395,16 @@ namespace pwiz.SkylineTestFunctional
                 toolDir = configureToolsDlg.ToolDir;
                 Assert.IsTrue(Directory.Exists(toolDir));
             });
-            MultiButtonMsgDlg resolveReportConflict3 = ShowDialog<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath));
-            RunUI(() =>
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict3 =>
             {
                 Assert.IsTrue(resolveReportConflict3.Message.Contains("The tool HelloWorld1 is in conflict with the new installation"));
                 Assert.IsTrue(resolveReportConflict3.Message.Contains("A Report with the name UniqueReport already exists."));
                 Assert.IsTrue(resolveReportConflict3.Message.Contains("Do you wish to overwrite or install in parallel?"));
                 resolveReportConflict3.Btn0Click(); //Overwrite
             });
+            WaitForConditionUI(() => configureToolsDlg.listTools.Items.Count == 2);
             RunUI(() =>
             {
-                Assert.AreEqual(2, configureToolsDlg.listTools.Items.Count);
                 Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
                 Assert.AreEqual("HelloWorld1", configureToolsDlg.textTitle.Text);
                 Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
@@ -417,17 +413,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(toolDir, configureToolsDlg.ToolDir);
                 Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
                 Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
-            }); MultiButtonMsgDlg resolveReportConflict4 = ShowDialog<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath));
-            RunUI(() =>
-            {
-                Assert.IsTrue(resolveReportConflict4.Message.Contains("The tool HelloWorld1 is in conflict with the new installation"));
-                Assert.IsTrue(resolveReportConflict4.Message.Contains("A Report with the name UniqueReport already exists."));
-                Assert.IsTrue(resolveReportConflict4.Message.Contains("Do you wish to overwrite or install in parallel?"));
-                resolveReportConflict4.Btn1Click(); //InParallel
             });
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath),
+                resolveReportConflict4 => resolveReportConflict4.Btn1Click());
+            WaitForConditionUI(() => configureToolsDlg.listTools.Items.Count == 3);
             RunUI(() =>
             {
-                Assert.AreEqual(3, configureToolsDlg.listTools.Items.Count);
                 Assert.AreEqual(2, configureToolsDlg.listTools.SelectedIndex);
                 Assert.AreEqual("HelloWorld2", configureToolsDlg.textTitle.Text);
                 Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
@@ -1199,10 +1190,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestValidNo()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            RunUI(() =>
-            {
-                configureToolsDlg.AddDialog(EXAMPLE, EXAMPLE_EXE, _empty, _empty);
-            });
+            RunUI(() => configureToolsDlg.AddDialog(EXAMPLE, EXAMPLE_EXE, _empty, _empty));
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);

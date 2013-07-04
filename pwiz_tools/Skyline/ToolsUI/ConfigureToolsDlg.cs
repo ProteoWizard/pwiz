@@ -971,17 +971,18 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 result = ToolInstaller.UnpackZipTool(fullpath, OverwriteOrInParallel, SkylineWindowParent.InstallProgram);
-
             }
-            catch (Exception ex)
+            catch (MessageException x)
             {
-                if (ex is MessageException || ex is IOException)
-                {
-                    MessageDlg.Show(this, ex.Message);
-                }                
+                MessageDlg.Show(this, x.Message);
+            }
+            catch (IOException x)
+            {
+                MessageDlg.Show(this, TextUtil.LineSeparate(string.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), x.Message));
             }
 
-
+            // The unzip function may have made changes that need to be reflected in the dialog box
+            // regardless of return value or exceptions thrown
             RemoveAllTools();
             //Reload the report dropdown menu!
             _driverReportSpec.LoadList(string.Empty);
@@ -992,14 +993,15 @@ namespace pwiz.Skyline.ToolsUI
             {
                 foreach (var message in result.MessagesThrown)
                 {
+                    // TODO: Make this a single form/message box
                     MessageDlg.Show(this, message);
                 }
             }
 
             //Reload the tool list
             ToolList = Settings.Default.ToolList
-           .Select(t => new ToolDescription(t))
-           .ToList();
+               .Select(t => new ToolDescription(t))
+               .ToList();
 
             RefreshListBox();
 

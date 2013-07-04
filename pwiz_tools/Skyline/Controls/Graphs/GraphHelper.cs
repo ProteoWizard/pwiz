@@ -260,9 +260,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             foreach (var graphPaneKeyItem in ListPrimaryGraphItems())
             {
-                ScaledRetentionTime scaledMin, scaledMax;
-                scaledMin = graphPaneKeyItem.Value.ScaleRetentionTime(min);
-                scaledMax = graphPaneKeyItem.Value.ScaleRetentionTime(max);
+                ScaledRetentionTime scaledMin = graphPaneKeyItem.Value.ScaleRetentionTime(min);
+                ScaledRetentionTime scaledMax = graphPaneKeyItem.Value.ScaleRetentionTime(max);
                 var graphPane = _displayState.GetGraphPane(GraphControl, graphPaneKeyItem.Key);
                 var axis = graphPane.XAxis;
                 axis.Scale.Min = scaledMin.DisplayTime;
@@ -320,23 +319,25 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class PaneKey : IComparable
         {
-            public static readonly PaneKey PRECURSORS = new PaneKey(null, false);
-            public static readonly PaneKey TRANSITIONS = new PaneKey(null, true);
-            public static readonly PaneKey DEFAULT = new PaneKey(null, false);
-            public PaneKey(TransitionGroupDocNode transitionGroup) 
-                : this(transitionGroup.TransitionGroup.LabelType, false)
+            public static readonly PaneKey PRECURSORS = new PaneKey(null, null, false);
+            public static readonly PaneKey TRANSITIONS = new PaneKey(null, null, true);
+            public static readonly PaneKey DEFAULT = new PaneKey(null, null, false);
+            public PaneKey(TransitionGroupDocNode nodeGroup) 
+                : this(nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.TransitionGroup.LabelType, false)
             {
             }
-            private PaneKey(IsotopeLabelType isotopeLabelType, bool isTransition)
+            private PaneKey(int? precusorCharge, IsotopeLabelType isotopeLabelType, bool isTransition)
             {
+                PrecursorCharge = precusorCharge;
                 IsotopeLabelType = isotopeLabelType;
                 IsTransition = isTransition;
             }
+            public int? PrecursorCharge { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public bool IsTransition { get; private set; }
-            private Tuple<IsotopeLabelType, bool> AsTuple()
+            private Tuple<int?, IsotopeLabelType, bool> AsTuple()
             {
-                return new Tuple<IsotopeLabelType, bool>(IsotopeLabelType, IsTransition);
+                return new Tuple<int?, IsotopeLabelType, bool>(PrecursorCharge, IsotopeLabelType, IsTransition);
             }
             public int CompareTo(object other)
             {

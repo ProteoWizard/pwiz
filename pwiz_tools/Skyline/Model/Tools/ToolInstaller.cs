@@ -172,7 +172,6 @@ namespace pwiz.Skyline.Model.Tools
                 if (Directory.Exists(tempToolPath))
                     DirectoryEx.SafeDelete(tempToolPath);
                 throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_);
-
             }
             zipFile.Dispose();
             
@@ -452,6 +451,12 @@ namespace pwiz.Skyline.Model.Tools
                         //Cancel installation                        
                         DirectoryEx.SafeDelete(permToolPath);
                         return null;
+                    }
+                    else
+                    {
+                        if (Settings.Default.FilePaths.ContainsKey(ppc))
+                            Settings.Default.FilePaths.Remove(ppc);
+                        Settings.Default.FilePaths.Add(ppc, path);
                     }
                 }
             }
