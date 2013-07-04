@@ -75,10 +75,20 @@ namespace pwiz.Skyline.Model.Results
             FileAlignmentIndices = new RetentionTimeAlignmentIndices[msDataFilePaths.Count];
 
             // Get peak scoring calculators
-            DetailedPeakFeatureCalculators = PeakFeatureCalculator.Calculators
-                .Where(c => c is DetailedPeakFeatureCalculator)
-                .Cast<DetailedPeakFeatureCalculator>()
-                .ToArray();
+            IEnumerable<IPeakFeatureCalculator> calcEnum;
+            if (document.Settings.HasResults && document.Settings.MeasuredResults.CachePaths.Any())
+            {
+                // Once a document has scores continue using those scores, until
+                // the document is re-scored.
+                calcEnum = document.Settings.MeasuredResults.CachedScoreTypes
+                    .Select(PeakFeatureCalculator.GetCalculator);
+            }
+            else
+            {
+                calcEnum = PeakFeatureCalculator.Calculators
+                    .Where(c => c is DetailedPeakFeatureCalculator);
+            }
+            DetailedPeakFeatureCalculators = calcEnum.Cast<DetailedPeakFeatureCalculator>().ToArray();
             _listScoreTypes.AddRange(DetailedPeakFeatureCalculators.Select(c => c.GetType()));
         }
 

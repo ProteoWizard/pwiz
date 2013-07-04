@@ -510,7 +510,7 @@ namespace pwiz.Skyline.FileUI
             btnUp.Enabled = enable;
             btnDown.Enabled = enable;
             btnRename.Enabled = enable;
-            btnRemoveAll.Enabled = btnMinimize.Enabled = listResults.Items.Count > 0;
+            btnRemoveAll.Enabled = btnMinimize.Enabled = btnRescore.Enabled = listResults.Items.Count > 0;
         }
 
         private sealed class UpdateList : IDisposable

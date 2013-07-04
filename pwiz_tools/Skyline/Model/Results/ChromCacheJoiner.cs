@@ -117,11 +117,9 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else if (!ArrayUtil.EqualsDeep(_listScoreTypes, rawData.ScoreTypes))
                     {
-                        // If the existing caches contain score types not in this new cache, throw an exception
-                        if (_listScoreTypes.Any(t => !rawData.ScoreTypes.Contains(t)))
+                        // If the existing score types in the caches are not the same, the caches cannot be joined
+                        if (_listScoreTypes.Intersect(rawData.ScoreTypes).Count() != _listScoreTypes.Count)
                             throw new InvalidDataException("Data cache files with different score types cannot be joined.");    // Not L10N
-
-                        IntersectScores(rawData);
                     }
                     _listScores.AddRange(rawData.Scores);
 
@@ -155,26 +153,6 @@ namespace pwiz.Skyline.Model.Results
                 {
                     Complete(new Exception(String.Format(Resources.ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__, CachePath), x));
                 }
-            }
-        }
-
-        private void IntersectScores(ChromatogramCache.RawData rawData)
-        {
-            if (_listScoreTypes.Count == 0)
-            {
-                rawData.ScoreTypes = new Type[0];
-                rawData.Scores = new float[0];
-                for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
-                {
-                    rawData.ChromatogramEntries[i].ClearScores();
-                }
-            }
-            else
-            {
-                // TODO: Implement this when new scores are added.
-                //       Currently it is only possible to have scores or no scores.
-                //       So, this case is never hit, and therefor would be difficult to test.
-                throw new NotImplementedException();
             }
         }
 
