@@ -570,17 +570,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public double[] GetUnalignedRetentionTimes(string peptideSequence, ExplicitMods explicitMods)
         {
             var times = new List<double>();
-            foreach (var source in DocumentRetentionTimes.RetentionTimeSources.Values)
+            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
+                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
+            foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                var library = PeptideSettings.Libraries.GetLibrary(source.Library);
-                if (null == library)
+                foreach (var source in library.ListRetentionTimeSources())
                 {
-                    continue;
+                    int? index = null;
+                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index));
                 }
-                var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
-                    .Select(typedSequence => typedSequence.ModifiedSequence);
-                int? index = null;
-                times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index));
             }
             return times.ToArray();
         }
