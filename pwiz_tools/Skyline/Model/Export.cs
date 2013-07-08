@@ -1749,10 +1749,9 @@ namespace pwiz.Skyline.Model
             // Write special ID to ensure 1-to-1 relationship between this ID and precursor m/z
             // Better to use one ID per peptide molecular structure, as Waters has a 512 ID limit
             // and this allows for 512 peptide charge states and not just 512 precursors.
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
-                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
-            // TODO: Go back to light type once the method exporter can handle it
-//            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
+//            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+//                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
             writer.Write('.'); // Not L10N
             writer.Write(nodeTranGroup.TransitionGroup.PrecursorCharge);
             if (step != 0)
