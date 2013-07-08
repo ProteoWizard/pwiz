@@ -44,7 +44,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            #region OtherTests
+            Settings.Default.ToolList.Clear();
+
             TestHttpPost();
 
             TestEmptyOpen();
@@ -88,7 +89,6 @@ namespace pwiz.SkylineTestFunctional
             ZipTestSkylineReports();
 
             TestToolDirMacro();
-            #endregion
 
             //TestArgCollector(); //Still Fails
 
@@ -435,9 +435,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestToolDirMacro()
         {
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string path1 = TestFilesDir.GetTestPath("TestToolDirMacro.zip");
-            RunUI(() =>
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.UnpackZipTool(path1);

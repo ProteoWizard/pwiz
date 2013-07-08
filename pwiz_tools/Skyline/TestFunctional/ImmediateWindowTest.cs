@@ -37,6 +37,8 @@ namespace pwiz.SkylineTestFunctional
         // Also tested in ConfigureToolsDlgTest
         protected override void DoTest()
         {
+            Settings.Default.ToolList.Clear();
+
             TestToolAdd();
         }
 
@@ -46,13 +48,16 @@ namespace pwiz.SkylineTestFunctional
             const string exePath = "example.exe"; //Not L10N
             RunUI(()=>
             {
+                immediateWindow.Clear();
+
                 int countStart = Settings.Default.ToolList.Count;
                 const string addToolCommand = "--tool-add=ImToolAdded --tool-command=" + exePath; //Not L10N
                 immediateWindow.WriteLine(addToolCommand);
-                immediateWindow.RunLine(0);                
+                immediateWindow.RunLine(immediateWindow.LineCount - 1); 
                 AssertEx.AreComparableStrings("{0} was added to the Tools Menu", immediateWindow.TextContent, 1); //Not L10N will be when command line stuff is localized.
                 SkylineWindow.PopulateToolsMenu();
                 Assert.AreEqual("ImToolAdded", SkylineWindow.GetToolText(countStart));
+
                 immediateWindow.Clear();
 
                 // Write the title of the tool and then run it from the immediate window.

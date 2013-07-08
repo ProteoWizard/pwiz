@@ -49,6 +49,19 @@ namespace pwiz.Skyline.Controls
 
         public TextWriter Writer { get { return _textBoxStreamWriter; } }
 
+        public int LineCount
+        {
+            get
+            {
+                int len = textImWindow.Lines.Length;
+                if (len == 0)
+                    return 0;
+                if (string.IsNullOrWhiteSpace(textImWindow.Lines[len - 1]))
+                    len--;
+                return len;
+            }
+        }
+
         private void textImWindow_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == '\r')
@@ -70,7 +83,6 @@ namespace pwiz.Skyline.Controls
         public void Cleanup()
         {
             _textBoxStreamWriter.Cleanup();
-
         }
 
         /// <summary>
@@ -82,14 +94,14 @@ namespace pwiz.Skyline.Controls
         public void RunLine (int line)
         {
             // Case when the textBox is completely empty, line returns 1 but Lines is an array length 0. 
-            if (line < textImWindow.Lines.Length)
+            if (line < LineCount)
             {
+                string lineText = textImWindow.Lines[line];
                 // This is to take care of the annoying case when the user trys to add a tool with a title they already used and the tool runs.@
-                if (!textImWindow.Lines[line].Contains("--tool-add"))
+                if (!lineText.Contains("--tool-add"))
                 {
                     //Check if there is a tool to run on the line
-                    foreach (var tool in
-                            Settings.Default.ToolList.Where(tool => textImWindow.Lines[line].Contains(tool.Title)))
+                    foreach (var tool in Settings.Default.ToolList.Where(tool => lineText.Contains(tool.Title)))
                     {                        
                         //CONSIDER: multiple tools running. eg. two tools titled "Tool" and "ToolTest" if you enter ToolTest then both tools will run.
                         try
@@ -104,11 +116,10 @@ namespace pwiz.Skyline.Controls
                         {
                             MessageDlg.Show(_parent, e.Message);
                         }
-                        
                     }
                 }
                 // Try to parse like SkylineRunner parameters 
-                string[] args = CommandLine.ParseInput(textImWindow.Lines[line]);
+                string[] args = CommandLine.ParseInput(lineText);
                 CommandLine commandLine = new CommandLine(new CommandStatusWriter(_textBoxStreamWriter));
                 commandLine.Run(args);
             }
