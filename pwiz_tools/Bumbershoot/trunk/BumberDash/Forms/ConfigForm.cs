@@ -154,6 +154,7 @@ namespace BumberDash.Forms
             switch (baseConfig.DestinationProgram)
             {
                 case "MyriMatch":
+                    this.Text = "MyriMatch Configuration Editor";
                     _myriTemplateList = templates.Where(x => x.DestinationProgram == "MyriMatch").ToList();
                     InitializePane(MyriGenPanel);
                     InitializePane(MyriAdvPanel);
@@ -163,6 +164,7 @@ namespace BumberDash.Forms
                     MyriInstrumentList.Text = "New";
                     break;
                 case "DirecTag":
+                    this.Text = "DirecTag Configuration Editor";
                     _DTTemplateList = templates.Where(x => x.DestinationProgram == "DirecTag").ToList();
                     InitializePane(DTGenPanel);
                     InitializePane(DTAdvPanel);
@@ -172,6 +174,7 @@ namespace BumberDash.Forms
                     DTInstrumentList.Text = "New";
                     break;
                 case "TagRecon":
+                    this.Text = "TagRecon Configuration Editor";
                     _TRTemplateList = templates.Where(x => x.DestinationProgram == "TagRecon").ToList();
                     InitializePane(TRGenPanel);
                     InitializePane(TRAdvPanel);
@@ -181,6 +184,7 @@ namespace BumberDash.Forms
                     TRInstrumentList.Text = "New";
                     break;
                 case "Pepitome":
+                    this.Text = "Pepitome Configuration Editor";
                     _pepTemplateList = templates.Where(x => x.DestinationProgram == "Pepitome").ToList();
                     InitializePane(PepGenPanel);
                     InitializePane(PepAdvPanel);
@@ -225,6 +229,7 @@ namespace BumberDash.Forms
             switch (configProgram)
             {
                 case "MyriMatch":
+                    this.Text = "MyriMatch Configuration Editor";
                     _myriTemplateList = templates.Where(x => x.DestinationProgram == "MyriMatch").ToList();
                     InitializePane(MyriGenPanel);
                     InitializePane(MyriAdvPanel);
@@ -234,6 +239,7 @@ namespace BumberDash.Forms
                     MyriInstrumentList.Text = "New";
                     break;
                 case "DirecTag":
+                    this.Text = "DirecTag Configuration Editor";
                     _DTTemplateList = templates.Where(x => x.DestinationProgram == "DirecTag").ToList();
                     InitializePane(DTGenPanel);
                     InitializePane(DTAdvPanel);
@@ -243,6 +249,7 @@ namespace BumberDash.Forms
                     DTInstrumentList.Text = "New";
                     break;
                 case "TagRecon":
+                    this.Text = "TagRecon Configuration Editor";
                     _TRTemplateList = templates.Where(x => x.DestinationProgram == "TagRecon").ToList();
                     InitializePane(TRGenPanel);
                     InitializePane(TRAdvPanel);
@@ -252,6 +259,7 @@ namespace BumberDash.Forms
                     TRInstrumentList.Text = "New";
                     break;
                 case "Pepitome":
+                    this.Text = "Pepitome Configuration Editor";
                     _pepTemplateList = templates.Where(x => x.DestinationProgram == "Pepitome").ToList();
                     InitializePane(PepGenPanel);
                     InitializePane(PepAdvPanel);

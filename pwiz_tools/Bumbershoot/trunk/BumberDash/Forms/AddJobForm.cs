@@ -50,6 +50,7 @@ namespace BumberDash.Forms
         {
             InitializeComponent();
             SearchTypeBox.Text = JobType.Database;
+            InputMethodBox.Text = "File List";
             SetDropDownItems(oldFiles);
             _templateList = templates;
         }
@@ -599,16 +600,23 @@ namespace BumberDash.Forms
         private bool IsValidJob()
         {
             var allValid = true;
-            var extensionList = new List<string>
-                                        {
-                                            ".raw", ".wiff", ".yep",
-                                            ".mzml", ".mz5", ".mgf", ".mzxml"
-                                        };
+            //var extensionList = new List<string>
+            //                            {
+            //                                ".raw", ".wiff", ".yep",
+            //                                ".mzml", ".mz5", ".mgf", ".mzxml"
+            //                            };
 
 
             // Get all input files and validate that they exist
             var inputFiles = GetInputFileNames();
-            if (inputFiles.Any(fileName => !File.Exists(fileName.Trim('"')) || !(extensionList.Contains((Path.GetExtension(fileName.Trim('"')) ?? string.Empty).ToLower()))))
+            if (InputMethodBox.Text == "File List" && inputFiles.Any(fileName => !File.Exists(fileName.Trim('"'))))
+            {
+                allValid = false;
+                InputFilesList.BackgroundColor = Color.LightPink;
+            }
+            else if (InputMethodBox.Text == "File Mask" &&
+                (!Directory.Exists(InputDirectoryBox.Text) || String.IsNullOrEmpty(FileMaskBox.Text) ||
+                MaskMessageLabel.Text.StartsWith("Error")))
             {
                 allValid = false;
                 InputFilesList.BackgroundColor = Color.LightPink;
@@ -781,16 +789,31 @@ namespace BumberDash.Forms
 
             NameBox.Text = hi.JobName;
             CPUsBox.Value = hi.Cpus;
-            var usedFiles = GetInputFileNames();
-            foreach(var file in fileList)
+
+            if (hi.FileList.Count == 1 && hi.FileList[0].FilePath.StartsWith("!"))
             {
-                if (usedFiles.Contains(file))
-                    continue;
-                var currentRow = InputFilesList.Rows.Count;
-                var newItem = new[] { Path.GetFileName(file.Trim('"')) };
-                InputFilesList.Rows.Insert(currentRow, newItem);
-                InputFilesList.Rows[currentRow].Cells[0].ToolTipText = file;
+                InputMethodBox.Text = "File Mask";
+                var fullMask = hi.FileList[0].FilePath.Trim('!');
+                var initialDir = Path.GetDirectoryName(fullMask);
+                var mask = Path.GetFileName(fullMask);
+                InputDirectoryBox.Text = initialDir;
+                FileMaskBox.Text = mask;
             }
+            else
+            {
+                InputMethodBox.Text = "File List";
+                var usedFiles = GetInputFileNames();
+                foreach (var file in fileList)
+                {
+                    if (usedFiles.Contains(file))
+                        continue;
+                    var currentRow = InputFilesList.Rows.Count;
+                    var newItem = new[] { Path.GetFileName(file.Trim('"')) };
+                    InputFilesList.Rows.Insert(currentRow, newItem);
+                    InputFilesList.Rows[currentRow].Cells[0].ToolTipText = file;
+                }
+            }
+            
             DatabaseLocBox.Text = hi.ProteinDatabase;
 
             //Output directory handled differently depending on if new folder is/was created
@@ -1149,10 +1172,77 @@ namespace BumberDash.Forms
 
         private List<String> GetInputFileNames()
         {
-            var fileList = new List<string>();
-            foreach (DataGridViewRow row in InputFilesList.Rows)
-                fileList.Add(row.Cells[0].ToolTipText);
-            return fileList;
+            if (InputMethodBox.Text == "File List")
+            {
+                var fileList = new List<string>();
+                foreach (DataGridViewRow row in InputFilesList.Rows)
+                    fileList.Add(row.Cells[0].ToolTipText);
+                return fileList;
+            }
+            else
+            {
+                return new List<string>(){"!" + Path.Combine(InputDirectoryBox.Text, FileMaskBox.Text)};
+            }
+        }
+
+        private void InputMethodBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            FileListPanel.Visible = InputMethodBox.SelectedItem == "File List";
+            FileMaskPanel.Visible = InputMethodBox.SelectedItem == "File Mask";
+        }
+
+        private void InputDirectoryButton_Click(object sender, EventArgs e)
+        {
+            var folderDialog = new FolderBrowserDialog
+                                   {
+                                       Description = "Input Directory",
+                                       SelectedPath = InputDirectoryBox.Text,
+                                       ShowNewFolderButton = false                                     
+                                   };
+            if (folderDialog.ShowDialog() == DialogResult.OK)
+            {
+                InputDirectoryBox.Text = folderDialog.SelectedPath;
+                OutputDirectoryBox.Text = folderDialog.SelectedPath;
+            }
+
+            CountMaskedFiles(sender,e);
+        }
+
+        private void CountMaskedFiles(object sender, EventArgs e)
+        {
+            if (InputMethodBox.Text == "File Mask" &&
+                Directory.Exists(InputDirectoryBox.Text) &&
+                !String.IsNullOrEmpty(FileMaskBox.Text))
+            {
+                try
+                {
+                    var fileList = Directory.GetFiles(InputDirectoryBox.Text, FileMaskBox.Text);
+                    if (fileList.Length > 0)
+                    {
+                        MaskMessageLabel.ForeColor = Color.DarkGreen;
+                        MaskMessageLabel.Text = String.Format("Found {0} files with the given mask", fileList.Length);
+                    }
+                    else
+                    {
+                        MaskMessageLabel.ForeColor = Color.DarkRed;
+                        MaskMessageLabel.Text = "Error: No files found with given mask";
+                    }
+                }
+                catch (Exception)
+                {
+                    MaskMessageLabel.ForeColor = Color.DarkRed;
+                    MaskMessageLabel.Text = "Error: Unable to process given mask";
+                }
+            }
+        }
+
+        private void FileMaskBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Return)
+            {
+                e.Handled = true;
+                CountMaskedFiles(sender, e);
+            }
         }
     }
 }

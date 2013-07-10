@@ -50,91 +50,91 @@ namespace BumberDash.Forms
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.ListViewItem listViewItem26 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carbamidomethylated Cysteine",
             "C",
             "57.0214"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem27 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.9949"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem28 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem29 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem4 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Threonine",
             "T",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem30 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem5 = new System.Windows.Forms.ListViewItem(new string[] {
             "Gln->Pyro-Glu",
             "(Q",
             "-17.0265"}, -1);
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.ListViewItem listViewItem21 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.ListViewItem listViewItem6 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carbamidomethylated Cysteine",
             "C",
             "57.0214"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem22 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem7 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.9949"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem23 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem8 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem24 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem9 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Threonine",
             "T",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem25 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem10 = new System.Windows.Forms.ListViewItem(new string[] {
             "Gln->Pyro-Glu",
             "(Q",
             "-17.0265"}, -1);
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle14 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.ListViewItem listViewItem31 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.ListViewItem listViewItem11 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carbamidomethylated Cysteine",
             "C",
             "57.0214"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem32 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem12 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.9949"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem33 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem13 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem34 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem14 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Threonine",
             "T",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem35 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem15 = new System.Windows.Forms.ListViewItem(new string[] {
             "Gln->Pyro-Glu",
             "(Q",
             "-17.0265"}, -1);
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle15 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle16 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.ListViewItem listViewItem36 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.ListViewItem listViewItem16 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carbamidomethylated Cysteine",
             "C",
             "57.0214"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem37 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem17 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.9949"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem38 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem18 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem39 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem19 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Threonine",
             "T",
             "79.9663"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem40 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem20 = new System.Windows.Forms.ListViewItem(new string[] {
             "Gln->Pyro-Glu",
             "(Q",
             "-17.0265"}, -1);
@@ -144,65 +144,6 @@ namespace BumberDash.Forms
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.TRGenPanel = new System.Windows.Forms.Panel();
-            this.TRToleranceGB = new System.Windows.Forms.GroupBox();
-            this.TRCTerminusMzToleranceBox = new System.Windows.Forms.TextBox();
-            this.TRFragmentMzToleranceBox = new System.Windows.Forms.TextBox();
-            this.TRCTerminusMzToleranceInfo = new System.Windows.Forms.Label();
-            this.TRPrecursorMzToleranceBox = new System.Windows.Forms.TextBox();
-            this.TRCTerminusMzToleranceLabel = new System.Windows.Forms.Label();
-            this.TRFragmentMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
-            this.TRCTerminusMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
-            this.TRNTerminusMzToleranceBox = new System.Windows.Forms.TextBox();
-            this.TRFragmentMzToleranceInfo = new System.Windows.Forms.Label();
-            this.TRPrecursorMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
-            this.TRNTerminusMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
-            this.TRNTerminusMzToleranceInfo = new System.Windows.Forms.Label();
-            this.TRFragmentMzToleranceLabel = new System.Windows.Forms.Label();
-            this.TRNTerminusMzToleranceLabel = new System.Windows.Forms.Label();
-            this.TRPrecursorMzToleranceInfo = new System.Windows.Forms.Label();
-            this.TRPrecursorMzToleranceLabel = new System.Windows.Forms.Label();
-            this.TRDigestionGB = new System.Windows.Forms.GroupBox();
-            this.TRMaxMissedCleavagesAuto = new System.Windows.Forms.Label();
-            this.TRMaxMissedCleavagesBox = new System.Windows.Forms.NumericUpDown();
-            this.TRMinTerminiCleavagesBox = new System.Windows.Forms.ComboBox();
-            this.TRCleavageRulesBox = new System.Windows.Forms.ComboBox();
-            this.TRCleavageRulesInfo = new System.Windows.Forms.Label();
-            this.TRCleavageRulesLabel = new System.Windows.Forms.Label();
-            this.TRMaxMissedCleavagesLabel = new System.Windows.Forms.Label();
-            this.TRMinTerminiCleavagesLabel = new System.Windows.Forms.Label();
-            this.TRInstrumentGB = new System.Windows.Forms.GroupBox();
-            this.TRInstrumentList = new System.Windows.Forms.ComboBox();
-            this.TRInstrumentLabel = new System.Windows.Forms.Label();
-            this.TRUseAvgMassOfSequencesBox = new System.Windows.Forms.ComboBox();
-            this.TRUseAvgMassOfSequencesLabel = new System.Windows.Forms.Label();
-            this.TRModGB = new System.Windows.Forms.GroupBox();
-            this.TRMaxAmbResultsForBlindModsLabel = new System.Windows.Forms.Label();
-            this.TRMaxAmbResultsForBlindModsBox = new System.Windows.Forms.NumericUpDown();
-            this.TRExplainUnknownMassShiftsAsBox = new System.Windows.Forms.ComboBox();
-            this.TRExplainUnknownMassShiftsAsLabel = new System.Windows.Forms.Label();
-            this.TRMaxNumPreferredDeltaMassesLabel = new System.Windows.Forms.Label();
-            this.TRMaxNumPreferredDeltaMassesBox = new System.Windows.Forms.NumericUpDown();
-            this.TRAppliedModBox = new System.Windows.Forms.DataGridView();
-            this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewComboBoxColumn2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.TRAppliedModLabel = new System.Windows.Forms.Label();
-            this.TRAppliedModRemove = new System.Windows.Forms.Button();
-            this.TRAppliedModAdd = new System.Windows.Forms.Button();
-            this.TRStaticModsInfo = new System.Windows.Forms.Label();
-            this.TRModTypeLabel = new System.Windows.Forms.Label();
-            this.TRModTypeList = new System.Windows.Forms.ComboBox();
-            this.TRModListLabel = new System.Windows.Forms.Label();
-            this.TRResidueLabel = new System.Windows.Forms.Label();
-            this.TRModMassLabel = new System.Windows.Forms.Label();
-            this.TRModMassText = new System.Windows.Forms.TextBox();
-            this.TRMaxDynamicModsBox = new System.Windows.Forms.NumericUpDown();
-            this.TRResidueText = new System.Windows.Forms.TextBox();
-            this.TRModList = new System.Windows.Forms.ListView();
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.TRMaxDynamicModsInfo = new System.Windows.Forms.Label();
-            this.TRMaxDynamicModsLabel = new System.Windows.Forms.Label();
             this.PepGenPanel = new System.Windows.Forms.Panel();
             this.PepModGB = new System.Windows.Forms.GroupBox();
             this.PepAppliedModBox = new System.Windows.Forms.DataGridView();
@@ -326,6 +267,65 @@ namespace BumberDash.Forms
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.DTMaxDynamicModsInfo = new System.Windows.Forms.Label();
             this.DTMaxDynamicModsLabel = new System.Windows.Forms.Label();
+            this.TRGenPanel = new System.Windows.Forms.Panel();
+            this.TRToleranceGB = new System.Windows.Forms.GroupBox();
+            this.TRCTerminusMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.TRFragmentMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.TRCTerminusMzToleranceInfo = new System.Windows.Forms.Label();
+            this.TRPrecursorMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.TRCTerminusMzToleranceLabel = new System.Windows.Forms.Label();
+            this.TRFragmentMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
+            this.TRCTerminusMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
+            this.TRNTerminusMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.TRFragmentMzToleranceInfo = new System.Windows.Forms.Label();
+            this.TRPrecursorMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
+            this.TRNTerminusMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
+            this.TRNTerminusMzToleranceInfo = new System.Windows.Forms.Label();
+            this.TRFragmentMzToleranceLabel = new System.Windows.Forms.Label();
+            this.TRNTerminusMzToleranceLabel = new System.Windows.Forms.Label();
+            this.TRPrecursorMzToleranceInfo = new System.Windows.Forms.Label();
+            this.TRPrecursorMzToleranceLabel = new System.Windows.Forms.Label();
+            this.TRDigestionGB = new System.Windows.Forms.GroupBox();
+            this.TRMaxMissedCleavagesAuto = new System.Windows.Forms.Label();
+            this.TRMaxMissedCleavagesBox = new System.Windows.Forms.NumericUpDown();
+            this.TRMinTerminiCleavagesBox = new System.Windows.Forms.ComboBox();
+            this.TRCleavageRulesBox = new System.Windows.Forms.ComboBox();
+            this.TRCleavageRulesInfo = new System.Windows.Forms.Label();
+            this.TRCleavageRulesLabel = new System.Windows.Forms.Label();
+            this.TRMaxMissedCleavagesLabel = new System.Windows.Forms.Label();
+            this.TRMinTerminiCleavagesLabel = new System.Windows.Forms.Label();
+            this.TRInstrumentGB = new System.Windows.Forms.GroupBox();
+            this.TRInstrumentList = new System.Windows.Forms.ComboBox();
+            this.TRInstrumentLabel = new System.Windows.Forms.Label();
+            this.TRUseAvgMassOfSequencesBox = new System.Windows.Forms.ComboBox();
+            this.TRUseAvgMassOfSequencesLabel = new System.Windows.Forms.Label();
+            this.TRModGB = new System.Windows.Forms.GroupBox();
+            this.TRMaxAmbResultsForBlindModsLabel = new System.Windows.Forms.Label();
+            this.TRMaxAmbResultsForBlindModsBox = new System.Windows.Forms.NumericUpDown();
+            this.TRExplainUnknownMassShiftsAsBox = new System.Windows.Forms.ComboBox();
+            this.TRExplainUnknownMassShiftsAsLabel = new System.Windows.Forms.Label();
+            this.TRMaxNumPreferredDeltaMassesLabel = new System.Windows.Forms.Label();
+            this.TRMaxNumPreferredDeltaMassesBox = new System.Windows.Forms.NumericUpDown();
+            this.TRAppliedModBox = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewComboBoxColumn2 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.TRAppliedModLabel = new System.Windows.Forms.Label();
+            this.TRAppliedModRemove = new System.Windows.Forms.Button();
+            this.TRAppliedModAdd = new System.Windows.Forms.Button();
+            this.TRStaticModsInfo = new System.Windows.Forms.Label();
+            this.TRModTypeLabel = new System.Windows.Forms.Label();
+            this.TRModTypeList = new System.Windows.Forms.ComboBox();
+            this.TRModListLabel = new System.Windows.Forms.Label();
+            this.TRResidueLabel = new System.Windows.Forms.Label();
+            this.TRModMassLabel = new System.Windows.Forms.Label();
+            this.TRModMassText = new System.Windows.Forms.TextBox();
+            this.TRMaxDynamicModsBox = new System.Windows.Forms.NumericUpDown();
+            this.TRResidueText = new System.Windows.Forms.TextBox();
+            this.TRModList = new System.Windows.Forms.ListView();
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.TRMaxDynamicModsInfo = new System.Windows.Forms.Label();
+            this.TRMaxDynamicModsLabel = new System.Windows.Forms.Label();
             this.AdvTab = new System.Windows.Forms.TabPage();
             this.TRAdvPanel = new System.Windows.Forms.Panel();
             this.TRMiscGB = new System.Windows.Forms.GroupBox();
@@ -574,16 +574,6 @@ namespace BumberDash.Forms
             this.mainTabControl.SuspendLayout();
             this.Gentab.SuspendLayout();
             this.SlowFadePanel.SuspendLayout();
-            this.TRGenPanel.SuspendLayout();
-            this.TRToleranceGB.SuspendLayout();
-            this.TRDigestionGB.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxMissedCleavagesBox)).BeginInit();
-            this.TRInstrumentGB.SuspendLayout();
-            this.TRModGB.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxAmbResultsForBlindModsBox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxNumPreferredDeltaMassesBox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TRAppliedModBox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxDynamicModsBox)).BeginInit();
             this.PepGenPanel.SuspendLayout();
             this.PepModGB.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PepAppliedModBox)).BeginInit();
@@ -605,6 +595,16 @@ namespace BumberDash.Forms
             this.DTModGB.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DTAppliedModBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.DTMaxDynamicModsBox)).BeginInit();
+            this.TRGenPanel.SuspendLayout();
+            this.TRToleranceGB.SuspendLayout();
+            this.TRDigestionGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxMissedCleavagesBox)).BeginInit();
+            this.TRInstrumentGB.SuspendLayout();
+            this.TRModGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxAmbResultsForBlindModsBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxNumPreferredDeltaMassesBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TRAppliedModBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxDynamicModsBox)).BeginInit();
             this.AdvTab.SuspendLayout();
             this.TRAdvPanel.SuspendLayout();
             this.TRMiscGB.SuspendLayout();
@@ -763,761 +763,6 @@ namespace BumberDash.Forms
             this.label1.TabIndex = 0;
             this.label1.Text = "Non-Default Value";
             // 
-            // TRGenPanel
-            // 
-            this.TRGenPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.TRGenPanel.Controls.Add(this.TRToleranceGB);
-            this.TRGenPanel.Controls.Add(this.TRDigestionGB);
-            this.TRGenPanel.Controls.Add(this.TRInstrumentGB);
-            this.TRGenPanel.Controls.Add(this.TRModGB);
-            this.TRGenPanel.Location = new System.Drawing.Point(0, 0);
-            this.TRGenPanel.Name = "TRGenPanel";
-            this.TRGenPanel.Size = new System.Drawing.Size(538, 528);
-            this.TRGenPanel.TabIndex = 3;
-            // 
-            // TRToleranceGB
-            // 
-            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceBox);
-            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceBox);
-            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceInfo);
-            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceBox);
-            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceLabel);
-            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceUnitsList);
-            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceUnitsList);
-            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceBox);
-            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceInfo);
-            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceUnitsList);
-            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceUnitsList);
-            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceInfo);
-            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceLabel);
-            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceLabel);
-            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceInfo);
-            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceLabel);
-            this.TRToleranceGB.Location = new System.Drawing.Point(8, 129);
-            this.TRToleranceGB.Name = "TRToleranceGB";
-            this.TRToleranceGB.Size = new System.Drawing.Size(514, 76);
-            this.TRToleranceGB.TabIndex = 3;
-            this.TRToleranceGB.TabStop = false;
-            this.TRToleranceGB.Text = "Tolerance";
-            // 
-            // TRCTerminusMzToleranceBox
-            // 
-            this.TRCTerminusMzToleranceBox.Enabled = false;
-            this.TRCTerminusMzToleranceBox.Location = new System.Drawing.Point(388, 42);
-            this.TRCTerminusMzToleranceBox.Name = "TRCTerminusMzToleranceBox";
-            this.TRCTerminusMzToleranceBox.Size = new System.Drawing.Size(55, 20);
-            this.TRCTerminusMzToleranceBox.TabIndex = 7;
-            this.TRCTerminusMzToleranceBox.Text = "1.25";
-            this.TRCTerminusMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
-            this.TRCTerminusMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            // 
-            // TRFragmentMzToleranceBox
-            // 
-            this.TRFragmentMzToleranceBox.Enabled = false;
-            this.TRFragmentMzToleranceBox.Location = new System.Drawing.Point(389, 15);
-            this.TRFragmentMzToleranceBox.Name = "TRFragmentMzToleranceBox";
-            this.TRFragmentMzToleranceBox.Size = new System.Drawing.Size(54, 20);
-            this.TRFragmentMzToleranceBox.TabIndex = 3;
-            this.TRFragmentMzToleranceBox.Text = "0.5";
-            this.TRFragmentMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
-            this.TRFragmentMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            // 
-            // TRCTerminusMzToleranceInfo
-            // 
-            this.TRCTerminusMzToleranceInfo.AutoSize = true;
-            this.TRCTerminusMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TRCTerminusMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRCTerminusMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TRCTerminusMzToleranceInfo.Location = new System.Drawing.Point(378, 37);
-            this.TRCTerminusMzToleranceInfo.Name = "TRCTerminusMzToleranceInfo";
-            this.TRCTerminusMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
-            this.TRCTerminusMzToleranceInfo.TabIndex = 74;
-            this.TRCTerminusMzToleranceInfo.Text = "?";
-            // 
-            // TRPrecursorMzToleranceBox
-            // 
-            this.TRPrecursorMzToleranceBox.Enabled = false;
-            this.TRPrecursorMzToleranceBox.Location = new System.Drawing.Point(135, 15);
-            this.TRPrecursorMzToleranceBox.Name = "TRPrecursorMzToleranceBox";
-            this.TRPrecursorMzToleranceBox.Size = new System.Drawing.Size(54, 20);
-            this.TRPrecursorMzToleranceBox.TabIndex = 1;
-            this.TRPrecursorMzToleranceBox.Text = "1.25";
-            this.TRPrecursorMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
-            this.TRPrecursorMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            // 
-            // TRCTerminusMzToleranceLabel
-            // 
-            this.TRCTerminusMzToleranceLabel.AutoSize = true;
-            this.TRCTerminusMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRCTerminusMzToleranceLabel.Location = new System.Drawing.Point(256, 45);
-            this.TRCTerminusMzToleranceLabel.Name = "TRCTerminusMzToleranceLabel";
-            this.TRCTerminusMzToleranceLabel.Size = new System.Drawing.Size(126, 13);
-            this.TRCTerminusMzToleranceLabel.TabIndex = 6;
-            this.TRCTerminusMzToleranceLabel.Text = "C-Terminus m/z tolerance:";
-            this.TRCTerminusMzToleranceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // TRFragmentMzToleranceUnitsList
-            // 
-            this.TRFragmentMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRFragmentMzToleranceUnitsList.Enabled = false;
-            this.TRFragmentMzToleranceUnitsList.FormattingEnabled = true;
-            this.TRFragmentMzToleranceUnitsList.Items.AddRange(new object[] {
-            "mz"});
-            this.TRFragmentMzToleranceUnitsList.Location = new System.Drawing.Point(450, 15);
-            this.TRFragmentMzToleranceUnitsList.Name = "TRFragmentMzToleranceUnitsList";
-            this.TRFragmentMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
-            this.TRFragmentMzToleranceUnitsList.TabIndex = 4;
-            // 
-            // TRCTerminusMzToleranceUnitsList
-            // 
-            this.TRCTerminusMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRCTerminusMzToleranceUnitsList.Enabled = false;
-            this.TRCTerminusMzToleranceUnitsList.FormattingEnabled = true;
-            this.TRCTerminusMzToleranceUnitsList.Items.AddRange(new object[] {
-            "mz"});
-            this.TRCTerminusMzToleranceUnitsList.Location = new System.Drawing.Point(450, 42);
-            this.TRCTerminusMzToleranceUnitsList.Name = "TRCTerminusMzToleranceUnitsList";
-            this.TRCTerminusMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
-            this.TRCTerminusMzToleranceUnitsList.TabIndex = 8;
-            // 
-            // TRNTerminusMzToleranceBox
-            // 
-            this.TRNTerminusMzToleranceBox.Enabled = false;
-            this.TRNTerminusMzToleranceBox.Location = new System.Drawing.Point(135, 42);
-            this.TRNTerminusMzToleranceBox.Name = "TRNTerminusMzToleranceBox";
-            this.TRNTerminusMzToleranceBox.Size = new System.Drawing.Size(54, 20);
-            this.TRNTerminusMzToleranceBox.TabIndex = 5;
-            this.TRNTerminusMzToleranceBox.Text = "1.5";
-            this.TRNTerminusMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
-            this.TRNTerminusMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            // 
-            // TRFragmentMzToleranceInfo
-            // 
-            this.TRFragmentMzToleranceInfo.AutoSize = true;
-            this.TRFragmentMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TRFragmentMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRFragmentMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TRFragmentMzToleranceInfo.Location = new System.Drawing.Point(378, 11);
-            this.TRFragmentMzToleranceInfo.Name = "TRFragmentMzToleranceInfo";
-            this.TRFragmentMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
-            this.TRFragmentMzToleranceInfo.TabIndex = 73;
-            this.TRFragmentMzToleranceInfo.Text = "?";
-            // 
-            // TRPrecursorMzToleranceUnitsList
-            // 
-            this.TRPrecursorMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRPrecursorMzToleranceUnitsList.Enabled = false;
-            this.TRPrecursorMzToleranceUnitsList.FormattingEnabled = true;
-            this.TRPrecursorMzToleranceUnitsList.Items.AddRange(new object[] {
-            "mz"});
-            this.TRPrecursorMzToleranceUnitsList.Location = new System.Drawing.Point(195, 15);
-            this.TRPrecursorMzToleranceUnitsList.Name = "TRPrecursorMzToleranceUnitsList";
-            this.TRPrecursorMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
-            this.TRPrecursorMzToleranceUnitsList.TabIndex = 2;
-            // 
-            // TRNTerminusMzToleranceUnitsList
-            // 
-            this.TRNTerminusMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRNTerminusMzToleranceUnitsList.Enabled = false;
-            this.TRNTerminusMzToleranceUnitsList.FormattingEnabled = true;
-            this.TRNTerminusMzToleranceUnitsList.Items.AddRange(new object[] {
-            "mz"});
-            this.TRNTerminusMzToleranceUnitsList.Location = new System.Drawing.Point(195, 42);
-            this.TRNTerminusMzToleranceUnitsList.Name = "TRNTerminusMzToleranceUnitsList";
-            this.TRNTerminusMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
-            this.TRNTerminusMzToleranceUnitsList.TabIndex = 6;
-            // 
-            // TRNTerminusMzToleranceInfo
-            // 
-            this.TRNTerminusMzToleranceInfo.AutoSize = true;
-            this.TRNTerminusMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TRNTerminusMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRNTerminusMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TRNTerminusMzToleranceInfo.Location = new System.Drawing.Point(124, 37);
-            this.TRNTerminusMzToleranceInfo.Name = "TRNTerminusMzToleranceInfo";
-            this.TRNTerminusMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
-            this.TRNTerminusMzToleranceInfo.TabIndex = 73;
-            this.TRNTerminusMzToleranceInfo.Text = "?";
-            // 
-            // TRFragmentMzToleranceLabel
-            // 
-            this.TRFragmentMzToleranceLabel.AutoSize = true;
-            this.TRFragmentMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRFragmentMzToleranceLabel.Location = new System.Drawing.Point(261, 19);
-            this.TRFragmentMzToleranceLabel.Name = "TRFragmentMzToleranceLabel";
-            this.TRFragmentMzToleranceLabel.Size = new System.Drawing.Size(122, 13);
-            this.TRFragmentMzToleranceLabel.TabIndex = 5;
-            this.TRFragmentMzToleranceLabel.Text = "Fragment m/z tolerance:";
-            // 
-            // TRNTerminusMzToleranceLabel
-            // 
-            this.TRNTerminusMzToleranceLabel.AutoSize = true;
-            this.TRNTerminusMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRNTerminusMzToleranceLabel.Location = new System.Drawing.Point(2, 45);
-            this.TRNTerminusMzToleranceLabel.Name = "TRNTerminusMzToleranceLabel";
-            this.TRNTerminusMzToleranceLabel.Size = new System.Drawing.Size(126, 13);
-            this.TRNTerminusMzToleranceLabel.TabIndex = 1;
-            this.TRNTerminusMzToleranceLabel.Text = "N-Terminus m/z tolerance:";
-            this.TRNTerminusMzToleranceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // TRPrecursorMzToleranceInfo
-            // 
-            this.TRPrecursorMzToleranceInfo.AutoSize = true;
-            this.TRPrecursorMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TRPrecursorMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRPrecursorMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TRPrecursorMzToleranceInfo.Location = new System.Drawing.Point(124, 10);
-            this.TRPrecursorMzToleranceInfo.Name = "TRPrecursorMzToleranceInfo";
-            this.TRPrecursorMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
-            this.TRPrecursorMzToleranceInfo.TabIndex = 72;
-            this.TRPrecursorMzToleranceInfo.Text = "?";
-            // 
-            // TRPrecursorMzToleranceLabel
-            // 
-            this.TRPrecursorMzToleranceLabel.AutoSize = true;
-            this.TRPrecursorMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRPrecursorMzToleranceLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.TRPrecursorMzToleranceLabel.Location = new System.Drawing.Point(6, 18);
-            this.TRPrecursorMzToleranceLabel.Name = "TRPrecursorMzToleranceLabel";
-            this.TRPrecursorMzToleranceLabel.Size = new System.Drawing.Size(123, 13);
-            this.TRPrecursorMzToleranceLabel.TabIndex = 0;
-            this.TRPrecursorMzToleranceLabel.Text = "Precursor m/z tolerance:";
-            // 
-            // TRDigestionGB
-            // 
-            this.TRDigestionGB.Controls.Add(this.TRMaxMissedCleavagesAuto);
-            this.TRDigestionGB.Controls.Add(this.TRMaxMissedCleavagesBox);
-            this.TRDigestionGB.Controls.Add(this.TRMinTerminiCleavagesBox);
-            this.TRDigestionGB.Controls.Add(this.TRCleavageRulesBox);
-            this.TRDigestionGB.Controls.Add(this.TRCleavageRulesInfo);
-            this.TRDigestionGB.Controls.Add(this.TRCleavageRulesLabel);
-            this.TRDigestionGB.Controls.Add(this.TRMaxMissedCleavagesLabel);
-            this.TRDigestionGB.Controls.Add(this.TRMinTerminiCleavagesLabel);
-            this.TRDigestionGB.Location = new System.Drawing.Point(268, 6);
-            this.TRDigestionGB.Name = "TRDigestionGB";
-            this.TRDigestionGB.Size = new System.Drawing.Size(254, 117);
-            this.TRDigestionGB.TabIndex = 2;
-            this.TRDigestionGB.TabStop = false;
-            this.TRDigestionGB.Text = "Digestion";
-            // 
-            // TRMaxMissedCleavagesAuto
-            // 
-            this.TRMaxMissedCleavagesAuto.BackColor = System.Drawing.Color.White;
-            this.TRMaxMissedCleavagesAuto.Enabled = false;
-            this.TRMaxMissedCleavagesAuto.Font = new System.Drawing.Font("Calibri", 13F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRMaxMissedCleavagesAuto.Location = new System.Drawing.Point(183, 85);
-            this.TRMaxMissedCleavagesAuto.Name = "TRMaxMissedCleavagesAuto";
-            this.TRMaxMissedCleavagesAuto.Size = new System.Drawing.Size(23, 18);
-            this.TRMaxMissedCleavagesAuto.TabIndex = 78;
-            this.TRMaxMissedCleavagesAuto.Text = "∞";
-            // 
-            // TRMaxMissedCleavagesBox
-            // 
-            this.TRMaxMissedCleavagesBox.Enabled = false;
-            this.TRMaxMissedCleavagesBox.Location = new System.Drawing.Point(182, 84);
-            this.TRMaxMissedCleavagesBox.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.TRMaxMissedCleavagesBox.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            -2147483648});
-            this.TRMaxMissedCleavagesBox.Name = "TRMaxMissedCleavagesBox";
-            this.TRMaxMissedCleavagesBox.Size = new System.Drawing.Size(40, 20);
-            this.TRMaxMissedCleavagesBox.TabIndex = 2;
-            this.TRMaxMissedCleavagesBox.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            -2147483648});
-            this.TRMaxMissedCleavagesBox.ValueChanged += new System.EventHandler(this.NumMaxMissedCleavagesBox_ValueChanged);
-            // 
-            // TRMinTerminiCleavagesBox
-            // 
-            this.TRMinTerminiCleavagesBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRMinTerminiCleavagesBox.FormattingEnabled = true;
-            this.TRMinTerminiCleavagesBox.Items.AddRange(new object[] {
-            "Non-Specific",
-            "Semi-Specific",
-            "Fully-Specific"});
-            this.TRMinTerminiCleavagesBox.Location = new System.Drawing.Point(130, 51);
-            this.TRMinTerminiCleavagesBox.Name = "TRMinTerminiCleavagesBox";
-            this.TRMinTerminiCleavagesBox.Size = new System.Drawing.Size(92, 21);
-            this.TRMinTerminiCleavagesBox.TabIndex = 1;
-            // 
-            // TRCleavageRulesBox
-            // 
-            this.TRCleavageRulesBox.FormattingEnabled = true;
-            this.TRCleavageRulesBox.Items.AddRange(new object[] {
-            "Trypsin",
-            "Trypsin/P",
-            "Chymotrypsin",
-            "TrypChymo",
-            "Lys-C",
-            "Lys-C/P",
-            "Asp-N",
-            "PepsinA",
-            "CNBr",
-            "Formic_acid"});
-            this.TRCleavageRulesBox.Location = new System.Drawing.Point(82, 19);
-            this.TRCleavageRulesBox.Name = "TRCleavageRulesBox";
-            this.TRCleavageRulesBox.Size = new System.Drawing.Size(140, 21);
-            this.TRCleavageRulesBox.TabIndex = 0;
-            this.TRCleavageRulesBox.Text = "Trypsin/P";
-            // 
-            // TRCleavageRulesInfo
-            // 
-            this.TRCleavageRulesInfo.AutoSize = true;
-            this.TRCleavageRulesInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TRCleavageRulesInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRCleavageRulesInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TRCleavageRulesInfo.Location = new System.Drawing.Point(71, 14);
-            this.TRCleavageRulesInfo.Name = "TRCleavageRulesInfo";
-            this.TRCleavageRulesInfo.Size = new System.Drawing.Size(13, 13);
-            this.TRCleavageRulesInfo.TabIndex = 69;
-            this.TRCleavageRulesInfo.Text = "?";
-            // 
-            // TRCleavageRulesLabel
-            // 
-            this.TRCleavageRulesLabel.AutoSize = true;
-            this.TRCleavageRulesLabel.Location = new System.Drawing.Point(29, 22);
-            this.TRCleavageRulesLabel.Name = "TRCleavageRulesLabel";
-            this.TRCleavageRulesLabel.Size = new System.Drawing.Size(47, 13);
-            this.TRCleavageRulesLabel.TabIndex = 0;
-            this.TRCleavageRulesLabel.Text = "Enzyme:";
-            // 
-            // TRMaxMissedCleavagesLabel
-            // 
-            this.TRMaxMissedCleavagesLabel.AutoSize = true;
-            this.TRMaxMissedCleavagesLabel.Location = new System.Drawing.Point(57, 86);
-            this.TRMaxMissedCleavagesLabel.Name = "TRMaxMissedCleavagesLabel";
-            this.TRMaxMissedCleavagesLabel.Size = new System.Drawing.Size(119, 13);
-            this.TRMaxMissedCleavagesLabel.TabIndex = 6;
-            this.TRMaxMissedCleavagesLabel.Text = "Max Missed Cleavages:";
-            // 
-            // TRMinTerminiCleavagesLabel
-            // 
-            this.TRMinTerminiCleavagesLabel.AutoSize = true;
-            this.TRMinTerminiCleavagesLabel.Location = new System.Drawing.Point(66, 55);
-            this.TRMinTerminiCleavagesLabel.Name = "TRMinTerminiCleavagesLabel";
-            this.TRMinTerminiCleavagesLabel.Size = new System.Drawing.Size(58, 13);
-            this.TRMinTerminiCleavagesLabel.TabIndex = 1;
-            this.TRMinTerminiCleavagesLabel.Text = "Specificity:";
-            // 
-            // TRInstrumentGB
-            // 
-            this.TRInstrumentGB.Controls.Add(this.TRInstrumentList);
-            this.TRInstrumentGB.Controls.Add(this.TRInstrumentLabel);
-            this.TRInstrumentGB.Controls.Add(this.TRUseAvgMassOfSequencesBox);
-            this.TRInstrumentGB.Controls.Add(this.TRUseAvgMassOfSequencesLabel);
-            this.TRInstrumentGB.Location = new System.Drawing.Point(8, 6);
-            this.TRInstrumentGB.Name = "TRInstrumentGB";
-            this.TRInstrumentGB.Size = new System.Drawing.Size(254, 117);
-            this.TRInstrumentGB.TabIndex = 1;
-            this.TRInstrumentGB.TabStop = false;
-            this.TRInstrumentGB.Text = "Instrument Specific";
-            // 
-            // TRInstrumentList
-            // 
-            this.TRInstrumentList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.TRInstrumentList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRInstrumentList.FormattingEnabled = true;
-            this.TRInstrumentList.Location = new System.Drawing.Point(102, 33);
-            this.TRInstrumentList.Name = "TRInstrumentList";
-            this.TRInstrumentList.Size = new System.Drawing.Size(116, 21);
-            this.TRInstrumentList.TabIndex = 0;
-            this.TRInstrumentList.SelectedIndexChanged += new System.EventHandler(this.InstrumentList_SelectedIndexChanged);
-            // 
-            // TRInstrumentLabel
-            // 
-            this.TRInstrumentLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.TRInstrumentLabel.AutoSize = true;
-            this.TRInstrumentLabel.Location = new System.Drawing.Point(37, 36);
-            this.TRInstrumentLabel.Name = "TRInstrumentLabel";
-            this.TRInstrumentLabel.Size = new System.Drawing.Size(59, 13);
-            this.TRInstrumentLabel.TabIndex = 45;
-            this.TRInstrumentLabel.Text = "Instrument:";
-            // 
-            // TRUseAvgMassOfSequencesBox
-            // 
-            this.TRUseAvgMassOfSequencesBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRUseAvgMassOfSequencesBox.FormattingEnabled = true;
-            this.TRUseAvgMassOfSequencesBox.Items.AddRange(new object[] {
-            "mono",
-            "avg"});
-            this.TRUseAvgMassOfSequencesBox.Location = new System.Drawing.Point(126, 62);
-            this.TRUseAvgMassOfSequencesBox.Name = "TRUseAvgMassOfSequencesBox";
-            this.TRUseAvgMassOfSequencesBox.Size = new System.Drawing.Size(92, 21);
-            this.TRUseAvgMassOfSequencesBox.TabIndex = 2;
-            // 
-            // TRUseAvgMassOfSequencesLabel
-            // 
-            this.TRUseAvgMassOfSequencesLabel.AutoSize = true;
-            this.TRUseAvgMassOfSequencesLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.TRUseAvgMassOfSequencesLabel.Location = new System.Drawing.Point(37, 65);
-            this.TRUseAvgMassOfSequencesLabel.Name = "TRUseAvgMassOfSequencesLabel";
-            this.TRUseAvgMassOfSequencesLabel.Size = new System.Drawing.Size(83, 13);
-            this.TRUseAvgMassOfSequencesLabel.TabIndex = 42;
-            this.TRUseAvgMassOfSequencesLabel.Text = "Precursor Mass:";
-            // 
-            // TRModGB
-            // 
-            this.TRModGB.Controls.Add(this.TRMaxAmbResultsForBlindModsLabel);
-            this.TRModGB.Controls.Add(this.TRMaxAmbResultsForBlindModsBox);
-            this.TRModGB.Controls.Add(this.TRExplainUnknownMassShiftsAsBox);
-            this.TRModGB.Controls.Add(this.TRExplainUnknownMassShiftsAsLabel);
-            this.TRModGB.Controls.Add(this.TRMaxNumPreferredDeltaMassesLabel);
-            this.TRModGB.Controls.Add(this.TRMaxNumPreferredDeltaMassesBox);
-            this.TRModGB.Controls.Add(this.TRAppliedModBox);
-            this.TRModGB.Controls.Add(this.TRAppliedModLabel);
-            this.TRModGB.Controls.Add(this.TRAppliedModRemove);
-            this.TRModGB.Controls.Add(this.TRAppliedModAdd);
-            this.TRModGB.Controls.Add(this.TRStaticModsInfo);
-            this.TRModGB.Controls.Add(this.TRModTypeLabel);
-            this.TRModGB.Controls.Add(this.TRModTypeList);
-            this.TRModGB.Controls.Add(this.TRModListLabel);
-            this.TRModGB.Controls.Add(this.TRResidueLabel);
-            this.TRModGB.Controls.Add(this.TRModMassLabel);
-            this.TRModGB.Controls.Add(this.TRModMassText);
-            this.TRModGB.Controls.Add(this.TRMaxDynamicModsBox);
-            this.TRModGB.Controls.Add(this.TRResidueText);
-            this.TRModGB.Controls.Add(this.TRModList);
-            this.TRModGB.Controls.Add(this.TRMaxDynamicModsInfo);
-            this.TRModGB.Controls.Add(this.TRMaxDynamicModsLabel);
-            this.TRModGB.Location = new System.Drawing.Point(8, 211);
-            this.TRModGB.Name = "TRModGB";
-            this.TRModGB.Size = new System.Drawing.Size(514, 310);
-            this.TRModGB.TabIndex = 4;
-            this.TRModGB.TabStop = false;
-            this.TRModGB.Text = "Modifications";
-            // 
-            // TRMaxAmbResultsForBlindModsLabel
-            // 
-            this.TRMaxAmbResultsForBlindModsLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRMaxAmbResultsForBlindModsLabel.AutoSize = true;
-            this.TRMaxAmbResultsForBlindModsLabel.Location = new System.Drawing.Point(252, 23);
-            this.TRMaxAmbResultsForBlindModsLabel.Name = "TRMaxAmbResultsForBlindModsLabel";
-            this.TRMaxAmbResultsForBlindModsLabel.Size = new System.Drawing.Size(193, 13);
-            this.TRMaxAmbResultsForBlindModsLabel.TabIndex = 96;
-            this.TRMaxAmbResultsForBlindModsLabel.Text = "Max Ambiguous Results for Blind Mods:";
-            // 
-            // TRMaxAmbResultsForBlindModsBox
-            // 
-            this.TRMaxAmbResultsForBlindModsBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRMaxAmbResultsForBlindModsBox.Location = new System.Drawing.Point(451, 19);
-            this.TRMaxAmbResultsForBlindModsBox.Name = "TRMaxAmbResultsForBlindModsBox";
-            this.TRMaxAmbResultsForBlindModsBox.Size = new System.Drawing.Size(45, 20);
-            this.TRMaxAmbResultsForBlindModsBox.TabIndex = 95;
-            this.TRMaxAmbResultsForBlindModsBox.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
-            // 
-            // TRExplainUnknownMassShiftsAsBox
-            // 
-            this.TRExplainUnknownMassShiftsAsBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRExplainUnknownMassShiftsAsBox.FormattingEnabled = true;
-            this.TRExplainUnknownMassShiftsAsBox.Items.AddRange(new object[] {
-            "",
-            "blindptms",
-            "preferredptms",
-            "mutations"});
-            this.TRExplainUnknownMassShiftsAsBox.Location = new System.Drawing.Point(115, 19);
-            this.TRExplainUnknownMassShiftsAsBox.Name = "TRExplainUnknownMassShiftsAsBox";
-            this.TRExplainUnknownMassShiftsAsBox.Size = new System.Drawing.Size(131, 21);
-            this.TRExplainUnknownMassShiftsAsBox.TabIndex = 1;
-            this.TRExplainUnknownMassShiftsAsBox.SelectedIndexChanged += new System.EventHandler(this.ExplainUnknownMassShiftsAsBox_SelectedIndexChanged);
-            // 
-            // TRExplainUnknownMassShiftsAsLabel
-            // 
-            this.TRExplainUnknownMassShiftsAsLabel.AutoSize = true;
-            this.TRExplainUnknownMassShiftsAsLabel.Location = new System.Drawing.Point(19, 15);
-            this.TRExplainUnknownMassShiftsAsLabel.Name = "TRExplainUnknownMassShiftsAsLabel";
-            this.TRExplainUnknownMassShiftsAsLabel.Size = new System.Drawing.Size(90, 26);
-            this.TRExplainUnknownMassShiftsAsLabel.TabIndex = 94;
-            this.TRExplainUnknownMassShiftsAsLabel.Text = "Explain Unknown\r\nMass Shifts As:";
-            // 
-            // TRMaxNumPreferredDeltaMassesLabel
-            // 
-            this.TRMaxNumPreferredDeltaMassesLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRMaxNumPreferredDeltaMassesLabel.AutoSize = true;
-            this.TRMaxNumPreferredDeltaMassesLabel.Location = new System.Drawing.Point(279, 263);
-            this.TRMaxNumPreferredDeltaMassesLabel.Name = "TRMaxNumPreferredDeltaMassesLabel";
-            this.TRMaxNumPreferredDeltaMassesLabel.Size = new System.Drawing.Size(50, 39);
-            this.TRMaxNumPreferredDeltaMassesLabel.TabIndex = 87;
-            this.TRMaxNumPreferredDeltaMassesLabel.Text = "Max\r\nPreferred\r\nPTMs:";
-            // 
-            // TRMaxNumPreferredDeltaMassesBox
-            // 
-            this.TRMaxNumPreferredDeltaMassesBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRMaxNumPreferredDeltaMassesBox.Location = new System.Drawing.Point(335, 283);
-            this.TRMaxNumPreferredDeltaMassesBox.Name = "TRMaxNumPreferredDeltaMassesBox";
-            this.TRMaxNumPreferredDeltaMassesBox.Size = new System.Drawing.Size(45, 20);
-            this.TRMaxNumPreferredDeltaMassesBox.TabIndex = 9;
-            this.TRMaxNumPreferredDeltaMassesBox.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.TRMaxNumPreferredDeltaMassesBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
-            // 
-            // TRAppliedModBox
-            // 
-            this.TRAppliedModBox.AllowUserToAddRows = false;
-            this.TRAppliedModBox.AllowUserToDeleteRows = false;
-            this.TRAppliedModBox.AllowUserToResizeColumns = false;
-            this.TRAppliedModBox.AllowUserToResizeRows = false;
-            this.TRAppliedModBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRAppliedModBox.BackgroundColor = System.Drawing.SystemColors.Window;
-            this.TRAppliedModBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle11.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.TRAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle11;
-            this.TRAppliedModBox.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.TRAppliedModBox.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.dataGridViewTextBoxColumn3,
-            this.dataGridViewTextBoxColumn4,
-            this.dataGridViewComboBoxColumn2});
-            dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle12.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle12.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle12.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle12.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle12.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.TRAppliedModBox.DefaultCellStyle = dataGridViewCellStyle12;
-            this.TRAppliedModBox.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-            this.TRAppliedModBox.Location = new System.Drawing.Point(282, 59);
-            this.TRAppliedModBox.MultiSelect = false;
-            this.TRAppliedModBox.Name = "TRAppliedModBox";
-            this.TRAppliedModBox.RowHeadersVisible = false;
-            this.TRAppliedModBox.RowTemplate.Height = 24;
-            this.TRAppliedModBox.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.TRAppliedModBox.ShowCellErrors = false;
-            this.TRAppliedModBox.Size = new System.Drawing.Size(226, 199);
-            this.TRAppliedModBox.TabIndex = 8;
-            this.TRAppliedModBox.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.AppliedModBox_RowsAdded);
-            this.TRAppliedModBox.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.AppliedModBox_RowsRemoved);
-            // 
-            // dataGridViewTextBoxColumn3
-            // 
-            this.dataGridViewTextBoxColumn3.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn3.HeaderText = "Motif";
-            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
-            this.dataGridViewTextBoxColumn3.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // dataGridViewTextBoxColumn4
-            // 
-            this.dataGridViewTextBoxColumn4.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn4.HeaderText = "Mass";
-            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
-            this.dataGridViewTextBoxColumn4.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // dataGridViewComboBoxColumn2
-            // 
-            this.dataGridViewComboBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewComboBoxColumn2.FillWeight = 150F;
-            this.dataGridViewComboBoxColumn2.HeaderText = "Type";
-            this.dataGridViewComboBoxColumn2.Items.AddRange(new object[] {
-            "Static",
-            "Dynamic",
-            "PreferredPTM"});
-            this.dataGridViewComboBoxColumn2.Name = "dataGridViewComboBoxColumn2";
-            this.dataGridViewComboBoxColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewComboBoxColumn2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // TRAppliedModLabel
-            // 
-            this.TRAppliedModLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRAppliedModLabel.AutoSize = true;
-            this.TRAppliedModLabel.Location = new System.Drawing.Point(279, 43);
-            this.TRAppliedModLabel.Name = "TRAppliedModLabel";
-            this.TRAppliedModLabel.Size = new System.Drawing.Size(88, 13);
-            this.TRAppliedModLabel.TabIndex = 91;
-            this.TRAppliedModLabel.Text = "Applied Mod List:";
-            // 
-            // TRAppliedModRemove
-            // 
-            this.TRAppliedModRemove.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRAppliedModRemove.Location = new System.Drawing.Point(244, 165);
-            this.TRAppliedModRemove.Name = "TRAppliedModRemove";
-            this.TRAppliedModRemove.Size = new System.Drawing.Size(32, 23);
-            this.TRAppliedModRemove.TabIndex = 7;
-            this.TRAppliedModRemove.Text = "<";
-            this.TRAppliedModRemove.UseVisualStyleBackColor = true;
-            this.TRAppliedModRemove.Click += new System.EventHandler(this.AppliedModRemove_Click);
-            // 
-            // TRAppliedModAdd
-            // 
-            this.TRAppliedModAdd.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRAppliedModAdd.Location = new System.Drawing.Point(244, 136);
-            this.TRAppliedModAdd.Name = "TRAppliedModAdd";
-            this.TRAppliedModAdd.Size = new System.Drawing.Size(32, 23);
-            this.TRAppliedModAdd.TabIndex = 6;
-            this.TRAppliedModAdd.Text = ">";
-            this.TRAppliedModAdd.UseVisualStyleBackColor = true;
-            this.TRAppliedModAdd.Click += new System.EventHandler(this.AppliedModAdd_Click);
-            // 
-            // TRStaticModsInfo
-            // 
-            this.TRStaticModsInfo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRStaticModsInfo.AutoSize = true;
-            this.TRStaticModsInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TRStaticModsInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRStaticModsInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TRStaticModsInfo.Location = new System.Drawing.Point(198, 258);
-            this.TRStaticModsInfo.Name = "TRStaticModsInfo";
-            this.TRStaticModsInfo.Size = new System.Drawing.Size(13, 13);
-            this.TRStaticModsInfo.TabIndex = 75;
-            this.TRStaticModsInfo.Text = "?";
-            // 
-            // TRModTypeLabel
-            // 
-            this.TRModTypeLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRModTypeLabel.AutoSize = true;
-            this.TRModTypeLabel.Location = new System.Drawing.Point(145, 266);
-            this.TRModTypeLabel.Name = "TRModTypeLabel";
-            this.TRModTypeLabel.Size = new System.Drawing.Size(58, 13);
-            this.TRModTypeLabel.TabIndex = 82;
-            this.TRModTypeLabel.Text = "Mod Type:";
-            // 
-            // TRModTypeList
-            // 
-            this.TRModTypeList.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRModTypeList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.TRModTypeList.FormattingEnabled = true;
-            this.TRModTypeList.Items.AddRange(new object[] {
-            "Static",
-            "Dynamic",
-            "PreferredPTM"});
-            this.TRModTypeList.Location = new System.Drawing.Point(148, 281);
-            this.TRModTypeList.Name = "TRModTypeList";
-            this.TRModTypeList.Size = new System.Drawing.Size(90, 21);
-            this.TRModTypeList.TabIndex = 5;
-            // 
-            // TRModListLabel
-            // 
-            this.TRModListLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRModListLabel.AutoSize = true;
-            this.TRModListLabel.Location = new System.Drawing.Point(6, 43);
-            this.TRModListLabel.Name = "TRModListLabel";
-            this.TRModListLabel.Size = new System.Drawing.Size(50, 13);
-            this.TRModListLabel.TabIndex = 54;
-            this.TRModListLabel.Text = "Mod List:";
-            // 
-            // TRResidueLabel
-            // 
-            this.TRResidueLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRResidueLabel.AutoSize = true;
-            this.TRResidueLabel.Location = new System.Drawing.Point(4, 266);
-            this.TRResidueLabel.Name = "TRResidueLabel";
-            this.TRResidueLabel.Size = new System.Drawing.Size(76, 13);
-            this.TRResidueLabel.TabIndex = 57;
-            this.TRResidueLabel.Text = "Redidue Motif:";
-            // 
-            // TRModMassLabel
-            // 
-            this.TRModMassLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRModMassLabel.AutoSize = true;
-            this.TRModMassLabel.Location = new System.Drawing.Point(83, 266);
-            this.TRModMassLabel.Name = "TRModMassLabel";
-            this.TRModMassLabel.Size = new System.Drawing.Size(59, 13);
-            this.TRModMassLabel.TabIndex = 58;
-            this.TRModMassLabel.Text = "Mod Mass:";
-            // 
-            // TRModMassText
-            // 
-            this.TRModMassText.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRModMassText.Location = new System.Drawing.Point(86, 282);
-            this.TRModMassText.Name = "TRModMassText";
-            this.TRModMassText.Size = new System.Drawing.Size(56, 20);
-            this.TRModMassText.TabIndex = 4;
-            this.TRModMassText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ModMassText_KeyPress);
-            this.TRModMassText.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            // 
-            // TRMaxDynamicModsBox
-            // 
-            this.TRMaxDynamicModsBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRMaxDynamicModsBox.Location = new System.Drawing.Point(463, 282);
-            this.TRMaxDynamicModsBox.Name = "TRMaxDynamicModsBox";
-            this.TRMaxDynamicModsBox.Size = new System.Drawing.Size(45, 20);
-            this.TRMaxDynamicModsBox.TabIndex = 10;
-            this.TRMaxDynamicModsBox.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
-            this.TRMaxDynamicModsBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
-            // 
-            // TRResidueText
-            // 
-            this.TRResidueText.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRResidueText.Location = new System.Drawing.Point(7, 282);
-            this.TRResidueText.Name = "TRResidueText";
-            this.TRResidueText.Size = new System.Drawing.Size(73, 20);
-            this.TRResidueText.TabIndex = 3;
-            this.TRResidueText.TextChanged += new System.EventHandler(this.ResidueText_TextChanged);
-            // 
-            // TRModList
-            // 
-            this.TRModList.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRModList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader2});
-            this.TRModList.FullRowSelect = true;
-            this.TRModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem26,
-            listViewItem27,
-            listViewItem28,
-            listViewItem29,
-            listViewItem30});
-            this.TRModList.Location = new System.Drawing.Point(7, 59);
-            this.TRModList.MultiSelect = false;
-            this.TRModList.Name = "TRModList";
-            this.TRModList.Size = new System.Drawing.Size(231, 199);
-            this.TRModList.TabIndex = 2;
-            this.TRModList.UseCompatibleStateImageBehavior = false;
-            this.TRModList.View = System.Windows.Forms.View.Details;
-            this.TRModList.SelectedIndexChanged += new System.EventHandler(this.ModList_SelectedIndexChanged);
-            // 
-            // columnHeader2
-            // 
-            this.columnHeader2.Text = "Description";
-            this.columnHeader2.Width = 205;
-            // 
-            // TRMaxDynamicModsInfo
-            // 
-            this.TRMaxDynamicModsInfo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRMaxDynamicModsInfo.AutoSize = true;
-            this.TRMaxDynamicModsInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TRMaxDynamicModsInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TRMaxDynamicModsInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TRMaxDynamicModsInfo.Location = new System.Drawing.Point(452, 271);
-            this.TRMaxDynamicModsInfo.Name = "TRMaxDynamicModsInfo";
-            this.TRMaxDynamicModsInfo.Size = new System.Drawing.Size(13, 13);
-            this.TRMaxDynamicModsInfo.TabIndex = 75;
-            this.TRMaxDynamicModsInfo.Text = "?";
-            // 
-            // TRMaxDynamicModsLabel
-            // 
-            this.TRMaxDynamicModsLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.TRMaxDynamicModsLabel.AutoSize = true;
-            this.TRMaxDynamicModsLabel.Location = new System.Drawing.Point(409, 265);
-            this.TRMaxDynamicModsLabel.Name = "TRMaxDynamicModsLabel";
-            this.TRMaxDynamicModsLabel.Size = new System.Drawing.Size(48, 39);
-            this.TRMaxDynamicModsLabel.TabIndex = 52;
-            this.TRMaxDynamicModsLabel.Text = "Max\r\nDynamic\r\nMods:";
-            // 
             // PepGenPanel
             // 
             this.PepGenPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -1564,27 +809,27 @@ namespace BumberDash.Forms
             this.PepAppliedModBox.AllowUserToResizeRows = false;
             this.PepAppliedModBox.BackgroundColor = System.Drawing.SystemColors.Window;
             this.PepAppliedModBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.PepAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.PepAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.PepAppliedModBox.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.PepAppliedModBox.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn5,
             this.dataGridViewTextBoxColumn6,
             this.dataGridViewComboBoxColumn3});
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle10.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle10.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle10.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle10.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.PepAppliedModBox.DefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.PepAppliedModBox.DefaultCellStyle = dataGridViewCellStyle2;
             this.PepAppliedModBox.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.PepAppliedModBox.Location = new System.Drawing.Point(282, 32);
             this.PepAppliedModBox.MultiSelect = false;
@@ -1739,11 +984,11 @@ namespace BumberDash.Forms
             this.columnHeader3});
             this.PepModList.FullRowSelect = true;
             this.PepModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem21,
-            listViewItem22,
-            listViewItem23,
-            listViewItem24,
-            listViewItem25});
+            listViewItem1,
+            listViewItem2,
+            listViewItem3,
+            listViewItem4,
+            listViewItem5});
             this.PepModList.Location = new System.Drawing.Point(7, 32);
             this.PepModList.MultiSelect = false;
             this.PepModList.Name = "PepModList";
@@ -2434,27 +1679,27 @@ namespace BumberDash.Forms
             this.MyriAppliedModBox.AllowUserToResizeRows = false;
             this.MyriAppliedModBox.BackgroundColor = System.Drawing.SystemColors.Window;
             this.MyriAppliedModBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            dataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle13.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle13.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle13.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle13.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle13.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.MyriAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle13;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.MyriAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.MyriAppliedModBox.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.MyriAppliedModBox.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Column1,
             this.Column2,
             this.Column3});
-            dataGridViewCellStyle14.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle14.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle14.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle14.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.MyriAppliedModBox.DefaultCellStyle = dataGridViewCellStyle14;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.MyriAppliedModBox.DefaultCellStyle = dataGridViewCellStyle4;
             this.MyriAppliedModBox.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.MyriAppliedModBox.Location = new System.Drawing.Point(282, 32);
             this.MyriAppliedModBox.MultiSelect = false;
@@ -2628,11 +1873,11 @@ namespace BumberDash.Forms
             this.Description});
             this.MyriModList.FullRowSelect = true;
             this.MyriModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem31,
-            listViewItem32,
-            listViewItem33,
-            listViewItem34,
-            listViewItem35});
+            listViewItem6,
+            listViewItem7,
+            listViewItem8,
+            listViewItem9,
+            listViewItem10});
             this.MyriModList.Location = new System.Drawing.Point(7, 32);
             this.MyriModList.MultiSelect = false;
             this.MyriModList.Name = "MyriModList";
@@ -2844,27 +2089,27 @@ namespace BumberDash.Forms
             this.DTAppliedModBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.DTAppliedModBox.BackgroundColor = System.Drawing.SystemColors.Window;
             this.DTAppliedModBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            dataGridViewCellStyle15.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle15.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle15.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle15.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle15.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle15.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle15.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.DTAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle15;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.DTAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.DTAppliedModBox.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.DTAppliedModBox.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn1,
             this.dataGridViewTextBoxColumn2,
             this.dataGridViewComboBoxColumn1});
-            dataGridViewCellStyle16.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle16.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle16.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle16.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle16.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle16.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.DTAppliedModBox.DefaultCellStyle = dataGridViewCellStyle16;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.DTAppliedModBox.DefaultCellStyle = dataGridViewCellStyle6;
             this.DTAppliedModBox.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.DTAppliedModBox.Location = new System.Drawing.Point(292, 32);
             this.DTAppliedModBox.MultiSelect = false;
@@ -3032,11 +2277,11 @@ namespace BumberDash.Forms
             this.columnHeader1});
             this.DTModList.FullRowSelect = true;
             this.DTModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem36,
-            listViewItem37,
-            listViewItem38,
-            listViewItem39,
-            listViewItem40});
+            listViewItem11,
+            listViewItem12,
+            listViewItem13,
+            listViewItem14,
+            listViewItem15});
             this.DTModList.Location = new System.Drawing.Point(7, 32);
             this.DTModList.MultiSelect = false;
             this.DTModList.Name = "DTModList";
@@ -3073,6 +2318,761 @@ namespace BumberDash.Forms
             this.DTMaxDynamicModsLabel.Size = new System.Drawing.Size(48, 39);
             this.DTMaxDynamicModsLabel.TabIndex = 52;
             this.DTMaxDynamicModsLabel.Text = "Max\r\nDynamic\r\nMods:";
+            // 
+            // TRGenPanel
+            // 
+            this.TRGenPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TRGenPanel.Controls.Add(this.TRToleranceGB);
+            this.TRGenPanel.Controls.Add(this.TRDigestionGB);
+            this.TRGenPanel.Controls.Add(this.TRInstrumentGB);
+            this.TRGenPanel.Controls.Add(this.TRModGB);
+            this.TRGenPanel.Location = new System.Drawing.Point(0, 0);
+            this.TRGenPanel.Name = "TRGenPanel";
+            this.TRGenPanel.Size = new System.Drawing.Size(538, 528);
+            this.TRGenPanel.TabIndex = 3;
+            // 
+            // TRToleranceGB
+            // 
+            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceBox);
+            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceBox);
+            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceInfo);
+            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceBox);
+            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceLabel);
+            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceUnitsList);
+            this.TRToleranceGB.Controls.Add(this.TRCTerminusMzToleranceUnitsList);
+            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceBox);
+            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceInfo);
+            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceUnitsList);
+            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceUnitsList);
+            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceInfo);
+            this.TRToleranceGB.Controls.Add(this.TRFragmentMzToleranceLabel);
+            this.TRToleranceGB.Controls.Add(this.TRNTerminusMzToleranceLabel);
+            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceInfo);
+            this.TRToleranceGB.Controls.Add(this.TRPrecursorMzToleranceLabel);
+            this.TRToleranceGB.Location = new System.Drawing.Point(8, 129);
+            this.TRToleranceGB.Name = "TRToleranceGB";
+            this.TRToleranceGB.Size = new System.Drawing.Size(514, 76);
+            this.TRToleranceGB.TabIndex = 3;
+            this.TRToleranceGB.TabStop = false;
+            this.TRToleranceGB.Text = "Tolerance";
+            // 
+            // TRCTerminusMzToleranceBox
+            // 
+            this.TRCTerminusMzToleranceBox.Enabled = false;
+            this.TRCTerminusMzToleranceBox.Location = new System.Drawing.Point(388, 42);
+            this.TRCTerminusMzToleranceBox.Name = "TRCTerminusMzToleranceBox";
+            this.TRCTerminusMzToleranceBox.Size = new System.Drawing.Size(55, 20);
+            this.TRCTerminusMzToleranceBox.TabIndex = 7;
+            this.TRCTerminusMzToleranceBox.Text = "1.25";
+            this.TRCTerminusMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
+            this.TRCTerminusMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            // 
+            // TRFragmentMzToleranceBox
+            // 
+            this.TRFragmentMzToleranceBox.Enabled = false;
+            this.TRFragmentMzToleranceBox.Location = new System.Drawing.Point(389, 15);
+            this.TRFragmentMzToleranceBox.Name = "TRFragmentMzToleranceBox";
+            this.TRFragmentMzToleranceBox.Size = new System.Drawing.Size(54, 20);
+            this.TRFragmentMzToleranceBox.TabIndex = 3;
+            this.TRFragmentMzToleranceBox.Text = "0.5";
+            this.TRFragmentMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
+            this.TRFragmentMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            // 
+            // TRCTerminusMzToleranceInfo
+            // 
+            this.TRCTerminusMzToleranceInfo.AutoSize = true;
+            this.TRCTerminusMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TRCTerminusMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRCTerminusMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TRCTerminusMzToleranceInfo.Location = new System.Drawing.Point(378, 37);
+            this.TRCTerminusMzToleranceInfo.Name = "TRCTerminusMzToleranceInfo";
+            this.TRCTerminusMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
+            this.TRCTerminusMzToleranceInfo.TabIndex = 74;
+            this.TRCTerminusMzToleranceInfo.Text = "?";
+            // 
+            // TRPrecursorMzToleranceBox
+            // 
+            this.TRPrecursorMzToleranceBox.Enabled = false;
+            this.TRPrecursorMzToleranceBox.Location = new System.Drawing.Point(135, 15);
+            this.TRPrecursorMzToleranceBox.Name = "TRPrecursorMzToleranceBox";
+            this.TRPrecursorMzToleranceBox.Size = new System.Drawing.Size(54, 20);
+            this.TRPrecursorMzToleranceBox.TabIndex = 1;
+            this.TRPrecursorMzToleranceBox.Text = "1.25";
+            this.TRPrecursorMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
+            this.TRPrecursorMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            // 
+            // TRCTerminusMzToleranceLabel
+            // 
+            this.TRCTerminusMzToleranceLabel.AutoSize = true;
+            this.TRCTerminusMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRCTerminusMzToleranceLabel.Location = new System.Drawing.Point(256, 45);
+            this.TRCTerminusMzToleranceLabel.Name = "TRCTerminusMzToleranceLabel";
+            this.TRCTerminusMzToleranceLabel.Size = new System.Drawing.Size(126, 13);
+            this.TRCTerminusMzToleranceLabel.TabIndex = 6;
+            this.TRCTerminusMzToleranceLabel.Text = "C-Terminus m/z tolerance:";
+            this.TRCTerminusMzToleranceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // TRFragmentMzToleranceUnitsList
+            // 
+            this.TRFragmentMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRFragmentMzToleranceUnitsList.Enabled = false;
+            this.TRFragmentMzToleranceUnitsList.FormattingEnabled = true;
+            this.TRFragmentMzToleranceUnitsList.Items.AddRange(new object[] {
+            "mz"});
+            this.TRFragmentMzToleranceUnitsList.Location = new System.Drawing.Point(450, 15);
+            this.TRFragmentMzToleranceUnitsList.Name = "TRFragmentMzToleranceUnitsList";
+            this.TRFragmentMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
+            this.TRFragmentMzToleranceUnitsList.TabIndex = 4;
+            // 
+            // TRCTerminusMzToleranceUnitsList
+            // 
+            this.TRCTerminusMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRCTerminusMzToleranceUnitsList.Enabled = false;
+            this.TRCTerminusMzToleranceUnitsList.FormattingEnabled = true;
+            this.TRCTerminusMzToleranceUnitsList.Items.AddRange(new object[] {
+            "mz"});
+            this.TRCTerminusMzToleranceUnitsList.Location = new System.Drawing.Point(450, 42);
+            this.TRCTerminusMzToleranceUnitsList.Name = "TRCTerminusMzToleranceUnitsList";
+            this.TRCTerminusMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
+            this.TRCTerminusMzToleranceUnitsList.TabIndex = 8;
+            // 
+            // TRNTerminusMzToleranceBox
+            // 
+            this.TRNTerminusMzToleranceBox.Enabled = false;
+            this.TRNTerminusMzToleranceBox.Location = new System.Drawing.Point(135, 42);
+            this.TRNTerminusMzToleranceBox.Name = "TRNTerminusMzToleranceBox";
+            this.TRNTerminusMzToleranceBox.Size = new System.Drawing.Size(54, 20);
+            this.TRNTerminusMzToleranceBox.TabIndex = 5;
+            this.TRNTerminusMzToleranceBox.Text = "1.5";
+            this.TRNTerminusMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
+            this.TRNTerminusMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            // 
+            // TRFragmentMzToleranceInfo
+            // 
+            this.TRFragmentMzToleranceInfo.AutoSize = true;
+            this.TRFragmentMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TRFragmentMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRFragmentMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TRFragmentMzToleranceInfo.Location = new System.Drawing.Point(378, 11);
+            this.TRFragmentMzToleranceInfo.Name = "TRFragmentMzToleranceInfo";
+            this.TRFragmentMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
+            this.TRFragmentMzToleranceInfo.TabIndex = 73;
+            this.TRFragmentMzToleranceInfo.Text = "?";
+            // 
+            // TRPrecursorMzToleranceUnitsList
+            // 
+            this.TRPrecursorMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRPrecursorMzToleranceUnitsList.Enabled = false;
+            this.TRPrecursorMzToleranceUnitsList.FormattingEnabled = true;
+            this.TRPrecursorMzToleranceUnitsList.Items.AddRange(new object[] {
+            "mz"});
+            this.TRPrecursorMzToleranceUnitsList.Location = new System.Drawing.Point(195, 15);
+            this.TRPrecursorMzToleranceUnitsList.Name = "TRPrecursorMzToleranceUnitsList";
+            this.TRPrecursorMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
+            this.TRPrecursorMzToleranceUnitsList.TabIndex = 2;
+            // 
+            // TRNTerminusMzToleranceUnitsList
+            // 
+            this.TRNTerminusMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRNTerminusMzToleranceUnitsList.Enabled = false;
+            this.TRNTerminusMzToleranceUnitsList.FormattingEnabled = true;
+            this.TRNTerminusMzToleranceUnitsList.Items.AddRange(new object[] {
+            "mz"});
+            this.TRNTerminusMzToleranceUnitsList.Location = new System.Drawing.Point(195, 42);
+            this.TRNTerminusMzToleranceUnitsList.Name = "TRNTerminusMzToleranceUnitsList";
+            this.TRNTerminusMzToleranceUnitsList.Size = new System.Drawing.Size(58, 21);
+            this.TRNTerminusMzToleranceUnitsList.TabIndex = 6;
+            // 
+            // TRNTerminusMzToleranceInfo
+            // 
+            this.TRNTerminusMzToleranceInfo.AutoSize = true;
+            this.TRNTerminusMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TRNTerminusMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRNTerminusMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TRNTerminusMzToleranceInfo.Location = new System.Drawing.Point(124, 37);
+            this.TRNTerminusMzToleranceInfo.Name = "TRNTerminusMzToleranceInfo";
+            this.TRNTerminusMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
+            this.TRNTerminusMzToleranceInfo.TabIndex = 73;
+            this.TRNTerminusMzToleranceInfo.Text = "?";
+            // 
+            // TRFragmentMzToleranceLabel
+            // 
+            this.TRFragmentMzToleranceLabel.AutoSize = true;
+            this.TRFragmentMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRFragmentMzToleranceLabel.Location = new System.Drawing.Point(261, 19);
+            this.TRFragmentMzToleranceLabel.Name = "TRFragmentMzToleranceLabel";
+            this.TRFragmentMzToleranceLabel.Size = new System.Drawing.Size(122, 13);
+            this.TRFragmentMzToleranceLabel.TabIndex = 5;
+            this.TRFragmentMzToleranceLabel.Text = "Fragment m/z tolerance:";
+            // 
+            // TRNTerminusMzToleranceLabel
+            // 
+            this.TRNTerminusMzToleranceLabel.AutoSize = true;
+            this.TRNTerminusMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRNTerminusMzToleranceLabel.Location = new System.Drawing.Point(2, 45);
+            this.TRNTerminusMzToleranceLabel.Name = "TRNTerminusMzToleranceLabel";
+            this.TRNTerminusMzToleranceLabel.Size = new System.Drawing.Size(126, 13);
+            this.TRNTerminusMzToleranceLabel.TabIndex = 1;
+            this.TRNTerminusMzToleranceLabel.Text = "N-Terminus m/z tolerance:";
+            this.TRNTerminusMzToleranceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // TRPrecursorMzToleranceInfo
+            // 
+            this.TRPrecursorMzToleranceInfo.AutoSize = true;
+            this.TRPrecursorMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TRPrecursorMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRPrecursorMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TRPrecursorMzToleranceInfo.Location = new System.Drawing.Point(124, 10);
+            this.TRPrecursorMzToleranceInfo.Name = "TRPrecursorMzToleranceInfo";
+            this.TRPrecursorMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
+            this.TRPrecursorMzToleranceInfo.TabIndex = 72;
+            this.TRPrecursorMzToleranceInfo.Text = "?";
+            // 
+            // TRPrecursorMzToleranceLabel
+            // 
+            this.TRPrecursorMzToleranceLabel.AutoSize = true;
+            this.TRPrecursorMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRPrecursorMzToleranceLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.TRPrecursorMzToleranceLabel.Location = new System.Drawing.Point(6, 18);
+            this.TRPrecursorMzToleranceLabel.Name = "TRPrecursorMzToleranceLabel";
+            this.TRPrecursorMzToleranceLabel.Size = new System.Drawing.Size(123, 13);
+            this.TRPrecursorMzToleranceLabel.TabIndex = 0;
+            this.TRPrecursorMzToleranceLabel.Text = "Precursor m/z tolerance:";
+            // 
+            // TRDigestionGB
+            // 
+            this.TRDigestionGB.Controls.Add(this.TRMaxMissedCleavagesAuto);
+            this.TRDigestionGB.Controls.Add(this.TRMaxMissedCleavagesBox);
+            this.TRDigestionGB.Controls.Add(this.TRMinTerminiCleavagesBox);
+            this.TRDigestionGB.Controls.Add(this.TRCleavageRulesBox);
+            this.TRDigestionGB.Controls.Add(this.TRCleavageRulesInfo);
+            this.TRDigestionGB.Controls.Add(this.TRCleavageRulesLabel);
+            this.TRDigestionGB.Controls.Add(this.TRMaxMissedCleavagesLabel);
+            this.TRDigestionGB.Controls.Add(this.TRMinTerminiCleavagesLabel);
+            this.TRDigestionGB.Location = new System.Drawing.Point(268, 6);
+            this.TRDigestionGB.Name = "TRDigestionGB";
+            this.TRDigestionGB.Size = new System.Drawing.Size(254, 117);
+            this.TRDigestionGB.TabIndex = 2;
+            this.TRDigestionGB.TabStop = false;
+            this.TRDigestionGB.Text = "Digestion";
+            // 
+            // TRMaxMissedCleavagesAuto
+            // 
+            this.TRMaxMissedCleavagesAuto.BackColor = System.Drawing.Color.White;
+            this.TRMaxMissedCleavagesAuto.Enabled = false;
+            this.TRMaxMissedCleavagesAuto.Font = new System.Drawing.Font("Calibri", 13F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRMaxMissedCleavagesAuto.Location = new System.Drawing.Point(183, 85);
+            this.TRMaxMissedCleavagesAuto.Name = "TRMaxMissedCleavagesAuto";
+            this.TRMaxMissedCleavagesAuto.Size = new System.Drawing.Size(23, 18);
+            this.TRMaxMissedCleavagesAuto.TabIndex = 78;
+            this.TRMaxMissedCleavagesAuto.Text = "∞";
+            // 
+            // TRMaxMissedCleavagesBox
+            // 
+            this.TRMaxMissedCleavagesBox.Enabled = false;
+            this.TRMaxMissedCleavagesBox.Location = new System.Drawing.Point(182, 84);
+            this.TRMaxMissedCleavagesBox.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.TRMaxMissedCleavagesBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.TRMaxMissedCleavagesBox.Name = "TRMaxMissedCleavagesBox";
+            this.TRMaxMissedCleavagesBox.Size = new System.Drawing.Size(40, 20);
+            this.TRMaxMissedCleavagesBox.TabIndex = 2;
+            this.TRMaxMissedCleavagesBox.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.TRMaxMissedCleavagesBox.ValueChanged += new System.EventHandler(this.NumMaxMissedCleavagesBox_ValueChanged);
+            // 
+            // TRMinTerminiCleavagesBox
+            // 
+            this.TRMinTerminiCleavagesBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRMinTerminiCleavagesBox.FormattingEnabled = true;
+            this.TRMinTerminiCleavagesBox.Items.AddRange(new object[] {
+            "Non-Specific",
+            "Semi-Specific",
+            "Fully-Specific"});
+            this.TRMinTerminiCleavagesBox.Location = new System.Drawing.Point(130, 51);
+            this.TRMinTerminiCleavagesBox.Name = "TRMinTerminiCleavagesBox";
+            this.TRMinTerminiCleavagesBox.Size = new System.Drawing.Size(92, 21);
+            this.TRMinTerminiCleavagesBox.TabIndex = 1;
+            // 
+            // TRCleavageRulesBox
+            // 
+            this.TRCleavageRulesBox.FormattingEnabled = true;
+            this.TRCleavageRulesBox.Items.AddRange(new object[] {
+            "Trypsin",
+            "Trypsin/P",
+            "Chymotrypsin",
+            "TrypChymo",
+            "Lys-C",
+            "Lys-C/P",
+            "Asp-N",
+            "PepsinA",
+            "CNBr",
+            "Formic_acid"});
+            this.TRCleavageRulesBox.Location = new System.Drawing.Point(82, 19);
+            this.TRCleavageRulesBox.Name = "TRCleavageRulesBox";
+            this.TRCleavageRulesBox.Size = new System.Drawing.Size(140, 21);
+            this.TRCleavageRulesBox.TabIndex = 0;
+            this.TRCleavageRulesBox.Text = "Trypsin/P";
+            // 
+            // TRCleavageRulesInfo
+            // 
+            this.TRCleavageRulesInfo.AutoSize = true;
+            this.TRCleavageRulesInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TRCleavageRulesInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRCleavageRulesInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TRCleavageRulesInfo.Location = new System.Drawing.Point(71, 14);
+            this.TRCleavageRulesInfo.Name = "TRCleavageRulesInfo";
+            this.TRCleavageRulesInfo.Size = new System.Drawing.Size(13, 13);
+            this.TRCleavageRulesInfo.TabIndex = 69;
+            this.TRCleavageRulesInfo.Text = "?";
+            // 
+            // TRCleavageRulesLabel
+            // 
+            this.TRCleavageRulesLabel.AutoSize = true;
+            this.TRCleavageRulesLabel.Location = new System.Drawing.Point(29, 22);
+            this.TRCleavageRulesLabel.Name = "TRCleavageRulesLabel";
+            this.TRCleavageRulesLabel.Size = new System.Drawing.Size(47, 13);
+            this.TRCleavageRulesLabel.TabIndex = 0;
+            this.TRCleavageRulesLabel.Text = "Enzyme:";
+            // 
+            // TRMaxMissedCleavagesLabel
+            // 
+            this.TRMaxMissedCleavagesLabel.AutoSize = true;
+            this.TRMaxMissedCleavagesLabel.Location = new System.Drawing.Point(57, 86);
+            this.TRMaxMissedCleavagesLabel.Name = "TRMaxMissedCleavagesLabel";
+            this.TRMaxMissedCleavagesLabel.Size = new System.Drawing.Size(119, 13);
+            this.TRMaxMissedCleavagesLabel.TabIndex = 6;
+            this.TRMaxMissedCleavagesLabel.Text = "Max Missed Cleavages:";
+            // 
+            // TRMinTerminiCleavagesLabel
+            // 
+            this.TRMinTerminiCleavagesLabel.AutoSize = true;
+            this.TRMinTerminiCleavagesLabel.Location = new System.Drawing.Point(66, 55);
+            this.TRMinTerminiCleavagesLabel.Name = "TRMinTerminiCleavagesLabel";
+            this.TRMinTerminiCleavagesLabel.Size = new System.Drawing.Size(58, 13);
+            this.TRMinTerminiCleavagesLabel.TabIndex = 1;
+            this.TRMinTerminiCleavagesLabel.Text = "Specificity:";
+            // 
+            // TRInstrumentGB
+            // 
+            this.TRInstrumentGB.Controls.Add(this.TRInstrumentList);
+            this.TRInstrumentGB.Controls.Add(this.TRInstrumentLabel);
+            this.TRInstrumentGB.Controls.Add(this.TRUseAvgMassOfSequencesBox);
+            this.TRInstrumentGB.Controls.Add(this.TRUseAvgMassOfSequencesLabel);
+            this.TRInstrumentGB.Location = new System.Drawing.Point(8, 6);
+            this.TRInstrumentGB.Name = "TRInstrumentGB";
+            this.TRInstrumentGB.Size = new System.Drawing.Size(254, 117);
+            this.TRInstrumentGB.TabIndex = 1;
+            this.TRInstrumentGB.TabStop = false;
+            this.TRInstrumentGB.Text = "Instrument Specific";
+            // 
+            // TRInstrumentList
+            // 
+            this.TRInstrumentList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.TRInstrumentList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRInstrumentList.FormattingEnabled = true;
+            this.TRInstrumentList.Location = new System.Drawing.Point(102, 33);
+            this.TRInstrumentList.Name = "TRInstrumentList";
+            this.TRInstrumentList.Size = new System.Drawing.Size(116, 21);
+            this.TRInstrumentList.TabIndex = 0;
+            this.TRInstrumentList.SelectedIndexChanged += new System.EventHandler(this.InstrumentList_SelectedIndexChanged);
+            // 
+            // TRInstrumentLabel
+            // 
+            this.TRInstrumentLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.TRInstrumentLabel.AutoSize = true;
+            this.TRInstrumentLabel.Location = new System.Drawing.Point(37, 36);
+            this.TRInstrumentLabel.Name = "TRInstrumentLabel";
+            this.TRInstrumentLabel.Size = new System.Drawing.Size(59, 13);
+            this.TRInstrumentLabel.TabIndex = 45;
+            this.TRInstrumentLabel.Text = "Instrument:";
+            // 
+            // TRUseAvgMassOfSequencesBox
+            // 
+            this.TRUseAvgMassOfSequencesBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRUseAvgMassOfSequencesBox.FormattingEnabled = true;
+            this.TRUseAvgMassOfSequencesBox.Items.AddRange(new object[] {
+            "mono",
+            "avg"});
+            this.TRUseAvgMassOfSequencesBox.Location = new System.Drawing.Point(126, 62);
+            this.TRUseAvgMassOfSequencesBox.Name = "TRUseAvgMassOfSequencesBox";
+            this.TRUseAvgMassOfSequencesBox.Size = new System.Drawing.Size(92, 21);
+            this.TRUseAvgMassOfSequencesBox.TabIndex = 2;
+            // 
+            // TRUseAvgMassOfSequencesLabel
+            // 
+            this.TRUseAvgMassOfSequencesLabel.AutoSize = true;
+            this.TRUseAvgMassOfSequencesLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.TRUseAvgMassOfSequencesLabel.Location = new System.Drawing.Point(37, 65);
+            this.TRUseAvgMassOfSequencesLabel.Name = "TRUseAvgMassOfSequencesLabel";
+            this.TRUseAvgMassOfSequencesLabel.Size = new System.Drawing.Size(83, 13);
+            this.TRUseAvgMassOfSequencesLabel.TabIndex = 42;
+            this.TRUseAvgMassOfSequencesLabel.Text = "Precursor Mass:";
+            // 
+            // TRModGB
+            // 
+            this.TRModGB.Controls.Add(this.TRMaxAmbResultsForBlindModsLabel);
+            this.TRModGB.Controls.Add(this.TRMaxAmbResultsForBlindModsBox);
+            this.TRModGB.Controls.Add(this.TRExplainUnknownMassShiftsAsBox);
+            this.TRModGB.Controls.Add(this.TRExplainUnknownMassShiftsAsLabel);
+            this.TRModGB.Controls.Add(this.TRMaxNumPreferredDeltaMassesLabel);
+            this.TRModGB.Controls.Add(this.TRMaxNumPreferredDeltaMassesBox);
+            this.TRModGB.Controls.Add(this.TRAppliedModBox);
+            this.TRModGB.Controls.Add(this.TRAppliedModLabel);
+            this.TRModGB.Controls.Add(this.TRAppliedModRemove);
+            this.TRModGB.Controls.Add(this.TRAppliedModAdd);
+            this.TRModGB.Controls.Add(this.TRStaticModsInfo);
+            this.TRModGB.Controls.Add(this.TRModTypeLabel);
+            this.TRModGB.Controls.Add(this.TRModTypeList);
+            this.TRModGB.Controls.Add(this.TRModListLabel);
+            this.TRModGB.Controls.Add(this.TRResidueLabel);
+            this.TRModGB.Controls.Add(this.TRModMassLabel);
+            this.TRModGB.Controls.Add(this.TRModMassText);
+            this.TRModGB.Controls.Add(this.TRMaxDynamicModsBox);
+            this.TRModGB.Controls.Add(this.TRResidueText);
+            this.TRModGB.Controls.Add(this.TRModList);
+            this.TRModGB.Controls.Add(this.TRMaxDynamicModsInfo);
+            this.TRModGB.Controls.Add(this.TRMaxDynamicModsLabel);
+            this.TRModGB.Location = new System.Drawing.Point(8, 211);
+            this.TRModGB.Name = "TRModGB";
+            this.TRModGB.Size = new System.Drawing.Size(514, 310);
+            this.TRModGB.TabIndex = 4;
+            this.TRModGB.TabStop = false;
+            this.TRModGB.Text = "Modifications";
+            // 
+            // TRMaxAmbResultsForBlindModsLabel
+            // 
+            this.TRMaxAmbResultsForBlindModsLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRMaxAmbResultsForBlindModsLabel.AutoSize = true;
+            this.TRMaxAmbResultsForBlindModsLabel.Location = new System.Drawing.Point(252, 23);
+            this.TRMaxAmbResultsForBlindModsLabel.Name = "TRMaxAmbResultsForBlindModsLabel";
+            this.TRMaxAmbResultsForBlindModsLabel.Size = new System.Drawing.Size(193, 13);
+            this.TRMaxAmbResultsForBlindModsLabel.TabIndex = 96;
+            this.TRMaxAmbResultsForBlindModsLabel.Text = "Max Ambiguous Results for Blind Mods:";
+            // 
+            // TRMaxAmbResultsForBlindModsBox
+            // 
+            this.TRMaxAmbResultsForBlindModsBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRMaxAmbResultsForBlindModsBox.Location = new System.Drawing.Point(451, 19);
+            this.TRMaxAmbResultsForBlindModsBox.Name = "TRMaxAmbResultsForBlindModsBox";
+            this.TRMaxAmbResultsForBlindModsBox.Size = new System.Drawing.Size(45, 20);
+            this.TRMaxAmbResultsForBlindModsBox.TabIndex = 95;
+            this.TRMaxAmbResultsForBlindModsBox.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // TRExplainUnknownMassShiftsAsBox
+            // 
+            this.TRExplainUnknownMassShiftsAsBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRExplainUnknownMassShiftsAsBox.FormattingEnabled = true;
+            this.TRExplainUnknownMassShiftsAsBox.Items.AddRange(new object[] {
+            "",
+            "blindptms",
+            "preferredptms",
+            "mutations"});
+            this.TRExplainUnknownMassShiftsAsBox.Location = new System.Drawing.Point(115, 19);
+            this.TRExplainUnknownMassShiftsAsBox.Name = "TRExplainUnknownMassShiftsAsBox";
+            this.TRExplainUnknownMassShiftsAsBox.Size = new System.Drawing.Size(131, 21);
+            this.TRExplainUnknownMassShiftsAsBox.TabIndex = 1;
+            this.TRExplainUnknownMassShiftsAsBox.SelectedIndexChanged += new System.EventHandler(this.ExplainUnknownMassShiftsAsBox_SelectedIndexChanged);
+            // 
+            // TRExplainUnknownMassShiftsAsLabel
+            // 
+            this.TRExplainUnknownMassShiftsAsLabel.AutoSize = true;
+            this.TRExplainUnknownMassShiftsAsLabel.Location = new System.Drawing.Point(19, 15);
+            this.TRExplainUnknownMassShiftsAsLabel.Name = "TRExplainUnknownMassShiftsAsLabel";
+            this.TRExplainUnknownMassShiftsAsLabel.Size = new System.Drawing.Size(90, 26);
+            this.TRExplainUnknownMassShiftsAsLabel.TabIndex = 94;
+            this.TRExplainUnknownMassShiftsAsLabel.Text = "Explain Unknown\r\nMass Shifts As:";
+            // 
+            // TRMaxNumPreferredDeltaMassesLabel
+            // 
+            this.TRMaxNumPreferredDeltaMassesLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRMaxNumPreferredDeltaMassesLabel.AutoSize = true;
+            this.TRMaxNumPreferredDeltaMassesLabel.Location = new System.Drawing.Point(279, 263);
+            this.TRMaxNumPreferredDeltaMassesLabel.Name = "TRMaxNumPreferredDeltaMassesLabel";
+            this.TRMaxNumPreferredDeltaMassesLabel.Size = new System.Drawing.Size(50, 39);
+            this.TRMaxNumPreferredDeltaMassesLabel.TabIndex = 87;
+            this.TRMaxNumPreferredDeltaMassesLabel.Text = "Max\r\nPreferred\r\nPTMs:";
+            // 
+            // TRMaxNumPreferredDeltaMassesBox
+            // 
+            this.TRMaxNumPreferredDeltaMassesBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRMaxNumPreferredDeltaMassesBox.Location = new System.Drawing.Point(335, 283);
+            this.TRMaxNumPreferredDeltaMassesBox.Name = "TRMaxNumPreferredDeltaMassesBox";
+            this.TRMaxNumPreferredDeltaMassesBox.Size = new System.Drawing.Size(45, 20);
+            this.TRMaxNumPreferredDeltaMassesBox.TabIndex = 9;
+            this.TRMaxNumPreferredDeltaMassesBox.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.TRMaxNumPreferredDeltaMassesBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
+            // 
+            // TRAppliedModBox
+            // 
+            this.TRAppliedModBox.AllowUserToAddRows = false;
+            this.TRAppliedModBox.AllowUserToDeleteRows = false;
+            this.TRAppliedModBox.AllowUserToResizeColumns = false;
+            this.TRAppliedModBox.AllowUserToResizeRows = false;
+            this.TRAppliedModBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRAppliedModBox.BackgroundColor = System.Drawing.SystemColors.Window;
+            this.TRAppliedModBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.TRAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            this.TRAppliedModBox.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.TRAppliedModBox.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn3,
+            this.dataGridViewTextBoxColumn4,
+            this.dataGridViewComboBoxColumn2});
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.TRAppliedModBox.DefaultCellStyle = dataGridViewCellStyle8;
+            this.TRAppliedModBox.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+            this.TRAppliedModBox.Location = new System.Drawing.Point(282, 59);
+            this.TRAppliedModBox.MultiSelect = false;
+            this.TRAppliedModBox.Name = "TRAppliedModBox";
+            this.TRAppliedModBox.RowHeadersVisible = false;
+            this.TRAppliedModBox.RowTemplate.Height = 24;
+            this.TRAppliedModBox.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.TRAppliedModBox.ShowCellErrors = false;
+            this.TRAppliedModBox.Size = new System.Drawing.Size(226, 199);
+            this.TRAppliedModBox.TabIndex = 8;
+            this.TRAppliedModBox.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.AppliedModBox_RowsAdded);
+            this.TRAppliedModBox.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.AppliedModBox_RowsRemoved);
+            // 
+            // dataGridViewTextBoxColumn3
+            // 
+            this.dataGridViewTextBoxColumn3.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn3.HeaderText = "Motif";
+            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            this.dataGridViewTextBoxColumn3.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // dataGridViewTextBoxColumn4
+            // 
+            this.dataGridViewTextBoxColumn4.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn4.HeaderText = "Mass";
+            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
+            this.dataGridViewTextBoxColumn4.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // dataGridViewComboBoxColumn2
+            // 
+            this.dataGridViewComboBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewComboBoxColumn2.FillWeight = 150F;
+            this.dataGridViewComboBoxColumn2.HeaderText = "Type";
+            this.dataGridViewComboBoxColumn2.Items.AddRange(new object[] {
+            "Static",
+            "Dynamic",
+            "PreferredPTM"});
+            this.dataGridViewComboBoxColumn2.Name = "dataGridViewComboBoxColumn2";
+            this.dataGridViewComboBoxColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewComboBoxColumn2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // TRAppliedModLabel
+            // 
+            this.TRAppliedModLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRAppliedModLabel.AutoSize = true;
+            this.TRAppliedModLabel.Location = new System.Drawing.Point(279, 43);
+            this.TRAppliedModLabel.Name = "TRAppliedModLabel";
+            this.TRAppliedModLabel.Size = new System.Drawing.Size(88, 13);
+            this.TRAppliedModLabel.TabIndex = 91;
+            this.TRAppliedModLabel.Text = "Applied Mod List:";
+            // 
+            // TRAppliedModRemove
+            // 
+            this.TRAppliedModRemove.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRAppliedModRemove.Location = new System.Drawing.Point(244, 165);
+            this.TRAppliedModRemove.Name = "TRAppliedModRemove";
+            this.TRAppliedModRemove.Size = new System.Drawing.Size(32, 23);
+            this.TRAppliedModRemove.TabIndex = 7;
+            this.TRAppliedModRemove.Text = "<";
+            this.TRAppliedModRemove.UseVisualStyleBackColor = true;
+            this.TRAppliedModRemove.Click += new System.EventHandler(this.AppliedModRemove_Click);
+            // 
+            // TRAppliedModAdd
+            // 
+            this.TRAppliedModAdd.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRAppliedModAdd.Location = new System.Drawing.Point(244, 136);
+            this.TRAppliedModAdd.Name = "TRAppliedModAdd";
+            this.TRAppliedModAdd.Size = new System.Drawing.Size(32, 23);
+            this.TRAppliedModAdd.TabIndex = 6;
+            this.TRAppliedModAdd.Text = ">";
+            this.TRAppliedModAdd.UseVisualStyleBackColor = true;
+            this.TRAppliedModAdd.Click += new System.EventHandler(this.AppliedModAdd_Click);
+            // 
+            // TRStaticModsInfo
+            // 
+            this.TRStaticModsInfo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRStaticModsInfo.AutoSize = true;
+            this.TRStaticModsInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TRStaticModsInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRStaticModsInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TRStaticModsInfo.Location = new System.Drawing.Point(198, 258);
+            this.TRStaticModsInfo.Name = "TRStaticModsInfo";
+            this.TRStaticModsInfo.Size = new System.Drawing.Size(13, 13);
+            this.TRStaticModsInfo.TabIndex = 75;
+            this.TRStaticModsInfo.Text = "?";
+            // 
+            // TRModTypeLabel
+            // 
+            this.TRModTypeLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRModTypeLabel.AutoSize = true;
+            this.TRModTypeLabel.Location = new System.Drawing.Point(145, 266);
+            this.TRModTypeLabel.Name = "TRModTypeLabel";
+            this.TRModTypeLabel.Size = new System.Drawing.Size(58, 13);
+            this.TRModTypeLabel.TabIndex = 82;
+            this.TRModTypeLabel.Text = "Mod Type:";
+            // 
+            // TRModTypeList
+            // 
+            this.TRModTypeList.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRModTypeList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TRModTypeList.FormattingEnabled = true;
+            this.TRModTypeList.Items.AddRange(new object[] {
+            "Static",
+            "Dynamic",
+            "PreferredPTM"});
+            this.TRModTypeList.Location = new System.Drawing.Point(148, 281);
+            this.TRModTypeList.Name = "TRModTypeList";
+            this.TRModTypeList.Size = new System.Drawing.Size(90, 21);
+            this.TRModTypeList.TabIndex = 5;
+            // 
+            // TRModListLabel
+            // 
+            this.TRModListLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRModListLabel.AutoSize = true;
+            this.TRModListLabel.Location = new System.Drawing.Point(6, 43);
+            this.TRModListLabel.Name = "TRModListLabel";
+            this.TRModListLabel.Size = new System.Drawing.Size(50, 13);
+            this.TRModListLabel.TabIndex = 54;
+            this.TRModListLabel.Text = "Mod List:";
+            // 
+            // TRResidueLabel
+            // 
+            this.TRResidueLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRResidueLabel.AutoSize = true;
+            this.TRResidueLabel.Location = new System.Drawing.Point(4, 266);
+            this.TRResidueLabel.Name = "TRResidueLabel";
+            this.TRResidueLabel.Size = new System.Drawing.Size(76, 13);
+            this.TRResidueLabel.TabIndex = 57;
+            this.TRResidueLabel.Text = "Redidue Motif:";
+            // 
+            // TRModMassLabel
+            // 
+            this.TRModMassLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRModMassLabel.AutoSize = true;
+            this.TRModMassLabel.Location = new System.Drawing.Point(83, 266);
+            this.TRModMassLabel.Name = "TRModMassLabel";
+            this.TRModMassLabel.Size = new System.Drawing.Size(59, 13);
+            this.TRModMassLabel.TabIndex = 58;
+            this.TRModMassLabel.Text = "Mod Mass:";
+            // 
+            // TRModMassText
+            // 
+            this.TRModMassText.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRModMassText.Location = new System.Drawing.Point(86, 282);
+            this.TRModMassText.Name = "TRModMassText";
+            this.TRModMassText.Size = new System.Drawing.Size(56, 20);
+            this.TRModMassText.TabIndex = 4;
+            this.TRModMassText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ModMassText_KeyPress);
+            this.TRModMassText.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            // 
+            // TRMaxDynamicModsBox
+            // 
+            this.TRMaxDynamicModsBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRMaxDynamicModsBox.Location = new System.Drawing.Point(463, 282);
+            this.TRMaxDynamicModsBox.Name = "TRMaxDynamicModsBox";
+            this.TRMaxDynamicModsBox.Size = new System.Drawing.Size(45, 20);
+            this.TRMaxDynamicModsBox.TabIndex = 10;
+            this.TRMaxDynamicModsBox.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            this.TRMaxDynamicModsBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
+            // 
+            // TRResidueText
+            // 
+            this.TRResidueText.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRResidueText.Location = new System.Drawing.Point(7, 282);
+            this.TRResidueText.Name = "TRResidueText";
+            this.TRResidueText.Size = new System.Drawing.Size(73, 20);
+            this.TRResidueText.TabIndex = 3;
+            this.TRResidueText.TextChanged += new System.EventHandler(this.ResidueText_TextChanged);
+            // 
+            // TRModList
+            // 
+            this.TRModList.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRModList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader2});
+            this.TRModList.FullRowSelect = true;
+            this.TRModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
+            listViewItem16,
+            listViewItem17,
+            listViewItem18,
+            listViewItem19,
+            listViewItem20});
+            this.TRModList.Location = new System.Drawing.Point(7, 59);
+            this.TRModList.MultiSelect = false;
+            this.TRModList.Name = "TRModList";
+            this.TRModList.Size = new System.Drawing.Size(231, 199);
+            this.TRModList.TabIndex = 2;
+            this.TRModList.UseCompatibleStateImageBehavior = false;
+            this.TRModList.View = System.Windows.Forms.View.Details;
+            this.TRModList.SelectedIndexChanged += new System.EventHandler(this.ModList_SelectedIndexChanged);
+            // 
+            // columnHeader2
+            // 
+            this.columnHeader2.Text = "Description";
+            this.columnHeader2.Width = 205;
+            // 
+            // TRMaxDynamicModsInfo
+            // 
+            this.TRMaxDynamicModsInfo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRMaxDynamicModsInfo.AutoSize = true;
+            this.TRMaxDynamicModsInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TRMaxDynamicModsInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TRMaxDynamicModsInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TRMaxDynamicModsInfo.Location = new System.Drawing.Point(452, 271);
+            this.TRMaxDynamicModsInfo.Name = "TRMaxDynamicModsInfo";
+            this.TRMaxDynamicModsInfo.Size = new System.Drawing.Size(13, 13);
+            this.TRMaxDynamicModsInfo.TabIndex = 75;
+            this.TRMaxDynamicModsInfo.Text = "?";
+            // 
+            // TRMaxDynamicModsLabel
+            // 
+            this.TRMaxDynamicModsLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.TRMaxDynamicModsLabel.AutoSize = true;
+            this.TRMaxDynamicModsLabel.Location = new System.Drawing.Point(409, 265);
+            this.TRMaxDynamicModsLabel.Name = "TRMaxDynamicModsLabel";
+            this.TRMaxDynamicModsLabel.Size = new System.Drawing.Size(48, 39);
+            this.TRMaxDynamicModsLabel.TabIndex = 52;
+            this.TRMaxDynamicModsLabel.Text = "Max\r\nDynamic\r\nMods:";
             // 
             // AdvTab
             // 
@@ -6322,26 +6322,12 @@ namespace BumberDash.Forms
             this.MinimumSize = new System.Drawing.Size(550, 540);
             this.Name = "ConfigForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ConfigForm";
+            this.Text = "Configuration Editor";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ConfigForm_FormClosing);
             this.mainTabControl.ResumeLayout(false);
             this.Gentab.ResumeLayout(false);
             this.SlowFadePanel.ResumeLayout(false);
             this.SlowFadePanel.PerformLayout();
-            this.TRGenPanel.ResumeLayout(false);
-            this.TRToleranceGB.ResumeLayout(false);
-            this.TRToleranceGB.PerformLayout();
-            this.TRDigestionGB.ResumeLayout(false);
-            this.TRDigestionGB.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxMissedCleavagesBox)).EndInit();
-            this.TRInstrumentGB.ResumeLayout(false);
-            this.TRInstrumentGB.PerformLayout();
-            this.TRModGB.ResumeLayout(false);
-            this.TRModGB.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxAmbResultsForBlindModsBox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxNumPreferredDeltaMassesBox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TRAppliedModBox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TRMaxDynamicModsBox)).EndInit();
             this.PepGenPanel.ResumeLayout(false);
             this.PepModGB.ResumeLayout(false);
             this.PepModGB.PerformLayout();
@@ -6373,6 +6359,20 @@ namespace BumberDash.Forms
             this.DTModGB.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DTAppliedModBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.DTMaxDynamicModsBox)).EndInit();
+            this.TRGenPanel.ResumeLayout(false);
+            this.TRToleranceGB.ResumeLayout(false);
+            this.TRToleranceGB.PerformLayout();
+            this.TRDigestionGB.ResumeLayout(false);
+            this.TRDigestionGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxMissedCleavagesBox)).EndInit();
+            this.TRInstrumentGB.ResumeLayout(false);
+            this.TRInstrumentGB.PerformLayout();
+            this.TRModGB.ResumeLayout(false);
+            this.TRModGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxAmbResultsForBlindModsBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxNumPreferredDeltaMassesBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TRAppliedModBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TRMaxDynamicModsBox)).EndInit();
             this.AdvTab.ResumeLayout(false);
             this.TRAdvPanel.ResumeLayout(false);
             this.TRMiscGB.ResumeLayout(false);

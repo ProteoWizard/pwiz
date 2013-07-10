@@ -72,6 +72,7 @@ namespace BumberDash.lib
             return _scanning;
         }
 
+        private string _direcTagMask;
         /// <summary>
         /// Starts Bumbershoot utility based on current row and destination program
         /// </summary>
@@ -85,6 +86,8 @@ namespace BumberDash.lib
 
             if (hi.Cpus > 0)
                 argumentString.Append(string.Format("-cpus {0} ", hi.Cpus));
+
+            var workingDirectory = hi.OutputDirectory.TrimEnd('*');
 
             switch (_destinationProgram)
             {
@@ -104,11 +107,21 @@ namespace BumberDash.lib
                                                         hi.ProteinDatabase));
 
                     //add files to scan to argument string
-                    foreach (var file in hi.FileList)
+                    if (hi.FileList.Count == 1 && hi.FileList[0].FilePath.StartsWith("!"))
                     {
-                        argumentString.Append(String.Format(" {0}", file.FilePath));
-                        _filesToProcess++;
+                        var fullMask = hi.FileList[0].FilePath.Trim('!');
+                        var initialDir = Path.GetDirectoryName(fullMask);
+                        var mask = Path.GetFileName(fullMask);
+                        var maskedFiles = Directory.GetFiles(initialDir, mask);
+                        argumentString.Append(String.Format(" \"{0}\"", fullMask));
+                        _filesToProcess = maskedFiles.Length;
                     }
+                    else
+                        foreach (var file in hi.FileList)
+                        {
+                            argumentString.Append(String.Format(" {0}", file.FilePath));
+                            _filesToProcess++;
+                        }
                     break;
                 case "DirecTag":
                     //Set  location of the program
@@ -127,11 +140,23 @@ namespace BumberDash.lib
                     argumentString.Append(configString.Trim());
 
                     //add files to scan to argument string
-                    foreach (var file in hi.FileList)
+                    _direcTagMask = null;
+                    if (hi.FileList.Count == 1 && hi.FileList[0].FilePath.StartsWith("!"))
                     {
-                        argumentString.Append(String.Format(" {0}", file.FilePath));
-                        _filesToProcess++;
+                        var fullMask = hi.FileList[0].FilePath.Trim('!');
+                        _direcTagMask = fullMask;
+                        var initialDir = Path.GetDirectoryName(fullMask);
+                        var mask = Path.GetFileName(fullMask);
+                        var maskedFiles = Directory.GetFiles(initialDir, mask);
+                        argumentString.Append(String.Format(" \"{0}\"", fullMask));
+                        _filesToProcess = maskedFiles.Length;
                     }
+                    else
+                        foreach (var file in hi.FileList)
+                        {
+                            argumentString.Append(String.Format(" {0}", file.FilePath));
+                            _filesToProcess++;
+                        }
                     break;
                 case "TagRecon":
                     //Set  location of the program
@@ -185,6 +210,7 @@ namespace BumberDash.lib
                         argumentString.AppendFormat(" \"{0}\"", Path.Combine(hi.OutputDirectory.TrimEnd('*'), file));
                         _filesToProcess++;
                     }
+                    
                     break;
                 case "Pepitome":
                     //Set  location of the program
@@ -201,11 +227,21 @@ namespace BumberDash.lib
                                                         configString, hi.ProteinDatabase, hi.SpectralLibrary));
 
                     //add files to scan to argument string
-                    foreach (var file in hi.FileList)
+                    if (hi.FileList.Count == 1 && hi.FileList[0].FilePath.StartsWith("!"))
                     {
-                        argumentString.Append(String.Format(" {0}", file.FilePath));
-                        _filesToProcess++;
+                        var fullMask = hi.FileList[0].FilePath.Trim('!');
+                        var initialDir = Path.GetDirectoryName(fullMask);
+                        var mask = Path.GetFileName(fullMask);
+                        var maskedFiles = Directory.GetFiles(initialDir, mask);
+                        argumentString.Append(String.Format(" \"{0}\"", fullMask));
+                        _filesToProcess = maskedFiles.Length;
                     }
+                    else
+                        foreach (var file in hi.FileList)
+                        {
+                            argumentString.Append(String.Format(" {0}", file.FilePath));
+                            _filesToProcess++;
+                        }
                     break;
                 default:
                     //should never be called, throw error if it is
@@ -213,7 +249,7 @@ namespace BumberDash.lib
                                                       _destinationProgram));
             }
 
-            psi.WorkingDirectory = hi.OutputDirectory.TrimEnd('*');
+            psi.WorkingDirectory = workingDirectory;
             psi.Arguments = argumentString.ToString();
             var commandGiven = (string.Format("Command given:{0}{1}>{2} {3}{0}{0}", Environment.NewLine, psi.WorkingDirectory, psi.FileName, psi.Arguments));
             SendToLog(commandGiven);
@@ -450,6 +486,7 @@ namespace BumberDash.lib
             }
         }
 
+        private string _fullError = string.Empty;
         private void ErrorCaught(object sender, DataReceivedEventArgs e)
         {
             if (!_scanning || (_destinationProgram == "TagRecon"
@@ -464,8 +501,17 @@ namespace BumberDash.lib
 
             var data = e.Data;
 
-            if (ErrorForward != null)
-                ErrorForward(string.Format("[{0}] Error detected- {1}", _destinationProgram, data));
+            if (_fullError == string.Empty)
+                _fullError = string.Format("[{0}] Error detected:", _destinationProgram);
+            _fullError += Environment.NewLine + data;
+
+            //if (ErrorForward != null)
+            //    ErrorForward(string.Format("[{0}] Error detected- {1}", _destinationProgram, data));
+        }
+
+        public string GetErrorMessage()
+        {
+            return _fullError.Length > 0 ? _fullError : null;
         }
 
         /// <summary>

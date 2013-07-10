@@ -416,12 +416,6 @@ namespace CustomDataSourceDialog
                 NavigateToFolder(listItem.Tag, null);
         }
 
-        private void FolderViewList_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == (char)Keys.Return && FolderViewList.SelectedItems.Count > 0)
-                DialogResult = DialogResult.OK;
-        }
-
         private void FolderViewList_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (FolderViewList.SelectedItems.Count == 0)
@@ -871,6 +865,37 @@ namespace CustomDataSourceDialog
                 }
                 else if (Directory.Exists(sourcePathTextBox.Text))
                     NavigateToFolder(sourcePathTextBox.Text, EventArgs.Empty);
+            }
+        }
+
+        private void FolderViewList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.A)
+            {
+                foreach (ListViewItem item in FolderViewList.Items)
+                    item.Selected = true;
+            }
+            else if (e.KeyCode == Keys.Return && FolderViewList.SelectedItems.Count > 0)
+            {
+                e.Handled = true;
+                if ( FolderViewList.SelectedItems.Count == 1 &&
+                    FolderViewList.SelectedItems[0].SubItems[2].Text == "File Folder" &&
+                    Directory.Exists((string)FolderViewList.SelectedItems[0].Tag))
+                    NavigateToFolder((string)FolderViewList.SelectedItems[0].Tag, null);
+                else
+                {
+                    var allFiles = true;
+                    foreach (ListViewItem item in FolderViewList.SelectedItems)
+                        if (item.SubItems[2].Text == "File Folder")
+                        {
+                            allFiles = false;
+                            break;
+                        }
+                    if (allFiles)
+                        DialogResult = DialogResult.OK;
+                    else
+                        MessageBox.Show("Not all selected items are valid files.");
+                }
             }
         }
     }

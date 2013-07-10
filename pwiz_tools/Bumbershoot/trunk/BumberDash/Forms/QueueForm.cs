@@ -89,11 +89,22 @@ namespace BumberDash.Forms
                     {
                         if (InvokeRequired)
                         {
+                            var errors = JobProcess.GetErrorMessage();
+                            if (errors != null)
+                            {
+                                ProgramHandler.LogDelegate logdelegate = ShowError;
+                                Invoke(logdelegate, errors);
+                            }
                             ProgramHandler.ExitDelegate jobdelegate = IndicateJobDone;
                             Invoke(jobdelegate, x, y);
                         }
                         else
+                        {
+                            var errors = JobProcess.GetErrorMessage();
+                            if (errors != null)
+                                ShowError(errors);
                             IndicateJobDone(x, y);
+                        }
                     },
                     StatusUpdate = (x, y) =>
                     {
@@ -804,17 +815,29 @@ namespace BumberDash.Forms
                 return true;
 
             // Get all input files and validate that they exist
-            foreach (var file in hi.FileList)
+            if (hi.FileList.Count == 1 && hi.FileList[0].FilePath.StartsWith("!"))
             {
-                //Input Box
-                var path = file.FilePath.Trim("\"".ToCharArray()); //temporary formatting string
-                if (!File.Exists(path))
+                var fullMask = hi.FileList[0].FilePath.Trim('!');
+                var initialDir = Path.GetDirectoryName(fullMask);
+                var mask = Path.GetFileName(fullMask);
+                if (!Directory.Exists(initialDir) || !Directory.GetFiles(initialDir, mask).Any())
                 {
                     allValid = false;
                     JobQueueDGV.Rows[row].Cells[0].Style.BackColor = Color.LightPink;
-                    break;
                 }
             }
+            else
+                foreach (var file in hi.FileList)
+                {
+                    //Input Box
+                    var path = file.FilePath.Trim("\"".ToCharArray()); //temporary formatting string
+                    if (!File.Exists(path))
+                    {
+                        allValid = false;
+                        JobQueueDGV.Rows[row].Cells[0].Style.BackColor = Color.LightPink;
+                        break;
+                    }
+                }
 
             if (allValid)
                 JobQueueDGV.Rows[row].Cells[0].Style.BackColor = Color.White;
@@ -1164,83 +1187,96 @@ namespace BumberDash.Forms
 
             //Remove associated pepXMLs? (yes/no)->  [[Remove associated files as well?]]
 
-            switch (MessageBox.Show("Delete associated result files as well?",
-                                    "Abort job",
-                                    MessageBoxButtons.YesNoCancel))
+            if (hi.FileList.Count == 1 && hi.FileList[0].FilePath.StartsWith("!"))
             {
-                case DialogResult.Yes:
-                    var trimmedOutput = hi.OutputDirectory.TrimEnd('*');
-                    if (hi.TagConfigFile == null)
-                    {
-                        foreach (var file in hi.FileList)
-                        {
-                            if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
-                            var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value));
-                        }
-                    }
-                    else
-                    {
-						var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
-						var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
-                        foreach (var file in hi.FileList)
-                        {
-                            if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
-                            var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.tags", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value,
-                                                     secondConfig == null ? string.Empty : secondConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value,
-                                                     secondConfig == null ? string.Empty : secondConfig.Value));
-                        }
-                    }
-
-                    if (hi.OutputDirectory.EndsWith("*"))
-                    {
-                        if (Directory.Exists(trimmedOutput))
-                        {
-                            var filesLeft = Directory.GetFileSystemEntries(trimmedOutput);
-                            if (filesLeft.Length == 0)
-                                Directory.Delete(trimmedOutput);
-                            if (filesLeft.Length == 1 
-                                && filesLeft[0].EndsWith("directag_intensity_ranksum_bins.cache"))
-                            {
-                                File.Delete(filesLeft[0]);
-                                Directory.Delete(trimmedOutput);
-                            }
-                                
-                        }
-                    }
-
-                    //if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
-                    {
-                        JobProcess.DeletedAbove();
-                        LastCompleted--;
-                    }
+                if (MessageBox.Show("Are you sure you want to delete this job?", "Delete", MessageBoxButtons.YesNo) ==
+                    DialogResult.Yes)
+                {
+                    JobProcess.DeletedAbove();
+                    LastCompleted--;
                     _session.Delete(JobQueueDGV[0, row].Tag);
                     _session.Flush();
                     JobQueueDGV.Rows.RemoveAt(row);
-                    break;
-
-                case DialogResult.No:
-                    //if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
-                    {
-                        JobProcess.DeletedAbove();
-                        LastCompleted--;
-                    }
-                    _session.Delete(JobQueueDGV[0, row].Tag);
-                    _session.Flush();
-                    JobQueueDGV.Rows.RemoveAt(row);
-                    break;
-                case DialogResult.Cancel:
-                    break;
+                }
             }
+            else
+                switch (MessageBox.Show("Delete associated result files as well?",
+                                    "Remove job",
+                                    MessageBoxButtons.YesNoCancel))
+                {
+                    case DialogResult.Yes:
+                        var trimmedOutput = hi.OutputDirectory.TrimEnd('*');
+                        if (hi.TagConfigFile == null)
+                        {
+                            foreach (var file in hi.FileList)
+                            {
+                                if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
+                                var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
+                                DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value));
+                                DeleteFile(String.Format(@"{0}\{1}{2}.mzid", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value));
+                            }
+                        }
+                        else
+                        {
+						    var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+						    var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
+                            foreach (var file in hi.FileList)
+                            {
+                                if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
+                                var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
+                                DeleteFile(String.Format(@"{0}\{1}{2}.tags", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value));
+                                DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value,
+                                                         secondConfig == null ? string.Empty : secondConfig.Value));
+                                DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value,
+                                                         secondConfig == null ? string.Empty : secondConfig.Value));
+                            }
+                        }
+
+                        if (hi.OutputDirectory.EndsWith("*"))
+                        {
+                            if (Directory.Exists(trimmedOutput))
+                            {
+                                var filesLeft = Directory.GetFileSystemEntries(trimmedOutput);
+                                if (filesLeft.Length == 0)
+                                    Directory.Delete(trimmedOutput);
+                                if (filesLeft.Length == 1 
+                                    && filesLeft[0].EndsWith("directag_intensity_ranksum_bins.cache"))
+                                {
+                                    File.Delete(filesLeft[0]);
+                                    Directory.Delete(trimmedOutput);
+                                }
+                                
+                            }
+                        }
+
+                        //if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                        {
+                            JobProcess.DeletedAbove();
+                            LastCompleted--;
+                        }
+                        _session.Delete(JobQueueDGV[0, row].Tag);
+                        _session.Flush();
+                        JobQueueDGV.Rows.RemoveAt(row);
+                        break;
+
+                    case DialogResult.No:
+                        //if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                        {
+                            JobProcess.DeletedAbove();
+                            LastCompleted--;
+                        }
+                        _session.Delete(JobQueueDGV[0, row].Tag);
+                        _session.Flush();
+                        JobQueueDGV.Rows.RemoveAt(row);
+                        break;
+                    case DialogResult.Cancel:
+                        break;
+                }
         }
 
         #endregion
