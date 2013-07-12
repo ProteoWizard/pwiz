@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
              });
             RunDlg<MessageDlg>(() => immediateWindow.RunLine(0), messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "File not found");                
+                AssertEx.Contains(messageDlg.Message, Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__);
                 messageDlg.OkDialog();
             });
             RunUI(immediateWindow.Dispose);

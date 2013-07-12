@@ -455,7 +455,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     Unsaved = true;
                     ToolList[spot].OutputToImmediateWindow = (cbOutputImmediateWindow.CheckState == CheckState.Checked);                    
-                }                                 
+                }
             }
         }
 
@@ -467,11 +467,11 @@ namespace pwiz.Skyline.ToolsUI
             int spot = listTools.SelectedIndex;
             if (spot != -1)
             {
-                if (ToolList[spot].ReportTitle != comboReport.Text)
+                if (ToolList[spot].ReportTitle != comboReport.Text && !(ToolList[spot].ReportTitle == null && comboReport.Text == string.Empty))
                 {
                     Unsaved = true;
                     ToolList[spot].ReportTitle = comboReport.Text;
-                }                
+                }
             }
         }
 
@@ -484,8 +484,16 @@ namespace pwiz.Skyline.ToolsUI
         /// Remove the currently selected value.
         /// </summary>
         public void Remove()
-        {            
-            int spot = listTools.SelectedIndex;         
+        {
+            int spot = listTools.SelectedIndex;
+            if (spot >= Settings.Default.ToolList.Count && !Unsaved)
+            {
+                //Removing a newly added tool
+            }
+            else
+            {
+                Unsaved = true;
+            }
             Removelist.Add(ToolList[spot]);
             ToolList.RemoveAt(spot);
             RefreshListBox();
@@ -522,7 +530,6 @@ namespace pwiz.Skyline.ToolsUI
                                ? highlighted.ReportTitle
                                : string.Empty;
             }
-            Unsaved = true;
         }
 
         private void btnMoveUp_Click(object sender, EventArgs e)
@@ -581,8 +588,8 @@ namespace pwiz.Skyline.ToolsUI
 
         public void OkDialog()
         {
-            if (SaveTools())            
-                DialogResult = DialogResult.OK;            
+            if (SaveTools())
+                DialogResult = DialogResult.OK;
         }
 
         private void btnCancel_Click(object sender, EventArgs eventArgs)
@@ -606,7 +613,7 @@ namespace pwiz.Skyline.ToolsUI
                         if (SaveTools())
                             DialogResult = DialogResult.OK;
                         break;
-                    case DialogResult.No:                        
+                    case DialogResult.No:
                         DialogResult = DialogResult.Cancel;
                         break;
                 }
@@ -632,7 +639,7 @@ namespace pwiz.Skyline.ToolsUI
                             DirectoryEx.SafeDelete(removeTool.ToolDirPath);                                                                            
                         }
                     }    
-                }                
+                }
 
                 Settings.Default.ToolList = CopyTools(ToolList); 
                 Unsaved = false;
@@ -677,7 +684,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                CommandBtnClick();    
+                CommandBtnClick();
             }
             
         }
@@ -696,7 +703,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ProgramPathContainer pcc = ToolMacros.IsProgramPathMacro(textCommand.Text);
             var dlg = new LocateFileDlg(pcc);
-            dlg.ShowDialog();            
+            dlg.ShowDialog();
         }
 
         public void CommandBtnClick()
@@ -741,7 +748,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void PopulateMacroList()
         {
-            // Populate _macroListArguments.            
+            // Populate _macroListArguments.
             foreach (Macro macro in ToolMacros._listArguments)
             {
                 _macroListArguments.Add(new MacroMenuItem(macro, textArguments, true));
@@ -790,7 +797,7 @@ namespace pwiz.Skyline.ToolsUI
                     // If multiple macros are allowed, append the macro ShortText.
                     _targetTextBox.Text += ShortText;
                 else
-                {               
+                {
                     // If Multiple Macros are NOT allowed, replace with macro ShortText.
                     _targetTextBox.Text = ShortText;
                 }
@@ -798,7 +805,7 @@ namespace pwiz.Skyline.ToolsUI
             public string GetContents(ToolMacroInfo tmf)
             {
                 return _macro.GetContents(tmf);
-            }           
+            }
         }
 
         // Used in automated testing.
@@ -874,7 +881,7 @@ namespace pwiz.Skyline.ToolsUI
                     continue;
                 }
 
-                menu.Items.Add(menuItem);                
+                menu.Items.Add(menuItem);
 
                 if (SkylineWindowParent != null)
                 {
@@ -901,8 +908,6 @@ namespace pwiz.Skyline.ToolsUI
                     menuItem.ToolTipText = content;
                 }
             }
-           
-           
         }
 
         #endregion // Macros
@@ -939,7 +944,7 @@ namespace pwiz.Skyline.ToolsUI
                             break;
                         case (DialogResult.No):
                             return;
-                    }                    
+                    }
                 }
 
                 var dlg = new OpenFileDialog
@@ -1016,7 +1021,8 @@ namespace pwiz.Skyline.ToolsUI
             {
                 listTools.SelectedIndex = ToolList.Count-1;
                 btnRemove.Enabled = true;
-            }                
+            }
+            Unsaved = false;
         }
 
         public void RemoveAllTools()

@@ -1,3 +1,22 @@
+/*
+ * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2012 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -141,7 +160,9 @@ namespace pwiz.Skyline.Model.Tools
             {                
                 throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_);
             }
-            name = name.Replace(' ', '_');
+            //This helps with zipfiles that have spaces in the titles. 
+            //Consider: We may want to add quotes around usages of the $(ToolDir) macro incase the Tool directory has spaces in one of its directory names.
+            name = name.Replace(' ', '_'); 
 
             string outerToolsFolderPath = ToolDescriptionHelpers.GetToolsDirectory();
             if (string.IsNullOrEmpty(outerToolsFolderPath))
@@ -200,7 +221,7 @@ namespace pwiz.Skyline.Model.Tools
             if (!toolInf.Exists)
             {
                 DirectoryEx.SafeDelete(tempToolPath);
-                throw new MessageException(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_Error_in_the_selected_zip_file_,Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_does_not_have_a_required_tool_inf_directory_at_the_top_level_));
+                throw new MessageException(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_, Resources.ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_directory_));
             }
 
             var existingReports = new List<ReportSpec>();
@@ -237,7 +258,7 @@ namespace pwiz.Skyline.Model.Tools
             if (toolsToBeOverwrittenTitles.Count > 0 || existingReports.Count > 0)
                 overwrite = shouldOverwrite(toolsToBeOverwrittenTitles, existingReports);
             else
-            {                
+            {
                 overwrite = true;
             }
             if (overwrite == null)
@@ -264,7 +285,7 @@ namespace pwiz.Skyline.Model.Tools
             }
             foreach (ReportSpec item in newReports)
             {
-                Settings.Default.ReportSpecList.Add(item); //What if they have two  files with conflicting report titles. //Todo: (danny) make sure we handle this.
+                Settings.Default.ReportSpecList.Add(item);
             }
             var reportRenameMapping = new Dictionary<string, string>();
             if (overwrite == false) // Dont overwrite so rename reports.
@@ -337,20 +358,20 @@ namespace pwiz.Skyline.Model.Tools
                         retval.AddMessage(e.Message);
                         continue;
                     }
-                    command = command.Replace(permToolPath, ToolMacros.TOOL_DIR);                    
+                    command = command.Replace(permToolPath, ToolMacros.TOOL_DIR);
                 }
                 else if (programPathContainer != null) // If it is a ProgramPath macro
                 {
                     List<string> packages = new List<string>();
                     int i = 1;
-                    string package = readin.GetPackage(i);                        
+                    string package = readin.GetPackage(i);
                     while (!string.IsNullOrEmpty(package))
                     {
                         packages.Add(package);
                         package = readin.GetPackage(++i);
                     }
 
-                    if (!Settings.Default.FilePaths.ContainsKey(programPathContainer) || packages.Count > 0)
+                    if (!Settings.Default.ToolFilePaths.ContainsKey(programPathContainer) || packages.Count > 0)
                         retval.AddInstallation(programPathContainer,packages);
                 }
 
@@ -423,13 +444,6 @@ namespace pwiz.Skyline.Model.Tools
                 //Append each tool to the return value
                 retval.AddTool(new ToolDescription(uniqueTitle, command, args, readin.Initial_Directory,
                                                    readin.Output_to_Immediate_Window.Contains("True"), reportTitle, dllPath, readin.Args_Collector_Type, permToolPath)); //Not L10N
-                                
-                //Settings.Default.ToolList.Add(new ToolDescription(uniqueTitle, command, args,
-                //                                                  readin.Initial_Directory,
-                //                                                  readin.Output_to_Immediate_Window.Contains("True"), //Not L10N
-                //                                                  reportTitle, dllPath,
-                //                                                  readin.Args_Collector_Type, permToolPath));                                  
-                
                 fileStream.Close();
 
             } // Done looping through .properties files.
@@ -448,15 +462,15 @@ namespace pwiz.Skyline.Model.Tools
                     string path = installProgram(ppc, retval.Installations[ppc]);
                     if (path == null)
                     {
-                        //Cancel installation                        
+                        //Cancel installation
                         DirectoryEx.SafeDelete(permToolPath);
                         return null;
                     }
-                    else
+                    else if (path != string.Empty)
                     {
-                        if (Settings.Default.FilePaths.ContainsKey(ppc))
-                            Settings.Default.FilePaths.Remove(ppc);
-                        Settings.Default.FilePaths.Add(ppc, path);
+                        if (Settings.Default.ToolFilePaths.ContainsKey(ppc))
+                            Settings.Default.ToolFilePaths.Remove(ppc);
+                        Settings.Default.ToolFilePaths.Add(ppc, path);
                     }
                 }
             }
@@ -471,7 +485,7 @@ namespace pwiz.Skyline.Model.Tools
                 // No valid tools were found
                 if (Directory.Exists(permToolPath))
                 {
-                    DirectoryEx.SafeDelete(permToolPath);                    
+                    DirectoryEx.SafeDelete(permToolPath);
                 }
             }
 
@@ -489,8 +503,8 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     return string.Format(formatString, i);
                 }
-                i++;                
-            } while (true);           
+                i++;
+            } while (true);
         }
 
         private static string GetUniqueToolTitle(string s)
@@ -605,6 +619,6 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
             return true;
-        }        
+        }
     }
 }

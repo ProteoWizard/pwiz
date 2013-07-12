@@ -14135,21 +14135,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error in the selected zip file..
+        ///   Looks up a localized string similar to Error: It does not contain the required tool-inf directory..
         /// </summary>
-        public static string ToolInstaller_UnpackZipTool_Error_in_the_selected_zip_file_ {
+        public static string ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_directory_ {
             get {
-                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error_in_the_selected_zip_file_", resourceCulture);
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_dire" +
+                        "ctory_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The selected zip file does not have a required tool-inf directory at the top level..
+        ///   Looks up a localized string similar to The selected zip file is not an installable tool..
         /// </summary>
-        public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_does_not_have_a_required_tool_inf_directory_at_the_top_level_ {
+        public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_ {
             get {
-                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_does_not_have_a_required_tool_i" +
-                        "nf_directory_at_the_top_level_", resourceCulture);
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_", resourceCulture);
             }
         }
         

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Model;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -35,7 +34,7 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
             string programName = ppc.ProgramName;
             string programVersion = ppc.ProgramVersion;
-            if (Settings.Default.FilePaths.ContainsKey(ppc))
+            if (Settings.Default.ToolFilePaths.ContainsKey(ppc))
             {
                 labelMessage.Text = programVersion != null
                                           ? string.Format(TextUtil.LineSeparate(
@@ -48,7 +47,7 @@ namespace pwiz.Skyline.Alerts
                                               Resources.LocateFileDlg_LocateFileDlg_Below_is_the_saved_value_for_the_path_to_the_executable,
                                               Resources.LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect),
                                               programName);
-                textPath.Text = Settings.Default.FilePaths[ppc];
+                textPath.Text = Settings.Default.ToolFilePaths[ppc];
             }
             else
             {
@@ -106,7 +105,7 @@ namespace pwiz.Skyline.Alerts
             if (ValidatePath())
             {
                 // Add the path to user settings!
-                var filePaths = Settings.Default.FilePaths;
+                var filePaths = Settings.Default.ToolFilePaths;
                 if (String.IsNullOrEmpty(textPath.Text))
                 {
                     //Remove the key if it exists
@@ -126,7 +125,7 @@ namespace pwiz.Skyline.Alerts
                     }
                 }
 
-                Settings.Default.FilePaths = CopyFilePaths(filePaths);
+                Settings.Default.ToolFilePaths = CopyFilePaths(filePaths);
                 DialogResult = DialogResult.OK;
             }
         }

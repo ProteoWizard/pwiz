@@ -208,21 +208,19 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
-        //public XmlMappedList<ProgramPathContainer,string> FilePaths 
-        //public Dictionary<ProgramPathContainer,string> FilePaths
-        public SerializableDictionary<ProgramPathContainer,string> FilePaths
+        public SerializableDictionary<ProgramPathContainer,string> ToolFilePaths
         {
             get
             {
-                if (this["FilePaths"] == null)
+                if (this["ToolFilePaths"] == null)
                 {
-                    FilePaths = new SerializableDictionary<ProgramPathContainer, string>();
+                    ToolFilePaths = new SerializableDictionary<ProgramPathContainer, string>();
                 }
-                return (SerializableDictionary<ProgramPathContainer, string>)(this["FilePaths"]);
+                return (SerializableDictionary<ProgramPathContainer, string>)(this["ToolFilePaths"]);
             }
             set
             {
-                this["FilePaths"] = value;
+                this["ToolFilePaths"] = value;
             }
         }
 

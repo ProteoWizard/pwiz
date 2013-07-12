@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -379,14 +378,14 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 catch (Exception ex)
                 {
-                    if (ex is FileNotFoundException || ex is Win32Exception)
+                    if (ex is FileNotFoundException)
                     {
                         exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(Resources.ToolDescription_RunTool_File_not_found_,
                                     Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_)));
                     }
                     else
                     {
-                        exceptionHandler.HandleException(new Exception(Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__));
+                        exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__, ex.Message)));
                     }
                 }
 

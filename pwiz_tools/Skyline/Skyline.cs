@@ -3500,8 +3500,15 @@ namespace pwiz.Skyline
                     wh.Set();
                 });
             wh.WaitOne();
-            wh.Dispose();           
-            return result == DialogResult.OK ? Settings.Default.FilePaths[programPathContainer] : null;
+            wh.Dispose();
+            if (result == DialogResult.OK)
+            {
+                return Settings.Default.ToolFilePaths.ContainsKey(programPathContainer) ? Settings.Default.ToolFilePaths[programPathContainer] : string.Empty;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         // currently a work-around to get an R-installer
