@@ -930,6 +930,10 @@ namespace pwiz.Skyline.Model
             double maxRtDiff = 0;
             if (nodeTran.Results != null)
             {
+                double? averageRT = null;
+                if (nodePep != null)
+                    averageRT = nodePep.AverageMeasuredRetentionTime;
+
                 for (int resultIdx = 0; resultIdx < nodeTran.Results.Count; resultIdx++)
                 {
                     if (SchedulingAlgorithm == ExportSchedulingAlgorithm.Single && SchedulingReplicateIndex != resultIdx)
@@ -941,9 +945,9 @@ namespace pwiz.Skyline.Model
 
                     foreach (var chromInfo in result)
                     {
-                        if (nodePep != null && nodePep.AverageMeasuredRetentionTime.HasValue)
+                        if (averageRT.HasValue)
                         {
-                            double rtDiff = nodePep.AverageMeasuredRetentionTime.Value - chromInfo.StartRetentionTime;
+                            double rtDiff = averageRT.Value - chromInfo.StartRetentionTime;
                             if (rtDiff > maxRtDiff)
                                 maxRtDiff = rtDiff;
                         }
