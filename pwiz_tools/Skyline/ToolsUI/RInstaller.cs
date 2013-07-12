@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -106,14 +107,10 @@ namespace pwiz.Skyline.ToolsUI
                 Installed = InstallR();
 
             // once R is installed, install Packages, if necessary
-            if (Installed && checkedListBoxPackages.CheckedIndices.Count != 0)
-                GetPackages();
+            if (Installed)
+                PackagesInstalled = GetPackages();
 
-            if (checkedListBoxPackages.CheckedIndices.Count == 0)
-            {
-                PackagesInstalled = true;
-            }
-
+ 
             // if R is successfully installed, return OK for a successful installation, regardless
             // of how the package installation turned out
             DialogResult = (Installed && PackagesInstalled) ? DialogResult.OK : DialogResult.Cancel;
@@ -237,7 +234,7 @@ namespace pwiz.Skyline.ToolsUI
             return statusCode == 0;
         }
 
-        private void GetPackages()
+        private bool GetPackages()
         {
             // only download the checked packages
             ICollection<Uri> packagesToDownload = new Collection<Uri>();
@@ -249,16 +246,35 @@ namespace pwiz.Skyline.ToolsUI
                 index++;
             }
 
-            if (packagesToDownload.Count != 0)
+            if (packagesToDownload.Count == 0)
+                return true;
+
+            try
             {
                 string packagePaths = null;
-                using (var dlg = new LongWaitDlg { Message = Resources.RInstaller_GetPackages_Downloading_packages })
+                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_GetPackages_Downloading_packages})
                 {
-                    dlg.PerformWork(this, 1000, longWaitBroker => packagePaths = DownloadPackages(packagesToDownload, longWaitBroker));
+                    dlg.PerformWork(this, 1000,
+                                    longWaitBroker =>
+                                    packagePaths = DownloadPackages(packagesToDownload, longWaitBroker));
                 }
                 // then install them
                 InstallPackages(packagePaths);
             }
+            catch (TargetInvocationException x)
+            {
+                if (x.InnerException is MessageException)
+                {
+                    MessageDlg.Show(this, x.InnerException.Message);
+                    return false;
+                }
+            }
+            catch (MessageException x)
+            {
+                MessageDlg.Show(this, x.Message);
+                return false;
+            }
+            return true;
         }
 
         private static string DownloadPackages(IEnumerable<Uri> packagesToDownload, ILongWaitBroker longWaitBroker)
@@ -270,7 +286,7 @@ namespace pwiz.Skyline.ToolsUI
             var packagePaths = new StringBuilder();
 
             // collect failed package installs
-            var failedDownloads = new Collection<Uri>();
+            var failedDownloads = new List<string>();
 
             // download each package
             foreach (var package in packagesToDownload)
@@ -281,11 +297,22 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     if (webClient.DownloadFileAsyncWithBroker(package, downloadPath))
                         packagePaths.Append(TextUtil.SEPARATOR_SPACE).Append(downloadPath);
+                    else
+                        failedDownloads.Add(package.ToString());
                 }
                 catch
                 {
-                    failedDownloads.Add(package); // TODO: do we want to do something with this? 
+                    failedDownloads.Add(package.ToString()); 
                 }
+            }
+            if (failedDownloads.Count > 0)
+            {
+                throw new MessageException(
+                    TextUtil.LineSeparate(Resources.RInstaller_DownloadPackages_Failed_to_download_the_following_packages_,
+                                          string.Empty,
+                                          TextUtil.LineSeparate(failedDownloads),
+                                          string.Empty,
+                                          Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
             }
             return packagePaths.ToString();
         }
@@ -299,10 +326,7 @@ namespace pwiz.Skyline.ToolsUI
             // then get the program path
             string programPath = FindRProgramPath(Version);
             if (programPath == null)
-            {
-                MessageDlg.Show(this, Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
-                return;
-            }
+                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
 
             // run installer
             var startInfo = new ProcessStartInfo("CMD.exe")  // Not L10N
@@ -317,12 +341,10 @@ namespace pwiz.Skyline.ToolsUI
                 packageInstall.Start();
                 packageInstall.WaitForExit();
                 MessageDlg.Show(this, Resources.RInstaller_InstallPackages_Tool_installation_completed);
-                PackagesInstalled = true;
             }
             catch (Exception ex)
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_An_error_occurred_installing_packages, ex.Message));
-                PackagesInstalled = false;
+                throw new MessageException(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_An_error_occurred_installing_packages, ex.Message), ex);
             }
         }
 

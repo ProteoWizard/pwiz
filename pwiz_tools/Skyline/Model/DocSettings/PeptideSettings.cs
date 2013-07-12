@@ -1746,7 +1746,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
 
                 // If already in the list, nothing more to do
-                if (librarySpecs.Contains(s => Equals(s.Name, libraryName)))
+                if (librarySpecs.Contains(s => Equals(s.Name, libraryName)) ||
+                        (_disconnectedLibraries != null && _disconnectedLibraries.Contains(l => Equals(l.Name, libraryName))))
                     continue;
 
                 // If the named spec is in the global settings, use it
@@ -1771,8 +1772,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
 
                 // Look for the library in the user's default library path
-                var pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
-                if (!File.Exists(pathLibrary) && findLibrary != null)
+                var pathLibrary = Settings.Default.LibraryDirectory != null
+                    ? Path.Combine(Settings.Default.LibraryDirectory, fileName)
+                    : null;
+                if (pathLibrary != null && !File.Exists(pathLibrary) && findLibrary != null)
                 {
                     pathLibrary = findLibrary(libraryName, fileName);
                     if (pathLibrary == null)
@@ -1787,6 +1790,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 librarySpecs.Add(libSpec);
                 Settings.Default.SpectralLibraryList.Add(libSpec);
             }
+
+            if (ArrayUtil.ReferencesEqual(LibrarySpecs, librarySpecs))
+                return this;
 
             return ChangeLibrarySpecs(librarySpecs);
         }
@@ -2016,15 +2022,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 for (int i = 0; i < libraries.Count; i++)
                 {
                     // First make sure it's not the document library
-                    var spec = _librarySpecs[i];
-                    if (!spec.IsDocumentLibrary)
+                    var spec = (!ReferenceEquals(libraries, _disconnectedLibraries) ? _librarySpecs[i] : null);
+                    if (spec == null || !spec.IsDocumentLibrary)
                     {
                         // If there is a library, write it.  Otherwise, write the
                         // library spec.
                         var item = libraries[i];
                         if (item == null)
                         {
-                            if (!spec.IsDocumentLocal)
+                            if (spec != null && !spec.IsDocumentLocal)
                             {
                                 IXmlElementHelper<LibrarySpec> helper = XmlUtil.FindHelper(spec, LIBRARY_SPEC_HELPERS);
                                 if (helper == null)

@@ -18,7 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
@@ -528,7 +528,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse)
         {
-            Debug.Assert(!diff.DiffPeptideProps); // No settings dependent properties yet.
+            Helpers.Assume(!diff.DiffPeptideProps); // No settings dependent properties yet.
 
             // If the peptide has explicit modifications, and the modifications have
             // changed, see if any of the explicit modifications have changed
@@ -1059,7 +1059,7 @@ namespace pwiz.Skyline.Model
                 {
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
-                        Debug.Assert(false);    // Should never happen
+                        Helpers.Assume(false);    // Should never happen
                     else
                     {
                         var infoNew = info;
@@ -1091,7 +1091,7 @@ namespace pwiz.Skyline.Model
                 {
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
-                        Debug.Assert(false);    // Should never happen
+                        Helpers.Assume(false);    // Should never happen
                     else
                     {
                         var infoNew = info;
@@ -1147,7 +1147,7 @@ namespace pwiz.Skyline.Model
                 if (info == null)
                     return;
 
-                Debug.Assert(FileId == null || ReferenceEquals(info.FileId, FileId));
+                Helpers.Assume(FileId == null || ReferenceEquals(info.FileId, FileId));
                 FileId = info.FileId;
                 FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
 
@@ -1168,7 +1168,7 @@ namespace pwiz.Skyline.Model
 
                 var key = new TransitionKey(nodeTran.Key);
                 if (TranAreas.ContainsKey(key))
-                    throw new ArgumentException(String.Format("Duplicate transition '{0}' found for peak areas ", nodeTran.Transition));
+                    throw new InvalidDataException(string.Format(Resources.PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas, nodeTran.Transition));
                 TranAreas.Add(key, info.Area);
             }
 
@@ -1275,7 +1275,7 @@ namespace pwiz.Skyline.Model
                 var statsW = new Statistics(weights);
                 stdev = (float)stats.StdDev(statsW);
                 double mean = areaTotalNum/areaTotalDenom;
-                Debug.Assert(Math.Abs(mean - stats.Mean(statsW)) < 0.0001);
+                Helpers.Assume(Math.Abs(mean - stats.Mean(statsW)) < 0.0001);
                 // Make sure the value does not exceed the bounds of a float.
                 return (float) Math.Min(float.MaxValue, Math.Max(float.MinValue, mean));
             }

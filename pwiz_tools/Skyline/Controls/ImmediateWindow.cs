@@ -42,10 +42,7 @@ namespace pwiz.Skyline.Controls
             // Initializes a new TextWriter to write to the textBox instead.
             _textBoxStreamWriter = new TextBoxStreamWriter(textImWindow, this, writerHelper);
             _parent = parent;
-            WriterHelper = writerHelper;
         }
-
-        private TextBoxStreamWriterHelper WriterHelper { get; set; }
 
         public TextWriter Writer { get { return _textBoxStreamWriter; } }
 
@@ -106,7 +103,7 @@ namespace pwiz.Skyline.Controls
                         //CONSIDER: multiple tools running. eg. two tools titled "Tool" and "ToolTest" if you enter ToolTest then both tools will run.
                         try
                         {                            
-                            tool.RunTool(_parent.Document, _parent, WriterHelper, _parent);
+                            tool.RunTool(_parent.Document, _parent, _textBoxStreamWriter.WriterHelper, _parent);
                         }
                         catch (WebToolException er  )
                         {
@@ -229,7 +226,6 @@ namespace pwiz.Skyline.Controls
         private readonly Dictionary<int, int> _pidToSmallInt;
         private readonly BitArrayEx _indexesInUse;
 
-
         private int GetMapping(int pid)
         {
             if (_pidToSmallInt.ContainsKey(pid))
@@ -270,6 +266,7 @@ namespace pwiz.Skyline.Controls
                WriteLine(mapping + ">" + s);
             }
         }
+
         public void HandleProcessExit(object sender, EventArgs processExitedEventArgs, int pid)
         {
             if (_pidToSmallInt.ContainsKey(pid))
@@ -286,19 +283,23 @@ namespace pwiz.Skyline.Controls
             WriteLineEvent handler = Wrote;
             if (handler != null) handler(this, args);
         }
+        
         public event WriteLineEvent Wrote;
+        
         public override void WriteLine()
         {
             base.WriteLine();
             Text += Environment.NewLine;
             OnWroteLine(string.Empty);
         }
+        
         public override void WriteLine(string value)
         {
             base.WriteLine(value);
             Text += value + Environment.NewLine;
             OnWroteLine(value);
         }
+        
         public override Encoding Encoding
         {
             get { return Encoding.UTF8; }
@@ -328,7 +329,7 @@ namespace pwiz.Skyline.Controls
             WriteLine(s);
         }
 
-        private TextBoxStreamWriterHelper WriterHelper { get; set; }
+        public TextBoxStreamWriterHelper WriterHelper { get; set; }
 
         public void Cleanup()
         {
@@ -341,8 +342,9 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         public override void WriteLine(string s)
         {
-            RunUIAction(WriteLineHelper,s);
+            RunUIAction(WriteLineHelper, s);
         }
+        
         private void WriteLineHelper(string s)
         {
             _box.AppendText(s + Environment.NewLine);
@@ -363,6 +365,7 @@ namespace pwiz.Skyline.Controls
         {
             RunUIAction(WriteFreshHelper, text);
         }      
+        
         private void WriteFreshHelper(string text)
         {
             int currentline = _box.GetLineFromCharIndex((_box.SelectionStart) + 1);
@@ -429,6 +432,7 @@ namespace pwiz.Skyline.Controls
         {
             _bitArray.Set(i,value);
         }
+        
         public bool Get(int i)
         {
             return _bitArray.Get(i);

@@ -90,8 +90,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private IList<SpectrumDisplayInfo> _spectra;
         private bool _inToolbarUpdate;
         // TODO
-        private object _spectrumKeySave;
-        private GraphHelper _graphHelper;
+        // private object _spectrumKeySave;
+        private readonly GraphHelper _graphHelper;
 
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {

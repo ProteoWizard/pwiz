@@ -120,7 +120,8 @@ namespace pwiz.Skyline.Model.Lib
             rp.filter = filter;
 
             // Get library settings
-            rp.tolerance = libraries.IonMatchTolerance;
+            Tolerance = libraries.IonMatchTolerance;
+            rp.tolerance = Tolerance;
             rp.pick = tranSettings.Libraries.Pick;
             int ionMatchCount = libraries.IonCount;
             // If no library filtering will happen, return all rankings for view in the UI
@@ -223,6 +224,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public IsotopeLabelType LabelType { get; private set; }
+        public double Tolerance { get; private set; }
 
 // ReSharper disable ParameterTypeCanBeEnumerable.Local
         private static void FindIntensityCutoff(IList<SpectrumPeaksInfo.MI> listMI, float left, float right, int minPeaks, int calls, ref float cutoff, ref int len)

@@ -5548,4 +5548,13 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_InstallPackages_An_error_occurred_installing_packages" xml:space="preserve">
     <value>An error occurred installing packages</value>
   </data>
+  <data name="PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas" xml:space="preserve">
+    <value>Duplicate transition '{0}' found for peak areas</value>
+  </data>
+  <data name="RInstaller_DownloadPackages_Failed_to_download_the_following_packages_" xml:space="preserve">
+    <value>Failed to download the following packages:</value>
+  </data>
+  <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
+    <value>Check your network connection or contact the tool provider for installation support.</value>
+  </data>
 </root>

@@ -267,18 +267,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 sb.Append(part);
             }
             // If predicted m/z should be displayed, but hasn't been yet, then display now.
-            double displayMz = 0;
             if (ShowMz && !showMzInLabel)
             {
-                displayMz = GetDisplayMz(rmi.PredictedMz);
-                sb.AppendLine().Append(displayMz);
+                sb.AppendLine().Append(GetDisplayMz(rmi.PredictedMz));
             }
             // If showing observed m/z, and it is different from the predicted m/z, then display it last.
             if (ShowObservedMz)
             {
-                double displayObservedMz = GetDisplayMz(rmi.ObservedMz);
-                if (displayMz != displayObservedMz)
-                    sb.AppendLine().Append(displayObservedMz);
+                sb.AppendLine().Append(GetDisplayMz(rmi.ObservedMz));
             }
             return sb.ToString();
         }
@@ -302,9 +298,13 @@ namespace pwiz.Skyline.Controls.Graphs
             return label.ToString();
         }
 
-        private static double GetDisplayMz(double mz)
+        private double GetDisplayMz(double mz)
         {
-            return Math.Round(mz, 1);
+            // Try to show enough decimal places to distinguish by tolerance
+            int places = 1;
+            while (places < 4 && ((int) (SpectrumInfo.Tolerance*Math.Pow(10, places))) == 0)
+                places++;
+            return Math.Round(mz, places);
         }
 
         private bool IsVisibleIon(LibraryRankedSpectrumInfo.RankedMI rmi)

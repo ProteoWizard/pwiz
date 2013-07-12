@@ -552,6 +552,8 @@ namespace pwiz.Skyline.Model.Tools
     public class MessageException : Exception
     {
         public MessageException(string message) : base(message){}
+
+        public MessageException(string message, Exception innerException) : base(message, innerException){}
     }
 
     public class ToolDescriptionHelpers
