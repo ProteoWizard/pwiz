@@ -136,6 +136,7 @@ namespace pwiz.Skyline.Model
         public const string BRUKER_TOF = "Bruker TOF";
         public const string THERMO = "Thermo";
         public const string THERMO_TSQ = "Thermo TSQ";
+        public const string THERMO_QUANTIVA = "Thermo Quantiva";
         public const string THERMO_LTQ = "Thermo LTQ";
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
         public const string WATERS = "Waters";
@@ -165,6 +166,7 @@ namespace pwiz.Skyline.Model
                 ABI,
                 AGILENT,
                 THERMO,
+                THERMO_QUANTIVA,
                 WATERS
             };
 
@@ -335,6 +337,8 @@ namespace pwiz.Skyline.Model
                         return ExportThermoCsv(doc, path);
                     else
                         return ExportThermoMethod(doc, path, template);
+                case ExportInstrumentType.THERMO_QUANTIVA:
+                    return ExportThermoQuantivaCsv(doc, path);
                 case ExportInstrumentType.THERMO_LTQ:
                     OptimizeType = null;
                     return ExportThermoLtqMethod(doc, path, template);
@@ -443,6 +447,16 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
+        public AbstractMassListExporter ExportThermoQuantivaCsv(SrmDocument document, string fileName)
+        {
+            var exporter = InitExporter(new ThermoQuantivaMassListExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            exporter.Export(fileName);
+
+            return exporter;
+        }
+
         public AbstractMassListExporter ExportThermoMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new ThermoMethodExporter(document));
@@ -537,7 +551,7 @@ namespace pwiz.Skyline.Model
     public class ThermoMassListExporter : AbstractMassListExporter
     {
         private bool _addTriggerReference;
-        private HashSet<string> _setRTStandards;
+        protected HashSet<string> _setRTStandards;
 
         public ThermoMassListExporter(SrmDocument document)
             : base(document, null)
@@ -673,6 +687,91 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
+
+            writer.WriteLine();
+        }
+    }
+
+    public class ThermoQuantivaMassListExporter : ThermoMassListExporter
+    {
+        public ThermoQuantivaMassListExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        protected override string InstrumentType
+        {
+            get { return ExportInstrumentType.THERMO_QUANTIVA; }
+        }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.Write("Compound"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Start Time (min)"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("End Time (min)"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Polarity"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Precursor (m/z)"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Product (m/z)"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Collision Energy (V)"); // Not L10N
+
+            writer.WriteLine();
+        }
+
+        protected override void WriteTransition(TextWriter writer,
+                                                PeptideGroupDocNode nodePepGroup,
+                                                PeptideDocNode nodePep,
+                                                TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
+                                                TransitionDocNode nodeTran,
+                                                int step)
+        {
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
+            writer.Write(FieldSeparator);
+            
+            // Retention time
+            if (MethodType == ExportMethodType.Standard)
+            {
+                // Start Time and Stop Time
+                writer.Write(0);
+                writer.Write(FieldSeparator);
+                writer.Write(RunLength);
+                writer.Write(FieldSeparator);
+            }
+            else
+            {
+                var prediction = Document.Settings.PeptideSettings.Prediction;
+                double windowRT;
+                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
+                // Start Time and Stop Time
+                if (predictedRT.HasValue)
+                {
+                    writer.Write(Math.Max(0, predictedRT.Value - windowRT / 2).ToString(CultureInfo));    // No negative retention times
+                    writer.Write(FieldSeparator);
+                    writer.Write((predictedRT.Value + windowRT / 2).ToString(CultureInfo));
+                    writer.Write(FieldSeparator);
+                }
+                else
+                {
+                    writer.Write(FieldSeparator);
+                    writer.Write(FieldSeparator);
+                }
+            }
+
+            writer.Write("Positive");
+            writer.Write(FieldSeparator);
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
 
             writer.WriteLine();
         }

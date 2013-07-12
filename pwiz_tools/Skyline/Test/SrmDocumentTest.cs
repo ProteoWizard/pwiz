@@ -36,6 +36,9 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class SrmDocumentTest : AbstractUnitTest
     {
+        private const double DEFAULT_RUN_LENGTH = 30.0;
+        private const double DEFAULT_DWELL_TIME = 20;
+
         /// <summary>
         /// A test for SrmDocument deserialization of v0.1 documents and
         /// general serialization.
@@ -178,6 +181,12 @@ namespace pwiz.SkylineTest
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateAgilentExporter, ExportStrategy.Single, 2, null,
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 7, CreateThermoQuantivaExporter, ExportStrategy.Single, 2, null,
+                              ExportMethodType.Standard);
+            Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 7, CreateThermoQuantivaExporter, ExportStrategy.Single, 2, null,
+                              ExportMethodType.Scheduled);
+            Assert.AreEqual(1, count);
         }
 
         private static int EqualCsvs(string xml, int countFields, CreateExporters exporters,
@@ -253,7 +262,7 @@ namespace pwiz.SkylineTest
                                      ExportMethodType methodType)
         {
             AbstractMassListExporter exporterActual;
-            exporter(actual, out exporterActual);
+            exporter(actual, methodType, strategy, out exporterActual);
             exporterActual.Export(null);
             var exportedActual = exporterActual.MemoryOutput;
             
@@ -291,16 +300,40 @@ namespace pwiz.SkylineTest
             exporterActual = new AbiMassListExporter(actual);
         }
 
-        private delegate void CreateExporter(SrmDocument actual, out AbstractMassListExporter exporterActual);
+        private delegate void CreateExporter(SrmDocument actual, ExportMethodType methodType, ExportStrategy strategy,
+                                             out AbstractMassListExporter exporterActual);
 
-        private static void CreateWatersExporter(SrmDocument actual, out AbstractMassListExporter exporterActual)
+        private static void CreateWatersExporter(SrmDocument actual, ExportMethodType methodType, ExportStrategy strategy,
+                                                         out AbstractMassListExporter exporterActual)
         {
-            exporterActual = new WatersMassListExporter(actual);
+            exporterActual = new WatersMassListExporter(actual)
+                {
+                    MethodType = methodType,
+                    Strategy = strategy,
+                    RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : 0
+                };
         }
 
-        private static void CreateAgilentExporter(SrmDocument actual, out AbstractMassListExporter exporterActual)
+        private static void CreateAgilentExporter(SrmDocument actual, ExportMethodType methodType, ExportStrategy strategy,
+                                                  out AbstractMassListExporter exporterActual)
         {
-            exporterActual = new AgilentMassListExporter(actual);
+            exporterActual = new AgilentMassListExporter(actual)
+                {
+                    MethodType = methodType,
+                    Strategy = strategy,
+                    DwellTime = methodType == (ExportMethodType.Standard) ? DEFAULT_DWELL_TIME : 0
+                };
+        }
+
+        private static void CreateThermoQuantivaExporter(SrmDocument actual, ExportMethodType methodType, ExportStrategy strategy,
+                                                         out AbstractMassListExporter exporterActual)
+        {
+            exporterActual = new ThermoQuantivaMassListExporter(actual)
+                {
+                    MethodType = methodType,
+                    Strategy = strategy,
+                    RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : (double?)null
+                };
         }
 
         private static void CheckImportSimilarity(SrmDocument document, SrmDocument docImport)
