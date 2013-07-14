@@ -2239,7 +2239,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (e.Button == MouseButtons.Left)
             {
-                if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
+                if (_peakBoundDragInfos != null)
                 {
                     PointF pt = new PointF(e.X, e.Y);
                     DoDrag(_peakBoundDragInfos.First().GraphPane, pt);
