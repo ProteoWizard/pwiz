@@ -866,6 +866,8 @@ namespace pwiz.Skyline.Model
         private bool HasResults { get { return Document.Settings.HasResults; } }
         private int OptimizeStepIndex { get; set; }
 
+        private Dictionary<string, int> _groupNamesToCharge = new Dictionary<string, int>();
+
         protected override string InstrumentType
         {
             get { return ExportInstrumentType.ABI; }
@@ -897,6 +899,12 @@ namespace pwiz.Skyline.Model
             {
                 public int Compare(TransitionOrdered x, TransitionOrdered y)
                 {
+                    // null results should be treated has having the worst rank (highest Rank number)
+                    if (x.Rank == null && y.Rank != null)
+                        return 1;
+                    if (x.Rank != null && y.Rank == null)
+                        return -1;
+
                     int c = Comparer.Default.Compare(x.Rank, y.Rank);
                     if (c != 0)
                         return c;
@@ -967,13 +975,13 @@ namespace pwiz.Skyline.Model
 
             string extPeptideId;
             string extGroupId ;
+            int charge = nodeTranGroup.TransitionGroup.PrecursorCharge;
             if (OptimizeType == null)
             {
                 extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                     nodePepGroup.Name,
                                                     modifiedPepSequence,
-                                                    GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
-                                                                         nodeTran.Transition),
+                                                    GetTransitionName(charge, nodeTran),
                                                     nodeTranGroup.TransitionGroup.LabelType);
                 extGroupId = string.Format("{0}.{1}.{2}", // Not L10N
                                                     nodePepGroup.Name,
@@ -985,17 +993,26 @@ namespace pwiz.Skyline.Model
                 extPeptideId = string.Format("{0}.{1}.{2}.CE_{3}.{4}", // Not L10N
                                                     nodePepGroup.Name,
                                                     modifiedPepSequence,
-                                                    GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
-                                                                         nodeTran.Transition),
+                                                    GetTransitionName(charge, nodeTran),
                                                     GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture),
                                                     nodeTranGroup.TransitionGroup.LabelType);
                 extGroupId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                     nodePepGroup.Name,
                                                     modifiedPepSequence,
-                                                    GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
-                                                                         nodeTran.Transition),
+                                                    GetTransitionName(charge, nodeTran),
                                                     nodeTranGroup.TransitionGroup.LabelType);
             }
+
+            int existCharge;
+            if (!_groupNamesToCharge.TryGetValue(extGroupId, out existCharge))
+            {
+                _groupNamesToCharge.Add(extGroupId, charge);
+            }
+            else if (existCharge != charge)
+            {
+                extGroupId = string.Format("{0} +{1}", extGroupId, charge);
+            }
+
             writer.WriteDsvField(extPeptideId, FieldSeparator);
             writer.Write(FieldSeparator);
 
@@ -1125,15 +1142,15 @@ namespace pwiz.Skyline.Model
             return sequenceWithMods;
         }
 
-        private static string GetTransitionName(int precursorCharge, Transition transition)
+        private static string GetTransitionName(int precursorCharge, TransitionDocNode transitionNode)
         {
-            if (transition.IsPrecursor())
+            if (transitionNode.Transition.IsPrecursor())
             {
-                return GetPrecursorTransitionName(precursorCharge, transition.FragmentIonName, transition.MassIndex);
+                return GetPrecursorTransitionName(precursorCharge, transitionNode.FragmentIonName, transitionNode.Transition.MassIndex);
             }
             else
             {
-                return GetTransitionName(precursorCharge, transition.FragmentIonName, transition.Charge);
+                return GetTransitionName(precursorCharge, transitionNode.FragmentIonName, transitionNode.Transition.Charge);
             }
         }
 

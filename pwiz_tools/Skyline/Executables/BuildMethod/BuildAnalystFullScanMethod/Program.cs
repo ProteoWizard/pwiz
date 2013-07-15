@@ -373,7 +373,7 @@ namespace BuildAnalystFullScanMethod
                     || transition.PrecursorMz >= maxTOFMass)
                     continue;
 
-                var precursorMz = transition.PrecursorMz;
+                var precursorMz = Math.Round(transition.PrecursorMz, 3);
                 while (assignedCandidateMassToRT.ContainsKey(precursorMz))
                 {
                     // Analyst does not allow duplicate masses in inclusion list
