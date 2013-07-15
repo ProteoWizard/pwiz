@@ -775,7 +775,7 @@ rule wiff-dll-location ( api-path : properties * )
     {
         result = $(api-path)\\vc9 ;
     }
-    else
+    else # VC10 DLLs should work for VC11 as well (it's dependent on .NET version)
     {
         result = $(api-path)\\vc10 ;
     }
@@ -789,15 +789,20 @@ rule wiff-dll-location ( api-path : properties * )
 rule bruker-dll-location ( api-path : properties * )
 {
     local result ;
-    if ( [ MATCH (x64) : $(PLATFORM) ] )
+    if <toolset-msvc:version>10.0 in $(properties) ||
+       <toolset-msvc:version>10.0express in $(properties)
     {
-        result = $(api-path)\\x64 ;
-    }
-    else
-    {
-        result = $(api-path)\\x86 ;
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            result = $(api-path)\\x64 ;
+        }
+        else
+        {
+            result = $(api-path)\\x86 ;
+        }
     }
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       $(result) &&
        [ path.exists $(result)\\CompassXtractMS.dll ]            
     {
         return $(result) ;
@@ -812,7 +817,7 @@ rule mhdac-dll-location ( api-path : properties * )
     {
         result = $(api-path)\\vc9_x86 ;
     }
-    else
+    else # VC10 DLLs should work for VC11 as well (it's dependent on .NET version)
     {
         if ( [ MATCH (x64) : $(PLATFORM) ] )
         {
@@ -848,8 +853,8 @@ rule masslynxraw-dll-location ( api-path : properties * )
                 result = $(api-path)\\vc9_x86_scl-0 ;
             }
         }
-        if <toolset-msvc:version>10.0 in $(properties) ||
-           <toolset-msvc:version>10.0express in $(properties)
+        else if <toolset-msvc:version>10.0 in $(properties) ||
+                <toolset-msvc:version>10.0express in $(properties)
         {
 			if ( [ MATCH (x64) : $(PLATFORM) ] )
 			{
@@ -860,8 +865,11 @@ rule masslynxraw-dll-location ( api-path : properties * )
 				result = $(api-path)\\vc10_x86_scl-0 ;
 			}
         }
+        # else we don't have DLLs for this MSVC version (it's dependent on CRT version)
     }
+
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       $(result) &&
        [ path.exists $(result)\\MassLynxRaw.dll ]            
     {
         return $(result) ;
