@@ -1911,6 +1911,9 @@
     <EmbeddedResource Include="Resources\ChromLib.bmp" />
     <EmbeddedResource Include="Resources\LabKey.bmp" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
+    <Content Include="RPackageInstaller.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

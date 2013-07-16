@@ -5556,4 +5556,7 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
     <value>Check your network connection or contact the tool provider for installation support.</value>
   </data>
+    <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_in_immediate_window_" xml:space="preserve">
+    <value>Package installation failed. Error log in immediate window.</value>
+  </data>
 </root>

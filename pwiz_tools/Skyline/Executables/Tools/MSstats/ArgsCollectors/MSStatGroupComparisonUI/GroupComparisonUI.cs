@@ -160,20 +160,20 @@ namespace MSStatArgsCollector
                 DialogResult = DialogResult.OK;
             }
         }
- 
+
         // The argument array for group comparisons is composed of the following elements:
         // [(-1 <= x <= 1){2,} , Comparison Name , TRUE|FALSE , E|R , E|R , TRUE|FALSE]
         //
         // The next n elements is a series of n doubles that represent the constants that will be applied 
         // to each group, where n is the (2+) total number of groups in the data source. There will
-        // be a single "1" in this series, which represents the constant applied to the
+        // be a single "-1" in this series, which represents the constant applied to the
         // control group. If there is only one other group for the control to be compared against, it will
-        // have a value of -1, while all other groups will have constants of 0. An example
+        // have a value of 1, while all other groups will have constants of 0. An example
         // subarray that might be generated would be: [1 , 0 , -1 , 0]
         //
         // In the case that there are k>1 groups to be compared against, each group that the control will
-        // be compared against adopts a value of -1.0/k, while any groups not being compared against the control
-        // again adopt a constant of 0. An example subarray that might be generated would be: [0 , 0 , -0.5 , 1 0 , -0.5] 
+        // be compared against adopts a value of 1.0/k, while any groups not being compared against the control
+        // again adopt a constant of 0. An example subarray that might be generated would be: [0 , 0 , 0.5 , -1 , 0 , 0.5] 
         // where k = 2
         //
         // The next element of the argument array is its name of the comparison 
@@ -184,21 +184,21 @@ namespace MSStatArgsCollector
         // "E" - expanded: the user wants the scope of technical replicates to be expanded, otherwise "R" - Restricted
         // "TRUE" - the user wants to include inference transitions, otherwise "FALSE"
         //
-        // An example of a complete array would be [0 , 1 , -0.5 , -0.5 , 0 , 0 , Disease-Healthy , TRUE , E , R , FALSE]
+        // An example of a complete array would be [0 , -1 , 0.5 , 0.5 , 0 , 0 , Disease-Healthy , TRUE , E , R , FALSE]
         private void GenerateArguments()
         {
             ICollection<string> commandLineArguments = new Collection<string>();
             
             // Generate constants for comparisons
             var constants = new double[ControlGroupList.Length];
-            constants[ControlGroup.SelectedIndex] = 1.0;
+            constants[ControlGroup.SelectedIndex] = -1.0;
             if (ControlGroupList.Length == 2)
             {
-                constants[1 - ControlGroup.SelectedIndex] = -1.0;
+                constants[1 - ControlGroup.SelectedIndex] = 1.0;
             }
             else
             {
-                double comparisonConstant = -1.0 / ComparisonGroups.SelectedItems.Count;
+                double comparisonConstant = 1.0 / ComparisonGroups.SelectedItems.Count;
                 foreach (string group in ComparisonGroups.SelectedItems)
                 {
                     constants[Array.IndexOf(ControlGroupList, group)] = comparisonConstant;

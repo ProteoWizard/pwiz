@@ -168,6 +168,7 @@
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="RetentionTimeAlignmentTest.cs" />
+    <Compile Include="RInstallerTest.cs" />
     <Compile Include="ScheduleMethodDlgTest.cs" />
     <Compile Include="ShareDocumentTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />

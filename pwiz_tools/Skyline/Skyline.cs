@@ -3518,9 +3518,16 @@ namespace pwiz.Skyline
             {
                 if (!RInstaller.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
                 {
-                    using (var dlg = new RInstaller(programPathContainer, packages))
+                    // we will need the immediate window to show output for package installation
+                    if (packages.Count != 0 && _immediateWindow == null)
                     {
-                        if (dlg.ShowDialog(this) != DialogResult.OK)
+                        ShowImmediateWindow();
+                    }
+                    
+                    using (var dlg = new RInstaller(programPathContainer, packages, _skylineTextBoxStreamWriterHelper))
+                    {
+                        DialogResult result = dlg.ShowDialog(this);
+                        if (result == DialogResult.Cancel || result == DialogResult.No)
                             return null;
                     }
                 }

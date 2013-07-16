@@ -342,9 +342,6 @@ namespace pwiz.Skyline
             return arg.Length > COMMAND_PREFIX.Length ? arg.Substring(COMMAND_PREFIX.Length) : string.Empty;
         }
 
-        private static readonly object SERVER_CONNECTION_LOCK = new object();
-        private bool _connected;
-
         public static void RunCommand(string[] inputArgs, CommandStatusWriter consoleOut)
         {
             using (CommandLine cmd = new CommandLine(consoleOut))
@@ -392,7 +389,8 @@ namespace pwiz.Skyline
             string outPipeName = "SkylineOutputPipe" + guidSuffix;
             using (var serverStream = new NamedPipeServerStream(outPipeName)) // Not L10N
             {
-                if (!WaitForConnection(serverStream, outPipeName))
+                var namedPipeServerConnector = new NamedPipeServerConnector();
+                if (!namedPipeServerConnector.WaitForConnection(serverStream, outPipeName))
                 {
                     return;
                 }
@@ -401,47 +399,6 @@ namespace pwiz.Skyline
                     RunCommand(args.ToArray(), sw);
                 }
             }
-        }
-
-        private bool WaitForConnection(NamedPipeServerStream serverStream, string outPipeName)
-        {
-            Thread connector = new Thread(() =>
-            {
-                serverStream.WaitForConnection();
-
-                lock (SERVER_CONNECTION_LOCK)
-                {
-                    _connected = true;
-                    Monitor.Pulse(SERVER_CONNECTION_LOCK);
-                }
-            });
-
-            connector.Start();
-
-            bool connected;
-            lock (SERVER_CONNECTION_LOCK)
-            {
-                Monitor.Wait(SERVER_CONNECTION_LOCK, 5 * 1000);
-                connected = _connected;
-            }
-
-            if (!connected)
-            {
-                // Clear the waiting thread.
-                try
-                {
-                    using (var pipeFake = new NamedPipeClientStream("SkylineOutputPipe")) // Not L10N
-                    {
-                        pipeFake.Connect(10);
-                    }
-                    return false;
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }

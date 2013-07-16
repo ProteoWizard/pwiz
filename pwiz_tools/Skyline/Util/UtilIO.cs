@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -1082,6 +1083,53 @@ namespace pwiz.Skyline.Util
             {
                 WriteBytes(file, (byte*)p, itemCount * sizeof(float));
             }
+        }
+    }
+
+    public class NamedPipeServerConnector
+    {
+        private static readonly object SERVER_CONNECTION_LOCK = new object();
+        private bool _connected;
+        
+        public bool WaitForConnection(NamedPipeServerStream serverStream, string outPipeName)
+        {
+            Thread connector = new Thread(() =>
+            {
+                serverStream.WaitForConnection();
+
+                lock (SERVER_CONNECTION_LOCK)
+                {
+                    _connected = true;
+                    Monitor.Pulse(SERVER_CONNECTION_LOCK);
+                }
+            });
+
+            connector.Start();
+
+            bool connected;
+            lock (SERVER_CONNECTION_LOCK)
+            {
+                Monitor.Wait(SERVER_CONNECTION_LOCK, 5 * 1000);
+                connected = _connected;
+            }
+
+            if (!connected)
+            {
+                // Clear the waiting thread.
+                try
+                {
+                    using (var pipeFake = new NamedPipeClientStream("SkylineOutputPipe")) // Not L10N
+                    {
+                        pipeFake.Connect(10);
+                    }
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
     
