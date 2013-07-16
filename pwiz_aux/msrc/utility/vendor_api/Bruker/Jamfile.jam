@@ -40,12 +40,15 @@ if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 
 rule vendor-api-requirements ( properties * )
 {
-    path-constant PLATFORM_API_PATH : [ bruker-dll-location $(API_PATH) : $(properties) ] ;
+    local dll-location = [ bruker-dll-location $(API_PATH) : $(properties) ] ;
 
     local result ;
     if <toolset>msvc in $(properties) &&
-       [ path.exists $(PLATFORM_API_PATH)/Interop.EDAL.dll ]
+       $(dll-location) &&
+       [ path.exists $(dll-location)/Interop.EDAL.dll ]
     {
+        path-constant PLATFORM_API_PATH : $(dll-location) ;
+
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
         {
