@@ -355,13 +355,13 @@ namespace pwiz.ProteomeDatabase.API
                     const String sqlPeptide =
                             "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();"; // Not L10N
                     using (var commandPeptide = session.Connection.CreateCommand())
+                    using (var commandProtein = session.Connection.CreateCommand())
                     {
                         commandPeptide.CommandText = sqlPeptide;
                         commandPeptide.Parameters.Add(new SQLiteParameter());
                         commandPeptide.Parameters.Add(new SQLiteParameter());
                         const String sqlPeptideProtein =
                             "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);"; // Not L10N
-                        var commandProtein = session.Connection.CreateCommand();
                         commandProtein.CommandText = sqlPeptideProtein;
                         commandProtein.Parameters.Add(new SQLiteParameter());
                         commandProtein.Parameters.Add(new SQLiteParameter());

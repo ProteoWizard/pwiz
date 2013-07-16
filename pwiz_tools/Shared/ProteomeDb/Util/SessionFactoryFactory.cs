@@ -39,6 +39,7 @@ namespace pwiz.ProteomeDatabase.Util
         {
             Configuration configuration = new Configuration()
                 //.SetProperty("show_sql", "true")
+                //.SetProperty("generate_statistics", "true")
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName) // Not L10N
                 .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder // Not L10N
                 {
