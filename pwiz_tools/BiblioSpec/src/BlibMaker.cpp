@@ -603,7 +603,8 @@ void BlibMaker::transferModifications(const char* schemaTmp,
     sprintf(zSql,
             "SELECT RefSpectraID, position, mass "
             "FROM %s.Modifications "
-            "WHERE RefSpectraID=%d", schemaTmp, spectraTmpID);
+            "WHERE RefSpectraID=%d "
+            "ORDER BY id", schemaTmp, spectraTmpID);
     smart_stmt pStmt;
     int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
 

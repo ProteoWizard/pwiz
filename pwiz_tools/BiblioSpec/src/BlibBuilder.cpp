@@ -282,7 +282,7 @@ int BlibBuilder::transferLibrary(int iLib,
     ProgressIndicator* progress =
         parentProgress->newNestedIndicator(getSpectrumCount(schemaTmp));
 
-    sprintf(zSql, "SELECT id FROM %s.RefSpectra", schemaTmp);
+    sprintf(zSql, "SELECT id FROM %s.RefSpectra ORDER BY id", schemaTmp);
 
     smart_stmt pStmt;
     int rc = sqlite3_prepare(getDb(), zSql, -1, &pStmt, 0);
