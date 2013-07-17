@@ -27,8 +27,6 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class FindNodeDlg : FormEx
     {
-        private const int COLLAPSED_HEIGHT = 150;
-
         private bool _advancedVisible;
         private readonly int _fullHeight;
         private readonly IFinder[] _finders;
@@ -153,7 +151,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    Height = COLLAPSED_HEIGHT;
+                    Height = _fullHeight - (checkedListBoxFinders.Bottom - btnShowHideAdvanced.Bottom);
                     btnShowHideAdvanced.Text = Resources.FindNodeDlg_AdvancedVisible_Show_Advanced;
                 }
             }
