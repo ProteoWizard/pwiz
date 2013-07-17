@@ -4,7 +4,7 @@ cat("\n\n =======================================")
 cat("\n ** Loading the required library..... \n")
 
 # load the library
-library(SRMstats)
+library(MSstats)
 
 # Input data
 filename<-commandArgs(trailingOnly=TRUE)[1];
@@ -39,10 +39,10 @@ cat("\n\n =======================================")
 cat("\n ** Generating dataProcess Plots..... \n")
 
 
-dataProcessPlots(data=quantData,type="ProfilePlot",text.size=1.5,address="")
+dataProcessPlots(data=quantData,type="ProfilePlot",address="")
 cat("\n Saved ProfilePlot.pdf \n")
 
-dataProcessPlots(data=quantData,type="QCPlot",text.size=1.5,address="")
+dataProcessPlots(data=quantData,type="QCPlot",address="")
 cat("\n Saved QCPlot.pdf \n")
 
 }

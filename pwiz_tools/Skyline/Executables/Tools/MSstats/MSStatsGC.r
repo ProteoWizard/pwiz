@@ -4,7 +4,7 @@ cat("\n\n =======================================")
 cat("\n ** Loading the required library..... \n")
 
 # load the library
-library(SRMstats)
+library(MSstats)
 
 # Input data
 arguments<-commandArgs(trailingOnly=TRUE);
