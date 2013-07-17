@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             GraphHelper graphHelper = new GraphHelper(msGraphControl);
             msGraphControl.MasterPane.Border.IsVisible = false;
+            msGraphControl.GraphPane.Border.IsVisible = false;
+            msGraphControl.GraphPane.AllowCurveOverlap = true;
             return graphHelper;
         }
 
@@ -76,24 +78,22 @@ namespace pwiz.Skyline.Controls.Graphs
                     pane.CurveList.Clear();
                     pane.GraphObjList.Clear();
                 }
+                _displayState.ZoomStateValid = true;
                 return;
             }
-            if (newDisplayState.CanUseZoomStateFrom(_displayState))
+            while (GraphControl.MasterPane.PaneList.Count > 1)
             {
-                ZoomState zoomState = GraphPanes.Any()
-                                          ? new ZoomState(GraphPanes.First(), ZoomState.StateType.Zoom)
-                                          : _displayState.ZoomState;
-                newDisplayState.ZoomState = zoomState;
-            }
-            GraphControl.MasterPane.PaneList.Clear();
-            if (!newDisplayState.AllowSplitPanes)
-            {
-                newDisplayState.GetGraphPane(GraphControl, PaneKey.DEFAULT);
+                // Remove all but the first graph pane so that the zoom state stack is preserved.
+                GraphControl.MasterPane.PaneList.RemoveRange(1, GraphControl.MasterPane.PaneList.Count - 1);
                 using (var graphics = GraphControl.CreateGraphics())
                 {
                     GraphControl.MasterPane.SetLayout(graphics, PaneLayout.SingleColumn);
                 }
             }
+            GraphControl.GraphPane.CurveList.Clear();
+            GraphControl.GraphPane.GraphObjList.Clear();
+            newDisplayState.ZoomStateValid = newDisplayState.CanUseZoomStateFrom(_displayState);
+            newDisplayState.ApplySettingsToGraphPane(GraphControl.GraphPane);
             _displayState = newDisplayState;
         }
 
@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!_zoomLocked)
             {
-                if (forceZoom || _displayState.ZoomState == null)
+                if (forceZoom || !_displayState.ZoomStateValid)
                 {
                     var chromDisplayState = _displayState as ChromDisplayState;
                     if (chromDisplayState != null)
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AutoZoomChromatograms(double bestStartTime, double bestEndTime)
         {
             var chromDisplayState = (ChromDisplayState) _displayState;
-            if (null != chromDisplayState.ZoomState)
+            if (chromDisplayState.ZoomStateValid)
             {
                 return;
             }
@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ZoomSpectrumToSettings(SrmDocument document, TransitionGroupDocNode nodeGroup)
         {
             var spectrumDisplayState = _displayState as SpectrumDisplayState;
-            if (null == spectrumDisplayState || spectrumDisplayState.ZoomState != null)
+            if (null == spectrumDisplayState || spectrumDisplayState.ZoomStateValid)
             {
                 return;
             }
@@ -253,8 +253,6 @@ namespace pwiz.Skyline.Controls.Graphs
             axis.Scale.MaxAuto = false;
             GraphControl.Invalidate();
         }
-
-
 
         private void ZoomXAxis(double min, double max)
         {
@@ -275,12 +273,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var chromDisplayState = (ChromDisplayState) _displayState;
             chromDisplayState.ChromGraphItems.Add(new KeyValuePair<PaneKey, ChromGraphItem>(paneKey, chromGraphItem));
-            return GraphControl.AddGraphItem(chromDisplayState.GetGraphPane(GraphControl, paneKey), chromGraphItem, false);
+            return GraphControl.AddGraphItem(chromDisplayState.GetOrCreateGraphPane(GraphControl, paneKey), chromGraphItem, false);
         }
 
         public CurveItem AddSpectrum(AbstractSpectrumGraphItem item)
         {
-            var pane = _displayState.GetGraphPane(GraphControl, PaneKey.DEFAULT);
+            var pane = _displayState.GetOrCreateGraphPane(GraphControl, PaneKey.DEFAULT);
             pane.Title.Text = item.Title;
             var curveItem = GraphControl.AddGraphItem(pane, item);
             curveItem.Label.IsVisible = false;
@@ -298,7 +296,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var curveItems = new List<CurveItem>();
             SetDisplayState(new ErrorDisplayState());
-            var pane = _displayState.GetGraphPane(GraphControl, PaneKey.DEFAULT);
+            var pane = _displayState.GetOrCreateGraphPane(GraphControl, PaneKey.DEFAULT);
             pane.Legend.IsVisible = false;
             foreach (var msGraphItem in errorItems)
             {
@@ -357,8 +355,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphPaneKeys = new List<PaneKey>();
             }
             protected HashSet<TransitionGroup> TransitionGroups { get; private set; }
-            public ZoomState ZoomState { get; set; }
             public abstract bool CanUseZoomStateFrom(DisplayState displayStatePrev);
+            public bool ZoomStateValid { get; set; }
             public List<PaneKey> GraphPaneKeys { get; private set; }
             public bool AllowSplitPanes { get; protected set; }
             public bool ShowLegend { get; protected set; }
@@ -366,17 +364,30 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (!AllowSplitPanes)
                 {
-                    if (!graphControl.MasterPane.PaneList.Any())
-                    {
-                        InsertMsGraphPane(graphControl, 0);
-                    }
                     return graphControl.GraphPane;
                 }
                 int index = GraphPaneKeys.BinarySearch(graphPaneKey);
                 if (index >= 0)
                 {
-                    return (MSGraphPane)graphControl.MasterPane.PaneList[index];
+                    return (MSGraphPane) graphControl.MasterPane.PaneList[index];
                 }
+                return null;
+            }
+            public MSGraphPane GetOrCreateGraphPane(MSGraphControl graphControl, PaneKey graphPaneKey)
+            {
+                var pane = GetGraphPane(graphControl, graphPaneKey);
+                if (null != pane)
+                {
+                    return pane;
+                }
+                if (GraphPaneKeys.Count == 0)
+                {
+                    GraphPaneKeys.Add(graphPaneKey);
+                    pane = graphControl.GraphPane;
+                    ApplySettingsToGraphPane(pane);
+                    return pane;
+                }
+                int index = GraphPaneKeys.BinarySearch(graphPaneKey);
                 int iInsert = ~index;
                 var graphPane = InsertMsGraphPane(graphControl, iInsert);
                 GraphPaneKeys.Insert(iInsert, graphPaneKey);
@@ -393,14 +404,25 @@ namespace pwiz.Skyline.Controls.Graphs
                     Border = { IsVisible = false },
                     AllowCurveOverlap = true,
                 };
-                pane.Title.IsVisible = true;
-                pane.Legend.IsVisible = ShowLegend;
-                if (null != ZoomState)
-                {
-                    ZoomState.ApplyState(pane);
-                }
+                ApplySettingsToGraphPane(pane);
+                var primaryPane = graphControl.GraphPane;
+                pane.CurrentItemType = primaryPane.CurrentItemType;
+                pane.ZoomStack.AddRange(primaryPane.ZoomStack);
+                var zoomState = new ZoomState(primaryPane, ZoomState.StateType.Zoom);
+                zoomState.ApplyState(pane);
                 graphControl.MasterPane.PaneList.Insert(iInsert, pane);
                 return pane;
+            }
+            /// <summary>
+            /// Resets the all of the properties of a graph pane that might have changed 
+            /// (or initialize the properties of a newly  created pane) so that it's ready 
+            /// to be used by a different set of graphs.
+            /// </summary>
+            public virtual void ApplySettingsToGraphPane(GraphPane graphPane)
+            {
+                graphPane.Legend.IsVisible = ShowLegend;
+                graphPane.Title.IsVisible = true;
+                graphPane.Title.Text = null;
             }
         }
 
@@ -433,11 +455,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Equals(TimeRange, prevChromDisplayState.TimeRange) &&
                         Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime))
                     {
-                        if (AutoZoomChrom.none == AutoZoomChrom
-                            || TransitionGroups.SetEquals(prevChromDisplayState.TransitionGroups))
-                        {
-                            return true;
-                        }
+                        return TransitionGroups.SetEquals(prevChromDisplayState.TransitionGroups);
                     }
                 }
                 return false;
