@@ -142,57 +142,107 @@ namespace pwiz.Topograph.ui.Forms
             public double Score { get; set; }
 
         }
+
         public class PerReplicateResult
         {
-            readonly HalfLifeCalculator.ProcessedRowData _rowData;
+            private readonly HalfLifeCalculator.ProcessedRowData _rowData;
+
             public PerReplicateResult(HalfLifeCalculator.ProcessedRowData rowData)
             {
                 _rowData = rowData;
             }
-            public bool Accept { get { return null == _rowData.RejectReason; } }
-            public LinkValue<Peptide> Peptide {get
+
+            public bool Accept
             {
-                return new LinkValue<Peptide>(_rowData.RawRowData.Peptide, (o, e) => PeptideFileAnalysisFrame
-                    .ShowPeptideFileAnalysis(_rowData.RawRowData.Peptide.Workspace, _rowData.RawRowData.PeptideFileAnalysisId));
-            }}
-            public MsDataFile DataFile { get { return _rowData.RawRowData.MsDataFile; } }
-            public double? Area { get { return _rowData.RawRowData.AreaUnderCurve; } }
-            public double? TracerPercent { get { return _rowData.RawRowData.TracerPercent; } }
-            public double? DeconvolutionScore { get { return _rowData.RawRowData.DeconvolutionScore; } }
-            public TurnoverResult IndividualTurnover 
-            { 
-                get 
+                get { return null == _rowData.RejectReason; }
+            }
+
+            public LinkValue<Peptide> Peptide
+            {
+                get
                 {
-                    if (!_rowData.RawRowData.IndTurnover.HasValue || !_rowData.RawRowData.IndPrecursorEnrichment.HasValue || !_rowData.RawRowData.IndTurnoverScore.HasValue)
+                    return new LinkValue<Peptide>(_rowData.RawRowData.Peptide, (o, e) => PeptideFileAnalysisFrame
+                                                                                             .ShowPeptideFileAnalysis(
+                                                                                                 _rowData.RawRowData
+                                                                                                         .Peptide
+                                                                                                         .Workspace,
+                                                                                                 _rowData.RawRowData
+                                                                                                         .PeptideFileAnalysisId));
+                }
+            }
+
+            public MsDataFile DataFile
+            {
+                get { return _rowData.RawRowData.MsDataFile; }
+            }
+
+            public double? Area
+            {
+                get { return _rowData.RawRowData.AreaUnderCurve; }
+            }
+
+            public double? TracerPercent
+            {
+                get { return _rowData.RawRowData.TracerPercent; }
+            }
+
+            public double? DeconvolutionScore
+            {
+                get { return _rowData.RawRowData.DeconvolutionScore; }
+            }
+
+            public TurnoverResult IndividualTurnover
+            {
+                get
+                {
+                    if (!_rowData.RawRowData.IndTurnover.HasValue ||
+                        !_rowData.RawRowData.IndPrecursorEnrichment.HasValue ||
+                        !_rowData.RawRowData.IndTurnoverScore.HasValue)
                     {
                         return null;
                     }
                     return new TurnoverResult
-                               {
-                                   PrecursorEnrichment = _rowData.RawRowData.IndPrecursorEnrichment.Value,
-                                   Turnover = _rowData.RawRowData.IndTurnover.Value,
-                                   Score = _rowData.RawRowData.IndTurnoverScore.Value,
-                               };
-                } 
+                        {
+                            PrecursorEnrichment = _rowData.RawRowData.IndPrecursorEnrichment.Value,
+                            Turnover = _rowData.RawRowData.IndTurnover.Value,
+                            Score = _rowData.RawRowData.IndTurnoverScore.Value,
+                        };
+                }
             }
+
             public TurnoverResult AverageTurnover
             {
                 get
                 {
-                    if (!_rowData.Turnover.HasValue || !_rowData.CurrentPrecursorPool.HasValue || !_rowData.TurnoverScore.HasValue) {
+                    if (!_rowData.Turnover.HasValue || !_rowData.CurrentPrecursorPool.HasValue ||
+                        !_rowData.TurnoverScore.HasValue)
+                    {
                         return null;
                     }
                     return new TurnoverResult
-                               {
-                                   PrecursorEnrichment = _rowData.CurrentPrecursorPool.Value,
-                                   Turnover = _rowData.Turnover.Value,
-                                   Score = _rowData.TurnoverScore.Value,
-                               };
+                        {
+                            PrecursorEnrichment = _rowData.CurrentPrecursorPool.Value,
+                            Turnover = _rowData.Turnover.Value,
+                            Score = _rowData.TurnoverScore.Value,
+                        };
                 }
             }
-            public ValidationStatus Status { get { return _rowData.RawRowData.ValidationStatus; } }
-            public int PsmCount { get { return _rowData.RawRowData.PsmCount; } }
-            public IntegrationNote PeakIntegrationNote { get { return _rowData.RawRowData.IntegrationNote; } }
+
+            public ValidationStatus Status
+            {
+                get { return _rowData.RawRowData.ValidationStatus; }
+            }
+
+            public int PsmCount
+            {
+                get { return _rowData.RawRowData.PsmCount; }
+            }
+
+            public IntegrationNote PeakIntegrationNote
+            {
+                get { return _rowData.RawRowData.IntegrationNote; }
+            }
+
             public double? TotalIonCurrent
             {
                 get
@@ -201,9 +251,13 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         return null;
                     }
-                    return _rowData.RawRowData.MsDataFile.GetTotalIonCurrent(_rowData.RawRowData.StartTime.Value, _rowData.RawRowData.EndTime.Value);
+                    return _rowData.RawRowData.MsDataFile.GetTotalIonCurrent(_rowData.RawRowData.StartTime.Value,
+                                                                             _rowData.RawRowData.EndTime.Value);
                 }
             }
+
+            public double? PeakStart { get { return _rowData.RawRowData.StartTime; } }
+            public double? PeakEnd { get { return _rowData.RawRowData.EndTime; } }
         }
     }
 }

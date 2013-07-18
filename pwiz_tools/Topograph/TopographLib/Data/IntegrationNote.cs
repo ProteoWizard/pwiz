@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 
 namespace pwiz.Topograph.Data
@@ -35,8 +36,10 @@ namespace pwiz.Topograph.Data
             IntegrationNotes.Add(label, this);
         }
 
+        [Browsable(false)]
         public string Label { get; private set;}
-        public int Ordinal { get; private set;}
+        [Browsable(false)]
+        public int Ordinal { get; private set; }
         public override string ToString()
         {
             return Label;

@@ -124,6 +124,15 @@ namespace pwiz.Topograph.Model
         [Browsable(false)]
         public double? PeakEndTime { get { return CalculatedPeaks == null ? null : CalculatedPeaks.EndTime; } }
 
+        public double? PeakStart 
+        {
+            get { return PeakData.Peaks.Count == 0 ? (double?) null : PeakData.Peaks.Min(peak => peak.StartTime); }
+        }
+        public double? PeakEnd
+        {
+            get { return PeakData.Peaks.Count == 0 ? (double?) null : PeakData.Peaks.Max(peak => peak.EndTime); }
+        }
+
         public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, ILookup<long, double> psmTimesByDataFileId)
         {
             var dbMsDataFile = session.Load<DbMsDataFile>(msDataFile.Id);
