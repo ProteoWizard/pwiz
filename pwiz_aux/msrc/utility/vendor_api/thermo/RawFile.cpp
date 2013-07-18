@@ -1067,10 +1067,13 @@ double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
                                                      name.c_str(), 
                                                      &v),
                                                      "[ScanInfoImpl::trailerExtraValueDouble()] ");
-    if (v.vt == VT_R4) return v.fltVal;
-	else if (v.vt == VT_R8) return v.dblVal;
-
-    throw RawEgg("[ScanInfoImpl::trailerExtraValueDouble()] Unknown type.");
+    switch (v.vt)
+    {
+        case VT_R4: return v.fltVal;
+        case VT_R8: return v.dblVal;
+        default:
+            throw RawEgg("[ScanInfoImpl::trailerExtraValueDouble()] Unknown type.");
+    }
 }
 
 
@@ -1084,11 +1087,19 @@ long ScanInfoImpl::trailerExtraValueLong(const string& name) const
                                                      name.c_str(), 
                                                      &v),
                                                      "[ScanInfoImpl::trailerExtraValueLong()] ");
-    if (v.vt == VT_I4) return v.lVal;
-	else if (v.vt == VT_I2) return v.iVal;
-	else if (v.vt == VT_INT) return v.intVal;
-
-    throw RawEgg("[ScanInfoImpl::trailerExtraValueLong()] Unknown type.");
+    switch (v.vt)
+    {
+        case VT_I1: return v.cVal;
+        case VT_UI1: return v.bVal;
+        case VT_I2: return v.iVal;
+        case VT_UI2: return v.uiVal;
+        case VT_I4: return v.lVal;
+        case VT_UI4: return v.ulVal;
+        case VT_INT: return v.intVal;
+        case VT_UINT: return v.uintVal;
+        default:
+            throw RawEgg("[ScanInfoImpl::trailerExtraValueLong()] Unknown type.");
+    }
 }
 
 
@@ -1272,7 +1283,7 @@ void RawFileImpl::parseInstrumentMethod()
 vector<double> RawFileImpl::getIsolationWidths(long scanNumber)
 {
     if (rawInterfaceVersion_ < 5)
-        throw RawEgg("[RawFileImpl::getActivationType()] GetIsolationWidthForScanNum requires the IXRawfile5 interface.");
+        throw RawEgg("[RawFileImpl::getIsolationWidths()] GetIsolationWidthForScanNum requires the IXRawfile5 interface.");
 
     IXRawfile5Ptr raw5 = (IXRawfile5Ptr) raw_;
 
