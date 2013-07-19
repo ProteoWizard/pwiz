@@ -176,16 +176,17 @@ string Version::str()
 struct DistinctDoubleArraySum
 {
     typedef DistinctDoubleArraySum MyType;
-    bool initialized;
     set<int> arrayIds;
     vector<double> result;
     boost::crc_32_type crc32;
 
-    DistinctDoubleArraySum(int arrayLength) : initialized(true), result((size_t) arrayLength, 0.0) {}
+    DistinctDoubleArraySum(int arrayLength) : result((size_t) arrayLength, 0.0) {}
 
     static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
     {
-        MyType* pThis = static_cast<MyType*>(sqlite3_aggregate_context(context, sizeof(MyType)));
+        MyType** ppThis = static_cast<MyType**>(sqlite3_aggregate_context(context, sizeof(MyType*)));
+        MyType* pThis = *ppThis;
+
         if (numValues > 1 || values[0] == NULL)
             return;
 
@@ -195,8 +196,8 @@ struct DistinctDoubleArraySum
         if (arrayBytes == NULL || arrayByteCount % 8 > 0)
             throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
 
-        if (!pThis->initialized)
-            pThis->DistinctDoubleArraySum::DistinctDoubleArraySum(arrayLength);
+        if (pThis == NULL)
+            pThis = new DistinctDoubleArraySum(arrayLength);
         else
             pThis->crc32.reset();
 
@@ -214,13 +215,14 @@ struct DistinctDoubleArraySum
 
     static void Final(sqlite3_context* context)
     {
-        MyType* pThis = static_cast<MyType*>(sqlite3_aggregate_context(context, sizeof(MyType)));
+        MyType** ppThis = static_cast<MyType**>(sqlite3_aggregate_context(context, sizeof(MyType*)));
+        MyType* pThis = *ppThis;
         
-        if (!pThis->initialized)
-            pThis->DistinctDoubleArraySum::DistinctDoubleArraySum(0);
+        if (pThis == NULL)
+            pThis = new DistinctDoubleArraySum(0);
 
         sqlite3_result_blob(context, &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
-        pThis->DistinctDoubleArraySum::~DistinctDoubleArraySum();
+        delete pThis;
     }
 };
 
