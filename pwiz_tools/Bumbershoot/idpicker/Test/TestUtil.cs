@@ -251,7 +251,7 @@ namespace Test
         [TestMethod]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(7, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(8, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel();
             TestModel.ClassInitialize(null);
@@ -261,6 +261,7 @@ namespace Test
 
 
             // test all revisions without a data filter applied
+            // we don't need to test upgrade from 7 to 8; the extra columns are ignored
             // we don't need to test upgrade from 5 to 6; it simply forces reapplication of the basic filters
             // we don't need to test upgrade from 4 to 5; it's a simple null value fix
 

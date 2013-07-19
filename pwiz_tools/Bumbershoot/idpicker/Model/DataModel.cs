@@ -169,6 +169,14 @@ namespace IDPicker.DataModel
         public virtual double Coverage { get; set; }
         public virtual IList<ushort> CoverageMask { get; set; }
 
+        public virtual int TaxonomyId { get; set; }
+        public virtual int GeneGroup { get; set; }
+        public virtual string GeneId { get; set; }
+        public virtual string GeneName { get; set; }
+        public virtual string Chromosome { get; set; }
+        public virtual string GeneFamily { get; set; }
+        public virtual string GeneDescription { get; set; }
+
         #region Transient instance members
         public Protein () { }
         public Protein (string description, string sequence)
@@ -254,7 +262,7 @@ namespace IDPicker.DataModel
         public virtual string DistinctMatchKey { get { return distinctMatchKey; } }
         public virtual long DistinctMatchId { get { return distinctMatchId; } }
 
-            /// <summary>
+        /// <summary>
         /// Automatically choose monoisotopic or average mass error based on the following logic:
         /// if the absolute value of monoisotopic error is less than absolute value of average error
         /// or if the monoisotopic error is nearly a multiple of a neutron mass,

@@ -38,7 +38,7 @@ typedef NativeIDPicker::Qonverter NativeQonverter;
 
 struct ProgressMonitorForwarder : public NativeQonverter::ProgressMonitor
 {
-    typedef void (__stdcall *QonversionProgressCallback)(int, int, bool&);
+    typedef void (__stdcall *QonversionProgressCallback)(int, int, const char*, bool&);
     QonversionProgressCallback managedFunctionPtr;
 
     ProgressMonitorForwarder(void* managedFunctionPtr)
@@ -51,21 +51,23 @@ struct ProgressMonitorForwarder : public NativeQonverter::ProgressMonitor
         {
             managedFunctionPtr(updateMessage.qonvertedAnalyses,
                                updateMessage.totalAnalyses,
+                               updateMessage.message.c_str(),
                                updateMessage.cancel);
         }
     }
 };
 
 //#pragma managed
-private delegate void QonversionProgressEventWrapper(int qonvertedAnalyses, int totalAnalyses, bool& cancel);
+private delegate void QonversionProgressEventWrapper(int qonvertedAnalyses, int totalAnalyses, const char* message, bool& cancel);
 
-void Qonverter::marshal(int qonvertedAnalyses, int totalAnalyses, bool& cancel)
+void Qonverter::marshal(int qonvertedAnalyses, int totalAnalyses, const char* message, bool& cancel)
 {
     try
     {
         QonversionProgressEventArgs^ eventArgs = gcnew QonversionProgressEventArgs();
         eventArgs->QonvertedAnalyses = qonvertedAnalyses;
         eventArgs->TotalAnalyses = totalAnalyses;
+        eventArgs->Message = gcnew String(message);
         eventArgs->Cancel = cancel;
         QonversionProgress(this, eventArgs);
         cancel = eventArgs->Cancel;

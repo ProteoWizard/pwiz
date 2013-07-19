@@ -379,6 +379,36 @@ struct UserFeedbackIterationListener : public IterationListener
     }
 };
 
+struct UserFeedbackProgressMonitor : public Qonverter::ProgressMonitor
+{
+    UserFeedbackProgressMonitor(const string& idpDbFilepath) : source(Parser::sourceNameFromFilename(bfs::path(idpDbFilepath).filename()))
+    {
+    }
+
+    virtual void operator() (UpdateMessage& updateMessage) const
+    {
+        // create a message for each file like "source (message: index/count)"
+        int index = updateMessage.qonvertedAnalyses;
+        int count = updateMessage.totalAnalyses;
+        const string& message = updateMessage.message;
+
+        if (index == 0 && count == 0)
+            cout << (boost::format("%1% (%2%)%|80t|")
+                     % source % message).str();
+        else if (count > 0)
+            cout << (boost::format("%1% (%3%/%4%: %2%)%|80t|")
+                     % source % message % (index+1) % count).str();
+        else
+            cout << (boost::format("%1% (%3%: %2%)%|80t|")
+                     % source % message % (index+1)).str();
+
+        cout << "\r" << flush;
+    }
+
+    private:
+    string source;
+};
+
 END_IDPICKER_NAMESPACE
 
 
@@ -430,6 +460,9 @@ int main( int argc, char* argv[] )
     {
 	    argList_t args( argv, argv+argc );
 
+        bfs::path exePath(args[0]);
+        chdir(exePath.parent_path().string().c_str());
+
 	    int rv;
         if( ( rv = InitProcess(args) ) > 0 )
 		    return rv;
@@ -475,45 +508,49 @@ int main( int argc, char* argv[] )
 
         parser.importSettingsCallback = Parser::ImportSettingsCallbackPtr(new ImportSettingsHandler);
         parser.parse(parserFilepaths, g_numWorkers, &ilr);
+        
+        if (!g_rtConfig->EmbedOnly)
+        {
+            // output summary statistics for each input file
+            cout << "\nSpectra Peptides Analysis/Source\n"
+                    "--------------------------------\n";
 
-        // output summary statistics for each input file
-        cout << "\nSpectra Peptides Analysis/Source\n"
-                "--------------------------------\n";
+            int totalSpectra = 0, totalPeptides = 0;
+            BOOST_FOREACH(const string& filepath, parserFilepaths)
+            {
+                pair<int, int> spectraPeptidesPair = summarizeQonversion(Parser::outputFilepath(filepath).string());
+                totalSpectra += spectraPeptidesPair.first;
+                totalPeptides += spectraPeptidesPair.second;
+            }
 
-        int totalSpectra = 0, totalPeptides = 0;
+            BOOST_FOREACH(const string& filepath, idpDbFilepaths)
+            {
+                Qonverter qonverter;
+                qonverter.logQonversionDetails = g_rtConfig->WriteQonversionDetails; 
+                qonverter.settingsByAnalysis[0] = g_rtConfig->getQonverterSettings();
+
+                UserFeedbackProgressMonitor progressMonitor(filepath);
+                qonverter.reset(filepath);
+                qonverter.qonvert(filepath, progressMonitor);
+
+                pair<int, int> spectraPeptidesPair = summarizeQonversion(filepath);
+
+                totalSpectra += spectraPeptidesPair.first;
+                totalPeptides += spectraPeptidesPair.second;
+            }
+
+            if (parserFilepaths.size() + idpDbFilepaths.size() > 1)
+                cout << "--------------------------------\n"
+                     << left << setw(8) << totalSpectra
+                     << left << setw(9) << totalPeptides
+                     << "Total\n" << endl;
+        }
+        
         BOOST_FOREACH(const string& filepath, parserFilepaths)
-        {
-            pair<int, int> spectraPeptidesPair = summarizeQonversion(Parser::outputFilepath(filepath).string());
-            totalSpectra += spectraPeptidesPair.first;
-            totalPeptides += spectraPeptidesPair.second;
-        }
-
-        BOOST_FOREACH(const string& filepath, idpDbFilepaths)
-        {
-            Qonverter qonverter;
-            qonverter.logQonversionDetails = g_rtConfig->WriteQonversionDetails; 
-            qonverter.settingsByAnalysis[0] = g_rtConfig->getQonverterSettings();
-
-            qonverter.reset(filepath);
-            qonverter.qonvert(filepath);
-
-            pair<int, int> spectraPeptidesPair = summarizeQonversion(filepath);
-
-            totalSpectra += spectraPeptidesPair.first;
-            totalPeptides += spectraPeptidesPair.second;
-        }
-
-        if (parserFilepaths.size() + idpDbFilepaths.size() > 1)
-            cout << "--------------------------------\n"
-                 << left << setw(8) << totalSpectra
-                 << left << setw(9) << totalPeptides
-                 << "Total\n" << endl;
+            idpDbFilepaths.push_back(Parser::outputFilepath(filepath).string());
 
         if (g_rtConfig->EmbedSpectrumSources || g_rtConfig->EmbedSpectrumScanTimes)
         {
-            BOOST_FOREACH(const string& filepath, parserFilepaths)
-                idpDbFilepaths.push_back(Parser::outputFilepath(filepath).string());
-
             map<int, QuantitationMethod> allSourcesQuantitationMethodMap;
             allSourcesQuantitationMethodMap[0] = g_rtConfig->QuantitationMethod;
 
@@ -530,6 +567,14 @@ int main( int argc, char* argv[] )
                     Embedder::embedScanTime(idpDbFilepaths[i], g_rtConfig->SourceSearchPath, allSourcesQuantitationMethodMap);
             }
         }
+
+        if (g_rtConfig->EmbedGeneMetadata)
+            for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
+            {
+                cout << "\rEmbedding gene metadata: " << (i+1) << "/" << idpDbFilepaths.size() << flush;
+                Embedder::embedGeneMetadata(idpDbFilepaths[i]);
+            }
+
     }
     catch (exception& e)
     {

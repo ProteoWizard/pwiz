@@ -717,17 +717,31 @@ namespace IDPicker.Forms
         }
 
         private static HashSet<string> _processedSources;
-        public static List<SpectrumSourceGroup> SetInitialStructure(TreeNode node, ISession session)
+        public static List<SpectrumSourceGroup> SetInitialStructure(TreeNode node, ISession session, string sourceGroupFile)
         {
             if (node == null)
-                return new List<SpectrumSourceGroup>();
-            
+            {
+                if (sourceGroupFile != null)
+                {
+                    var dummy = new GroupingControlForm(session.SessionFactory);
+                    return dummy.applyAssemblyText(session, sourceGroupFile);
+                }
+                else
+                    return new List<SpectrumSourceGroup>();
+            }
+
             _processedSources = new HashSet<string>();
             tlvBranch convertedNode = GenericNodeToBranch(node, session, null);
+
             var transaction = session.BeginTransaction();
-            var returnValue = SetGroupingHierarchy(convertedNode, session);
-            transaction.Commit();
-            return returnValue;
+            try
+            {
+                return SetGroupingHierarchy(convertedNode, session);
+            }
+            finally
+            {
+                transaction.Commit();
+            }
         }
 
         private static tlvBranch GenericNodeToBranch(TreeNode node, ISession session, tlvBranch parent)
@@ -779,12 +793,18 @@ namespace IDPicker.Forms
             if (ofd.ShowDialog(this) == DialogResult.Cancel)
                 return;
 
+            applyAssemblyText(session, ofd.FileName);
+        }
+
+        private List<SpectrumSourceGroup> applyAssemblyText(ISession session, string filepath)
+        {
             var spectrumSources = session.Query<SpectrumSource>().ToList();
             var sourcesByGroup = new Map<string, List<SpectrumSource>>();
             var alreadyGroupedSources = new Set<string>();
+            var sourceGroups = new List<SpectrumSourceGroup>();
 
             // open the assembly.txt file
-            using (var assembleTxtFile = File.OpenText(ofd.FileName))
+            using (var assembleTxtFile = File.OpenText(filepath))
             {
                 string line;
                 while ((line = assembleTxtFile.ReadLine()) != null)
@@ -799,19 +819,35 @@ namespace IDPicker.Forms
                         string group = lineMatch.Groups[3].ToString() + lineMatch.Groups[4].ToString();
                         string filemask = lineMatch.Groups[7].ToString() + lineMatch.Groups[8].ToString();
 
-                        if (!Path.IsPathRooted(filemask))
-                            filemask = Path.Combine(Path.GetDirectoryName(ofd.FileName), filemask);
-
-                        if (!sourcesByGroup.Contains(group))
-                            sourcesByGroup[group] = new List<SpectrumSource>();
-
-                        if (!Directory.Exists(Path.GetDirectoryName(filemask)))
-                            continue;
-
-                        var files = Directory.GetFiles(Path.GetDirectoryName(filemask), Path.GetFileName(filemask));
-                        var sourceNames = files.Select(o => Path.GetFileNameWithoutExtension(o));
-                        foreach (string sourceName in sourceNames)
+                        // for wildcards, use old style behavior
+                        if (filemask.IndexOfAny("*?".ToCharArray()) > -1)
                         {
+                            if (!Path.IsPathRooted(filemask))
+                                filemask = Path.Combine(Path.GetDirectoryName(filepath), filemask);
+
+                            if (!sourcesByGroup.Contains(group))
+                                sourcesByGroup[group] = new List<SpectrumSource>();
+
+                            if (!Directory.Exists(Path.GetDirectoryName(filemask)))
+                                continue;
+
+                            var files = Directory.GetFiles(Path.GetDirectoryName(filemask), Path.GetFileName(filemask));
+                            var sourceNames = files.Select(o => Path.GetFileNameWithoutExtension(o));
+                            foreach (string sourceName in sourceNames)
+                            {
+                                var spectrumSource = spectrumSources.SingleOrDefault(o => o.Name == sourceName);
+                                if (spectrumSource == null)
+                                    continue;
+
+                                var insertResult = alreadyGroupedSources.Insert(sourceName);
+                                if (insertResult.WasInserted)
+                                    sourcesByGroup[group].Add(spectrumSource);
+                            }
+                        }
+                        else
+                        {
+                            // otherwise, match directly to source names
+                            string sourceName = Path.GetFileNameWithoutExtension(filemask);
                             var spectrumSource = spectrumSources.SingleOrDefault(o => o.Name == sourceName);
                             if (spectrumSource == null)
                                 continue;
@@ -823,13 +859,15 @@ namespace IDPicker.Forms
                     }
                     catch (Exception ex)
                     {
-                        Program.HandleException(new Exception("Error reading assembly text from \"" + ofd.FileName + "\": " + ex.Message, ex));
+                        Program.HandleException(new Exception("Error reading assembly text from \"" + filepath + "\": " + ex.Message, ex));
                     }
                 }
             }
 
             // remove existing groups
             RemoveGroupNode(_rootNode, false);
+
+            sourceGroups.Add(new SpectrumSourceGroup { Name = "/" });
 
             // build new group hierarchy
             foreach (var itr in sourcesByGroup)
@@ -838,6 +876,8 @@ namespace IDPicker.Forms
                     continue;
 
                 var ssg = new SpectrumSourceGroup { Name = itr.Key };
+                if (!alreadyGroupedSources.Contains(ssg.Name))
+                    sourceGroups.Add(ssg);
 
                 // decompose group path into segments, e.g. /foo/bar/ -> {foo, bar}
                 IEnumerable<string> segments = ssg.Name.Split("/".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
@@ -849,7 +889,9 @@ namespace IDPicker.Forms
                     var segmentNode = parentNode.Children.FirstOrDefault(o => o.Text == segment);
                     if (segmentNode == null)
                     {
-                        var segmentGroup = new SpectrumSourceGroup { Name = parentNode.Text + "/" + segment };
+                        var segmentGroup = new SpectrumSourceGroup { Name = (parentNode.Text + "/").Replace("//", "/") + segment };
+                        if (!alreadyGroupedSources.Contains(segmentGroup.Name))
+                            sourceGroups.Add(segmentGroup);
 
                         segmentNode = new tlvBranch
                         {
@@ -896,6 +938,8 @@ namespace IDPicker.Forms
             
             tlvGroupedFiles.RefreshObject(_rootNode);
             tlvGroupedFiles.ExpandAll();
+
+            return sourceGroups.ToList();
         }
     }
 }

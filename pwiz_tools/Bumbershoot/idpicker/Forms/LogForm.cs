@@ -29,58 +29,119 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
 using DigitalRune.Windows.Docking;
+using NHibernate;
+using NHibernate.Stat;
 
 namespace IDPicker.Forms
 {
     public partial class LogForm : DockableForm
     {
         DateTime logStart;
-        List<Pair<TimeSpan, string>> logTable;
+        List<Tuple<TimeSpan, string, string>> logTable;
         NotifyingStringWriter logWriter;
+        List<QueryStatistics> queryStatistics;
+        ISessionFactory sessionFactory;
 
         public TextWriter LogWriter { get { return logWriter; } }
 
-        public LogForm ()
+        public LogForm()
         {
             InitializeComponent();
 
             Icon = Properties.Resources.BlankIcon;
 
-            HideOnClose = true;
-
-            logStart = DateTime.UtcNow;
-            logTable = new List<Pair<TimeSpan, string>>();
+            logStart = System.Diagnostics.Process.GetCurrentProcess().StartTime;
+            logTable = new List<Tuple<TimeSpan, string, string>>();
             logWriter = new NotifyingStringWriter();
             logWriter.Wrote += logWriter_Wrote;
+
+            queryStatistics = new List<QueryStatistics>();
+            sessionFactory = null;
+        }
+
+        public void SetSessionFactory(ISessionFactory sessionFactory)
+        {
+            this.sessionFactory = sessionFactory;
+            refreshStatistics();
+        }
+
+        private void refreshStatistics()
+        {
+            queryStatistics.Clear();
+            if (sessionFactory == null)
+            {
+                tabPage2.Text = "Query Statistics (no session factory)";
+                tabPage2.Enabled = false;
+            }
+            else if (!sessionFactory.Statistics.IsStatisticsEnabled)
+            {
+                tabPage2.Text = "Query Statistics (no statistics)";
+                tabPage2.Enabled = false;
+            }
+            else
+            {
+                tabPage2.Text = "Query Statistics";
+                tabPage2.Enabled = true;
+                foreach (var query in sessionFactory.Statistics.Queries)
+                    queryStatistics.Add(sessionFactory.Statistics.GetQueryStatistics(query));
+                queryStatistics.Sort((x, y) => -x.ExecutionMaxTime.CompareTo(y.ExecutionMaxTime));
+            }
+            queryStatisticsDataGridView.RowCount = queryStatistics.Count;
+            queryStatisticsDataGridView.Refresh();
         }
 
         private void logWriter_Wrote (object sender, NotifyingStringWriter.WroteEventArgs e)
         {
-            if (dataGridView.InvokeRequired)
+            if (queryLogDataGridView.InvokeRequired)
             {
-                dataGridView.BeginInvoke(new System.Windows.Forms.MethodInvoker(() => logWriter_Wrote(sender, e)));
+                queryLogDataGridView.BeginInvoke(new System.Windows.Forms.MethodInvoker(() => logWriter_Wrote(sender, e)));
                 return;
             }
 
-            logTable.Add(new Pair<TimeSpan, string>(DateTime.UtcNow - logStart, e.Text));
-            dataGridView.RowCount = logTable.Count;
-
-            if (dataGridView.DisplayRectangle.Height > 0)
+            string entry = e.Text;
+            string source = String.Empty;
+            var queryCommentMatch = Regex.Match(e.Text, "/\\*\\s*Source:(.*)\\*/");
+            if (queryCommentMatch.Success && queryCommentMatch.Groups[1].Success)
             {
-                dataGridView.FirstDisplayedScrollingRowIndex = Math.Max(0, logTable.Count - 4);
-                dataGridView.Refresh();
+                source = queryCommentMatch.Groups[1].Value;
+                entry = entry.Replace(queryCommentMatch.Groups[0].Value, "");
             }
+
+            logTable.Add(new Tuple<TimeSpan, string, string>(DateTime.Now - logStart, source, entry));
+
+            queryLogDataGridView.RowCount = logTable.Count;
+
+            if (queryLogDataGridView.DisplayRectangle.Height > 0)
+            {
+                queryLogDataGridView.FirstDisplayedScrollingRowIndex = Math.Max(0, logTable.Count - 4);
+                queryLogDataGridView.Refresh();
+            }
+
+            refreshStatistics();
         }
 
-        private void dataGridView_CellValueNeeded (object sender, DataGridViewCellValueEventArgs e)
+        private void queryLogDataGridView_CellValueNeeded (object sender, DataGridViewCellValueEventArgs e)
         {
             if (e.ColumnIndex == timestampColumn.Index)
-                e.Value = logTable[e.RowIndex].first.TotalSeconds;
+                e.Value = logTable[e.RowIndex].Item1.TotalSeconds;
+            else if (e.ColumnIndex == sourceColumn.Index)
+                e.Value = logTable[e.RowIndex].Item2;
             else
-                e.Value = logTable[e.RowIndex].second;
+                e.Value = logTable[e.RowIndex].Item3;
+        }
+
+        private void queryStatisticsDataGridView_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
+        {
+            if (e.ColumnIndex == maxTimeColumn.Index)
+                e.Value = queryStatistics[e.RowIndex].ExecutionMaxTime.TotalSeconds;
+            else if (e.ColumnIndex == rowCountColumn.Index)
+                e.Value = queryStatistics[e.RowIndex].ExecutionRowCount;
+            else
+                e.Value = queryStatistics[e.RowIndex].CategoryName;
         }
     }
 

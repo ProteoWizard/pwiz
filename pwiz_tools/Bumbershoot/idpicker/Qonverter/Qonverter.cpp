@@ -255,14 +255,23 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
           "WHERE psm.QValue > 1 AND Rank = 1 "
           //(rerankMatches ? string() : string("AND Rank = 1 ")) +
           "GROUP BY psm.Analysis, s.Source";
+    
+    ProgressMonitor::UpdateMessage updateMessage;
+    updateMessage.qonvertedAnalyses = 0;
+    updateMessage.totalAnalyses = 0;
+    updateMessage.cancel = false;
+    updateMessage.message = "counting analysis/source pairs";
+    progressMonitor(updateMessage);
+    if (updateMessage.cancel)
+        return;
 
     vector<AnalysisSourcePair> analysisSourcePairs;
     CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), getAnalysisSourcePairs, &analysisSourcePairs, &errorBuf));
 
     // send initial progress update to indicate how many qonversion steps there are
-    ProgressMonitor::UpdateMessage updateMessage;
     updateMessage.qonvertedAnalyses = 0;
     updateMessage.totalAnalyses = analysisSourcePairs.size();
+    updateMessage.message = "validating qonversion settings";
     updateMessage.cancel = false;
     progressMonitor(updateMessage);
     if (updateMessage.cancel)
@@ -290,6 +299,11 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
             validateSettings(settingsByAnalysis[analysis]);
     }
 
+    updateMessage.message = "qonverting";
+    progressMonitor(updateMessage);
+    if (updateMessage.cancel)
+        return;
+
     set<string> handledAnalyses;
 
     // qonvert each analysis/source pair independently
@@ -305,15 +319,39 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
         sql = "SELECT Name FROM SpectrumSource WHERE Id=" + spectrumSourceId;
         const string& sourceName = sqlite::query(db, sql.c_str()).begin()->get<string>(0);
 
-        // verify that the decoyPrefix occurs in the PSM subset
-        sql = "SELECT COUNT(*) "
-              "FROM Spectrum s "
-              "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
-              "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum "
+        // create a temporary table containing the peptide/protein data for each PSM
+        sql = "DROP TABLE IF EXISTS PsmPeptideInfo;"
+              "CREATE TEMP TABLE PsmPeptideInfo AS "
+              "SELECT psm.Id AS Id,"
+              "       CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2"
+              "            ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END)"
+              "            END AS DecoyState,"
+              "       MAX(NTerminusIsSpecific+CTerminusIsSpecific) AS MaxSpecificity,"
+              "       MissedCleavages "
+              "FROM PeptideInstance pi "
+              "JOIN PeptideSpectrumMatch psm ON pi.Peptide=psm.Peptide "
               "JOIN Protein pro ON pi.Protein=pro.Id "
+              "JOIN Spectrum s ON psm.Spectrum=s.Id "
               "WHERE s.Source=" + spectrumSourceId +
               "  AND psm.Analysis=" + analysisId +
-              "  AND pro.Accession LIKE '" + decoyPrefix + "%'";
+              (rerankMatches ? " " : " AND Rank = 1 ") +
+              "GROUP BY psm.Id;"
+              "CREATE INDEX PsmPeptideInfo_Id ON PsmPeptideInfo (Id);";
+        
+        updateMessage.message = "collecting PSM protein info";
+        progressMonitor(updateMessage);
+        if (updateMessage.cancel)
+            return;
+
+        CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), NULL, NULL, &errorBuf));
+
+        // verify that the decoyPrefix occurs in the PSM subset
+        sql = "SELECT COUNT(*) FROM PsmPeptideInfo WHERE DecoyState > 0 ";
+
+        updateMessage.message = "checking for decoy prefix";
+        progressMonitor(updateMessage);
+        if (updateMessage.cancel)
+            return;
 
         bool decoyPrefixOccurs = true;
         CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), verifyDecoyPrefixOccurs, &decoyPrefixOccurs, &errorBuf));
@@ -330,13 +368,7 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
         sql = "SELECT GROUP_CONCAT(scoreName.Name || ';' || scoreName.Id) "
               "FROM PeptideSpectrumMatchScore psmScore "
               "JOIN PeptideSpectrumMatchScoreName scoreName ON ScoreNameId=scoreName.Id "
-              "JOIN (SELECT psm.Id "
-              "      FROM PeptideSpectrumMatch psm "
-              "      JOIN Spectrum s ON Spectrum=s.Id "
-              "      WHERE s.Source=" + spectrumSourceId +
-              "        AND psm.Analysis=" + analysisId +
-              (rerankMatches ? "" : " AND Rank = 1 ") +
-              "      LIMIT 1) AS psm ON psmScore.PsmId=psm.Id";
+              "JOIN (SELECT Id FROM PsmPeptideInfo LIMIT 1) AS psm ON psmScore.PsmId=psm.Id";
 
         vector<string> actualScoreIdNamePairs; // the order of scores is important!
         vector<string> actualScoreNames;
@@ -408,27 +440,26 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
 #ifdef QONVERTER_HAS_NATIVEID
               "s.NativeID, "
 #endif
-              "psm.Rank, "
-              "       CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
-              "            ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
-              "            END AS DecoyState, "
-              "       psm.Charge, "
-              "       MAX(NTerminusIsSpecific+CTerminusIsSpecific), "
-              "       MissedCleavages, "
-              "       ABS(MonoisotopicMassError), " +
+              "psm.Rank, DecoyState, psm.Charge, MaxSpecificity, MissedCleavages, ABS(MonoisotopicMassError), " +
               scoreSelects +
               "FROM Spectrum s "
-              "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
-              "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum " +
+              "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum "
+              "JOIN PsmPeptideInfo ppi ON psm.Id=ppi.Id " +
               scoreJoins +
-              "JOIN Protein pro ON pi.Protein=pro.Id "
-              "WHERE s.Source=" + spectrumSourceId +
-              "  AND psm.Analysis=" + analysisId +
-              //(rerankMatches ? "" : " AND Rank = 1 ") +
               " GROUP BY psm.Id";
+
+        updateMessage.message = "reading PSMs";
+        progressMonitor(updateMessage);
+        if (updateMessage.cancel)
+            return;
 
         PsmRowReader psmRowReader(scoreIdSet);
         psmRowReader.read(db, sql.c_str());
+
+        updateMessage.message = "normalizing scores";
+        progressMonitor(updateMessage);
+        if (updateMessage.cancel)
+            return;
 
         // normalize scores (according to qonverterSettings)
         normalize(qonverterSettings, psmRowReader.psmRows);
@@ -437,6 +468,11 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
              << qonverterSettings.decoyPrefix << endl;
         BOOST_FOREACH_FIELD((const string& name)(const Qonverter::Settings::ScoreInfo& scoreInfo), qonverterSettings.scoreInfoByName)
             cout << name << " " << scoreInfo.weight << " " << scoreInfo.order << " " << scoreInfo.normalizationMethod << endl;*/
+        
+        updateMessage.message = "calculating Q values";
+        progressMonitor(updateMessage);
+        if (updateMessage.cancel)
+            return;
 
         switch (qonverterSettings.qonverterMethod.index())
         {
@@ -474,6 +510,11 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
                 cout << " " << psm.scores[j];
             cout << endl;
         }*/
+        
+        updateMessage.message = "updating Q values";
+        progressMonitor(updateMessage);
+        if (updateMessage.cancel)
+            return;
 
         // update the database with the new Q values
         updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows);
@@ -502,6 +543,7 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
         handledAnalyses.insert(analysisId);
 
         ++updateMessage.qonvertedAnalyses;
+        updateMessage.message.clear();
         progressMonitor(updateMessage);
         if (updateMessage.cancel)
             return;
@@ -528,6 +570,30 @@ void Qonverter::reset(sqlite3* idpDb)
     // drop old QonversionDetails
     CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS QonversionDetails", NULL, NULL, &errorBuf));
 
+    dropFilters(idpDb);
+
+    // reset Q values
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "UPDATE PeptideSpectrumMatch SET QValue = 2", NULL, NULL, &errorBuf));
+
+    // delete QonverterSettings
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DELETE FROM QonverterSettings", NULL, NULL, &errorBuf));
+}
+
+
+void Qonverter::dropFilters(const string& idpDbFilepath)
+{
+    SchemaUpdater::update(idpDbFilepath);
+
+    sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
+
+    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
+
+    dropFilters(db.connected());
+}
+
+
+void Qonverter::dropFilters(sqlite3* idpDb)
+{
     // drop Filtered* tables
     string dropFilteredTables = "DROP TABLE IF EXISTS FilteredProtein;"
                                 "DROP TABLE IF EXISTS FilteredPeptideInstance;"
@@ -558,12 +624,6 @@ void Qonverter::reset(sqlite3* idpDb)
     catch (runtime_error&)
     {
     }
-
-    // reset Q values
-    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "UPDATE PeptideSpectrumMatch SET QValue = 2", NULL, NULL, &errorBuf));
-
-    // delete QonverterSettings
-    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DELETE FROM QonverterSettings", NULL, NULL, &errorBuf));
 }
 
 

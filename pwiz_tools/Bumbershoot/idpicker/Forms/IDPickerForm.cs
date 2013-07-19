@@ -104,6 +104,8 @@ namespace IDPicker
         /// </summary>
         private string defaultMergedOutputFilepath = null;
 
+        private string defaultApplySourceGroupHierarchy = null;
+
         public IDPickerForm (IList<string> args)
         {
             InitializeComponent();
@@ -820,7 +822,8 @@ namespace IDPicker
                            "             -MinSpectraPerDistinctMatch <integer>\r\n" +
                            "             -MinSpectraPerDistinctPeptide <integer>\r\n" +
                            "             -MaxProteinGroupsPerPeptide <integer>\r\n" +
-                           "             -MergedOutputFilepath <string>\r\n";
+                           "             -MergedOutputFilepath <string>\r\n" +
+                           "             -ApplySourceGroupHierarchy <filepath>\r\n";
             if (Program.IsHeadless)
                 Console.Error.WriteLine("\r\nUsage:\r\n" + usage);
             else
@@ -873,6 +876,8 @@ namespace IDPicker
                         defaultDataFilter.MaximumProteinGroupsPerPeptide = Convert.ToInt32(args[i + 1]);
                     else if (arg == "-MergedOutputFilepath")
                         defaultMergedOutputFilepath = args[i + 1];
+                    else if (arg == "-ApplySourceGroupHierarchy")
+                        defaultApplySourceGroupHierarchy = args[i + 1];
                     else
                     {
                         Program.HandleUserError(new Exception("unsupported parameter \"" + arg + "\""));
@@ -987,7 +992,7 @@ namespace IDPicker
                 }
 
                 if (Program.IsHeadless && xml_filepaths.Any())
-                    Program.HandleUserError(new Exception("headless mode only supports merging idpDB files"));
+                    Program.HandleUserError(new Exception("headless mode only supports merging and filtering idpDB files"));
 
                 // warn if idpDBs already exist
                 bool warnOnce = false, skipReconvert = false;
@@ -1025,7 +1030,7 @@ namespace IDPicker
                 if (!openSingleFile && potentialPaths.Contains(commonFilepath))
                     commonFilepath = commonFilepath.Replace(".idpDB", " (merged).idpDB");
                 string mergeTargetFilepath = defaultMergedOutputFilepath ?? commonFilepath;
-                if (File.Exists(mergeTargetFilepath) && Program.IsHeadless)
+                if (!openSingleFile && File.Exists(mergeTargetFilepath) && Program.IsHeadless)
                     File.Delete(mergeTargetFilepath);
                 else
                 {
@@ -1196,6 +1201,7 @@ namespace IDPicker
                 }));
 
                 var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
+                if (logForm != null) logForm.SetSessionFactory(sessionFactory);
 
                 BeginInvoke(new MethodInvoker(() =>
                 {
@@ -1215,9 +1221,10 @@ namespace IDPicker
 
                     toolStripStatusLabel.Text = "Refreshing group structure...";
                     statusStrip.Refresh();
-                    var usedGroups = GroupingControlForm.SetInitialStructure(rootNode, session);
+                    var usedGroups = GroupingControlForm.SetInitialStructure(rootNode, session, defaultApplySourceGroupHierarchy);
                     if (usedGroups != null && usedGroups.Any())
                     {
+                        // TODO: select the remaining source groups where the names do not start with 
                         var unusedGroups = session.QueryOver<SpectrumSourceGroup>().List();
                         foreach (var item in usedGroups)
                             unusedGroups.Remove(item);
@@ -1244,6 +1251,10 @@ namespace IDPicker
                     modificationTableForm.RoundToNearest = roundToNearest;
 
                     basicFilter = DataFilter.LoadFilter(session);
+
+                    // if user has overridden filters from the command-line, make sure to reapply the filter
+                    if (!defaultDataFilter.PersistentDataFilter.Equals(defaultDataFilter.OriginalPersistentDataFilter))
+                        basicFilter = null;
 
                     if (basicFilter == null)
                     {
@@ -1530,6 +1541,9 @@ namespace IDPicker
                 if (cancel)
                     return;
 
+                clearData();
+                basicFilterControl.Enabled = false;
+
                 var qonverter = new Qonverter();
                 qonverter.QonversionProgress += progressMonitor.UpdateProgress;
                 qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
@@ -1539,7 +1553,6 @@ namespace IDPicker
                 //qonverter.LogQonversionDetails = true;
                 try
                 {
-                    clearData();
                     qonverter.Reset(Text);
                     qonverter.Qonvert(Text);
                 }
@@ -1571,8 +1584,6 @@ namespace IDPicker
 
             viewFilter = basicFilter;
 
-            viewFilter.ApplyBasicFilters(session);
-
             session.Close();
             sessionFactory.Close();
 
@@ -1584,7 +1595,7 @@ namespace IDPicker
             basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
             dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
             dataFilterPopup.Closed += dataFilterPopup_Closed;
-            OpenFiles(new List<string> {Text}, null);
+            new Thread(() => OpenFiles(new List<string> { Text }, null)).Start();
         }
 
         private void toExcelToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1785,8 +1796,144 @@ namespace IDPicker
             Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialProteinView.html");
         }
 
+        private void loadRefSeqGeneMetadata()
+        {
+            #region Check for updated gene2protein database and download it
+            string g2pTimestamp = null;
+
+            string g2pPath = Path.Combine(Application.UserAppDataPath, "gene2protein.db3");
+            string g2pPathAlternate = Path.Combine(Application.StartupPath, "gene2protein.db3");
+            var copyUserToAlternate = new ProcessStartInfo("cmd.exe", String.Format("/C copy /Y \"{0}\" \"{1}\"", g2pPath, g2pPathAlternate));
+            copyUserToAlternate.CreateNoWindow = true;
+
+            if (!File.Exists(g2pPath) && File.Exists(g2pPathAlternate))
+                File.Copy(g2pPathAlternate, g2pPath);
+            else if (File.Exists(g2pPath) && !File.Exists(g2pPathAlternate))
+            {
+                var p = Process.Start(copyUserToAlternate);
+                p.WaitForExit();
+                if (p.ExitCode == 1)
+                    MessageBox.Show("Unable to copy gene2protein.db3 from user-specific path to application path:\r\n" +
+                                    Path.GetDirectoryName(g2pPath) +
+                                    "\r\nto\r\n" +
+                                    Path.GetDirectoryName(g2pPathAlternate),
+                                    "Unable to copy");
+            }
+
+            if (File.Exists(g2pPath))
+            {
+                var con = new SQLiteConnection(@"Data Source=" + g2pPath + ";Version=3");
+                con.Open();
+                g2pTimestamp = con.ExecuteQuery("SELECT Timestamp FROM About").Single().GetString(0);
+                con.Close();
+
+                string g2pURL = "http://fenchurch.mc.vanderbilt.edu/bin/g2p";
+                string g2pTimestampURL = String.Format("{0}/G2P_TIMESTAMP", g2pURL);
+
+                string latestTimestamp;
+                lock (Program.WebClient)
+                {
+                    latestTimestamp = Program.WebClient.DownloadString(g2pTimestampURL).Trim();
+                }
+
+                if (g2pTimestamp.CompareTo(latestTimestamp) < 0)
+                {
+                    Invoke(new MethodInvoker(() =>
+                    {
+                        var form = new NewVersionForm("RefSeq Gene to Protein Database",
+                                                      g2pTimestamp,
+                                                      latestTimestamp,
+                                                      String.Empty)
+                                                      {
+                                                          Owner = this,
+                                                          StartPosition = FormStartPosition.CenterParent
+                                                      };
+
+                        if (form.ShowDialog() == DialogResult.Yes)
+                        {
+                            var oldG2Ptime = File.GetCreationTimeUtc(g2pPath);
+                            string backupG2Pname = String.Format("{0}.{1}.bak", g2pPath, oldG2Ptime.ToString("yyyyMMddHHmm"));
+                            File.Move(g2pPath, backupG2Pname);
+                            try
+                            {
+                                string g2pDatabaseURL = String.Format("{0}/gene2protein.db3", g2pURL);
+                                lock (Program.WebClient)
+                                {
+                                    Program.WebClient.DownloadFile(g2pDatabaseURL, g2pPath);
+
+                                    var p = Process.Start(copyUserToAlternate);
+                                    p.WaitForExit();
+                                    if (p.ExitCode == 1)
+                                        MessageBox.Show("Unable to copy gene2protein.db3 from user-specific path to application path:\r\n" +
+                                                        Path.GetDirectoryName(g2pPath) +
+                                                        "\r\nto\r\n" +
+                                                        Path.GetDirectoryName(g2pPathAlternate),
+                                                        "Unable to copy");
+                                }
+                                g2pTimestamp = latestTimestamp;
+                            }
+                            catch (Exception)
+                            {
+                                if (!File.Exists(g2pPath))
+                                    File.Move(backupG2Pname, g2pPath);
+                            }
+                        }
+                        else
+                            g2pTimestamp = null; // no update
+                    }));
+                }
+                else
+                    g2pTimestamp = null; // no update
+            }
+            else // downloading database for the first time (or it has been deleted)
+            {
+                string g2pURL = "http://fenchurch.mc.vanderbilt.edu/bin/g2p";
+                string g2pDatabaseURL = String.Format("{0}/gene2protein.db3", g2pURL);
+                lock (Program.WebClient)
+                {
+                    Program.WebClient.DownloadFile(g2pDatabaseURL, g2pPath);
+
+                    var p = Process.Start(copyUserToAlternate);
+                    p.WaitForExit();
+                    if (p.ExitCode == 1)
+                        MessageBox.Show("Unable to copy gene2protein.db3 from user-specific path to application path:\r\n" +
+                                        Path.GetDirectoryName(g2pPath) +
+                                        "\r\nto\r\n" +
+                                        Path.GetDirectoryName(g2pPathAlternate),
+                                        "Unable to copy");
+                }
+            }
+            #endregion
+
+            if (session == null)
+                return;
+
+            try
+            {
+                clearSession();
+                Embedder.EmbedGeneMetadata(Text, null);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "embedding gene metadata failed");
+            }
+
+            OpenFiles(new List<string> { Text }, null);
+        }
+
+        private void loadGeneMetadataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            loadRefSeqGeneMetadata();
+        }
+
         private void showLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new MethodInvoker(() => showLogToolStripMenuItem_Click(sender, e)));
+                return;
+            }
+
             logForm.Show(dockPanel, DockState.DockBottomAutoHide);
         }
     }

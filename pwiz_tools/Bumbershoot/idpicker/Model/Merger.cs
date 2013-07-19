@@ -253,7 +253,6 @@ namespace IDPicker.DataModel
                         addNewQonverterSettings(conn);
 
                         conn.ExecuteNonQuery("INSERT INTO merged.MergedFiles VALUES ('" + mergeSourceFilepath.Replace("'", "''") + "')");
-                        PruneGroupTree(conn);
                     }
                     catch(Exception ex)
                     {
@@ -278,6 +277,7 @@ namespace IDPicker.DataModel
                 {
                     addIntegerSet(conn);
                     conn.ExecuteNonQuery("UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL");
+                    deleteEmptySpectrumSourceGroups(conn);
                 }
                 finally
                 {
@@ -327,7 +327,7 @@ namespace IDPicker.DataModel
                     addIntegerSet(conn);
                     conn.ExecuteNonQuery("UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL");
 
-                    PruneGroupTree(conn);
+                    deleteEmptySpectrumSourceGroups(conn);
 
                     transaction.Commit();
 
@@ -342,54 +342,6 @@ namespace IDPicker.DataModel
             // if merging to a temporary file, move it back to the real target
             if (tempMergeTargetFilepath != mergeTargetFilepath)
                 File.Move(tempMergeTargetFilepath, mergeTargetFilepath);
-        }
-
-        private void PruneGroupTree(SQLiteConnection conn)
-        {
-            var groupNameToID = new Dictionary<string, int>();
-            var groupsToRemove = new HashSet<string>();
-            var usedGroups = new HashSet<int>();
-
-            var queriedGroups = conn.ExecuteQuery("SELECT * FROM SpectrumSourceGroup");
-            var usedGroupQuerey = conn.ExecuteQuery("SELECT DISTINCT group_ FROM SpectrumSource");
-            foreach (var group in usedGroupQuerey)
-            {
-                try
-                {
-                    var groupNum = group.GetInt32(0);
-                    usedGroups.Add(groupNum);
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-            foreach (var group in queriedGroups)
-            {
-                var idBase = group[0].ToString();
-                var id = int.Parse(idBase);
-                var name = group[1].ToString();
-                if (groupNameToID.ContainsKey(name))
-                    continue;
-                groupNameToID.Add(name,id);
-                groupsToRemove.Add(name);
-            }
-            foreach (var group in queriedGroups)
-            {
-                var idBase = group[0].ToString();
-                var id = int.Parse(idBase);
-                var name = group[1].ToString();
-
-                if (usedGroups.Contains(id))
-                {
-                    var validGroup = groupsToRemove.Where(item => name.Contains(item)).ToList();
-                    foreach (var item in validGroup)
-                        groupsToRemove.Remove(item);
-                }
-            }
-            var idsToRemove = groupsToRemove.Select(item => groupNameToID[item]).ToList();
-            conn.ExecuteQuery("DELETE FROM spectrumSourceGroup WHERE id in (" + string.Join(",", idsToRemove) + ")");
-            conn.ExecuteQuery("DELETE FROM spectrumSourceGroupLink WHERE group_ in (" + string.Join(",", idsToRemove) + ")");
         }
 
         static string mergeProteinsSql =
@@ -531,13 +483,13 @@ namespace IDPicker.DataModel
 
 
         static string addNewProteinsSql =
-              @"INSERT INTO merged.Protein (Id, Accession, IsDecoy, Length)
-                SELECT AfterMergeId, Accession, IsDecoy, Length
+              @"INSERT INTO merged.Protein (Id, Accession, IsDecoy, Length, GeneId, GeneGroup)
+                SELECT AfterMergeId, Accession, IsDecoy, Length, GeneId, GeneGroup
                 FROM NewProteins
                 JOIN {0}.Protein newPro ON BeforeMergeId = newPro.Id;
 
                 INSERT INTO merged.ProteinMetadata
-                SELECT AfterMergeId, Description
+                SELECT AfterMergeId, Description, TaxonomyId, GeneName, Chromosome, GeneFamily, GeneDescription
                 FROM NewProteins
                 JOIN {0}.ProteinMetadata newPro ON BeforeMergeId = newPro.Id;
 
@@ -736,6 +688,7 @@ namespace IDPicker.DataModel
             MaxAnalysisId += (long) maxIds[11];
         }
 
+
         static void addIntegerSet (IDbConnection conn)
         {
             long maxInteger = (long) conn.ExecuteQuery("SELECT IFNULL(MAX(Value),0) FROM IntegerSet").First()[0];
@@ -750,6 +703,21 @@ namespace IDPicker.DataModel
                 cmd.ExecuteNonQuery();
             }
         }
+
+
+        void deleteEmptySpectrumSourceGroups(IDbConnection conn)
+        {
+            conn.ExecuteNonQuery(@"DELETE FROM SpectrumSourceGroup
+                                   WHERE Id NOT IN (
+                                                    SELECT ssg.Id
+                                                    FROM SpectrumSourceGroup ssg
+                                                    JOIN (SELECT DISTINCT ssg.Name FROM SpectrumSourceGroup ssg JOIN SpectrumSource ss ON ssg.Id=ss.Group_) groupsWithNoDirectSources
+                                                      ON instr(groupsWithNoDirectSources.Name || '/', ssg.Name || '/') != 0
+                                                      OR ssg.Name='/'
+                                                   )");
+            conn.ExecuteNonQuery("DELETE FROM SpectrumSourceGroupLink WHERE Group_ NOT IN (SELECT Id FROM SpectrumSourceGroup)");
+        }
+
 
         bool OnMergingProgress (Exception ex, int mergedFiles)
         {

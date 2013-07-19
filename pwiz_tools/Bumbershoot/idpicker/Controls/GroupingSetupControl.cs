@@ -103,6 +103,17 @@ namespace IDPicker.Controls
 
         void objectListView_ItemChecked (object sender, ItemCheckedEventArgs e)
         {
+            if (GroupingChanging != null)
+            {
+                var eventArgs = new GroupingChangingEventArgs<T>()
+                {
+                    Grouping = (e.Item as OLVListItem).RowObject as Grouping<T>
+                };
+                GroupingChanging(this, eventArgs);
+                if (eventArgs.Cancel)
+                    return;
+            }
+
             if (GroupingChanged != null)
                 GroupingChanged(this, EventArgs.Empty);
         }
@@ -116,6 +127,16 @@ namespace IDPicker.Controls
         /// Occurs when the user reorders or changes the checked state of the groupings.
         /// </summary>
         public event EventHandler GroupingChanged;
+
+        /// <summary>
+        /// Checks or unchecks the specified grouping mode.
+        /// </summary>
+        public void SetGrouping(T groupingMode, bool checked_)
+        {
+            var grouping = Groupings.First(o => o.Mode.Equals(groupingMode));
+            if (checked_) objectListView.CheckObject(grouping);
+            else objectListView.UncheckObject(grouping);
+        }
 
         /// <summary>
         /// Returns a read-only list of all the available groupings.

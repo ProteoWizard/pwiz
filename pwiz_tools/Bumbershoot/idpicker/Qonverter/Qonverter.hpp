@@ -231,6 +231,7 @@ struct Qonverter
         {
             int qonvertedAnalyses;
             int totalAnalyses;
+            string message;
             bool cancel;
         };
 
@@ -242,6 +243,9 @@ struct Qonverter
 
     void reset(const string& idpDbFilepath);
     void reset(sqlite3* idpDb);
+
+    void dropFilters(const string& idpFilepath);
+    void dropFilters(sqlite3* idpDb);
 };
 
 

@@ -44,6 +44,7 @@ namespace IDPicker.Forms
 
             textTemplate.Text = String.Format(textTemplate.Text, productName, currentVersion, newVersion);
             changelogTextBox.Text = changeLog;
+            showChangeLogCheckbox.Visible = !changeLog.IsNullOrEmpty();
         }
 
         Size nonCollapsedSize;

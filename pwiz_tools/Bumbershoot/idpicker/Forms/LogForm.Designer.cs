@@ -52,33 +52,46 @@ namespace IDPicker.Forms
         /// </summary>
         private void InitializeComponent ()
         {
-            this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.queryLogDataGridView = new System.Windows.Forms.DataGridView();
             this.timestampColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.sourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.entryColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
+            this.tabControl = new System.Windows.Forms.TabControl();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.queryStatisticsDataGridView = new System.Windows.Forms.DataGridView();
+            this.maxTimeColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.rowCountColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.queryColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.queryLogDataGridView)).BeginInit();
+            this.tabControl.SuspendLayout();
+            this.tabPage1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.queryStatisticsDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
-            // dataGridView
+            // queryLogDataGridView
             // 
-            this.dataGridView.AllowUserToAddRows = false;
-            this.dataGridView.AllowUserToDeleteRows = false;
-            this.dataGridView.AllowUserToResizeRows = false;
-            this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
-            this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.queryLogDataGridView.AllowUserToAddRows = false;
+            this.queryLogDataGridView.AllowUserToDeleteRows = false;
+            this.queryLogDataGridView.AllowUserToResizeRows = false;
+            this.queryLogDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
+            this.queryLogDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.queryLogDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.timestampColumn,
+            this.sourceColumn,
             this.entryColumn});
-            this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView.Name = "dataGridView";
-            this.dataGridView.ReadOnly = true;
-            this.dataGridView.RowHeadersVisible = false;
-            this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridView.ShowEditingIcon = false;
-            this.dataGridView.Size = new System.Drawing.Size(412, 369);
-            this.dataGridView.TabIndex = 0;
-            this.dataGridView.VirtualMode = true;
-            this.dataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.dataGridView_CellValueNeeded);
+            this.queryLogDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.queryLogDataGridView.Location = new System.Drawing.Point(3, 3);
+            this.queryLogDataGridView.Name = "queryLogDataGridView";
+            this.queryLogDataGridView.ReadOnly = true;
+            this.queryLogDataGridView.RowHeadersVisible = false;
+            this.queryLogDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.queryLogDataGridView.ShowEditingIcon = false;
+            this.queryLogDataGridView.Size = new System.Drawing.Size(398, 337);
+            this.queryLogDataGridView.TabIndex = 0;
+            this.queryLogDataGridView.VirtualMode = true;
+            this.queryLogDataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.queryLogDataGridView_CellValueNeeded);
             // 
             // timestampColumn
             // 
@@ -89,6 +102,14 @@ namespace IDPicker.Forms
             this.timestampColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.timestampColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
+            // sourceColumn
+            // 
+            this.sourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.sourceColumn.HeaderText = "Source";
+            this.sourceColumn.Name = "sourceColumn";
+            this.sourceColumn.ReadOnly = true;
+            this.sourceColumn.Width = 200;
+            // 
             // entryColumn
             // 
             this.entryColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -96,12 +117,91 @@ namespace IDPicker.Forms
             this.entryColumn.Name = "entryColumn";
             this.entryColumn.ReadOnly = true;
             // 
+            // tabControl
+            // 
+            this.tabControl.Controls.Add(this.tabPage1);
+            this.tabControl.Controls.Add(this.tabPage2);
+            this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl.Location = new System.Drawing.Point(0, 0);
+            this.tabControl.Name = "tabControl";
+            this.tabControl.SelectedIndex = 0;
+            this.tabControl.Size = new System.Drawing.Size(412, 369);
+            this.tabControl.TabIndex = 1;
+            // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.queryLogDataGridView);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(404, 343);
+            this.tabPage1.TabIndex = 0;
+            this.tabPage1.Text = "Query Log";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.queryStatisticsDataGridView);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(404, 343);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Query Statistics";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // queryStatisticsDataGridView
+            // 
+            this.queryStatisticsDataGridView.AllowUserToAddRows = false;
+            this.queryStatisticsDataGridView.AllowUserToDeleteRows = false;
+            this.queryStatisticsDataGridView.AllowUserToResizeRows = false;
+            this.queryStatisticsDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
+            this.queryStatisticsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.queryStatisticsDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.maxTimeColumn,
+            this.rowCountColumn,
+            this.queryColumn});
+            this.queryStatisticsDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.queryStatisticsDataGridView.Location = new System.Drawing.Point(3, 3);
+            this.queryStatisticsDataGridView.Name = "queryStatisticsDataGridView";
+            this.queryStatisticsDataGridView.ReadOnly = true;
+            this.queryStatisticsDataGridView.RowHeadersVisible = false;
+            this.queryStatisticsDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.queryStatisticsDataGridView.ShowEditingIcon = false;
+            this.queryStatisticsDataGridView.Size = new System.Drawing.Size(398, 337);
+            this.queryStatisticsDataGridView.TabIndex = 1;
+            this.queryStatisticsDataGridView.VirtualMode = true;
+            this.queryStatisticsDataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.queryStatisticsDataGridView_CellValueNeeded);
+            // 
+            // maxTimeColumn
+            // 
+            this.maxTimeColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.maxTimeColumn.HeaderText = "Max. Time";
+            this.maxTimeColumn.Name = "maxTimeColumn";
+            this.maxTimeColumn.ReadOnly = true;
+            this.maxTimeColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            // 
+            // rowCountColumn
+            // 
+            this.rowCountColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.rowCountColumn.HeaderText = "Rows";
+            this.rowCountColumn.Name = "rowCountColumn";
+            this.rowCountColumn.ReadOnly = true;
+            this.rowCountColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            // 
+            // queryColumn
+            // 
+            this.queryColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.queryColumn.HeaderText = "Query";
+            this.queryColumn.Name = "queryColumn";
+            this.queryColumn.ReadOnly = true;
+            // 
             // LogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(412, 369);
-            this.Controls.Add(this.dataGridView);
+            this.Controls.Add(this.tabControl);
             this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right) 
             | DigitalRune.Windows.Docking.DockAreas.Top) 
             | DigitalRune.Windows.Docking.DockAreas.Bottom) 
@@ -110,16 +210,28 @@ namespace IDPicker.Forms
             this.Name = "LogForm";
             this.TabText = "LogForm";
             this.Text = "LogForm";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.queryLogDataGridView)).EndInit();
+            this.tabControl.ResumeLayout(false);
+            this.tabPage1.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.queryStatisticsDataGridView)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView;
+        private System.Windows.Forms.DataGridView queryLogDataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn timestampColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn sourceColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn entryColumn;
+        private System.Windows.Forms.TabControl tabControl;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.DataGridView queryStatisticsDataGridView;
+        private System.Windows.Forms.DataGridViewTextBoxColumn maxTimeColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn rowCountColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn queryColumn;
 
     }
 }

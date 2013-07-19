@@ -76,6 +76,7 @@
     <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
     <Optimize>false</Optimize>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>build-nt-x86\msvc-release-x86_64\</OutputPath>
@@ -112,9 +113,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="InteropQonverter, Version=3.0.511.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="InteropQonverter, Version=3.0.511.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>build-nt-x86\obj\x64\release\InteropQonverter.dll</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\release\InteropQonverter.dll</HintPath>
     </Reference>
     <Reference Include="MathNet.Numerics, Version=2011.4.17.0, Culture=neutral, PublicKeyToken=cd8b63ad3d691a37, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -144,9 +145,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\SimplePopup\PopupControl.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>build-nt-x86\obj\x64\release\pwiz_bindings_cli.dll</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\release\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Data.Linq, Version=1.13.41.2, Culture=neutral, PublicKeyToken=cab60358ab4081ea, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -601,6 +602,9 @@
     <Content Include="QuasiTel.R">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Gene.png" />
+    <None Include="Resources\ProteinViewIcon1.ico" />
+    <None Include="Resources\Protein1.png" />
     <None Include="Resources\file.png" />
   </ItemGroup>
   <ItemGroup>

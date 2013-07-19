@@ -129,9 +129,10 @@ namespace IDPicker
             progressUpdate.Total = e.TotalAnalyses;
             progressUpdate.Current = e.QonvertedAnalyses;
 
-            progressUpdate.Message = String.Format("Calculating Q values... ({0}/{1})",
+            progressUpdate.Message = String.Format("Calculating Q values... ({2}: {0}/{1})",
                                                    e.QonvertedAnalyses,
-                                                   e.TotalAnalyses);
+                                                   e.TotalAnalyses,
+                                                   e.Message);
 
             ProgressUpdate(this, progressUpdate);
             e.Cancel = progressUpdate.Cancel;

@@ -190,6 +190,8 @@ namespace IDPicker
 
         #region Update checking and error reporting
         private static WebClient webClient = new WebClient();
+        public static WebClient WebClient { get { return webClient; } }
+
         private static void initializeWebClient ()
         {
             new Thread(() => { try { lock (webClient) webClient.DownloadString("http://www.google.com"); } catch {/* TODO: log warning */} }).Start();

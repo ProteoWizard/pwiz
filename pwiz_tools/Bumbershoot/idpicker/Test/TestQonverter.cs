@@ -280,14 +280,15 @@ namespace Test
             {
                 Assert.AreEqual(Qonverter, sender);
                 Assert.AreEqual(ExpectedQonvertedAnalyses, eventArgs.QonvertedAnalyses);
-                Assert.AreEqual(ExpectedTotalAnalyses, eventArgs.TotalAnalyses);
+                Assert.AreEqual(eventArgs.Message.StartsWith("counting") ? 0 : ExpectedTotalAnalyses, eventArgs.TotalAnalyses);
 
                 if (CancelAtCount == eventArgs.QonvertedAnalyses)
                     eventArgs.Cancel = true;
                 else
                     Assert.IsTrue(eventArgs.QonvertedAnalyses < CancelAtCount);
 
-                ++ExpectedQonvertedAnalyses;
+                if (eventArgs.Message == ("updating Q values"))
+                    ++ExpectedQonvertedAnalyses;
             }
         }
     }

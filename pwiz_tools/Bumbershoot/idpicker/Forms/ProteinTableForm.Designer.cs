@@ -57,6 +57,10 @@ namespace IDPicker.Forms
             this.countColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.coverageColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.proteinGroupColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.geneIdColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.geneNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.chromosomeColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.geneFamilyColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctPeptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctMatchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.filteredSpectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -107,6 +111,34 @@ namespace IDPicker.Forms
             this.proteinGroupColumn.TrackVisitedState = false;
             this.proteinGroupColumn.Width = 80;
             // 
+            // geneIdColumn
+            // 
+            this.geneIdColumn.HeaderText = "Gene Id";
+            this.geneIdColumn.Name = "geneIdColumn";
+            this.geneIdColumn.ReadOnly = true;
+            this.geneIdColumn.Width = 100;
+            // 
+            // geneNameColumn
+            // 
+            this.geneNameColumn.HeaderText = "Gene Name";
+            this.geneNameColumn.Name = "geneNameColumn";
+            this.geneNameColumn.ReadOnly = true;
+            this.geneNameColumn.Width = 120;
+            // 
+            // chromosomeColumn
+            // 
+            this.chromosomeColumn.HeaderText = "Chromosome";
+            this.chromosomeColumn.Name = "chromosomeColumn";
+            this.chromosomeColumn.ReadOnly = true;
+            this.chromosomeColumn.Width = 100;
+            // 
+            // geneFamilyColumn
+            // 
+            this.geneFamilyColumn.HeaderText = "Gene Family";
+            this.geneFamilyColumn.Name = "geneFamilyColumn";
+            this.geneFamilyColumn.ReadOnly = true;
+            this.geneFamilyColumn.Width = 120;
+            // 
             // distinctPeptidesColumn
             // 
             this.distinctPeptidesColumn.HeaderText = "Distinct Peptides";
@@ -156,6 +188,10 @@ namespace IDPicker.Forms
                                               countColumn,
                                               coverageColumn,
                                               proteinGroupColumn,
+                                              geneIdColumn,
+                                              geneNameColumn,
+                                              chromosomeColumn,
+                                              geneFamilyColumn,
                                               distinctPeptidesColumn,
                                               distinctMatchesColumn,
                                               filteredSpectraColumn,
@@ -186,6 +222,10 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn countColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn coverageColumn;
         private System.Windows.Forms.DataGridViewLinkColumn proteinGroupColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn geneIdColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn geneNameColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn chromosomeColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn geneFamilyColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctPeptidesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctMatchesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn filteredSpectraColumn;

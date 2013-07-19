@@ -239,6 +239,12 @@ namespace IDPicker.DataModel
                 using (var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3", path)))
                 {
                     conn.Open();
+                    conn.ExecuteNonQuery(@"PRAGMA journal_mode=DELETE;
+                                           PRAGMA synchronous=OFF;
+                                           PRAGMA automatic_indexing=OFF;
+                                           PRAGMA cache_size=30000;
+                                           PRAGMA temp_store=MEMORY;
+                                           PRAGMA page_size=32768");
                     DropIndexes(conn);
                     CreateIndexes(conn);
                 }

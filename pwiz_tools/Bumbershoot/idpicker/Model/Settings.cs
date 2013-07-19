@@ -227,7 +227,7 @@ namespace IDPicker.DataModel
         #endregion
     }
 
-    public enum GroupBy { Cluster, ProteinGroup, Peptide, PeptideGroup, Source, Spectrum, Analysis, Charge, Off }
+    public enum GroupBy { Cluster, ProteinGroup, Peptide, PeptideGroup, Source, Spectrum, Analysis, Charge, GeneFamily, GeneGroup, Gene, Chromosome, Off }
     public enum PivotBy { SpectraByGroup, SpectraBySource, MatchesByGroup, MatchesBySource, PeptidesByGroup, PeptidesBySource, iTRAQByGroup, iTRAQBySource, TMTByGroup, TMTBySource, Off }
 
     [Serializable]

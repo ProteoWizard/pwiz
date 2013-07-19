@@ -30,22 +30,27 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
     TEAMCITY_TEST_DECORATION = <testing.arg>--teamcity-test-decoration ;
 }
 
+obj SchemaUpdater : SchemaUpdater.cpp
+                  : # requirements
+                      <library>../freicore/libraries/SQLite//sqlite3pp
+                      <library>$(PWIZ_SOURCE)/pwiz/utility/misc//pwiz_utility_misc
+                  : # default-build
+                  : # usage-requirements
+                      <library>../freicore/libraries/SQLite//sqlite3pp
+                      <library>$(PWIZ_SOURCE)/pwiz/utility/misc//pwiz_utility_misc
+                  ;
 
 lib Qonverter
     : # sources
-        [ glob *Qonverter.cpp ] SchemaUpdater.cpp
+        [ glob *Qonverter.cpp ] SchemaUpdater
     : # requirements
-        <library>../freicore/libraries/SQLite//sqlite3pp
         <library>..//svm
         <library>/ext/boost//thread
-        <library>/ext/boost//filesystem
         <library>waffles//waffles
     : # default-build
     : # usage-requirements
-        <library>../freicore/libraries/SQLite//sqlite3pp
         <library>..//svm
         <library>/ext/boost//thread
-        <library>/ext/boost//filesystem
         <library>waffles//waffles
     ;
 
@@ -68,7 +73,7 @@ lib Parser
     ;
 
 exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
-exe idpQuery : idpQuery.cpp ../freicore/libraries/SQLite//sqlite3pp /ext/boost//filesystem /ext/boost//regex /ext/boost//date_time ;
+exe idpQuery : idpQuery.cpp SchemaUpdater /ext/boost//regex ;
 
 import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;

@@ -116,6 +116,17 @@ void Embedder::EmbedScanTime(String^ idpDbFilepath,
 }
 
 
+void Embedder::EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr)
+{
+    try
+    {
+        NativeEmbedder::embedGeneMetadata(ToStdString(idpDbFilepath),
+                                          ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
+    }
+    CATCH_AND_FORWARD
+}
+
+
 void Embedder::Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath)
 {
     try

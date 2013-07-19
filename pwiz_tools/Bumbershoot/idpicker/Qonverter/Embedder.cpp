@@ -24,6 +24,7 @@
 
 
 #include "Embedder.hpp"
+#include "Qonverter.hpp"
 #include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -37,6 +38,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/throw_exception.hpp"
+#include "boost/xpressive/xpressive.hpp"
 
 # ifdef BOOST_POSIX_API
 #   include <fcntl.h>
@@ -652,7 +654,7 @@ void embed(const string& idpDbFilepath,
             if (index == sl.size())
                 throw runtime_error("[embed] nativeID '" + nativeID + "' not found in \"" + sourceFilename + "\"");
             filteredIndexes.insert((int) index);
-            rowIdByNativeID[nativeID] = source.spectrumIds[j];
+            rowIdByNativeID[sl.spectrumIdentity(index).id] = source.spectrumIds[j];
         }
         
         sqlite::transaction transaction(idpDb);
@@ -817,7 +819,7 @@ void embedScanTime(const string& idpDbFilepath,
             if (index == sl.size())
                 throw runtime_error("[embed] nativeID '" + nativeID + "' not found in \"" + sourceFilename + "\"");
             filteredIndexes.insert((int) index);
-            rowIdByNativeID[nativeID] = source.spectrumIds[j];
+            rowIdByNativeID[sl.spectrumIdentity(index).id] = source.spectrumIds[j];
         }
 
         sqlite::transaction transaction(idpDb);
@@ -909,6 +911,74 @@ void extract(const string& idpDbFilepath, const string& sourceName, const string
     }
 
     throw runtime_error("[extract] source \"" + sourceName + "\" not found in \"" + idpDbFilepath + "\"");
+}
+
+
+void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
+{
+    if (!bfs::exists("gene2protein.db3"))
+        throw runtime_error("[loadGeneMetadata] gene2protein.db3 not found: download it from http://fenchurch.mc.vanderbilt.edu/bin/g2p/gene2protein.db3 and put it in the IDPicker directory.");
+
+    typedef boost::tuple<string, string, string, boost::optional<string>, boost::optional<string> > GeneTuple;
+    typedef map<string, GeneTuple> ProteinToGeneMap;
+    ProteinToGeneMap proteinToGeneMap;
+    {
+        sqlite::database g2pDb("gene2protein.db3");
+        sqlite::query proteinToGeneQuery(g2pDb, "SELECT ProteinAccession, ApprovedId, ApprovedName, Chromosome, GeneFamily, GeneDescription FROM GeneToProtein");
+        BOOST_FOREACH(sqlite::query::rows row, proteinToGeneQuery)
+        {
+            string geneId, geneName, chromosome, geneFamily, geneDescription;
+            boost::tie(geneId, geneName, chromosome, geneFamily, geneDescription) = row.get_columns<string, string, string, string, string>(1, 2, 3, 4, 5);
+            proteinToGeneMap[row.get<string>(0)] = boost::make_tuple(geneId, geneName, chromosome,
+                                                                     boost::make_optional(!geneFamily.empty(), geneFamily),
+                                                                     boost::make_optional(!geneDescription.empty(), geneDescription));
+        }
+    }
+
+    // open the database
+    sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
+    
+    idpDb.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
+
+    // drop filtered tables
+    Qonverter q;
+    q.dropFilters(idpDb.connected());
+
+    // reset GeneId column
+    idpDb.execute("UPDATE Protein SET GeneId=NULL");
+
+    using namespace boost::xpressive;
+
+    sqlite::transaction transaction(idpDb);
+    sqlite::query proteinIdAccessions(idpDb, "SELECT Id, Accession FROM Protein WHERE IsDecoy=0");
+    sqlite::command proteinQuery(idpDb, "UPDATE Protein SET GeneId=? WHERE Id=?");
+    sqlite::command proteinMetadataQuery(idpDb, "UPDATE ProteinMetadata SET TaxonomyId=9606, GeneName=?, Chromosome=?, GeneFamily=?, GeneDescription=? WHERE Id=?");
+    sregex refseqRegex = sregex::compile("^(?:gi\\|\\d+\\|ref\\|)?(\\S+?)(?:\\|)?$");
+    BOOST_FOREACH(sqlite::query::rows row, proteinIdAccessions)
+    {
+        sqlite3_int64 id = row.get<sqlite3_int64>(0);
+        string accession = regex_replace(row.get<string>(1), refseqRegex, "$1");
+
+        ProteinToGeneMap::const_iterator findItr = proteinToGeneMap.find(accession);
+        if (findItr == proteinToGeneMap.end())
+            continue;
+
+        const GeneTuple& geneTuple = findItr->second;
+
+        proteinQuery.binder() << geneTuple.get<0>() << id;
+        proteinQuery.step();
+        proteinQuery.reset();
+
+        if (geneTuple.get<3>().is_initialized())
+            proteinMetadataQuery.binder() << geneTuple.get<1>() << geneTuple.get<2>() << geneTuple.get<3>().get() << geneTuple.get<4>().get() << id;
+        else
+            proteinMetadataQuery.binder() << geneTuple.get<1>() << geneTuple.get<2>() << sqlite::ignore << sqlite::ignore << id;
+        proteinMetadataQuery.step();
+        proteinMetadataQuery.reset();
+    }
+    idpDb.execute("UPDATE Protein SET GeneId='Unmapped_'||Accession WHERE GeneId IS NULL");
+    //idpDb.execute("UPDATE Protein SET GeneId='Unmapped' WHERE GeneId IS NULL");
+    transaction.commit();
 }
 
 

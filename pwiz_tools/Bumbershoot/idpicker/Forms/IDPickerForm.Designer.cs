@@ -77,6 +77,7 @@ namespace IDPicker
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadGeneMetadataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.layoutToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.dataFiltersToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -287,7 +288,8 @@ namespace IDPicker
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.optionsToolStripMenuItem});
+            this.optionsToolStripMenuItem,
+            this.loadGeneMetadataToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -295,9 +297,16 @@ namespace IDPicker
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.optionsToolStripMenuItem.Text = "Options...";
             this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
+            // 
+            // loadGeneMetadataToolStripMenuItem
+            // 
+            this.loadGeneMetadataToolStripMenuItem.Name = "loadGeneMetadataToolStripMenuItem";
+            this.loadGeneMetadataToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.loadGeneMetadataToolStripMenuItem.Text = "Load Gene Metadata";
+            this.loadGeneMetadataToolStripMenuItem.Click += new System.EventHandler(this.loadGeneMetadataToolStripMenuItem_Click);
             // 
             // layoutToolStripMenuRoot
             // 
@@ -408,7 +417,7 @@ namespace IDPicker
             // showLogToolStripMenuItem
             // 
             this.showLogToolStripMenuItem.Name = "showLogToolStripMenuItem";
-            this.showLogToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.showLogToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.showLogToolStripMenuItem.Text = "Show Log";
             this.showLogToolStripMenuItem.Click += new System.EventHandler(this.showLogToolStripMenuItem_Click);
             // 
@@ -492,6 +501,7 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem developerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem spectralLibraryToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadGeneMetadataToolStripMenuItem;
 
     }
 }

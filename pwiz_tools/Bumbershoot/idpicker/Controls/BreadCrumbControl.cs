@@ -273,7 +273,17 @@ namespace IDPicker.Controls
 
             //go through the arduous process of figuring out what the data type is
             //and creating a list of all values present
-            if (dataFilter.Cluster != null)
+            if (dataFilter.GeneGroup != null)
+            {
+                for (var x = 0; x < dataFilter.GeneGroup.Count; x++)
+                    contents.Add(new KeyValuePair<string, int>(dataFilter.GeneGroup[x].ToString(), x));
+            }
+            else if (dataFilter.Gene != null)
+            {
+                for (var x = 0; x < dataFilter.Gene.Count; x++)
+                    contents.Add(new KeyValuePair<string, int>(dataFilter.Gene[x].ToString(), x));
+            }
+            else if (dataFilter.Cluster != null)
             {
                 for (var x = 0; x < dataFilter.Cluster.Count; x++)
                     contents.Add(new KeyValuePair<string, int>(dataFilter.Cluster[x].ToString(), x));
@@ -504,7 +514,19 @@ namespace IDPicker.Controls
         /// <returns></returns>
         private bool RemoveItemInContainer(DataFilter dataFilter, int itemNumber)
         {
-            if (dataFilter.Cluster != null)
+            if (dataFilter.GeneGroup != null)
+            {
+                dataFilter.GeneGroup.RemoveAt(itemNumber);
+                if (dataFilter.GeneGroup.Count > 0)
+                    return false;
+            }
+            else if (dataFilter.Gene != null)
+            {
+                dataFilter.Gene.RemoveAt(itemNumber);
+                if (dataFilter.Gene.Count > 0)
+                    return false;
+            }
+            else if (dataFilter.Cluster != null)
             {
                 dataFilter.Cluster.RemoveAt(itemNumber);
                 if (dataFilter.Cluster.Count > 0)
@@ -601,12 +623,16 @@ namespace IDPicker.Controls
 
                 if (breadCrumbs[x].Text.Contains("Q-value"))
                     breadCrumbs.RemoveAt(x); //Sometimes bugs and gets extra-long breadcrumb
-                else if (item.Cluster != null || item.ProteinGroup != null || item.Protein != null)
+                else if (item.GeneGroup != null || item.Gene != null || item.Cluster != null ||
+                         item.ProteinGroup != null || item.Protein != null)
                 {
-                    if (overallData.Cluster != null || overallData.ProteinGroup != null || overallData.Protein != null)
+                    if (overallData.GeneGroup != null || overallData.Gene != null || overallData.Cluster != null ||
+                        overallData.ProteinGroup != null || overallData.Protein != null)
                         breadCrumbs.RemoveAt(x);
                     else
                     {
+                        overallData.GeneGroup = overallData.GeneGroup ?? item.GeneGroup;
+                        overallData.Gene = overallData.Gene ?? item.Gene;
                         overallData.Cluster = overallData.Cluster ?? item.Cluster;
                         overallData.ProteinGroup = overallData.ProteinGroup ?? item.ProteinGroup;
                         overallData.Protein = overallData.Protein ?? item.Protein;

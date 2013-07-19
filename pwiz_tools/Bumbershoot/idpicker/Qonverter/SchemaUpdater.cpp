@@ -36,12 +36,35 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 7;
+const int CURRENT_SCHEMA_REVISION = 8;
 
 namespace SchemaUpdater {
 
 
 namespace {
+
+void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    try
+    {
+        // add gene columns to protein tables
+        db.execute("ALTER TABLE Protein ADD COLUMN GeneId TEXT");
+        db.execute("ALTER TABLE Protein ADD COLUMN GeneGroup INT");
+        db.execute("ALTER TABLE ProteinMetadata ADD COLUMN TaxonomyId INT");
+        db.execute("ALTER TABLE ProteinMetadata ADD COLUMN GeneName TEXT");
+        db.execute("ALTER TABLE ProteinMetadata ADD COLUMN Chromosome TEXT");
+        db.execute("ALTER TABLE ProteinMetadata ADD COLUMN GeneFamily TEXT");
+        db.execute("ALTER TABLE ProteinMetadata ADD COLUMN GeneDescription TEXT");
+
+        db.execute("ALTER TABLE UnfilteredProtein ADD COLUMN GeneId TEXT");
+        db.execute("ALTER TABLE UnfilteredProtein ADD COLUMN GeneGroup INT");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "no such") && !bal::contains(e.what(), "duplicate column")) // column or table
+            throw runtime_error(e.what());
+    }
+}
 
 void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -170,6 +193,8 @@ void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
         if (!bal::contains(e.what(), "no such")) // column or table
             throw runtime_error(e.what());
     }
+
+    update_7_to_8(db, ilr);
 }
 
 void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
@@ -365,6 +390,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
         update_5_to_6(db, ilr);
     else if (schemaRevision == 6)
         update_6_to_7(db, ilr);
+    else if (schemaRevision == 7)
+        update_7_to_8(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

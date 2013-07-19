@@ -110,7 +110,7 @@
 
     <class name="Protein">
         <id name="Id"><generator class="native"/></id>
-        <property name="Accession" />
+        <property name="Accession"/>
 
         <bag name="Peptides" inverse="true" batch-size="500" lazy="true">
             <key column="Protein"/>
@@ -120,9 +120,20 @@
         <property name="Cluster" access="nosetter.camelcase"/>
         <property name="ProteinGroup" access="nosetter.camelcase"/>
         <property name="Length" access="nosetter.camelcase"/>
+        <property name="GeneId"/>
+        <property name="GeneGroup"/>
 
         <!-- We store these long text fields in separate tables so that joins against the Protein table are faster -->
-        <join optional="true" table="ProteinMetadata"><key column="Id"/><property name="Description"/></join>
+        <join optional="true" table="ProteinMetadata">
+            <key column="Id"/>
+            <property name="Description"/>
+            <property name="TaxonomyId"/>
+            <property name="GeneName"/>
+            <property name="Chromosome"/>
+            <property name="GeneFamily"/>
+            <property name="GeneDescription"/>
+        </join>
+        
         <join optional="true" table="ProteinData"><key column="Id"/><property name="Sequence" lazy="true"/></join>
 
         <join optional="true" table="ProteinCoverage">

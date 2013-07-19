@@ -154,6 +154,7 @@ public ref struct Qonverter
     {
         property int QonvertedAnalyses;
         property int TotalAnalyses;
+        property String^ Message;
         property bool Cancel;
     };
 
@@ -169,7 +170,7 @@ public ref struct Qonverter
     void Reset(String^ idpDbFilepath);
     void Reset(System::IntPtr idpDb);
 
-    internal: void marshal(int qonvertedAnalyses, int totalAnalyses, bool& cancel);
+    internal: void marshal(int qonvertedAnalyses, int totalAnalyses, const char* message, bool& cancel);
 };
 
 

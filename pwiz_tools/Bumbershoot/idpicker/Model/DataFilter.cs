@@ -89,7 +89,7 @@ namespace IDPicker.DataModel
             public FilteringProgressEventArgs(string stage, int completed, Exception ex)
             {
                 CompletedFilters = completed;
-                TotalFilters = 19;
+                TotalFilters = 20;
                 FilteringStage = stage;
                 FilteringException = ex;
             }
@@ -138,6 +138,8 @@ namespace IDPicker.DataModel
 
             DistinctMatchFormat = other.DistinctMatchFormat;
 
+            GeneGroup = other.GeneGroup == null ? null : new List<int>(other.GeneGroup);
+            Gene = other.Gene == null ? null : new List<string>(other.Gene);
             Cluster = other.Cluster == null ? null : new List<int>(other.Cluster);
             ProteinGroup = other.ProteinGroup == null ? null : new List<int>(other.ProteinGroup);
             Protein = other.Protein == null ? null : new List<Protein>(other.Protein);
@@ -188,6 +190,8 @@ namespace IDPicker.DataModel
 
         public DistinctMatchFormat DistinctMatchFormat { get; set; }
 
+        public IList<int> GeneGroup { get; set; }
+        public IList<string> Gene { get; set; }
         public IList<int> Cluster { get; set; }
         public IList<int> ProteinGroup { get; set; }
         public IList<int> PeptideGroup { get; set; }
@@ -231,7 +235,11 @@ namespace IDPicker.DataModel
 
         public bool HasProteinFilter
         {
-            get { return !Cluster.IsNullOrEmpty() || !ProteinGroup.IsNullOrEmpty() || !Protein.IsNullOrEmpty() || !AminoAcidOffset.IsNullOrEmpty(); }
+            get
+            {
+                return !GeneGroup.IsNullOrEmpty() || !Gene.IsNullOrEmpty() || !Cluster.IsNullOrEmpty() ||
+                       !ProteinGroup.IsNullOrEmpty() || !Protein.IsNullOrEmpty() || !AminoAcidOffset.IsNullOrEmpty();
+            }
         }
 
         public bool HasPeptideFilter
@@ -294,6 +302,8 @@ namespace IDPicker.DataModel
 
             return PersistentDataFilter.Equals(other.PersistentDataFilter) &&
                    OriginalPersistentDataFilter.Equals(other.OriginalPersistentDataFilter) &&
+                   NullSafeSequenceEqual(GeneGroup, other.GeneGroup) &&
+                   NullSafeSequenceEqual(Gene, other.Gene) &&
                    NullSafeSequenceEqual(Cluster, other.Cluster) &&
                    NullSafeSequenceEqual(ProteinGroup, other.ProteinGroup) &&
                    NullSafeSequenceEqual(PeptideGroup, other.PeptideGroup) &&
@@ -315,6 +325,8 @@ namespace IDPicker.DataModel
         public static DataFilter operator + (DataFilter lhs, DataFilter rhs)
         {
             var newFilter = new DataFilter(lhs);
+            newFilter.GeneGroup = NullSafeSequenceUnion(newFilter.GeneGroup, rhs.GeneGroup);
+            newFilter.Gene = NullSafeSequenceUnion(newFilter.Gene, rhs.Gene);
             newFilter.Cluster = NullSafeSequenceUnion(newFilter.Cluster, rhs.Cluster);
             newFilter.ProteinGroup = NullSafeSequenceUnion(newFilter.ProteinGroup, rhs.ProteinGroup);
             newFilter.PeptideGroup = NullSafeSequenceUnion(newFilter.PeptideGroup, rhs.PeptideGroup);
@@ -363,6 +375,8 @@ namespace IDPicker.DataModel
         public override string ToString ()
         {
             var result = new List<string>();
+            toStringHelper("Gene group", GeneGroup, result);
+            toStringHelper("Gene", Gene, result);
             toStringHelper("Cluster", Cluster, result);
             toStringHelper("Protein group", ProteinGroup, result);
             toStringHelper("Peptide group", PeptideGroup, result);
@@ -509,7 +523,7 @@ namespace IDPicker.DataModel
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", ++stepsCompleted, null)))
                 return;
             string filterProteinsSql =
-                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT);
+                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);
                   INSERT INTO FilteredProtein SELECT pro.*
                   FROM PeptideSpectrumMatch psm
                   JOIN FilteredSpectrum s ON psm.Spectrum = s.Id
@@ -615,8 +629,6 @@ namespace IDPicker.DataModel
                                           DELETE FROM PeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM Peptide);
                                           DELETE FROM Spectrum WHERE Id NOT IN (SELECT Spectrum FROM PeptideSpectrumMatch);
                                          ").ExecuteUpdate();
-                --stepsCompleted;
-                session.CreateSQLQuery("DROP INDEX Protein_ProteinGroup").ExecuteUpdate();
 
                 // reapply protein-level filters after filtering out ambiguous PSMs
                 session.CreateSQLQuery(@"DROP INDEX FilteredProtein_Accession;
@@ -629,18 +641,25 @@ namespace IDPicker.DataModel
                 session.CreateSQLQuery(@"CREATE UNIQUE INDEX FilteredProtein_Accession ON Protein (Accession);
                                          DROP TABLE TempProtein").ExecuteUpdate();
 
+                stepsCompleted -= 2;
                 if (AssembleProteinGroups(session, ref stepsCompleted)) return;
             }
+
+            session.CreateSQLQuery("ANALYZE").ExecuteUpdate();
 
             if (AssembleClusters(session, ref stepsCompleted)) return;
             if (ApplyAdditionalPeptidesFilter(session, ref stepsCompleted)) return;
             if (AssembleProteinCoverage(session, ref stepsCompleted)) return;
             if (AssembleDistinctMatches(session, ref stepsCompleted)) return;
-
-            // assemble new protein groups after the additional peptides filter
-            session.CreateSQLQuery("DROP INDEX Protein_ProteinGroup").ExecuteUpdate();
-            if (AssembleProteinGroups(session, ref stepsCompleted)) return;
             if (AssemblePeptideGroups(session, ref stepsCompleted)) return;
+
+            // assemble new protein groups if the additional peptides filter was applied
+            if (MinimumAdditionalPeptidesPerProtein != 0)
+            {
+                stepsCompleted -= 2;
+                session.CreateSQLQuery("DROP INDEX Protein_ProteinGroup; DROP INDEX IF EXISTS Protein_GeneGroup").ExecuteUpdate();
+                if (AssembleProteinGroups(session, ref stepsCompleted)) return;
+            }
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating summary statistics...", ++stepsCompleted, null)))
                 return;
@@ -653,6 +672,8 @@ namespace IDPicker.DataModel
                 session.Transaction.Commit();
 
             if (AggregateQuantitationData(session, ref stepsCompleted)) return;
+
+            session.CreateSQLQuery("ANALYZE").ExecuteUpdate();
         }
 
 
@@ -674,7 +695,7 @@ namespace IDPicker.DataModel
 
                                      -- ProteinGroup will be a continuous sequence starting at 1
                                      CREATE TEMP TABLE TempProtein AS
-                                     SELECT ProteinId, Accession, IsDecoy, Cluster, pg2.rowid, Length
+                                     SELECT ProteinId, Accession, IsDecoy, Cluster, pg2.rowid, Length, GeneId, GeneGroup
                                      FROM ProteinGroups pg
                                      JOIN ( 
                                            SELECT pg.ProteinGroup
@@ -687,6 +708,38 @@ namespace IDPicker.DataModel
                                      INSERT INTO Protein SELECT * FROM TempProtein;
                                      CREATE INDEX Protein_ProteinGroup ON Protein (ProteinGroup);
                                      DROP TABLE ProteinGroups;
+                                     DROP TABLE TempProtein;
+                                    ").ExecuteUpdate();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling gene groups...", ++stepsCompleted, null)))
+                return true;
+
+            if (Convert.ToInt32(session.CreateSQLQuery("SELECT COUNT(*) FROM Protein WHERE GeneId IS NOT NULL").UniqueResult()) == 0)
+                return false;
+
+            session.CreateSQLQuery(@"CREATE TEMP TABLE GeneGroups AS
+                                     SELECT pro.GeneId AS GeneId, GROUP_CONCAT(DISTINCT pi.Peptide) AS GeneGroup
+                                     FROM PeptideInstance pi
+                                     JOIN Protein pro ON pi.Protein = pro.Id
+                                     GROUP BY pro.GeneId;
+
+                                     -- GeneGroup will be a continuous sequence starting at 1
+                                     CREATE TEMP TABLE TempProtein AS
+                                     SELECT pro.Id, Accession, IsDecoy, Cluster, ProteinGroup, Length, pro.GeneId, gg2.rowid AS GeneGroup
+                                     FROM GeneGroups gg
+                                     JOIN ( 
+                                           SELECT gg.GeneGroup
+                                           FROM GeneGroups gg
+                                           GROUP BY gg.GeneGroup
+                                           ORDER BY gg.GeneId
+                                          ) gg2 ON gg.GeneGroup = gg2.GeneGroup
+                                     JOIN Protein pro ON gg.GeneId = pro.GeneId
+                                     GROUP BY pro.Id;
+
+                                     DELETE FROM Protein;
+                                     INSERT INTO Protein SELECT * FROM TempProtein;
+                                     CREATE INDEX Protein_GeneGroup ON Protein (GeneGroup);
+                                     DROP TABLE GeneGroups;
                                      DROP TABLE TempProtein;
                                     ").ExecuteUpdate();
 
@@ -827,16 +880,23 @@ namespace IDPicker.DataModel
         {
             if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage...", ++stepsCompleted, null)))
                 return true;
-            
-            session.CreateSQLQuery(@"DELETE FROM ProteinCoverage;
-                                     INSERT INTO ProteinCoverage (Id, Coverage)
-                                     SELECT pi.Protein, CAST(COUNT(DISTINCT i.Value) AS REAL) * 100 / pro.Length
+
+            // HACK: without the subselect, the query planner in SQLite 3.7.15 and later performs very badly for these 2 queries
+
+            session.CreateSQLQuery(@"CREATE TEMP TABLE CoverageJoinTable AS
+                                     SELECT pro.Id AS Protein, pro.Length AS ProteinLength, pi.Offset AS PeptideOffset, pi.Length AS PeptideLength
                                      FROM PeptideInstance pi
                                      JOIN Protein pro ON pi.Protein=pro.Id
                                      JOIN ProteinData pd ON pi.Protein=pd.Id
-                                     JOIN IntegerSet i
-                                     WHERE i.Value BETWEEN pi.Offset AND pi.Offset+pi.Length-1
-                                     GROUP BY pi.Protein;
+                                     GROUP BY pi.Id;
+                                     CREATE INDEX CoverageJoinTable_ProteinOffsetLength ON CoverageJoinTable (Protein, PeptideOffset, PeptideLength);
+
+                                     DELETE FROM ProteinCoverage;
+                                     INSERT INTO ProteinCoverage (Id, Coverage)
+                                     SELECT Protein, CAST(COUNT(DISTINCT i.Value) AS REAL) * 100 / ProteinLength
+                                     FROM IntegerSet i, CoverageJoinTable
+                                     WHERE i.Value BETWEEN PeptideOffset AND PeptideOffset+PeptideLength-1
+                                     GROUP BY Protein;
                                     ").ExecuteUpdate();
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage masks...", ++stepsCompleted, null)))
@@ -844,65 +904,65 @@ namespace IDPicker.DataModel
 
             // get non-zero coverage depths at each protein offset
             var coverageMaskRows = session.CreateSQLQuery(
-                                   @"SELECT pi.Protein, pro.Length, i.Value, COUNT(i.Value)
-                                     FROM PeptideInstance pi
-                                     JOIN Protein pro ON pi.Protein=pro.Id
-                                     JOIN ProteinData pd ON pi.Protein=pd.Id
-                                     JOIN IntegerSet i 
-                                     WHERE i.Value BETWEEN pi.Offset AND pi.Offset+pi.Length-1
-                                     GROUP BY pi.Protein, i.Value
-                                     ORDER BY pi.Protein, i.Value;
+                                   @"SELECT Protein, ProteinLength, i.Value, COUNT(i.Value)
+                                     FROM IntegerSet i, CoverageJoinTable
+                                     WHERE i.Value BETWEEN PeptideOffset AND PeptideOffset+PeptideLength-1
+                                     GROUP BY Protein, i.Value
+                                     ORDER BY Protein, i.Value;
+                                     DROP TABLE CoverageJoinTable;
                                     ").List().OfType<object[]>();
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Updating protein coverage masks...", ++stepsCompleted, null)))
                 return true;
 
-            var cmd = session.Connection.CreateCommand();
-            cmd.CommandText = "UPDATE ProteinCoverage SET CoverageMask = ? WHERE Id = ?";
-            var parameters = new List<System.Data.IDbDataParameter>();
-            for (int i = 0; i < 2; ++i)
+            using (var cmd = session.Connection.CreateCommand())
             {
-                parameters.Add(cmd.CreateParameter());
-                cmd.Parameters.Add(parameters[i]);
-            }
-            cmd.Prepare();
-
-            var proteinCoverageMaskUserType = new ProteinCoverageMaskUserType();
-            long currentProteinId = 0;
-            ushort[] currentProteinMask = null;
-
-            foreach (object[] row in coverageMaskRows)
-            {
-                long proteinId = Convert.ToInt64(row[0]);
-                int proteinLength = Convert.ToInt32(row[1]);
-
-                // before moving on to the next protein, update the current one
-                if (proteinId > currentProteinId)
+                cmd.CommandText = "UPDATE ProteinCoverage SET CoverageMask = ? WHERE Id = ?";
+                var parameters = new List<System.Data.IDbDataParameter>();
+                for (int i = 0; i < 2; ++i)
                 {
-                    if (currentProteinMask != null)
+                    parameters.Add(cmd.CreateParameter());
+                    cmd.Parameters.Add(parameters[i]);
+                }
+                cmd.Prepare();
+
+                var proteinCoverageMaskUserType = new ProteinCoverageMaskUserType();
+                long currentProteinId = 0;
+                ushort[] currentProteinMask = null;
+
+                foreach (object[] row in coverageMaskRows)
+                {
+                    long proteinId = Convert.ToInt64(row[0]);
+                    int proteinLength = Convert.ToInt32(row[1]);
+
+                    // before moving on to the next protein, update the current one
+                    if (proteinId > currentProteinId)
                     {
-                        parameters[0].Value = proteinCoverageMaskUserType.Disassemble(currentProteinMask);
-                        parameters[1].Value = currentProteinId;
-                        cmd.ExecuteNonQuery();
+                        if (currentProteinMask != null)
+                        {
+                            parameters[0].Value = proteinCoverageMaskUserType.Disassemble(currentProteinMask);
+                            parameters[1].Value = currentProteinId;
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        currentProteinId = proteinId;
+                        currentProteinMask = new ushort[proteinLength];
+
+                        // initialize all offsets to 0 (no coverage)
+                        currentProteinMask.Initialize();
                     }
 
-                    currentProteinId = proteinId;
-                    currentProteinMask = new ushort[proteinLength];
-
-                    // initialize all offsets to 0 (no coverage)
-                    currentProteinMask.Initialize();
+                    // set a covered offset to its coverage depth
+                    currentProteinMask[Convert.ToInt32(row[2])] = Convert.ToUInt16(row[3]);
                 }
 
-                // set a covered offset to its coverage depth
-                currentProteinMask[Convert.ToInt32(row[2])] = Convert.ToUInt16(row[3]);
-            }
-
-            // set the last protein's mask
-            if (currentProteinMask != null)
-            {
-                parameters[0].Value = proteinCoverageMaskUserType.Disassemble(currentProteinMask);
-                parameters[1].Value = currentProteinId;
-                cmd.ExecuteNonQuery();
+                // set the last protein's mask
+                if (currentProteinMask != null)
+                {
+                    parameters[0].Value = proteinCoverageMaskUserType.Disassemble(currentProteinMask);
+                    parameters[1].Value = currentProteinId;
+                    cmd.ExecuteNonQuery();
+                }
             }
 
             return false;
@@ -1352,7 +1412,7 @@ namespace IDPicker.DataModel
             }
             else if (fromTable == FromPeptideSpectrumMatch)
             {
-                if (!Cluster.IsNullOrEmpty() || !ProteinGroup.IsNullOrEmpty())
+                if (!Cluster.IsNullOrEmpty() || !ProteinGroup.IsNullOrEmpty() || !GeneGroup.IsNullOrEmpty() || !Gene.IsNullOrEmpty())
                     foreach (var branch in PeptideSpectrumMatchToProtein.Split(';'))
                         joins.Add(joins.Count, branch);
 
@@ -1393,50 +1453,56 @@ namespace IDPicker.DataModel
                     pair.Value = ((string) pair.Value).Replace("LEFT JOIN psm.Mod", "JOIN psm.Mod")
                                                       .Replace("LEFT JOIN pm.Mod", "JOIN pm.Mod");
 
+            if (!GeneGroup.IsNullOrEmpty())
+                proteinConditions.Add(String.Format("pro.GeneGroup IN ({0})", String.Join(",", GeneGroup.Select(o => o.ToString()))));
+
+            if (!Gene.IsNullOrEmpty())
+                proteinConditions.Add(String.Format("pro.GeneId IN ('{0}')", String.Join("','", Gene)));
+
             if (!Cluster.IsNullOrEmpty())
-                clusterConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()).ToArray())));
+                clusterConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()))));
 
             if (!ProteinGroup.IsNullOrEmpty())
-                proteinConditions.Add(String.Format("pro.ProteinGroup IN ({0})", String.Join(",", ProteinGroup.Select(o => o.ToString()).ToArray())));
+                proteinConditions.Add(String.Format("pro.ProteinGroup IN ({0})", String.Join(",", ProteinGroup.Select(o => o.ToString()))));
 
             if (!Protein.IsNullOrEmpty())
             {
                 string column = fromTable == FromProtein || joins.Any(o => ((string) o.Value).EndsWith(" pro")) ? "pro.id" : "pi.Protein.id";
-                proteinConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Protein.Select(o => o.Id.ToString()).ToArray())));
+                proteinConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Protein.Select(o => o.Id.ToString()))));
             }
 
             if (!PeptideGroup.IsNullOrEmpty())
-                peptideConditions.Add(String.Format("pep.PeptideGroup IN ({0})", String.Join(",", PeptideGroup.Select(o => o.ToString()).ToArray())));
+                peptideConditions.Add(String.Format("pep.PeptideGroup IN ({0})", String.Join(",", PeptideGroup.Select(o => o.ToString()))));
 
             if (!Peptide.IsNullOrEmpty())
             {
                 string column = joins.Any(o => ((string) o.Value).EndsWith(" pi")) ? "pi.Peptide.id" : "psm.Peptide.id";
-                peptideConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Peptide.Select(o => o.Id.ToString()).ToArray())));
+                peptideConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Peptide.Select(o => o.Id.ToString()))));
             }
 
             if (!DistinctMatchKey.IsNullOrEmpty())
-                peptideConditions.Add(String.Format("psm.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o=> o.Key).ToArray())));
+                peptideConditions.Add(String.Format("psm.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o=> o.Key))));
 
             if (!ModifiedSite.IsNullOrEmpty())
-                modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()).ToArray())));
+                modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()))));
 
             if (!Modifications.IsNullOrEmpty())
-                modConditions.Add(String.Format("pm.Modification.id IN ({0})", String.Join(",", Modifications.Select(o => o.Id.ToString()).ToArray())));
+                modConditions.Add(String.Format("pm.Modification.id IN ({0})", String.Join(",", Modifications.Select(o => o.Id.ToString()))));
 
             if (!Charge.IsNullOrEmpty())
-                otherConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()).ToArray())));
+                otherConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()))));
 
             if (!Analysis.IsNullOrEmpty())
-                otherConditions.Add(String.Format("psm.Analysis.id IN ({0})", String.Join(",", Analysis.Select(o => o.Id.ToString()).ToArray())));
+                otherConditions.Add(String.Format("psm.Analysis.id IN ({0})", String.Join(",", Analysis.Select(o => o.Id.ToString()))));
 
             if (!Spectrum.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("psm.Spectrum.id IN ({0})", String.Join(",", Spectrum.Select(o => o.Id.ToString()).ToArray())));
+                spectrumConditions.Add(String.Format("psm.Spectrum.id IN ({0})", String.Join(",", Spectrum.Select(o => o.Id.ToString()))));
 
             if (!SpectrumSource.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("psm.Spectrum.Source.id IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()).ToArray())));
+                spectrumConditions.Add(String.Format("psm.Spectrum.Source.id IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()))));
 
             if (!SpectrumSourceGroup.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("ssgl.Group.id IN ({0})", String.Join(",", SpectrumSourceGroup.Select(o => o.Id.ToString()).ToArray())));
+                spectrumConditions.Add(String.Format("ssgl.Group.id IN ({0})", String.Join(",", SpectrumSourceGroup.Select(o => o.Id.ToString()))));
 
             if (!AminoAcidOffset.IsNullOrEmpty())
             {
@@ -1451,7 +1517,7 @@ namespace IDPicker.DataModel
                         offsetConditions.Add(String.Format("(pi.Offset <= {0} AND pi.Offset+pi.Length > {0})", offset));
                 }
 
-                otherConditions.Add("(" + String.Join(" OR ", offsetConditions.ToArray()) + ")");
+                otherConditions.Add("(" + String.Join(" OR ", offsetConditions) + ")");
             }
 
             var query = new StringBuilder();
@@ -1462,12 +1528,12 @@ namespace IDPicker.DataModel
             query.Append(" ");
 
             var conditions = new List<string>();
-            if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions.ToArray()) + ")");
-            if (clusterConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", clusterConditions.ToArray()) + ")");
-            if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions.ToArray()) + ")");
-            if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions.ToArray()) + ")");
-            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", modConditions.ToArray()) + ")");
-            if (otherConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", otherConditions.ToArray()) + ")");
+            if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions) + ")");
+            if (clusterConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", clusterConditions) + ")");
+            if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions) + ")");
+            if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions) + ")");
+            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", modConditions) + ")");
+            if (otherConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", otherConditions) + ")");
 
             if (conditions.Count > 0)
             {
@@ -1488,46 +1554,52 @@ namespace IDPicker.DataModel
             var modConditions = new List<string>();
             var otherConditions = new List<string>();
 
+            if (!GeneGroup.IsNullOrEmpty())
+                proteinConditions.Add(String.Format("pro.GeneGroup IN ({0})", String.Join(",", GeneGroup.Select(o => o.ToString()))));
+
+            if (!Gene.IsNullOrEmpty())
+                proteinConditions.Add(String.Format("pro.GeneId IN ('{0}')", String.Join("','", Gene)));
+
             if (!Cluster.IsNullOrEmpty())
-                proteinConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()).ToArray())));
+                proteinConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()))));
 
             if (!ProteinGroup.IsNullOrEmpty())
-                proteinConditions.Add(String.Format("pro.ProteinGroup IN ({0})", String.Join(",", ProteinGroup.Select(o => o.ToString()).ToArray())));
+                proteinConditions.Add(String.Format("pro.ProteinGroup IN ({0})", String.Join(",", ProteinGroup.Select(o => o.ToString()))));
 
             if (!Protein.IsNullOrEmpty())
-                proteinConditions.Add(String.Format("pi.Protein IN ({0})", String.Join(",", Protein.Select(o => o.Id.ToString()).ToArray())));
+                proteinConditions.Add(String.Format("pi.Protein IN ({0})", String.Join(",", Protein.Select(o => o.Id.ToString()))));
 
             if (!PeptideGroup.IsNullOrEmpty())
-                peptideConditions.Add(String.Format("pep.PeptideGroup IN ({0})", String.Join(",", PeptideGroup.Select(o => o.ToString()).ToArray())));
+                peptideConditions.Add(String.Format("pep.PeptideGroup IN ({0})", String.Join(",", PeptideGroup.Select(o => o.ToString()))));
 
             if (!Peptide.IsNullOrEmpty())
-                peptideConditions.Add(String.Format("pi.Peptide IN ({0})", String.Join(",", Peptide.Select(o => o.Id.ToString()).ToArray())));
+                peptideConditions.Add(String.Format("pi.Peptide IN ({0})", String.Join(",", Peptide.Select(o => o.Id.ToString()))));
 
             if (!DistinctMatchKey.IsNullOrEmpty())
                 peptideConditions.Add(String.Format("IFNULL(dm.DistinctMatchKey, " +
                                                     DistinctMatchFormat.SqlExpression +
-                                                    ") IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o => o.Key).ToArray())));
+                                                    ") IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o => o.Key))));
 
             if (!ModifiedSite.IsNullOrEmpty())
-                modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()).ToArray())));
+                modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()))));
 
             if (!Modifications.IsNullOrEmpty())
-                modConditions.Add(String.Format("pm.Modification IN ({0})", String.Join(",", Modifications.Select(o => o.Id.ToString()).ToArray())));
+                modConditions.Add(String.Format("pm.Modification IN ({0})", String.Join(",", Modifications.Select(o => o.Id.ToString()))));
 
             if (!Charge.IsNullOrEmpty())
-                otherConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()).ToArray())));
+                otherConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()))));
 
             if (!Analysis.IsNullOrEmpty())
-                otherConditions.Add(String.Format("psm.Analysis IN ({0})", String.Join(",", Analysis.Select(o => o.Id.ToString()).ToArray())));
+                otherConditions.Add(String.Format("psm.Analysis IN ({0})", String.Join(",", Analysis.Select(o => o.Id.ToString()))));
 
             if (!Spectrum.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("psm.Spectrum IN ({0})", String.Join(",", Spectrum.Select(o => o.Id.ToString()).ToArray())));
+                spectrumConditions.Add(String.Format("psm.Spectrum IN ({0})", String.Join(",", Spectrum.Select(o => o.Id.ToString()))));
 
             if (!SpectrumSource.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("s.Source IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()).ToArray())));
+                spectrumConditions.Add(String.Format("s.Source IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()))));
 
             if (!SpectrumSourceGroup.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("ssgl.Group_ IN ({0})", String.Join(",", SpectrumSourceGroup.Select(o => o.Id.ToString()).ToArray())));
+                spectrumConditions.Add(String.Format("ssgl.Group_ IN ({0})", String.Join(",", SpectrumSourceGroup.Select(o => o.Id.ToString()))));
 
             if (!AminoAcidOffset.IsNullOrEmpty())
             {
@@ -1542,22 +1614,22 @@ namespace IDPicker.DataModel
                         offsetConditions.Add(String.Format("(pi.Offset <= {0} AND pi.Offset+pi.Length > {0})", offset));
                 }
 
-                otherConditions.Add("(" + String.Join(" OR ", offsetConditions.ToArray()) + ")");
+                otherConditions.Add("(" + String.Join(" OR ", offsetConditions) + ")");
             }
 
             var query = new StringBuilder();
 
             var conditions = new List<string>();
-            if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions.ToArray()) + ")");
-            if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions.ToArray()) + ")");
-            if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions.ToArray()) + ")");
-            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", modConditions.ToArray()) + ")");
-            if (otherConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", otherConditions.ToArray()) + ")");
+            if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions) + ")");
+            if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions) + ")");
+            if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions) + ")");
+            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", modConditions) + ")");
+            if (otherConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", otherConditions) + ")");
 
             if (conditions.Count > 0)
             {
                 query.Append(" WHERE ");
-                query.Append(String.Join(" AND ", conditions.ToArray()));
+                query.Append(String.Join(" AND ", conditions));
                 query.Append(" ");
             }
 
@@ -1592,6 +1664,8 @@ namespace IDPicker.DataModel
                    DataFilter.MinimumSpectraPerDistinctMatch.GetHashCode() ^
                    DataFilter.MinimumSpectraPerDistinctPeptide.GetHashCode() ^
                    DataFilter.MaximumProteinGroupsPerPeptide.GetHashCode() ^
+                   NullSafeHashCode(DataFilter.GeneGroup) ^
+                   NullSafeHashCode(DataFilter.Gene) ^
                    NullSafeHashCode(DataFilter.Cluster) ^
                    NullSafeHashCode(DataFilter.ProteinGroup) ^
                    NullSafeHashCode(DataFilter.PeptideGroup) ^

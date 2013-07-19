@@ -84,6 +84,9 @@ static void EmbedScanTime(String^ idpDbFilepath,
                           IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                           pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
+/// embed gene metadata in the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
+static void EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr);
+
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
 static void Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath);
 
