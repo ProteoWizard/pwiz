@@ -157,9 +157,13 @@ namespace pwiz.Skyline.Model.Irt
                 dictSeqToPeptide.Clear();
             }
 
+            var dictStandardPeptides = dictSeqToPeptide.ToDictionary(p => p.Value.Peptide.GlobalIndex, p => p.Value);
+
             // Must have standard peptides, all with results
-            if (dictSeqToPeptide.Count == 0 || dictSeqToPeptide.Values.Any(nodePep => !nodePep.HasResults))
+            if (dictSeqToPeptide.Count == 0)
                 return rtRegression.ClearEquations();
+            else if (dictSeqToPeptide.Values.Any(nodePep => !nodePep.HasResults))
+                return rtRegression.ClearEquations(dictStandardPeptides);
 
             var calculator = rtRegression.Calculator;
             var dictSeqToScore = dictSeqToPeptide.ToDictionary(p => p.Key,
@@ -191,13 +195,12 @@ namespace pwiz.Skyline.Model.Irt
 
             // If not all standard peptides have at least some retention time value, fail prediction
             if (listPepCorr.Count != dictSeqToPeptide.Count)
-                return rtRegression.ClearEquations();
+                return rtRegression.ClearEquations(dictStandardPeptides);
 
             // Only calculate regressions for files with retention times for all of the standards
             var fileIdToConversions = from p in dictFileIdToCorr
                                        where p.Value.Count == dictSeqToPeptide.Count
                                        select new KeyValuePair<int, RegressionLine>(p.Key, CalcConversion(p.Value));
-            var dictStandardPeptides = dictSeqToPeptide.ToDictionary(p => p.Value.Peptide.GlobalIndex, p => p.Value);
 
             return rtRegression.ChangeEquations(new RegressionLineElement(CalcConversion(listPepCorr)),
                                                 fileIdToConversions,

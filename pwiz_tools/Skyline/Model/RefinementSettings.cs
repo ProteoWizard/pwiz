@@ -556,6 +556,24 @@ namespace pwiz.Skyline.Model
             public ExplicitMods Mods { get; set; }
         }
 
+        public static int CountDecoys(SrmDocument document)
+        {
+            // Exclude RT standard peptides
+            RetentionTimeRegression rtRegression = null;
+            if (document.Settings.PeptideSettings.Prediction.RetentionTime != null)
+                rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
+
+            int count = 0;
+            foreach (var nodePep in document.Peptides)
+            {
+                if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
+                    continue;
+
+                count += PeakFeatureEnumerator.ComparableGroups(nodePep).Count();
+            }
+            return count;
+        }
+
         private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, bool multiCycle,
                                                       Func<SequenceMods, SequenceMods> genDecoySequence)
         {

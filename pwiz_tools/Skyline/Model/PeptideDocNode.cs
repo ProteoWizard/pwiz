@@ -843,6 +843,7 @@ namespace pwiz.Skyline.Model
             {
                 var transition = nodeTran.Transition;
                 var losses = nodeTran.Losses;
+                var libInfo = nodeTran.LibInfo;
                 var tranNew = new Transition(tranGroup,
                                              transition.IonType,
                                              transition.CleavageOffset,
@@ -852,7 +853,7 @@ namespace pwiz.Skyline.Model
                 var isotopeDist = nodeGroupMatching.IsotopeDist;
                 double massH = calc.GetFragmentMass(tranNew, isotopeDist);
                 var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, isotopeDist);
-                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, null));
+                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, libInfo));
             }
             return listTrans.ToArray();
         }

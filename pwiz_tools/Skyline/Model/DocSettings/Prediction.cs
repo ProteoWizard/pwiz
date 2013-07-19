@@ -127,16 +127,24 @@ namespace pwiz.Skyline.Model.DocSettings
                     });
         }
 
-        public RetentionTimeRegression ClearEquations()
+        public RetentionTimeRegression ClearEquations(IDictionary<int, PeptideDocNode> dictStandardPeptides = null)
         {
             if (Conversion == null)
-                return this;
+            {
+                if (dictStandardPeptides == null && _dictStandardPeptides == null)
+                    return this;
+                if (dictStandardPeptides != null && _dictStandardPeptides != null)
+                {
+                    if (dictStandardPeptides.Count == dictStandardPeptides.Intersect(_dictStandardPeptides).Count())
+                        return this;
+                }
+            }
 
             return ChangeProp(ImClone(this), im =>
                     {
                         im.Conversion = null;
                         im._listFileIdToConversion = null;
-                        im._dictStandardPeptides = null;
+                        im._dictStandardPeptides = (dictStandardPeptides != null ? MakeReadOnly(dictStandardPeptides) : null);
                     });
         }
 
@@ -220,8 +228,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // unless the document has no results
             if (Conversion == null)
             {
-                if (!document.Settings.HasResults)
-                    return false;
+//                if (!document.Settings.HasResults)
+//                    return false;
 
                 // If prediction settings have change, then do auto-recalc
                 if (previous == null || !ReferenceEquals(this,

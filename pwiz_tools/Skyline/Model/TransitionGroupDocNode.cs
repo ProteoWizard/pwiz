@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model
             bool autoSelectTransitions = diff.DiffTransitions &&
                                          settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren;
 
-            if (diff.DiffTransitionGroupProps || diff.DiffTransitions || diff.DiffTransitionProps)
+            if (!IsDecoy && (diff.DiffTransitionGroupProps || diff.DiffTransitions || diff.DiffTransitionProps))
             {
                 // Skip transition ranking, if only transition group properties changed
                 var transitionRanksLib = transitionRanks;
@@ -756,8 +756,8 @@ namespace pwiz.Skyline.Model
                         if (!ReferenceEquals(info, nodeTransition.LibInfo))
                             dotProductChange = true;
 
-                        // Avoid overwriting valid transition lib info before the libraries are loaded
-                        if (libInfo != null && info == null && !settingsNew.PeptideSettings.Libraries.IsLoaded)
+                        // Avoid overwriting valid transition lib info before the libraries are loaded or for decoys
+                        if (libInfo != null && info == null && (IsDecoy || !settingsNew.PeptideSettings.Libraries.IsLoaded))
                             info = nodeTransition.LibInfo;
                         var nodeNew = new TransitionDocNode(tran, annotations, losses,
                             massH, isotopeDistInfo, info, results);
