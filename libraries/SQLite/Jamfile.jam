@@ -22,8 +22,10 @@
 
 #lib sqlite3 : : <toolset>msvc <link>shared <name>System.Data.SQLite <search>. : : <include>. ;
 
-lib sqlite3 : sqlite3.c : <toolset>msvc <link>static : : <include>. ;
-lib sqlite3pp : sqlite3pp.cpp sqlite3.c : <toolset>msvc <link>static <include>. : : <include>. ;
+lib sqlite3 : sqlite3.c : <toolset>msvc <link>static <define>SQLITE_MAX_MMAP_SIZE=70368744177664 : : <include>. ;
+lib sqlite3pp : sqlite3pp.cpp sqlite3 : <toolset>msvc <link>static <include>. : : <include>. ;
 
-lib sqlite3 : sqlite3.c : : : <include>. <linkflags>-ldl ;
-lib sqlite3pp : sqlite3pp.cpp sqlite3.c : <include>. : : <include>. <linkflags>-ldl ;
+lib sqlite3 : sqlite3.c : : : <include>. <linkflags>-ldl <define>SQLITE_MAX_MMAP_SIZE=70368744177664 ;
+lib sqlite3pp : sqlite3pp.cpp sqlite3 : <include>. : : <include>. <linkflags>-ldl ;
+
+#exe sqlite : shell.c : <library>sqlite3 <link>static ;
