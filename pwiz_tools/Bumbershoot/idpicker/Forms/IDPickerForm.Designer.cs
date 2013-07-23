@@ -437,6 +437,7 @@ namespace IDPicker
             // 
             // IDPickerForm
             // 
+            this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.AppWorkspace;
@@ -450,6 +451,8 @@ namespace IDPicker
             this.Name = "IDPickerForm";
             this.Text = "IDPicker";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.IDPickerForm_FormClosing);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.IDPickerForm_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.IDPickerForm_DragEnter);
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
             this.menuStrip1.ResumeLayout(false);

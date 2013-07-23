@@ -178,6 +178,7 @@ namespace IDPicker.Controls
 
         void dataGridView_CellValuePushed(object sender, TreeDataGridViewCellValueEventArgs e)
         {
+            double temp;
             var importSettingsRow = rows[e.RowIndexHierarchy[0]];
 
             if (e.RowIndexHierarchy.Count == 1)
@@ -185,7 +186,7 @@ namespace IDPicker.Controls
                 if (e.ColumnIndex == analysisNameColumn.Index) importSettingsRow.Analysis.name = (string) e.Value;
                 else if (e.ColumnIndex == databaseColumn.Index) importSettingsRow.ImportSettings.proteinDatabaseFilepath = (string) e.Value;
                 else if (e.ColumnIndex == decoyPrefixColumn.Index) importSettingsRow.DecoyPrefix = (string) e.Value;
-                else if (e.ColumnIndex == maxFDRColumn.Index) importSettingsRow.ImportSettings.maxQValue = Convert.ToDouble(e.Value);
+                else if (e.ColumnIndex == maxFDRColumn.Index && double.TryParse(e.Value.ToString(), out temp)) importSettingsRow.ImportSettings.maxQValue = Convert.ToDouble(e.Value);
                 else if (e.ColumnIndex == maxRankColumn.Index) importSettingsRow.ImportSettings.maxResultRank = Convert.ToInt32(e.Value);
                 else if (e.ColumnIndex == ignoreUnmappedPeptidesColumn.Index) importSettingsRow.ImportSettings.ignoreUnmappedPeptides = (bool) e.Value;
                 else if (e.ColumnIndex == qonverterSettingsColumn.Index) importSettingsRow.QonverterSettingsPreset = (string) e.Value;

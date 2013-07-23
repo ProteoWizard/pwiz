@@ -1,4 +1,28 @@
-﻿namespace IDPicker.Forms
+﻿//
+// $Id: ExportLibrarySettings.Designer.cs 521 2013-07-11 23:50:05Z holmanjd $
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+// The Original Code is the IDPicker project.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2012 Vanderbilt University
+//
+// Contributor(s):
+//
+
+namespace IDPicker.Forms
 {
     partial class ExportLibrarySettings
     {
@@ -40,7 +64,7 @@
             this.FragmentNumBox = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
             this.PrecursorNumBox = new System.Windows.Forms.NumericUpDown();
-            this.label5 = new System.Windows.Forms.Label();
+            this.PrecursorLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.SpectrumNumBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.FragmentNumBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PrecursorNumBox)).BeginInit();
@@ -69,11 +93,11 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(62, 119);
+            this.label2.Location = new System.Drawing.Point(65, 119);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(77, 13);
+            this.label2.Size = new System.Drawing.Size(74, 13);
             this.label2.TabIndex = 2;
-            this.label2.Text = "Output Format:";
+            this.label2.Text = "Output format:";
             // 
             // outputFormatBox
             // 
@@ -107,6 +131,7 @@
             this.crossBox.TabIndex = 5;
             this.crossBox.Text = "Cross-Peptide Compare";
             this.crossBox.UseVisualStyleBackColor = true;
+            this.crossBox.CheckedChanged += new System.EventHandler(this.crossBox_CheckedChanged);
             // 
             // startButton
             // 
@@ -143,15 +168,15 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(48, 65);
+            this.label3.Location = new System.Drawing.Point(18, 65);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(91, 13);
+            this.label3.Size = new System.Drawing.Size(121, 13);
             this.label3.TabIndex = 9;
-            this.label3.Text = "Minimum Spectra:";
+            this.label3.Text = "Min spectra per peptide:";
             // 
             // FragmentNumBox
             // 
-            this.FragmentNumBox.DecimalPlaces = 1;
+            this.FragmentNumBox.DecimalPlaces = 3;
             this.FragmentNumBox.Increment = new decimal(new int[] {
             5,
             0,
@@ -178,7 +203,8 @@
             // 
             // PrecursorNumBox
             // 
-            this.PrecursorNumBox.DecimalPlaces = 1;
+            this.PrecursorNumBox.DecimalPlaces = 3;
+            this.PrecursorNumBox.Enabled = false;
             this.PrecursorNumBox.Increment = new decimal(new int[] {
             5,
             0,
@@ -194,14 +220,15 @@
             0,
             65536});
             // 
-            // label5
+            // PrecursorLabel
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(16, 13);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(123, 13);
-            this.label5.TabIndex = 11;
-            this.label5.Text = "Precursor m/z tolerance:";
+            this.PrecursorLabel.AutoSize = true;
+            this.PrecursorLabel.Enabled = false;
+            this.PrecursorLabel.Location = new System.Drawing.Point(16, 13);
+            this.PrecursorLabel.Name = "PrecursorLabel";
+            this.PrecursorLabel.Size = new System.Drawing.Size(123, 13);
+            this.PrecursorLabel.TabIndex = 11;
+            this.PrecursorLabel.Text = "Precursor m/z tolerance:";
             // 
             // ExportLibrarySettings
             // 
@@ -209,7 +236,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 241);
             this.Controls.Add(this.PrecursorNumBox);
-            this.Controls.Add(this.label5);
+            this.Controls.Add(this.PrecursorLabel);
             this.Controls.Add(this.SpectrumNumBox);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.FragmentNumBox);
@@ -248,6 +275,6 @@
         private System.Windows.Forms.NumericUpDown FragmentNumBox;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.NumericUpDown PrecursorNumBox;
-        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label PrecursorLabel;
     }
 }

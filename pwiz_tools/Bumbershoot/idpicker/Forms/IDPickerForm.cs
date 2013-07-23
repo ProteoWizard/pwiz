@@ -167,8 +167,10 @@ namespace IDPicker
             proteinTableForm.AutoHidePortion = 0.5;
 
             peptideTableForm = new PeptideTableForm();
-            peptideTableForm.Show(proteinTableForm.Pane, DockPaneAlignment.Right, 0.7);
+            peptideTableForm.Show(dockPanel, DockState.DockTop);
             peptideTableForm.AutoHidePortion = 0.5;
+
+            proteinTableForm.Activate();
 
             modificationTableForm = new ModificationTableForm();
             modificationTableForm.Show(dockPanel, DockState.Document);
@@ -914,7 +916,7 @@ namespace IDPicker
                 return;
             }
 
-            new Thread(() => { OpenFiles(expandedFilepaths, null); }).Start();
+            new Thread(() => { OpenFiles(expandedFilepaths); }).Start();
         }
 
         /// <summary>
@@ -971,7 +973,7 @@ namespace IDPicker
             }
         }
 
-        void OpenFiles (IList<string> filepaths, TreeNode rootNode)
+        void OpenFiles (IList<string> filepaths, TreeNode rootNode = null)
         {
             try
             {
@@ -1447,7 +1449,7 @@ namespace IDPicker
                               in (new System.Text.RegularExpressions.Regex(@"\w:(?:\\(?:\w| |_|-)+)+.idpDB"))
                               .Matches(ses.Connection.ConnectionString) select m.Value).SingleOrDefault<string>());
             if (File.Exists(database[0]))
-                OpenFiles(database, null);
+                OpenFiles(database);
         }
 
         private void IDPickerForm_FormClosing (object sender, FormClosingEventArgs e)
@@ -1935,6 +1937,36 @@ namespace IDPicker
             }
 
             logForm.Show(dockPanel, DockState.DockBottomAutoHide);
+        }
+
+        private void IDPickerForm_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+            else
+                e.Effect = DragDropEffects.None;
+        }
+
+        private void IDPickerForm_DragDrop(object sender, DragEventArgs e)
+        {
+            try
+            {
+                var fileList = ((string[])e.Data.GetData(DataFormats.FileDrop)).ToList();
+
+                if (fileList != null)
+                {
+                    for(var x = fileList.Count-1; x >= 0; x--)
+                        if (!File.Exists(fileList[x]) || Path.GetExtension(fileList[x]).ToLower() != ".idpdb")
+                            fileList.RemoveAt(x);
+                    var bgw = new BackgroundWorker();
+                    bgw.DoWork += (x, y) => OpenFiles((List<string>)y.Argument);
+                    bgw.RunWorkerAsync(fileList);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error in DragDrop function: " + ex.Message);
+            }
         }
     }
 

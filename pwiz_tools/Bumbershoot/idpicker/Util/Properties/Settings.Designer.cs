@@ -217,7 +217,7 @@ namespace IDPicker.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.25")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.1")]
         public double DefaultMaxImportFDR {
             get {
                 return ((double)(this["DefaultMaxImportFDR"]));

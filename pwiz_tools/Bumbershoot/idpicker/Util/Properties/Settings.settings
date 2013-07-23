@@ -92,7 +92,7 @@
       <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="DefaultMaxImportFDR" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">0.25</Value>
+      <Value Profile="(Default)">0.1</Value>
     </Setting>
     <Setting Name="DefaultIgnoreUnmappedPeptides" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

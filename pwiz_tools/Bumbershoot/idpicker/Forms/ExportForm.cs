@@ -1,4 +1,28 @@
-﻿using System;
+﻿//
+// $Id: ExportForm.cs 470 2012-08-24 23:02:57Z holmanjd $
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+// The Original Code is the IDPicker project.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2012 Vanderbilt University
+//
+// Contributor(s): 
+//
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -935,16 +959,19 @@ namespace IDPicker.Forms
             }
 
             Text = "Export Library";
-            var settingsDialog = new ExportLibrarySettings();
+            var settingsDialog = new ExportLibrarySettings(_session);
             if (settingsDialog.ShowDialog() == DialogResult.OK)
             {
                 _libraryExportSettings = settingsDialog.GetSettings();
+                var connstr = _session.Connection.ConnectionString;
+                var fileBase = Path.GetFileNameWithoutExtension(Regex.Match(connstr, "Data Source=([^;]+)").Groups[1].ToString());
 
                 _exportLocation = string.Empty;
                 var sfd = new SaveFileDialog
                               {
                                   AddExtension = true,
                                   DefaultExt = ".sptxt",
+                                  FileName = fileBase + ".sptxt",
                                   Filter = "Spectral Library|*.sptxt"
                               };
                 if (sfd.ShowDialog() == DialogResult.OK)
@@ -953,7 +980,7 @@ namespace IDPicker.Forms
                     return;
 
                 string database = _session.Connection.GetDataSource();
-                if (MessageBox.Show("Back up database?", "Backup?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (MessageBox.Show("Back up database?", "", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     var backupNumber = 1;
                     string dbBackupFile = Path.ChangeExtension(database, ".backup.idpDB");
@@ -988,6 +1015,8 @@ namespace IDPicker.Forms
                 bg.RunWorkerCompleted += (x, y) =>
                                              {
                                                  timer.Stop();
+                                                 progressBar.Style = ProgressBarStyle.Continuous;
+                                                 progressBar.Value = 100;
                                                  var failMessage = string.Empty;
                                                  if (_retrievalFails > 0)
                                                      failMessage += Environment.NewLine + _retrievalFails +
@@ -997,14 +1026,16 @@ namespace IDPicker.Forms
                                                                     " matches fell below minimum spectra threshhold";
                                                  if (_overlapFails > 0)
                                                      failMessage += Environment.NewLine + _overlapFails +
-                                                                    " matches lost due to spectra overlap";
+                                                                    " matches lost due to ambiguous identification";
                                                  if (_decoyFails > 0)
                                                      failMessage += Environment.NewLine + _decoyFails +
                                                                     " matches found unsuitable for decoying and were dropped";
-                                                 MessageBox.Show(string.Format("Finished, {0:00}:{1:00}:{2:00} elapsed{3}",
+                                                 MessageBox.Show(string.Format("Finished, {0:00}:{1:00}:{2:00} elapsed{3}{4}{5}",
                                                                                timer.Elapsed.Hours,
                                                                                timer.Elapsed.Minutes,
                                                                                timer.Elapsed.Seconds,
+                                                                               Environment.NewLine,
+                                                                               "Created library with " + _successfulAdds + " matches",
                                                                                failMessage));
                                                  Close();
                                              };
@@ -1014,8 +1045,8 @@ namespace IDPicker.Forms
             else
                 Close();
         }
-        
 
+        int _successfulAdds;
         int _retrievalFails;
         int _minSpectraFails;
         int _overlapFails;
@@ -1062,12 +1093,13 @@ namespace IDPicker.Forms
             //// create a temp table to store clustered spectrum IDs
             _session.CreateSQLQuery(@"DROP TABLE IF EXISTS SpectralPeaks").ExecuteUpdate();
             _session.CreateSQLQuery(
-                @"CREATE TABLE IF NOT EXISTS SpectralPeaks (Id INTEGER PRIMARY KEY, spectra INTEGER, mz STRING, intensity STRING, mods STRING, charge INTEGER, mass REAL, preAA STRING, postAA STRING, sequence STRING, protein STRING, origPeptide STRING, annotations STRING)
+                @"CREATE TABLE IF NOT EXISTS SpectralPeaks (Id INTEGER PRIMARY KEY, spectra INTEGER, mz STRING, intensity STRING, mods STRING, charge INTEGER, mass REAL, preAA STRING, postAA STRING, sequence STRING, protein STRING, origPeptide STRING, annotations STRING, numSpectraUsed INTEGER)
                                     ").ExecuteUpdate();
             var peaklist = new List<object[]>();
             var currentSource = string.Empty;
 
-
+            var sourcesSeen = new HashSet<string>();
+            var totalSources = spectrumRows.Select(x => x.SourceName).Distinct().Count();
             lock (_owner)
                 for (int i = 0; i < spectrumRowsCount; ++i)
                 {
@@ -1075,8 +1107,7 @@ namespace IDPicker.Forms
 
                     if (row.SourceName != currentSource)
                     {
-                        bg.ReportProgress((int) (((i + 1)/(double) spectrumRowsCount)*100),
-                                          string.Format("Extracting peaks for {0} spectra ... ", spectrumRowsCount));
+                        sourcesSeen.Add(row.SourceName);
                         var saving = _session.BeginTransaction();
                         saving.Begin();
                         var insertPeakscmd = _session.Connection.CreateCommand();
@@ -1101,7 +1132,7 @@ namespace IDPicker.Forms
                     }
 
                     bg.ReportProgress((int) (((i + 1)/(double) spectrumRowsCount)*100),
-                                      string.Format("Extracting peaks for {0} spectra ... ", spectrumRowsCount));
+                                      string.Format("Extracting peaks for {0} spectra (File {1} of {2})", spectrumRowsCount, sourcesSeen.Count, totalSources));
 
                     //if (processedSpectrumIDs.Contains(row.SpectrumId))
                     //    break;
@@ -1176,15 +1207,16 @@ namespace IDPicker.Forms
 
             var insertDecoyCmd = _session.Connection.CreateCommand();
             insertDecoyCmd.CommandText =
-                "INSERT INTO SpectralPeaks (spectra, mz, intensity,mods,charge,mass,preAA,postAA,sequence,protein,origPeptide, annotations) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+                "INSERT INTO SpectralPeaks (spectra, mz, intensity,mods,charge,mass,preAA,postAA,sequence,protein,origPeptide, annotations, numSpectraUsed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
             var insertDecoyParameters = new List<System.Data.IDbDataParameter>();
-            for (int x = 0; x < 12; ++x)
+            for (int x = 0; x < 13; ++x)
             {
                 insertDecoyParameters.Add(insertDecoyCmd.CreateParameter());
                 insertDecoyCmd.Parameters.Add(insertDecoyParameters[x]);
             }
             insertDecoyCmd.Prepare();
             var annotations = new Dictionary<long, string>();
+            _successfulAdds = 0;
             _retrievalFails = 0;
             _minSpectraFails = 0;
             _overlapFails = 0;
@@ -1468,14 +1500,16 @@ namespace IDPicker.Forms
                                 insertDecoyParameters[9].Value = decoyProteinString;
                                 insertDecoyParameters[10].Value = preAA + "." + peptideName + "." + postAA;
                                 insertDecoyParameters[11].Value = spectraAnnotations;
+                                insertDecoyParameters[12].Value = spectraList.Count;
                                 insertDecoyCmd.ExecuteNonQuery();
                             }
 
                             spectraInfo.Add(bestSpectra,
                                             new object[]
-                                                {charge, mass, modstring, preAA, postAA, peptideName, proteinString});
+                                                {charge, mass, modstring, preAA, postAA, peptideName, proteinString,spectraList.Count});
 
                             acceptedSpectra.Add(bestSpectra);
+                            _successfulAdds++;
                         }
                     }
                 }
@@ -1485,9 +1519,9 @@ namespace IDPicker.Forms
             bg.ReportProgress(-1, "Adding detailed peak data... ");
             var insertPeakInfocmd = _session.Connection.CreateCommand();
             insertPeakInfocmd.CommandText =
-                "UPDATE SpectralPeaks SET charge=?, mass=?, mods=?, preAA=?, postAA=?, sequence=?, protein=?, annotations=? where spectra=?";
+                "UPDATE SpectralPeaks SET charge=?, mass=?, mods=?, preAA=?, postAA=?, sequence=?, protein=?, numSpectraUsed=?, annotations=? where spectra=?";
             var insertPeakInfoParameters = new List<System.Data.IDbDataParameter>();
-            for (int x = 0; x < 9; ++x)
+            for (int x = 0; x < 10; ++x)
             {
                 insertPeakInfoParameters.Add(insertPeakInfocmd.CreateParameter());
                 insertPeakInfocmd.Parameters.Add(insertPeakInfoParameters[x]);
@@ -1504,8 +1538,9 @@ namespace IDPicker.Forms
                 insertPeakInfoParameters[4].Value = spectraInfo[item][4];
                 insertPeakInfoParameters[5].Value = spectraInfo[item][5];
                 insertPeakInfoParameters[6].Value = spectraInfo[item][6];
-                insertPeakInfoParameters[7].Value = annotations[item];
-                insertPeakInfoParameters[8].Value = item;
+                insertPeakInfoParameters[7].Value = spectraInfo[item][7];
+                insertPeakInfoParameters[8].Value = annotations[item];
+                insertPeakInfoParameters[9].Value = item;
                 insertPeakInfocmd.ExecuteNonQuery();
             }
 
@@ -1521,8 +1556,6 @@ namespace IDPicker.Forms
             }
 
             bg.ReportProgress(-1, string.Format("Exporting to {0}... ", _exportLocation));
-
-            var fails = new int[] {_retrievalFails, _minSpectraFails, _overlapFails, _decoyFails};
 
             ExportLibrary(_exportLocation);
         }
@@ -1835,6 +1868,7 @@ namespace IDPicker.Forms
                 var proteinString = resultList[x][10].ToString();
                 var origPeptide = resultList[x][11] == null ? string.Empty : resultList[x][11].ToString();
                 var annotationList = (resultList[x][12].ToString()).Split("|".ToCharArray());
+                var numSpectraUsed = int.Parse(resultList[x][13].ToString());
 
                 if (mzList.Length != intensityList.Length)
                     continue;
@@ -1845,8 +1879,8 @@ namespace IDPicker.Forms
                 fileout.WriteLine("PrecursorMZ: {0:f4}", Math.Round(mass / charge, 4));
                 fileout.WriteLine("Status: Normal");
                 fileout.WriteLine("FullName: {0}.{1}.{2}/{3}", preAA, sequence, postAA, charge);
-                fileout.WriteLine("Comment: Mods={0}{1} Protein={2}", mods,
-                                  origPeptide == string.Empty ? string.Empty : " OrigPeptide=" + origPeptide, proteinString);
+                fileout.WriteLine("Comment: Mods={0}{1} NumSpectraUsed={2} Protein={3}", mods,
+                                  origPeptide == string.Empty ? string.Empty : " OrigPeptide=" + origPeptide, numSpectraUsed, proteinString);
                 fileout.WriteLine("NumPeaks: {0}", mzList.Length);
                 for (var y = 0; y < mzList.Length; y++)
                 {
