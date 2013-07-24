@@ -5559,4 +5559,10 @@ Are you sure you want to continue?</value>
     <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log in immediate window.</value>
   </data>
+  <data name="ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__" xml:space="preserve">
+    <value>Searching for missing result files in {0}.</value>
+  </data>
+  <data name="ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__" xml:space="preserve">
+    <value>An error occurred attempting to find missing result files in {0}.</value>
+  </data>
 </root>

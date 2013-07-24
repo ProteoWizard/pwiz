@@ -18,12 +18,16 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -72,6 +76,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                       };
             importFastaPage.Controls.Add(ImportFastaControl);
 
+            MatchModificationsControl = new MatchModificationsControl(SkylineWindow)
+                                            {
+                                                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                                                Location = new Point(2, 60)
+                                            };
+            matchModificationsPage.Controls.Add(MatchModificationsControl);
+
             FullScanSettingsControl = new FullScanSettingsControl(SkylineWindow)
                                            {
                                                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
@@ -92,11 +103,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private TransitionSettings TransitionSettings { get { return SkylineWindow.DocumentUI.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
 
-
         public BuildPeptideSearchLibraryControl BuildPepSearchLibControl { get; private set; }
         public ImportFastaControl ImportFastaControl { get; private set; }
         public FullScanSettingsControl FullScanSettingsControl { get; private set; }
         public ImportResultsControl ImportResultsControl { get; private set; }
+        public MatchModificationsControl MatchModificationsControl { get; private set; }
 
         private Library DocLib { get { return BuildPepSearchLibControl.DocLib; } }
 
@@ -155,17 +166,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             }
                         }
 
-                        // Todo: This needs to be moved under Pages.match_modifications_page when that page is finally enabled!
-                        // The next page is going to be the MS1 Full-Scan Settings
-                        // page, so initialize it.
-                        // FullScanSettingsControl.InitializeMs1FullScanSettingsPage();
-
-                        // Todo: The next page should be the modifications page, but we skip past it for now. We'll revisit once everything else is working.
-                        CurrentPage++;
+                        // Initialize modifications page or skip if no modifications.
+                        if (!MatchModificationsControl.Initialize(DocLib))
+                            CurrentPage++;
                     }
                     break;
 
                 case Pages.match_modifications_page:
+                    {
+                        MatchModificationsControl.AddCheckedModifications();
+
+                        // The next page is going to be the MS1 Full-Scan Settings
+                        // page, so initialize it.
+                        // FullScanSettingsControl.InitializeMs1FullScanSettingsPage();
+                    }
                     break;
 
                 case Pages.ms1_full_scan_settings_page:
@@ -327,19 +341,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             btnNext.Enabled = e.NumFoundFiles > 0;
         }
-
-        #region Modifications page
-
-        // Todo: We "hide" the modifications page for now so skip past it. Need to revisit this later!
-
-        private void matchModsTextBox_Enter(object sender, EventArgs e)
-        {
-            // On the match modifications page, we don't want the text box
-            // to get focus because we don't want the text to be selected.
-            modificationsListBox.Focus();
-        }
-
-        #endregion
 
         #region Functional testing support
 

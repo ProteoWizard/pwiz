@@ -55,9 +55,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.matchModificationsPage = new System.Windows.Forms.TabPage();
             this.addModsTitlePanel = new System.Windows.Forms.Panel();
             this.label16 = new System.Windows.Forms.Label();
-            this.matchModsSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.matchModsTextBox = new System.Windows.Forms.TextBox();
-            this.modificationsListBox = new System.Windows.Forms.CheckedListBox();
             this.ms1FullScanSettingsPage = new System.Windows.Forms.TabPage();
             this.ms1FullScanSettingsTitlePanel = new System.Windows.Forms.Panel();
             this.label19 = new System.Windows.Forms.Label();
@@ -71,10 +68,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panel1.SuspendLayout();
             this.matchModificationsPage.SuspendLayout();
             this.addModsTitlePanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.matchModsSplitContainer)).BeginInit();
-            this.matchModsSplitContainer.Panel1.SuspendLayout();
-            this.matchModsSplitContainer.Panel2.SuspendLayout();
-            this.matchModsSplitContainer.SuspendLayout();
             this.ms1FullScanSettingsPage.SuspendLayout();
             this.ms1FullScanSettingsTitlePanel.SuspendLayout();
             this.importFastaPage.SuspendLayout();
@@ -322,7 +315,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.getChromatogramsPage.Location = new System.Drawing.Point(4, 22);
             this.getChromatogramsPage.Name = "getChromatogramsPage";
             this.getChromatogramsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.getChromatogramsPage.Size = new System.Drawing.Size(394, 512);
+            this.getChromatogramsPage.Size = new System.Drawing.Size(394, 514);
             this.getChromatogramsPage.TabIndex = 1;
             this.getChromatogramsPage.Text = "2";
             this.getChromatogramsPage.UseVisualStyleBackColor = true;
@@ -352,11 +345,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // matchModificationsPage
             // 
             this.matchModificationsPage.Controls.Add(this.addModsTitlePanel);
-            this.matchModificationsPage.Controls.Add(this.matchModsSplitContainer);
             this.matchModificationsPage.Location = new System.Drawing.Point(4, 22);
             this.matchModificationsPage.Name = "matchModificationsPage";
             this.matchModificationsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.matchModificationsPage.Size = new System.Drawing.Size(394, 512);
+            this.matchModificationsPage.Size = new System.Drawing.Size(394, 514);
             this.matchModificationsPage.TabIndex = 3;
             this.matchModificationsPage.Text = "3";
             this.matchModificationsPage.UseVisualStyleBackColor = true;
@@ -383,63 +375,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label16.TabIndex = 0;
             this.label16.Text = "Add Modifications";
             // 
-            // matchModsSplitContainer
-            // 
-            this.matchModsSplitContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.matchModsSplitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.matchModsSplitContainer.IsSplitterFixed = true;
-            this.matchModsSplitContainer.Location = new System.Drawing.Point(3, 52);
-            this.matchModsSplitContainer.Name = "matchModsSplitContainer";
-            this.matchModsSplitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // matchModsSplitContainer.Panel1
-            // 
-            this.matchModsSplitContainer.Panel1.Controls.Add(this.matchModsTextBox);
-            // 
-            // matchModsSplitContainer.Panel2
-            // 
-            this.matchModsSplitContainer.Panel2.Controls.Add(this.modificationsListBox);
-            this.matchModsSplitContainer.Size = new System.Drawing.Size(388, 457);
-            this.matchModsSplitContainer.SplitterDistance = 42;
-            this.matchModsSplitContainer.TabIndex = 0;
-            // 
-            // matchModsTextBox
-            // 
-            this.matchModsTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.matchModsTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.matchModsTextBox.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.matchModsTextBox.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.matchModsTextBox.Location = new System.Drawing.Point(18, 9);
-            this.matchModsTextBox.Multiline = true;
-            this.matchModsTextBox.Name = "matchModsTextBox";
-            this.matchModsTextBox.ReadOnly = true;
-            this.matchModsTextBox.Size = new System.Drawing.Size(340, 26);
-            this.matchModsTextBox.TabIndex = 2;
-            this.matchModsTextBox.Text = "This library appears to contain the modifications listed below. Please select the" +
-    " ones you would like to use in the Skyline document:";
-            this.matchModsTextBox.Enter += new System.EventHandler(this.matchModsTextBox_Enter);
-            // 
-            // modificationsListBox
-            // 
-            this.modificationsListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.modificationsListBox.CheckOnClick = true;
-            this.modificationsListBox.FormattingEnabled = true;
-            this.modificationsListBox.Location = new System.Drawing.Point(18, 3);
-            this.modificationsListBox.Name = "modificationsListBox";
-            this.modificationsListBox.Size = new System.Drawing.Size(347, 364);
-            this.modificationsListBox.TabIndex = 1;
-            // 
             // ms1FullScanSettingsPage
             // 
             this.ms1FullScanSettingsPage.Controls.Add(this.ms1FullScanSettingsTitlePanel);
             this.ms1FullScanSettingsPage.Location = new System.Drawing.Point(4, 22);
             this.ms1FullScanSettingsPage.Name = "ms1FullScanSettingsPage";
             this.ms1FullScanSettingsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.ms1FullScanSettingsPage.Size = new System.Drawing.Size(394, 512);
+            this.ms1FullScanSettingsPage.Size = new System.Drawing.Size(394, 514);
             this.ms1FullScanSettingsPage.TabIndex = 5;
             this.ms1FullScanSettingsPage.Text = "4";
             this.ms1FullScanSettingsPage.UseVisualStyleBackColor = true;
@@ -472,7 +414,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFastaPage.Location = new System.Drawing.Point(4, 22);
             this.importFastaPage.Name = "importFastaPage";
             this.importFastaPage.Padding = new System.Windows.Forms.Padding(3);
-            this.importFastaPage.Size = new System.Drawing.Size(394, 512);
+            this.importFastaPage.Size = new System.Drawing.Size(394, 514);
             this.importFastaPage.TabIndex = 4;
             this.importFastaPage.Text = "5";
             this.importFastaPage.UseVisualStyleBackColor = true;
@@ -526,11 +468,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.matchModificationsPage.ResumeLayout(false);
             this.addModsTitlePanel.ResumeLayout(false);
             this.addModsTitlePanel.PerformLayout();
-            this.matchModsSplitContainer.Panel1.ResumeLayout(false);
-            this.matchModsSplitContainer.Panel1.PerformLayout();
-            this.matchModsSplitContainer.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.matchModsSplitContainer)).EndInit();
-            this.matchModsSplitContainer.ResumeLayout(false);
             this.ms1FullScanSettingsPage.ResumeLayout(false);
             this.ms1FullScanSettingsTitlePanel.ResumeLayout(false);
             this.ms1FullScanSettingsTitlePanel.PerformLayout();
@@ -575,9 +512,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Button btnEarlyFinish;
         private System.Windows.Forms.Panel buildSpectralLibraryTitlePanel;
         private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.SplitContainer matchModsSplitContainer;
-        private System.Windows.Forms.TextBox matchModsTextBox;
-        private System.Windows.Forms.CheckedListBox modificationsListBox;
 
     }
 }

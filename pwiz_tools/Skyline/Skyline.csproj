@@ -452,6 +452,12 @@
     <Compile Include="FileUI\MProphetFeaturesDlg.Designer.cs">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\MatchModificationsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\MatchModificationsControl.Designer.cs">
+      <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1082,6 +1088,9 @@
     <EmbeddedResource Include="FileUI\OpenDataSourceDialog.resx">
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.resx">
+      <DependentUpon>MatchModificationsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.resx">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>

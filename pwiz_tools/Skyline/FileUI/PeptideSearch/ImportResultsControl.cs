@@ -242,7 +242,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         break;
                     }
 
-                    longWaitBroker.Message = String.Format("Searching for missing files in {0}.", dir);
+                    // Don't look inside directories which are actually data sources
+                    if (DataSourceUtil.IsDataSource(dir))
+                        continue;
+
+                    longWaitBroker.Message = String.Format(Resources.ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__, dir);
                     FindDataFiles(longWaitBroker, missingFiles, dir, ref numMissingFiles);
                     if (numMissingFiles == 0)
                     {
@@ -252,7 +256,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             catch (Exception x)
             {
-                MessageDlg.Show(WizardForm, TextUtil.LineSeparate(string.Format("An error occurred attempting to find the files in {0}.", directory), x.Message));
+                MessageDlg.Show(WizardForm, TextUtil.LineSeparate(string.Format(Resources.ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__, directory), x.Message));
             }
         }
 
@@ -266,26 +270,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
                 }
 
-                if (DataSourceUtil.IsDataSource(file))
+                if (!DataSourceUtil.IsDataSource(file))
+                    continue;
+
+                // Check to see if the file matches any of the missing files
+                string fileName = Path.GetFileName(file);
+                foreach (var item in missingFiles.Keys.Where(item => !missingFiles[item].Found))
                 {
-                    // Check to see if the file matches any of the missing files
-                    string fileName = Path.GetFileName(file);
-                    foreach (var item in missingFiles.Keys.Where(item => !missingFiles[item].Found))
+                    if (null == item)   // For ReSharper
+                        continue;
+
+                    if (Equals(item, fileName) ||
+                        MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(item),
+                                                        Path.GetFileNameWithoutExtension(file)))
                     {
-                        if (null != item)
+                        missingFiles[item].Found = true;
+                        missingFiles[item].Path = file;
+                        numMissingFiles--;
+                        if (numMissingFiles == 0)
                         {
-                            if (Equals(item, fileName) ||
-                                MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(item),
-                                                                Path.GetFileNameWithoutExtension(file)))
-                            {
-                                missingFiles[item].Found = true;
-                                missingFiles[item].Path = file;
-                                numMissingFiles--;
-                                if (numMissingFiles == 0)
-                                {
-                                    return;
-                                }
-                            }
+                            return;
                         }
                     }
                 }

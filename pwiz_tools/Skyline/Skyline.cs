@@ -2228,7 +2228,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool ChangeSettings(SrmSettings newSettings, bool store)
+        public bool ChangeSettings(SrmSettings newSettings, bool store, string message = null)
         {
             if (store)
             {
@@ -2243,7 +2243,7 @@ namespace pwiz.Skyline
                     newSettings = (SrmSettings)newSettings.ChangeName(defaultName);
             }
 
-            ModifyDocument(Resources.SkylineWindow_ChangeSettings_Change_settings, doc => doc.ChangeSettings(newSettings));
+            ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, doc => doc.ChangeSettings(newSettings));
             return true;
         }
 
