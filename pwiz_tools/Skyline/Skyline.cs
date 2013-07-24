@@ -3516,10 +3516,10 @@ namespace pwiz.Skyline
         {
             if (programPathContainer.ProgramName.Equals("R"))
             {
-                if (!RInstaller.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
+                if (!RUtil.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
                 {
                     // we will need the immediate window to show output for package installation
-                    if (packages.Count != 0 && _immediateWindow == null)
+                    if (packages.Count != 0)
                     {
                         ShowImmediateWindow();
                     }
@@ -3531,9 +3531,27 @@ namespace pwiz.Skyline
                             return null;
                     }
                 }
-                return RInstaller.FindRProgramPath(programPathContainer.ProgramVersion);
+                return RUtil.FindRProgramPath(programPathContainer.ProgramVersion);
             }
-            else
+            else if (programPathContainer.ProgramName.Equals("Python"))
+            {
+                if (!PythonUtil.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
+                {
+                    if (packages.Count != 0)
+                    {
+                        ShowImmediateWindow();
+                    }
+                    
+                    using (var dlg = new PythonInstaller(programPathContainer, packages, _skylineTextBoxStreamWriterHelper))
+                    {
+                        DialogResult result = dlg.ShowDialog(this);
+                        if (result == DialogResult.Cancel)
+                            return null;
+                    }
+                }
+                return PythonUtil.GetProgramPath(programPathContainer.ProgramVersion);
+            } 
+            else 
             {
                 return FindProgramPath(programPathContainer);
             }

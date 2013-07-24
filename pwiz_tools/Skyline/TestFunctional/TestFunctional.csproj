@@ -166,6 +166,7 @@
     <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
+    <Compile Include="PythonInstallerTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="RetentionTimeAlignmentTest.cs" />

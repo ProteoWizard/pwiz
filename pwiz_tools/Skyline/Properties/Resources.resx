@@ -5515,9 +5515,6 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_InstallR_Downloading_R" xml:space="preserve">
     <value>Downloading R</value>
   </data>
-  <data name="RInstaller_InstallR_Download_succeeded" xml:space="preserve">
-    <value>Download succeeded</value>
-  </data>
   <data name="RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_" xml:space="preserve">
     <value>R installation was not completed. Cancelling tool installation.</value>
   </data>
@@ -5536,9 +5533,6 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_InstallPackages_Unknown_error_installing_packages" xml:space="preserve">
     <value>Unknown error installing packages</value>
   </data>
-  <data name="RInstaller_InstallPackages_Tool_installation_completed" xml:space="preserve">
-    <value>Tool installation completed</value>
-  </data>
   <data name="RInstaller_InstallPackages_An_error_occurred_installing_packages" xml:space="preserve">
     <value>An error occurred installing packages</value>
   </data>  <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_" xml:space="preserve">
@@ -5556,13 +5550,79 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
     <value>Check your network connection or contact the tool provider for installation support.</value>
   </data>
-    <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_in_immediate_window_" xml:space="preserve">
-    <value>Package installation failed. Error log in immediate window.</value>
+    <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
+    <value>Package installation failed. Error log output in immediate window.</value>
   </data>
   <data name="ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__" xml:space="preserve">
     <value>Searching for missing result files in {0}.</value>
   </data>
   <data name="ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__" xml:space="preserve">
     <value>An error occurred attempting to find missing result files in {0}.</value>
+  </data>
+    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
+    <value>This tool requires Python {0} and the following packages. Select packages toinstall and then click Install to begin the installation process.</value>
+  </data>
+    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process" xml:space="preserve">
+    <value>This tool requires Python {0}. Click install to begin the installation process</value>
+  </data>
+    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
+    <value>This tool requires the following Python packages. Select packages to install and then click Install to begin the installation process.</value>
+  </data>
+    <data name="PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation" xml:space="preserve">
+    <value>Python installation failed. Canceling tool installation</value>
+  </data>
+    <data name="PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation" xml:space="preserve">
+    <value>Package Installation was not completed. Canceling tool installation</value>
+  </data>
+    <data name="PythonInstaller_GetPython_Python_installation_completed" xml:space="preserve">
+    <value>Python installation completed</value>
+  </data>
+    <data name="PythonInstaller_GetPackages_Package_installation_completed" xml:space="preserve">
+    <value>Package installation completed</value>
+  </data>
+    <data name="PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process" xml:space="preserve">
+    <value>Skyline uses the Python tool setuptools and the Python package manager Pip to install packages from source. Click install to begin the installation process</value>
+  </data>
+    <data name="PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_" xml:space="preserve">
+    <value>Python package installation cannot continue. Canceling tool installation.</value>
+  </data>
+    <data name="PythonInstaller_InstallPackages_Pip_installation_complete" xml:space="preserve">
+    <value>Pip installation complete</value>
+  </data>
+    <data name="PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__" xml:space="preserve">
+    <value>Pip installation failed. Error log output in immediate window.</value>
+  </data>
+    <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+    <data name="PythonInstaller_DownloadPython_Download_failed" xml:space="preserve">
+    <value>Download failed</value>
+  </data>
+    <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support" xml:space="preserve">
+    <value>Check your network connection or contact the tool provider for installation support</value>
+  </data>
+    <data name="PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages" xml:space="preserve">
+    <value>Failed to download the following packages</value>
+  </data>
+    <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
+    <value>Package installation failed. Error log output in immediate window.</value>
+  </data>
+    <data name="RInstaller_GetR_R_installation_complete" xml:space="preserve">
+    <value>R installation complete</value>
+  </data>
+    <data name="RInstaller_GetPackages_Package_installation_complete" xml:space="preserve">
+    <value>Package installation complete</value>
+  </data>
+    <data name="PythonInstaller_InstallPackages_Unknown_error_installing_packages" xml:space="preserve">
+    <value>Unknown error installing packages</value>
+  </data>
+    <data name="PythonInstaller_InstallPip_Unknown_error_installing_pip" xml:space="preserve">
+    <value>Unknown error installing pip</value>
+  </data>
+    <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers" xml:space="preserve">
+    <value>Download failed. Check your network connection or contact Skyline developers</value>
+  </data>
+    <data name="TestNamedPipeProcessRunner_RunProcess_Error_running_process" xml:space="preserve">
+    <value>Error running process</value>
   </data>
 </root>

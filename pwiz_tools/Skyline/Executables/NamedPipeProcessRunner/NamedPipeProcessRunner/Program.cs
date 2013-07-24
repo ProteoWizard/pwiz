@@ -24,7 +24,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Text;
 
-namespace RPackageInstaller
+namespace NamedPipeProcessRunner
 {
 
     class Program
@@ -36,7 +36,7 @@ namespace RPackageInstaller
             var cmdArgs = new List<string>(args);
             cmdArgs.RemoveAt(0);
 
-            using (var clientStream = new NamedPipeClientStream("SkylineRPackageInstallPipe" + guidSuffix)) // Not L10N
+            using (var clientStream = new NamedPipeClientStream("SkylineProcessRunnerPipe" + guidSuffix)) // Not L10N
             {
                 try
                 {

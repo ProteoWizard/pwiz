@@ -1189,6 +1189,9 @@
     <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\PythonInstaller.resx">
+      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\RInstaller.resx">
       <DependentUpon>RInstaller.cs</DependentUpon>
     </EmbeddedResource>
@@ -1277,6 +1280,12 @@
     <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\PythonInstaller.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\PythonInstaller.Designer.cs">
+      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    </Compile>
     <Compile Include="ToolsUI\RInstaller.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1303,6 +1312,7 @@
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
+    <Compile Include="Util\UtilInstall.cs" />
     <Compile Include="Util\UtilUIExtra.cs" />
     <Compile Include="Util\UtilIOExtra.cs" />
     <Compile Include="Util\Extensions\UtilDB.cs" />
@@ -1920,7 +1930,7 @@
     <EmbeddedResource Include="Resources\ChromLib.bmp" />
     <EmbeddedResource Include="Resources\LabKey.bmp" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
-    <Content Include="RPackageInstaller.exe">
+    <Content Include="NamedPipeProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="SkylineData.ico" />

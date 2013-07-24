@@ -21,9 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -43,22 +41,22 @@ namespace pwiz.Skyline.ToolsUI
     public partial class RInstaller : FormEx
     {
 
-        private string Version { get; set; }
-        private bool Installed { get; set; }
-        private ICollection<string> PackageUris { get; set; }
-        private TextWriter Writer { get; set; }
+        private readonly string _version;
+        private readonly bool _installed;
+        private readonly ICollection<string> _packageUris;
+        private readonly TextWriter _writer;
 
         public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packageUris, TextWriter writer)
-            : this(rPathContainer, packageUris, CheckInstalled(rPathContainer.ProgramVersion), writer)
+            : this(rPathContainer, packageUris, RUtil.CheckInstalled(rPathContainer.ProgramVersion), writer)
         {
         }
 
         public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packageUris, bool installed, TextWriter writer)
         {
-            Version = rPathContainer.ProgramVersion;
-            PackageUris = packageUris;
-            Installed = installed;
-            Writer = writer;
+            _version = rPathContainer.ProgramVersion;
+            _packageUris = packageUris;
+            _installed = installed;
+            _writer = writer;
             InitializeComponent();
         }
 
@@ -66,24 +64,30 @@ namespace pwiz.Skyline.ToolsUI
 
         private void RInstaller_Load(object sender, EventArgs e)
         {
-            if (!Installed && PackageUris.Count != 0)
+            if (!_installed && _packageUris.Count != 0)
             {
                 PopulatePackageCheckListBox();
                 labelMessage.Text = string.Format(
-                    Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, Version);
+                    Resources
+                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_,
+                    _version);
             }
-            else if (!Installed)
+            else if (!_installed)
             {
                 labelMessage.Text = string.Format(
-                    Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_, Version);
+                    Resources
+                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_,
+                    _version);
                 int shift = btnCancel.Top - checkedListBoxPackages.Top;
                 checkedListBoxPackages.Visible = checkedListBoxPackages.Enabled = false;
                 Height -= shift;
             }
-            else if (PackageUris.Count != 0)
+            else if (_packageUris.Count != 0)
             {
                 PopulatePackageCheckListBox();
-                labelMessage.Text = Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process;
+                labelMessage.Text =
+                    Resources
+                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process;
             }
 
             IsLoaded = true;
@@ -94,7 +98,7 @@ namespace pwiz.Skyline.ToolsUI
             // add package names
             ICollection<string> packageNames = new Collection<string>();
             const string pattern = @"([^/]*)\.(zip|tar\.gz)$"; // Not L10N
-            foreach (var package in PackageUris)
+            foreach (var package in _packageUris)
             {
                 Match name = Regex.Match(package, pattern);
                 packageNames.Add(name.Groups[1].ToString());
@@ -112,52 +116,41 @@ namespace pwiz.Skyline.ToolsUI
         {
             Hide();
 
-            // if R is not installed, install it!
-            if (!Installed)
-                Installed = InstallR();
-
-            // once R is installed, install Packages, if necessary
-            bool packagesInstalled = false;
-            if (Installed)
-                packagesInstalled = GetPackages();
-
-            // if both R and the associated packages are installed successfully, return YES, otherwise NO
-            DialogResult = (Installed && packagesInstalled) ? DialogResult.Yes : DialogResult.No;
+            if ((_installed || GetR()) && (checkedListBoxPackages.CheckedItems.Count == 0 || GetPackages()))
+            {
+                DialogResult = DialogResult.Yes;
+            }
+            else
+            {
+                DialogResult = DialogResult.No;
+            }
         }
 
-        /// <summary>
-        /// Returns true if R is installed successfully
-        /// </summary>
-        private bool InstallR()
+        private bool GetR()
         {
-            // First, download the executable installer
             try
             {
-                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0})
+                using (
+                    var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0}
+                    )
                 {
                     dlg.PerformWork(this, 500, DownloadR);
                 }
-            }
-            catch (MessageException ex)
-            {
-                MessageDlg.Show(this, ex.Message);
-                return false;
+                InstallR();
+                MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete);
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException.GetType() == typeof(MessageException))
+                if (ex.InnerException.GetType() == typeof (MessageException))
                 {
                     MessageDlg.Show(this, ex.Message);
                     return false;
                 }
                 throw;
             }
-            MessageDlg.Show(this, Resources.RInstaller_InstallR_Download_succeeded);                        
-
-            // Then run the installer
-            if (!RunInstaller())
+            catch (MessageException ex)
             {
-                MessageDlg.Show(this, Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_);
+                MessageDlg.Show(this, ex.Message);
                 return false;
             }
             return true;
@@ -171,7 +164,7 @@ namespace pwiz.Skyline.ToolsUI
             const string baseUri = "http://cran.r-project.org/bin/windows/base/"; // Not L10N
 
             // format the file name, e.g. R-2.15.2-win.exe
-            string exe = "R-" + Version + "-win.exe"; // Not L10N
+            string exe = "R-" + _version + "-win.exe"; // Not L10N
 
             // create the download path for the file
             DownloadPath = Path.GetTempPath() + exe;
@@ -180,167 +173,74 @@ namespace pwiz.Skyline.ToolsUI
             using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
             {
 
-                // first try downloading it as if it is the most recent release of R. The most
-                // recent version is stored in a different location of the CRAN repo than older versions
-                Uri versionUri = new Uri(baseUri + exe);
-                bool successfulDownload = webClient.DownloadFileAsyncWithBroker(versionUri, DownloadPath);
-                if (successfulDownload)
-                    return;
+                // First try downloading it as if it is the most recent release of R. The most
+                // recent version is stored in a different location of the CRAN repo than older versions.
+                // Otherwise, check and see if it is an older release
 
-                // otherwise, check and see if it is an older release
-                versionUri = new Uri(baseUri + "old/" + Version + "/" + exe); // Not L10N
-                successfulDownload = webClient.DownloadFileAsyncWithBroker(versionUri, DownloadPath);
+                var recentUri = new Uri(baseUri + exe);
+                var olderUri = new Uri(baseUri + "old/" + _version + "/" + exe);
 
-                if (!successfulDownload)
+                if (!webClient.DownloadFileAsync(recentUri, DownloadPath) && !webClient.DownloadFileAsync(olderUri, DownloadPath))
                     throw new MessageException(
                         TextUtil.LineSeparate(
-                            Resources.RInstaller_DownloadR_Download_failed, 
-                            Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
+                            Resources.RInstaller_DownloadR_Download_failed,
+                            Resources
+                                .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
             }
         }
 
-        private class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
+        private void InstallR()
         {
-            private readonly ILongWaitBroker _longWaitBroker;
-            private readonly WebClient _webClient;
-            private bool DownloadComplete { get; set; }
-            private bool SuccessfulDownload { get; set; }
-            private int DownloadsCompleted { get; set; }
-            
-            /// <summary>
-            /// The asynchronous download client links a webclient to a longwaitbroker; it supports
-            /// multiple asynchronous downloads during the same instance of a longwaitdlg's perform work
-            /// </summary>
-            /// <param name="longWaitBroker">The associated longwaitbroker</param>
-            /// <param name="filesToDownload">The number of files to download; this is used to update
-            /// the associated longWaitDlg's progress bar</param>
-            public MultiFileAsynchronousDownloadClient(ILongWaitBroker longWaitBroker, int filesToDownload)
-            {
-                _longWaitBroker = longWaitBroker;
-                _webClient = new WebClient();
-                DownloadsCompleted = 0;
-                _webClient.DownloadProgressChanged += (sender, args) =>
-                    {
-                        longWaitBroker.ProgressValue = (int) (((((double) DownloadsCompleted)/filesToDownload)*100)
-                                                       + ((1.0/filesToDownload)*args.ProgressPercentage));
-                    };
-                _webClient.DownloadFileCompleted += (sender, args) =>
-                    {
-                        DownloadsCompleted++;
-                        SuccessfulDownload = (args.Error == null);
-                        DownloadComplete = true;
-                    };
-            }
-
-            /// <summary>
-            /// Downloads a file asynchronously, updating the instances' wait dialog's progress bar
-            /// </summary>
-            /// <exception cref="MessageException">If the user cancels the download through the associated long wait dialog</exception>
-            /// <returns>True if the download was successful, otherwise false</returns>
-            public bool DownloadFileAsyncWithBroker(Uri address, string fileName)
-            {
-                // reset download status
-                DownloadComplete = false;
-                SuccessfulDownload = false;
-
-                Match file = Regex.Match(address.AbsolutePath, @"[^/]*$"); // Not L10N
-                _longWaitBroker.Message = string.Format(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Downloading__0_, file);
-                _webClient.DownloadFileAsync(address, fileName);
-                
-                // while downloading, check to see if the user has canceled the operation
-                while (!DownloadComplete)
-                {
-                    if (_longWaitBroker.IsCanceled)
-                    {
-                        _webClient.CancelAsync();
-                        throw new MessageException(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled);
-                    }
-                }
-                return SuccessfulDownload;
-            }
-
-            #region IDisposable Members
-
-            public void Dispose()
-            {
-                _webClient.Dispose();
-            }
-
-            #endregion
-        }
-
-        /// <summary>
-        /// Returns true if the installation was successful.
-        /// </summary>
-        private bool RunInstaller()
-        {
-            var processRunner = TestProcessRunner ?? new InstallProcessRunner();
+            var processRunner = TestProcessRunner ?? new SynchronousProcessRunner();
             // an exit code of 0 indicates a successful installation
-            return processRunner.RunProcess(new ProcessStartInfo {FileName = DownloadPath}) == 0;
+            if (processRunner.RunProcess(new Process {StartInfo = new ProcessStartInfo {FileName = DownloadPath}}) != 0)
+                throw new MessageException(
+                    Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_);
         }
 
-        private class InstallProcessRunner : IProcessRunner
-        {
-            public int RunProcess(ProcessStartInfo startInfo)
-            {
-                Process install = new Process { StartInfo = startInfo };
-                install.Start();
-                install.WaitForExit();
-                int exitCode = install.ExitCode;
-                install.Close();
-                return exitCode;
-            }
-        }
-
-        /// <summary>
-        /// Returns true if packages were downloaded AND installed successfully
-        /// </summary>
-        /// <returns></returns>
         private bool GetPackages()
+        {
+            try
+            {
+                string packagePaths = null;
+                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_GetPackages_Downloading_packages, ProgressValue = 0})
+                {
+                    dlg.PerformWork(this, 1000,
+                                    longWaitBroker =>
+                                    packagePaths = DownloadPackages(longWaitBroker));
+                }
+                InstallPackages(packagePaths);
+                MessageDlg.Show(this, Resources.RInstaller_GetPackages_Package_installation_complete);
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (ex.InnerException is MessageException)
+                {
+                    MessageDlg.Show(this, ex.InnerException.Message);
+                    return false;
+                }
+            }
+            catch (MessageException ex)
+            {
+                MessageDlg.Show(this, ex.Message);
+                return false;
+            }
+            return true;
+        }
+
+        /// <returns>A space separated string of package source file locations on the local file system</returns>
+        private string DownloadPackages(ILongWaitBroker longWaitBroker)
         {
             // only download the checked packages
             ICollection<Uri> packagesToDownload = new Collection<Uri>();
             int index = 0;
-            foreach (var package in PackageUris)
+            foreach (var package in _packageUris)
             {
                 if (checkedListBoxPackages.GetItemCheckState(index) == CheckState.Checked)
                     packagesToDownload.Add(new Uri(package));
                 index++;
             }
 
-            if (packagesToDownload.Count == 0)
-                return true;
-
-            try
-            {
-                string packagePaths = null;
-                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_GetPackages_Downloading_packages})
-                {
-                    dlg.PerformWork(this, 1000,
-                                    longWaitBroker =>
-                                    packagePaths = DownloadPackages(packagesToDownload, longWaitBroker));
-                }
-                MessageDlg.Show(this, Resources.RInstaller_InstallR_Download_succeeded);
-                InstallPackages(packagePaths);
-            }
-            catch (TargetInvocationException x)
-            {
-                if (x.InnerException is MessageException)
-                {
-                    MessageDlg.Show(this, x.InnerException.Message);
-                    return false;
-                }
-            }
-            catch (MessageException x)
-            {
-                MessageDlg.Show(this, x.Message);
-                return false;
-            }
-            return true;
-        }
-
-        private string DownloadPackages(ICollection<Uri> packagesToDownload, ILongWaitBroker longWaitBroker)
-        {
             // create the webclient
             using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, packagesToDownload.Count))
             {
@@ -355,7 +255,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     Match file = Regex.Match(package.AbsolutePath, @"([^/]*\.)(zip|tar\.gz)"); // Not L10N
                     string downloadPath = Path.GetTempPath() + file.Groups[1] + file.Groups[2];
-                    if (webClient.DownloadFileAsyncWithBroker(package, downloadPath))
+                    if (webClient.DownloadFileAsync(package, downloadPath))
                     {
                         packagePaths.Add(downloadPath);
                     }
@@ -374,16 +274,11 @@ namespace pwiz.Skyline.ToolsUI
                             Resources
                                 .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
                 }
-                string result = CommandLine.ParseCommandLineArray(packagePaths.ToArray());
-                return result;
+
+                return CommandLine.ParseCommandLineArray(packagePaths.ToArray());
             }
         }
 
-        public bool PackageInstallError { get; set; }
-
-        /// <summary>
-        /// Returns true if packages were installed successfully
-        /// </summary>
         private void InstallPackages(string packagePaths)
         {
             // ensure that there are Packages to install
@@ -391,53 +286,25 @@ namespace pwiz.Skyline.ToolsUI
                 return;
 
             // then get the program path
-            string programPath = TestProgramPath ?? FindRProgramPath(Version);
+            string programPath = TestProgramPath ?? RUtil.FindRProgramPath(_version);
             if (programPath == null)
                 throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
 
-            // create GUID
-            string guidSuffix = string.Format("-{0}", Guid.NewGuid());
+            // create argument string
+            var argumentBuilder = new StringBuilder();
+            argumentBuilder.Append("/C \"").Append(programPath).Append("\" CMD INSTALL ").Append(packagePaths);
 
-            var startInfo = new ProcessStartInfo
-                {
-                    FileName = "RPackageInstaller.exe", // Not L10N
-                    Arguments = guidSuffix + " /C \"" + programPath + "\" CMD INSTALL " + packagePaths, // Not L10N
-                    Verb = "runas" // Not L10N
-                };
-
-            string pipeName = "SkylineRPackageInstallPipe" + guidSuffix; // Not L10N
-
-            using (var pipeStream = new NamedPipeServerStream(pipeName))
+            var processRunner = TestNamedPipeProcessRunner ?? new NamedPipeProcessRunnerWrapper();
+            try
             {
-                var installer = TestAsyncProcessRunner ?? new AsynchronousProcessRunner(startInfo);
-                bool installationFinished = false;
-                installer.Exited += (sender, args) => installationFinished = true;
-                installer.Start();
-
-                var namedPipeServerConnector = new NamedPipeServerConnector();
-                // if(the connection fails)
-                if (!(TestConnectionSuccess ?? namedPipeServerConnector.WaitForConnection(pipeStream, pipeName)))
+                if (processRunner.RunProcess(argumentBuilder.ToString(), true, _writer) != 0)
                 {
-                    throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
+                    throw new MessageException(Resources.RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_);
                 }
-                else
-                {
-                    using (var reader = TestPipeStreamReader ?? new PipeStreamReaderWrapper(pipeStream))
-                    {
-                        reader.PropogateStream(Writer);
-                    }
-
-                    while (!installationFinished)
-                    {
-                        // wait for package installation process to finish
-                    }
-
-                    if (installer.GetExitCode() != 0)
-                    {
-                        PackageInstallError = true;
-                        throw new MessageException(Resources.RInstaller_InstallPackages_Package_installation_failed__Error_log_in_immediate_window_);
-                    }
-                }
+            }
+            catch (IOException)
+            {
+                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
             }
         }
 
@@ -446,8 +313,7 @@ namespace pwiz.Skyline.ToolsUI
         // test classes for functional testing
         public IProcessRunner TestProcessRunner { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
-        public IPipeStreamReaderWrapper TestPipeStreamReader { get; set; }
-        public IAsynchronousProcessRunner TestAsyncProcessRunner { get; set; }
+        public INamedPipeProcessRunnerWrapper TestNamedPipeProcessRunner { get; set; }
         public string TestProgramPath { get; set; }
         public bool? TestConnectionSuccess { get; set; }
 
@@ -476,70 +342,9 @@ namespace pwiz.Skyline.ToolsUI
 
         #endregion
 
-        /// <summary>
-        /// Wrapper class for an asynchronous process that supports user added exit event handling
-        /// and exit codes
-        /// </summary>
-        private class AsynchronousProcessRunner : IAsynchronousProcessRunner
-        {
-            private readonly Process _process;
-            public event EventHandler Exited
-            {
-                add { _process.Exited += value; }
-                remove { _process.Exited += value; }
-            }
+    }
 
-            private int ExitCode { get; set; }
-
-            public AsynchronousProcessRunner(ProcessStartInfo startInfo)
-            {
-                _process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
-                _process.Exited += (sender, args) => ExitCode = _process.ExitCode;
-            }
-
-            public void Start()
-            {
-                _process.Start();
-            }
-
-            public int GetExitCode()
-            {
-                return ExitCode;
-            }
-        }
-
-        /// <summary>
-        /// Wrapper class for a streamreader that reads from a named pipe and writes
-        /// it to Skyline's immediate window
-        /// </summary>
-        private class PipeStreamReaderWrapper : IPipeStreamReaderWrapper
-        {
-            private readonly StreamReader _streamReader;
-
-            public PipeStreamReaderWrapper(Stream namedPipe)
-            {
-                _streamReader = new StreamReader(namedPipe);
-            }
-
-            public void PropogateStream(TextWriter writer)
-            {
-                var immediateWindow = writer as TextBoxStreamWriterHelper; 
-                string line;
-                while ((line = _streamReader.ReadLine()) != null)
-                {
-                    if (immediateWindow != null) immediateWindow.WriteLine(line);
-                }
-            }
-
-            #region IDisposable Members
-
-            public void Dispose()
-            {
-                _streamReader.Dispose();
-            }
-
-            #endregion
-        }
+    public static class RUtil {
 
         private const string REGISTRY_LOCATION = @"SOFTWARE\R-core\R\"; // Not L10N
 
@@ -589,33 +394,5 @@ namespace pwiz.Skyline.ToolsUI
         }
 
     }
-
-    // interfaces to support wrapper classes for downloading, running processes, using named pipes and writing over
-    // streams. These support automated functional testing of the class
-
-    public interface IAsynchronousDownloadClient : IDisposable
-    {
-        /// <returns>True if the given file was downloaded successfully</returns>
-        bool DownloadFileAsyncWithBroker(Uri address, string fileName);
-    }
-
-    public interface IProcessRunner
-    {
-        /// <returns>The exit code of the process</returns>
-        int RunProcess(ProcessStartInfo startInfo);
-    }
-
-    public interface IAsynchronousProcessRunner
-    {
-        event EventHandler Exited;
-        void Start();
-        int GetExitCode();
-    }
-
-    public interface IPipeStreamReaderWrapper : IDisposable
-    {
-        void PropogateStream(TextWriter writer);
-    }
-
 }
 

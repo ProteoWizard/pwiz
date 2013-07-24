@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
@@ -1131,6 +1132,68 @@ namespace pwiz.Skyline.Util
             }
             return true;
         }
+    }
+
+    public static class NamedPipeProcessRunner
+    {
+        /// <summary>
+        /// Runs the NamedPipeProcessRunner executable file with the given arguments. These arguments
+        /// are passed to CMD.exe within the NamedPipeProcessRunner
+        /// </summary>
+        /// <param name="arguments">The arguments to run at the command line</param>
+        /// <param name="runAsAdministrator">If true, this process will be run as administrator, which
+        /// allows for the CMD.exe process to be ran with elevated privileges</param>
+        /// <param name="writer">The textwriter to which the command lines output will be written to</param>
+        /// <returns>The exitcode of the CMD process ran with the specified arguments</returns>
+        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
+        {
+            // create GUID
+            string guidSuffix = string.Format("-{0}", Guid.NewGuid());
+
+            var startInfo = new ProcessStartInfo
+                {
+                    FileName = "NamedPipeProcessRunner.exe", // Not L10N
+                    Arguments = guidSuffix + " " + arguments,
+                };
+                
+            if (runAsAdministrator)
+                startInfo.Verb = "runas";
+
+            var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
+
+            string pipeName = "SkylineProcessRunnerPipe" + guidSuffix; // Not L10N
+
+            using (var pipeStream = new NamedPipeServerStream(pipeName))
+            {
+                bool processFinished = false;
+                process.Exited += (sender, args) => processFinished = true;
+                process.Start();
+
+                var namedPipeServerConnector = new NamedPipeServerConnector();
+                if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
+                {
+                    using (var reader = new StreamReader(pipeStream))
+                    {
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            writer.WriteLine(line);
+                        }
+                    }
+
+                    while (!processFinished)
+                    {
+                        // wait for process to finish
+                    }
+
+                    return process.ExitCode;
+                }
+                else
+                {
+                    throw new IOException("Error running process"); // TODO: localize
+                }
+            }
+        }    
     }
     
     internal static class Kernel32

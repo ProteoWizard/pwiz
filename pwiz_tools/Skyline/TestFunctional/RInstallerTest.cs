@@ -16,18 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -46,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        public static bool Installed { get; set; }
+        private static bool Installed { get; set; }
         private static ICollection<string> Packages { get; set; }
         private static readonly ProgramPathContainer PPC = new ProgramPathContainer(R, R_VERSION);
 
@@ -148,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatRInstaller(false, true, true);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_InstallR_Download_succeeded, messageDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
         }
@@ -158,9 +155,6 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatRInstaller(false, true, false);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_InstallR_Download_succeeded, messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            messageDlg = FindOpenForm<MessageDlg>();
             Assert.AreEqual(Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
@@ -243,12 +237,9 @@ namespace pwiz.SkylineTestFunctional
         private static void TestPackageConnectFailure()
         {
             var rInstaller = FormatPackageInstaller(false, true, false, false);
-            var downloadDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick()); 
-            Assert.AreEqual(Resources.RInstaller_InstallR_Download_succeeded, downloadDlg.Message);
-            OkDialog(downloadDlg, downloadDlg.OkDialog);
-            var installDlg = FindOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages, installDlg.Message);
-            OkDialog(downloadDlg, installDlg.OkDialog);
+            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick()); 
+            Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages, messageDlg.Message);
+            OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
         }
 
@@ -256,23 +247,19 @@ namespace pwiz.SkylineTestFunctional
         private static void TestPackageInstallFailure()
         {
             var rInstaller = FormatPackageInstaller(false, true, true, false);
-            var downloadDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_InstallR_Download_succeeded, downloadDlg.Message);
-            OkDialog(downloadDlg, downloadDlg.OkDialog);
-            var messageDlg = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.RInstaller_InstallPackages_Package_installation_failed__Error_log_in_immediate_window_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
+            Assert.AreEqual(Resources.RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
-            Assert.IsTrue(rInstaller.PackageInstallError);
         }
 
         // Test package install success
         private static void TestPackageInstallSuccess()
         {
             var rInstaller = FormatPackageInstaller(false, true, true, true);
-            var downloadPackagesDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_InstallR_Download_succeeded, downloadPackagesDlg.Message);
-            OkDialog(downloadPackagesDlg, downloadPackagesDlg.OkDialog);
+            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
+            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete, messageDlg.Message);
+            OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
         }
 
@@ -287,8 +274,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient { DownloadSuccess = downloadSuccess, CancelDownload = cancelDownload};
                 rInstaller.TestConnectionSuccess = connectSuccess;
-                rInstaller.TestAsyncProcessRunner = new TestAsyncProcessRunner {ExitCode = installSuccess ? 0 : 1};
-                rInstaller.TestPipeStreamReader = new TestPipeStreamReader();
+                rInstaller.TestNamedPipeProcessRunner = new TestNamedPipeProcessRunner {ConnectSuccess = connectSuccess, ExitCode = installSuccess ? 0 : 1};
                 rInstaller.TestProgramPath = string.Empty;
             });
             return rInstaller;
@@ -303,22 +289,25 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(10*1000, () => rInstaller.IsLoaded);
             RunUI(() =>
                 {
-                    rInstaller.TestAsyncProcessRunner = new TestAsyncProcessRunner {ExitCode = 0};
+                    rInstaller.TestNamedPipeProcessRunner = new TestNamedPipeProcessRunner
+                        {
+                            ConnectSuccess = true,
+                            ExitCode = 0
+                        };
                     rInstaller.TestConnectionSuccess = true;
                     rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
                         {
                             CancelDownload = false,
                             DownloadSuccess = true
                         };
-                    rInstaller.TestPipeStreamReader = new TestPipeStreamReader();
                     rInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 0};
                     rInstaller.TestProgramPath = string.Empty;
                 });
             var downloadRDlg = ShowDialog<MessageDlg>(rInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.RInstaller_InstallR_Download_succeeded, downloadRDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete, downloadRDlg.Message);
             OkDialog(downloadRDlg, downloadRDlg.OkDialog);
             var downloadPackagesDlg = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.RInstaller_InstallR_Download_succeeded, downloadPackagesDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete, downloadPackagesDlg.Message);
             OkDialog(downloadPackagesDlg, downloadPackagesDlg.OkDialog);
             Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
         }
@@ -330,71 +319,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 dlg.ShowDialog();
             }
-        }
-    }
-
-    // The test Asynchronous Download Client allows us to simulate downloading files from the internet
-    public class TestAsynchronousDownloadClient : IAsynchronousDownloadClient
-    {
-        public bool DownloadSuccess { get; set; }
-        public bool CancelDownload { get; set; }
-        
-        public bool DownloadFileAsyncWithBroker(Uri address, string fileName)
-        {
-            if (CancelDownload)
-                throw new MessageException(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled);
-            return DownloadSuccess;
-        }
-
-        public void Dispose()
-        {
-        }
-
-    }
-
-    // The test Process Runner allows us to simulate the synchronous execution of a Process by specifying
-    // its return code
-    public class TestProcessRunner : IProcessRunner
-    {
-        public int ExitCode { get; set; }
-        
-        public int RunProcess(ProcessStartInfo startInfo)
-        {
-            return ExitCode;
-        }
-    }
-
-    // The test Async Process Runner alows us to simulate the asynchronous execution of a Process by allowing
-    // the user to add events to handle on the processes exit, and then handling them 'immediately' on start
-    public class TestAsyncProcessRunner : IAsynchronousProcessRunner
-    {
-        public int ExitCode { private get; set; }
-        public event EventHandler Exited;
-
-        public void Start()
-        {
-            if (Exited != null)
-            {
-                Exited.Invoke(this, null);
-            }
-        }
-
-        public int GetExitCode()
-        {
-            return ExitCode;
-        }
-    }
-
-    // The test Pipe Stream Reader is a simple placeholder for instances where we don't want to read/write the output
-    // of a stream
-    public class TestPipeStreamReader : IPipeStreamReaderWrapper
-    {
-        public void Dispose()
-        {
-        }
-
-        public void PropogateStream(TextWriter writer)
-        {
         }
     }
 

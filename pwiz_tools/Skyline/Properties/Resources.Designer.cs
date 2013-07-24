@@ -10272,6 +10272,191 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to download the following packages.
+        /// </summary>
+        public static string PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages {
+            get {
+                return ResourceManager.GetString("PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download failed. Check your network connection or contact Skyline developers.
+        /// </summary>
+        public static string PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers {
+            get {
+                return ResourceManager.GetString("PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_con" +
+                        "tact_Skyline_developers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check your network connection or contact the tool provider for installation support.
+        /// </summary>
+        public static string PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support {
+            get {
+                return ResourceManager.GetString("PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_" +
+                        "provider_for_installation_support", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download failed.
+        /// </summary>
+        public static string PythonInstaller_DownloadPython_Download_failed {
+            get {
+                return ResourceManager.GetString("PythonInstaller_DownloadPython_Download_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package installation completed.
+        /// </summary>
+        public static string PythonInstaller_GetPackages_Package_installation_completed {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPackages_Package_installation_completed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python installation completed.
+        /// </summary>
+        public static string PythonInstaller_GetPython_Python_installation_completed {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPython_Python_installation_completed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string PythonInstaller_InstallPackages_Install {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Install", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package installation failed. Error log output in immediate window..
+        /// </summary>
+        public static string PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_" +
+                        "immediate_window_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package Installation was not completed. Canceling tool installation.
+        /// </summary>
+        public static string PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling" +
+                        "_tool_installation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pip installation complete.
+        /// </summary>
+        public static string PythonInstaller_InstallPackages_Pip_installation_complete {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Pip_installation_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python package installation cannot continue. Canceling tool installation..
+        /// </summary>
+        public static string PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canc" +
+                        "eling_tool_installation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline uses the Python tool setuptools and the Python package manager Pip to install packages from source. Click install to begin the installation process.
+        /// </summary>
+        public static string PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_P" +
+                        "ython_package_manager_Pip_to_install_packages_from_source__Click_install_to_begi" +
+                        "n_the_installation_process", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error installing packages.
+        /// </summary>
+        public static string PythonInstaller_InstallPackages_Unknown_error_installing_packages {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Unknown_error_installing_packages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pip installation failed. Error log output in immediate window..
+        /// </summary>
+        public static string PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate" +
+                        "_window__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error installing pip.
+        /// </summary>
+        public static string PythonInstaller_InstallPip_Unknown_error_installing_pip {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPip_Unknown_error_installing_pip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python installation failed. Canceling tool installation.
+        /// </summary>
+        public static string PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation {
+            get {
+                return ResourceManager.GetString("PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installa" +
+                        "tion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires Python {0}. Click install to begin the installation process.
+        /// </summary>
+        public static string PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process {
+            get {
+                return ResourceManager.GetString("PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install" +
+                        "_to_begin_the_installation_process", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires Python {0} and the following packages. Select packages toinstall and then click Install to begin the installation process..
+        /// </summary>
+        public static string PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_installation_process_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_follow" +
+                        "ing_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_inst" +
+                        "allation_process_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires the following Python packages. Select packages to install and then click Install to begin the installation process..
+        /// </summary>
+        public static string PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_pack" +
+                        "ages__Select_packages_to_install_and_then_click_Install_to_begin_the_installatio" +
+                        "n_process_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ratio{0}To{1}.
         /// </summary>
         public static string RatioPropertyAccessor_GetPeptideKey_Ratio_0_To_1_ {
@@ -11289,6 +11474,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Package installation complete.
+        /// </summary>
+        public static string RInstaller_GetPackages_Package_installation_complete {
+            get {
+                return ResourceManager.GetString("RInstaller_GetPackages_Package_installation_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R installation complete.
+        /// </summary>
+        public static string RInstaller_GetR_R_installation_complete {
+            get {
+                return ResourceManager.GetString("RInstaller_GetR_R_installation_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred installing packages.
         /// </summary>
         public static string RInstaller_InstallPackages_An_error_occurred_installing_packages {
@@ -11298,21 +11501,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package installation failed. Error log in immediate window..
+        ///   Looks up a localized string similar to Package installation failed. Error log output in immediate window..
         /// </summary>
-        public static string RInstaller_InstallPackages_Package_installation_failed__Error_log_in_immediate_window_ {
+        public static string RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_ {
             get {
-                return ResourceManager.GetString("RInstaller_InstallPackages_Package_installation_failed__Error_log_in_immediate_wi" +
-                        "ndow_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Tool installation completed.
-        /// </summary>
-        public static string RInstaller_InstallPackages_Tool_installation_completed {
-            get {
-                return ResourceManager.GetString("RInstaller_InstallPackages_Tool_installation_completed", resourceCulture);
+                return ResourceManager.GetString("RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immed" +
+                        "iate_window_", resourceCulture);
             }
         }
         
@@ -11322,15 +11516,6 @@ namespace pwiz.Skyline.Properties {
         public static string RInstaller_InstallPackages_Unknown_error_installing_packages {
             get {
                 return ResourceManager.GetString("RInstaller_InstallPackages_Unknown_error_installing_packages", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Download succeeded.
-        /// </summary>
-        public static string RInstaller_InstallR_Download_succeeded {
-            get {
-                return ResourceManager.GetString("RInstaller_InstallR_Download_succeeded", resourceCulture);
             }
         }
         
@@ -14037,6 +14222,15 @@ namespace pwiz.Skyline.Properties {
         public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {
             get {
                 return ResourceManager.GetString("SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error running process.
+        /// </summary>
+        public static string TestNamedPipeProcessRunner_RunProcess_Error_running_process {
+            get {
+                return ResourceManager.GetString("TestNamedPipeProcessRunner_RunProcess_Error_running_process", resourceCulture);
             }
         }
         
