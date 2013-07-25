@@ -221,6 +221,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "CalculateIsolationSchemeDlg";
+            this.ShowInTaskbar = false;
             this.ResumeLayout(false);
             this.PerformLayout();
 
