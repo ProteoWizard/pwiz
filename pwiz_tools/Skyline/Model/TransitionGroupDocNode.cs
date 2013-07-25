@@ -1027,12 +1027,10 @@ namespace pwiz.Skyline.Model
                                         ChromPeak peak = ChromPeak.EMPTY;
                                         if (info != null)
                                         {
-                                            // If the peak boundaries have been set by the user, and this transition
-                                            // was not present previously, make sure it gets the same peak boundaries.
+                                            // If the peak boundaries have been set by the user, make sure this peak matches
                                             TransitionChromInfo chromInfoBest;
                                             if (dictUserSetInfoBest != null &&
-                                                    dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex, out chromInfoBest) &&
-                                                    !setTranPrevious.Contains(nodeTran.Key))
+                                                    dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex, out chromInfoBest))
                                             {
                                                 int startIndex = info.IndexOfNearestTime(chromInfoBest.StartRetentionTime);
                                                 int endIndex = info.IndexOfNearestTime(chromInfoBest.EndRetentionTime);
@@ -1997,28 +1995,27 @@ namespace pwiz.Skyline.Model
                                                           nodeGroupSynch.AutoManageChildren);
             }
 
-            // If not automanaged, then set the explicit transitions
-            if (!nodeResult.AutoManageChildren)
+            var childrenNew = new List<DocNode>();
+            foreach (TransitionDocNode nodeTran in nodeGroupSynch.Children)
             {
-                var childrenNew = new List<DocNode>();
-                foreach (TransitionDocNode nodeTran in nodeGroupSynch.Children)
-                {
-                    var tranMatch = nodeTran.Transition;
-                    var tran = new Transition(TransitionGroup,
-                                              tranMatch.IonType,
-                                              tranMatch.CleavageOffset,
-                                              tranMatch.MassIndex,
-                                              tranMatch.Charge);
-                    var losses = nodeTran.Losses;
-                    // m/z, isotope distribution and library info calculated later
-                    childrenNew.Add(new TransitionDocNode(tran, losses, 0, null, null));
-                }
-                nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                var tranMatch = nodeTran.Transition;
+                var tran = new Transition(TransitionGroup,
+                                            tranMatch.IonType,
+                                            tranMatch.CleavageOffset,
+                                            tranMatch.MassIndex,
+                                            tranMatch.Charge);
+                var losses = nodeTran.Losses;
+                // m/z, isotope distribution and library info calculated later
+                var nodeTranNew = new TransitionDocNode(tran, losses, 0, null, null);
+                // keep existing nodes, if we have them
+                var nodeTranExist = nodeResult.Transitions.FirstOrDefault(n => Equals(n.Key, nodeTranNew.Key));
+                childrenNew.Add(nodeTranExist ?? nodeTranNew);
             }
-
-            // Change settings to creat auto-manage children, or calculate
-            // mz values, library ranks and result matching
-            return nodeResult.ChangeSettings(settings, nodePep, nodePep.ExplicitMods, SrmSettingsDiff.ALL);
+            nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+            // Update properties so that the next settings change will update results correctly
+            nodeResult = nodeResult.ChangeSettings(settings, nodePep, nodePep.ExplicitMods, SrmSettingsDiff.PROPS);
+            var diff = new SrmSettingsDiff(settings, true);
+            return nodeResult.UpdateResults(settings, diff, nodePep, this);
         }
 
         /// <summary>

@@ -305,10 +305,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.SaveTools();
                 });
-            RunDlg<LocateFileDlg>(() => configureToolsDlg.UnpackZipTool(allCommandTypesPath), dlg =>
-                {
-                 dlg.OkDialog();   
-                });
+            RunDlg<LocateFileDlg>(() => configureToolsDlg.UnpackZipTool(allCommandTypesPath), dlg => dlg.OkDialog());
             WaitForConditionUI(1*1000, ()=>configureToolsDlg.listTools.Items.Count == 3);
             RunUI(()=>
             {

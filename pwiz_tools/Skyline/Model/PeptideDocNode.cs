@@ -1276,7 +1276,7 @@ namespace pwiz.Skyline.Model
                 var statsW = new Statistics(weights);
                 stdev = (float)stats.StdDev(statsW);
                 double mean = areaTotalNum/areaTotalDenom;
-                Helpers.Assume(Math.Abs(mean - stats.Mean(statsW)) < 0.0001);
+                // Helpers.Assume(Math.Abs(mean - stats.Mean(statsW)) < 0.0001);
                 // Make sure the value does not exceed the bounds of a float.
                 return (float) Math.Min(float.MaxValue, Math.Max(float.MinValue, mean));
             }

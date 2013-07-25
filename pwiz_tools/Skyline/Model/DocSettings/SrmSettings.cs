@@ -850,7 +850,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 defSet.PeakScoringModelList.Add(PeptideSettings.Integration.PeakScoringModel);
             }
 
-            UpdateDefaultModifications(true);
+            UpdateDefaultModifications(true, true);
             if (TransitionSettings.Prediction != null)
             {
                 TransitionPrediction prediction = TransitionSettings.Prediction;
