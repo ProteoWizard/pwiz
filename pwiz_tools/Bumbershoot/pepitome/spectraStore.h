@@ -1106,7 +1106,9 @@ namespace pepitome
                 else if(bal::starts_with(buf, "NumPeaks"))
                 {
                     bal::split(tokens, buf, bal::is_any_of(":"));
-                    numPeaks = lexical_cast<size_t>(tokens[1]);
+					string peakInput = tokens[1];
+					peakInput.erase(peakInput.begin(), std::find_if(peakInput.begin(), peakInput.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+                    numPeaks = lexical_cast<size_t>(peakInput);
                 }
                 else if(bal::starts_with(buf, "PrecursorMZ"))
                 {
