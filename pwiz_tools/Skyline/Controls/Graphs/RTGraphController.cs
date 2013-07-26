@@ -18,6 +18,7 @@
  */
 
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -42,23 +43,24 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool ShowDelete(Point mousePt)
         {
-            var regressionGraphPane = GraphSummary.GraphPane as RTLinearRegressionGraphPane;
+            var regressionGraphPane = GraphSummary.GraphPaneFromPoint(mousePt) as RTLinearRegressionGraphPane;
             return (regressionGraphPane != null &&
                 regressionGraphPane.AllowDeletePoint(new PointF(mousePt.X, mousePt.Y)));
         } 
 
         public void SelectPeptide(IdentityPath peptidePath)
         {
-            var regressionGraphPane = GraphSummary.GraphPane as RTLinearRegressionGraphPane;
-            if (regressionGraphPane != null)
+            foreach (var regressionGraphPane in GraphSummary.GraphPanes.OfType<RTLinearRegressionGraphPane>())
+            {
                 regressionGraphPane.SelectPeptide(peptidePath);
+            }
         }
 
         public bool ShowDeleteOutliers
         {
             get
             {
-                var regressionGraphPane = GraphSummary.GraphPane as RTLinearRegressionGraphPane;
+                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
                 return (regressionGraphPane != null && regressionGraphPane.HasOutliers);
             }
         }
@@ -67,7 +69,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var regressionGraphPane = GraphSummary.GraphPane as RTLinearRegressionGraphPane;
+                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
                 return (regressionGraphPane != null ? regressionGraphPane.Outliers : null);
             }
         }
@@ -76,7 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var regressionGraphPane = GraphSummary.GraphPane as RTLinearRegressionGraphPane;
+                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
                 return (regressionGraphPane != null ? regressionGraphPane.RegressionRefined : null);
             }
         }
@@ -85,21 +87,21 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var regressionGraphPane = GraphSummary.GraphPane as RTLinearRegressionGraphPane;
+                var regressionGraphPane = GraphSummary.GraphPanes.FirstOrDefault() as RTLinearRegressionGraphPane;
                 return (regressionGraphPane != null ? regressionGraphPane.StatisticsRefined : null);
             }
         }
 
         public void OnActiveLibraryChanged()
         {
-            if (GraphSummary.GraphPane is RTReplicateGraphPane ||
+            if (GraphSummary.GraphPanes.FirstOrDefault() is RTReplicateGraphPane ||
                     RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 GraphSummary.UpdateUI();
         }
 
         public void OnResultsIndexChanged()
         {
-            if (GraphSummary.GraphPane is RTReplicateGraphPane ||
+            if (GraphSummary.GraphPanes.FirstOrDefault() is RTReplicateGraphPane ||
                     RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 GraphSummary.UpdateUI();
         }
@@ -114,20 +116,20 @@ namespace pwiz.Skyline.Controls.Graphs
             switch (GraphType)
             {
                 case GraphTypeRT.regression:
-                    if (!(GraphSummary.GraphPane is RTLinearRegressionGraphPane))
-                        GraphSummary.GraphPane = new RTLinearRegressionGraphPane(GraphSummary);
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTLinearRegressionGraphPane))
+                        GraphSummary.GraphPanes = new [] {new RTLinearRegressionGraphPane(GraphSummary)};
                     break;
                 case GraphTypeRT.replicate:
-                    if (!(GraphSummary.GraphPane is RTReplicateGraphPane))
-                        GraphSummary.GraphPane = new RTReplicateGraphPane(GraphSummary);
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTReplicateGraphPane))
+                        GraphSummary.GraphPanes = new []{new RTReplicateGraphPane(GraphSummary)};
                     break;
                 case GraphTypeRT.peptide:
-                    if (!(GraphSummary.GraphPane is RTPeptideGraphPane))
-                        GraphSummary.GraphPane = new RTPeptideGraphPane(GraphSummary);
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTPeptideGraphPane))
+                        GraphSummary.GraphPanes = new[] {new RTPeptideGraphPane(GraphSummary)};
                     break;
                 case GraphTypeRT.schedule:
-                    if (!(GraphSummary.GraphPane is RTScheduleGraphPane))
-                        GraphSummary.GraphPane = new RTScheduleGraphPane(GraphSummary);
+                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTScheduleGraphPane))
+                        GraphSummary.GraphPanes = new[] {new RTScheduleGraphPane(GraphSummary)};
                     break;
             }
         }

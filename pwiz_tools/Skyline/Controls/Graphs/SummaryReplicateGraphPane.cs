@@ -158,18 +158,21 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly SrmDocument _document;
             private readonly DocNode _docNode;
             private readonly DisplayTypeChrom _displayType;
+            private readonly GraphHelper.PaneKey _paneKey;
 
             private ReadOnlyCollection<DocNode> _docNodes;
             private ReadOnlyCollection<String> _docNodeLabels;
             private ReadOnlyCollection<List<PointPairList>> _pointPairLists;
             private ReadOnlyCollection<ReplicateGroup> _replicateGroups;
 
-            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp)
+
+            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, GraphHelper.PaneKey paneKey)
             {
                 _document = document;
                 _docNode = docNode;
                 _displayType = displayType;
                 ReplicateGroupOp = replicateGroupOp;
+                _paneKey = paneKey;
             }
 
             protected DisplayTypeChrom DisplayType { get { return _displayType; } }
@@ -224,6 +227,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodePep)).ToArray();
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
+                        if (!_paneKey.IncludesTransitionGroup(nodeGroup))
+                        {
+                            continue;
+                        }
                         docNodes.Add(nodeGroup);
                         pointPairLists.Add(GetPointPairLists(nodeGroup, DisplayTypeChrom.total));
                         docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));

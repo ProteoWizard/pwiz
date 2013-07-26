@@ -723,7 +723,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 if (displayType != DisplayTypeChrom.precursors)
                                 {
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance, 
-                                                       nodeGroup, chromGroupInfo, GraphHelper.PaneKey.TRANSITIONS, DisplayTypeChrom.products,
+                                                       nodeGroup, chromGroupInfo, GraphHelper.PaneKey.PRODUCTS, DisplayTypeChrom.products,
                                                        ref bestStartTime, ref bestEndTime);
                                 }
                             }
@@ -924,6 +924,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     arrayChromInfo = new ChromatogramInfo[0];
                     displayTrans = new TransitionDocNode[0];
+                    numTrans = 0;
                 }
                 else
                 {

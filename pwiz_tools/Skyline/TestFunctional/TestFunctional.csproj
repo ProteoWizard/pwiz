@@ -175,6 +175,7 @@
     <Compile Include="ShareDocumentTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
+    <Compile Include="SplitGraphTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -238,6 +239,7 @@
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
+    <None Include="SplitGraphTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
   </ItemGroup>
   <ItemGroup>

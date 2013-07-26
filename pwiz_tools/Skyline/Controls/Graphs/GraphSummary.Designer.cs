@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphSummary));
             this.graphControl = new ZedGraph.ZedGraphControl();
             this.SuspendLayout();
@@ -38,6 +39,7 @@
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.graphControl.IsShowCopyMessage = false;
+            this.graphControl.IsSynchronizeXAxes = true;
             this.graphControl.Name = "graphControl";
             this.graphControl.ScrollGrace = 0D;
             this.graphControl.ScrollMaxX = 0D;

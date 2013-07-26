@@ -36,9 +36,10 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public class AreaReplicateGraphPane : SummaryReplicateGraphPane
     {
-        public AreaReplicateGraphPane(GraphSummary graphSummary)
+        public AreaReplicateGraphPane(GraphSummary graphSummary, GraphHelper.PaneKey paneKey)
             : base(graphSummary)
         {
+            PaneKey = paneKey;
         }
 
         protected override void InitFromData(GraphData graphData)
@@ -147,7 +148,20 @@ namespace pwiz.Skyline.Controls.Graphs
             BarSettings.Type = BarType;
             Title.Text = null;
 
-            DisplayTypeChrom displayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
+            DisplayTypeChrom displayType;
+            if (Equals(PaneKey, GraphHelper.PaneKey.PRECURSORS))
+            {
+                displayType = DisplayTypeChrom.precursors;
+            }
+            else if (Equals(PaneKey, GraphHelper.PaneKey.PRODUCTS))
+            {
+                displayType = DisplayTypeChrom.products;
+            }
+            else
+            {
+                displayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
+            }
+
             DocNode selectedNode = selectedTreeNode.Model;
             DocNode parentNode = selectedNode;
             IdentityPath identityPath = selectedTreeNode.Path;
@@ -172,8 +186,10 @@ namespace pwiz.Skyline.Controls.Graphs
             // unless chromatogram display type is total
             else if (selectedTreeNode is PeptideTreeNode)
             {
-                var children = ((DocNodeParent) selectedNode).Children;
-                if (children.Count == 1 && displayType != DisplayTypeChrom.total)
+                var children = ((PeptideDocNode) selectedNode).TransitionGroups
+                    .Where(PaneKey.IncludesTransitionGroup)
+                    .ToArray();
+                if (children.Length == 1 && displayType != DisplayTypeChrom.total)
                 {
                     selectedNode = parentNode = children[0];
                     identityPath = new IdentityPath(identityPath, parentNode.Id);
@@ -254,7 +270,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
             GraphData graphData = new AreaGraphData(document, parentNode, displayType, replicateGroupOp,
-                ratioIndex, normalizeData, expectedValue);
+                ratioIndex, normalizeData, expectedValue, PaneKey);
             var aggregateOp = replicateGroupOp.AggregateOp;
             int countNodes = graphData.DocNodes.Count;
             if (countNodes == 0)
@@ -715,8 +731,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                  GraphValues.ReplicateGroupOp replicateGroupOp,
                                  int ratioIndex,
                                  AreaNormalizeToData normalize,
-                                 AreaExpectedValue expectedVisible)
-                : base(document, docNode, displayType, replicateGroupOp)
+                                 AreaExpectedValue expectedVisible,
+                                 GraphHelper.PaneKey paneKey)
+                : base(document, docNode, displayType, replicateGroupOp, paneKey)
             {
                 _docNode = docNode;
                 _ratioIndex = ratioIndex;

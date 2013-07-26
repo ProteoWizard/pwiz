@@ -2081,7 +2081,12 @@ namespace pwiz.Skyline
 
         private void splitChromGraphMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.SplitChromatogramGraph = !Settings.Default.SplitChromatogramGraph;
+            ShowSplitChromatogramGraph(!Settings.Default.SplitChromatogramGraph);
+        }
+
+        public void ShowSplitChromatogramGraph(bool split)
+        {
+            Settings.Default.SplitChromatogramGraph = split;
             UpdateGraphPanes();
         }
 
@@ -2353,7 +2358,7 @@ namespace pwiz.Skyline
                 if (graphType == GraphTypeRT.replicate)
                 {
                     iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
-                    var rtReplicateGraphPane = _graphRetentionTime.GraphPane as RTReplicateGraphPane;
+                    var rtReplicateGraphPane = _graphRetentionTime.GraphPanes.FirstOrDefault() as RTReplicateGraphPane;
                     if (rtReplicateGraphPane != null && rtReplicateGraphPane.CanShowRTLegend)
                     {
                         showRTLegendContextMenuItem.Checked = set.ShowRetentionTimesLegend;
@@ -3003,7 +3008,7 @@ namespace pwiz.Skyline
                             areaNormalizeNoneContextMenuItem
                         });                 
                 }
-                var areaReplicateGraphPane = _graphPeakArea.GraphPane as AreaReplicateGraphPane;
+                var areaReplicateGraphPane = _graphPeakArea.GraphPanes.FirstOrDefault() as AreaReplicateGraphPane;
                 if (areaReplicateGraphPane != null)
                 {
                     // If the area replicate graph is being displayed and it shows a legend, 

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -178,7 +179,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void GraphSummary_KeyDown(object sender, KeyEventArgs e)
         {
-            if (GraphPane.HandleKeyDownEvent(sender, e))
+            if (GraphPanes.First().HandleKeyDownEvent(sender, e))
                 return;
 
             if (_controller.HandleKeyDownEvent(sender, e))
@@ -192,17 +193,17 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public int CurveCount { get { return GraphPane.CurveList.Count; } }
+        public int CurveCount { get { return GraphPanes.Sum(pane=>pane.CurveList.Count); } }
 
-        internal SummaryGraphPane GraphPane
+        internal IEnumerable<SummaryGraphPane> GraphPanes
         {
-            get { return graphControl.MasterPane[0] as SummaryGraphPane; }
-            set { graphControl.MasterPane[0] = value; }
+            get { return graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>(); }
+            set { graphControl.MasterPane.PaneList.Clear(); graphControl.MasterPane.PaneList.AddRange(value); }
         }
 
         public bool TryGetGraphPane<TPane>(out TPane pane) where TPane : class
         {
-            pane = GraphPane as TPane;
+            pane = GraphPanes.FirstOrDefault() as TPane;
             return (pane != null);
         }
 
@@ -213,7 +214,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IEnumerable<string> Categories
         {
-            get { return GraphPane.XAxis.Scale.TextLabels; }
+            get { return GraphPanes.First().XAxis.Scale.TextLabels; }
         }
 
         public void UpdateUI()
@@ -242,29 +243,32 @@ namespace pwiz.Skyline.Controls.Graphs
             if (AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view && !mods.HasHeavyModifications)
                 AreaGraphController.AreaView = AreaNormalizeToView.none;
 
-            var graphPaneCurrent = GraphPane;
+            var graphPanesCurrent = GraphPanes.ToArray();
             _controller.OnUpdateGraph();
-            var graphPane = GraphPane;
+            var graphPanes = GraphPanes.ToArray();
 
-            if (graphPaneCurrent != graphPane)
+            if (!graphPanesCurrent.SequenceEqual(graphPanes))
             {
-                // Release any necessary resources from the old pane
-                var disposable = graphPaneCurrent as IDisposable;
-                if (disposable != null)
-                    disposable.Dispose();
+                foreach (var pane in graphPanesCurrent)
+                {
+                    // Release any necessary resources from the old pane
+                    var disposable = pane as IDisposable;
+                    if (disposable != null)
+                        disposable.Dispose();
+                }
 
                 // Layout the new pane
                 using (Graphics g = CreateGraphics())
                 {
-                    graphControl.MasterPane.DoLayout(g);
+                    graphControl.MasterPane.SetLayout(g, PaneLayout.SingleColumn);
                 }                
             }
 
-            if (graphPane != null)
+            foreach (var pane in graphPanes)
             {
-                graphPane.UpdateGraph(checkData);
-                graphControl.Invalidate();
+                pane.UpdateGraph(checkData);
             }
+            graphControl.Invalidate();
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
@@ -274,22 +278,40 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (GraphPane == null)
+            var graphPane = GraphPaneFromPoint(e.Location);
+            if (graphPane == null)
                 return false;
             if (sender != null && e.Button == sender.PanButtons && ModifierKeys == sender.PanModifierKeys)
-                GraphPane.EnsureYMin();
-            return GraphPane.HandleMouseMoveEvent(sender, e);
+                graphPane.EnsureYMin();
+            return graphPane.HandleMouseMoveEvent(sender, e);
         }
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            return GraphPane.HandleMouseDownEvent(sender, e);
+            var graphPane = GraphPaneFromPoint(e.Location);
+            return null != graphPane && graphPane.HandleMouseDownEvent(sender, e);
         }
 
         private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
         {
-            GraphPane.EnsureYMin();
+            foreach (var pane in GraphPanes)
+            {
+                pane.EnsureYMin();
+            }
         }
+
+        public SummaryGraphPane GraphPaneFromPoint(PointF point)
+        {
+            if (graphControl.MasterPane.PaneList.Count == 1)
+            {
+                return graphControl.MasterPane.PaneList[0] as SummaryGraphPane;
+            }
+            else
+            {
+                return graphControl.MasterPane.FindPane(point) as SummaryGraphPane;
+            }
+        }
+
 
         protected override void OnClosed(EventArgs e)
         {
@@ -299,8 +321,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private void GraphSummary_Resize(object sender, EventArgs e)
         {
             // Apparently on Windows 7, a resize event may occur during InitializeComponent
-            if (GraphPane != null)
-                GraphPane.HandleResizeEvent();
+            foreach (var pane in GraphPanes)
+            {
+                pane.HandleResizeEvent();
+            }
         }
     }
 }

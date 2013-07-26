@@ -24,8 +24,8 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaPeptideGraphPane : SummaryPeptideGraphPane
     {
-        public AreaPeptideGraphPane(GraphSummary graphSummary)
-            : base(graphSummary)
+        public AreaPeptideGraphPane(GraphSummary graphSummary, GraphHelper.PaneKey paneKey)
+            : base(graphSummary, paneKey)
         {
         }
 
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 result = GraphSummary.ResultsIndex;
-            return new AreaGraphData(document, selectedGroup, selectedProtein, result, displayType);
+            return new AreaGraphData(document, selectedGroup, selectedProtein, result, displayType, PaneKey);
         }
 
         protected override void UpdateAxes()
@@ -50,8 +50,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                  TransitionGroupDocNode selectedGroup,
                                  PeptideGroupDocNode selectedProtein,
                                  int? result,
-                                 DisplayTypeChrom displayType)
-                : base(document, selectedGroup, selectedProtein, result, displayType, null)
+                                 DisplayTypeChrom displayType,
+                                 GraphHelper.PaneKey paneKey)
+                : base(document, selectedGroup, selectedProtein, result, displayType, null, paneKey)
             {
             }
 

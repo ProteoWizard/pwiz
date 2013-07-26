@@ -50,10 +50,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected GraphData _graphData;
 
-        protected SummaryPeptideGraphPane(GraphSummary graphSummary)
+        protected SummaryPeptideGraphPane(GraphSummary graphSummary, GraphHelper.PaneKey paneKey)
             : base(graphSummary)
         {
-            XAxis.Title.Text = Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide;
+            PaneKey = paneKey;
+            string xAxisTitle = Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide;
+            if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
+            {
+                xAxisTitle += " (" + paneKey.IsotopeLabelType + ")";
+            }
+            XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Text;
         }
 
@@ -217,7 +223,8 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly int? _resultIndex;
 
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
-                             int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp)
+                             int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp, 
+                             GraphHelper.PaneKey paneKey)
             {
                 _resultIndex = iResult;
                 RetentionTimeTransformOp = retentionTimeTransformOp;
@@ -232,13 +239,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 int pointListCount = 0;
                 var dictTypeToSet = new Dictionary<IsotopeLabelType, int>();
-                
+
+                bool onePointPerPeptide = PeptideOrder == SummaryPeptideOrder.document &&
+                                          null != paneKey.IsotopeLabelType;
                 // Figure out how many point lists to create
                 bool displayTotals = (displayType == DisplayTypeChrom.total);
                 if (displayTotals)
                 {
                     foreach (var nodeGroup in document.TransitionGroups)
                     {
+                        if (!paneKey.IncludesTransitionGroup(nodeGroup))
+                        {
+                            continue;
+                        }
                         IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
                         if (!dictTypeToSet.ContainsKey(labelType))
                             dictTypeToSet.Add(labelType, pointListCount++);
@@ -247,7 +260,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     foreach (var nodeGroup in document.TransitionGroups)
+                    {
+                        if (!paneKey.IncludesTransitionGroup(nodeGroup))
+                        {
+                            continue;
+                        }
                         pointListCount = Math.Max(pointListCount, GraphChromatogram.GetDisplayTransitions(nodeGroup, displayType).Count());
+                    }
                 }
 
                 // Build the list of points to show.
@@ -261,11 +280,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     } 
                     foreach (PeptideDocNode nodePep in nodeGroupPep.Children)
                     {
+                        bool addBlankPoint = onePointPerPeptide &&
+                                             !nodePep.TransitionGroups.Any(paneKey.IncludesTransitionGroup);
                         foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                         {
                             var path = new IdentityPath(nodeGroupPep.PeptideGroup,
                                                         nodePep.Peptide, nodeGroup.TransitionGroup);
-                            listPoints.Add(new GraphPointData(nodePep, nodeGroup, path));
+                            var graphPointData = new GraphPointData(nodePep, nodeGroup, path);
+                            if (addBlankPoint || paneKey.IncludesTransitionGroup(nodeGroup))
+                            {
+                                listPoints.Add(graphPointData);
+                            }
+                            if (addBlankPoint)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
@@ -302,7 +331,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodePep = dataPoint.NodePep;
                     var nodeGroup = dataPoint.NodeGroup;
-
                     if (!ReferenceEquals(nodePep, nodePepCurrent))
                     {
                         nodePepCurrent = nodePep;
@@ -328,7 +356,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                        (chargeCount > 1
                                             ? Transition.GetChargeIndicator(transitionGroup.PrecursorCharge)
                                             : string.Empty);
-                        if (!displayTotals)
+                        if (!displayTotals && null == paneKey.IsotopeLabelType)
                             label += transitionGroup.LabelTypeText;
                         if (peptideOrder == SummaryPeptideOrder.time)
                         {
@@ -354,18 +382,41 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (displayTotals)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
-                        pointPairLists[dictTypeToSet[labelType]].Add(CreatePointPair(iGroup, nodeGroup, ref groupMaxY, ref groupMinY, resultIndex));
+                        if (dictTypeToSet.ContainsKey(labelType))
+                        {
+                            if (paneKey.IncludesTransitionGroup(nodeGroup))
+                            {
+                                pointPairLists[dictTypeToSet[labelType]].Add(CreatePointPair(iGroup, nodeGroup,
+                                                                                             ref groupMaxY, ref groupMinY,
+                                                                                             resultIndex));
+                            }
+                            else
+                            {
+                                pointPairLists[dictTypeToSet[labelType]].Add(PointPairMissing(iGroup));
+                            }
+                        }
                     }
                     else
                     {
-                        var nodeTrans = GraphChromatogram.GetDisplayTransitions(nodeGroup, displayType).ToArray();
-                        for (int i = 0; i < pointListCount; i++)
+                        if (paneKey.IncludesTransitionGroup(nodeGroup))
                         {
-                            var pointPairList = pointPairLists[i];
-                            pointPairList.Add(i >= nodeTrans.Length
-                                                  ? CreatePointPairMissing(iGroup)
-                                                  : CreatePointPair(iGroup, nodeTrans[i], ref groupMaxY, ref groupMinY,
-                                                                    resultIndex));
+                            var nodeTrans = GraphChromatogram.GetDisplayTransitions(nodeGroup, displayType).ToArray();
+                            for (int i = 0; i < pointListCount; i++)
+                            {
+                                var pointPairList = pointPairLists[i];
+                                pointPairList.Add(i >= nodeTrans.Length
+                                                      ? CreatePointPairMissing(iGroup)
+                                                      : CreatePointPair(iGroup, nodeTrans[i], ref groupMaxY,
+                                                                        ref groupMinY,
+                                                                        resultIndex));
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < pointListCount; i++)
+                            {
+                                pointPairLists[i].Add(CreatePointPairMissing(iGroup));
+                            }
                         }
                     }
                     // ReSharper restore DoNotCallOverridableMethodsInConstructor
@@ -616,6 +667,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 return retentionTimeValues.Value.Scale(regressionFunction);
             }
+
+            protected virtual bool AddBlankPointsForGraphPanes { get { return false; } }
         }
 
         private class GraphPointData
