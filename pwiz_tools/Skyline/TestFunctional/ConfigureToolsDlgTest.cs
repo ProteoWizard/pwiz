@@ -99,19 +99,18 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestLocateFileDlg()
         {
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string path = TestFilesDir.GetTestPath("TestLocateFileDlg.zip");
             RunUI(configureToolsDlg.RemoveAllTools);
-            LocateFileDlg locateFileDlg1 = ShowDialog<LocateFileDlg>(() => configureToolsDlg.UnpackZipTool(path));
-            RunUI(() =>
+            RunDlg<LocateFileDlg>(() => configureToolsDlg.UnpackZipTool(path), locateFileDlg =>
             {
                 AssertEx.AreComparableStrings(TextUtil.LineSeparate(
                     Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
                     Resources.LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below,
                     Resources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first,
-                    Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again), locateFileDlg1.Message, 4);
-                Assert.AreEqual(String.Empty, locateFileDlg1.Path);
-                locateFileDlg1.OkDialog();
+                    Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again), locateFileDlg.Message, 4);
+                Assert.AreEqual(String.Empty, locateFileDlg.Path);
+                locateFileDlg.OkDialog();
             });
 // ReSharper disable LocalizableElement
             WaitForConditionUI(2 * 1000, ()=> configureToolsDlg.textTitle.Text == "TestTool1"); //Not L10N            
@@ -125,9 +124,10 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
                     Assert.AreEqual("QuaSAR Input", configureToolsDlg.comboReport.SelectedItem);
                 });
-            
-            LocateFileDlg locateFileDlg = ShowDialog<LocateFileDlg>(configureToolsDlg.EditMacro);
-            RunUI(()=>
+
+            {
+                LocateFileDlg locateFileDlg = ShowDialog<LocateFileDlg>(configureToolsDlg.EditMacro);
+                RunUI(() =>
                 {
                     AssertEx.AreComparableStrings(TextUtil.LineSeparate(
                         Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
@@ -135,20 +135,18 @@ namespace pwiz.SkylineTestFunctional
                         Resources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first,
                         Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again), locateFileDlg.Message, 4);
                     Assert.AreEqual(String.Empty, locateFileDlg.Path);
-                locateFileDlg.Path = "invalidPath";
-            });
-            RunDlg<MessageDlg>(locateFileDlg.OkDialog, messageDlg =>
-            {
-                AssertEx.AreComparableStrings(Resources.LocateFileDlg_PathPasses_You_have_not_provided_a_valid_path_, messageDlg.Message);
-                messageDlg.OkDialog();
-            });
-            RunUI(() => locateFileDlg.CancelButton.PerformClick());
-            WaitForClosedForm(locateFileDlg);
-            RunUI(()=>
-            {
-                configureToolsDlg.OkDialog();
-                SkylineWindow.PopulateToolsMenu();
-            });
+                    locateFileDlg.Path = "invalidPath";
+                });
+                RunDlg<MessageDlg>(locateFileDlg.OkDialog, messageDlg =>
+                {
+                    AssertEx.AreComparableStrings(Resources.LocateFileDlg_PathPasses_You_have_not_provided_a_valid_path_, messageDlg.Message);
+                    messageDlg.OkDialog();
+                });
+                RunUI(() => locateFileDlg.CancelButton.PerformClick());
+                WaitForClosedForm(locateFileDlg);
+            }
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            RunUI(()=> SkylineWindow.PopulateToolsMenu());
             string validpath = TestFilesDir.GetTestPath("ShortStdinToStdout.exe"); 
             RunDlg<LocateFileDlg>(() => SkylineWindow.RunTool(0), lfd =>
             {
@@ -157,8 +155,7 @@ namespace pwiz.SkylineTestFunctional
                 lfd.OkDialog();
             });            
 
-            ConfigureToolsDlg ctd = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            
+            var ctd = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);            
             RunDlg<LocateFileDlg>(configureToolsDlg.EditMacro, locate =>
             {
                 AssertEx.AreComparableStrings(TextUtil.LineSeparate(
@@ -168,17 +165,13 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(validpath, locate.Path);
                 locate.OkDialog();
             });
-            RunUI(()=>
-            {    
-                ctd.RemoveAllTools();
-                ctd.OkDialog();
-            });
-            WaitForClosedForm(ctd);
+            RunUI(ctd.RemoveAllTools);
+            OkDialog(ctd, ctd.OkDialog);
         }
 
         private static void TestNotInstalledTool()
         {            
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
             {
                 configureToolsDlg.RemoveAllTools();                
@@ -193,18 +186,13 @@ namespace pwiz.SkylineTestFunctional
                     dlg.Message, 0);
                 dlg.OkDialog();
             });
-            RunUI(() =>
-            {
-                configureToolsDlg.Remove();
-                configureToolsDlg.OkDialog();    
-            });
-
-            
+            RunUI(configureToolsDlg.Remove);
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }        
 
         private void ZipTestGoodImport()
         {
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string path1 = TestFilesDir.GetTestPath("MSstats.zip");
             string exepath = TestFilesDir.GetTestPath("ShortStdinToStdout.exe");
             RunUI(() =>
@@ -213,8 +201,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.SaveTools();
                     //configureToolsDlg.UnpackZipTool(path1);
                 });
-            LocateFileDlg locateFileDlg = ShowDialog<LocateFileDlg>(() =>configureToolsDlg.UnpackZipTool(path1));
-            RunUI(() =>
+            RunDlg<LocateFileDlg>(() =>configureToolsDlg.UnpackZipTool(path1), locateFileDlg =>
             {                
                 Assert.AreEqual(String.Empty, locateFileDlg.Path);
                 locateFileDlg.Path = exepath;
@@ -264,13 +251,13 @@ namespace pwiz.SkylineTestFunctional
                 
                 
                 configureToolsDlg.RemoveAllTools();
-                configureToolsDlg.OkDialog();
             });
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
         private void ZipTestInvalidToolDescription()
         {
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string toolNoCommandPath = TestFilesDir.GetTestPath("ToolNoCommand.zip");
             RunUI(() =>
                 {
@@ -293,12 +280,12 @@ namespace pwiz.SkylineTestFunctional
                         Resources.ConfigureToolsDlg_unpackZipTool_skipping_that_tool_), messageDlg.Message, 1);
                 messageDlg.OkDialog();
             });
-            RunUI(configureToolsDlg.OkDialog);
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
         private void ZipTestAllCommandTypes()
         {
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string allCommandTypesPath = TestFilesDir.GetTestPath("AllCommandTypes.zip");
             RunUI(() =>
                 {
@@ -349,8 +336,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(configureToolsDlg.ArgsCollectorType, string.Empty);
 
                 configureToolsDlg.RemoveAllTools();
-                configureToolsDlg.OkDialog();
             });
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
         private void ZipTestSkylineReports()
@@ -362,8 +349,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.SaveTools();                    
                 });
-            MessageDlg messageDlgReportNotProvided = ShowDialog<MessageDlg>(()=>configureToolsDlg.UnpackZipTool(testSkylineReportsPath));
-            RunUI(()=>
+            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(testSkylineReportsPath), messageDlgReportNotProvided =>
                     {
                         AssertEx.AreComparableStrings(
                             Resources.UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_,
@@ -452,9 +438,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
                 Assert.AreNotEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem); //Could asser
                 configureToolsDlg.RemoveAllTools();
-                configureToolsDlg.OkDialog();
             });
-
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
         private void TestToolDirMacro()
@@ -532,8 +517,7 @@ namespace pwiz.SkylineTestFunctional
                     // Somehow the SRM collider and Quasar are still on the list!
 
                     Assert.AreEqual("TestArgCollector", toolText); // Not L10N                    
-                    SkylineWindow.RunTool(0);
-                    
+                    SkylineWindow.RunTool(0);                    
                 });
             const string toolOutput = "SomeArgs test args collector SomeMoreArgs"; // Not L10N
             WaitForConditionUI(3*1000, () => SkylineWindow.ImmediateWindow.TextContent.Contains(toolOutput));
@@ -592,9 +576,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestHttpPost()
         {            
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             FakeWebHelper fakeWebHelper = new FakeWebHelper();
-            RunUI(() =>
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     //Remove all tools.
                     configureToolsDlg.RemoveAllTools();
@@ -604,7 +587,10 @@ namespace pwiz.SkylineTestFunctional
                                                 "Transition Results"); // Not L10N
                     Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
                     configureToolsDlg.OkDialog();
+                });
 
+            RunUI(() =>
+                {
                     Settings.Default.ToolList[0].WebHelpers = fakeWebHelper;
                     Settings.Default.ToolList[1].WebHelpers = fakeWebHelper;
 
@@ -625,33 +611,34 @@ namespace pwiz.SkylineTestFunctional
                         Settings.Default.ToolList.RemoveAt(0);
                     }
                     SkylineWindow.PopulateToolsMenu();
-
                 });
         }
 
         private void TestImmediateWindow()
         {            
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string exePath = TestFilesDir.GetTestPath("ShortStdinToStdout.exe"); // Not L10N
             // ShortStdinToStdout outputs the string provided to it. the string can come either as an argument or from stdin.
             WaitForCondition(10*60*1000, () => File.Exists(exePath));
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
+                {
+                    Assert.IsTrue(File.Exists(exePath));
+                    //Remove all tools.
+                    configureToolsDlg.RemoveAllTools();
+                    configureToolsDlg.AddDialog("ImWindowTest", exePath, _empty, _empty, true,
+                                                "Peptide RT Results"); // Report passed via stdin. // Not L10N
+                    configureToolsDlg.AddDialog("ImWindowTestWithMacro", exePath, ToolMacros.INPUT_REPORT_TEMP_PATH,
+                                                _empty, true, "Transition Results");
+                    // Report passed as an argument. // Not L10N
+                    Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
+                    configureToolsDlg.OkDialog();
+                });
             RunUI(() =>
-            {
-                Assert.IsTrue(File.Exists(exePath));
-                //Remove all tools.
-                configureToolsDlg.RemoveAllTools();
-                configureToolsDlg.AddDialog("ImWindowTest", exePath, _empty, _empty, true,
-                                            "Peptide RT Results"); // Report passed via stdin. // Not L10N
-                configureToolsDlg.AddDialog("ImWindowTestWithMacro", exePath, ToolMacros.INPUT_REPORT_TEMP_PATH,
-                                            _empty, true, "Transition Results");
-                // Report passed as an argument. // Not L10N
-                Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
-                configureToolsDlg.OkDialog();
-                SkylineWindow.PopulateToolsMenu();
-                Assert.AreEqual("ImWindowTest", SkylineWindow.GetToolText(0)); // Not L10N
-                Assert.AreEqual("ImWindowTestWithMacro", SkylineWindow.GetToolText(1)); // Not L10N
-                SkylineWindow.RunTool(0);                                               
-            });
+                {
+                    SkylineWindow.PopulateToolsMenu();
+                    Assert.AreEqual("ImWindowTest", SkylineWindow.GetToolText(0)); // Not L10N
+                    Assert.AreEqual("ImWindowTestWithMacro", SkylineWindow.GetToolText(1)); // Not L10N
+                    SkylineWindow.RunTool(0);                                               
+                });
             string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio" // Not L10N
                 .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
             WaitForConditionUI(30*1000, () => SkylineWindow.ImmediateWindow != null);
@@ -665,11 +652,11 @@ namespace pwiz.SkylineTestFunctional
                 .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
             WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));
             RunUI(() => SkylineWindow.ImmediateWindow.Clear());            
-    }
+        }
 
         private void TestURL()
         {
-            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
             {
                     configureToolsDlg.RemoveAllTools();
@@ -734,8 +721,8 @@ namespace pwiz.SkylineTestFunctional
 
                           //delete both and exit
                           configureToolsDlg.RemoveAllTools();
-                          configureToolsDlg.OkDialog();
                       });
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
         private void TestMacros()
@@ -781,7 +768,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestCascadingMenuItems()
         {
             {
-                ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
                 RunUI(() =>
                 {
                     configureToolsDlg.RemoveAllTools();
@@ -801,43 +788,46 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
-                {
-                    SkylineWindow.PopulateToolsMenu();
-                    Assert.AreEqual(EXAMPLE3, SkylineWindow.GetTextByIndex(0));
-                    Assert.AreEqual(FOLDER_NAME, SkylineWindow.GetTextByIndex(1));
-                    Assert.AreEqual(EXAMPLE1, SkylineWindow.GetTextByIndex(2));
-                    
-                    ToolStripMenuItem mi = SkylineWindow.GetMenuItem(1);
-                    Assert.AreEqual(EXAMPLE1, mi.DropDownItems[0].Text);
-                    SkylineWindow.ToolMenuItem example1 = (SkylineWindow.ToolMenuItem) mi.DropDownItems[0];
-                    Assert.AreEqual(EXAMPLE1_EXE, example1.Command);
-                    
-                    Assert.AreEqual(FURTHER, mi.DropDownItems[1].Text);
-                    ToolStripMenuItem mi2 = (ToolStripMenuItem) mi.DropDownItems[1];
-                    Assert.AreEqual(EXAMPLE3, mi2.DropDownItems[0].Text);
-                    SkylineWindow.ToolMenuItem example3 = (SkylineWindow.ToolMenuItem)mi2.DropDownItems[0];
-                    Assert.AreEqual(EXAMPLE3_EXE, example3.Command);
+                    {
+                        SkylineWindow.PopulateToolsMenu();
+                        Assert.AreEqual(EXAMPLE3, SkylineWindow.GetTextByIndex(0));
+                        Assert.AreEqual(FOLDER_NAME, SkylineWindow.GetTextByIndex(1));
+                        Assert.AreEqual(EXAMPLE1, SkylineWindow.GetTextByIndex(2));
 
-                    Assert.AreEqual(EXAMPLE2, mi.DropDownItems[2].Text);
-                    SkylineWindow.ToolMenuItem example2 = (SkylineWindow.ToolMenuItem)mi.DropDownItems[2];
-                    Assert.AreEqual(EXAMPLE2_EXE, example2.Command);
+                        ToolStripMenuItem mi = SkylineWindow.GetMenuItem(1);
+                        Assert.AreEqual(EXAMPLE1, mi.DropDownItems[0].Text);
+                        SkylineWindow.ToolMenuItem example1 = (SkylineWindow.ToolMenuItem) mi.DropDownItems[0];
+                        Assert.AreEqual(EXAMPLE1_EXE, example1.Command);
 
-                    Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
+                        Assert.AreEqual(FURTHER, mi.DropDownItems[1].Text);
+                        ToolStripMenuItem mi2 = (ToolStripMenuItem) mi.DropDownItems[1];
+                        Assert.AreEqual(EXAMPLE3, mi2.DropDownItems[0].Text);
+                        SkylineWindow.ToolMenuItem example3 = (SkylineWindow.ToolMenuItem) mi2.DropDownItems[0];
+                        Assert.AreEqual(EXAMPLE3_EXE, example3.Command);
 
-                    configureToolsDlg.RemoveAllTools();
-                    // Now the tool list is empty.
-                    Assert.IsFalse(configureToolsDlg.btnRemove.Enabled);
-                    configureToolsDlg.OkDialog();
-                    SkylineWindow.PopulateToolsMenu();
-                    Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
-                });
+                        Assert.AreEqual(EXAMPLE2, mi.DropDownItems[2].Text);
+                        SkylineWindow.ToolMenuItem example2 = (SkylineWindow.ToolMenuItem) mi.DropDownItems[2];
+                        Assert.AreEqual(EXAMPLE2_EXE, example2.Command);
+
+                        Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
+
+                        configureToolsDlg.RemoveAllTools();
+                        // Now the tool list is empty.
+                        Assert.IsFalse(configureToolsDlg.btnRemove.Enabled);
+                    });
+                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+                RunUI(() =>
+                    {
+                        SkylineWindow.PopulateToolsMenu();
+                        Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
+                    });
             }
         }
 
         private void TestButtons()
         {
             {
-                ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
                 RunUI(() =>
                 {
                     configureToolsDlg.RemoveAllTools();
@@ -983,7 +973,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(EXAMPLE3, configureToolsDlg.ToolList[0].Title);
                     Assert.AreEqual(EXAMPLE1, configureToolsDlg.ToolList[1].Title); 
                     Assert.AreEqual(EXAMPLE2, configureToolsDlg.ToolList[2].Title); 
-            });
+                });
                 RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(2), messageDlg =>
                 {
                     AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
@@ -1020,6 +1010,7 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
+                WaitForClosedForm(configureToolsDlg);
                 RunUI(() =>
                 {
                     SkylineWindow.PopulateToolsMenu();
@@ -1056,6 +1047,7 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
+                WaitForClosedForm(configureToolsDlg);
                 RunUI(() =>
                 {
                     SkylineWindow.PopulateToolsMenu();
@@ -1079,7 +1071,10 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.RemoveAllTools();
                     // Now the tool list is empty.
                     Assert.IsFalse(configureToolsDlg.btnRemove.Enabled);
-                    configureToolsDlg.OkDialog();
+                });
+                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+                RunUI(()=>
+                {
                     SkylineWindow.PopulateToolsMenu();
                     Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
                 });
@@ -1154,7 +1149,8 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_, messageDlg.Message, 0);
                 messageDlg.Btn0Click();
             });
-            RunUI(() => Assert.IsFalse(configureToolsDlg.btnApply.Enabled));
+            WaitForClosedForm(configureToolsDlg);
+//            RunUI(() => Assert.IsFalse(configureToolsDlg.btnApply.Enabled));
         }
 
         private void TestEmptyCommand()
@@ -1166,11 +1162,8 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_, messageDlg.Message, 1);
                 messageDlg.OkDialog();
             });
-            RunUI(() =>
-            {
-                configureToolsDlg.Remove();
-                configureToolsDlg.OkDialog();
-            });
+            RunUI(configureToolsDlg.Remove);
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
         private void TestSaveDialogNo()
@@ -1189,6 +1182,8 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_, messageDlg.Message, 0);
                 messageDlg.Btn1Click();
             }); 
+
+            WaitForClosedForm(configureToolsDlg);
         }
 
         private void TestSavedCancel()
@@ -1212,6 +1207,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             });
+            WaitForClosedForm(configureToolsDlg);
         }
 
         private void TestIndexChange()
@@ -1236,8 +1232,8 @@ namespace pwiz.SkylineTestFunctional
                 configureToolsDlg.Remove();
                 configureToolsDlg.Remove();
                 configureToolsDlg.SaveTools();
-                configureToolsDlg.OkDialog();
             });
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
         
         private void TestProcessStart()
@@ -1253,6 +1249,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             }); 
+            WaitForClosedForm(configureToolsDlg);
             RunUI(() =>
             {            
                 SkylineWindow.PopulateToolsMenu();
@@ -1279,11 +1276,8 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             });
-            RunUI(() =>
-            {
-                configureToolsDlg.RemoveAllTools();
-                configureToolsDlg.OkDialog();
-            });
+            RunUI(configureToolsDlg.RemoveAllTools);
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
         // Check that a complaint dialog is displayed when the user tries to run a tool missing a macro. 
@@ -1300,6 +1294,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             });
+            WaitForClosedForm(configureToolsDlg);
             RunUI(() =>
             {
                 ToolDescription toolMenuItem = Settings.Default.ToolList[0];
@@ -1339,6 +1334,5 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(args, path);
             });
         }
-
     }
 }
