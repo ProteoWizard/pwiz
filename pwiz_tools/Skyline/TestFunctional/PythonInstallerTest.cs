@@ -239,6 +239,7 @@ namespace pwiz.SkylineTestFunctional
                     pythonInstaller.UncheckAllPackages();
                     pythonInstaller.AcceptButton.PerformClick();
                 });
+            WaitForClosedForm(pythonInstaller);
             Assert.AreEqual(DialogResult.OK, pythonInstaller.DialogResult);
         }
 

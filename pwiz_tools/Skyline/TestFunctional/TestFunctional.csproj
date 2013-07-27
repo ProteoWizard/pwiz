@@ -155,6 +155,7 @@
     <Compile Include="ImportPeptideSearchModificationsTest.cs" />
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
+    <Compile Include="InstallToolsTest.cs" />
     <Compile Include="IrtTest.cs" />
     <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
@@ -227,6 +228,7 @@
     <None Include="ImportDocTest.zip" />
     <None Include="ImportPeptideSearchModifications.zip" />
     <None Include="InsertTest.zip" />
+    <None Include="InstallToolsTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />

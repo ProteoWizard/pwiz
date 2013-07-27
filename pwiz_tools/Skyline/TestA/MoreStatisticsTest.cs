@@ -29,6 +29,17 @@ namespace pwiz.SkylineTestA
     public class MoreStatisticsTest : AbstractUnitTest
     {
         [TestMethod]
+        public void StudentTDistTest()
+        {
+            double v = Statistics.DT(2, 5);
+            Assert.AreEqual(0.06509031, v, 0.000001);
+            double p = Statistics.PT(2, 5);
+            Assert.AreEqual(0.9490303, p, 0.0000001);
+            double q = Statistics.QT(0.975, 5);
+            Assert.AreEqual(2.570582, q, 0.000001);
+        }
+
+        [TestMethod]
         public void DNormTest()
         {
             for (int i = 0; i < UNIT_NORMAL_DENSITY_FROM_R.Length; i+=2)
@@ -39,6 +50,16 @@ namespace pwiz.SkylineTestA
             {
                 VerifyNormal(i, 1, 0.5, NON_UNIT_NORMAL_DENSITY_FROM_R);
             }
+        }
+
+        [TestMethod]
+        public void QNormTest()
+        {
+            Assert.AreEqual(1.959964, Statistics.QNorm(0.975), 0.0000005);
+            Assert.AreEqual(2.575829, Statistics.QNorm(0.995), 0.0000005);
+            Assert.AreEqual(-1.959964, Statistics.QNorm(0.025), 0.0000005);
+            Assert.AreEqual(-2.575829, Statistics.QNorm(0.005), 0.0000005);
+            Assert.AreEqual(0, Statistics.QNorm(0.5));
         }
 
         private void VerifyNormal(int i, double mean, double stdev, double[] normalDensities)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Distributions;
 
 namespace pwiz.Skyline.Util
 {
@@ -457,6 +458,10 @@ namespace pwiz.Skyline.Util
             return new Statistics(s._list.Select(v => Z(v, mean, stdev)));
         }
 
+        /// <summary>
+        /// Calculates a z-score (decimal number of standard deviations from the mean)
+        /// for a single value, based on a mean and standard deviation.
+        /// </summary>
         public static double Z(double value, double mean, double stdev)
         {
             try
@@ -469,31 +474,69 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /// <summary>
+        /// Density function for a Student's T distribution for a specified number
+        /// of degrees of freedom.
+        /// </summary>
+        public static double DT(double value, double df, double location = 0, double scale = 1)
+        {
+            var tdist = new StudentT(location, scale, df);
+            return tdist.Density(value);
+        }
+
+        /// <summary>
+        /// Distribution function for Student's T distribution for a specified z-score
+        /// and a number of degrees of freedom.
+        /// </summary>
+        public static double PT(double z, double df)
+        {
+            var tdist = new StudentT(0, 1, df);
+            return tdist.CumulativeDistribution(z);
+        }
+
+        /// <summary>
+        /// Quantile function for Student's T distribution for a specified probability
+        /// and a number of degrees of freedom.
+        /// </summary>
+        public static double QT(double p, double df)
+        {
+            return QDist(p, prob => PT(prob, df));
+        }
+
+        /// <summary>
+        /// Density function for a Normal distribution for a specified mean and standard deviation
+        /// </summary>
         public static double DNorm(double value, double mean = 0, double stdev = 1)
         {
             return (1/(Math.Sqrt(2*Math.PI)*stdev))*Math.Pow(Math.E, -Math.Pow(value - mean, 2)/(2*Math.Pow(stdev, 2)));
         }
 
         /// <summary>
-        /// Computes the p value of a given value using the set of numbers as a null distribution
-        /// which is assumed to be Gaussian (normal).
+        /// Quantile function for a Normal distribution for a specified probability
         /// </summary>
-        /// <param name="value">An arbitrary value</param>
-        /// <returns>P value</returns>
-        public double PvalueNorm(double value)
+        public static double QNorm(double p)
         {
-            return 1 - PNorm(Z(value));
+            return QDist(p, PNorm);
         }
 
         /// <summary>
-        /// Computes the p values of a given target distribution using the set of numbers as a null distribution
-        /// which is assumed to be Gaussian (normal).
+        /// Quantile function for any distribution for which a distribution function
+        /// exists.  Binary search method is used to find the specified quantile using
+        /// the distribution function.
         /// </summary>
-        /// <param name="s">Another set of numbers</param>
-        /// <returns>Index standard for each number in the new set</returns>
-        public double[] PvaluesNorm(Statistics s)
+        private static double QDist(double p, Func<double, double> pDist)
         {
-            return Z(s)._list.Select(v => 1 - PNorm(v)).ToArray();
+            double left = -40, right = 40;
+            while (Math.Abs((left - right) / left) > 1E-15)
+            {
+                double middle = (left + right) / 2;
+                double middleP = pDist(middle);
+                if (middleP < p)
+                    left = middle;
+                else
+                    right = middle;
+            }
+            return Math.Round(left, 10);
         }
 
         private const double Z_MAX = 6.0;
@@ -538,6 +581,28 @@ namespace pwiz.Skyline.Util
             }
 
             return z > 0.0 ? ((x + 1.0) * 0.5) : ((1.0 - x) * 0.5);
+        }
+
+        /// <summary>
+        /// Computes the p value of a given value using the set of numbers as a null distribution
+        /// which is assumed to be Gaussian (normal).
+        /// </summary>
+        /// <param name="value">An arbitrary value</param>
+        /// <returns>P value</returns>
+        public double PvalueNorm(double value)
+        {
+            return 1 - PNorm(Z(value));
+        }
+
+        /// <summary>
+        /// Computes the p values of a given target distribution using the set of numbers as a null distribution
+        /// which is assumed to be Gaussian (normal).
+        /// </summary>
+        /// <param name="s">Another set of numbers</param>
+        /// <returns>Index standard for each number in the new set</returns>
+        public double[] PvaluesNorm(Statistics s)
+        {
+            return Z(s)._list.Select(v => 1 - PNorm(v)).ToArray();
         }
 
         /// <summary>
