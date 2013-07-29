@@ -26,6 +26,14 @@ import path ;
 # extract the input files for the tests
 path-constant TEST_DATA_PATH : ./inputs ;
 
+# get copy command and separator
+constant COPY_COMMAND : [ common.copy-command ] ;
+os_separator = / ;
+if [ modules.peek : NT ]
+{
+    os_separator = \\ ;
+}
+
 rule test-data
 {
     # decompress test data if available (on any platform)
@@ -415,12 +423,24 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-pilot
   : check-pilot ;
 
+# mqpar file handling
+make output/mqpar1.using : : @use-mqpar1 : $(test_output_req) ;
+make output/mqpar2.using : check-maxquant-targeted : @use-mqpar2 : $(test_output_req) ;
+actions use-mqpar1
+{
+    $(COPY_COMMAND) $(TEST_DATA_PATH)$(os_separator)mqpar.xml.copy $(TEST_DATA_PATH)$(os_separator)mqpar.xml
+}
+actions use-mqpar2
+{
+    $(COPY_COMMAND) $(TEST_DATA_PATH)$(os_separator)mqpar2.xml.copy $(TEST_DATA_PATH)$(os_separator)mqpar.xml
+}
+
 # Test maxquant text file
 make output/maxquant.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/test.msms.txt output/maxquant.blib
-  :
+  : <dependency>output/mqpar1.using
   : build-maxquant ;
 run-if-exists CompareLibraryContents.cpp compare-src
   :
@@ -434,7 +454,7 @@ make output/maxquant.targeted.blib : inputs/empty : @common.copy : $(test_output
 run-if-exists ExecuteBlib.cpp
   : -o -s -u -U -S
   : ../src//BlibBuild inputs/maxquant-targeted-stdin.txt output/maxquant.targeted.blib
-  :
+  : <dependency>check-maxquant
   : build-maxquant-targeted ;
 run-if-exists CompareLibraryContents.cpp compare-src
   :
@@ -442,6 +462,21 @@ run-if-exists CompareLibraryContents.cpp compare-src
   : $(compare-reqs)
     <dependency>build-maxquant-targeted
   : check-maxquant-targeted ;
+
+# Test maxquant text file (new format)
+make output/maxquant2.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/test2.msms.txt output/maxquant2.blib
+  : <dependency>output/mqpar2.using
+    <dependency>check-maxquant-targeted
+  : build-maxquant2 ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/maxquant2.blib reference/maxquant2.check reference/zbuild.skip-lines
+  : $(compare-reqs)
+    <dependency>build-maxquant2
+  : check-maxquant2 ;
   
 
 # Test mzid format from scaffold

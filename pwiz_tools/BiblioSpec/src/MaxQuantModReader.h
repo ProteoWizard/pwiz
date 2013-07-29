@@ -176,7 +176,8 @@ private:
         ROOT_STATE,
         MODIFICATION_TAG, READING_POSITION,                  // for modifications.xml reading
         FIXED_MODIFICATIONS_TAG, READING_FIXED_MODIFICATION, // for mqpar.xml reading
-        FILENAMES_TAG, READING_FILENAME,
+        FILEPATHS_TAG, READING_FILEPATH,
+        PARAMGROUPINDICES_TAG, READING_PARAMGROUPINDEX,
         LABELS_TAG, READING_LABEL
     };
 
@@ -185,6 +186,7 @@ private:
     set<MaxQuantModification>* modBank_;
     set<string>* fixedMods_;
     vector<MaxQuantLabels>* labelBank_;
+    vector<int> paramGroupIndices_; // raw -> paramGroupIndex
     STATE state_;
     int groupParams_;
     int rawIndex_;

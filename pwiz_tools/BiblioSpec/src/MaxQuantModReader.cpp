@@ -108,16 +108,26 @@ void MaxQuantModReader::startElement(const XML_Char* name,
             charBuf_.clear();
             state_ = READING_FIXED_MODIFICATION;
         }
-        else if (isIElement("Filenames", name))
+        else if (isIElement("filePaths", name))
         {
-            state_ = FILENAMES_TAG;
+            state_ = FILEPATHS_TAG;
         }
-        else if (state_ == FILENAMES_TAG && isIElement("string", name))
+        else if (state_ == FILEPATHS_TAG && isIElement("string", name))
         {
             charBuf_.clear();
-            state_ = READING_FILENAME;
+            state_ = READING_FILEPATH;
         }
-        else if (isIElement("GroupParams", name))
+        else if (isIElement("paramGroupIndices", name))
+        {
+            state_ = PARAMGROUPINDICES_TAG;
+        }
+        else if (state_ == PARAMGROUPINDICES_TAG && isIElement("int", name))
+        {
+            charBuf_.clear();
+            state_ = READING_PARAMGROUPINDEX;
+        }
+        else if (isIElement("GroupParams", name) ||
+                 (isIElement("parameterGroups", name) && !paramGroupIndices_.empty()))
         {
             ++groupParams_;
         }
@@ -166,16 +176,44 @@ void MaxQuantModReader::endElement(const XML_Char* name)
             fixedMods_->insert(charBuf_);
             state_ = FIXED_MODIFICATIONS_TAG;
         }
-        else if (isIElement("Filenames", name))
+        else if (isIElement("filePaths", name))
         {
             state_ = ROOT_STATE;
         }
-        else if (state_ == READING_FILENAME)
+        else if (state_ == READING_FILEPATH)
         {
-            string rawBaseName = filesystem::basename(filesystem::path(charBuf_));
+            string rawBaseName = filesystem::basename(charBuf_);
             MaxQuantLabels newLabelingStates(rawBaseName);
             labelBank_->push_back(newLabelingStates);
-            state_ = FILENAMES_TAG;
+            state_ = FILEPATHS_TAG;
+        }
+        else if (isIElement("paramGroupIndices", name))
+        {
+            // check that each raw file had a corresponding param group index
+            if (paramGroupIndices_.size() != labelBank_->size())
+            {
+                throw BlibException(false, "Number of raw files (%d) did not match "
+                                           "number of paramGroupIndices (%d).",
+                                           labelBank_->size(), paramGroupIndices_.size());
+            }
+            state_ = ROOT_STATE;
+        }
+        else if (state_ == READING_PARAMGROUPINDEX)
+        {
+            paramGroupIndices_.push_back(lexical_cast<int>(charBuf_));
+            state_ = PARAMGROUPINDICES_TAG;
+        }
+        else if (isIElement("parameterGroups", name) && !paramGroupIndices_.empty())
+        {
+            // check that each raw file had a corresponding parameterGroup
+            for (vector<int>::iterator i = paramGroupIndices_.begin(); i != paramGroupIndices_.end(); ++i)
+            {
+                if (*i > rawIndex_)
+                {
+                    throw BlibException(false, "Parameter group index %d was outside the range of "
+                                               "of parameter groups (%d).", *i, rawIndex_ + 1);
+                }
+            }
         }
         else if (isIElement("GroupParams", name))
         {
@@ -194,13 +232,28 @@ void MaxQuantModReader::endElement(const XML_Char* name)
         else if (state_ == READING_LABEL)
         {
             vector<string> newLabelSubset;
-            // split multiple labels (e.g. "Arg6; Lys4"
+            // split multiple labels (e.g. "Arg6; Lys4")
             split(newLabelSubset, charBuf_, is_any_of(";"));
             // trim whitespace
             for_each(newLabelSubset.begin(), newLabelSubset.end(),
                 boost::bind(&boost::trim<string>, _1, std::locale()));
 
-            (*labelBank_)[rawIndex_].addModsStrings(newLabelSubset);
+            if (!paramGroupIndices_.empty())
+            {
+                // Assign label to all raw files with this parameter index
+                for (size_t i = 0; i < paramGroupIndices_.size(); ++i)
+                {
+                    if (paramGroupIndices_[i] == rawIndex_)
+                    {
+                        (*labelBank_)[i].addModsStrings(newLabelSubset);
+                        Verbosity::debug("Adding to labelBank_[%d] : %s", i, charBuf_.c_str());
+                    }
+                }
+            }
+            else
+            {
+                (*labelBank_)[rawIndex_].addModsStrings(newLabelSubset);
+            }
 
             state_ = LABELS_TAG;
         }
@@ -214,7 +267,8 @@ void MaxQuantModReader::characters(const XML_Char *s, int len)
 {
     if (state_ == READING_POSITION ||
         state_ == READING_FIXED_MODIFICATION ||
-        state_ == READING_FILENAME ||
+        state_ == READING_FILEPATH ||
+        state_ == READING_PARAMGROUPINDEX ||
         state_ == READING_LABEL)
     {
         charBuf_.append(s, len);
