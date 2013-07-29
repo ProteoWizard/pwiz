@@ -211,6 +211,12 @@ namespace pwiz.Skyline.Controls
     /// </summary>
     public class TextBoxStreamWriterHelper : TextWriter
     {
+        // Assume they wont run more than 32 processes at the same time that output to the immediate window.          
+        public const int NUM_PROC = 32;
+
+        private readonly Dictionary<int, int> _pidToSmallInt;
+        private readonly BitArrayEx _indexesInUse;
+
         public TextBoxStreamWriterHelper()
         {
             Text = string.Empty;
@@ -219,40 +225,6 @@ namespace pwiz.Skyline.Controls
         }
 
         public string Text { get; set; }
-
-        public const int NUM_PROC = 32;
-                         // Assume they wont run more than 32 processes at the same time that output to the immediate window.          
-
-        private readonly Dictionary<int, int> _pidToSmallInt;
-        private readonly BitArrayEx _indexesInUse;
-
-        private int GetMapping(int pid)
-        {
-            if (_pidToSmallInt.ContainsKey(pid))
-            {
-                return _pidToSmallInt[pid];
-            }
-
-            if (_pidToSmallInt.Count == 0)
-            {
-                _pidToSmallInt.Add(pid, -1);
-                return -1;
-            }
-            if (_pidToSmallInt.Count == 1)
-            {
-                List<int> keys = new List<int>(_pidToSmallInt.Keys);
-                foreach (var key in keys)
-                {
-                    if (_pidToSmallInt[key] == -1)
-                    {
-                        _pidToSmallInt.Remove(key);
-                        _pidToSmallInt[key] = _indexesInUse.GetLowest();
-                    }
-                }
-            }
-            _pidToSmallInt[pid] = _indexesInUse.GetLowest();
-            return _pidToSmallInt[pid];
-        }
 
         public void WriteLineWithIdentifier(int process, string s)
         {
@@ -263,19 +235,54 @@ namespace pwiz.Skyline.Controls
             }
             else
             {
-               WriteLine(mapping + ">" + s);
+                WriteLine(mapping + ">" + s);
             }
         }
 
-        public void HandleProcessExit(object sender, EventArgs processExitedEventArgs, int pid)
+        private int GetMapping(int pid)
         {
-            if (_pidToSmallInt.ContainsKey(pid))
+            lock (this)
             {
-                int index = _pidToSmallInt[pid];
-                _pidToSmallInt.Remove(pid);
-                if (_indexesInUse.IndexInRange(index) && _indexesInUse.Get(index))
-                    _indexesInUse.Set(index, false);                             
-            }             
+                int index;
+                if (_pidToSmallInt.TryGetValue(pid, out index))
+                {
+                    return index;
+                }
+                // If this is the only process, assign -1, which means not to print an identifier
+                if (_pidToSmallInt.Count == 0)
+                {
+                    _pidToSmallInt.Add(pid, -1);
+                    return -1;
+                }
+                // If there is only one, then its identifier may be -1, and need to be changed
+                // to start identifying its output
+                if (_pidToSmallInt.Count == 1)
+                {
+                    var pidIndex = _pidToSmallInt.First();
+                    if (pidIndex.Value == -1)
+                    {
+                        _pidToSmallInt.Remove(pidIndex.Key);
+                        _pidToSmallInt.Add(pidIndex.Key, _indexesInUse.GetLowest());
+                    }
+                }
+                index = _indexesInUse.GetLowest();
+                _pidToSmallInt.Add(pid, index);
+                return index;
+            }
+        }
+
+        public void HandleProcessExit(int pid)
+        {
+            lock (this)
+            {
+                int index;
+                if (_pidToSmallInt.TryGetValue(pid, out index))
+                {
+                    _pidToSmallInt.Remove(pid);
+                    if (_indexesInUse.IndexInRange(index) && _indexesInUse.Get(index))
+                        _indexesInUse.Set(index, false);
+                }
+            }
         }
         
         protected virtual void OnWroteLine(string args)

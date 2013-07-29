@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.Tools
                         p.OutputDataReceived += (sender, dataReceivedEventArgs) => boxStreamWriterHelper.WriteLineWithIdentifier(p.Id, dataReceivedEventArgs.Data);
                         p.ErrorDataReceived += (sender, dataReceivedEventArgs) => boxStreamWriterHelper.WriteLineWithIdentifier(p.Id, dataReceivedEventArgs.Data);
                         //p.Refresh();
-                        p.Exited += (sender, processExitedEventArgs) => boxStreamWriterHelper.HandleProcessExit(sender, processExitedEventArgs, p.Id);
+                        p.Exited += (sender, processExitedEventArgs) => boxStreamWriterHelper.HandleProcessExit(p.Id);
                     }
                     
                 }
