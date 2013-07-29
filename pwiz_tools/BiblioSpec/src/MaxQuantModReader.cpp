@@ -182,7 +182,17 @@ void MaxQuantModReader::endElement(const XML_Char* name)
         }
         else if (state_ == READING_FILEPATH)
         {
-            string rawBaseName = filesystem::basename(charBuf_);
+            string rawBaseName(charBuf_);
+            size_t lastSlash = rawBaseName.find_last_of("/\\");
+            if (lastSlash != string::npos)
+            {
+              rawBaseName = rawBaseName.substr(lastSlash + 1);
+            }
+            size_t extensionBegin = rawBaseName.find_last_of(".");
+            if (extensionBegin != string::npos)
+            {
+              rawBaseName.erase(extensionBegin);
+            }
             MaxQuantLabels newLabelingStates(rawBaseName);
             labelBank_->push_back(newLabelingStates);
             state_ = FILEPATHS_TAG;
