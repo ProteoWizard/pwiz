@@ -72,6 +72,7 @@ enum BUILD_INPUT
     MAXQUANT,
     MORPHEUS,
     MSGF,
+    PEAKS,
 
     // Keep this last
     NUM_BUILD_INPUTS

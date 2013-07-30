@@ -47,7 +47,8 @@ const char* scoreTypeNames[NUM_PSM_SCORE_TYPES] = {
     "SEQUEST XCORR",
     "MAXQUANT SCORE",
     "MORPHEUS SCORE",
-    "MSGF+ SCORE"
+    "MSGF+ SCORE",
+    "PEAKS CONFIDENCE SCORE"
 };
 
 /**

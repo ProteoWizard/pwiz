@@ -102,7 +102,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
       setSpecFileName(fileroot.c_str(), extensions, dirs); 
 
       // Check if this pepXML file is from Proteome Discoverer
-      string rawType = getRequiredAttrValue("raw_data_type", attr);
+      string rawType = getAttrValue("raw_data_type", attr);
       if (rawType == ".msf") {
           Verbosity::comment(V_DEBUG, "Pepxml file is from Proteome Discoverer.");
           analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
@@ -148,6 +148,11 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
                lookUpBy_ = NAME_ID;
                specReader_->setIdType(NAME_ID);
+           } else if (search_engine.find("PEAKS DB") == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from PEAKS");
+               analysisType_ = PEAKS_ANALYSIS;
+               scoreType_ = PEAKS_CONFIDENCE_SCORE;
+               probCutOff = getScoreThreshold(PEAKS);
            } else if(search_engine.find("SEQUEST") == 0 &&
                      analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from SEQUEST Proteome Discoverer.");
@@ -199,6 +204,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        if( analysisType_ == PEPTIDE_PROPHET_ANALYSIS ||
            analysisType_ == INTER_PROPHET_ANALYSIS ||
            analysisType_ == OMSSA_ANALYSIS ||
+           analysisType_ == PEAKS_ANALYSIS ||
            analysisType_ == PROTEIN_PROSPECTOR_ANALYSIS ||
            analysisType_ == PROTEOME_DISCOVERER_ANALYSIS ||
            analysisType_ == XTANDEM_ANALYSIS) {
@@ -284,9 +290,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
            (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
-           (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue"))
+           (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue") ||
+           (analysisType_ == PEAKS_ANALYSIS && score_name == "confidence"))
        {
-               pepProb = getDoubleRequiredAttrValue("value", attr);
+           pepProb = getDoubleRequiredAttrValue("value", attr);
        }
    }
    // no score for spectrum mill
@@ -390,6 +397,7 @@ bool PepXMLreader::scorePasses(double score){
     switch(analysisType_){
     case PEPTIDE_PROPHET_ANALYSIS:
     case INTER_PROPHET_ANALYSIS:
+    case PEAKS_ANALYSIS:
         if(score >= probCutOff){ 
             return true;
         }

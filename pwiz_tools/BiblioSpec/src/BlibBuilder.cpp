@@ -50,6 +50,7 @@ targetSequences(NULL), targetSequencesModified(NULL), stdinStream(&cin)
     scoreThresholds[MAXQUANT] = 0.05; // MaxQuant PEP
     scoreThresholds[MORPHEUS] = 0.01; // Morpheus PSM q-value
     scoreThresholds[MSGF] = 0.01; // MSGF+ PSM q-value
+    scoreThresholds[PEAKS] = 0.95;  // PEAKS confidence
 }
 
 BlibBuilder::~BlibBuilder()
@@ -84,6 +85,7 @@ void BlibBuilder::usage()
         "   -q  <max score>   Maximum FDR for accepting results from Percolator (.sqt or .perc.xml) files. Default 0.01.\n"
         "   -Q  <max score>   Maximum q-value for accepting results from Morpheus .pep.xml files. Default 0.01.\n"
         "   -d  <max score>   Maximum q-value for accepting results from MSGF+ .pep.xml files. Default 0.01.\n"
+        "   -k  <min score>   Minimum PEAKS confidence level. Default 0.95 (or 95%)\n"
         "   -p  <min score>   Minimum probability for accepting results from PeptideProphet (.pep.xml) files. Default 0.95.\n"
         "   -e  <max score>   Maximum expectation value for accepting results from Mascot (.dat) files. Default 0.05\n"
         "   -t  <max score>   Maximum expectation value for accepting results from X! Tandem (.xtan.xml) files. Default 0.1\n"
@@ -349,12 +351,15 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         scoreThresholds[MAXQUANT] = 1 - probability_cutoff;
         scoreThresholds[MORPHEUS] = 1 - probability_cutoff;
         scoreThresholds[MSGF] = 1 - probability_cutoff;
+        scoreThresholds[PEAKS] = probability_cutoff;
     } else if (switchName == 'q' && ++i < argc) {
         scoreThresholds[SQT] = atof(argv[i]);
     } else if (switchName == 'Q' && ++i < argc) {
         scoreThresholds[MORPHEUS] = atof(argv[i]);
     } else if (switchName == 'd' && ++i < argc) {
         scoreThresholds[MSGF] = atof(argv[i]);
+    } else if (switchName == 'k' && ++i < argc) {
+        scoreThresholds[PEAKS] = atof(argv[i]);
     } else if (switchName == 'p' && ++i < argc) {
         scoreThresholds[PEPXML] = atof(argv[i]);
     } else if (switchName == 'P' && ++i < argc) {

@@ -265,6 +265,19 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-msgfdb
   : check-msgfdb ;
 
+make output/peaksdb.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/peaksdb.pep.xml output/peaksdb.blib
+  : 
+  : build-peaksdb ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/peaksdb.blib reference/peaksdb.check
+  : $(compare-reqs)
+    <dependency>build-peaksdb
+  : check-peaksdb ;
+
 make output/prospector.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o

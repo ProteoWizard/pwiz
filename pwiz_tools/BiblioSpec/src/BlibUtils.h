@@ -76,6 +76,7 @@ enum PSM_SCORE_TYPE {
     MAXQUANT_SCORE,           // maxquant msms.txt files
     MORPHEUS_SCORE,           // pepxml files with morpehus scores
     MSGF_SCORE,            // pepxml files with ms-gfdb scores
+    PEAKS_CONFIDENCE_SCORE,   // pepxml files with peaks confidence scores
 
     NUM_PSM_SCORE_TYPES
 };
