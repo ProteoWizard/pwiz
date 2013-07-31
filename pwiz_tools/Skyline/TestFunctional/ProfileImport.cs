@@ -87,14 +87,15 @@ namespace pwiz.SkylineTestFunctional
 
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
-                dlg.RemoveAll();
+                dlg.RemoveAllReplicates();
                 dlg.OkDialog();
             });
 
             using (new DotTraceProfile())
             {
-                if (_dataFile is string)
-                    ImportResultsFile((string)_dataFile, 60*60);    // Allow 60 minutes for loading.
+                string fileName = _dataFile as string;
+                if (fileName != null)
+                    ImportResultsFile(fileName, 60*60);    // Allow 60 minutes for loading.
                 else
                     ImportResultsFiles((string[])_dataFile, 60*60); // Allow 60 minutes for loading.
             }
