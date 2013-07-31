@@ -305,11 +305,26 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsFormOpen(Form form)
         {
-            foreach (var formOpen in Application.OpenForms)
+            // Try 10 times, through exceptions, and then assume the form is not open
+            // Exceptions can happen if Application.OpenForms list is modified while
+            // enumerating.  Shouldn't happen 10 times.
+            for (int i = 0; i < 10; i++)
             {
-                if (ReferenceEquals(form, formOpen))
+                try
                 {
-                    return true;
+                    foreach (var formOpen in Application.OpenForms)
+                    {
+                        if (ReferenceEquals(form, formOpen))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+// ReSharper disable EmptyGeneralCatchClause
+                catch
+// ReSharper restore EmptyGeneralCatchClause
+                {
                 }
             }
             return false;

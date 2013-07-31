@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!string.IsNullOrEmpty(status.FilePath) && _currentFilePath != status.FilePath)
                 {
                     _currentFilePath = status.FilePath;
-                    LOG.Info("Showing " + _currentFilePath);    // Not L10N
+//                    LOG.Info("Showing " + _currentFilePath);    // Not L10N
                     lblFileName.Text = SampleHelp.GetFileName(status.FilePath) + SampleHelp.GetPathSampleNamePart(status.FilePath);
                     asyncGraph.ClearGraph(status);
                 }

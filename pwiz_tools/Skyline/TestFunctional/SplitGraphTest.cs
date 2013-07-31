@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SplitGraphUnitTest.sky")));
             CollectionAssert.AreEqual(new[]{"SplitGraph_rev1.clib"}, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
                 .Select(spec => Path.GetFileName(spec.FilePath)).ToArray());

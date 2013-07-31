@@ -227,9 +227,12 @@ namespace pwiz.SkylineTestA
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)),
                 Resources.PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_);
 
+            // Release open streams
+            docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docResults, false);
+
             // Now check a file that has peptide ID's, and see that they're properly ported
-            var peptideIdDoc = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
-            SrmDocument docId = ResultsUtil.DeserializeDocument(peptideIdDoc);
+            var peptideIdPath = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
+            SrmDocument docId = ResultsUtil.DeserializeDocument(peptideIdPath);
             docId = docId.ChangeSettings(docId.Settings.ChangePeptideLibraries(libraries =>
                 {
                     var lib = libraries.Libraries[0];
@@ -239,7 +242,7 @@ namespace pwiz.SkylineTestA
                         });
                 }));
 
-            var docContainerId = new ResultsTestDocumentContainer(null, peptideIdDoc);
+            var docContainerId = new ResultsTestDocumentContainer(null, peptideIdPath);
             docContainerId.SetDocument(docId, null, true);
             docContainerId.AssertComplete();
             SrmDocument docResultsId = docContainerId.Document;
@@ -248,6 +251,9 @@ namespace pwiz.SkylineTestA
                                                                   : "Template_MS1Filtering_1118_2011_3-2min_new.tsv");
             DoFileImportTests(docResultsId, peakBoundaryFileId, _precursorChargeId,
                 _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
+
+            // Release open streams
+            docContainerId.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docResultsId, false);
         }
 
         private ReportSpec MakeReportSpec()
@@ -271,26 +277,32 @@ namespace pwiz.SkylineTestA
         private void ImportThrowsException(SrmDocument docResults, string importText, string message)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
-            var readerPeakBoundaries = new StringReader(importText);
-            long lineCount = Helpers.CountLinesInString(importText);
-            AssertEx.ThrowsException<IOException>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount), message);
+            using (var readerPeakBoundaries = new StringReader(importText))
+            {
+                long lineCount = Helpers.CountLinesInString(importText);
+                AssertEx.ThrowsException<IOException>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount), message);
+            }
         }
 
         private void ImportNoException(SrmDocument docResults, string importText)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
-            var readerPeakBoundaries = new StringReader(importText);
-            long lineCount = Helpers.CountLinesInString(importText);
-            AssertEx.NoExceptionThrown<Exception>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount));
+            using (var readerPeakBoundaries = new StringReader(importText))
+            {
+                long lineCount = Helpers.CountLinesInString(importText);
+                AssertEx.NoExceptionThrown<Exception>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount));
+            }
         }
 
         private SrmDocument ImportFileToDoc(SrmDocument docOld, string importFile)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docOld);
-            var readerPeakBoundaries = new StreamReader(importFile);
-            long lineCount = Helpers.CountLinesInFile(importFile);
-            SrmDocument docNew = peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount);
-            return docNew;
+            using (var readerPeakBoundaries = new StreamReader(importFile))
+            {
+                long lineCount = Helpers.CountLinesInFile(importFile);
+                SrmDocument docNew = peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount);
+                return docNew;
+            }
         }
 
         public void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName)

@@ -32,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    public partial class ImportPeptideSearchDlg : Form
+    public partial class ImportPeptideSearchDlg : FormEx
     {
         public enum Pages
         {
@@ -226,7 +226,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 precursorMassType = MassType.Monoisotopic;
                 if (FullScanSettingsControl.Enrichments == null)
                 {
-                    MessageDlg.Show(FormEx.GetParentForm(this), Resources.TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_filtering_on_high_resolution_mass_spectrometers);
+                    MessageDlg.Show(GetParentForm(this), Resources.TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_filtering_on_high_resolution_mass_spectrometers);
                     return false;
                 }
             }
