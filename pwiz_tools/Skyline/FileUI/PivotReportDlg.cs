@@ -231,7 +231,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (_columns.Count == 0)
             {
-                MessageBox.Show(this, "A report must have at least one column.", Program.Name);
+                MessageBox.Show(this, Resources.PivotReportDlg_ShowPreview_A_report_must_have_at_least_one_column_, Program.Name);
                 return;
             }
 

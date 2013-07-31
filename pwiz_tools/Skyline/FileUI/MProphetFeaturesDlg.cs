@@ -71,7 +71,7 @@ namespace pwiz.Skyline.FileUI
         {
             using (var dlg = new SaveFileDialog
             {
-                Title = "Export mProphet Features",
+                Title = Resources.MProphetFeaturesDlg_OkDialog_Export_mProphet_Features,
                 OverwritePrompt = true,
                 DefaultExt = EXT,
                 Filter = TextUtil.FileDialogFilterAll("mProphet Feature Files", EXT),

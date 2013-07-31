@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly SrmDocument _document;
             private readonly DocNode _docNode;
             private readonly DisplayTypeChrom _displayType;
-            private readonly GraphHelper.PaneKey _paneKey;
+            private GraphHelper.PaneKey _paneKey;
 
             private ReadOnlyCollection<DocNode> _docNodes;
             private ReadOnlyCollection<String> _docNodeLabels;

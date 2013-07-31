@@ -328,7 +328,9 @@ namespace pwiz.SkylineTestTutorial
                       {
                           resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells["PrecursorReplicateNote"];
                           resultsGrid.BeginEdit(true);
-                          resultsGrid.EditingControl.Text = "Low signal";
+// ReSharper disable LocalizableElement
+                          resultsGrid.EditingControl.Text = "Low signal";   // Not L10N
+// ReSharper restore LocalizableElement
                           resultsGrid.EndEdit();
                           resultsGrid.CurrentCell = resultsGrid.Rows[1].Cells[resultsGrid.CurrentCell.ColumnIndex];
                       });

@@ -449,7 +449,9 @@ namespace pwiz.SkylineTestTutorial
 
                 var resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
                 var colConcentration =
-                    resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText);
+// ReSharper disable LocalizableElement
+                    resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText); // Not L10N
+// ReSharper restore LocalizableElement
                 if (IsFullData)
                 {
                     float[] concentrations =

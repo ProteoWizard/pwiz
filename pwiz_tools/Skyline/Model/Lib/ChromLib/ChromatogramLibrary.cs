@@ -88,7 +88,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 if (null != precursor)
                 {
                     var timeIntensities = precursor.ChromatogramData;
-                    var mzIntensities = new Dictionary<double, float[]>();
                     double height = 0;
                     var chromDatas = new List<LibraryChromGroup.ChromData>();
                     foreach (var transition in precursor.Transitions)
@@ -336,7 +335,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((ChromatogramLibrary) obj);
         }
 

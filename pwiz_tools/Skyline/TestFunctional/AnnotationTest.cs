@@ -221,7 +221,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(cell.Visible);
                 resultsGrid.CurrentCell = cell;
                 resultsGrid.BeginEdit(true);
-                resultsGrid.EditingControl.Text = "Test2";
+// ReSharper disable LocalizableElement
+                resultsGrid.EditingControl.Text = "Test2";  // Not L10N
+// ReSharper restore LocalizableElement
                 resultsGrid.EndEdit();
                 // Check all nodes have received the correct values.
                 foreach(TransitionTreeNode nodeTree in SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes)

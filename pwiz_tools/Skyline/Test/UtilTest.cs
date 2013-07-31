@@ -101,7 +101,9 @@ namespace pwiz.SkylineTest
 
             // Test UnauthorizedAccessException.
             const string readOnlyFile = "TestReadOnlyFile.txt"; // Not L10N
+// ReSharper disable LocalizableElement
             File.WriteAllText(readOnlyFile, "Testing read only file delete.\n"); // Not L10N
+// ReSharper restore LocalizableElement
             var fileInfo = new FileInfo(readOnlyFile) {IsReadOnly = true};
             AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(readOnlyFile));
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(readOnlyFile, true));

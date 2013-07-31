@@ -598,7 +598,9 @@ namespace pwiz.SkylineTestUtil
 
             foreach (var messageDlg in Application.OpenForms.OfType<MessageDlg>())
             {
+// ReSharper disable LocalizableElement
                 Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message); // Not L10N
+// ReSharper restore LocalizableElement
             }
 
             // Actually throwing an exception can cause an infinite loop in MSTest

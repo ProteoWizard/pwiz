@@ -447,7 +447,9 @@ namespace pwiz.SkylineTestA
 
             if (!success)
             {
-                Console.WriteLine("Failed to write Agilent method: {0}", output);
+// ReSharper disable LocalizableElement
+                Console.WriteLine("Failed to write Agilent method: {0}", output);   // Not L10N
+// ReSharper restore LocalizableElement
                 Assert.IsTrue(success);
             }
         }

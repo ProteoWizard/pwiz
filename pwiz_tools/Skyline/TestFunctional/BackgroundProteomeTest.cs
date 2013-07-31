@@ -86,10 +86,14 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SequenceTree sequenceTree = SkylineWindow.SequenceTree;
                     sequenceTree.BeginEdit(false);
-                    sequenceTree.StatementCompletionEditBox.TextBox.Text = "Y18D10A.20";
+// ReSharper disable LocalizableElement
+                    sequenceTree.StatementCompletionEditBox.TextBox.Text = "Y18D10A.20";    // Not L10N
+// ReSharper restore LocalizableElement
                     sequenceTree.CommitEditBox(false);
                     sequenceTree.BeginEdit(false);
-                    sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK";
+// ReSharper disable LocalizableElement
+                    sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK";    // Not L10N
+// ReSharper restore LocalizableElement
                 });
 
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();

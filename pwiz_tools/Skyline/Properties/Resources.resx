@@ -5625,4 +5625,13 @@ Are you sure you want to continue?</value>
     <data name="TestNamedPipeProcessRunner_RunProcess_Error_running_process" xml:space="preserve">
     <value>Error running process</value>
   </data>
+  <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
+    <value>In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data.  Chromatograms will not be re-imported from raw data files, but peak integration information may change.</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_Export_mProphet_Features" xml:space="preserve">
+    <value>Export mProphet Features</value>
+  </data>
+  <data name="PivotReportDlg_ShowPreview_A_report_must_have_at_least_one_column_" xml:space="preserve">
+    <value>A report must have at least one column.</value>
+  </data>
 </root>

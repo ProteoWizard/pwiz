@@ -20,6 +20,7 @@ using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -34,8 +35,7 @@ namespace pwiz.Skyline.FileUI
             DocumentUIContainer = documentUIContainer;
 
             labelMessage.Text =
-                "In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data.  " +
-                "Chromatograms will not be re-imported from raw data files, but peak integration information may change.";
+                Resources.RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_;
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.FileUI
                 using (var saveFileDialog =
                     new SaveFileDialog
                     {
-                        InitialDirectory = Properties.Settings.Default.ActiveDirectory,
+                        InitialDirectory = Settings.Default.ActiveDirectory,
                         OverwritePrompt = true,
                         DefaultExt = SrmDocument.EXT,
                         Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC),

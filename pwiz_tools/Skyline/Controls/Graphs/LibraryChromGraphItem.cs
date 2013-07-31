@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Drawing;
-using ZedGraph;
-using pwiz.MSGraph;
-using pwiz.Skyline.Model.Lib;
+//using System.Collections.Generic;
+//using System.Drawing;
+//using ZedGraph;
+//using pwiz.MSGraph;
+//using pwiz.Skyline.Model.Lib;
 
-namespace pwiz.Skyline.Controls.Graphs
-{
+//namespace pwiz.Skyline.Controls.Graphs
+//{
 //    public class LibraryChromGraphItem : ChromGraphItem
 //    {
 //        private readonly string _title;
@@ -67,4 +67,4 @@ namespace pwiz.Skyline.Controls.Graphs
 //        }
 //
 //    }
-}
+//}

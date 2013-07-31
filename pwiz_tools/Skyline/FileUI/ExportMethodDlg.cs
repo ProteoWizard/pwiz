@@ -1001,7 +1001,9 @@ namespace pwiz.Skyline.FileUI
 
             if (radioSingle.Checked)
             {
+// ReSharper disable LocalizableElement
                 labelMethodNum.Text = "1"; // Not L10N
+// ReSharper restore LocalizableElement
             }
             else
             {
@@ -1203,7 +1205,9 @@ namespace pwiz.Skyline.FileUI
 
             if (IsDia)
             {
+// ReSharper disable LocalizableElement
                 labelMethodNum.Text = "1"; // Not L10N
+// ReSharper restore LocalizableElement
                 return;
             }
 
@@ -1222,7 +1226,9 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+// ReSharper disable LocalizableElement
             labelMethodNum.Text = "..."; // Not L10N
+// ReSharper restore LocalizableElement
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
 

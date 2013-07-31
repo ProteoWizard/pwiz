@@ -252,7 +252,9 @@ namespace pwiz.SkylineTestTutorial
                         SetClipboardFileText(@"MethodEdit\FASTA\Peptide list.txt"); // Not L10N
                         SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                         SkylineWindow.Paste();
+// ReSharper disable LocalizableElement
                         SkylineWindow.SequenceTree.Nodes[0].Text = "Primary Peptides"; // Not L10N
+// ReSharper restore LocalizableElement
                     });
                 FindNode("TLTAQSMQNSTQSAPNK"); // Not L10N
                 PauseForScreenShot("page 13"); // Not L10N

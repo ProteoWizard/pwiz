@@ -34,7 +34,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     mods.Add(item);
                 return mods;
             }
-            private set { }
         }
 
         public IEnumerable<string> UnmatchedModifications
@@ -46,7 +45,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     mods.Add(item);
                 return mods;
             }
-            private set { }
         }
 
         public bool Initialize(Library docLib)

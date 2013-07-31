@@ -8117,6 +8117,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export mProphet Features.
+        /// </summary>
+        public static string MProphetFeaturesDlg_OkDialog_Export_mProphet_Features {
+            get {
+                return ResourceManager.GetString("MProphetFeaturesDlg_OkDialog_Export_mProphet_Features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MProphetScoringModel was given a peak with {0} features, but it has {1} peak feature calculators.
         /// </summary>
         public static string MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators {
@@ -10035,6 +10044,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A report must have at least one column..
+        /// </summary>
+        public static string PivotReportDlg_ShowPreview_A_report_must_have_at_least_one_column_ {
+            get {
+                return ResourceManager.GetString("PivotReportDlg_ShowPreview_A_report_must_have_at_least_one_column_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} has been modified, since it was first opened..
         /// </summary>
         public static string PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened {
@@ -10979,6 +10997,15 @@ namespace pwiz.Skyline.Properties {
         public static string ReportSpecList_Title_Edit_Reports {
             get {
                 return ResourceManager.GetString("ReportSpecList_Title_Edit_Reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data.  Chromatograms will not be re-imported from raw data files, but peak integration information may change..
+        /// </summary>
+        public static string RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_ {
+            get {
+                return ResourceManager.GetString(@"RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_", resourceCulture);
             }
         }
         
