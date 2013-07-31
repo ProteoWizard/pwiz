@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -83,6 +84,12 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(_skyFile));
+
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                dlg.RemoveAll();
+                dlg.OkDialog();
+            });
 
             using (new DotTraceProfile())
             {
