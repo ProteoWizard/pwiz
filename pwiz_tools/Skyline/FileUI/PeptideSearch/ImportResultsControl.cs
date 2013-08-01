@@ -345,5 +345,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public int NumFoundFiles { get; private set; }
         }
+
+        private void resultsSplitContainer_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+
+        }
     }
 }

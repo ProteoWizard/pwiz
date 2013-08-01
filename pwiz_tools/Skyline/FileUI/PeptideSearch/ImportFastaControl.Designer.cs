@@ -46,7 +46,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.tbxFasta.Multiline = true;
             this.tbxFasta.Name = "tbxFasta";
             this.tbxFasta.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbxFasta.Size = new System.Drawing.Size(282, 367);
+            this.tbxFasta.Size = new System.Drawing.Size(282, 236);
             this.tbxFasta.TabIndex = 0;
             this.tbxFasta.TextChanged += new System.EventHandler(this.tbxFasta_TextChanged);
             // 
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelError.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelError.Controls.Add(this.tbxError);
-            this.panelError.Location = new System.Drawing.Point(14, 411);
+            this.panelError.Location = new System.Drawing.Point(14, 277);
             this.panelError.Name = "panelError";
             this.panelError.Size = new System.Drawing.Size(282, 35);
             this.panelError.TabIndex = 22;
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.tbxFasta);
             this.Name = "ImportFastaControl";
-            this.Size = new System.Drawing.Size(381, 460);
+            this.Size = new System.Drawing.Size(381, 315);
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
             this.ResumeLayout(false);

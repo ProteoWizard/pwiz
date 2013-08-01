@@ -84,6 +84,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
                                                Location = new Point(18, 50)
                                            };
+            FullScanSettingsControl.ReduceOptions();
             ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
 
             ImportResultsControl = new ImportResultsControl(SkylineWindow)
@@ -161,10 +162,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 return;
                             }
                         }
-
-                        // Initialize modifications page or skip if no modifications.
-                        if (!MatchModificationsControl.Initialize(DocLib))
-                            CurrentPage++;
                     }
                     break;
 
@@ -200,6 +197,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             CurrentPage++;
+
+            // Initialize modifications page or skip if no modifications.
+            if (CurrentPage == Pages.match_modifications_page &&
+                !MatchModificationsControl.Initialize(DocLib))
+            {
+                CurrentPage++;
+            }
+            if (CurrentPage == Pages.ms1_full_scan_settings_page &&
+                SkylineWindow.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled)
+            {
+                // If the user has already set up full-scan settings, then just continue, since
+                // they may have any kind of settings, like PRM or DIA
+                CurrentPage++;
+            }
 
             int lastPageIndex = wizardPagesImportPeptideSearch.TabCount - 1;
             if (CurrentPage == (Pages)lastPageIndex)

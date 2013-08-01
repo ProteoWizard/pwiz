@@ -140,6 +140,21 @@ namespace pwiz.Skyline.SettingsUI
 
                 return retentionTimeFilterType;
             }
+            set
+            {
+                switch (value)
+                {
+                    case RetentionTimeFilterType.scheduling_windows:
+                        radioUseSchedulingWindow.Checked = true;
+                        break;
+                    case RetentionTimeFilterType.ms2_ids:
+                        radioTimeAroundMs2Ids.Checked = true;
+                        break;
+                    default:
+                        radioKeepAllTime.Checked = true;
+                        break;
+                }
+            }
         }
 
         private void InitializeMs1FilterUI()
@@ -753,6 +768,33 @@ namespace pwiz.Skyline.SettingsUI
                     labelTh.Left = textMz.Right;
             }
             label.Text = labelText;
+        }
+
+        public void ReduceOptions()
+        {
+            // Reduce MS1 filtering groupbox.
+            const int newMS1Height = 150;
+            int ms1HeightDifference = groupBoxMS1.Height - newMS1Height;
+            labelEnrichments.Hide();
+            comboEnrichments.Hide();
+            groupBoxMS1.Height = newMS1Height;
+
+            // Hide MS/MS filtering groupbox entirely.
+            groupBoxMS2.Hide();
+
+            // Reduce and reposition Retention time filtering groupbox.
+            const int newRetentionTimeHeight = 70;
+            int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
+            int radioTimeAroundTopDifference = radioTimeAroundMs2Ids.Top - newRadioTimeAroundTop;
+            groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Top - ms1HeightDifference;
+            radioUseSchedulingWindow.Hide();
+            radioTimeAroundMs2Ids.Top = newRadioTimeAroundTop;
+            flowLayoutPanelTimeAroundMs2Ids.Top -= radioTimeAroundTopDifference;
+            groupBoxRetentionTimeToKeep.Height = newRetentionTimeHeight;
+
+            // Select defaults
+            PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
+            radioTimeAroundMs2Ids.Checked = true;
         }
     }
 }

@@ -101,7 +101,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             }
 
-            _matcher.Matches = checkedMods.ToDictionary(x => x.Key, x => x.Value);
+            var newStructuralMods = new List<StaticMod>();
+            var newHeavyMods = new List<TypedModifications> { new TypedModifications(IsotopeLabelType.heavy, new List<StaticMod>()) };
+            foreach (var checkedMod in checkedMods)
+            {
+                if (checkedMod.Value.StructuralMod != null)
+                    newStructuralMods.Add(checkedMod.Value.StructuralMod);
+                else if (checkedMod.Value.HeavyMod != null)
+                    newHeavyMods.First().Modifications.Add(checkedMod.Value.HeavyMod);
+            }
+            _matcher.MatcherPepMods = new PeptideModifications(newStructuralMods, newHeavyMods);
 
             // Update document modifications
             SrmSettings newSettings = SkylineWindow.Document.Settings.ChangePeptideModifications(
@@ -199,6 +208,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                              : Settings.Default.HeavyModList.EditItem(this, null, Settings.Default.HeavyModList, null);
 
             AddModification(newMod, type);
+        }
+
+        public void ChangeAll(bool check)
+        {
+            for (int i = 0; i < modificationsListBox.Items.Count; ++i)
+                modificationsListBox.SetItemChecked(i, check);
         }
     }
 }

@@ -52,18 +52,18 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.modificationsListBox.CheckOnClick = true;
             this.modificationsListBox.FormattingEnabled = true;
-            this.modificationsListBox.Location = new System.Drawing.Point(3, 3);
+            this.modificationsListBox.Location = new System.Drawing.Point(19, 42);
             this.modificationsListBox.Name = "modificationsListBox";
-            this.modificationsListBox.Size = new System.Drawing.Size(359, 169);
+            this.modificationsListBox.Size = new System.Drawing.Size(340, 79);
             this.modificationsListBox.TabIndex = 4;
             // 
             // labelModifications
             // 
             this.labelModifications.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelModifications.Location = new System.Drawing.Point(3, 0);
+            this.labelModifications.Location = new System.Drawing.Point(19, 10);
             this.labelModifications.Name = "labelModifications";
-            this.labelModifications.Size = new System.Drawing.Size(365, 29);
+            this.labelModifications.Size = new System.Drawing.Size(353, 29);
             this.labelModifications.TabIndex = 5;
             this.labelModifications.Text = "This library appears to contain the modifications listed below. Please select the" +
     " ones you would like to use in the Skyline document:";
@@ -74,9 +74,9 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.unmatchedListBox.FormattingEnabled = true;
-            this.unmatchedListBox.Location = new System.Drawing.Point(3, 17);
+            this.unmatchedListBox.Location = new System.Drawing.Point(18, 25);
             this.unmatchedListBox.Name = "unmatchedListBox";
-            this.unmatchedListBox.Size = new System.Drawing.Size(359, 160);
+            this.unmatchedListBox.Size = new System.Drawing.Size(340, 82);
             this.unmatchedListBox.TabIndex = 6;
             // 
             // splitContainer1
@@ -84,27 +84,30 @@
             this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(3, 32);
+            this.splitContainer1.IsSplitterFixed = true;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.modificationsListBox);
+            this.splitContainer1.Panel1.Controls.Add(this.labelModifications);
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.label1);
+            this.splitContainer1.Panel2.Controls.Add(this.btnAddModification);
             this.splitContainer1.Panel2.Controls.Add(this.unmatchedListBox);
-            this.splitContainer1.Size = new System.Drawing.Size(365, 370);
-            this.splitContainer1.SplitterDistance = 178;
+            this.splitContainer1.Size = new System.Drawing.Size(381, 312);
+            this.splitContainer1.SplitterDistance = 123;
             this.splitContainer1.TabIndex = 7;
             this.splitContainer1.TabStop = false;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 1);
+            this.label1.Location = new System.Drawing.Point(18, 5);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(252, 13);
             this.label1.TabIndex = 7;
@@ -113,7 +116,7 @@
             // btnAddModification
             // 
             this.btnAddModification.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnAddModification.Location = new System.Drawing.Point(6, 422);
+            this.btnAddModification.Location = new System.Drawing.Point(18, 137);
             this.btnAddModification.Name = "btnAddModification";
             this.btnAddModification.Size = new System.Drawing.Size(140, 23);
             this.btnAddModification.TabIndex = 8;
@@ -148,11 +151,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
-            this.Controls.Add(this.btnAddModification);
             this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.labelModifications);
             this.Name = "MatchModificationsControl";
-            this.Size = new System.Drawing.Size(381, 460);
+            this.Size = new System.Drawing.Size(381, 315);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.Panel2.PerformLayout();

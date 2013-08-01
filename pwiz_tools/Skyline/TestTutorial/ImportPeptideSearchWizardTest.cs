@@ -142,6 +142,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                importPeptideSearchDlg.MatchModificationsControl.ChangeAll(false);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -154,6 +155,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 importPeptideSearchDlg.FullScanSettingsControl.Peaks = "3";
+                importPeptideSearchDlg.FullScanSettingsControl.RetentionTimeFilterType = RetentionTimeFilterType.none;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             WaitForDocumentChange(doc);
@@ -168,12 +170,12 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForClosedForm(importPeptideSearchDlg);
             doc = WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 8 minutes
-            
-            AssertEx.IsDocumentState(doc, null, 11, 41, 41, 123);
+
+            AssertEx.IsDocumentState(doc, null, 11, 40, 40, 120);
             RunUI(SkylineWindow.IntegrateAll);
             // Only WIFF file contains all of the results.  The mzML file had to be reduced.
             if (ExtensionTestContext.CanImportAbWiff)
-                AssertResult.IsDocumentResultsState(doc, REPLICATE_BASE_NAME, 39, 39, 0, 109, 0);
+                AssertResult.IsDocumentResultsState(doc, REPLICATE_BASE_NAME, 38, 38, 0, 106, 0);
             else
                 AssertResult.IsDocumentResultsState(doc, REPLICATE_BASE_NAME, 7, 7, 0, 19, 0);
 

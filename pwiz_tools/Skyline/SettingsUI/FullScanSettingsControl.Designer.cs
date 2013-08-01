@@ -30,15 +30,15 @@
         {
             this.groupBoxRetentionTimeToKeep = new System.Windows.Forms.GroupBox();
             this.radioTimeAroundMs2Ids = new System.Windows.Forms.RadioButton();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.label35 = new System.Windows.Forms.Label();
+            this.flowLayoutPanelTimeAroundMs2Ids = new System.Windows.Forms.FlowLayoutPanel();
+            this.labelTimeAroundMs2Ids1 = new System.Windows.Forms.Label();
             this.tbxTimeAroundMs2Ids = new System.Windows.Forms.TextBox();
-            this.label27 = new System.Windows.Forms.Label();
+            this.labelTimeAroundMs2Ids2 = new System.Windows.Forms.Label();
             this.radioUseSchedulingWindow = new System.Windows.Forms.RadioButton();
             this.radioKeepAllTime = new System.Windows.Forms.RadioButton();
             this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
             this.comboEnrichments = new System.Windows.Forms.ComboBox();
-            this.label29 = new System.Windows.Forms.Label();
+            this.labelEnrichments = new System.Windows.Forms.Label();
             this.labelPrecursorIsotopeFilterPercent = new System.Windows.Forms.Label();
             this.textPrecursorIsotopeFilter = new System.Windows.Forms.TextBox();
             this.labelPrecursorIsotopeFilter = new System.Windows.Forms.Label();
@@ -64,7 +64,7 @@
             this.comboAcquisitionMethod = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.groupBoxRetentionTimeToKeep.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
+            this.flowLayoutPanelTimeAroundMs2Ids.SuspendLayout();
             this.groupBoxMS1.SuspendLayout();
             this.groupBoxMS2.SuspendLayout();
             this.SuspendLayout();
@@ -72,7 +72,7 @@
             // groupBoxRetentionTimeToKeep
             // 
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioTimeAroundMs2Ids);
-            this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanel1);
+            this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanelTimeAroundMs2Ids);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioUseSchedulingWindow);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioKeepAllTime);
             this.groupBoxRetentionTimeToKeep.Location = new System.Drawing.Point(17, 385);
@@ -94,28 +94,28 @@
             this.radioTimeAroundMs2Ids.UseVisualStyleBackColor = true;
             this.radioTimeAroundMs2Ids.CheckedChanged += new System.EventHandler(this.RadioNoiseAroundMs2IdsCheckedChanged);
             // 
-            // flowLayoutPanel1
+            // flowLayoutPanelTimeAroundMs2Ids
             // 
-            this.flowLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.flowLayoutPanelTimeAroundMs2Ids.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.flowLayoutPanel1.Controls.Add(this.label35);
-            this.flowLayoutPanel1.Controls.Add(this.tbxTimeAroundMs2Ids);
-            this.flowLayoutPanel1.Controls.Add(this.label27);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(27, 63);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(303, 22);
-            this.flowLayoutPanel1.TabIndex = 2;
+            this.flowLayoutPanelTimeAroundMs2Ids.Controls.Add(this.labelTimeAroundMs2Ids1);
+            this.flowLayoutPanelTimeAroundMs2Ids.Controls.Add(this.tbxTimeAroundMs2Ids);
+            this.flowLayoutPanelTimeAroundMs2Ids.Controls.Add(this.labelTimeAroundMs2Ids2);
+            this.flowLayoutPanelTimeAroundMs2Ids.Location = new System.Drawing.Point(27, 63);
+            this.flowLayoutPanelTimeAroundMs2Ids.Name = "flowLayoutPanelTimeAroundMs2Ids";
+            this.flowLayoutPanelTimeAroundMs2Ids.Size = new System.Drawing.Size(303, 22);
+            this.flowLayoutPanelTimeAroundMs2Ids.TabIndex = 2;
             // 
-            // label35
+            // labelTimeAroundMs2Ids1
             // 
-            this.label35.AutoSize = true;
-            this.label35.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label35.Location = new System.Drawing.Point(3, 3);
-            this.label35.Margin = new System.Windows.Forms.Padding(3);
-            this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(109, 13);
-            this.label35.TabIndex = 3;
-            this.label35.Text = "Use only scans within";
+            this.labelTimeAroundMs2Ids1.AutoSize = true;
+            this.labelTimeAroundMs2Ids1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.labelTimeAroundMs2Ids1.Location = new System.Drawing.Point(3, 3);
+            this.labelTimeAroundMs2Ids1.Margin = new System.Windows.Forms.Padding(3);
+            this.labelTimeAroundMs2Ids1.Name = "labelTimeAroundMs2Ids1";
+            this.labelTimeAroundMs2Ids1.Size = new System.Drawing.Size(109, 13);
+            this.labelTimeAroundMs2Ids1.TabIndex = 3;
+            this.labelTimeAroundMs2Ids1.Text = "Use only scans within";
             // 
             // tbxTimeAroundMs2Ids
             // 
@@ -125,16 +125,16 @@
             this.tbxTimeAroundMs2Ids.Size = new System.Drawing.Size(49, 20);
             this.tbxTimeAroundMs2Ids.TabIndex = 3;
             // 
-            // label27
+            // labelTimeAroundMs2Ids2
             // 
-            this.label27.AutoSize = true;
-            this.label27.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label27.Location = new System.Drawing.Point(167, 3);
-            this.label27.Margin = new System.Windows.Forms.Padding(3);
-            this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(114, 13);
-            this.label27.TabIndex = 4;
-            this.label27.Text = "minutes of MS/MS IDs";
+            this.labelTimeAroundMs2Ids2.AutoSize = true;
+            this.labelTimeAroundMs2Ids2.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.labelTimeAroundMs2Ids2.Location = new System.Drawing.Point(167, 3);
+            this.labelTimeAroundMs2Ids2.Margin = new System.Windows.Forms.Padding(3);
+            this.labelTimeAroundMs2Ids2.Name = "labelTimeAroundMs2Ids2";
+            this.labelTimeAroundMs2Ids2.Size = new System.Drawing.Size(114, 13);
+            this.labelTimeAroundMs2Ids2.TabIndex = 4;
+            this.labelTimeAroundMs2Ids2.Text = "minutes of MS/MS IDs";
             // 
             // radioUseSchedulingWindow
             // 
@@ -163,7 +163,7 @@
             // groupBoxMS1
             // 
             this.groupBoxMS1.Controls.Add(this.comboEnrichments);
-            this.groupBoxMS1.Controls.Add(this.label29);
+            this.groupBoxMS1.Controls.Add(this.labelEnrichments);
             this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilterPercent);
             this.groupBoxMS1.Controls.Add(this.textPrecursorIsotopeFilter);
             this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilter);
@@ -193,15 +193,15 @@
             this.comboEnrichments.TabIndex = 6;
             this.comboEnrichments.SelectedIndexChanged += new System.EventHandler(this.comboEnrichments_SelectedIndexChanged);
             // 
-            // label29
+            // labelEnrichments
             // 
-            this.label29.AutoSize = true;
-            this.label29.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label29.Location = new System.Drawing.Point(14, 160);
-            this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(139, 13);
-            this.label29.TabIndex = 5;
-            this.label29.Text = "Isotope la&beling enrichment:";
+            this.labelEnrichments.AutoSize = true;
+            this.labelEnrichments.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.labelEnrichments.Location = new System.Drawing.Point(14, 160);
+            this.labelEnrichments.Name = "labelEnrichments";
+            this.labelEnrichments.Size = new System.Drawing.Size(139, 13);
+            this.labelEnrichments.TabIndex = 5;
+            this.labelEnrichments.Text = "Isotope la&beling enrichment:";
             // 
             // labelPrecursorIsotopeFilterPercent
             // 
@@ -455,8 +455,8 @@
             this.Size = new System.Drawing.Size(363, 491);
             this.groupBoxRetentionTimeToKeep.ResumeLayout(false);
             this.groupBoxRetentionTimeToKeep.PerformLayout();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
+            this.flowLayoutPanelTimeAroundMs2Ids.ResumeLayout(false);
+            this.flowLayoutPanelTimeAroundMs2Ids.PerformLayout();
             this.groupBoxMS1.ResumeLayout(false);
             this.groupBoxMS1.PerformLayout();
             this.groupBoxMS2.ResumeLayout(false);
@@ -469,15 +469,15 @@
 
         private System.Windows.Forms.GroupBox groupBoxRetentionTimeToKeep;
         private System.Windows.Forms.RadioButton radioTimeAroundMs2Ids;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.Label label35;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelTimeAroundMs2Ids;
+        private System.Windows.Forms.Label labelTimeAroundMs2Ids1;
         private System.Windows.Forms.TextBox tbxTimeAroundMs2Ids;
-        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.Label labelTimeAroundMs2Ids2;
         private System.Windows.Forms.RadioButton radioUseSchedulingWindow;
         private System.Windows.Forms.RadioButton radioKeepAllTime;
         private System.Windows.Forms.GroupBox groupBoxMS1;
         private System.Windows.Forms.ComboBox comboEnrichments;
-        private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.Label labelEnrichments;
         private System.Windows.Forms.Label labelPrecursorIsotopeFilterPercent;
         private System.Windows.Forms.TextBox textPrecursorIsotopeFilter;
         private System.Windows.Forms.Label labelPrecursorIsotopeFilter;
