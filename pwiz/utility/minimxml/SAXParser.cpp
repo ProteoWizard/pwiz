@@ -287,14 +287,18 @@ void Handler::Attributes::parseAttributes(string::size_type& index) const
                 char quoteChar = *c;
                 const char *q = strchr(textbuff+indexQuoteOpen+1,quoteChar);
                 indexQuoteClose = q?(q-textbuff):string::npos;
-            } 
+            }
             else 
                 indexQuoteClose = string::npos;
             if (indexQuoteClose == string::npos) 
             { // this index can only be OK if the others are too
-                if ('/'==textbuff[indexNameBegin]) 
+                if ('/'==textbuff[indexNameBegin])
                 { // end of tag
                     index++; 
+                    break;
+                }
+                else if ('\0'==textbuff[indexNameBegin])
+                {
                     break;
                 }
                 throw runtime_error("[SAXParser::parseAttribute()] Error at index "

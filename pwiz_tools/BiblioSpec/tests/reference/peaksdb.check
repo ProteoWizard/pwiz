@@ -1,11 +1,13 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb.blib	4	1	1
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peaksdb.blib	6	1	1
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	retentionTime	fileID	SpecIDinFile	score	scoreType
-1	DNPQTHYYAVAVVK	695.84	2	DNPQTHYYAVAVVK	-	-	1	1797	0.319567	1	2	1.0	16
-2	TSDANINWNNLK	547.59	2	TSDANINWNNLK	-	-	1	2072	1.3441	1	4	1.0	16
-3	ANELLINVK	820.89	2	ANELLINVK	-	-	1	1321	1.421767	1	5	1.0	16
-4	HSTVFDNLPNPEDR	537.25055	3	HSTVFDNLPNPEDR	-	-	1	1625	1.7776	1	7	1.0	16
+1	DNPQTHYYAVAVVK	802.91	2	DNPQTHYYAVAVVK	-	-	1	2832	0.0729	1	2	1.0	16
+2	TSDANINWNNLK	695.84	2	TSDANINWNNLK	-	-	1	1797	0.319567	1	4	1.0	16
+3	ANELLINVK	507.3	2	ANELLINVK	-	-	1	1495	0.368933	1	5	1.0	16
+4	HSTVFDNLPNPEDR	547.59	3	HSTVFDNLPNPEDR	-	-	1	2072	1.3441	1	7	1.0	16
+5	HSTVFDNLPNPEDR	820.89	2	HSTVFDNLPNPEDR	-	-	1	1321	1.421767	1	8	1.0	16
+6	LVNELTEFAK	582.8105	2	LVNELTEFAK	-	-	1	798	1.702967	1	12	1.0	16
 id	fileName
 1	/BiblioSpec/tests/inputs/peaksdb.mzXML
 id	scoreType

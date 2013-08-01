@@ -308,8 +308,8 @@ void PepXMLreader::endElement(const XML_Char* name)
         if( numFiles > 1 ){
             initSpecFileProgress(numFiles);
 
-        } 
-    } else if(isElement("msms_run_summary", name)) {      
+        }
+    } else if(isElement("msms_run_summary", name)) {
         if( analysisType_ == UNKNOWN_ANALYSIS ){
             throw BlibException(false, "The .pep.xml file is not from one of "
                                 "the recognized sources (PeptideProphet, "
@@ -333,7 +333,7 @@ void PepXMLreader::endElement(const XML_Char* name)
 
         buildTables(scoreType_);
         
-        // reset values for next 
+        // reset values for next
         mzXMLFile[0]='\0';
         massType = 0;
         for(int i=0; i<128; i++) {
@@ -357,12 +357,12 @@ void PepXMLreader::endElement(const XML_Char* name)
             
             Verbosity::comment(V_DETAIL, "Adding psm.  Scan %d, charge %d, "
                                "score %.2f, seq %s, name %s.",
-                               scanNumber, charge, pepProb, pepSeq, 
+                               scanNumber, charge, pepProb, pepSeq,
                                spectrumName.c_str());
              psms_.push_back(curPSM_);
             curPSM_ = NULL;
         }
-        
+
         // reset for next query
         // TODO (BF: Aug-13-09): would be faster/cleaner if we just kept an object at curPsm and filled values into that instead of using charge,pepSeq, etc.
         // this is reset at the beginning of the element, which is better?
@@ -383,7 +383,6 @@ void PepXMLreader::endElement(const XML_Char* name)
 
 bool PepXMLreader::parseFile()
 {
-   
    return parse();
 }
 
@@ -398,7 +397,7 @@ bool PepXMLreader::scorePasses(double score){
     case PEPTIDE_PROPHET_ANALYSIS:
     case INTER_PROPHET_ANALYSIS:
     case PEAKS_ANALYSIS:
-        if(score >= probCutOff){ 
+        if(score >= probCutOff){
             return true;
         }
         break;

@@ -263,7 +263,7 @@ bool PwizReader::getSpectrum(int identifier,
                                      BiblioSpec::SPEC_ID_TYPE findBy,
                                      bool getPeaks)
 {
-    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, 
+    BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL,
                                    "PwizReader looking for %s %d.",
                  (findBy == BiblioSpec::INDEX_ID ? "index" : "scan number" ),
                                    identifier);
