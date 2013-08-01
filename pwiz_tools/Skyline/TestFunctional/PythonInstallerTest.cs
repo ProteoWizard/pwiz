@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     public class PythonInstallerTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestPythonInstaller()
+        public void  TestPythonInstaller()
         {
             RunFunctionalTest();
         }
@@ -51,6 +51,9 @@ namespace pwiz.SkylineTestFunctional
         private const string EXE_PACKAGE = "http://test.com/package.exe";
         private const string TARGZ_PACKAGE = "http://test.com/package.tar.gz";
         private const string ZIP_PACKAGE = "http://test.com/package.zip";
+        private const string LOCAL_ZIP_PACKAGE = "C:\\localpackage.zip";
+        private const string LOCAL_TARGZ_PACKAGE = "C:\\localpackage.tar.gz";
+        private const string LOCAL_EXE_PACKAGE = "C:\\localpackage.exe";
         
         protected override void DoTest()
         {
@@ -74,11 +77,11 @@ namespace pwiz.SkylineTestFunctional
         private static void TestDlgLoadBoth()
         {
             PPC = new ProgramPathContainer(PYTHON, VERSION_27);
-            PackageUris = new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE};
+            PackageUris = new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_EXE_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE};
             Installed = false;
             var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(PPC, PackageUris, Installed));
             WaitForConditionUI(5*1000, () => pythonInstaller.IsLoaded);
-            Assert.AreEqual(string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_installation_process_, VERSION_27), pythonInstaller.Message);
+            Assert.AreEqual(string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, VERSION_27), pythonInstaller.Message);
             OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -91,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
             Installed = false;
             var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(PPC, PackageUris, Installed));
             WaitForConditionUI(5 * 1000, () => pythonInstaller.IsLoaded);
-            Assert.AreEqual(string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process, VERSION_27), pythonInstaller.Message);
+            Assert.AreEqual(string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process_, VERSION_27), pythonInstaller.Message);
             OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -100,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestDlgLoadPackagesOnly()
         {
             PPC = new ProgramPathContainer(PYTHON, VERSION_27);
-            PackageUris = new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE};
+            PackageUris = new Collection<string> { EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_EXE_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE };
             Installed = true;
             var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(PPC, PackageUris, Installed));
             WaitForConditionUI(5 * 1000, () => pythonInstaller.IsLoaded);
@@ -113,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestProperPopulation()
         {
             PPC = new ProgramPathContainer(PYTHON, VERSION_27);
-            PackageUris = new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE};
+            PackageUris = new Collection<string> { EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_EXE_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE };
             Installed = false;
             var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(PPC, PackageUris, Installed));
             WaitForConditionUI(5 * 1000, () => pythonInstaller.IsLoaded);
@@ -138,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPythonInstaller(true, false, false);
             var messageDlg = ShowDialog<MessageDlg>(() => pythonInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled, messageDlg.Message);
+            Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -149,8 +152,8 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPythonInstaller(false, false, false);
             var messageDlg = ShowDialog<MessageDlg>(() => pythonInstaller.AcceptButton.PerformClick());
             Assert.AreEqual(TextUtil.LineSeparate(
-                Resources.PythonInstaller_DownloadPython_Download_failed, 
-                Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support), messageDlg.Message);
+                Resources.PythonInstaller_DownloadPython_Download_failed_, 
+                Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -160,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPythonInstaller(false, true, false);
             var messageDlg = ShowDialog<MessageDlg>(() => pythonInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -170,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPythonInstaller(false, true, true);
             var messageDlg = ShowDialog<MessageDlg>(() => pythonInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.PythonInstaller_GetPython_Python_installation_completed, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_GetPython_Python_installation_completed_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.OK, pythonInstaller.DialogResult);
         }
@@ -210,7 +213,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPackageInstallerBothTypes(true, false, false, false);
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled, messageDlg.Message);
+            Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -221,11 +224,11 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlyExes(false, false, false);
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.AcceptButton.PerformClick);
             var packages = new Collection<string> {EXE_PACKAGE};
-            Assert.AreEqual(TextUtil.LineSeparate(Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages, 
+            Assert.AreEqual(TextUtil.LineSeparate(Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_, 
                                                   string.Empty, 
                                                   TextUtil.LineSeparate(packages), 
                                                   string.Empty, 
-                                                  Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support), messageDlg.Message);
+                                                  Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -261,7 +264,7 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, false, false);
             SetPipInstallResults(pythonInstaller, true, false, false, false);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var errorDlg = ShowDialog<MessageDlg>(messageDlg.BtnCancelClick);
             Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
@@ -274,11 +277,11 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, false, false);
             SetPipInstallResults(pythonInstaller, true, false, false, false);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipErrorDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled, pipErrorDlg.Message);
+            Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, pipErrorDlg.Message);
             OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
-            var packageErrorDlg = FindOpenForm<MessageDlg>();
+            var packageErrorDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, packageErrorDlg.Message);
             OkDialog(packageErrorDlg, packageErrorDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
@@ -290,11 +293,11 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, false, false);
             SetPipInstallResults(pythonInstaller, false, false, false, false);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipErrorDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers, pipErrorDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_, pipErrorDlg.Message);
             OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
-            var packageErrorDlg = FindOpenForm<MessageDlg>();
+            var packageErrorDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, packageErrorDlg.Message);
             OkDialog(packageErrorDlg, packageErrorDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
@@ -306,11 +309,11 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, false, false);
             SetPipInstallResults(pythonInstaller, false, true, false, false);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipErrorDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPip_Unknown_error_installing_pip, pipErrorDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPip_Unknown_error_installing_pip_, pipErrorDlg.Message);
             OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
-            var packageErrorDlg = FindOpenForm<MessageDlg>();
+            var packageErrorDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, packageErrorDlg.Message);
             OkDialog(packageErrorDlg, packageErrorDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
@@ -322,7 +325,7 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, false, false);
             SetPipInstallResults(pythonInstaller, false, true, true, false);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipErrorDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
             Assert.AreEqual(Resources.PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__, pipErrorDlg.Message);
             OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
@@ -337,12 +340,12 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, false, false);
             SetPipInstallResults(pythonInstaller, false, true, true, true);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipMessageDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete, pipMessageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete_, pipMessageDlg.Message);
             OkDialog(pipMessageDlg, pipMessageDlg.OkDialog);
-            var errorDlg = FindOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages, errorDlg.Message);
+            var errorDlg = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -353,11 +356,11 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, true, false);
             SetPipInstallResults(pythonInstaller, false, true, true, true);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipMessageDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete, pipMessageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete_, pipMessageDlg.Message);
             OkDialog(pipMessageDlg, pipMessageDlg.OkDialog);
-            var errorDlg = FindOpenForm<MessageDlg>();
+            var errorDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
@@ -369,12 +372,12 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlySources(false, true, true, true);
             SetPipInstallResults(pythonInstaller, false, true, true, true);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipMessageDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete, pipMessageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete_, pipMessageDlg.Message);
             OkDialog(pipMessageDlg, pipMessageDlg.OkDialog);
-            var installSuccessDlg = FindOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed, installSuccessDlg.Message);
+            var installSuccessDlg = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed_, installSuccessDlg.Message);
             OkDialog(installSuccessDlg, installSuccessDlg.OkDialog);
             Assert.AreEqual(DialogResult.OK, pythonInstaller.DialogResult);
         }
@@ -410,7 +413,7 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlyExes(false, true, false);
             RunUI(() => pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 1});
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Cancel, pythonInstaller.DialogResult);
         }
@@ -421,7 +424,7 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = FormatPackageInstallerOnlyExes(false, true, true);
             RunUI(() => pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 0});
             var installSuccessDlg = ShowDialog<MessageDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed, installSuccessDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed_, installSuccessDlg.Message);
             OkDialog(installSuccessDlg, installSuccessDlg.OkDialog);
             Assert.AreEqual(DialogResult.OK, pythonInstaller.DialogResult);
         }
@@ -433,12 +436,12 @@ namespace pwiz.SkylineTestFunctional
             SetPipInstallResults(pythonInstaller, false, true, true, true);
             RunUI(() => pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 0});
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, messageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message);
             var pipMessageDlg = ShowDialog<MessageDlg>(messageDlg.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete, pipMessageDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete_, pipMessageDlg.Message);
             OkDialog(pipMessageDlg, pipMessageDlg.OkDialog);
-            var installSuccessDlg = FindOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed, installSuccessDlg.Message);
+            var installSuccessDlg = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed_, installSuccessDlg.Message);
             OkDialog(installSuccessDlg, installSuccessDlg.OkDialog);
             Assert.AreEqual(DialogResult.OK, pythonInstaller.DialogResult);
         }
@@ -446,21 +449,21 @@ namespace pwiz.SkylineTestFunctional
         private static PythonInstaller FormatPackageInstallerOnlyExes(bool cancelDownload, bool downloadSuccess, bool installSuccess)
         {
             return FormatPackageInstaller(cancelDownload, downloadSuccess, true, installSuccess,
-                                          new Collection<string> {EXE_PACKAGE});
+                                          new Collection<string> {EXE_PACKAGE, LOCAL_EXE_PACKAGE});
         }
 
         private static PythonInstaller FormatPackageInstallerOnlySources(bool cancelDownload, bool downloadSuccess,
                                                                          bool connectSuccess, bool installSuccess)
         {
             return FormatPackageInstaller(cancelDownload, downloadSuccess, connectSuccess, installSuccess,
-                                          new Collection<string> {TARGZ_PACKAGE, ZIP_PACKAGE});
+                                          new Collection<string> {TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE});
         }
 
         private static PythonInstaller FormatPackageInstallerBothTypes(bool cancelDownload, bool downloadSuccess,
                                                                        bool connectSuccess, bool installSuccess)
         {
             return FormatPackageInstaller(cancelDownload, downloadSuccess, connectSuccess, installSuccess,
-                                          new Collection<string> {ZIP_PACKAGE, TARGZ_PACKAGE, EXE_PACKAGE});
+                                          new Collection<string> {ZIP_PACKAGE, TARGZ_PACKAGE, EXE_PACKAGE, LOCAL_ZIP_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_EXE_PACKAGE});
         }
 
         private static PythonInstaller FormatPackageInstaller(bool cancelDownload, bool downloadSuccess,
@@ -494,7 +497,7 @@ namespace pwiz.SkylineTestFunctional
                 ShowDialog<PythonInstaller>(
                     () =>
                     InstallProgram(new ProgramPathContainer(PYTHON, VERSION_27),
-                                   new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE}, false));
+                                   new Collection<string> {EXE_PACKAGE, TARGZ_PACKAGE, ZIP_PACKAGE, LOCAL_EXE_PACKAGE, LOCAL_TARGZ_PACKAGE, LOCAL_ZIP_PACKAGE}, false));
             
             RunUI(() =>
                 {
@@ -518,21 +521,21 @@ namespace pwiz.SkylineTestFunctional
                 });
 
             var pythonInstallSuccessDlg = ShowDialog<MessageDlg>(pythonInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.PythonInstaller_GetPython_Python_installation_completed, pythonInstallSuccessDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_GetPython_Python_installation_completed_, pythonInstallSuccessDlg.Message);
             OkDialog(pythonInstallSuccessDlg, pythonInstallSuccessDlg.OkDialog);
             var pipPromptDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process, pipPromptDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, pipPromptDlg.Message);
             OkDialog(pipPromptDlg, pipPromptDlg.AcceptButton.PerformClick);
             var pipInstallSuccessDlg = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete, pipInstallSuccessDlg.Message);
+            Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Pip_installation_complete_, pipInstallSuccessDlg.Message);
             OkDialog(pipInstallSuccessDlg, pipInstallSuccessDlg.OkDialog);
-            var packageInstallSuccessDlg = FindOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed, packageInstallSuccessDlg.Message);
+            var packageInstallSuccessDlg = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed_, packageInstallSuccessDlg.Message);
             OkDialog(packageInstallSuccessDlg, packageInstallSuccessDlg.OkDialog);
             Assert.AreEqual(DialogResult.OK, pythonInstaller.DialogResult);
         }
 
-        private static void InstallProgram(ProgramPathContainer ppc, ICollection<string> packageUris, bool installed)
+        private static void InstallProgram(ProgramPathContainer ppc, IEnumerable<string> packageUris, bool installed)
         {
             using (var dlg = new PythonInstaller(ppc, packageUris, installed, null))
             {

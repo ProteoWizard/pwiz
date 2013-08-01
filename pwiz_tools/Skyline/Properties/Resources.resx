@@ -5332,8 +5332,8 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_" xml:space="preserve">
     <value>Invalid file selected. No tools added.</value>
   </data>
-  <data name="ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_" xml:space="preserve">
-    <value>There is a naming conflict in unpacking the zip. Tool importing cancled!</value>
+  <data name="ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_" xml:space="preserve">
+    <value>There is a naming conflict in unpacking the zip. Tool importing canceled!</value>
   </data>
   <data name="ConfigureToolsDlg_unpackZipTool_Failed_to_read_file_0_The_tool_described_failed_to_import" xml:space="preserve">
     <value>Failed to read file {0}. The tool described failed to import.</value>
@@ -5500,8 +5500,8 @@ Are you sure you want to continue?</value>
   <data name="UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_" xml:space="preserve">
     <value>The tool "{0}" requires report type titled "{1}" and it is not provided. Import canceled.</value>
   </data>
-  <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process" xml:space="preserve">
-    <value>This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process</value>
+  <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
+    <value>This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
     <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the use of R {0}. Click Install to begin the installation process.</value>
@@ -5518,24 +5518,19 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_" xml:space="preserve">
     <value>R installation was not completed. Cancelling tool installation.</value>
   </data>
-  <data name="RInstaller_DownloadR_Download_failed" xml:space="preserve">
-    <value>Download failed</value>
+  <data name="RInstaller_DownloadR_Download_failed_" xml:space="preserve">
+    <value>Download failed.</value>
   </data>
-  <data name="AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Downloading__0_" xml:space="preserve">
-    <value>Downloading {0}</value>
-  </data>
-  <data name="AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled" xml:space="preserve">
-    <value>Download canceled</value>
+  <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_" xml:space="preserve">
+    <value>Download canceled.</value>
   </data>
   <data name="RInstaller_GetPackages_Downloading_packages" xml:space="preserve">
     <value>Downloading packages</value>
   </data>
-  <data name="RInstaller_InstallPackages_Unknown_error_installing_packages" xml:space="preserve">
-    <value>Unknown error installing packages</value>
+  <data name="RInstaller_InstallPackages_Unknown_error_installing_packages_" xml:space="preserve">
+    <value>Unknown error installing packages.</value>
   </data>
-  <data name="RInstaller_InstallPackages_An_error_occurred_installing_packages" xml:space="preserve">
-    <value>An error occurred installing packages</value>
-  </data>  <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_" xml:space="preserve">
+  <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_" xml:space="preserve">
     <value>The selected zip file is not an installable tool.</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_directory_" xml:space="preserve">
@@ -5559,35 +5554,35 @@ Are you sure you want to continue?</value>
   <data name="ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__" xml:space="preserve">
     <value>An error occurred attempting to find missing result files in {0}.</value>
   </data>
-    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
-    <value>This tool requires Python {0} and the following packages. Select packages toinstall and then click Install to begin the installation process.</value>
+    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
+    <value>This tool requires Python {0} and the following packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
-    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process" xml:space="preserve">
-    <value>This tool requires Python {0}. Click install to begin the installation process</value>
+    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process_" xml:space="preserve">
+    <value>This tool requires Python {0}. Click install to begin the installation process.</value>
   </data>
     <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the following Python packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
-    <data name="PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation" xml:space="preserve">
-    <value>Python installation failed. Canceling tool installation</value>
+    <data name="PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_" xml:space="preserve">
+    <value>Python installation failed. Canceling tool installation.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation" xml:space="preserve">
-    <value>Package Installation was not completed. Canceling tool installation</value>
+    <data name="PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_" xml:space="preserve">
+    <value>Package Installation was not completed. Canceling tool installation.</value>
   </data>
-    <data name="PythonInstaller_GetPython_Python_installation_completed" xml:space="preserve">
-    <value>Python installation completed</value>
+    <data name="PythonInstaller_GetPython_Python_installation_completed_" xml:space="preserve">
+    <value>Python installation completed.</value>
   </data>
-    <data name="PythonInstaller_GetPackages_Package_installation_completed" xml:space="preserve">
-    <value>Package installation completed</value>
+    <data name="PythonInstaller_GetPackages_Package_installation_completed_" xml:space="preserve">
+    <value>Package installation completed.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process" xml:space="preserve">
-    <value>Skyline uses the Python tool setuptools and the Python package manager Pip to install packages from source. Click install to begin the installation process</value>
+    <data name="PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_" xml:space="preserve">
+    <value>Skyline uses the Python tool setuptools and the Python package manager Pip to install packages from source. Click install to begin the installation process.</value>
   </data>
     <data name="PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_" xml:space="preserve">
     <value>Python package installation cannot continue. Canceling tool installation.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Pip_installation_complete" xml:space="preserve">
-    <value>Pip installation complete</value>
+    <data name="PythonInstaller_InstallPackages_Pip_installation_complete_" xml:space="preserve">
+    <value>Pip installation complete.</value>
   </data>
     <data name="PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__" xml:space="preserve">
     <value>Pip installation failed. Error log output in immediate window.</value>
@@ -5595,32 +5590,32 @@ Are you sure you want to continue?</value>
     <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
     <value>Install</value>
   </data>
-    <data name="PythonInstaller_DownloadPython_Download_failed" xml:space="preserve">
-    <value>Download failed</value>
+    <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
+    <value>Download failed.</value>
   </data>
-    <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support" xml:space="preserve">
-    <value>Check your network connection or contact the tool provider for installation support</value>
+    <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
+    <value>Check your network connection or contact the tool provider for installation support.</value>
   </data>
-    <data name="PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages" xml:space="preserve">
-    <value>Failed to download the following packages</value>
+    <data name="PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_" xml:space="preserve">
+    <value>Failed to download the following packages:</value>
   </data>
     <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
   </data>
-    <data name="RInstaller_GetR_R_installation_complete" xml:space="preserve">
-    <value>R installation complete</value>
+    <data name="RInstaller_GetR_R_installation_complete_" xml:space="preserve">
+    <value>R installation complete.</value>
   </data>
-    <data name="RInstaller_GetPackages_Package_installation_complete" xml:space="preserve">
-    <value>Package installation complete</value>
+    <data name="RInstaller_GetPackages_Package_installation_complete_" xml:space="preserve">
+    <value>Package installation complete.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Unknown_error_installing_packages" xml:space="preserve">
-    <value>Unknown error installing packages</value>
+    <data name="PythonInstaller_InstallPackages_Unknown_error_installing_packages_" xml:space="preserve">
+    <value>Unknown error installing packages.</value>
   </data>
-    <data name="PythonInstaller_InstallPip_Unknown_error_installing_pip" xml:space="preserve">
-    <value>Unknown error installing pip</value>
+    <data name="PythonInstaller_InstallPip_Unknown_error_installing_pip_" xml:space="preserve">
+    <value>Unknown error installing pip.</value>
   </data>
-    <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers" xml:space="preserve">
-    <value>Download failed. Check your network connection or contact Skyline developers</value>
+    <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
+    <value>Download failed. Check your network connection or contact Skyline developers.</value>
   </data>
     <data name="TestNamedPipeProcessRunner_RunProcess_Error_running_process" xml:space="preserve">
     <value>Error running process</value>
@@ -5633,5 +5628,29 @@ Are you sure you want to continue?</value>
   </data>
   <data name="PivotReportDlg_ShowPreview_A_report_must_have_at_least_one_column_" xml:space="preserve">
     <value>A report must have at least one column.</value>
+  </data>
+    <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0" xml:space="preserve">
+    <value>Downloading {0}</value>
+  </data>
+    <data name="ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_" xml:space="preserve">
+    <value>Annotations with the following names already exist:</value>
+  </data>
+    <data name="ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_" xml:space="preserve">
+    <value>An annotation with the following name already exists:</value>
+  </data>
+    <data name="ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_" xml:space="preserve">
+    <value>Do you want to overwrite or keep the existing annotations?</value>
+  </data>
+    <data name="ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_" xml:space="preserve">
+    <value>Please re-install the tool and try again.</value>
+  </data>
+    <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted" xml:space="preserve">
+    <value>This tool requires the use of the following annotations which are missing or improperly formatted</value>
+  </data>
+    <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document" xml:space="preserve">
+    <value>This tool requires the use of the following annotations which are not enabled for this document</value>
+  </data>
+    <data name="ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_" xml:space="preserve">
+    <value>Please enable these annotations and fill in the appropriate data in order to use the tool.</value>
   </data>
 </root>

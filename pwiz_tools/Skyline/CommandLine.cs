@@ -1939,12 +1939,18 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// A method for parsing an array of individual arguments to be passed to the command line to generate
-        /// the string that will ultimately be passed. If a argument has white space, it is surrounded by quotes 
+        /// the string that will ultimately be passed. If a argument has white space, it is surrounded by quotes.
+        /// If an empty (size 0) array is given, it returns string.Empty 
         /// </summary>
         /// <param name="arguments">The arguments to parse</param>
         /// <returns>The appropriately formatted command line argument string</returns>
         public static string ParseCommandLineArray(string[] arguments)
         {
+            if (!arguments.Any())
+            {
+                return string.Empty;
+            }
+            
             StringBuilder commandLineArguments = new StringBuilder();
             foreach (string argument in arguments)
             {
@@ -1954,7 +1960,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    commandLineArguments.Append(" " + argument);
+                    commandLineArguments.Append(TextUtil.SEPARATOR_SPACE + argument);
                 }
             }
             commandLineArguments.Remove(0, 1);

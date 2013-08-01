@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Util
                 {
                     _webClient.CancelAsync();
                     throw new MessageException(
-                        Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled);
+                        Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
                 }
             }
             return DownloadSucceeded;
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Util
         public bool DownloadFileAsync(Uri address, string fileName)
         {
             if (CancelDownload)
-                throw new MessageException(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled);
+                throw new MessageException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
             return DownloadSuccess;
         }
 

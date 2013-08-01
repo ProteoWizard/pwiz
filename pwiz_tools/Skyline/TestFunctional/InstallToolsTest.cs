@@ -18,10 +18,13 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -35,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     public class InstallToolsTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestConfigureToolsDlg()
+        public void TestInstallTools()
         {
             TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N
             RunFunctionalTest();
@@ -52,6 +55,8 @@ namespace pwiz.SkylineTestFunctional
             ZipTestAllCommandTypes();
 
             ZipTestSkylineReports();
+
+            ZipTestAnnotations();
 
             TestToolDirMacro();
 
@@ -405,6 +410,110 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.RemoveAllTools();
                 });
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+        }
+
+        private void ZipTestAnnotations()
+        {
+            var sampleId = new AnnotationDef("SampleID", // Not L10N
+                                             AnnotationDef.AnnotationTargetSet.Singleton(
+                                                 AnnotationDef.AnnotationTarget.replicate),
+                                              AnnotationDef.AnnotationType.text,
+                                             new List<string>());
+
+            var isConc = new AnnotationDef("IS Conc", // Not L10N
+                                           AnnotationDef.AnnotationTargetSet.Singleton(
+                                               AnnotationDef.AnnotationTarget.replicate),
+                                           AnnotationDef.AnnotationType.text,
+                                           new List<string>());
+
+            var analyteConcentration = new AnnotationDef("Analyte Concentration", // Not L10N
+                                                         AnnotationDef.AnnotationTargetSet.Singleton(
+                                                             AnnotationDef.AnnotationTarget.replicate),
+                                                         AnnotationDef.AnnotationType.text,
+                                                         new List<string>());
+
+            var sampleIdTransition = new AnnotationDef("SampleID", // Not L10N
+                                                       AnnotationDef.AnnotationTargetSet.Singleton(
+                                                           AnnotationDef.AnnotationTarget.transition),
+                                                       AnnotationDef.AnnotationType.text,
+                                                       new List<string>());
+
+            // Test proper loading of annotations
+            string testAnnotationsPath = TestFilesDir.GetTestPath("TestAnnotations.zip"); // Not L10N
+            RunDlg<ConfigureToolsDlg>(() => SkylineWindow.ShowConfigureToolsDlg(), dlg =>
+            {
+                dlg.RemoveAllTools();
+                dlg.UnpackZipTool(testAnnotationsPath);
+                WaitForConditionUI(() => dlg.ToolList.Count == 4);
+
+                ToolDescription t0 = dlg.ToolList[0];
+                ToolDescription t1 = dlg.ToolList[1];
+                ToolDescription t2 = dlg.ToolList[2];
+                ToolDescription t3 = dlg.ToolList[3];
+
+                AssertEx.AreEqualDeep(t0.Annotations, new List<AnnotationDef>());
+                AssertEx.AreEqualDeep(t1.Annotations,
+                                      new List<AnnotationDef>
+                                              {
+                                                  sampleId,
+                                                  isConc,
+                                                  analyteConcentration
+                                              });
+                AssertEx.AreEqualDeep(t2.Annotations, new List<AnnotationDef> { sampleId });
+                AssertEx.AreEqualDeep(t3.Annotations, new List<AnnotationDef>());
+                Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleId));
+                Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(isConc));
+                Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(analyteConcentration));
+
+                dlg.OkDialog();
+            });
+
+            // Test conflicting annotations
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            string conflictAnnotationsPath = TestFilesDir.GetTestPath("ConflictAnnotations.zip"); // Not L10N
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(conflictAnnotationsPath),
+                                      messageDlg => messageDlg.Btn1Click()); // keep existing annotations
+            WaitForConditionUI(() => configureToolsDlg.ToolList.Count == 5);
+            Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleId));
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(conflictAnnotationsPath),
+                                      dlg => dlg.Btn0Click());
+            RunDlg<MultiButtonMsgDlg>(() => FindOpenForm<MultiButtonMsgDlg>(), messageDlg => messageDlg.Btn0Click());
+            // overwrite existing annotations
+            Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleIdTransition));
+
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            RunUI(() => SkylineWindow.PopulateToolsMenu());
+
+            // Test running the tool with an unchecked annotation
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), dlg =>
+                {
+                    Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
+                                                                 string.Empty,
+                                                                 TextUtil.LineSeparate(new Collection<string> {sampleId.GetKey()}),
+                                                                 string.Empty,
+                                                                 Resources.ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_), dlg.Message);
+                    dlg.OkDialog();
+                });
+
+            // Test running the tool with a missing annotation
+            Settings.Default.AnnotationDefList = new AnnotationDefList();
+            WaitForCondition(() => Settings.Default.AnnotationDefList.Count == 0);
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), dlg =>
+            {
+                Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted,
+                                                              string.Empty,
+                                                              TextUtil.LineSeparate(new Collection<string> { sampleId.GetKey() }),
+                                                              string.Empty,
+                                                              Resources.ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_), dlg.Message);
+                dlg.OkDialog();
+            });
+
+            // Clean-up
+            RunDlg<ConfigureToolsDlg>(() => SkylineWindow.ShowConfigureToolsDlg(), dlg =>
+            {
+                dlg.RemoveAllTools();
+                dlg.OkDialog();
+            });
         }
 
         private void TestToolDirMacro()

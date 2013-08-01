@@ -55,7 +55,8 @@ namespace pwiz.Skyline.Model.Tools
             public const string ARGS_COLLECTOR_DLL = "ArgsCollectorDll";                //Not L10N
             public const string ARGS_COLLECTOR_TYPE = "ArgsCollectorType";              //Not L10N
             public const string DESCRIPTION = "Description";                            //Not L10N
-            public const string PACKAGE = "Package{0}";
+            public const string PACKAGE = "Package{0}";                                 //Not L10N
+            public const string ANNOTATION = "Annotation{0}";                           //Not L10N
             
             // Defaults for optional values in the .properties file
             public static readonly Hashtable DEFAULTS = new Hashtable
@@ -137,22 +138,33 @@ namespace pwiz.Skyline.Model.Tools
             string package = _properties.GetProperty(lookup);
             return package != null ? package.Trim() : null;
         }
+        public string GetAnnotation(int a)
+        {
+            string lookup = string.Format(PropertiesConstants.ANNOTATION, a);
+            string annotation = _properties.GetProperty(lookup);
+            return annotation != null ? annotation.Trim() : null;
+        }
         #endregion //Accessors
     }
 
     public class ToolInstaller
     {
+        private const string TOOL_INF = "tool-inf"; // Not L10N
+
         /// <summary>
         /// Function for unpacking zipped External tools.
         /// </summary>
-        /// <param name="pathToZip">Path to the zipped file that contains the tool and all its assicaited files.</param>        
+        /// <param name="pathToZip">Path to the zipped file that contains the tool and all its assicaited files.</param> 
+        /// <param name="shouldOverwriteAnnotations">Function that when given a list of annotations that would be overwritten by an installation,
+        /// returns true or false for overwrite, and null for cancel installation</param>       
         /// <param name="shouldOverwrite">Function that when given a list of tools and a list of reports that would be removed by an installation
         ///  it returns a bool, true for overwrite, false for in parallel and null for cancel installation</param>
         /// <param name="installProgram">Function that finds a program path given a program path container.</param>
         /// <returns></returns>
         public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip,
-                                                               Func<List<string>, List<ReportSpec>, bool?> shouldOverwrite,
-                                                               Func<ProgramPathContainer, ICollection<string>,string> installProgram)
+                                                                Func<List<AnnotationDef>, bool?> shouldOverwriteAnnotations,                                                   
+                                                                Func<List<string>, List<ReportSpec>, bool?> shouldOverwrite,
+                                                                Func<ProgramPathContainer, ICollection<string>,string> installProgram)
         {
             UnzipToolReturnAccumulator retval = new UnzipToolReturnAccumulator();
             string name = Path.GetFileNameWithoutExtension(pathToZip);
@@ -192,7 +204,7 @@ namespace pwiz.Skyline.Model.Tools
                 zipFile.Dispose();
                 if (Directory.Exists(tempToolPath))
                     DirectoryEx.SafeDelete(tempToolPath);
-                throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_);
+                throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_);
             }
             zipFile.Dispose();
             
@@ -217,17 +229,81 @@ namespace pwiz.Skyline.Model.Tools
             if (!dirInfo.Exists) //Case where they try to load tools from an empty zipfile then the folder is never created.
                 dirInfo.Create();
 
-            DirectoryInfo toolInf = new DirectoryInfo(Path.Combine(tempToolPath, "tool-inf"));
+            DirectoryInfo toolInf = new DirectoryInfo(Path.Combine(tempToolPath, TOOL_INF));
             if (!toolInf.Exists)
             {
                 DirectoryEx.SafeDelete(tempToolPath);
                 throw new MessageException(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_, Resources.ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_directory_));
             }
 
+            var srmSerialzer = new XmlSerializer(typeof (SrmDocument));
+            var conflictAnnotations = new List<AnnotationDef>();
+            var newAnnotations = new List<AnnotationDef>();
+            // Need to filter for .sky files only, as .GetFiles(".sky") also returns .skyr files
+            foreach (FileInfo file in toolInf.GetFiles().Where(file => file.Extension.Equals(SrmDocument.EXT)))
+            {
+                SrmDocument document;
+                try
+                {
+                    using (var stream = File.OpenRead(file.FullName))
+                    {
+                        document = (SrmDocument) srmSerialzer.Deserialize(stream);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    DirectoryEx.SafeDelete(tempToolPath);
+                    throw new IOException(string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__, file.FullName), exception);
+                }
+
+                foreach (AnnotationDef annotationDef in document.Settings.DataSettings.AnnotationDefs)
+                {
+                    if (Settings.Default.AnnotationDefList.ContainsKey(annotationDef.GetKey()))
+                    {
+                        var existingAnnotation = Settings.Default.AnnotationDefList[annotationDef.GetKey()];
+                        if (!existingAnnotation.Equals(annotationDef))
+                        {
+                            conflictAnnotations.Add(annotationDef);
+                        }
+                    }
+                    else
+                    {
+                        newAnnotations.Add(annotationDef);
+                    }
+                }
+            }
+
+            bool? overwriteAnnotations;
+            if (conflictAnnotations.Count != 0)
+            {
+                overwriteAnnotations = shouldOverwriteAnnotations(conflictAnnotations);
+            }
+            else
+            {
+                overwriteAnnotations = false;
+            }
+
+            if (overwriteAnnotations == null)
+            {
+                // Cancelled by user
+                DirectoryEx.SafeDelete(tempToolPath);
+                return null;
+            }
+
+            if (overwriteAnnotations == true)
+            {
+                newAnnotations.AddRange(conflictAnnotations);
+            }
+
+            foreach (AnnotationDef annotation in newAnnotations)
+            {
+                Settings.Default.AnnotationDefList.SetValue(annotation);
+            }
+
             var existingReports = new List<ReportSpec>();
             var newReports = new List<ReportSpec>();
             var xmlSerializer = new XmlSerializer(typeof(ReportSpecList));
-            foreach (FileInfo file in toolInf.GetFiles("*.skyr"))
+            foreach (FileInfo file in toolInf.GetFiles("*" + ReportSpecList.EXT_REPORTS))
             {
                 ReportSpecList loadedItems;
                 try
@@ -291,6 +367,7 @@ namespace pwiz.Skyline.Model.Tools
             if (overwrite == false) // Dont overwrite so rename reports.
             {
                 permToolPath = GetNewDirName(permToolPath);
+
                 //Deal with renaming reports!
                 foreach (ReportSpec item in existingReports)
                 {
@@ -367,6 +444,10 @@ namespace pwiz.Skyline.Model.Tools
                     string package = readin.GetPackage(i);
                     while (!string.IsNullOrEmpty(package))
                     {
+                        // if the package is not a uri, it is stored locally in the tool-inf directory
+                        if (!package.StartsWith("http")) // Not L10N
+                            package = Path.Combine(tempToolPath, TOOL_INF, package);
+                        
                         packages.Add(package);
                         package = readin.GetPackage(++i);
                     }
@@ -376,6 +457,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
 
                 string reportTitle = readin.Input_Report_Name;
+                List<AnnotationDef> annotations = new List<AnnotationDef>();
                 // Check we have the relevant report
                 if (!string.IsNullOrWhiteSpace(reportTitle))
                 {
@@ -390,6 +472,14 @@ namespace pwiz.Skyline.Model.Tools
                         retval.AddMessage(string.Format(Resources.UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_, readin.Title, reportTitle));
                         fileStream.Dispose();
                         continue;
+                    }
+                    // Get annotations for this specific tool
+                    for (int i = 1; ; i++)
+                    {
+                        string annotation = readin.GetAnnotation(i);
+                        if (string.IsNullOrEmpty(annotation))
+                            break;
+                        annotations.Add(Settings.Default.AnnotationDefList[annotation]);
                     }
                 }
 
@@ -443,16 +533,10 @@ namespace pwiz.Skyline.Model.Tools
 
                 //Append each tool to the return value
                 retval.AddTool(new ToolDescription(uniqueTitle, command, args, readin.Initial_Directory,
-                                                   readin.Output_to_Immediate_Window.Contains("True"), reportTitle, dllPath, readin.Args_Collector_Type, permToolPath)); //Not L10N
+                                                   readin.Output_to_Immediate_Window.Contains("True"), reportTitle, dllPath, readin.Args_Collector_Type, permToolPath, annotations)); //Not L10N
                 fileStream.Close();
 
             } // Done looping through .properties files.
-            
-            // Remove the folder in tempfolder.
-            if (tempToolPath.Contains("Temp")) // Minor sanity check //Not L10N
-            {
-                DirectoryEx.SafeDelete(tempToolPath);
-            }
 
             //Check if we need to install a program
             if (retval.Installations.Count > 0)
@@ -473,6 +557,12 @@ namespace pwiz.Skyline.Model.Tools
                         Settings.Default.ToolFilePaths.Add(ppc, path);
                     }
                 }
+            }
+
+            // Remove the folder in tempfolder.
+            if (tempToolPath.Contains("Temp")) // Minor sanity check //Not L10N
+            {
+                DirectoryEx.SafeDelete(tempToolPath);
             }
 
             foreach (var tool in retval.ValidToolsFound)

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -39,38 +40,54 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly string _version;
         private readonly bool _installed;
-        private readonly ICollection<string> _packageUris;
         private readonly TextWriter _writer;
 
-        public PythonInstaller(ProgramPathContainer pythonPathContainer, ICollection<string> packageUris, TextWriter writer)
-            : this(pythonPathContainer, packageUris, PythonUtil.CheckInstalled(pythonPathContainer.ProgramVersion), writer)
+        private IList<string> PackageUris { get; set; }
+        private IList<string> LocalPackages { get; set; } 
+
+        public PythonInstaller(ProgramPathContainer pythonPathContainer, IEnumerable<string> packages, TextWriter writer)
+            : this(pythonPathContainer, packages, PythonUtil.CheckInstalled(pythonPathContainer.ProgramVersion), writer)
         {
         }
 
-        public PythonInstaller(ProgramPathContainer pythonPathContainer, ICollection<string> packageUris, bool installed, TextWriter writer)
+        public PythonInstaller(ProgramPathContainer pythonPathContainer, IEnumerable<string> packages, bool installed, TextWriter writer)
         {
             _version = pythonPathContainer.ProgramVersion;
-            _packageUris = packageUris;
             _installed = installed;
             _writer = writer;
+            AssignPackages(packages);
             InitializeComponent();
+        }
+
+        private void AssignPackages(IEnumerable<string> packages)
+        {
+            PackageUris = new List<string>();
+            LocalPackages = new List<string>();
+            foreach (var package in packages)
+            {
+                if (package.StartsWith("http")) // Not L10N
+                    PackageUris.Add(package);
+                else
+                    LocalPackages.Add(package);
+            }
         }
 
         public bool IsLoaded { get; private set; }
 
         private void PythonInstaller_Load(object sender, EventArgs e)
         {
-            if (!_installed && _packageUris.Count != 0)
+            if (!_installed && (PackageUris.Count + LocalPackages.Count) != 0)
             {
-                labelMessage.Text = string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_installation_process_, _version);
+                labelMessage.Text = string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, _version);
                 PopulatePackageCheckListBox();
             } else if (!_installed)
             {
-                labelMessage.Text = string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process, _version);
+                labelMessage.Text = string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process_, _version);
                 int shift = btnCancel.Top - clboxPackages.Top;
                 clboxPackages.Visible = clboxPackages.Enabled = false;
                 Height -= shift;
-            } else if (_packageUris.Count != 0)
+            }
+            else if ((PackageUris.Count + LocalPackages.Count) != 0)
             {
                 labelMessage.Text = Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_;
                 PopulatePackageCheckListBox();
@@ -80,15 +97,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void PopulatePackageCheckListBox()
         {
-            // add package names
-            ICollection<string> packageNames = new Collection<string>();
-            const string pattern = @"([^/]*)\.(exe|zip|tar\.gz)$"; // Not L10N
-            foreach (var package in _packageUris)
-            {
-                Match name = Regex.Match(package, pattern);
-                packageNames.Add(name.Groups[1].ToString());
-            }
-            clboxPackages.DataSource = packageNames;
+            clboxPackages.DataSource = IsolatePackageNames(PackageUris).Concat(IsolatePackageNames(LocalPackages)).ToList();
 
             // initially set them as checked
             for (int i = 0; i < clboxPackages.Items.Count; i++)
@@ -96,6 +105,18 @@ namespace pwiz.Skyline.ToolsUI
                 clboxPackages.SetItemChecked(i, true);
             }
         }
+
+        private static IEnumerable<string> IsolatePackageNames(IEnumerable<string> packages)
+        {
+            ICollection<string> packageNames = new Collection<string>();
+            const string pattern = @"([^/\\]*)\.(zip|tar\.gz|exe)$"; // Not L10N
+            foreach (var package in packages)
+            {
+                Match name = Regex.Match(package, pattern);
+                packageNames.Add(name.Groups[1].ToString());
+            }
+            return packageNames;
+        } 
 
         private void btnInstall_Click(object sender, EventArgs e)
         {
@@ -120,7 +141,7 @@ namespace pwiz.Skyline.ToolsUI
                     waitDlg.PerformWork(this, 500, DownloadPython);
                 }
                 InstallPython();
-                MessageDlg.Show(this, Resources.PythonInstaller_GetPython_Python_installation_completed);
+                MessageDlg.Show(this, Resources.PythonInstaller_GetPython_Python_installation_completed_);
                 return true;
             }
             catch (TargetInvocationException ex)
@@ -156,8 +177,8 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (!webClient.DownloadFileAsync(downloadUri, DownloadPath = Path.GetTempPath() + fileName))
                     throw new MessageException(TextUtil.LineSeparate(
-                        Resources.PythonInstaller_DownloadPython_Download_failed, 
-                        Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support));
+                        Resources.PythonInstaller_DownloadPython_Download_failed_, 
+                        Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
             }
         }
 
@@ -170,19 +191,25 @@ namespace pwiz.Skyline.ToolsUI
                     Arguments = "/i \"" + DownloadPath + "\"", // Not L10N
                 };
             if (processRunner.RunProcess(new Process {StartInfo = startInfo}) != 0)
-                throw new MessageException(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation);
+                throw new MessageException(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_);
         }
 
         private bool GetPackages()
         {
+            ICollection<string> downloadablePackages = new Collection<string>();
+            ICollection<string> localPackages = new Collection<string>();
+            AssignPackagesToInstall(ref downloadablePackages, ref localPackages);
+            
+            IEnumerable<string> packagePaths = null;
             try
             {
                 using (var waitDlg = new LongWaitDlg{ProgressValue = 0})
                 {
-                    waitDlg.PerformWork(this, 500, DownloadPackages);
+                    waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
                 }
-                InstallPackages();
-                MessageDlg.Show(this, Resources.PythonInstaller_GetPackages_Package_installation_completed);
+                packagePaths = (packagePaths == null) ? localPackages : packagePaths.Concat(localPackages);
+                InstallPackages(packagePaths);
+                MessageDlg.Show(this, Resources.PythonInstaller_GetPackages_Package_installation_completed_);
                 return true;
             }
             catch (TargetInvocationException ex)
@@ -201,26 +228,27 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private ICollection<string> ExePaths { get; set; }
-        private ICollection<string> SourcePaths { get; set; } 
-
-        private void DownloadPackages(ILongWaitBroker waitBroker)
+        private void AssignPackagesToInstall(ref ICollection<string> downloadableFiles, ref ICollection<string> localFiles)
         {
-            // only download the checked packages
-            ICollection<string> packagesToDownload = new Collection<string>();
-            int index = 0;
-            foreach (var package in _packageUris)
+            foreach (int index in clboxPackages.CheckedIndices)
             {
-                if (clboxPackages.GetItemCheckState(index) == CheckState.Checked)
-                    packagesToDownload.Add(package);
-                index++;
+                if (index < PackageUris.Count)
+                {
+                    downloadableFiles.Add(PackageUris[index]);
+                }
+                else
+                {
+                    localFiles.Add(LocalPackages[index - PackageUris.Count]);
+                }
             }
+        }
 
-            var failedDownloads = new Collection<string>();
-            ExePaths = new Collection<string>();
-            SourcePaths = new Collection<string>();
+        private ICollection<string> DownloadPackages(ILongWaitBroker waitBroker, IEnumerable<string> packagesToDownload)
+        {
+            ICollection<string> downloadPaths = new Collection<string>();
+            ICollection<string> failedDownloads = new Collection<string>();
 
-            using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(waitBroker, _packageUris.Count))
+            using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(waitBroker, PackageUris.Count))
             {
                 foreach (var package in packagesToDownload)
                 {
@@ -228,14 +256,7 @@ namespace pwiz.Skyline.ToolsUI
                     string downloadPath = Path.GetTempPath() + file;
                     if (webClient.DownloadFileAsync(new Uri(package), downloadPath))
                     {
-                        if (downloadPath.EndsWith(".exe")) // Not L10N
-                        {
-                            ExePaths.Add(downloadPath);
-                        }
-                        else
-                        {
-                            SourcePaths.Add(downloadPath);
-                        }
+                        downloadPaths.Add(downloadPath);
                     }
                     else
                     {
@@ -248,27 +269,39 @@ namespace pwiz.Skyline.ToolsUI
             {
                 throw new MessageException(
                         TextUtil.LineSeparate(
-                            Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages,
+                            Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_,
                             string.Empty,
                             TextUtil.LineSeparate(failedDownloads),
                             string.Empty,
-                            Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support));
+                            Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
             }
+            return downloadPaths;
         }
 
-        private void InstallPackages()
+        private void InstallPackages(IEnumerable<string> packages)
         {
+            // separate packages
+            ICollection<string> exePaths = new Collection<string>();
+            ICollection<string> sourcePaths = new Collection<string>();
+            foreach (var package in packages)
+            {
+                if (package.EndsWith(".exe")) // Not L10N
+                    exePaths.Add(package);
+                else
+                    sourcePaths.Add(package);
+            }
+            
             // install packages with executable installers first
-            foreach (var package in ExePaths)
+            foreach (var package in exePaths)
             {
                 var processRunner = TestProcessRunner ?? new SynchronousProcessRunner();
                 if (processRunner.RunProcess(new Process {StartInfo = new ProcessStartInfo(package)}) != 0) {
-                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation);
+                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_);
                 }
             }
 
             // then install packages from source
-            if (SourcePaths.Count != 0)
+            if (sourcePaths.Count != 0)
             {
                 // try and find the path to the pip package manager .exe
                 string pipPath = PythonUtil.GetPipPath(_version);
@@ -278,7 +311,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     var dlg =
                         new MultiButtonMsgDlg(
-                            Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process,
+                            Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
                             Resources.PythonInstaller_InstallPackages_Install);
 
                     DialogResult result = dlg.ShowDialog(this);
@@ -286,7 +319,7 @@ namespace pwiz.Skyline.ToolsUI
                     if (result == DialogResult.OK && GetPip())
                     {
                         pipPath = PythonUtil.GetPipPath(_version);
-                        MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete);
+                        MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
                     }
                     else
                     {
@@ -295,7 +328,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
 
                 var argumentBuilder = new StringBuilder("/C echo installing packages"); // Not L10N
-                foreach (var package in SourcePaths)
+                foreach (var package in sourcePaths)
                 {
                     argumentBuilder.Append(" & ")
                                  .Append(pipPath)
@@ -313,7 +346,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (IOException)
                 {
-                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages);
+                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
                 }
             }
         }
@@ -366,7 +399,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (!webClient.DownloadFileAsync(new Uri(setupToolsScript), SetupToolsPath) ||
                     !webClient.DownloadFileAsync(new Uri(pipScript), PipPath))
                 {
-                    throw new MessageException(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers);
+                    throw new MessageException(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
                 }
             }
         }
@@ -392,7 +425,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (IOException)
             {
-                throw new MessageException(Resources.PythonInstaller_InstallPip_Unknown_error_installing_pip);
+                throw new MessageException(Resources.PythonInstaller_InstallPip_Unknown_error_installing_pip_);
             }
         }
 

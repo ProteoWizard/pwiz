@@ -43,28 +43,43 @@ namespace pwiz.Skyline.ToolsUI
 
         private readonly string _version;
         private readonly bool _installed;
-        private readonly ICollection<string> _packageUris;
         private readonly TextWriter _writer;
 
-        public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packageUris, TextWriter writer)
-            : this(rPathContainer, packageUris, RUtil.CheckInstalled(rPathContainer.ProgramVersion), writer)
+        private IList<string> PackageUris { get; set; }
+        private IList<string> LocalPackages { get; set; } 
+
+        public RInstaller(ProgramPathContainer rPathContainer, IEnumerable<string> packages, TextWriter writer)
+            : this(rPathContainer, packages, RUtil.CheckInstalled(rPathContainer.ProgramVersion), writer)
         {
         }
 
-        public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packageUris, bool installed, TextWriter writer)
+        public RInstaller(ProgramPathContainer rPathContainer, IEnumerable<string> packages, bool installed, TextWriter writer)
         {
             _version = rPathContainer.ProgramVersion;
-            _packageUris = packageUris;
             _installed = installed;
             _writer = writer;
+            AssignPackages(packages);
             InitializeComponent();
+        }
+
+        private void AssignPackages(IEnumerable<string> packages)
+        {
+            PackageUris = new List<string>();
+            LocalPackages = new List<string>();
+            foreach (var package in packages)
+            {
+                if (package.StartsWith("http")) // Not L10N
+                    PackageUris.Add(package);
+                else
+                    LocalPackages.Add(package);
+            }
         }
 
         public bool IsLoaded { get; set; }
 
         private void RInstaller_Load(object sender, EventArgs e)
         {
-            if (!_installed && _packageUris.Count != 0)
+            if (!_installed && (PackageUris.Count + LocalPackages.Count) != 0)
             {
                 PopulatePackageCheckListBox();
                 labelMessage.Text = string.Format(
@@ -82,12 +97,12 @@ namespace pwiz.Skyline.ToolsUI
                 checkedListBoxPackages.Visible = checkedListBoxPackages.Enabled = false;
                 Height -= shift;
             }
-            else if (_packageUris.Count != 0)
+            else if ((PackageUris.Count + LocalPackages.Count) != 0)
             {
                 PopulatePackageCheckListBox();
                 labelMessage.Text =
                     Resources
-                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process;
+                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_;
             }
 
             IsLoaded = true;
@@ -95,15 +110,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void PopulatePackageCheckListBox()
         {
-            // add package names
-            ICollection<string> packageNames = new Collection<string>();
-            const string pattern = @"([^/]*)\.(zip|tar\.gz)$"; // Not L10N
-            foreach (var package in _packageUris)
-            {
-                Match name = Regex.Match(package, pattern);
-                packageNames.Add(name.Groups[1].ToString());
-            }
-            checkedListBoxPackages.DataSource = packageNames;
+            checkedListBoxPackages.DataSource = IsolatePackageNames(PackageUris).Concat(IsolatePackageNames(LocalPackages)).ToList();
 
             // initially set them as checked
             for (int i = 0; i < checkedListBoxPackages.Items.Count; i++)
@@ -111,6 +118,18 @@ namespace pwiz.Skyline.ToolsUI
                 checkedListBoxPackages.SetItemChecked(i, true);
             }
         }
+
+        private static IEnumerable<string> IsolatePackageNames(IEnumerable<string> packages)
+        { 
+            ICollection<string> packageNames = new Collection<string>();
+            const string pattern = @"([^/\\]*)\.(zip|tar\.gz)$"; // Not L10N
+            foreach (var package in packages)
+            {
+                Match name = Regex.Match(package, pattern);
+                packageNames.Add(name.Groups[1].ToString());
+            }
+            return packageNames;
+        } 
 
         private void btnInstall_Click(object sender, EventArgs e)
         {
@@ -137,7 +156,7 @@ namespace pwiz.Skyline.ToolsUI
                     dlg.PerformWork(this, 500, DownloadR);
                 }
                 InstallR();
-                MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete);
+                MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
             }
             catch (TargetInvocationException ex)
             {
@@ -183,7 +202,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (!webClient.DownloadFileAsync(recentUri, DownloadPath) && !webClient.DownloadFileAsync(olderUri, DownloadPath))
                     throw new MessageException(
                         TextUtil.LineSeparate(
-                            Resources.RInstaller_DownloadR_Download_failed,
+                            Resources.RInstaller_DownloadR_Download_failed_,
                             Resources
                                 .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
             }
@@ -202,15 +221,21 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                string packagePaths = null;
-                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_GetPackages_Downloading_packages, ProgressValue = 0})
+                ICollection<string> downloadablePackages = new Collection<string>();
+                ICollection<string> localPackages = new Collection<string>();
+                AssignPackagesToInstall(ref downloadablePackages, ref localPackages);
+
+                IEnumerable<string> packagePaths = null;
+                if (downloadablePackages.Count != 0)
                 {
-                    dlg.PerformWork(this, 1000,
-                                    longWaitBroker =>
-                                    packagePaths = DownloadPackages(longWaitBroker));
+                    using (var dlg = new LongWaitDlg{Message = Resources.RInstaller_GetPackages_Downloading_packages, ProgressValue = 0})
+                    {
+                        dlg.PerformWork(this, 1000, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
+                    }
                 }
-                InstallPackages(packagePaths);
-                MessageDlg.Show(this, Resources.RInstaller_GetPackages_Package_installation_complete);
+                packagePaths = (packagePaths == null) ? localPackages : packagePaths.Concat(localPackages);
+                InstallPackages(CommandLine.ParseCommandLineArray(packagePaths.ToArray()));
+                MessageDlg.Show(this, Resources.RInstaller_GetPackages_Package_installation_complete_);
             }
             catch (TargetInvocationException ex)
             {
@@ -228,21 +253,26 @@ namespace pwiz.Skyline.ToolsUI
             return true;
         }
 
-        /// <returns>A space separated string of package source file locations on the local file system</returns>
-        private string DownloadPackages(ILongWaitBroker longWaitBroker)
+        private void AssignPackagesToInstall(ref ICollection<string> downloadableFiles, ref ICollection<string> localFiles)
         {
-            // only download the checked packages
-            ICollection<Uri> packagesToDownload = new Collection<Uri>();
-            int index = 0;
-            foreach (var package in _packageUris)
+            foreach (int index in checkedListBoxPackages.CheckedIndices)
             {
-                if (checkedListBoxPackages.GetItemCheckState(index) == CheckState.Checked)
-                    packagesToDownload.Add(new Uri(package));
-                index++;
+                if (index < PackageUris.Count)
+                {
+                    downloadableFiles.Add(PackageUris[index]);
+                }
+                else
+                {
+                    localFiles.Add(LocalPackages[index - PackageUris.Count]);
+                }
             }
+        }
 
+        /// <returns>An enumerable collection of package source file locations on the local file system</returns>
+        private IEnumerable<string> DownloadPackages(ILongWaitBroker longWaitBroker, ICollection<string> packages)
+        {
             // create the webclient
-            using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, packagesToDownload.Count))
+            using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, packages.Count))
             {
                 // store filepaths
                 var packagePaths = new Collection<string>();
@@ -251,16 +281,17 @@ namespace pwiz.Skyline.ToolsUI
                 var failedDownloads = new List<string>();
 
                 // download each package
-                foreach (var package in packagesToDownload)
+                foreach (var package in packages)
                 {
-                    Match file = Regex.Match(package.AbsolutePath, @"([^/]*\.)(zip|tar\.gz)"); // Not L10N
+                    var uri = new Uri(package);
+                    Match file = Regex.Match(uri.AbsolutePath, @"([^/]*\.)(zip|tar\.gz)"); // Not L10N
                     string downloadPath = Path.GetTempPath() + file.Groups[1] + file.Groups[2];
-                    if (webClient.DownloadFileAsync(package, downloadPath))
+                    if (webClient.DownloadFileAsync(uri, downloadPath))
                     {
                         packagePaths.Add(downloadPath);
                     }
                     else
-                        failedDownloads.Add(package.ToString());
+                        failedDownloads.Add(package);
                 }
 
                 if (failedDownloads.Count > 0)
@@ -275,12 +306,12 @@ namespace pwiz.Skyline.ToolsUI
                                 .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
                 }
 
-                return CommandLine.ParseCommandLineArray(packagePaths.ToArray());
+                return packagePaths;
             }
         }
 
         private void InstallPackages(string packagePaths)
-        {
+        {  
             // ensure that there are Packages to install
             if (string.IsNullOrEmpty(packagePaths))
                 return;
@@ -288,11 +319,11 @@ namespace pwiz.Skyline.ToolsUI
             // then get the program path
             string programPath = TestProgramPath ?? RUtil.FindRProgramPath(_version);
             if (programPath == null)
-                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
+                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages_);
 
             // create argument string
             var argumentBuilder = new StringBuilder();
-            argumentBuilder.Append("/C \"").Append(programPath).Append("\" CMD INSTALL ").Append(packagePaths);
+            argumentBuilder.Append("/C \"").Append(programPath).Append("\" CMD INSTALL ").Append(packagePaths); // Not L10N
 
             var processRunner = TestNamedPipeProcessRunner ?? new NamedPipeProcessRunnerWrapper();
             try
@@ -304,7 +335,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (IOException)
             {
-                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages);
+                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages_);
             }
         }
 
@@ -357,7 +388,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <param name="rVersion">The version to check</param>
         public static bool CheckInstalled(string rVersion)
         {
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE"); // Not L10N
+            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE") ?? Registry.CurrentUser.OpenSubKey(@"SOFTWARE"); // Not L10N
             if (softwareKey == null)
                 return false;
 
@@ -382,7 +413,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <param name="rVersion">The version of R, e.g. "2.15.2"</param>
         public static string FindRProgramPath(string rVersion)
         {
-            RegistryKey rKey = Registry.LocalMachine.OpenSubKey(REGISTRY_LOCATION + rVersion);
+            RegistryKey rKey = Registry.LocalMachine.OpenSubKey(REGISTRY_LOCATION + rVersion) ?? Registry.CurrentUser.OpenSubKey(REGISTRY_LOCATION + rVersion);
             if (rKey == null)
                 return null;
 

@@ -185,12 +185,12 @@ namespace pwiz.Skyline.ToolsUI
             if (ToolDescription.IsWebPageCommand(command))
             {
                 newTool = new ToolDescription(GetTitle(title), command, string.Empty, string.Empty, false,
-                    selectedReport, argsCollectorDllPath, argsCollectorType, toolDirPath);
+                    selectedReport, argsCollectorDllPath, argsCollectorType, toolDirPath, null);
             }
             else
             {
                 newTool = new ToolDescription(GetTitle(title), command, arguments, initialDirectory, isImmediateOutput,
-                    selectedReport, argsCollectorDllPath, argsCollectorType,toolDirPath);    
+                    selectedReport, argsCollectorDllPath, argsCollectorType,toolDirPath, null);    
             }
             ToolList.Add(newTool);
             RefreshListBox();
@@ -975,7 +975,7 @@ namespace pwiz.Skyline.ToolsUI
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
-                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteOrInParallel, SkylineWindowParent.InstallProgram);
+                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel, SkylineWindowParent.InstallProgram);
             }
             catch (MessageException x)
             {
@@ -1107,6 +1107,35 @@ namespace pwiz.Skyline.ToolsUI
                     return true;
                 case DialogResult.No:
                     return false;
+            }
+            return false;
+        }
+
+        public static bool? OverwriteAnnotations(List<AnnotationDef> annotations)
+        {
+            List<string> annotationTitles = annotations.Select(annotation => annotation.GetKey()).ToList();
+            
+            string annotationMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_, string.Empty,
+                                                    "{0}", string.Empty);
+
+            string annotationSingleMessage =
+                TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_, string.Empty, "{0}", string.Empty);
+
+            string annotationMessage = annotations.Count == 1 ? annotationSingleMessage : annotationMultiMessage;
+            string question = Resources.ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_;
+
+            string messageFormat = TextUtil.LineSeparate(annotationMessage, question);
+
+            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)), "Overwrite", "Keep Existing", true);
+            DialogResult result = dlg.ShowDialog();
+            switch (result)
+            {
+                    case DialogResult.Cancel:
+                        return null;
+                    case DialogResult.Yes:
+                        return true;
+                    case DialogResult.No:
+                        return false;
             }
             return false;
         }

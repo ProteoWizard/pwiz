@@ -231,7 +231,18 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
-                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int) ImageId.labkey;
+                    JToken moduleProperties = subFolder["moduleProperties"]; // Not L10N
+                    if (moduleProperties == null)
+                        folderNode.ImageIndex = folderNode.SelectedImageIndex = (int) ImageId.labkey;
+                    else
+                    {
+                        string effectiveValue = (string) moduleProperties[0]["effectiveValue"]; // Not L10N
+                        folderNode.ImageIndex =
+                            folderNode.SelectedImageIndex =
+                            (effectiveValue.Equals("Library") || effectiveValue.Equals("LibraryProtein")) // Not L10N
+                                ? (int)ImageId.chrom_lib
+                                : (int)ImageId.labkey;
+                    }
                 }
 
                 folderNode.Tag = new FolderInformation(server, canUpload);
@@ -414,7 +425,7 @@ namespace pwiz.Skyline.FileUI
         public JToken GetInfoForFolders(Server server)
         {
             // Retrieve folders from server.
-            Uri uri = Call(server.URI, "project", null, "getContainers", "includeSubfolders=true"); // Not L10N
+            Uri uri = Call(server.URI, "project", null, "getContainers", "includeSubfolders=true&moduleProperties=TargetedMS"); // Not L10N
 
             using (WebClient webClient = new WebClient())
             {

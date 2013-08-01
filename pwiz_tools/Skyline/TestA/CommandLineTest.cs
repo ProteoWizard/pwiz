@@ -1516,6 +1516,9 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void CommandLineArrayParserTest()
         {
+            // Test case [] = "" - an empty array
+            Assert.AreEqual(string.Empty, CommandLine.ParseCommandLineArray(new string[0]));
+            
             // Test case [a,b,c] = "a b c" - a simple array with no spaces
             Assert.AreEqual("a b c", CommandLine.ParseCommandLineArray(new [] {"a", "b", "c"}));
 

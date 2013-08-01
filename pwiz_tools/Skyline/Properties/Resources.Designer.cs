@@ -865,24 +865,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download canceled.
-        /// </summary>
-        public static string AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled {
-            get {
-                return ResourceManager.GetString("AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloading {0}.
-        /// </summary>
-        public static string AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Downloading__0_ {
-            get {
-                return ResourceManager.GetString("AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Downloading__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &amp;Background Proteomes:.
         /// </summary>
         public static string BackgroundProteomeList_Label_Background_Proteomes {
@@ -2598,6 +2580,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An annotation with the following name already exists:.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_alre" +
+                        "ady_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations with the following names already exist:.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_alrea" +
+                        "dy_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to overwrite or keep the existing annotations?.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_exist" +
+                        "ing_annotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A Report with the name {1} already exists..
         /// </summary>
         public static string ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists_ {
@@ -2789,12 +2801,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is a naming conflict in unpacking the zip. Tool importing cancled!.
+        ///   Looks up a localized string similar to There is a naming conflict in unpacking the zip. Tool importing canceled!.
         /// </summary>
-        public static string ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_cancled_ {
+        public static string ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_ {
             get {
                 return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__" +
-                        "Tool_importing_cancled_", resourceCulture);
+                        "Tool_importing_canceled_", resourceCulture);
             }
         }
         
@@ -8325,6 +8337,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloading {0}.
+        /// </summary>
+        public static string MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0 {
+            get {
+                return ResourceManager.GetString("MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download canceled..
+        /// </summary>
+        public static string MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_ {
+            get {
+                return ResourceManager.GetString("MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid attempt to find a fragment in a peptide without fragment ions..
         /// </summary>
         public static string MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions {
@@ -10290,58 +10321,58 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download the following packages.
+        ///   Looks up a localized string similar to Failed to download the following packages:.
         /// </summary>
-        public static string PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages {
+        public static string PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_ {
             get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download failed. Check your network connection or contact Skyline developers.
+        ///   Looks up a localized string similar to Download failed. Check your network connection or contact Skyline developers..
         /// </summary>
-        public static string PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers {
+        public static string PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_con" +
-                        "tact_Skyline_developers", resourceCulture);
+                        "tact_Skyline_developers_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Check your network connection or contact the tool provider for installation support.
+        ///   Looks up a localized string similar to Check your network connection or contact the tool provider for installation support..
         /// </summary>
-        public static string PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support {
+        public static string PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_" +
-                        "provider_for_installation_support", resourceCulture);
+                        "provider_for_installation_support_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download failed.
+        ///   Looks up a localized string similar to Download failed..
         /// </summary>
-        public static string PythonInstaller_DownloadPython_Download_failed {
+        public static string PythonInstaller_DownloadPython_Download_failed_ {
             get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPython_Download_failed", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_DownloadPython_Download_failed_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package installation completed.
+        ///   Looks up a localized string similar to Package installation completed..
         /// </summary>
-        public static string PythonInstaller_GetPackages_Package_installation_completed {
+        public static string PythonInstaller_GetPackages_Package_installation_completed_ {
             get {
-                return ResourceManager.GetString("PythonInstaller_GetPackages_Package_installation_completed", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_GetPackages_Package_installation_completed_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation completed.
+        ///   Looks up a localized string similar to Python installation completed..
         /// </summary>
-        public static string PythonInstaller_GetPython_Python_installation_completed {
+        public static string PythonInstaller_GetPython_Python_installation_completed_ {
             get {
-                return ResourceManager.GetString("PythonInstaller_GetPython_Python_installation_completed", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_GetPython_Python_installation_completed_", resourceCulture);
             }
         }
         
@@ -10365,21 +10396,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package Installation was not completed. Canceling tool installation.
+        ///   Looks up a localized string similar to Package Installation was not completed. Canceling tool installation..
         /// </summary>
-        public static string PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation {
+        public static string PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling" +
-                        "_tool_installation", resourceCulture);
+                        "_tool_installation_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pip installation complete.
+        ///   Looks up a localized string similar to Pip installation complete..
         /// </summary>
-        public static string PythonInstaller_InstallPackages_Pip_installation_complete {
+        public static string PythonInstaller_InstallPackages_Pip_installation_complete_ {
             get {
-                return ResourceManager.GetString("PythonInstaller_InstallPackages_Pip_installation_complete", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Pip_installation_complete_", resourceCulture);
             }
         }
         
@@ -10394,22 +10425,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline uses the Python tool setuptools and the Python package manager Pip to install packages from source. Click install to begin the installation process.
+        ///   Looks up a localized string similar to Skyline uses the Python tool setuptools and the Python package manager Pip to install packages from source. Click install to begin the installation process..
         /// </summary>
-        public static string PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process {
+        public static string PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_P" +
                         "ython_package_manager_Pip_to_install_packages_from_source__Click_install_to_begi" +
-                        "n_the_installation_process", resourceCulture);
+                        "n_the_installation_process_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown error installing packages.
+        ///   Looks up a localized string similar to Unknown error installing packages..
         /// </summary>
-        public static string PythonInstaller_InstallPackages_Unknown_error_installing_packages {
+        public static string PythonInstaller_InstallPackages_Unknown_error_installing_packages_ {
             get {
-                return ResourceManager.GetString("PythonInstaller_InstallPackages_Unknown_error_installing_packages", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_InstallPackages_Unknown_error_installing_packages_", resourceCulture);
             }
         }
         
@@ -10424,42 +10455,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown error installing pip.
+        ///   Looks up a localized string similar to Unknown error installing pip..
         /// </summary>
-        public static string PythonInstaller_InstallPip_Unknown_error_installing_pip {
+        public static string PythonInstaller_InstallPip_Unknown_error_installing_pip_ {
             get {
-                return ResourceManager.GetString("PythonInstaller_InstallPip_Unknown_error_installing_pip", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_InstallPip_Unknown_error_installing_pip_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation failed. Canceling tool installation.
+        ///   Looks up a localized string similar to Python installation failed. Canceling tool installation..
         /// </summary>
-        public static string PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation {
+        public static string PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installa" +
-                        "tion", resourceCulture);
+                        "tion_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This tool requires Python {0}. Click install to begin the installation process.
+        ///   Looks up a localized string similar to This tool requires Python {0}. Click install to begin the installation process..
         /// </summary>
-        public static string PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process {
+        public static string PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install" +
-                        "_to_begin_the_installation_process", resourceCulture);
+                        "_to_begin_the_installation_process_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This tool requires Python {0} and the following packages. Select packages toinstall and then click Install to begin the installation process..
+        ///   Looks up a localized string similar to This tool requires Python {0} and the following packages. Select packages to install and then click Install to begin the installation process..
         /// </summary>
-        public static string PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_installation_process_ {
+        public static string PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_follow" +
-                        "ing_packages__Select_packages_toinstall_and_then_click_Install_to_begin_the_inst" +
-                        "allation_process_", resourceCulture);
+                        "ing_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_ins" +
+                        "tallation_process_", resourceCulture);
             }
         }
         
@@ -11483,11 +11514,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download failed.
+        ///   Looks up a localized string similar to Download failed..
         /// </summary>
-        public static string RInstaller_DownloadR_Download_failed {
+        public static string RInstaller_DownloadR_Download_failed_ {
             get {
-                return ResourceManager.GetString("RInstaller_DownloadR_Download_failed", resourceCulture);
+                return ResourceManager.GetString("RInstaller_DownloadR_Download_failed_", resourceCulture);
             }
         }
         
@@ -11501,29 +11532,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package installation complete.
+        ///   Looks up a localized string similar to Package installation complete..
         /// </summary>
-        public static string RInstaller_GetPackages_Package_installation_complete {
+        public static string RInstaller_GetPackages_Package_installation_complete_ {
             get {
-                return ResourceManager.GetString("RInstaller_GetPackages_Package_installation_complete", resourceCulture);
+                return ResourceManager.GetString("RInstaller_GetPackages_Package_installation_complete_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to R installation complete.
+        ///   Looks up a localized string similar to R installation complete..
         /// </summary>
-        public static string RInstaller_GetR_R_installation_complete {
+        public static string RInstaller_GetR_R_installation_complete_ {
             get {
-                return ResourceManager.GetString("RInstaller_GetR_R_installation_complete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred installing packages.
-        /// </summary>
-        public static string RInstaller_InstallPackages_An_error_occurred_installing_packages {
-            get {
-                return ResourceManager.GetString("RInstaller_InstallPackages_An_error_occurred_installing_packages", resourceCulture);
+                return ResourceManager.GetString("RInstaller_GetR_R_installation_complete_", resourceCulture);
             }
         }
         
@@ -11538,11 +11560,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown error installing packages.
+        ///   Looks up a localized string similar to Unknown error installing packages..
         /// </summary>
-        public static string RInstaller_InstallPackages_Unknown_error_installing_packages {
+        public static string RInstaller_InstallPackages_Unknown_error_installing_packages_ {
             get {
-                return ResourceManager.GetString("RInstaller_InstallPackages_Unknown_error_installing_packages", resourceCulture);
+                return ResourceManager.GetString("RInstaller_InstallPackages_Unknown_error_installing_packages_", resourceCulture);
             }
         }
         
@@ -11587,13 +11609,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process.
+        ///   Looks up a localized string similar to This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process..
         /// </summary>
-        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process {
+        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_ {
             get {
                 return ResourceManager.GetString("RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages" +
                         "__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_pr" +
-                        "ocess", resourceCulture);
+                        "ocess_", resourceCulture);
             }
         }
         
@@ -14371,6 +14393,45 @@ namespace pwiz.Skyline.Properties {
         public static string ToolDescription_Validate_Tools_must_have_a_title {
             get {
                 return ResourceManager.GetString("ToolDescription_Validate_Tools_must_have_a_title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enable these annotations and fill in the appropriate data in order to use the tool..
+        /// </summary>
+        public static string ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the" +
+                        "_appropriate_data_in_order_to_use_the_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please re-install the tool and try again..
+        /// </summary>
+        public static string ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires the use of the following annotations which are missing or improperly formatted.
+        /// </summary>
+        public static string ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted {
+            get {
+                return ResourceManager.GetString("ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_ann" +
+                        "otations_which_are_missing_or_improperly_formatted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires the use of the following annotations which are not enabled for this document.
+        /// </summary>
+        public static string ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document {
+            get {
+                return ResourceManager.GetString("ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_ann" +
+                        "otations_which_are_not_enabled_for_this_document", resourceCulture);
             }
         }
         

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         public ToolDescription(ToolDescription t)
-            : this(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle, t.ArgsCollectorDllPath, t.ArgsCollectorClassName, t.ToolDirPath)
+            : this(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle, t.ArgsCollectorDllPath, t.ArgsCollectorClassName, t.ToolDirPath, t.Annotations)
         {            
         }
 
@@ -85,12 +86,12 @@ namespace pwiz.Skyline.Model.Tools
         public ToolDescription(string title, string command, string arguments, string initialDirectory,
                                bool outputToImmediateWindow, string reportTitle)
             : this( title,  command,  arguments,  initialDirectory,
-                                outputToImmediateWindow,  reportTitle, string.Empty, string.Empty, null)
+                                outputToImmediateWindow,  reportTitle, string.Empty, string.Empty, null, new List<AnnotationDef>())
         {            
         }
 
         public ToolDescription(string title, string command, string arguments, string initialDirectory,
-                               bool outputToImmediateWindow, string reportTitle, string argsCollectorDllPath, string argsCollectorClassName, string toolDirPath)
+                               bool outputToImmediateWindow, string reportTitle, string argsCollectorDllPath, string argsCollectorClassName, string toolDirPath, List<AnnotationDef> annotations)
         {
             Title = title;
             Command = command;
@@ -101,6 +102,7 @@ namespace pwiz.Skyline.Model.Tools
             ArgsCollectorDllPath = argsCollectorDllPath;
             ArgsCollectorClassName = argsCollectorClassName;
             ToolDirPath = toolDirPath;
+            Annotations = annotations;
 
             //Validate();  //Not immutable
         }
@@ -120,6 +122,7 @@ namespace pwiz.Skyline.Model.Tools
         public string ArgsCollectorDllPath { get; set; }
         public string ArgsCollectorClassName { get; set; }
         public string ToolDirPath { get; set; }
+        public List<AnnotationDef> Annotations { get; set; }
 
         public bool IsWebPage { get { return IsWebPageCommand(Command); } }
 
@@ -178,12 +181,17 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Run the tool. When you call run tool. call it on a different thread. 
         /// </summary>       
-        /// <param name="doc"> Document to base reports off of. </param>
+        /// <param name="document"> Document to base reports off of. </param>
         /// <param name="toolMacroProvider"> Interface for replacing Tool Macros with the correct strings. </param>
         /// <param name="textWriter"> A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
-        /// <param name="exceptionHandler"> An interface for throwing exceptions to be delt with on different threads. </param>
-        public void RunTool(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        /// <param name="exceptionHandler"> An interface for throwing exceptions to be dealt with on different threads. </param>
+        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
         {
+            if (Annotations != null && Annotations.Count != 0)
+            {
+                VerifyAnnotations(document);
+            }
+
             if (IsWebPage)
             {
                 var webHelpers = WebHelpers ?? new WebHelpers();
@@ -194,15 +202,47 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else // It has a selected report that must be posted. 
                 {
-                    PostToLink(doc, exceptionHandler, webHelpers);
+                    PostToLink(document, exceptionHandler, webHelpers);
                 }
             }
             else // Not a website. Needs its own thread.
             {                
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
                 IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
-                RunExecutable(doc, newToolMacroProvider, textWriter, exceptionHandler);                
+                RunExecutable(document, newToolMacroProvider, textWriter, exceptionHandler);                
             }           
+        }
+
+        private void VerifyAnnotations(SrmDocument document)
+        {
+            var missingAnnotations = new List<string>();
+            var uncheckedAnnotations = new List<string>();
+            foreach (AnnotationDef annotationDef in Annotations)
+            {
+                if (!Settings.Default.AnnotationDefList.Contains(annotationDef))
+                    missingAnnotations.Add(annotationDef.GetKey());
+                else if (!document.Settings.DataSettings.AnnotationDefs.Contains(annotationDef))
+                    uncheckedAnnotations.Add(annotationDef.GetKey());
+            }
+
+            if (missingAnnotations.Count != 0)
+            {
+                throw new MessageException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted, 
+                                                                  string.Empty, 
+                                                                  TextUtil.LineSeparate(missingAnnotations), 
+                                                                  string.Empty, 
+                                                                  Resources.ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_));
+
+            }
+
+            if (uncheckedAnnotations.Count != 0)
+            {
+                throw new MessageException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
+                                                                 string.Empty, 
+                                                                 TextUtil.LineSeparate(uncheckedAnnotations), 
+                                                                 string.Empty,
+                                                                 Resources.ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_));
+            }
         }
 
         private Thread PostToLink(SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
@@ -426,6 +466,11 @@ namespace pwiz.Skyline.Model.Tools
             argscollector_class_name,
             tool_dir_path
         }
+        
+        private enum EL
+        {
+            annotation
+        }
 
         private void Validate()
         {
@@ -451,8 +496,18 @@ namespace pwiz.Skyline.Model.Tools
             PreviousCommandLineArgs = reader.GetAttribute(ATTR.argument_generated) ?? string.Empty;
             ArgsCollectorDllPath = reader.GetAttribute(ATTR.argscollector_dll_path) ?? string.Empty;
             ArgsCollectorClassName = reader.GetAttribute(ATTR.argscollector_class_name) ?? string.Empty;
-            ToolDirPath = reader.GetAttribute(ATTR.tool_dir_path) ?? string.Empty;            
-            reader.Read();
+            ToolDirPath = reader.GetAttribute(ATTR.tool_dir_path) ?? string.Empty;
+            Annotations = new List<AnnotationDef>();
+            if (!reader.IsEmptyElement)
+            {
+                reader.ReadStartElement();
+                reader.ReadElementList(EL.annotation, Annotations);
+                reader.ReadEndElement();
+            }
+            else
+            {
+                reader.Read();
+            }
             Validate();
         }
 
@@ -467,8 +522,11 @@ namespace pwiz.Skyline.Model.Tools
             writer.WriteAttributeIfString(ATTR.argument_generated, PreviousCommandLineArgs);
             writer.WriteAttributeIfString(ATTR.argscollector_dll_path, ArgsCollectorDllPath);
             writer.WriteAttributeIfString(ATTR.argscollector_class_name, ArgsCollectorClassName);
-            writer.WriteAttributeIfString(ATTR.tool_dir_path,ToolDirPath);
+            writer.WriteAttributeIfString(ATTR.tool_dir_path, ToolDirPath);
+            writer.WriteElementList(EL.annotation, Annotations ?? new List<AnnotationDef>());
         }
+
+
         #endregion
         
         #region object overrides

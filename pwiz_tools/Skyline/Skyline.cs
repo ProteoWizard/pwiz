@@ -2459,7 +2459,7 @@ namespace pwiz.Skyline
                 {
                     AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
                 }
-                catch (Exception e)
+                catch (MessageException e)
                 {
                     MessageDlg.Show(_parent, e.Message);
                 }

@@ -51,6 +51,8 @@ namespace pwiz.SkylineTestFunctional
         private const string R_VERSION = "2.15.2";
         private const string PACKAGE_1 = "http://www.test.com/package1.zip";
         private const string PACKAGE_2 = "http://www.test.com/package2.tar.gz";
+        private const string PACKAGE_3 = "C:\\localpackage1.zip";
+        private const string PACKAGE_4 = "C:\\localpackage2.tar.gz";
 
         protected override void DoTest()
         {
@@ -74,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestDlgLoadBoth()
         {
             Installed = false;
-            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2 };
+            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             Assert.AreEqual(string.Format(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, PPC.ProgramVersion), rInstaller.Message);
@@ -86,10 +88,10 @@ namespace pwiz.SkylineTestFunctional
         private static void TestDlgLoadOnlyR()
         {
             Installed = true;
-            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2 };
+            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
-            Assert.AreEqual(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process, rInstaller.Message);
+            Assert.AreEqual(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, rInstaller.Message);
             OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
             Assert.AreEqual(DialogResult.Cancel, rInstaller.DialogResult);
         }
@@ -109,9 +111,9 @@ namespace pwiz.SkylineTestFunctional
         // Tests that the form properly populates the checkbox
         private static void TestProperPopulation()
         {
-            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2 };
+            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
-            WaitForConditionUI(10*1000, () => rInstaller.IsLoaded);
+            WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             Assert.AreEqual(Packages.Count, rInstaller.PackagesListCount);
 
             // ensure that packages default to checked upon load
@@ -135,7 +137,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatRInstaller(true, false, false);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled, messageDlg.Message);
+            Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
         }
@@ -145,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatRInstaller(false, true, true);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete, messageDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
         }
@@ -165,7 +167,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatRInstaller(false, false, false);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick()); 
-            Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_DownloadR_Download_failed, Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message);
+            Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_DownloadR_Download_failed_, Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
         }
@@ -198,9 +200,7 @@ namespace pwiz.SkylineTestFunctional
         // Tests that the tool will install if the user unselects all the packages to install
         private static void TestNoPackagesDownload()
         {
-            Installed = true;
-            Packages = new Collection<string> {PACKAGE_1, PACKAGE_2};
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var rInstaller = FormatPackageInstaller(false, false, false, false);
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(rInstaller.UncheckAllPackages);
             OkDialog(rInstaller, rInstaller.AcceptButton.PerformClick);
@@ -212,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatPackageInstaller(true, false, false, false);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.AsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled, messageDlg.Message);
+            Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
         }
@@ -238,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatPackageInstaller(false, true, false, false);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick()); 
-            Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages, messageDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
         }
@@ -258,7 +258,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatPackageInstaller(false, true, true, true);
             var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete, messageDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
         }
@@ -267,7 +267,7 @@ namespace pwiz.SkylineTestFunctional
         private static RInstaller FormatPackageInstaller(bool cancelDownload, bool downloadSuccess, bool connectSuccess, bool installSuccess)
         {
             Installed = true;
-            Packages = new Collection<string> {PACKAGE_1, PACKAGE_2};
+            Packages = new Collection<string> {PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4};
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(() =>
@@ -284,7 +284,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestStartToFinish()
         {
             Installed = false;
-            Packages = new Collection<string> {PACKAGE_1, PACKAGE_2};
+            Packages = new Collection<string> {PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4};
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
             WaitForConditionUI(10*1000, () => rInstaller.IsLoaded);
             RunUI(() =>
@@ -304,16 +304,16 @@ namespace pwiz.SkylineTestFunctional
                     rInstaller.TestProgramPath = string.Empty;
                 });
             var downloadRDlg = ShowDialog<MessageDlg>(rInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete, downloadRDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, downloadRDlg.Message);
             OkDialog(downloadRDlg, downloadRDlg.OkDialog);
             var downloadPackagesDlg = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete, downloadPackagesDlg.Message);
+            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete_, downloadPackagesDlg.Message);
             OkDialog(downloadPackagesDlg, downloadPackagesDlg.OkDialog);
             Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
         }
 
         // helper method to simulate the creation of the InstallR dialog, so we can use our test installer
-        private static void InstallProgram(ProgramPathContainer ppc, ICollection<string> packages, bool installed)
+        private static void InstallProgram(ProgramPathContainer ppc, IEnumerable<string> packages, bool installed)
         {
             using (var dlg = new RInstaller(ppc, packages, installed, null))
             {
