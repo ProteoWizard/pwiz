@@ -320,27 +320,34 @@ namespace pwiz.Skyline.Controls.Graphs
             public static readonly PaneKey PRECURSORS = new PaneKey(null, null, false);
             public static readonly PaneKey PRODUCTS = new PaneKey(null, null, true);
             public static readonly PaneKey DEFAULT = new PaneKey(null, null, null);
-            public PaneKey(TransitionGroupDocNode nodeGroup) 
-                : this(nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.TransitionGroup.LabelType, false)
+
+            public PaneKey(TransitionGroupDocNode nodeGroup)
+                : this(nodeGroup != null ? nodeGroup.TransitionGroup.PrecursorCharge : (int?) null,
+                       nodeGroup != null ? nodeGroup.TransitionGroup.LabelType : null,
+                       false)
             {
             }
 
             public PaneKey(IsotopeLabelType isotopeLabelType) : this(null, isotopeLabelType, false)
             {
             }
+
             private PaneKey(int? precusorCharge, IsotopeLabelType isotopeLabelType, bool? isProducts) : this()
             {
                 PrecursorCharge = precusorCharge;
                 IsotopeLabelType = isotopeLabelType;
                 IsProducts = isProducts;
             }
+            
             public int? PrecursorCharge { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public bool? IsProducts { get; private set; }
+            
             private Tuple<int?, IsotopeLabelType, bool?> AsTuple()
             {
                 return new Tuple<int?, IsotopeLabelType, bool?>(PrecursorCharge, IsotopeLabelType, IsProducts);
             }
+            
             public int CompareTo(object other)
             {
                 return Comparer.Default.Compare(AsTuple(), ((PaneKey)other).AsTuple());

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Forms;
@@ -43,8 +45,6 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private static bool Installed { get; set; }
-        private static ICollection<string> Packages { get; set; }
         private static readonly ProgramPathContainer PPC = new ProgramPathContainer(R, R_VERSION);
 
         private const string R = "R";
@@ -56,11 +56,19 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            TestDlgLoad();
-            TestProperPopulation();
-            TestInstallR();
-            TestInstallPackages();
-            TestStartToFinish();
+            try
+            {
+                TestDlgLoad();
+                TestProperPopulation();
+                TestInstallR();
+                TestInstallPackages();
+                TestStartToFinish();
+            }
+            catch (Exception)
+            {
+                DebugLog.Info("Issue");
+                throw;
+            }
         }
 
         // Tests that the form loads with the proper display based on whether R is installed or not, as
@@ -75,50 +83,44 @@ namespace pwiz.SkylineTestFunctional
         // R is not installed, and there are packages to install
         private static void TestDlgLoadBoth()
         {
-            Installed = false;
-            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
+            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
-            Assert.AreEqual(string.Format(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, PPC.ProgramVersion), rInstaller.Message);
-            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
-            Assert.AreEqual(DialogResult.Cancel, rInstaller.DialogResult);
+            RunUI(() => Assert.AreEqual(string.Format(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, PPC.ProgramVersion), rInstaller.Message));
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // R is installed, and there are packages to install
         private static void TestDlgLoadOnlyR()
         {
-            Installed = true;
-            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
+            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, true));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
-            Assert.AreEqual(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, rInstaller.Message);
-            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
-            Assert.AreEqual(DialogResult.Cancel, rInstaller.DialogResult);
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_, rInstaller.Message));
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // R is not installed, and there are no packages to install
         private static void TestDlgLoadOnlyPackages()
         {
-            Installed = false;
-            Packages = new Collection<string>();
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var packages = new Collection<string>();
+            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
-            Assert.AreEqual(string.Format(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_, PPC.ProgramVersion), rInstaller.Message);
-            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
-            Assert.AreEqual(DialogResult.Cancel, rInstaller.DialogResult);
+            RunUI(() => Assert.AreEqual(string.Format(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_, PPC.ProgramVersion), rInstaller.Message));
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Tests that the form properly populates the checkbox
         private static void TestProperPopulation()
         {
-            Packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var packages = new Collection<string> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
+            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
-            Assert.AreEqual(Packages.Count, rInstaller.PackagesListCount);
+            RunUI(() => Assert.AreEqual(packages.Count, rInstaller.PackagesListCount));
 
             // ensure that packages default to checked upon load
-            Assert.AreEqual(Packages.Count, rInstaller.PackagesListCheckedCount);
-            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
+            RunUI(() => Assert.AreEqual(packages.Count, rInstaller.PackagesListCheckedCount));
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         private static void TestInstallR()
@@ -136,48 +138,47 @@ namespace pwiz.SkylineTestFunctional
         private static void TestRDownloadCancel()
         {
             var rInstaller = FormatRInstaller(true, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
         
         // Test R download success && install success
         private static void TestRDownloadAndInstallSuccess()
         {
             var rInstaller = FormatRInstaller(false, true, true);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // Test R download success && install failure
         private static void TestRDownloadSuccessInstallFailure()
         {
             var rInstaller = FormatRInstaller(false, true, false);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // Test R download failure
         private static void TestRDownloadFailure()
         {
             var rInstaller = FormatRInstaller(false, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick()); 
-            Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_DownloadR_Download_failed_, Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog); 
+            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_DownloadR_Download_failed_, Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // helper method for setting up the R installer form to support a number of possible installation outcomes
         private static RInstaller FormatRInstaller(bool cancelDownload, bool downloadSuccess, bool installSuccess)
         {
-            Installed = false;
-            Packages = new Collection<string>();
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var packages = new Collection<string>();
+            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10*1000, () => rInstaller.IsLoaded);
             RunUI(() =>
                 {
@@ -203,72 +204,69 @@ namespace pwiz.SkylineTestFunctional
             var rInstaller = FormatPackageInstaller(false, false, false, false);
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(rInstaller.UncheckAllPackages);
-            OkDialog(rInstaller, rInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
+            OkDialog(rInstaller, rInstaller.OkDialog);
         }
 
         // Test for canceling the package download
         private static void TestPackageDownloadCancel()
         {
             var rInstaller = FormatPackageInstaller(true, false, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // Test for package download failure
         private static void TestPackageDownloadFailure()
         {
             var rInstaller = FormatPackageInstaller(false, false, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick()); 
-            Assert.AreEqual(TextUtil.LineSeparate(
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog); 
+            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(
                             Resources.RInstaller_DownloadPackages_Failed_to_download_the_following_packages_,
                             string.Empty,
                             TextUtil.LineSeparate(new List<string>{PACKAGE_1,PACKAGE_2}),
                             string.Empty,
-                            Resources
-                                .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message);
+                            Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // Test for failure to connect to the named pipe
         private static void TestPackageConnectFailure()
         {
             var rInstaller = FormatPackageInstaller(false, true, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick()); 
-            Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog); 
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // Test for package install failure
         private static void TestPackageInstallFailure()
         {
             var rInstaller = FormatPackageInstaller(false, true, true, false);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.No, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // Test package install success
         private static void TestPackageInstallSuccess()
         {
             var rInstaller = FormatPackageInstaller(false, true, true, true);
-            var messageDlg = ShowDialog<MessageDlg>(() => rInstaller.AcceptButton.PerformClick());
-            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete_, messageDlg.Message);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // helper method for setting up the R installer form to support a number of possible package installation outcomes
         private static RInstaller FormatPackageInstaller(bool cancelDownload, bool downloadSuccess, bool connectSuccess, bool installSuccess)
         {
-            Installed = true;
-            Packages = new Collection<string> {PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4};
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var packages = new Collection<string> {PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4};
+            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, true));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(() =>
             {
@@ -283,9 +281,8 @@ namespace pwiz.SkylineTestFunctional
         // Tests the start to finish process of installing both R and associated packages
         private static void TestStartToFinish()
         {
-            Installed = false;
-            Packages = new Collection<string> {PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4};
-            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, Packages, Installed));
+            var packages = new Collection<string> {PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4};
+            var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10*1000, () => rInstaller.IsLoaded);
             RunUI(() =>
                 {
@@ -303,13 +300,13 @@ namespace pwiz.SkylineTestFunctional
                     rInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 0};
                     rInstaller.TestProgramPath = string.Empty;
                 });
-            var downloadRDlg = ShowDialog<MessageDlg>(rInstaller.AcceptButton.PerformClick);
-            Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, downloadRDlg.Message);
+            var downloadRDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, downloadRDlg.Message));
             OkDialog(downloadRDlg, downloadRDlg.OkDialog);
             var downloadPackagesDlg = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete_, downloadPackagesDlg.Message);
+            RunUI(() => Assert.AreEqual(Resources.RInstaller_GetPackages_Package_installation_complete_, downloadPackagesDlg.Message));
             OkDialog(downloadPackagesDlg, downloadPackagesDlg.OkDialog);
-            Assert.AreEqual(DialogResult.Yes, rInstaller.DialogResult);
+            WaitForClosedForm(rInstaller);
         }
 
         // helper method to simulate the creation of the InstallR dialog, so we can use our test installer
@@ -317,9 +314,16 @@ namespace pwiz.SkylineTestFunctional
         {
             using (var dlg = new RInstaller(ppc, packages, installed, null))
             {
+                // Keep OK button from doing anything ever
+                dlg.TestProcessRunner = new TestProcessRunner { ExitCode = 0 }; 
                 dlg.ShowDialog();
             }
         }
-    }
 
+        private static void Cancel(Form form)
+        {
+            WaitForConditionUI(5000, () => form.CancelButton != null);
+            form.CancelButton.PerformClick();
+        }
+    }
 }

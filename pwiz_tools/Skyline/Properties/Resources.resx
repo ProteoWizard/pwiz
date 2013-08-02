@@ -5101,8 +5101,8 @@ Are you sure you want to continue?</value>
   <data name="GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_" xml:space="preserve">
     <value>No precursor models for decoys were found.</value>
   </data>
-  <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___2___decoy_generation_method_" xml:space="preserve">
-    <value>{0} must be less than the number of precursor models for decoys, or use the '{2}' decoy generation method.</value>
+  <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___1___decoy_generation_method_" xml:space="preserve">
+    <value>{0} must be less than the number of precursor models for decoys, or use the '{1}' decoy generation method.</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
     <value>Joining chromatograms...</value>

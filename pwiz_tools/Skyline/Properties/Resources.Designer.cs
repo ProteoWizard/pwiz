@@ -5925,12 +5925,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} must be less than the number of precursor models for decoys, or use the &apos;{2}&apos; decoy generation method..
+        ///   Looks up a localized string similar to {0} must be less than the number of precursor models for decoys, or use the &apos;{1}&apos; decoy generation method..
         /// </summary>
-        public static string GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___2___decoy_generation_method_ {
+        public static string GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___1___decoy_generation_method_ {
             get {
                 return ResourceManager.GetString("GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_f" +
-                        "or_decoys__or_use_the___2___decoy_generation_method_", resourceCulture);
+                        "or_decoys__or_use_the___1___decoy_generation_method_", resourceCulture);
             }
         }
         

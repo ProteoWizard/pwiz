@@ -2070,7 +2070,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             PointF pt = new PointF(e.X, e.Y);
 
-            if (_peakBoundDragInfos != null)
+            if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
             {
                 graphControl.Cursor = Cursors.VSplit;
                 if (DoDrag(_peakBoundDragInfos[0].GraphPane, pt))

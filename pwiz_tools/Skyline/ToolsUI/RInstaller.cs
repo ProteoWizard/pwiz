@@ -133,6 +133,11 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnInstall_Click(object sender, EventArgs e)
         {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
             Hide();
 
             if ((_installed || GetR()) && (checkedListBoxPackages.CheckedItems.Count == 0 || GetPackages()))

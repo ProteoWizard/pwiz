@@ -120,6 +120,11 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnInstall_Click(object sender, EventArgs e)
         {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
             Hide();
 
             if ((_installed || GetPython()) && (clboxPackages.CheckedIndices.Count == 0 || GetPackages()))

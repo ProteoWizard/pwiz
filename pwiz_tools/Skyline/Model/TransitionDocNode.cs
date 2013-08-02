@@ -343,6 +343,9 @@ namespace pwiz.Skyline.Model
 
         public DocNode ChangePeak(int indexSet, ChromFileInfoId fileId, int step, ChromPeak peak, int ratioCount)
         {
+            if (Results == null)
+                return this;
+
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
             // If the target peak is exactly the same as the proposed change,
