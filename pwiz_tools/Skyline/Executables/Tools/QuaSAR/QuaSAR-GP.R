@@ -18,58 +18,63 @@ debug = FALSE
 ## Command line processing and other functions to support GenePattern
 ##
 
-parse.cmdline <- function (...) {
+parse.cmdline <- function () {
   # set up for command line processing (if needed)
-  # arguments are specified positionally (since there are no optional arguments) and
-  args <- list (...)
-  if ( length (args) != 22)
+  # arguments are specified positionally (since there are no optional arguments) and ...
+  arguments <- commandArgs(trailingOnly=TRUE)
+  if ( length (arguments) != 23)
     # expected arguments not present -- error
-    stop ("USAGE: R --slave --no-save --args '<libdir> <skyline.file> <concentration.file> <title> <analyte> <standard.present> <standard> <units>\n
+    stop ("USAGE: R --slave --no-save --args '<quasar.r> <common.r> <skyline.file> <concentration.file> <title> <analyte> <standard.present> <standard> <units>\n
                   <generate.cv.table> <generate.calcurves> <number.transitions.plot> <generate.lodloq.table> <generate.peak.area.plots> <use.par> <max.calcurve.linear.scale>\n
-                  <max.calcurve.log.scale> <perform.audit> <audit.cv.threshold> <output.prefix>' < QuaSAR-GP.r\n")
+                  <max.calcurve.log.scale> <perform.audit> <audit.cv.threshold> <output.prefix>' < QuaSAR-GP.r\n") #<libdir>
     
-  for (i in 1:22) {
-    arg <- args [i]
+  for (i in 1:23) {
+    arg <- arguments [i]
     # remove leading and trailing blanks
     arg <- gsub ("^ *", "", arg)
     arg <- gsub (" *$", "", arg)
     # remove any embedded quotation marks
     arg <- gsub ("['\'\"]", "", arg)
-    if (i==1) libdir <<- arg
-    if (i==2) skylineFile <<- arg
-    if (i==3) concentrationFile <<- arg
-    if (i==4) site <<- arg
-    if (i==5) analyteName <<- arg
-    if (i==6) internalStandard <<- as.numeric (arg)
-    if (i==7) standardName <<- arg
-    if (i==8) unitsLabel <<- arg
-    if (i==9) generateCVTable <<- as.numeric (arg)
-    if (i==10) generateCalcurves <<- as.numeric (arg)
-    if (i==11) nTransitionsPlot <<- as.numeric (arg)
-    if (i==12) generateLODLOQTable <<- as.numeric (arg)
-    if (i==13) generateLODLOQcomparison <<- as.numeric (arg)
-    if (i==14) generatePeakAreaPlots <<- as.numeric (arg)
-    if (i==15) usePAR <<- as.numeric (arg)
-    if (i==16) maxLinearScale <<- as.numeric (arg)
-    if (i==17) maxLogScale <<- as.numeric (arg)
-    if (i==18) performAudit <<- as.numeric (arg)
-    if (i==19) CVThreshold <<- as.numeric (arg)
-    if (i==20) performEndogenouscalc <<- as.numeric (arg)
-    if (i==21) endogenousCI <<- as.numeric (arg)
-    if (i==22) outputPrefix <<- arg
+    # if (i==1) libdir <<- arg
+	if (i==1) quasarScript <<- arg
+	if (i==2) commonScript <<- arg
+    if (i==3) skylineFile <<- arg
+    if (i==4) concentrationFile <<- arg
+    if (i==5) site <<- arg
+    if (i==6) analyteName <<- arg
+    if (i==7) internalStandard <<- as.numeric (arg)
+    if (i==8) standardName <<- arg
+    if (i==9) unitsLabel <<- arg
+    if (i==10) generateCVTable <<- as.numeric (arg)
+    if (i==11) generateCalcurves <<- as.numeric (arg)
+    if (i==12) nTransitionsPlot <<- as.numeric (arg)
+    if (i==13) generateLODLOQTable <<- as.numeric (arg)
+    if (i==14) generateLODLOQcomparison <<- as.numeric (arg)
+    if (i==15) generatePeakAreaPlots <<- as.numeric (arg)
+    if (i==16) usePAR <<- as.numeric (arg)
+    if (i==17) maxLinearScale <<- as.numeric (arg)
+    if (i==18) maxLogScale <<- as.numeric (arg)
+    if (i==19) performAudit <<- as.numeric (arg)
+    if (i==20) CVThreshold <<- as.numeric (arg)
+    if (i==21) performEndogenouscalc <<- as.numeric (arg)
+    if (i==22) endogenousCI <<- as.numeric (arg)
+    if (i==23) outputPrefix <<- arg
   }
-  if (libdir == "NULL") libdir <- NULL
+  # if (libdir == "NULL") libdir <- NULL
 
-  # for use in GenePattern
-  if (! is.null (libdir) ) {
-    source (paste (libdir, "QuaSAR.R", sep=''))
-    source (paste (libdir, "common.R", sep=''))
-    if (libdir!='') {
-      setLibPath(libdir)
-      #install.required.packages(libdir)
-    }
-  }  
+  # # for use in GenePattern
+  # if (! is.null (libdir) ) {
+    # source paste (libdir, "QuaSAR.R", sep=''))
+    # source paste (libdir, "common.R", sep=''))
+    # if (libdir!='') {
+      # setLibPath(libdir)
+      # #install.required.packages(libdir)
+    # }
+  # }  
 
+  source(quasarScript)
+  source(commonScript)
+  
   # load libraries
   library(RColorBrewer)
   library(gtools)
@@ -78,6 +83,7 @@ parse.cmdline <- function (...) {
   library(lattice)
   library(ggplot2)
   library(boot)
+  library(grid)
 
   # write summary of experiment to a summary file
   filename <- paste (outputPrefix, '-parameters-summary.csv', sep='')
@@ -94,7 +100,8 @@ parse.cmdline <- function (...) {
 	generatePeakAreaPlots = 1
   }
 	
-
+  print ('Processing arguments ...', quote=FALSE)
+	
   params <- c("Input Data File", "Input Concentration File", "Experiment Title", 
                "Analyte Name", "Internal Standard", "Internal Standard Name", "Units", "Perform AuDIT", "Generate CV Table", "Generate Calibration Curves", "Max Number of Transitions to Plot",
                "Generate LOD and  LOQ Tables", "Generate LOD and LOQ Comparison", "Generate Peak Area Plots", "Use PAR for analysis", "Liner Scale Maximum", "Log Scale Maximum",
@@ -216,5 +223,9 @@ install.required.packages <- function (libdir) {
   }
 }
 
+tryCatch({parse.cmdline()}, 
+finally = {
+cat("Finished!")
+})
 
 # END

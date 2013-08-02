@@ -67,6 +67,8 @@ calculate <-
   d <- data.in
   conc <- conc.in
 
+  print ('Creating labels ...', quote=FALSE)
+  
   # STEP 2: create the transition.id label
   d.new <- data.frame()
   tmp <- apply (d,1,
@@ -89,6 +91,8 @@ calculate <-
 
   if (debug) write.csv (data, file = paste (output.prefix, '-calcAfterMerge.csv', sep=''), row.names=FALSE)
 
+  print ('Converting fields ...', quote=FALSE)
+  
   # STEP 3: convert relevant fields
   # to numeric
   for (col in c ('area', 'IS.area', 'concentration')) 
@@ -96,6 +100,8 @@ calculate <-
   # to string
   for (col in c('peptide', 'sample', 'replicate', 'transition.id'))
     data [, col] <- unlist (lapply (data[, col], toString))
+	
+  print ('Converting transitions IDs ...', quote=FALSE)
   
   # STEP 4: convert transition.id to transition which are identical for every peptide
   tr.old <- data [, c('sample', 'replicate', 'peptide', 'transition.id')]
@@ -168,7 +174,8 @@ calculate <-
                    unlink (file)  # delete temp file
                  })
     }
-                
+     
+	print ('Writing AuDIT output ...', quote=FALSE)
                 
     # write final output
     if (!is.null (output.prefix))
@@ -184,6 +191,8 @@ calculate <-
   
   ## Create an intergrated transition that combines intensities from all the "good" transitions
 
+  print ('Integrating transitions ...', quote=FALSE)
+  
   # combine data and audit.result
   if (!is.null (audit.result)) {
     integrated.input  <- merge (data, audit.result, by=c('peptide','transition.id', 'sample'))
@@ -562,6 +571,7 @@ calculate <-
     colnames (castnrepcv.d) [ncol (castnrepcv.d) ] <- 'replicates.summed'
     castcv.d <- cbind(castcv.d, castnrepcv.d['replicates.summed'])
    
+	print ('Writing CV table ...', quote=FALSE)
           
     # write the CV table output file with units in the column headers
     names(castcv.d)[names(castcv.d)=='concentration'] <- paste('concentration (', units, ')', sep = "")
@@ -764,6 +774,9 @@ plot.transition <- function (data.tr, bad.tran.data, rug.shift=0, low.conc.value
  
 
   if (plot.points) {
+  
+	#print ('Plotting points ...', quote=FALSE)
+	
     # plot points
     if (!add) {
 
