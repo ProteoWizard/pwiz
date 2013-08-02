@@ -118,14 +118,14 @@ namespace MS1ProbeArgsCollector
 
     public class MS1ProbeArgsCollector
     {
-        public static string[] CollectArgs(string report, string[] oldArgs)
+        public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
         {
             using (var dlg = new MS1Probe(oldArgs))
             {
-                if (dlg.ShowDialog() == DialogResult.OK)
-                    return dlg.Arguments;
+                if (parent != null)
+                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
+                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
             }
-            return null;
         }
     }
 }

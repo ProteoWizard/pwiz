@@ -231,7 +231,7 @@ namespace MSStatArgsCollector
 
     public class MSstatsGroupComparisonCollector
     {
-        public static string[] CollectArgs(string report, string[] oldArgs)
+        public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
         {
             // Split report (.csv file) by lines
             string[] lines = report.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
@@ -255,15 +255,11 @@ namespace MSStatArgsCollector
 
             using (var dlg = new GroupComparisonUi(groups.ToArray(), oldArgs))
             {
-                DialogResult result = dlg.ShowDialog();
-
-                if (result == DialogResult.OK)
+                if (parent != null)
                 {
-                    // Run the tool with these arguments
-                    return dlg.Arguments;
+                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
                 }
-                // Don't run the tool
-                return null;
+                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
             }
         }
     }

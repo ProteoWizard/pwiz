@@ -803,6 +803,7 @@
     <Compile Include="Model\Tools\ToolDescription.cs" />
     <Compile Include="Model\Tools\ToolInstaller.cs" />
     <Compile Include="Model\Tools\ToolMacros.cs" />
+    <Compile Include="Model\Tools\ToolReportCache.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionDocNode.cs" />

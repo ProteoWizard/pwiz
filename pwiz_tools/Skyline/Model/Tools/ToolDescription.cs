@@ -24,6 +24,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -181,11 +182,12 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Run the tool. When you call run tool. call it on a different thread. 
         /// </summary>       
-        /// <param name="document"> Document to base reports off of. </param>
+        /// <param name="document"> The document to base reports off of. </param>
         /// <param name="toolMacroProvider"> Interface for replacing Tool Macros with the correct strings. </param>
         /// <param name="textWriter"> A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
         /// <param name="exceptionHandler"> An interface for throwing exceptions to be dealt with on different threads. </param>
-        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        /// <param name="parent">A parent control to invoke to display args collectors in, if necessary. Can be null. </param>
+        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent) 
         {
             if (Annotations != null && Annotations.Count != 0)
             {
@@ -209,7 +211,7 @@ namespace pwiz.Skyline.Model.Tools
             {                
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
                 IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
-                RunExecutable(document, newToolMacroProvider, textWriter, exceptionHandler);                
+                RunExecutable(document, newToolMacroProvider, textWriter, exceptionHandler, parent);                
             }           
         }
 
@@ -259,9 +261,9 @@ namespace pwiz.Skyline.Model.Tools
                 webHelpers.PostToLink(Command, report);
         }
 
-        private Thread RunExecutable(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        private Thread RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent)
         {
-            var thread = new Thread(() => RunExecutableBackground(doc, toolMacroProvider, textWriter, exceptionHandler));
+            var thread = new Thread(() => RunExecutableBackground(document, toolMacroProvider, textWriter, exceptionHandler, parent));
             thread.Start();
             return thread;
         }
@@ -269,19 +271,20 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         ///  Method used to encapsolate the running of a executable for threading.
         /// </summary>
-        /// <param name="doc"> Document to base reports off of. </param>
+        /// <param name="document"> Contains the document to base reports off of, as well as to serve as the parent for args collector forms. </param>
         /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>
         /// <param name="textWriter"> A textWriter to write to if outputting to the immediate window. </param>
         /// <param name="exceptionHandler"> Interface to enable throwing exceptions on other threads. </param>
-        private void RunExecutableBackground(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        /// <param name="parent">If there is an Args Collector form, it will be showed on this control. Can be null. </param>
+        private void RunExecutableBackground(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent)
         {                                                
             // Need to know if $(InputReportTempPath) is an argument to determine if a report should be piped to stdin or not.
             bool containsInputReportTempPath = Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH);
-            string command = GetCommand(doc, toolMacroProvider, exceptionHandler);
+            string command = GetCommand(document, toolMacroProvider, exceptionHandler);
             if (command == null) // Has already thrown the error.
                 return;
-            string args = GetArguments(doc, toolMacroProvider, exceptionHandler);
-            string initDir = GetInitialDirectory(doc, toolMacroProvider, exceptionHandler); // If either of these fails an Exception is thrown.
+            string args = GetArguments(document, toolMacroProvider, exceptionHandler);
+            string initDir = GetInitialDirectory(document, toolMacroProvider, exceptionHandler); // If either of these fails an Exception is thrown.
                                     
             if (args != null && initDir != null)
             {
@@ -293,7 +296,7 @@ namespace pwiz.Skyline.Model.Tools
                 string reportCsv = null;
                 if (!String.IsNullOrEmpty(ReportTitle) && !containsInputReportTempPath) // Then pipe to stdin.
                 {
-                    reportCsv = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, exceptionHandler);
+                    reportCsv = ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, exceptionHandler);
                     startInfo.RedirectStandardInput = true;
                 }
 
@@ -328,13 +331,21 @@ namespace pwiz.Skyline.Model.Tools
                             Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again),Title)));
                         return;             
                     }
+                    
 
-
-                    object[] collectorArgs = new object[] { csvToParse, (oldArgs != null) ? CommandLine.ParseInput(oldArgs) : null };
+                    object[] collectorArgs = new object[] { parent  , csvToParse, (oldArgs != null) ? CommandLine.ParseInput(oldArgs) : null };
                     object answer = null;
+
                     try
                     {
-                        answer = type.GetMethod("CollectArgs").Invoke(null, collectorArgs); //Not L10N
+                        // if there is a control given, use it to invoke the args collector form with that control as its parent. Otherwise just 
+                        // invoke the form by itself
+                        answer = parent != null
+                                     ? parent.Invoke(
+                                         Delegate.CreateDelegate(
+                                             typeof (Func<IWin32Window, string, string[], string[]>),
+                                             type.GetMethod("CollectArgs")), collectorArgs)
+                                     : type.GetMethod("CollectArgs").Invoke(null, collectorArgs);
                     }
                     catch (Exception x)
                     {
@@ -640,7 +651,7 @@ namespace pwiz.Skyline.Model.Tools
                 return null;
             }
 
-            return reportSpec.ReportToCsvString(doc, exceptionHandler as IProgressMonitor);
+            return ToolReportCache.Instance.GetReport(doc, reportSpec, exceptionHandler as IProgressMonitor);
         }
 
         public static string GetToolsDirectory()

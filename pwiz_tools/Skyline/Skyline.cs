@@ -144,6 +144,8 @@ namespace pwiz.Skyline
             _retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
             _retentionTimeManager.Register(this);
 
+            ToolReportCache.Instance.Register(this);
+
             // Get placement values before changing anything.
             Point location = Settings.Default.MainWindowLocation;
             Size size = Settings.Default.MainWindowSize;
@@ -2448,11 +2450,11 @@ namespace pwiz.Skyline
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent);
+                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, null);
                     }
                     else
                     {
-                        _tool.RunTool(_parent.Document, _parent, null, _parent);
+                        _tool.RunTool(_parent.Document, _parent, null, _parent, null);
                     }
                 }
                 catch (WebToolException e)

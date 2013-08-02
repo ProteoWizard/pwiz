@@ -27,14 +27,14 @@ namespace MSStatArgsCollector
     {
         private enum Args { samples, peptides, transitions, power, fdr, lower_fold, upper_fold }
 
-        public string[] arguments { get; private set; }
+        public string[] Arguments { get; private set; }
 
         public SampleSizeUi(string[] oldArgs)
         {
             InitializeComponent();
 
             if (oldArgs != null && oldArgs.Length == 7)
-                arguments = oldArgs;
+                Arguments = oldArgs;
 
             // set shift distance based on ititial form layout
             SampleShift = numberSamples.Top - rBtnPeptides.Top;
@@ -48,47 +48,47 @@ namespace MSStatArgsCollector
 
         private void RestoreValues()
         {
-            if (arguments != null)
+            if (Arguments != null)
             {
-                if (arguments[(int) Args.samples].Equals(TRUESTRING))
+                if (Arguments[(int) Args.samples].Equals(TRUESTRING))
                 {
                     rBtnSamples.Checked = true;
                 }
                 else
                 {
-                    numberSamples.Value = decimal.Parse(arguments[(int) Args.samples]);
+                    numberSamples.Value = decimal.Parse(Arguments[(int) Args.samples]);
                 }
 
-                if (arguments[(int) Args.peptides].Equals(TRUESTRING))
+                if (Arguments[(int) Args.peptides].Equals(TRUESTRING))
                 {
                     rBtnPeptides.Checked = true;
                 }
                 else
                 {
-                    numberPeptides.Value = decimal.Parse(arguments[(int) Args.peptides]);
+                    numberPeptides.Value = decimal.Parse(Arguments[(int) Args.peptides]);
                 }
 
-                if (arguments[(int) Args.transitions].Equals(TRUESTRING))
+                if (Arguments[(int) Args.transitions].Equals(TRUESTRING))
                 {
                     rBtnTransitions.Checked = true;
                 }
                 else
                 {
-                    numberTransitions.Value = decimal.Parse(arguments[2]);
+                    numberTransitions.Value = decimal.Parse(Arguments[2]);
                 }
 
-                if (arguments[(int) Args.power].Equals(TRUESTRING))
+                if (Arguments[(int) Args.power].Equals(TRUESTRING))
                 {
                     rBtnPower.Checked = true;
                 }
                 else
                 {
-                    numberPower.Text = arguments[(int) Args.power];
+                    numberPower.Text = Arguments[(int) Args.power];
                 }
 
-                numberFDR.Text = arguments[(int) Args.fdr];
-                numberLDFC.Text = arguments[(int) Args.lower_fold];
-                numberUDFC.Text = arguments[(int) Args.upper_fold];
+                numberFDR.Text = Arguments[(int) Args.fdr];
+                numberLDFC.Text = Arguments[(int) Args.lower_fold];
+                numberUDFC.Text = Arguments[(int) Args.upper_fold];
             }
 
             if (!rBtnSamples.Checked && !rBtnPeptides.Checked && !rBtnTransitions.Checked && !rBtnPower.Checked)
@@ -150,16 +150,16 @@ namespace MSStatArgsCollector
         //
         private void GenerateArguments()
         {
-            arguments = arguments ?? new string[7];
+            Arguments = Arguments ?? new string[7];
             
-            arguments[(int) Args.samples] = (rBtnSamples.Checked) ? TRUESTRING : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
-            arguments[(int) Args.peptides] = (rBtnPeptides.Checked) ? TRUESTRING : numberPeptides.Value.ToString(CultureInfo.InvariantCulture);
-            arguments[(int) Args.transitions] = (rBtnTransitions.Checked) ? TRUESTRING : numberTransitions.Value.ToString(CultureInfo.InvariantCulture); 
-            arguments[(int) Args.power] = (rBtnPower.Checked) ? TRUESTRING : numberPower.Text;
+            Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? TRUESTRING : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.peptides] = (rBtnPeptides.Checked) ? TRUESTRING : numberPeptides.Value.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.transitions] = (rBtnTransitions.Checked) ? TRUESTRING : numberTransitions.Value.ToString(CultureInfo.InvariantCulture); 
+            Arguments[(int) Args.power] = (rBtnPower.Checked) ? TRUESTRING : numberPower.Text;
 
-            arguments[(int) Args.fdr] = numberFDR.Text;
-            arguments[(int) Args.lower_fold] = numberLDFC.Text;
-            arguments[(int) Args.upper_fold] = numberUDFC.Text;
+            Arguments[(int) Args.fdr] = numberFDR.Text;
+            Arguments[(int) Args.lower_fold] = numberLDFC.Text;
+            Arguments[(int) Args.upper_fold] = numberUDFC.Text;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -281,17 +281,15 @@ namespace MSStatArgsCollector
     public class MSstatsSampleSizeCollector
     {
 
-        public static string[] CollectArgs(string report, string[] args)
+        public static string[] CollectArgs(IWin32Window parent, string report, string[] args)
         {
             using (var dlg = new SampleSizeUi(args))
             {
-                DialogResult result = dlg.ShowDialog();
-                if (result == DialogResult.OK)
+                if (parent != null)
                 {
-                    return dlg.arguments;
+                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
                 }
-                // otherwise don't run the tool
-                return null;
+                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
             }
         }
     }
