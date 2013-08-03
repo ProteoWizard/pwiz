@@ -393,23 +393,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <param name="rVersion">The version to check</param>
         public static bool CheckInstalled(string rVersion)
         {
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE") ?? Registry.CurrentUser.OpenSubKey(@"SOFTWARE"); // Not L10N
-            if (softwareKey == null)
-                return false;
-
-            if (softwareKey.GetSubKeyNames().Contains("R-core")) // Not L10N
-            {
-                RegistryKey rKey = Registry.LocalMachine.OpenSubKey(REGISTRY_LOCATION);
-                if (rKey == null)
-                    return false;
-
-                foreach (var localVersion in rKey.GetSubKeyNames())
-                {
-                    if (localVersion.Equals(rVersion))
-                        return true;
-                }
-            }
-            return false;
+            return (Registry.LocalMachine.OpenSubKey(REGISTRY_LOCATION + rVersion) ?? Registry.CurrentUser.OpenSubKey(REGISTRY_LOCATION + rVersion)) != null;
         }
 
         /// <summary>
@@ -423,10 +407,7 @@ namespace pwiz.Skyline.ToolsUI
                 return null;
 
             string installPath = rKey.GetValue("InstallPath") as string; // Not L10N
-            if (installPath == null)
-                return null;
-
-            return installPath + "\\bin\\R.exe"; // Not L10N
+            return (installPath != null) ? installPath + "\\bin\\R.exe" : null; // Not L10N
         }
 
     }
