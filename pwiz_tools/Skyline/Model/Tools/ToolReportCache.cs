@@ -26,6 +26,7 @@ namespace pwiz.Skyline.Model.Tools
     {
         private readonly IDictionary<ReportSpec, string> _dictionary;
         private readonly LinkedList<ReportSpec> _list;
+        private IDocumentContainer _documentContainer;
         private SrmDocument _document;
         private int CurrentSize { get; set; }
         private const int MAXIMUM_SIZE = 50 * 1024 * 1024;  // 50M
@@ -51,8 +52,21 @@ namespace pwiz.Skyline.Model.Tools
 
         public void Register(IDocumentContainer container)
         {
-            _document = container.Document;
-            container.Listen(OnDocumentChanged);
+            // Only one document container at a time
+            if (_documentContainer != null)
+                _documentContainer.Unlisten(OnDocumentChanged);
+            _documentContainer = container;
+            // A null container can be used to clear
+            if (container == null)
+            {
+                _document = null;
+            }
+            else
+            {
+                _document = container.Document;
+                container.Listen(OnDocumentChanged);
+            }
+            RefreshCache(_document);
         }
 
         protected void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
