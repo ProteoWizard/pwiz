@@ -44,55 +44,58 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void AddReportTest()
         {
-            ToolReportCache.Instance.Register(_testDocumentContainer);
-            ToolReportCache.Instance.TestReport = REPORT_STRING;
-
-            Assert.IsFalse(ToolReportCache.Instance.ContainsKey(_report1));
-            Assert.IsFalse(ToolReportCache.Instance.ContainsValue(REPORT_STRING));
-            string report = ToolReportCache.Instance.GetReport(null, _report1, null);
-            Assert.AreEqual(REPORT_STRING, report);
-            Assert.IsTrue(ToolReportCache.Instance.ContainsKey(_report1));
-            Assert.IsTrue(ToolReportCache.Instance.ContainsValue(REPORT_STRING));
-            ToolReportCache.Instance.ResetCache();
+            using (new ReportCacheTestInitializer(_testDocumentContainer))
+            {
+                Assert.IsFalse(ToolReportCache.Instance.ContainsKey(_report1));
+                Assert.IsFalse(ToolReportCache.Instance.ContainsValue(REPORT_STRING));
+                string report = ToolReportCache.Instance.GetReport(null, _report1, null);
+                Assert.AreEqual(REPORT_STRING, report);
+                Assert.IsTrue(ToolReportCache.Instance.ContainsKey(_report1));
+                Assert.IsTrue(ToolReportCache.Instance.ContainsValue(REPORT_STRING));
+            }
         }
 
         [TestMethod]
         public void ReportToFrontTest()
         {
-            // Tests that the most recently used report is brought to the front
-            ToolReportCache.Instance.Register(_testDocumentContainer);
-            ToolReportCache.Instance.TestReport = REPORT_STRING;
+            using (new ReportCacheTestInitializer(_testDocumentContainer))
+            {
+                // Tests that the most recently used report is brought to the front
+                ToolReportCache.Instance.Register(_testDocumentContainer);
+                ToolReportCache.Instance.TestReport = REPORT_STRING;
 
-            // add three reports to the cache
-            ToolReportCache.Instance.GetReport(null, _report1, null);
-            ToolReportCache.Instance.GetReport(null, _report2, null);
-            ToolReportCache.Instance.GetReport(null, _report3, null);
-            Assert.IsTrue(ToolReportCache.Instance.IsFirst(_report3));
-            Assert.IsTrue(ToolReportCache.Instance.IsLast(_report1));
+                // add three reports to the cache
+                ToolReportCache.Instance.GetReport(null, _report1, null);
+                ToolReportCache.Instance.GetReport(null, _report2, null);
+                ToolReportCache.Instance.GetReport(null, _report3, null);
+                Assert.IsTrue(ToolReportCache.Instance.IsFirst(_report3));
+                Assert.IsTrue(ToolReportCache.Instance.IsLast(_report1));
 
-            // access the first report again, bringing it to the front
-            ToolReportCache.Instance.GetReport(null, _report1, null);
-            Assert.IsTrue(ToolReportCache.Instance.IsFirst(_report1));
-            ToolReportCache.Instance.ResetCache();
+                // access the first report again, bringing it to the front
+                ToolReportCache.Instance.GetReport(null, _report1, null);
+                Assert.IsTrue(ToolReportCache.Instance.IsFirst(_report1));
+            }
         }
 
         [TestMethod]
         public void CacheCapacityTest()
         {
-            // Tests that the cache kicks out the LRU report when it reaches its capacity
-            ToolReportCache.Instance.Register(_testDocumentContainer);
-            ToolReportCache.Instance.TestMaximumSize = Convert.ToInt32(ToolReportCache.ReportSize(REPORT_STRING) * 2.5);
-            ToolReportCache.Instance.TestReport = REPORT_STRING;
+            using (new ReportCacheTestInitializer(_testDocumentContainer))
+            {
+                // Tests that the cache kicks out the LRU report when it reaches its capacity
+                ToolReportCache.Instance.Register(_testDocumentContainer);
+                ToolReportCache.Instance.TestMaximumSize = Convert.ToInt32(ToolReportCache.ReportSize(REPORT_STRING) * 2.5);
+                ToolReportCache.Instance.TestReport = REPORT_STRING;
 
-            // add two reports to the cache
-            ToolReportCache.Instance.GetReport(null, _report1, null);
-            ToolReportCache.Instance.GetReport(null, _report2, null);
-            
-            // the cache is now 80% full, adding one more report should cause it to exceed capacity
-            Assert.IsTrue(ToolReportCache.Instance.IsLast(_report1));
-            ToolReportCache.Instance.GetReport(null, _report3, null);
-            Assert.IsFalse(ToolReportCache.Instance.ContainsKey(_report1));
-            ToolReportCache.Instance.ResetCache();
+                // add two reports to the cache
+                ToolReportCache.Instance.GetReport(null, _report1, null);
+                ToolReportCache.Instance.GetReport(null, _report2, null);
+
+                // the cache is now 80% full, adding one more report should cause it to exceed capacity
+                Assert.IsTrue(ToolReportCache.Instance.IsLast(_report1));
+                ToolReportCache.Instance.GetReport(null, _report3, null);
+                Assert.IsFalse(ToolReportCache.Instance.ContainsKey(_report1));
+            }
         }
 
         [TestMethod]
@@ -100,21 +103,41 @@ namespace pwiz.SkylineTestA
         {
             // Tests that the cache is cleared on document changes
             _testDocumentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), _testDocumentContainer.Document);
-            ToolReportCache.Instance.Register(_testDocumentContainer);
-            ToolReportCache.Instance.TestReport = REPORT_STRING;
-            ToolReportCache.Instance.GetReport(_testDocumentContainer.Document, _report1, null);
-            Assert.IsTrue(ToolReportCache.Instance.ContainsKey(_report1));
 
-            // change the document
-            var oldDocument = _testDocumentContainer.Document;
-            _testDocumentContainer.Document.Settings.PeptideSettings.ChangeFilter(
-                _testDocumentContainer.Document.Settings.PeptideSettings.Filter.ChangeAutoSelect(
-                    _testDocumentContainer.Document.Settings.PeptideSettings.Filter.AutoSelect));
+            using (new ReportCacheTestInitializer(_testDocumentContainer))
+            {
+                ToolReportCache.Instance.GetReport(_testDocumentContainer.Document, _report1, null);
+                Assert.IsTrue(ToolReportCache.Instance.ContainsKey(_report1));
 
-            _testDocumentContainer.SetDocument(_testDocumentContainer.Document, oldDocument);
-            Assert.IsFalse(ToolReportCache.Instance.ContainsKey(_report1));
-            Assert.IsFalse(ToolReportCache.Instance.ContainsValue(REPORT_STRING));
-            ToolReportCache.Instance.ResetCache();
+                // change the document
+                var oldDocument = _testDocumentContainer.Document;
+                _testDocumentContainer.Document.Settings.PeptideSettings.ChangeFilter(
+                    _testDocumentContainer.Document.Settings.PeptideSettings.Filter.ChangeAutoSelect(
+                        _testDocumentContainer.Document.Settings.PeptideSettings.Filter.AutoSelect));
+
+                _testDocumentContainer.SetDocument(_testDocumentContainer.Document, oldDocument);
+                Assert.IsFalse(ToolReportCache.Instance.ContainsKey(_report1));
+                Assert.IsFalse(ToolReportCache.Instance.ContainsValue(REPORT_STRING));
+            }
+        }
+
+        private class ReportCacheTestInitializer : IDisposable
+        {
+            private readonly ToolReportCache _reportCache;
+
+            public ReportCacheTestInitializer(IDocumentContainer testDocumentContainer)
+            {
+                _reportCache = ToolReportCache.Instance;
+                _reportCache.Register(testDocumentContainer);
+                _reportCache.TestReport = REPORT_STRING;
+            }
+
+            public void Dispose()
+            {
+                _reportCache.TestReport = null;
+                _reportCache.TestMaximumSize = null;
+                _reportCache.Register(null);
+            }
         }
 
         //[TestMethod]

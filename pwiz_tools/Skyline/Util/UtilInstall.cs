@@ -60,8 +60,8 @@ namespace pwiz.Skyline.Util
 
             _webClient.DownloadProgressChanged += (sender, args) =>
                 {
-                    _longWaitBroker.ProgressValue = (int) (((((double) FilesDownloaded)/files)*100)
-                                                           + ((1.0/files)*args.ProgressPercentage));
+                    _longWaitBroker.ProgressValue = (int) Math.Min(100, ((((double) FilesDownloaded)/files)*100)
+                                                                        + ((1.0/files)*args.ProgressPercentage));
                 };
 
             _webClient.DownloadFileCompleted += (sender, args) =>

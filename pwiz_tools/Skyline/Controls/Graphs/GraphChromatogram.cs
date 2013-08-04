@@ -2073,7 +2073,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
             {
                 graphControl.Cursor = Cursors.VSplit;
-                if (DoDrag(_peakBoundDragInfos[0].GraphPane, pt))
+                if (DoDrag(_peakBoundDragInfos.First().GraphPane, pt))
                     Refresh();
                 return true;
             }

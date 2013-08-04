@@ -242,39 +242,41 @@ namespace pwiz.Skyline.FileUI
         public KeyValuePair<string, string[]>[] GetDataSourcePathsFile(string name)
         {
             CheckDisposed();
-            OpenDataSourceDialog dlgOpen = new OpenDataSourceDialog
-                                               {
-                                                   Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
-                                               };
-            // The dialog expects null to mean no directory was supplied, so don't assign
-            // an empty string.
-            string initialDir = Path.GetDirectoryName(_documentSavedPath);
-            dlgOpen.InitialDirectory = initialDir;
-            // Use saved source type, if there is one.
-            string sourceType = Settings.Default.SrmResultsSourceType;
-            if (!string.IsNullOrEmpty(sourceType))
-                dlgOpen.SourceTypeName = sourceType;
-
-            if (dlgOpen.ShowDialog(this) != DialogResult.OK)
-                return null;
-
-            Settings.Default.SrmResultsDirectory = !Equals(_documentSavedPath, dlgOpen.CurrentDirectory)
-                                                       ? dlgOpen.CurrentDirectory
-                                                       : string.Empty;
-            Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
-
-            string[] dataSources = dlgOpen.DataSources;
-
-            if (dataSources == null || dataSources.Length == 0)
+            using (var dlgOpen = new OpenDataSourceDialog
+                {
+                    Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
+                })
             {
-                MessageBox.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen, Program.Name);
-                return null;
+                // The dialog expects null to mean no directory was supplied, so don't assign
+                // an empty string.
+                string initialDir = Path.GetDirectoryName(_documentSavedPath);
+                dlgOpen.InitialDirectory = initialDir;
+                // Use saved source type, if there is one.
+                string sourceType = Settings.Default.SrmResultsSourceType;
+                if (!string.IsNullOrEmpty(sourceType))
+                    dlgOpen.SourceTypeName = sourceType;
+
+                if (dlgOpen.ShowDialog(this) != DialogResult.OK)
+                    return null;
+
+                Settings.Default.SrmResultsDirectory = !Equals(_documentSavedPath, dlgOpen.CurrentDirectory)
+                                                           ? dlgOpen.CurrentDirectory
+                                                           : string.Empty;
+                Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
+
+                string[] dataSources = dlgOpen.DataSources;
+
+                if (dataSources == null || dataSources.Length == 0)
+                {
+                    MessageBox.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen, Program.Name);
+                    return null;
+                }
+
+                if (name != null)
+                    return GetDataSourcePathsFileSingle(name, dataSources);
+
+                return GetDataSourcePathsFileReplicates(dataSources);
             }
-
-            if (name != null)
-                return GetDataSourcePathsFileSingle(name, dataSources);
-
-            return GetDataSourcePathsFileReplicates(dataSources);
         }
 
         public KeyValuePair<string, string[]>[] GetDataSourcePathsFileSingle(string name, IEnumerable<string> dataSources)
