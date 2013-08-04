@@ -931,6 +931,31 @@ namespace pwiz.Skyline
             }
         }
 
+
+        private void chromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowChromatogramFeaturesDialog();
+        }
+
+        public void ShowChromatogramFeaturesDialog()
+        {
+            if (!DocumentUI.Settings.HasResults)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_);
+                return;
+            }
+            if (DocumentUI.PeptideCount == 0)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_peptides_for_which_to_export_chromatograms);
+                return;
+            }
+
+            using (var dlg = new ExportChromatogramDlg(DocumentUI, DocumentFilePath))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
         private void mProphetFeaturesMenuItem_Click(object sender, EventArgs e)
         {
             ShowMProphetFeaturesDialog();

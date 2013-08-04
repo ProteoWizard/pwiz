@@ -434,6 +434,12 @@
     <Compile Include="EditUI\SchedulingGraphPropertyDlg.Designer.cs">
       <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\ExportChromatogramDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ExportChromatogramDlg.Designer.cs">
+      <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ManageResultsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -514,6 +520,7 @@
     <Compile Include="Model\Esp\PiCalc.cs" />
     <Compile Include="Model\DocSettings\IsolationScheme.cs" />
     <Compile Include="Model\DocSettings\IsolationWindow.cs" />
+    <Compile Include="Model\ExportChromatograms.cs" />
     <Compile Include="Model\Find\AbstractDocNodeFinder.cs" />
     <Compile Include="Model\Find\MissingAnyResultsFinder.cs" />
     <Compile Include="Model\Find\MissingLibraryDataFinder.cs" />
@@ -1078,6 +1085,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RenameProteinsDlg.resx">
       <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportChromatogramDlg.resx">
+      <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportMethodDlg.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>

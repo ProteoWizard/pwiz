@@ -5653,4 +5653,43 @@ Are you sure you want to continue?</value>
     <data name="ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_" xml:space="preserve">
     <value>Please enable these annotations and fill in the appropriate data in order to use the tool.</value>
   </data>
+  <data name="ChromatogramExporter_Export_Corrupted_chromatogram_data_at_charge__0__state_of_peptide__1_" xml:space="preserve">
+    <value>Corrupted chromatogram data at charge {0} state of peptide {1}</value>
+  </data>
+  <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
+    <value>Bad chromatogram data for charge {0} state of peptide {1}</value>
+  </data>
+  <data name="ChromatogramExporter_Export_One_or_more_missing_chromatograms_at_charge_state__0__of_peptide__1_" xml:space="preserve">
+    <value>One or more missing chromatograms at charge state {0} of peptide {1}</value>
+  </data>
+  <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
+    <value>The document must have imported results.</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Export_Chromatogram" xml:space="preserve">
+    <value>Export Chromatograms</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files" xml:space="preserve">
+    <value>Chromatogram Export Files</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__" xml:space="preserve">
+    <value>Failed attempting to save chromatograms to {0}.</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_Exporting_Chromatograms" xml:space="preserve">
+    <value>Exporting Chromatograms</value>
+  </data>
+  <data name="ChromatogramExporter_Export_Exporting_Chromatograms_for__0_" xml:space="preserve">
+    <value>Exporting Chromatograms for {0}</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_At_least_one_file_must_be_selected" xml:space="preserve">
+    <value>At least one file must be selected</value>
+  </data>
+  <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_peptides_for_which_to_export_chromatograms" xml:space="preserve">
+    <value>The document must have peptides for which to export chromatograms.</value>
+  </data>
+  <data name="ExportChromatogramDlg_OkDialog_At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
+    <value>At least one chromatogram type must be selected.</value>
+  </data>
+  <data name="ChromatogramExporter_GetExtractorName_Invalid_extractor_name_" xml:space="preserve">
+    <value>Invalid extractor name.</value>
+  </data>
 </root>

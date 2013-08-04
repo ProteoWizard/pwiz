@@ -234,6 +234,7 @@ namespace pwiz.Skyline
             this.exportReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eSPFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chromatogramsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mruBeforeToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1794,7 +1795,8 @@ namespace pwiz.Skyline
             this.exportMethodMenuItem,
             this.exportReportMenuItem,
             this.eSPFeaturesMenuItem,
-            this.mProphetFeaturesMenuItem});
+            this.mProphetFeaturesMenuItem,
+            this.chromatogramsToolStripMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             resources.ApplyResources(this.exportToolStripMenuItem, "exportToolStripMenuItem");
             // 
@@ -1833,6 +1835,12 @@ namespace pwiz.Skyline
             this.mProphetFeaturesMenuItem.Name = "mProphetFeaturesMenuItem";
             resources.ApplyResources(this.mProphetFeaturesMenuItem, "mProphetFeaturesMenuItem");
             this.mProphetFeaturesMenuItem.Click += new System.EventHandler(this.mProphetFeaturesMenuItem_Click);
+            // 
+            // chromatogramsToolStripMenuItem
+            // 
+            this.chromatogramsToolStripMenuItem.Name = "chromatogramsToolStripMenuItem";
+            resources.ApplyResources(this.chromatogramsToolStripMenuItem, "chromatogramsToolStripMenuItem");
+            this.chromatogramsToolStripMenuItem.Click += new System.EventHandler(this.chromatogramsToolStripMenuItem_Click);
             // 
             // mruBeforeToolStripSeparator
             // 
@@ -3265,6 +3273,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator48;
         private System.Windows.Forms.ToolStripMenuItem splitGraphMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showLibraryChromatogramsSpectrumContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chromatogramsToolStripMenuItem;
     }
 }
 

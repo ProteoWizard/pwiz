@@ -1884,6 +1884,54 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bad chromatogram data for charge {0} state of peptide {1}.
+        /// </summary>
+        public static string ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_ {
+            get {
+                return ResourceManager.GetString("ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide" +
+                        "__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Corrupted chromatogram data at charge {0} state of peptide {1}.
+        /// </summary>
+        public static string ChromatogramExporter_Export_Corrupted_chromatogram_data_at_charge__0__state_of_peptide__1_ {
+            get {
+                return ResourceManager.GetString("ChromatogramExporter_Export_Corrupted_chromatogram_data_at_charge__0__state_of_pe" +
+                        "ptide__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exporting Chromatograms for {0}.
+        /// </summary>
+        public static string ChromatogramExporter_Export_Exporting_Chromatograms_for__0_ {
+            get {
+                return ResourceManager.GetString("ChromatogramExporter_Export_Exporting_Chromatograms_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One or more missing chromatograms at charge state {0} of peptide {1}.
+        /// </summary>
+        public static string ChromatogramExporter_Export_One_or_more_missing_chromatograms_at_charge_state__0__of_peptide__1_ {
+            get {
+                return ResourceManager.GetString("ChromatogramExporter_Export_One_or_more_missing_chromatograms_at_charge_state__0_" +
+                        "_of_peptide__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid extractor name..
+        /// </summary>
+        public static string ChromatogramExporter_GetExtractorName_Invalid_extractor_name_ {
+            get {
+                return ResourceManager.GetString("ChromatogramExporter_GetExtractorName_Invalid_extractor_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure trying to read points.
         /// </summary>
         public static string ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points {
@@ -4515,6 +4563,60 @@ namespace pwiz.Skyline.Properties {
         public static string ExplicitMods_ChangeModifications_Modification_type__0__not_found {
             get {
                 return ResourceManager.GetString("ExplicitMods_ChangeModifications_Modification_type__0__not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one chromatogram type must be selected..
+        /// </summary>
+        public static string ExportChromatogramDlg_OkDialog_At_least_one_chromatogram_type_must_be_selected {
+            get {
+                return ResourceManager.GetString("ExportChromatogramDlg_OkDialog_At_least_one_chromatogram_type_must_be_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one file must be selected.
+        /// </summary>
+        public static string ExportChromatogramDlg_OkDialog_At_least_one_file_must_be_selected {
+            get {
+                return ResourceManager.GetString("ExportChromatogramDlg_OkDialog_At_least_one_file_must_be_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Export Files.
+        /// </summary>
+        public static string ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files {
+            get {
+                return ResourceManager.GetString("ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export Chromatograms.
+        /// </summary>
+        public static string ExportChromatogramDlg_OkDialog_Export_Chromatogram {
+            get {
+                return ResourceManager.GetString("ExportChromatogramDlg_OkDialog_Export_Chromatogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exporting Chromatograms.
+        /// </summary>
+        public static string ExportChromatogramDlg_OkDialog_Exporting_Chromatograms {
+            get {
+                return ResourceManager.GetString("ExportChromatogramDlg_OkDialog_Exporting_Chromatograms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to save chromatograms to {0}..
+        /// </summary>
+        public static string ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__ {
+            get {
+                return ResourceManager.GetString("ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__", resourceCulture);
             }
         }
         
@@ -13275,6 +13377,26 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowCalculatorScoreFormat {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowCalculatorScoreFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must have imported results..
+        /// </summary>
+        public static string SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_resu" +
+                        "lts_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must have peptides for which to export chromatograms..
+        /// </summary>
+        public static string SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_peptides_for_which_to_export_chromatograms {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_peptides_for_" +
+                        "which_to_export_chromatograms", resourceCulture);
             }
         }
         
