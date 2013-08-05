@@ -562,7 +562,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            using (SaveFileDialog dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog
             {
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 OverwritePrompt = true,

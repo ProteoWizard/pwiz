@@ -369,28 +369,30 @@ namespace pwiz.Skyline.FileUI
         public KeyValuePair<string, string[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);
-            FolderBrowserDialog dlg = new FolderBrowserDialog
+            using (FolderBrowserDialog dlg = new FolderBrowserDialog
+                {
+                    Description = Resources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory,
+                    ShowNewFolderButton = false,
+                    SelectedPath = initialDir
+                })
             {
-                Description = Resources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory,
-                ShowNewFolderButton = false,
-                SelectedPath = initialDir
-            };
-            if (dlg.ShowDialog(this) != DialogResult.OK)
-                return null;
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return null;
 
-            string dirRoot = dlg.SelectedPath;
+                string dirRoot = dlg.SelectedPath;
 
-            Settings.Default.SrmResultsDirectory = dirRoot;
+                Settings.Default.SrmResultsDirectory = dirRoot;
 
-            KeyValuePair<string, string[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
-            if (namedPaths.Length == 0)
-            {
-                MessageBox.Show(this, 
-                    string.Format(Resources.ImportResultsDlg_GetDataSourcePathsDir_No_results_found_in_the_folder__0__, dirRoot), 
-                    Program.Name);
-                return null;
+                KeyValuePair<string, string[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
+                if (namedPaths.Length == 0)
+                {
+                    MessageBox.Show(this,
+                        string.Format(Resources.ImportResultsDlg_GetDataSourcePathsDir_No_results_found_in_the_folder__0__, dirRoot),
+                        Program.Name);
+                    return null;
+                }
+                return namedPaths;
             }
-            return namedPaths;
         }
 
         private static string GetCommonPrefix(IEnumerable<string> values)

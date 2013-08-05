@@ -920,7 +920,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         private ITipProvider _tipProvider;
         private readonly ITipDisplayer _tipDisplayer;
         private Rectangle _rectItem;
-        private readonly Timer _timer;
+        private Timer _timer;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
         private const int NODE_SPACE_Y = 5;
@@ -930,6 +930,16 @@ namespace pwiz.Skyline.Controls.SeqNode
             _timer = new Timer { Interval = 500 };
             _timer.Tick += Timer_Tick;
             _tipDisplayer = tipDisplayer;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_timer != null)
+            {
+                _timer.Dispose();
+                _timer = null;
+            }
+            base.Dispose(disposing);
         }
 
         public void HideTip()

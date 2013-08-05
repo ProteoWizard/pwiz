@@ -650,21 +650,22 @@ namespace pwiz.Skyline.FileUI
                         break;
                 }
 
-                SaveFileDialog dlg = new SaveFileDialog
+                using (var dlg = new SaveFileDialog
+                    {
+                        Title = title,
+                        InitialDirectory = Settings.Default.ExportDirectory,
+                        OverwritePrompt = true,
+                        DefaultExt = ext,
+                        Filter = TextUtil.FileDialogFilterAll(filter, ext)
+                    })
                 {
-                    Title = title,
-                    InitialDirectory = Settings.Default.ExportDirectory,
-                    OverwritePrompt = true,
-                    DefaultExt = ext,
-                    Filter = TextUtil.FileDialogFilterAll(filter, ext)
-                };
+                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    {
+                        return;
+                    }
 
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    return;
+                    outputPath = dlg.FileName;
                 }
-
-                outputPath = dlg.FileName;
             }
 
             Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
@@ -1311,79 +1312,81 @@ namespace pwiz.Skyline.FileUI
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ||
                 Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))
             {
-                var chooseDirDialog = new FolderBrowserDialog
-                                          {
-                                              Description = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
-                                          };
+                using (var chooseDirDialog = new FolderBrowserDialog
+                    {
+                        Description = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
+                    })
+                {
+                    if (!string.IsNullOrEmpty(templateName))
+                    {
+                        chooseDirDialog.SelectedPath = templateName;
+                    }
 
-                if (!string.IsNullOrEmpty(templateName))
-                {
-                    chooseDirDialog.SelectedPath = templateName;
-                } 
-                
-                if (chooseDirDialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    templateName = chooseDirDialog.SelectedPath;
-                    if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) &&
-                        !AgilentMethodExporter.IsAgilentMethodPath(templateName))
+                    if (chooseDirDialog.ShowDialog(this) == DialogResult.OK)
                     {
-                        MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd);
-                        return;
+                        templateName = chooseDirDialog.SelectedPath;
+                        if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) &&
+                            !AgilentMethodExporter.IsAgilentMethodPath(templateName))
+                        {
+                            MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd);
+                            return;
+                        }
+                        else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
+                                 !BrukerMethodExporter.IsBrukerMethodPath(templateName))
+                        {
+                            MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_);
+                            return;
+                        }
+                        textTemplateFile.Text = templateName;
                     }
-                    else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
-                             !BrukerMethodExporter.IsBrukerMethodPath(templateName))
-                    {
-                        MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_);
-                        return;
-                    }
-                    textTemplateFile.Text = templateName;
                 }
 
                 return;
             }
 
-            var openFileDialog = new OpenFileDialog
-                                     {
-                                         Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
-                                         // Extension based on currently selected type
-                                         CheckPathExists = true
-                                     };
-
-            if (!string.IsNullOrEmpty(templateName))
-            {
-                try
+            using (var openFileDialog = new OpenFileDialog
                 {
-                    openFileDialog.InitialDirectory = Path.GetDirectoryName(templateName);
-                    openFileDialog.FileName = Path.GetFileName(templateName);
+                    Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
+                    // Extension based on currently selected type
+                    CheckPathExists = true
+                })
+            {
+                if (!string.IsNullOrEmpty(templateName))
+                {
+                    try
+                    {
+                        openFileDialog.InitialDirectory = Path.GetDirectoryName(templateName);
+                        openFileDialog.FileName = Path.GetFileName(templateName);
+                    }
+                    catch (ArgumentException)
+                    {
+                    } // Invalid characters
+                    catch (PathTooLongException)
+                    {
+                    }
                 }
-                catch (ArgumentException)
+
+                var listFileTypes = new List<string>();
+                if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
                 {
-                } // Invalid characters
-                catch (PathTooLongException)
-                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
                 }
-            }
+                else if (Equals(InstrumentType, ExportInstrumentType.THERMO_TSQ) ||
+                         Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_THERMO));
+                }
+                else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO) ||
+                         Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_WATERS));
+                }
+                openFileDialog.Filter = TextUtil.FileDialogFiltersAll(listFileTypes.ToArray());
 
-            var listFileTypes = new List<string>();
-            if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
-            {
-                listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
-            }
-            else if (Equals(InstrumentType, ExportInstrumentType.THERMO_TSQ) ||
-                     Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
-            {
-                listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_THERMO));
-            }
-            else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO) ||
-                     Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
-            {
-                listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_WATERS));
-            }
-            openFileDialog.Filter = TextUtil.FileDialogFiltersAll(listFileTypes.ToArray());
-
-            if (openFileDialog.ShowDialog(this) == DialogResult.OK)
-            {
-                textTemplateFile.Text = openFileDialog.FileName;
+                if (openFileDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    textTemplateFile.Text = openFileDialog.FileName;
+                }
             }
         }
 

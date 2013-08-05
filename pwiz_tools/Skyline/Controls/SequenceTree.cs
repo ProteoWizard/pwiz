@@ -153,6 +153,11 @@ namespace pwiz.Skyline.Controls
         {
             if (_pickTimer != null)
                 _pickTimer.Tick -= tick_ShowPickList;
+            if (_nodeTip != null)
+            {
+                _nodeTip.Dispose();
+                _nodeTip = null;
+            }
             base.Dispose(disposing);
         }
 

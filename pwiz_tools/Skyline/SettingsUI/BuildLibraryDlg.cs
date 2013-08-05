@@ -265,21 +265,22 @@ namespace pwiz.Skyline.SettingsUI
                 fileName = string.Empty;
             }
 
-            SaveFileDialog dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog
+                {
+                    InitialDirectory = Settings.Default.LibraryDirectory,
+                    FileName = fileName,
+                    OverwritePrompt = true,
+                    DefaultExt = BiblioSpecLiteSpec.EXT,
+                    Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
+                })
             {
-                InitialDirectory = Settings.Default.LibraryDirectory,
-                FileName = fileName,                
-                OverwritePrompt = true,
-                DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
-            };
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
 
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
-
-                textPath.Text = dlg.FileName;
-            }            
+                    textPath.Text = dlg.FileName;
+                }
+            }
         }
 
         private void btnNext_Click(object sender, EventArgs e)
@@ -342,40 +343,45 @@ namespace pwiz.Skyline.SettingsUI
             for (int i = 0; i < wildExts.Length; i++)
                 wildExts[i] = "*" + RESULTS_EXTS[i]; // Not L10N
 
-            OpenFileDialog dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog
+                {
+                    Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
+                    InitialDirectory = initialDirectory,
+                    CheckPathExists = true,
+                    SupportMultiDottedExtensions = true,
+                    Multiselect = true,
+                    DefaultExt = BiblioSpecLibSpec.EXT,
+                    Filter = TextUtil.FileDialogFiltersAll(
+                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" +
+                        string.Join(";", wildExts), // Not L10N
+                        BiblioSpecLiteSpec.FILTER_BLIB)
+                })
             {
-                Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
-                InitialDirectory = initialDirectory,
-                CheckPathExists = true,
-                SupportMultiDottedExtensions = true,
-                Multiselect = true,
-                DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(
-                    Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" + string.Join(";", wildExts), // Not L10N
-                    BiblioSpecLiteSpec.FILTER_BLIB)
-            };
-            if (dlg.ShowDialog(parent) == DialogResult.OK)
-            {
-                Settings.Default.LibraryResultsDirectory = Path.GetDirectoryName(dlg.FileName);
+                if (dlg.ShowDialog(parent) == DialogResult.OK)
+                {
+                    Settings.Default.LibraryResultsDirectory = Path.GetDirectoryName(dlg.FileName);
 
-                return dlg.FileNames;
+                    return dlg.FileNames;
+                }
             }
             return null;
         }
 
         private void btnAddDirectory_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog dlg = new FolderBrowserDialog
+            using (var dlg = new FolderBrowserDialog
+                {
+                    Description = Resources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory,
+                    ShowNewFolderButton = false,
+                    SelectedPath = Settings.Default.LibraryResultsDirectory
+                })
             {
-                Description = Resources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory, 
-                ShowNewFolderButton = false,
-                SelectedPath = Settings.Default.LibraryResultsDirectory
-            };
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                Settings.Default.LibraryResultsDirectory = dlg.SelectedPath;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.LibraryResultsDirectory = dlg.SelectedPath;
 
-                AddDirectory(dlg.SelectedPath);
+                    AddDirectory(dlg.SelectedPath);
+                }
             }
         }
 

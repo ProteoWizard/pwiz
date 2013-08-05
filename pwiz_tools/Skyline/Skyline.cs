@@ -740,6 +740,8 @@ namespace pwiz.Skyline
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
 
+            ToolReportCache.Instance.Register(null);
+
             if (!Program.FunctionalTest)
                 LOG.Info("Skyline closed.\r\n-----------------------");
             

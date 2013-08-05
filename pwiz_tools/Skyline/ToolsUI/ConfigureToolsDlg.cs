@@ -947,15 +947,19 @@ namespace pwiz.Skyline.ToolsUI
                     }
                 }
 
-                var dlg = new OpenFileDialog
+                using (var dlg = new OpenFileDialog
+                    {
+                        Filter =
+                            TextUtil.FileDialogFiltersAll(
+                                TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
+                        Multiselect = false
+                    })
                 {
-                    Filter = TextUtil.FileDialogFiltersAll( TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
-                    Multiselect = false
-                };
-                DialogResult result = dlg.ShowDialog();
-                if (result == DialogResult.OK)
-                {
-                    UnpackZipTool(dlg.FileName);
+                    DialogResult result = dlg.ShowDialog();
+                    if (result == DialogResult.OK)
+                    {
+                        UnpackZipTool(dlg.FileName);
+                    }
                 }
             }
             if (ToolList.Count == 1)

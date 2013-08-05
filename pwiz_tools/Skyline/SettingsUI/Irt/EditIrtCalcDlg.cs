@@ -154,7 +154,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return;
             }
 
-            using (SaveFileDialog dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog
             {
                 Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database,
                 InitialDirectory = Settings.Default.ActiveDirectory,

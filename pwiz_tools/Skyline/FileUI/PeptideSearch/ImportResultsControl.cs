@@ -162,19 +162,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             // Ask the user for the directory to search
             string initialDir = Path.GetDirectoryName(Path.GetDirectoryName(SkylineWindow.DocumentFilePath));
-            FolderBrowserDialog dlg = new FolderBrowserDialog
+            using (var dlg = new FolderBrowserDialog
+                {
+                    Description = Resources.ImportResultsControl_findResultsFilesButton_Click_Results_Directory,
+                    ShowNewFolderButton = false,
+                    SelectedPath = initialDir
+                })
             {
-                Description = Resources.ImportResultsControl_findResultsFilesButton_Click_Results_Directory,
-                ShowNewFolderButton = false,
-                SelectedPath = initialDir
-            };
-            if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
-                return;
+                if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
+                    return;
 
-            // See if we're still missing any files, and update UI accordingly
-            if (!UpdateResultsFiles(dlg.SelectedPath))
-            {
-                MessageDlg.Show(WizardForm, Resources.ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_);
+                // See if we're still missing any files, and update UI accordingly
+                if (!UpdateResultsFiles(dlg.SelectedPath))
+                {
+                    MessageDlg.Show(WizardForm, Resources.ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_);
+                }
             }
         }
 

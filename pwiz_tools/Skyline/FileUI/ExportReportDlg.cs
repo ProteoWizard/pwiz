@@ -129,40 +129,41 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            SaveFileDialog dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog
+                {
+                    Title = Resources.ExportReportDlg_OkDialog_Export_Report,
+                    InitialDirectory = Settings.Default.ExportDirectory,
+                    OverwritePrompt = true,
+                    DefaultExt = TextUtil.EXT_CSV,
+                    Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV)
+                })
             {
-                Title = Resources.ExportReportDlg_OkDialog_Export_Report,
-                InitialDirectory = Settings.Default.ExportDirectory,
-                OverwritePrompt = true,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV)
-            };
-            if (!string.IsNullOrEmpty(_documentUiContainer.DocumentFilePath))
-            {
-                dlg.InitialDirectory = Path.GetDirectoryName(_documentUiContainer.DocumentFilePath);
-                dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + TextUtil.EXT_CSV;
+                if (!string.IsNullOrEmpty(_documentUiContainer.DocumentFilePath))
+                {
+                    dlg.InitialDirectory = Path.GetDirectoryName(_documentUiContainer.DocumentFilePath);
+                    dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + TextUtil.EXT_CSV;
+                }
+
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                string fileName = dlg.FileName;
+                char separator;
+                // 1-based index
+                switch (dlg.FilterIndex)
+                {
+                    // TSV
+                    case 2:
+                        separator = TextUtil.SEPARATOR_TSV;
+                        break;
+                    // CSV
+                    default:
+                        // Use the local culture CSV separator
+                        separator = TextUtil.GetCsvSeparator(CultureInfo);
+                        break;
+                }
+                OkDialog(fileName, separator);
             }
-
-            if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                return;
-
-            string fileName = dlg.FileName;
-            char separator;
-            // 1-based index
-            switch (dlg.FilterIndex)
-            {
-                // TSV
-                case 2:
-                    separator = TextUtil.SEPARATOR_TSV;
-                    break;
-                // CSV
-                default:
-                    // Use the local culture CSV separator
-                    separator = TextUtil.GetCsvSeparator(CultureInfo);
-                    break;
-            }
-
-            OkDialog(fileName, separator);
         }
 
         public void OkDialog(string fileName, char separator)

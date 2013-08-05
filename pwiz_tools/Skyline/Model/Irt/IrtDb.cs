@@ -207,7 +207,9 @@ namespace pwiz.Skyline.Model.Irt
                             Equals(peptideNew, peptideOld))
                         continue;
 
-                    session.SaveOrUpdate(peptideNew);
+                    // Create a new instance, because not doing this causes a BindingSource leak
+                    var peptideNewDisconnected = new DbIrtPeptide(peptideNew);
+                    session.SaveOrUpdate(peptideNewDisconnected);
                 }
 
                 transaction.Commit();

@@ -292,20 +292,22 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddFastaFile_Click(object sender, EventArgs e)
         {
-            var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog
+                {
+                    Title = Resources.BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File,
+                    InitialDirectory = Settings.Default.FastaDirectory,
+                    CheckPathExists = true
+                    // FASTA files often have no extension as well as .fasta and others
+                })
             {
-                Title = Resources.BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File,
-                InitialDirectory = Settings.Default.FastaDirectory,
-                CheckPathExists = true
-                // FASTA files often have no extension as well as .fasta and others
-            };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
-            {
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                String fastaFilePath = openFileDialog.FileName;
+                Settings.Default.LibraryDirectory = Path.GetDirectoryName(fastaFilePath);
+                AddFastaFile(fastaFilePath);
             }
-            String fastaFilePath = openFileDialog.FileName;
-            Settings.Default.LibraryDirectory = Path.GetDirectoryName(fastaFilePath);
-            AddFastaFile(fastaFilePath);
         }
 
         public void AddFastaFile(string fastaFilePath)

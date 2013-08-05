@@ -112,15 +112,17 @@ namespace pwiz.Skyline.FileUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog
+            using (var saveFileDialog = new SaveFileDialog
+                {
+                    InitialDirectory = Settings.Default.ActiveDirectory,
+                    CheckPathExists = true,
+                    Filter = Filter
+                })
             {
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                CheckPathExists = true,
-                Filter = Filter
-            };
-            saveFileDialog.ShowDialog(this);
-            if (!string.IsNullOrEmpty(saveFileDialog.FileName))
-                OkDialog(saveFileDialog.FileName);
+                saveFileDialog.ShowDialog(this);
+                if (!string.IsNullOrEmpty(saveFileDialog.FileName))
+                    OkDialog(saveFileDialog.FileName);
+            }
         }
 
         public void OkDialog(string fileName)
@@ -194,15 +196,17 @@ namespace pwiz.Skyline.FileUI
 
         public static string GetImportFileName(Form parent, string filter)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            using (var dialog = new OpenFileDialog
+                {
+                    InitialDirectory = Settings.Default.ActiveDirectory,
+                    CheckPathExists = true,
+                    Filter = filter
+                })
             {
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                CheckPathExists = true,
-                Filter = filter
-            };
-            if (dialog.ShowDialog(parent) == DialogResult.Cancel)
-                return null;
-            return dialog.FileName;
+                if (dialog.ShowDialog(parent) == DialogResult.Cancel)
+                    return null;
+                return dialog.FileName;
+            }
         }
 
         public static bool ImportFile(Form parent, TList listDest, string fileName)
