@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
 
             //ZipTestGoodImport(); //Imports MSstats report. //Trys to install R which will be tested somewhere else.
 
-            ZipTestInvalidToolDescription();
+            ZipTestInvalidPropertiesFiles();
 
             ZipTestAllCommandTypes();
 
@@ -65,7 +65,95 @@ namespace pwiz.SkylineTestFunctional
             TestNotInstalledTool();
 
             TestLocateFileDlg();
+
+            TestToolVersioning();
         }
+
+
+
+        private void TestToolVersioning()
+        {
+            string version1 = TestFilesDir.GetTestPath("TestToolVersioning\\1.0\\Counter.zip");
+            {
+                RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
+                {
+                        configureToolsDlg.RemoveAllTools();
+                        configureToolsDlg.SaveTools();
+                        configureToolsDlg.UnpackZipTool(version1);
+                        Assert.AreEqual("Counter", configureToolsDlg.textTitle.Text);
+                        Assert.AreEqual("$(ToolDir)\\NumberWriter.exe", configureToolsDlg.textCommand.Text);
+                        Assert.AreEqual("100 100", configureToolsDlg.textArguments.Text);
+                        Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
+                        Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                        configureToolsDlg.OkDialog();
+                    });
+                ToolDescription newtool = Settings.Default.ToolList[0];
+                Assert.AreEqual("Counter", newtool.PackageName);
+                Assert.AreEqual("uw.genomesciences.macosslabs.skyline.externaltools.test.countertool", newtool.PackageIdentifier);
+                Assert.AreEqual("1.0", newtool.PackageVersion);
+            }
+            {
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version1), messageDlg =>
+                    {
+                        string messageForm =
+                            TextUtil.LineSeparate(
+                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_,
+                                string.Empty,
+                                Resources
+                                    .ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_);
+                        AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 1);
+
+                        messageDlg.Btn1Click(); // In Parallel
+                    });
+                WaitForConditionUI(3*1000, () => configureToolsDlg.ToolList.Count == 2);
+                string version2 = TestFilesDir.GetTestPath("TestToolVersioning\\1.0.2\\Counter.zip");
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version2), messageDlg =>
+                    {
+
+                        string messageForm =TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
+                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_);
+                        AssertEx.AreComparableStrings(messageForm, messageDlg.Message,2);
+                       
+                        messageDlg.Btn0Click(); // Update/Overwrite
+                    });
+                WaitForConditionUI(3*1000, () => configureToolsDlg.ToolList.Count == 2);
+                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+                ToolDescription newtool = Settings.Default.ToolList[1];
+                Assert.AreEqual("Counter", newtool.PackageName);
+                Assert.AreEqual("uw.genomesciences.macosslabs.skyline.externaltools.test.countertool", newtool.PackageIdentifier);
+                Assert.AreEqual("1.0.2", newtool.PackageVersion); 
+            }
+            {
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version1), messageDlg =>
+                {
+                    string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_,
+                                string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 3);
+                    
+                    messageDlg.Btn1Click(); // In Parallel
+                });
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 3);
+                string versionDifferent = TestFilesDir.GetTestPath("TestToolVersioning\\Differentidentifier\\Counter.zip");
+                
+                //Testing recognition of a different unique identifier when zip has the same name
+                RunUI(()=>configureToolsDlg.UnpackZipTool(versionDifferent)); 
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 4);
+                string version3 = TestFilesDir.GetTestPath("TestToolVersioning\\1.2.0\\Counter.zip");
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version3), messageDlg =>
+                {
+                    string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
+                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, messageDlg.Message, 2);
+                    messageDlg.Btn0Click(); // Upgrade
+                });
+                WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 4);
+                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            }
+            Settings.Default.ToolList.Clear();
+        }
+
 
         private void TestLocateFileDlg()
         {
@@ -225,7 +313,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
-        private void ZipTestInvalidToolDescription()
+        private void ZipTestInvalidPropertiesFiles()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string toolNoCommandPath = TestFilesDir.GetTestPath("ToolNoCommand.zip");
@@ -250,6 +338,27 @@ namespace pwiz.SkylineTestFunctional
                                                                         Resources.ConfigureToolsDlg_unpackZipTool_skipping_that_tool_), messageDlg.Message, 1);
                     messageDlg.OkDialog();
                 });
+            string toolNoName = TestFilesDir.GetTestPath("NoName.zip");
+            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoName), messageDlg =>
+            {
+                AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_, 
+                            Resources.ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_), messageDlg.Message,2);
+                messageDlg.OkDialog();
+            });
+            string toolNoVersion = TestFilesDir.GetTestPath("NoVersion.zip");
+            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoVersion), messageDlg =>
+            {
+                AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_,
+                            Resources.ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_), messageDlg.Message, 2);
+                messageDlg.OkDialog();
+            });
+            string toolNoIdentifier = TestFilesDir.GetTestPath("NoIdentifier.zip");
+            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoIdentifier), messageDlg =>
+            {
+                AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_,
+                            Resources.ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_), messageDlg.Message, 2);
+                messageDlg.OkDialog();
+            });
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
@@ -266,9 +375,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(1*1000, ()=>configureToolsDlg.listTools.Items.Count == 3);
             RunUI(()=>
                 {
-                    //configureToolsDlg.UnpackZipTool(allCommandTypesPath);
-                    //Assert.AreEqual(3, configureToolsDlg.listTools.Items.Count);
-
                     // ExecutableType
                     configureToolsDlg.listTools.SelectedIndex = 0;
                     Assert.AreEqual("ExecutableType", configureToolsDlg.textTitle.Text);
@@ -340,8 +446,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => configureToolsDlg.SaveTools());
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict =>
                 {
-                    Assert.IsTrue(resolveReportConflict.Message.Contains("A Report with the name UniqueReport already exists."));
-                    Assert.IsTrue(resolveReportConflict.Message.Contains("Do you wish to overwrite or install in parallel?"));
+                    string messageForm =
+                        TextUtil.LineSeparate(
+                            Resources
+                                .ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_,
+                            string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, resolveReportConflict.Message,1);
                     resolveReportConflict.CancelDialog();
                 });
             WaitForConditionUI(() => configureToolsDlg.listTools.Items.Count == 1);
@@ -357,8 +467,12 @@ namespace pwiz.SkylineTestFunctional
                 });
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict2 =>
                 {
-                    Assert.IsTrue(resolveReportConflict2.Message.Contains("A Report with the name UniqueReport already exists."));
-                    Assert.IsTrue(resolveReportConflict2.Message.Contains("Do you wish to overwrite or install in parallel?"));                        
+                    string messageForm =
+                        TextUtil.LineSeparate(
+                            Resources
+                                .ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_,
+                            string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, resolveReportConflict2.Message, 1);                       
                     resolveReportConflict2.Btn0Click(); //Overwrite report
                 });
             WaitForConditionUI(() => configureToolsDlg.listTools.Items.Count == 2);
@@ -377,10 +491,14 @@ namespace pwiz.SkylineTestFunctional
                 });
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict3 =>
                 {
-                    Assert.IsTrue(resolveReportConflict3.Message.Contains("The tool HelloWorld1 is in conflict with the new installation"));
-                    Assert.IsTrue(resolveReportConflict3.Message.Contains("A Report with the name UniqueReport already exists."));
-                    Assert.IsTrue(resolveReportConflict3.Message.Contains("Do you wish to overwrite or install in parallel?"));
-                    resolveReportConflict3.Btn0Click(); //Overwrite
+                    string messageForm =
+                            TextUtil.LineSeparate(
+                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_,
+                                string.Empty,
+                                Resources
+                                    .ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_);
+                    AssertEx.AreComparableStrings(messageForm, resolveReportConflict3.Message, 1);
+                    resolveReportConflict3.BtnCancelClick(); //Cancel
                 });
             WaitForConditionUI(() => configureToolsDlg.listTools.Items.Count == 2);
             RunUI(() =>
@@ -406,7 +524,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
                     Assert.AreNotEqual(toolDir, configureToolsDlg.ToolDir);
                     Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreNotEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem); //Could asser
+                    Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem); 
                     configureToolsDlg.RemoveAllTools();
                 });
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);

@@ -5482,20 +5482,8 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_AddFromFile_Zip_Files" xml:space="preserve">
     <value>Zip Files</value>
   </data>
-  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_this_new_installation_" xml:space="preserve">
-    <value>The following tools are in conflict with this new installation:</value>
-  </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation" xml:space="preserve">
     <value>The tool {0} is in conflict with the new installation</value>
-  </data>
-  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_exist_" xml:space="preserve">
-    <value>Reports with the following names already exist:</value>
-  </data>
-  <data name="ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists_" xml:space="preserve">
-    <value>A Report with the name {1} already exists.</value>
-  </data>
-  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_" xml:space="preserve">
-    <value>Do you wish to overwrite or install in parallel?</value>
   </data>
   <data name="UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_" xml:space="preserve">
     <value>The tool "{0}" requires report type titled "{1}" and it is not provided. Import canceled.</value>
@@ -5532,9 +5520,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_" xml:space="preserve">
     <value>The selected zip file is not an installable tool.</value>
-  </data>
-  <data name="ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_directory_" xml:space="preserve">
-    <value>Error: It does not contain the required tool-inf directory.</value>
   </data>
   <data name="PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas" xml:space="preserve">
     <value>Duplicate transition '{0}' found for peak areas</value>
@@ -5691,5 +5676,65 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ChromatogramExporter_GetExtractorName_Invalid_extractor_name_" xml:space="preserve">
     <value>Invalid extractor name.</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_" xml:space="preserve">
+    <value>Do you wish to overwrite or install in parallel?</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Overwrite" xml:space="preserve">
+    <value>Overwrite</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel" xml:space="preserve">
+    <value>In Parallel</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Reinstall" xml:space="preserve">
+    <value>Reinstall</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_" xml:space="preserve">
+    <value>The tool {0} is currently installed.</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_" xml:space="preserve">
+    <value>Do you wish to upgrade to {0} or install in parallel?</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Upgrade" xml:space="preserve">
+    <value>Upgrade</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_" xml:space="preserve">
+    <value>This is an older installation v{0} of the tool {1}</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_" xml:space="preserve">
+    <value>Do you wish to overwrite with the older version {0} or install in parallel?</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_" xml:space="preserve">
+    <value>The tool {0} is already installed.</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_" xml:space="preserve">
+    <value>Do you wish to reinstall or install in parallel?</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports" xml:space="preserve">
+    <value>This installation would modify the following reports</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_" xml:space="preserve">
+    <value>This installation would modify the report titled {0}</value>
+  </data>
+  <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_" xml:space="preserve">
+    <value>The selected zip file is not a valid installable tool.</value>
+  </data>
+  <data name="ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_" xml:space="preserve">
+    <value>Error: The {0} does not contain a valid {1} attribute.</value>
+  </data>
+  <data name="ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required__0__directory_" xml:space="preserve">
+    <value>Error: It does not contain the required {0} directory.</value>
+  </data>
+  <data name="ToolInstaller_GetToolInfo_Failed_to_process_the__0__file" xml:space="preserve">
+    <value>Failed to process the {0} file</value>
+  </data>
+  <data name="ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_" xml:space="preserve">
+    <value>Error: It does not contain the required {0} in the {1} directory.</value>
+  </data>
+  <data name="ToolInstaller_AddToolFromProperties_Missing_the_file__0___Tool__1__import_failed" xml:space="preserve">
+    <value>Missing the file {0}. Tool {1} import failed</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing" xml:space="preserve">
+    <value>Keep Existing</value>
   </data>
 </root>

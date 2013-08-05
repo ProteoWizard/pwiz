@@ -795,7 +795,7 @@ namespace pwiz.Skyline.Properties
                                "http://www.srmcollider.org/srmcollider/srmcollider.py",
                                ReportSpecList.SRM_COLLIDER_REPORT_NAME),
                            new ToolDescription("QuaSAR",
-                               "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR"), 
+                               "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR", string.Empty), 
                        };
         }
 

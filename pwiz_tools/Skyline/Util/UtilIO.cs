@@ -982,8 +982,13 @@ namespace pwiz.Skyline.Util
         public const string TEMP_PREFIX = "~SK"; // Not L10N
 
         public TemporaryDirectory()
+            : this(Path.Combine(Path.GetTempPath(), TEMP_PREFIX + Path.GetRandomFileName()))
         {
-            DirPath = Path.Combine(Path.GetTempPath(), TEMP_PREFIX + Path.GetRandomFileName());
+        }
+
+        public TemporaryDirectory(string dirPath)
+        {
+            DirPath = dirPath;
             Directory.CreateDirectory(DirPath);
         }
 

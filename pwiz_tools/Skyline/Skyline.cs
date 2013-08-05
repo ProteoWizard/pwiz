@@ -2381,6 +2381,7 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Runs a tool by index from the tools menu. (for testing) make sure to SkylineWindow.PopulateToolsMenu() first
+        /// Does not work with nested tools. 
         /// </summary>
         /// <param name="i">Index of tool in the menu. Zero indexed.</param>
         public void RunTool(int i)

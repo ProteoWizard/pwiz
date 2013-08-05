@@ -137,16 +137,14 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private string GetTitle()
         {
-            return ToolInstaller.GetUniqueVersion(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, value => !ToolList.Any(item => Equals(item.Title, value)));            
+            return ToolInstaller.GetUniqueFormat(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, value => !ToolList.Any(item => Equals(item.Title, value)));            
         }
 
         private string GetTitle(string title)
         {
-            if (!ToolList.Any(item => Equals(item.Title, title)))
-            {
-                return title;
-            }
-            return ToolInstaller.GetUniqueVersion(string.Concat(title, "{0}"), value => !ToolList.Any(item => Equals(item.Title, value)));            
+            return ToolList.Any(item => Equals(item.Title, title))
+                       ? ToolInstaller.GetUniqueName(title, value => !ToolList.Any(item => Equals(item.Title, value)))
+                       : title;
         }
 
         private bool IsUniqueTitle(string title)
@@ -168,29 +166,32 @@ namespace pwiz.Skyline.ToolsUI
                               bool isImmediateOutput, string selectedReport)
         {
             AddDialog(title, command, arguments, initialDirectory, isImmediateOutput, selectedReport,
-                      string.Empty, string.Empty, string.Empty);
+                      string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
         }
 
         public void AddDialog(string title,
-                              string command,
+                              string command, 
                               string arguments,
                               string initialDirectory,
                               bool isImmediateOutput,
                               string selectedReport,
                               string argsCollectorDllPath,
                               string argsCollectorType,
-                              string toolDirPath)        
+                              string toolDirPath,
+                              string packageVersion,
+                              string packageIdentifier,
+                              string packageName)        
         {
             ToolDescription newTool;
             if (ToolDescription.IsWebPageCommand(command))
             {
                 newTool = new ToolDescription(GetTitle(title), command, string.Empty, string.Empty, false,
-                    selectedReport, argsCollectorDllPath, argsCollectorType, toolDirPath, null);
+                    selectedReport, argsCollectorDllPath, argsCollectorType, toolDirPath, null, packageVersion, packageIdentifier, packageName);
             }
             else
             {
                 newTool = new ToolDescription(GetTitle(title), command, arguments, initialDirectory, isImmediateOutput,
-                    selectedReport, argsCollectorDllPath, argsCollectorType,toolDirPath, null);    
+                    selectedReport, argsCollectorDllPath, argsCollectorType, toolDirPath, null, packageVersion, packageIdentifier, packageName);
             }
             ToolList.Add(newTool);
             RefreshListBox();
@@ -1039,6 +1040,14 @@ namespace pwiz.Skyline.ToolsUI
             RefreshListBox();
         }
 
+        public enum RelativeVersion
+        {
+            upgrade,
+            reinstall,
+            olderversion,
+            unknown
+        }
+
         #region Functional test support
 
         public void TestHelperIndexChange(int i)
@@ -1073,35 +1082,64 @@ namespace pwiz.Skyline.ToolsUI
 
         #endregion
 
-        public static bool? OverwriteOrInParallel(List<string> toolTitles,List<ReportSpec> reportList)
+        public static bool? OverwriteOrInParallel(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion, string newCollectionName)
         {
-            List<string> reportTitles = reportList.Select(sp => sp.GetKey()).ToList();
-
-            string toolMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_this_new_installation_, string.Empty,
-                                                    "{0}", string.Empty); // Not L10N
-            string toolSingleMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation,string.Empty);
-
-
-            string reportMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_exist_, string.Empty,
-                                                    "{1}", string.Empty); // Not L10N
-            string reportSingleMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists_,string.Empty);
-
-            string question = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_;
-            
-            string toolMessage = string.Empty;
-            if (toolTitles.Count > 0)
+            string message;
+            string buttonText;
+            if (toolCollectionName != null)
             {
-                toolMessage = toolTitles.Count == 1 ? toolSingleMessage : toolMultiMessage;
+                RelativeVersion relativeVersion = DetermineRelativeVersion(toolCollectionVersion, foundVersion);
+                string toolMessage;
+                switch (relativeVersion)
+                {
+                    case RelativeVersion.upgrade:
+                        toolMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty, 
+                            string.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_, foundVersion));                        
+                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Upgrade;
+                        break;
+                    case RelativeVersion.olderversion:
+                        toolMessage =
+                            TextUtil.LineSeparate(
+                                string.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_, foundVersion, "{0}"), //Not L10N
+                                string.Empty, 
+                                string.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_,
+                                foundVersion));
+                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite;
+                        break;
+                    case RelativeVersion.reinstall:
+                        toolMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_, 
+                            string.Empty,
+                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_);                        
+                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Reinstall;
+                        break;
+                    default:
+                        toolMessage =
+                            TextUtil.LineSeparate(
+                                Resources
+                                    .ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation,
+                                string.Empty,
+                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
+                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite; // Or update?
+                        break;
+                }
+                message = string.Format(toolMessage, toolCollectionName);
             }
-            string reportMessage = string.Empty;
-            if (reportList.Count > 0)
+            else //Warn about overwritng report.
             {
-                reportMessage = reportList.Count == 1 ? reportSingleMessage : reportMultiMessage;
+                List<string> reportTitles = reportList.Select(sp => sp.GetKey()).ToList();
+            
+                string reportMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports, string.Empty,
+                                                              "{0}", string.Empty); //Not L10N
+                string reportSingleMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_, string.Empty);
+                
+                string reportMessage = reportList.Count == 1 ? reportSingleMessage : reportMultiMessage;
+                string question = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_;
+                buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite;
+                string reportMessageFormat = TextUtil.LineSeparate(reportMessage, question);
+                message = string.Format(reportMessageFormat, TextUtil.LineSeparate(reportTitles));
             }
 
-            string messageFormat = TextUtil.LineSeparate(toolMessage, reportMessage, question);
-            
-            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(toolTitles), TextUtil.LineSeparate(reportTitles)), "Overwrite", "In Parallel", true);
+            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(message, buttonText, Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true);
             DialogResult result = dlg.ShowDialog();
             switch (result)
             {
@@ -1113,6 +1151,29 @@ namespace pwiz.Skyline.ToolsUI
                     return false;
             }
             return false;
+        }
+
+
+        public static RelativeVersion DetermineRelativeVersion(string versionToCompare, string foundVersion)
+        {
+            if (!string.IsNullOrEmpty(foundVersion) && !string.IsNullOrEmpty(versionToCompare))
+            {
+                Version current = new Version(versionToCompare);
+                Version found = new Version(foundVersion);
+                if (current > found) //Installing an olderversion.
+                {
+                    return RelativeVersion.olderversion;
+                }
+                else if (current == found) // Installing the same version.
+                {
+                    return RelativeVersion.reinstall;
+                }
+                else if (found > current)
+                {
+                    return RelativeVersion.upgrade;
+                }
+            }
+            return RelativeVersion.unknown;
         }
 
         public static bool? OverwriteAnnotations(List<AnnotationDef> annotations)
@@ -1130,7 +1191,7 @@ namespace pwiz.Skyline.ToolsUI
 
             string messageFormat = TextUtil.LineSeparate(annotationMessage, question);
 
-            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)), "Overwrite", "Keep Existing", true);
+            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)), Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite, Resources.ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing, true);
             DialogResult result = dlg.ShowDialog();
             switch (result)
             {

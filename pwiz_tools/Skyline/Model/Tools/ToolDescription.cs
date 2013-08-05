@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Tools
     [XmlRoot("ToolDescription")]
     public class ToolDescription : IXmlSerializable, IKeyContainer<string>
     {
-        public static readonly ToolDescription EMPTY = new ToolDescription(string.Empty, string.Empty, string.Empty, string.Empty);
+        public static readonly ToolDescription EMPTY = new ToolDescription(string.Empty, string.Empty, string.Empty, string.Empty, false, string.Empty);
 
         public static bool IsWebPageCommand(string command)
         {
@@ -65,13 +65,8 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         public ToolDescription(ToolDescription t)
-            : this(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle, t.ArgsCollectorDllPath, t.ArgsCollectorClassName, t.ToolDirPath, t.Annotations)
+            : this(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle, t.ArgsCollectorDllPath, t.ArgsCollectorClassName, t.ToolDirPath, t.Annotations, t.PackageVersion, t.PackageIdentifier, t.PackageName )
         {            
-        }
-
-        public ToolDescription(string title, string command)
-            : this(title, command, string.Empty, string.Empty, false, string.Empty)
-        {
         }
 
         public ToolDescription(string title, string command, string reportTitle)
@@ -79,20 +74,16 @@ namespace pwiz.Skyline.Model.Tools
         {
         }
 
-        public ToolDescription(string title, string command, string arguments, string initialDirectory)
-            : this(title, command, arguments, initialDirectory, false, string.Empty)
-        {
-        }
-
         public ToolDescription(string title, string command, string arguments, string initialDirectory,
                                bool outputToImmediateWindow, string reportTitle)
             : this( title,  command,  arguments,  initialDirectory,
-                                outputToImmediateWindow,  reportTitle, string.Empty, string.Empty, null, new List<AnnotationDef>())
+                                outputToImmediateWindow,  reportTitle, string.Empty, string.Empty, null,new List<AnnotationDef>(), null, null, null)
         {            
         }
 
         public ToolDescription(string title, string command, string arguments, string initialDirectory,
-                               bool outputToImmediateWindow, string reportTitle, string argsCollectorDllPath, string argsCollectorClassName, string toolDirPath, List<AnnotationDef> annotations)
+                               bool outputToImmediateWindow, string reportTitle, string argsCollectorDllPath, 
+                               string argsCollectorClassName, string toolDirPath, List<AnnotationDef> annotations, string packageVersion, string packageIdentifier, string packageName )
         {
             Title = title;
             Command = command;
@@ -104,6 +95,10 @@ namespace pwiz.Skyline.Model.Tools
             ArgsCollectorClassName = argsCollectorClassName;
             ToolDirPath = toolDirPath;
             Annotations = annotations;
+            PackageVersion = packageVersion;
+            PackageIdentifier = packageIdentifier;
+            PackageName = packageName;
+            
 
             //Validate();  //Not immutable
         }
@@ -124,6 +119,9 @@ namespace pwiz.Skyline.Model.Tools
         public string ArgsCollectorClassName { get; set; }
         public string ToolDirPath { get; set; }
         public List<AnnotationDef> Annotations { get; set; }
+        public string PackageVersion { get; set; }
+        public string PackageIdentifier { get; set; }
+        public string PackageName { get; set; }
 
         public bool IsWebPage { get { return IsWebPageCommand(Command); } }
 
@@ -475,7 +473,10 @@ namespace pwiz.Skyline.Model.Tools
             argument_generated,
             argscollector_dll_path,
             argscollector_class_name,
-            tool_dir_path
+            tool_dir_path,
+            package_version,
+            package_identifier,
+            package_name
         }
         
         private enum EL
@@ -508,6 +509,9 @@ namespace pwiz.Skyline.Model.Tools
             ArgsCollectorDllPath = reader.GetAttribute(ATTR.argscollector_dll_path) ?? string.Empty;
             ArgsCollectorClassName = reader.GetAttribute(ATTR.argscollector_class_name) ?? string.Empty;
             ToolDirPath = reader.GetAttribute(ATTR.tool_dir_path) ?? string.Empty;
+            PackageVersion = reader.GetAttribute(ATTR.package_version) ?? string.Empty;
+            PackageIdentifier = reader.GetAttribute(ATTR.package_identifier) ?? string.Empty;
+            PackageName = reader.GetAttribute(ATTR.package_name) ?? string.Empty;
             Annotations = new List<AnnotationDef>();
             if (!reader.IsEmptyElement)
             {
@@ -534,6 +538,9 @@ namespace pwiz.Skyline.Model.Tools
             writer.WriteAttributeIfString(ATTR.argscollector_dll_path, ArgsCollectorDllPath);
             writer.WriteAttributeIfString(ATTR.argscollector_class_name, ArgsCollectorClassName);
             writer.WriteAttributeIfString(ATTR.tool_dir_path, ToolDirPath);
+            writer.WriteAttributeIfString(ATTR.package_version, PackageVersion);
+            writer.WriteAttributeIfString(ATTR.package_identifier, PackageIdentifier);
+            writer.WriteAttributeIfString(ATTR.package_name, PackageName);
             writer.WriteElementList(EL.annotation, Annotations ?? new List<AnnotationDef>());
         }
 
@@ -549,10 +556,13 @@ namespace pwiz.Skyline.Model.Tools
                     Equals(Arguments, tool.Arguments) &&
                     Equals(InitialDirectory, tool.InitialDirectory) &&
                     Equals(OutputToImmediateWindow, tool.OutputToImmediateWindow)) &&
-                    Equals(ReportTitle, tool.ReportTitle)&&
+                    Equals(ReportTitle, tool.ReportTitle) &&
                     Equals(ArgsCollectorDllPath, tool.ArgsCollectorDllPath) &&
                     Equals(ArgsCollectorClassName, tool.ArgsCollectorClassName) &&
-                    Equals(ToolDirPath, tool.ToolDirPath);
+                    Equals(ToolDirPath, tool.ToolDirPath) &&
+                    Equals(PackageVersion, tool.PackageVersion) &&
+                    Equals(PackageIdentifier, tool.PackageIdentifier) &&
+                    Equals(PackageName, tool.PackageName);
         }
 
         public override int GetHashCode()
@@ -568,6 +578,9 @@ namespace pwiz.Skyline.Model.Tools
                 result = (result * 397) ^ ArgsCollectorDllPath.GetHashCode();
                 result = (result * 397) ^ ArgsCollectorClassName.GetHashCode();
                 result = (result * 397) ^ ToolDirPath.GetHashCode();
+                result = (result * 397) ^ PackageVersion.GetHashCode();
+                result = (result * 397) ^ PackageIdentifier.GetHashCode();
+                result = (result * 397) ^ PackageName.GetHashCode();
                 return result;
             }
         }

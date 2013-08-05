@@ -2658,12 +2658,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A Report with the name {1} already exists..
+        ///   Looks up a localized string similar to Keep Existing.
         /// </summary>
-        public static string ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists_ {
+        public static string ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing {
             get {
-                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_A_Report_with_the_name__1__already_exists" +
-                        "_", resourceCulture);
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing", resourceCulture);
             }
         }
         
@@ -2678,22 +2677,77 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reports with the following names already exist:.
+        ///   Looks up a localized string similar to Do you wish to overwrite with the older version {0} or install in parallel?.
         /// </summary>
-        public static string ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_exist_ {
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_ {
             get {
-                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Reports_with_the_following_names_already_" +
-                        "exist_", resourceCulture);
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_v" +
+                        "ersion__0__or_install_in_parallel_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The following tools are in conflict with this new installation:.
+        ///   Looks up a localized string similar to Do you wish to reinstall or install in parallel?.
         /// </summary>
-        public static string ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_this_new_installation_ {
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_ {
             get {
-                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_The_following_tools_are_in_conflict_with_" +
-                        "this_new_installation_", resourceCulture);
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_pa" +
+                        "rallel_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you wish to upgrade to {0} or install in parallel?.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_" +
+                        "in_parallel_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In Parallel.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overwrite.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Overwrite {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Overwrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reinstall.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Reinstall {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Reinstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tool {0} is already installed..
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tool {0} is currently installed..
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_", resourceCulture);
             }
         }
         
@@ -2704,6 +2758,45 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_" +
                         "installation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This installation would modify the following reports.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_follow" +
+                        "ing_reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This installation would modify the report titled {0}.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report" +
+                        "_titled__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is an older installation v{0} of the tool {1}.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the" +
+                        "_tool__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrade.
+        /// </summary>
+        public static string ConfigureToolsDlg_OverwriteOrInParallel_Upgrade {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_OverwriteOrInParallel_Upgrade", resourceCulture);
             }
         }
         
@@ -14568,12 +14661,60 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: It does not contain the required tool-inf directory..
+        ///   Looks up a localized string similar to Missing the file {0}. Tool {1} import failed.
         /// </summary>
-        public static string ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_directory_ {
+        public static string ToolInstaller_AddToolFromProperties_Missing_the_file__0___Tool__1__import_failed {
             get {
-                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required_tool_inf_dire" +
-                        "ctory_", resourceCulture);
+                return ResourceManager.GetString("ToolInstaller_AddToolFromProperties_Missing_the_file__0___Tool__1__import_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: It does not contain the required {0} in the {1} directory..
+        /// </summary>
+        public static string ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__" +
+                        "directory_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to process the {0} file.
+        /// </summary>
+        public static string ToolInstaller_GetToolInfo_Failed_to_process_the__0__file {
+            get {
+                return ResourceManager.GetString("ToolInstaller_GetToolInfo_Failed_to_process_the__0__file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: It does not contain the required {0} directory..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required__0__directory_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required__0__directory" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The {0} does not contain a valid {1} attribute..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected zip file is not a valid installable tool..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool" +
+                        "_", resourceCulture);
             }
         }
         

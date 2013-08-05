@@ -869,7 +869,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Settings.Default.ToolList.RemoveAt(0);
                 }
-                Settings.Default.ToolList.Add(new ToolDescription(EXAMPLE2, EXAMPLE2_EXE, "$(DocumentPath)", "$(DocumentDir)")); // Not L10N
+                Settings.Default.ToolList.Add(new ToolDescription(EXAMPLE2, EXAMPLE2_EXE, "$(DocumentPath)", "$(DocumentDir)", false, string.Empty)); // Not L10N
 
                 SkylineWindow.Paste("PEPTIDER"); // Not L10N
                 bool saved = SkylineWindow.SaveDocument(TestContext.GetTestPath("ConfigureToolsTest.sky")); // Not L10N
