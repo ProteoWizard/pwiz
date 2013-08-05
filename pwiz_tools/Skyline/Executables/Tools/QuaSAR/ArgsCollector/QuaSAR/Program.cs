@@ -13,9 +13,10 @@ namespace QuaSAR
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new QuaSAR.QuaSARUI(null));
+            //Application.EnableVisualStyles();
+            //Application.SetCompatibleTextRenderingDefault(false);
+            //Application.Run(new QuaSARSimpleUI(null));
+            QuaSARCollector.CollectArgs(null, null, null);
         }
     }
 }

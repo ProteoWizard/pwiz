@@ -57,6 +57,7 @@
     <Compile Include="QuaSARUI.Designer.cs">
       <DependentUpon>QuaSARUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="QuaSARUtil.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
