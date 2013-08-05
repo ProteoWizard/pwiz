@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model
                                 extractorName,
                                 TextUtil.EXCEL_NA,
                                 TextUtil.EXCEL_NA,
-                                System.Convert.ToString(tic)
+                                System.Convert.ToString(tic, cultureInfo)
                             };
                         FormatChromLine(writer, fieldArray, times, intensities, cultureInfo);
 
@@ -201,12 +201,12 @@ namespace pwiz.Skyline.Model
                                     {
                                         fileName,
                                         peptideModifiedSequence,
-                                        System.Convert.ToString(precursorCharge),
-                                        System.Convert.ToString(productMz),
+                                        System.Convert.ToString(precursorCharge, cultureInfo),
+                                        System.Convert.ToString(productMz, cultureInfo),
                                         fragmentIon,
-                                        System.Convert.ToString(productCharge),
+                                        System.Convert.ToString(productCharge, cultureInfo),
                                         labelType,
-                                        System.Convert.ToString(tic)
+                                        System.Convert.ToString(tic, cultureInfo)
                                     };
                     FormatChromLine(writer, fieldArray, times, intensities, cultureInfo);
                 }
@@ -216,13 +216,13 @@ namespace pwiz.Skyline.Model
         private static float CalculateTic(IList<float> times, IList<float> intensities)
         {
             int numberPoints = intensities.Count;
-            float tic = 0;
+            double tic = 0;
             for (int i = 0; i < numberPoints - 1; ++i)
             {
                 // Trapezoid rule (seconds of intensity)
-                tic += (times[i + 1] - times[i]) * 60 * (intensities[i + 1] + intensities[i]) / (float)2.0;
+                tic += ((double)times[i + 1] - times[i]) * 60.0 * ((double)intensities[i + 1] + intensities[i]) / 2.0;
             }
-            return tic;
+            return (float)tic;
         }
 
         private static void FormatHeader(TextWriter writer, IList<string> fieldNames)
@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Model
             {
                 if (i > 0)
                     writer.Write(intensitySeparator);
-                writer.WriteDsvField(System.Convert.ToString(floatArray[i]), intensitySeparator);
+                writer.WriteDsvField(System.Convert.ToString(floatArray[i], cultureInfo), intensitySeparator);
             }
         }
 
