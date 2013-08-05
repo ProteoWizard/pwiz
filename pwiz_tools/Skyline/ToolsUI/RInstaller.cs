@@ -154,9 +154,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                using (
-                    var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0}
-                    )
+                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0})
                 {
                     dlg.PerformWork(this, 500, DownloadR);
                 }

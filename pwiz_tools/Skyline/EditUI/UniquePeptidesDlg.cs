@@ -145,20 +145,22 @@ namespace pwiz.Skyline.EditUI
         private void LaunchPeptideProteinsQuery()
         {
             HashSet<Protein> proteinSet = new HashSet<Protein>();
-            LongWaitDlg longWaitDlg = new LongWaitDlg
+            using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database,
+                    Message = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences
+                })
             {
-                Text = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database,
-                Message = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences
-            };
-            try
-            {
-                longWaitDlg.PerformWork(this, 1000, QueryPeptideProteins);
-            }
-            catch (Exception x)
-            {
-                var message = TextUtil.LineSeparate(string.Format(Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__,
-                                            BackgroundProteome.Name),x.Message); 
-                MessageDlg.Show(this, message);
+                try
+                {
+                    longWaitDlg.PerformWork(this, 1000, QueryPeptideProteins);
+                }
+                catch (Exception x)
+                {
+                    var message = TextUtil.LineSeparate(string.Format(Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__,
+                                                BackgroundProteome.Name), x.Message);
+                    MessageDlg.Show(this, message);
+                }
             }
             if (_peptideProteins == null)
             {

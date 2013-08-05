@@ -29,10 +29,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                var mods = new List<string>();
-                foreach (string item in modificationsListBox.Items)
-                    mods.Add(item);
-                return mods;
+                return modificationsListBox.Items.Cast<string>();
             }
         }
 
@@ -40,10 +37,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                var mods = new List<string>();
-                foreach (string item in unmatchedListBox.Items)
-                    mods.Add(item);
-                return mods;
+                return unmatchedListBox.Items.Cast<string>();
             }
         }
 

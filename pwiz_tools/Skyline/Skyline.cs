@@ -1528,15 +1528,17 @@ namespace pwiz.Skyline
             var findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
             IList<FindResult> results = null;
-            var longWaitDlg = new LongWaitDlg(this);
-            longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
-            if (results.Count == 0)
+            using (var longWaitDlg = new LongWaitDlg(this))
             {
-                if (!longWaitDlg.IsCanceled)
+                longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
+                if (results.Count == 0)
                 {
-                    MessageBox.Show(parent.TopLevelControl, findOptions.GetNotFoundMessage());
+                    if (!longWaitDlg.IsCanceled)
+                    {
+                        MessageBox.Show(parent.TopLevelControl, findOptions.GetNotFoundMessage());
+                    }
+                    return;
                 }
-                return;
             }
             // Consider(nicksh): if there is only one match, then perhaps just navigate to it instead
             // of displaying FindResults window

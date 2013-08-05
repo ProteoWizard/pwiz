@@ -95,11 +95,13 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                var waitDlg = new LongWaitDlg
-                              {
-                                  Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
-                              };
-                waitDlg.PerformWork(this, 1000, () => PublishDocumentDlgLoad(listServerFolders));
+                using (var waitDlg = new LongWaitDlg
+                    {
+                        Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
+                    })
+                {
+                    waitDlg.PerformWork(this, 1000, () => PublishDocumentDlgLoad(listServerFolders));
+                }
             }
             catch (Exception x)
             {
@@ -296,9 +298,11 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                var waitDlg = new LongWaitDlg {Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File};
-                waitDlg.PerformWork(parent, 1000, longWaitBroker => PanoramaPublishClient.SendZipFile(folderInfo.Server, folderPath,
-                                                                                        zipFilePath, longWaitBroker));
+                using (var waitDlg = new LongWaitDlg { Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File })
+                {
+                    waitDlg.PerformWork(parent, 1000, longWaitBroker => PanoramaPublishClient.SendZipFile(folderInfo.Server, folderPath,
+                                                                                            zipFilePath, longWaitBroker));
+                }
             }
             catch (Exception x)
             {

@@ -1017,24 +1017,24 @@ namespace pwiz.Skyline
         private void ImportPeakBoundaries(TextReader reader, long lineCount, string description)
         {
             var docCurrent = DocumentUI;
-            var longWaitDlg = new LongWaitDlg(this)
-            {
-                Text = description,
-            };
             SrmDocument docNew = null;
-            var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
-            longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                       docNew = peakBoundaryImporter.Import(reader, longWaitBroker, lineCount));
-
-
-            if (docNew == null)
-                return;
-
-            if (longWaitDlg.IsDocumentChanged(docCurrent))
+            using (var longWaitDlg = new LongWaitDlg(this) { Text = description })
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
-                return;
+                var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                           docNew = peakBoundaryImporter.Import(reader, longWaitBroker, lineCount));
+
+
+                if (docNew == null)
+                    return;
+
+                if (longWaitDlg.IsDocumentChanged(docCurrent))
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
+                    return;
+                }                
             }
+
             ModifyDocument(description, doc =>
             {
                 if (!ReferenceEquals(doc, docCurrent))
@@ -1122,22 +1122,21 @@ namespace pwiz.Skyline
                 reader = new StringReader(TextUtil.LineSeparate(header, TextUtil.LineSeparate(sequences.ToArray())));
             }
 
-            var longWaitDlg = new LongWaitDlg(this)
-            {
-                Text = description,
-            };
             SrmDocument docNew = null;
-            IdentityPath nextAdded;
-            longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                       docNew = docCurrent.ImportFasta(reader, longWaitBroker, lineCount, matcher, to, out selectPath, out nextAdded));
-
-            if (docNew == null)
-                return;
-
-            if (longWaitDlg.IsDocumentChanged(docCurrent))
+            using (var longWaitDlg = new LongWaitDlg(this) { Text = description })
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);                
-                return;
+                IdentityPath nextAdded;
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                           docNew = docCurrent.ImportFasta(reader, longWaitBroker, lineCount, matcher, to, out selectPath, out nextAdded));
+
+                if (docNew == null)
+                    return;
+
+                if (longWaitDlg.IsDocumentChanged(docCurrent))
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    return;
+                }
             }
 
             // If importing the FASTA produced any childless proteins
@@ -1303,27 +1302,29 @@ namespace pwiz.Skyline
             IdentityPath selectPath = null;
 
             var docCurrent = DocumentUI;
-            var longWaitDlg = new LongWaitDlg(this)
-            {
-                Text = Resources.SkylineWindow_ImportFiles_Import_Skyline_document_data,
-            };
             SrmDocument docNew = null;
-            longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                docNew = ImportFiles(docCurrent,
-                                     longWaitBroker,
-                                     filePaths,
-                                     resultsAction,
-                                     mergePeptides,
-                                     nodeSel != null ? nodeSel.Path : null,
-                                     out selectPath));
-
-            if (docNew == null || ReferenceEquals(docNew, docCurrent))
-                return;
-
-            if (longWaitDlg.IsDocumentChanged(docCurrent))
+            using (var longWaitDlg = new LongWaitDlg(this)
+                {
+                    Text = Resources.SkylineWindow_ImportFiles_Import_Skyline_document_data,
+                })
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
-                return;
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                    docNew = ImportFiles(docCurrent,
+                                         longWaitBroker,
+                                         filePaths,
+                                         resultsAction,
+                                         mergePeptides,
+                                         nodeSel != null ? nodeSel.Path : null,
+                                         out selectPath));
+
+                if (docNew == null || ReferenceEquals(docNew, docCurrent))
+                    return;
+
+                if (longWaitDlg.IsDocumentChanged(docCurrent))
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    return;
+                }
             }
 
             ModifyDocument(Resources.SkylineWindow_ImportFiles_Import_Skyline_document_data, doc =>

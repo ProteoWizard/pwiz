@@ -41,7 +41,6 @@ namespace pwiz.Skyline.SettingsUI
         private String _databasePath;
         private String _name;
         private bool _buildNew = true;  // Design mode with build UI showing
-        private LongWaitDlg _longWaitDlg;
         private BackgroundProteomeSpec _backgroundProteomeSpec;
         private readonly MessageBoxHelper _messageBoxHelper;
         public BuildBackgroundProteomeDlg(IEnumerable<BackgroundProteomeSpec> existing)
@@ -274,13 +273,6 @@ namespace pwiz.Skyline.SettingsUI
             Close();
         }
 
-        private bool UpdateProgress(String message, int progress)
-        {
-            _longWaitDlg.ProgressValue = progress;
-            _longWaitDlg.Message = message;
-            return !_longWaitDlg.IsCanceled;
-        }
-
         private void btnBuild_Click(object sender, EventArgs e)
         {
             BuildNew = !BuildNew;
@@ -314,38 +306,55 @@ namespace pwiz.Skyline.SettingsUI
         {
             String databasePath = textPath.Text;
             Settings.Default.FastaDirectory = Path.GetDirectoryName(fastaFilePath);
-            _longWaitDlg = new LongWaitDlg
-                               {
-                                   ProgressValue = 0
-                               };
-
-            try
+            using (var longWaitDlg = new LongWaitDlg { ProgressValue = 0 })
             {
-                _longWaitDlg.PerformWork(this, 0, () =>
+                var progressMonitor = new ProgressMonitor(longWaitDlg);
+                try
                 {
-                    if (!File.Exists(databasePath))
+                    longWaitDlg.PerformWork(this, 0, () =>
                     {
-                        ProteomeDb.CreateProteomeDb(databasePath);
-                    }
-                    var proteomeDb = ProteomeDb.OpenProteomeDb(databasePath);
-                    using (var reader = File.OpenText(fastaFilePath))
-                    {
-                        proteomeDb.AddFastaFile(reader, UpdateProgress);
-                    }
-                });
+                        if (!File.Exists(databasePath))
+                        {
+                            ProteomeDb.CreateProteomeDb(databasePath);
+                        }
+                        var proteomeDb = ProteomeDb.OpenProteomeDb(databasePath);
+                        using (var reader = File.OpenText(fastaFilePath))
+                        {
+                            proteomeDb.AddFastaFile(reader, progressMonitor.UpdateProgress);
+                        }
+                    });
+                }
+                catch (Exception x)
+                {
+                    var message = TextUtil.LineSeparate(string.Format(Resources.BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__,
+                                                                      fastaFilePath),
+                                                        x.Message);
+                    MessageDlg.Show(this, message);
+                    return;
+                }
             }
-            catch (Exception x)
-            {
-                var message = TextUtil.LineSeparate(string.Format(Resources.BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__,
-                                                                  fastaFilePath),
-                                                    x.Message);
-                MessageDlg.Show(this, message);
-                return;
-            }
+
             string path = Path.GetFileName(fastaFilePath);
             if (path != null)
                 listboxFasta.Items.Add(path);
             RefreshStatus();
+        }
+
+        private class ProgressMonitor
+        {
+            private readonly LongWaitDlg _longWaitDlg;
+
+            public ProgressMonitor(LongWaitDlg longWaitDlg)
+            {
+                _longWaitDlg = longWaitDlg;
+            }
+
+            public bool UpdateProgress(string message, int progress)
+            {
+                _longWaitDlg.ProgressValue = progress;
+                _longWaitDlg.Message = message;
+                return !_longWaitDlg.IsCanceled;
+            }
         }
 
         private void textName_TextChanged(object sender, EventArgs e)
@@ -420,14 +429,16 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    var longWaitDlg = new LongWaitDlg
-                                          {
-                                              Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File,
-                                              Message = string.Format(Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__,
-                                                      textPath.Text)
-                                          };
                     ProteomeDb proteomeDb = null;
-                    longWaitDlg.PerformWork(this, 1000, () => proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text));
+                    using (var longWaitDlg = new LongWaitDlg
+                        {
+                            Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File,
+                            Message = string.Format(Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__,
+                                                    textPath.Text)
+                        })
+                    {
+                        longWaitDlg.PerformWork(this, 1000, () => proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text));
+                    }
                     if (proteomeDb == null)
                         throw new Exception();
 

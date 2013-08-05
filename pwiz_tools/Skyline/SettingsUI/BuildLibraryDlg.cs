@@ -387,24 +387,25 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddDirectory(string dirPath)
         {
-            var longWaitDlg = new LongWaitDlg
+            using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = Resources.BuildLibraryDlg_AddDirectory_Find_Input_Files,
+                })
             {
-                Text = Resources.BuildLibraryDlg_AddDirectory_Find_Input_Files,
-            };
-
-            try
-            {
-                var inputFiles = new List<string>();
-                longWaitDlg.PerformWork(this, 800, broker => FindInputFiles(dirPath, inputFiles, broker));
-                AddInputFiles(inputFiles);
+                try
+                {
+                    var inputFiles = new List<string>();
+                    longWaitDlg.PerformWork(this, 800, broker => FindInputFiles(dirPath, inputFiles, broker));
+                    AddInputFiles(inputFiles);
+                }
+                catch (Exception x)
+                {
+                    var message = TextUtil.LineSeparate(string.Format(Resources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
+                                                                      dirPath),
+                                                        x.Message);
+                    MessageDlg.Show(this, message);
+                }
             }
-            catch (Exception x)
-            {
-                var message = TextUtil.LineSeparate(string.Format(Resources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
-                                                                  dirPath),
-                                                    x.Message);
-                MessageDlg.Show(this, message);
-            }            
         }
 
         private void btnAddPaths_Click(object sender, EventArgs e)

@@ -333,27 +333,29 @@ namespace pwiz.Skyline.FileUI
 
         private string[] GetWiffSubPaths(string filePath)
         {
-            var longWaitDlg = new LongWaitDlg
+            using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = Resources.ImportResultsDlg_GetWiffSubPaths_Sample_Names,
+                    Message = string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__, 
+                                            Path.GetFileName(filePath))
+                })
             {
-                Text = Resources.ImportResultsDlg_GetWiffSubPaths_Sample_Names,
-                Message = string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__, Path.GetFileName(filePath))
-            };
+                string[] dataIds = null;
+                try
+                {
+                    longWaitDlg.PerformWork(this, 800, () => dataIds = MsDataFileImpl.ReadIds(filePath));
+                }
+                catch (Exception x)
+                {
+                    string message = TextUtil.LineSeparate(
+                        string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__, filePath),
+                        Resources.ImportResultsDlg_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
+                        x.Message);
+                    MessageDlg.Show(this, message);
+                }
 
-            string[] dataIds = null;
-            try
-            {
-                longWaitDlg.PerformWork(this, 800, () => dataIds = MsDataFileImpl.ReadIds(filePath));
+                return DataSourceUtil.GetWiffSubPaths(filePath, dataIds, ChooseSamples);
             }
-            catch (Exception x)
-            {
-                string message = TextUtil.LineSeparate(
-                    string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__, filePath),
-                    Resources.ImportResultsDlg_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
-                    x.Message); 
-                MessageDlg.Show(this, message);
-            }
-
-            return DataSourceUtil.GetWiffSubPaths(filePath, dataIds, ChooseSamples);
         }
 
         private IEnumerable<int> ChooseSamples(string dataSource, IEnumerable<string> sampleNames)

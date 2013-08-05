@@ -5737,4 +5737,7 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing" xml:space="preserve">
     <value>Keep Existing</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__" xml:space="preserve">
+    <value>Failed to build the library {0}.</value>
+  </data>
 </root>

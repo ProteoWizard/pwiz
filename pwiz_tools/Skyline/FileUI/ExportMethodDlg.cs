@@ -1508,17 +1508,22 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            var longWait = new LongWaitDlg { Text = Resources.ExportDlgProperties_PerformLongExport_Exporting_Methods };
-            try
+            using (var longWait = new LongWaitDlg
+                    {
+                        Text = Resources.ExportDlgProperties_PerformLongExport_Exporting_Methods
+                    })
             {
-                var status = longWait.PerformWork(_dialog, 800, performExport);
-                if (status.IsError)
-                    MessageDlg.Show(_dialog, status.ErrorException.Message);
-            }
-            catch (Exception x)
-            {
-                MessageDlg.Show(_dialog, TextUtil.LineSeparate(Resources.ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export,
-                                                               x.Message));
+                try
+                {
+                    var status = longWait.PerformWork(_dialog, 800, performExport);
+                    if (status.IsError)
+                        MessageDlg.Show(_dialog, status.ErrorException.Message);
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.Show(_dialog, TextUtil.LineSeparate(Resources.ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export,
+                                                                   x.Message));
+                }
             }
         }
 

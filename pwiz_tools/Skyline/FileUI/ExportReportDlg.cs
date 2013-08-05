@@ -78,12 +78,14 @@ namespace pwiz.Skyline.FileUI
             if (_database == null)
             {
                 var status = new ProgressStatus(Resources.ExportReportDlg_GetDatabase_Generating_Report_Data);
-                var longWait = new LongWaitDlg
-                                   {
-                                       Text = status.Message,
-                                       Message = Resources.ExportReportDlg_GetDatabase_Analyzing_document
-                                   };
-                longWait.PerformWork(owner, 1500, broker => EnsureDatabase(broker, 100, ref status));
+                using (var longWait = new LongWaitDlg
+                    {
+                        Text = status.Message,
+                        Message = Resources.ExportReportDlg_GetDatabase_Analyzing_document
+                    })
+                {
+                    longWait.PerformWork(owner, 1500, broker => EnsureDatabase(broker, 100, ref status));
+                }
             }
 
             return _database;
@@ -191,33 +193,35 @@ namespace pwiz.Skyline.FileUI
                         Report report = GetReport();
                         bool success = false;
 
-                        var longWait = new LongWaitDlg { Text = Resources.ExportReportDlg_ExportReport_Generating_Report };
-                        longWait.PerformWork(this, 1500, broker =>
+                        using (var longWait = new LongWaitDlg { Text = Resources.ExportReportDlg_ExportReport_Generating_Report })
                         {
-                            var status = new ProgressStatus(Resources.ExportReportDlg_GetDatabase_Analyzing_document);
-                            broker.UpdateProgress(status);
-                            Database database = EnsureDatabase(broker, 80, ref status);
-                            if (broker.IsCanceled)
-                                return;
-                            broker.UpdateProgress(status = status.ChangeMessage(Resources.ExportReportDlg_ExportReport_Building_report));
-                            ResultSet resultSet = report.Execute(database);
-                            if (broker.IsCanceled)
-                                return;
-                            broker.UpdateProgress(status = status.ChangePercentComplete(95)
-                                .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
-                            
-                            ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo);
+                            longWait.PerformWork(this, 1500, broker =>
+                            {
+                                var status = new ProgressStatus(Resources.ExportReportDlg_GetDatabase_Analyzing_document);
+                                broker.UpdateProgress(status);
+                                Database database = EnsureDatabase(broker, 80, ref status);
+                                if (broker.IsCanceled)
+                                    return;
+                                broker.UpdateProgress(status = status.ChangeMessage(Resources.ExportReportDlg_ExportReport_Building_report));
+                                ResultSet resultSet = report.Execute(database);
+                                if (broker.IsCanceled)
+                                    return;
+                                broker.UpdateProgress(status = status.ChangePercentComplete(95)
+                                    .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
-                            writer.Flush();
-                            writer.Close();
+                                ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo);
 
-                            if (broker.IsCanceled)
-                                return;
-                            broker.UpdateProgress(status.Complete());
+                                writer.Flush();
+                                writer.Close();
 
-                            saver.Commit();
-                            success = true;
-                        });
+                                if (broker.IsCanceled)
+                                    return;
+                                broker.UpdateProgress(status.Complete());
+
+                                saver.Commit();
+                                success = true;
+                            });
+                        }
 
                         return success;
                     }

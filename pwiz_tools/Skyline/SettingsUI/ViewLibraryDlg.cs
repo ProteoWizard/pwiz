@@ -47,38 +47,13 @@ using Label = System.Windows.Forms.Label;
 
 namespace pwiz.Skyline.SettingsUI
 {
-
-    /// <summary>
-    /// Interface for any window that contains a graph, to allow non-blocking
-    /// updates with a <see cref="System.Windows.Forms.Timer"/>.
-    /// </summary>
-    public interface IGraphContainer : IUpdatable
-    {
-        /// <summary>
-        /// Locks/unlocks the Y-axis, so that it auto-scales.
-        /// </summary>
-        /// <param name="lockY">True to use Y-axis auto-scaling</param>
-        void LockYAxis(bool lockY);
-    }
-
-    /// <summary>
-    /// Needed by the graph object.
-    /// </summary>
-    public interface IStateProvider
-    {
-        IList<IonType> ShowIonTypes { get; }
-        IList<int> ShowIonCharges { get; }
-
-        void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
-    }
-
     /// <summary>
     /// Dialog to view the contents of the libraries in the Peptide Settings 
     /// dialog's Library tab. It allows you to select one of the libraries 
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : FormEx, IGraphContainer, IStateProvider, ITipDisplayer
+    public partial class ViewLibraryDlg : FormEx, IGraphContainer, ITipDisplayer
     {
         // Used to parse the modification string in a given sequence
         private const string REGEX_MODIFICATION_PATTERN = @"\[[^\]]*\]"; // Not L10N
@@ -117,7 +92,7 @@ namespace pwiz.Skyline.SettingsUI
         private ViewLibraryPepInfo? _lastTipNode;
         private ITipProvider _lastTipProvider;
         private bool _showChromatograms;
-        private GraphHelper _graphHelper;
+        private readonly GraphHelper _graphHelper;
 
         private ModFontHolder ModFonts { get; set; }
 
@@ -419,24 +394,26 @@ namespace pwiz.Skyline.SettingsUI
                 if (selectedLibrarySpec == null)
                     return;
 
-                var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library };
-                try
+                using (var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library })
                 {
-                    var status = longWait.PerformWork(this, 800, monitor =>
+                    try
                     {
-                        _selectedLibrary = selectedLibrarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
-                    });
-                    if (status.IsError)
-                    {
-                        MessageDlg.Show(this, status.ErrorException.Message);
-                        return;
+                        var status = longWait.PerformWork(this, 800, monitor =>
+                        {
+                            _selectedLibrary = selectedLibrarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
+                        });
+                        if (status.IsError)
+                        {
+                            MessageDlg.Show(this, status.ErrorException.Message);
+                            return;
+                        }
                     }
-                }
-                catch (Exception x)
-                {
-                    var message = TextUtil.LineSeparate(string.Format(Resources.ViewLibraryDlg_LoadLibrary_An_error_occurred_attempting_to_import_the__0__library, selectedLibrarySpec.Name),
-                                    x.Message);
-                    MessageDlg.Show(this, message);
+                    catch (Exception x)
+                    {
+                        var message = TextUtil.LineSeparate(string.Format(Resources.ViewLibraryDlg_LoadLibrary_An_error_occurred_attempting_to_import_the__0__library, selectedLibrarySpec.Name),
+                                        x.Message);
+                        MessageDlg.Show(this, message);
+                    }
                 }
             }
             btnAddAll.Enabled = true;
@@ -1405,15 +1382,18 @@ namespace pwiz.Skyline.SettingsUI
 
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;
 
-            LongWaitDlg longWaitDlg = new LongWaitDlg
-                                          {
-                                              Text = Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides,
-                                              Message = Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings
-                                          };
-            longWaitDlg.PerformWork(this, 1000, pepMatcher.AddAllPeptidesToDocument);
-            var newDocument = pepMatcher.DocAllPeptides;
-            if (longWaitDlg.IsCanceled || newDocument == null)
-                return;
+            SrmDocument newDocument;
+            using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides,
+                    Message = Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings
+                })
+            {
+                longWaitDlg.PerformWork(this, 1000, pepMatcher.AddAllPeptidesToDocument);
+                newDocument = pepMatcher.DocAllPeptides;
+                if (longWaitDlg.IsCanceled || newDocument == null)
+                    return;
+            }
 
             var selectedPath = pepMatcher.AddAllPeptidesSelectedPath;
             var numMatchedPeptides = pepMatcher.MatchedPeptideCount;
