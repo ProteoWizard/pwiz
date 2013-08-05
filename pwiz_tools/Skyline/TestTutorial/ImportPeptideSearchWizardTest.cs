@@ -80,16 +80,9 @@ namespace pwiz.SkylineTestTutorial
             SrmDocument doc = SkylineWindow.Document;
             // Configure the peptide settings for the document.
             var peptideSettingsUI = ShowPeptideSettings();
-            const string carbamidomethylCysteineName = "Carbamidomethyl Cysteine";
-            const string phosphoStName = "Phospho (ST)";
-            const string phosphoYName = "Phospho (Y)";
-            const string oxidationMName = "Oxidation (M)";
-            AddStaticMod(phosphoStName, true, peptideSettingsUI);
-            AddStaticMod(phosphoYName, true, peptideSettingsUI);
-            AddStaticMod(oxidationMName, true, peptideSettingsUI);
+
             RunUI(() =>
             {
-                peptideSettingsUI.PickedStaticMods = new[] { carbamidomethylCysteineName, phosphoStName, phosphoYName, oxidationMName };
                 peptideSettingsUI.MissedCleavages = 2;
                 peptideSettingsUI.OkDialog();
             });
@@ -138,11 +131,11 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // We're on the "Match Modifications" page of the wizard.
-            // There should be no unknown modifications, so just move to the next page.
+            List<string> modsToCheck = new List<string>() { "Phospho (ST)", "Phospho (Y)", "Oxidation (M)" };
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
-                importPeptideSearchDlg.MatchModificationsControl.ChangeAll(false);
+                importPeptideSearchDlg.MatchModificationsControl.CheckedModifications = modsToCheck;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 

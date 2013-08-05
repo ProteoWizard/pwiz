@@ -1,4 +1,22 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2013 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -89,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // Define expected matched/unmatched modifications
-                var expectedMatched = new List<string> { "Acetyl (T) = T[42]", "Carbamyl (K) = K[43]" };
+                var expectedMatched = new List<string> { "Acetyl (T)", "Carbamyl (K)" };
                 var expectedUnmatched = new List<string> { "R[114]" };
                 // Verify matched/unmatched modifications
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
@@ -126,6 +144,17 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqualDeep(expectedStaticMods, ModNames(docModified.Settings.PeptideSettings.Modifications.StaticModifications));
             AssertEx.AreEqualDeep(expectedHeavyMods, ModNames(Settings.Default.HeavyModList));
             AssertEx.AreEqualDeep(expectedHeavyMods, ModNames(docModified.Settings.PeptideSettings.Modifications.HeavyModifications));
+
+            // Make sure that Acetyl (T) and Carbamyl (K) are variable.
+            foreach (var mod in Settings.Default.StaticModList)
+            {
+                if (mod.Name == "Carbamidomethyl (C)")
+                    Assert.IsFalse(mod.IsVariable);
+                else if (mod.Name == "Acetyl (T)" || mod.Name == "Carbamyl (K)")
+                    Assert.IsTrue(mod.IsVariable);
+                else
+                    Assert.Fail("Unexpected modification '{0}'", mod.Name);
+            }
 
             RunUI(() => SkylineWindow.SaveDocument());
         }
