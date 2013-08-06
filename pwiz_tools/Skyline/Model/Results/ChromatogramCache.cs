@@ -800,7 +800,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Write sequence bytes
                 locationSeqBytes = outStream.Position;
-                if (seqBytes.Count > 0)
+                if (seqBytes != null && seqBytes.Count > 0)
                 {
                     byte[] seqBytesBuffer = seqBytes.ToArray();
                     outStream.Write(seqBytesBuffer, 0, seqBytesBuffer.Length);
@@ -904,7 +904,8 @@ namespace pwiz.Skyline.Model.Results
                 outStream.Write(BitConverter.GetBytes(scores.Length), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(locationScores), 0, sizeof(long));
                 // sequence bytes
-                outStream.Write(BitConverter.GetBytes(seqBytes.Count), 0, sizeof(int));
+                int countSeqBytes = (seqBytes != null ? seqBytes.Count : 0);
+                outStream.Write(BitConverter.GetBytes(countSeqBytes), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(locationSeqBytes), 0, sizeof(long));
             }
             // The format version must remain in the same relative position as in the
