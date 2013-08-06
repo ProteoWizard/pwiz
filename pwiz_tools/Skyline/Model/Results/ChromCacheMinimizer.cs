@@ -428,10 +428,8 @@ namespace pwiz.Skyline.Model.Results
             private int _peakCount;
             private readonly List<ChromGroupHeaderInfo5> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo5>();
             private readonly List<ChromTransition5> _transitions = new List<ChromTransition5>();
-            private readonly List<ChromCachedFile> _files = new List<ChromCachedFile>();
             private readonly List<Type> _scoreTypes;
             private readonly List<float> _scores = new List<float>();
-            private readonly int[] _fileIndexMap;
 
             public Writer(ChromatogramCache chromatogramCache, Stream outputStream, FileStream outputStreamPeaks)
             {
@@ -439,7 +437,6 @@ namespace pwiz.Skyline.Model.Results
                 _outputStream = outputStream;
                 _outputStreamPeaks = outputStreamPeaks;
                 _scoreTypes = chromatogramCache.ScoreTypes.ToList();
-                _fileIndexMap = Enumerable.Repeat(-1, chromatogramCache.CachedFiles.Count).ToArray();
             }
 
             public void WriteChromGroup(ChromatogramGroupInfo originalChromGroup, MinimizedChromGroup minimizedChromGroup)
@@ -450,12 +447,7 @@ namespace pwiz.Skyline.Model.Results
                 }
            
                 var originalHeader = originalChromGroup.Header;
-                int fileIndex = _fileIndexMap[originalHeader.FileIndex];
-                if (fileIndex == -1)
-                {
-                    fileIndex = _fileIndexMap[originalHeader.FileIndex] = _files.Count;
-                    _files.Add(_originalCache.CachedFiles[originalHeader.FileIndex]);
-                }
+                int fileIndex = originalHeader.FileIndex;
                 int startTransitionIndex = _transitions.Count;
                 int startPeakIndex = _peakCount;
                 int startScoreIndex = _scores.Count;
@@ -566,7 +558,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 ChromatogramCache.WriteStructs(_outputStream,
                                                _outputStreamPeaks,
-                                               _files,
+                                               _originalCache.CachedFiles,
                                                _chromGroupHeaderInfos,
                                                _transitions,
                                                _scoreTypes,
