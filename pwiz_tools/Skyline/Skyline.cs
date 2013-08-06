@@ -3379,6 +3379,11 @@ namespace pwiz.Skyline
             get { return _libraryBuildNotificationHandler.LibraryBuildCompleteCallback; }
         }
 
+        public void RemoveLibraryBuildNotification()
+        {
+            _libraryBuildNotificationHandler.RemoveLibraryBuildNotification();
+        }
+
         #endregion
 
         private void SkylineWindow_Move(object sender, EventArgs e)

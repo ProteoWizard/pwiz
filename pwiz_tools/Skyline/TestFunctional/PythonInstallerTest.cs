@@ -55,19 +55,11 @@ namespace pwiz.SkylineTestFunctional
         
         protected override void DoTest()
         {
-            try
-            {
-                TestDlgLoad();
-                TestProperPopulation();
-                TestGetPython();
-                TestGetPackages();
-                TestStartToFinish();
-            }
-            catch (Exception)
-            {
-                DebugLog.Info("Issue");
-                throw;
-            }
+            TestDlgLoad();
+            TestProperPopulation();
+            TestGetPython();
+            TestGetPackages();
+            TestStartToFinish();
         }
 
         // Tests that the form loads with the proper display based on whether Python is installed or not, as

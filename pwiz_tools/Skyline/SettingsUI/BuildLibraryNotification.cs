@@ -274,7 +274,7 @@ namespace pwiz.Skyline.SettingsUI
             RemoveLibraryBuildNotification();
         }
 
-        private void RemoveLibraryBuildNotification()
+        public void RemoveLibraryBuildNotification()
         {
             lock (this)
             {

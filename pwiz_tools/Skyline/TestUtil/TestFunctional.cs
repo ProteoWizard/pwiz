@@ -239,27 +239,35 @@ namespace pwiz.SkylineTestUtil
             return String.Format(connectionFormat, filePath, hasHeader ? "YES" : "NO");
         }
 
-        public static TDlg FindOpenForm<TDlg>() where TDlg : Form
+        private static IEnumerable<Form> OpenForms
         {
-            while (true) {
-                try
+            get
+            {
+                while (true)
                 {
-                    foreach (var form in Application.OpenForms)
+                    try
                     {
-                        var tForm = form as TDlg;
-                        if (tForm != null && tForm.Created)
-                        {
-                            return tForm;
-                        }
+                        return Application.OpenForms.Cast<Form>().ToArray();
                     }
-                    return null;
-                }
-                catch (InvalidOperationException)
-                {
-                    // Application.OpenForms might be modified during the iteration.
-                    // If that happens, go through the list again.
+                    catch (InvalidOperationException)
+                    {
+                        // Application.OpenForms might be modified during the iteration.
+                        // If that happens, go through the list again.
+                    }
                 }
             }
+        }
+        public static TDlg FindOpenForm<TDlg>() where TDlg : Form
+        {
+            foreach (var form in OpenForms)
+            {
+                var tForm = form as TDlg;
+                if (tForm != null && tForm.Created)
+                {
+                    return tForm;
+                }
+            }
+            return null;
         }
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
@@ -305,26 +313,11 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsFormOpen(Form form)
         {
-            // Try 10 times, through exceptions, and then assume the form is not open
-            // Exceptions can happen if Application.OpenForms list is modified while
-            // enumerating.  Shouldn't happen 10 times.
-            for (int i = 0; i < 10; i++)
+            foreach (var formOpen in OpenForms)
             {
-                try
+                if (ReferenceEquals(form, formOpen))
                 {
-                    foreach (var formOpen in Application.OpenForms)
-                    {
-                        if (ReferenceEquals(form, formOpen))
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-// ReSharper disable EmptyGeneralCatchClause
-                catch
-// ReSharper restore EmptyGeneralCatchClause
-                {
+                    return true;
                 }
             }
             return false;
@@ -599,10 +592,10 @@ namespace pwiz.SkylineTestUtil
                 if (_testExceptions.Count == 0)
                 {
                     // Long wait for library build notifications
-                    WaitForConditionUI(
-                        () => !Application.OpenForms.Cast<Form>().Any(form => form is BuildLibraryNotification));
+                    RunUI(() => SkylineWindow.RemoveLibraryBuildNotification());
+                    WaitForConditionUI(() => !OpenForms.Any(f => f is BuildLibraryNotification));
                     // Short wait for anything else
-                    WaitForConditionUI(5000, () => Application.OpenForms.Count == 1);
+                    WaitForConditionUI(5000, () => OpenForms.Count() == 1);
                 }
             }
             catch (Exception x)
@@ -611,7 +604,7 @@ namespace pwiz.SkylineTestUtil
                 _testExceptions.Add(x);
             }
 
-            foreach (var messageDlg in Application.OpenForms.OfType<MessageDlg>())
+            foreach (var messageDlg in OpenForms.OfType<MessageDlg>())
             {
 // ReSharper disable LocalizableElement
                 Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message); // Not L10N
@@ -619,7 +612,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Actually throwing an exception can cause an infinite loop in MSTest
-            _testExceptions.AddRange(from form in Application.OpenForms.Cast<Form>()
+            _testExceptions.AddRange(from form in OpenForms
                                         where !(form is SkylineWindow)
                                         select new AssertFailedException(
                                             String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
