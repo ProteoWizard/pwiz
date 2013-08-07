@@ -220,13 +220,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal abstract class GraphData : Immutable
         {
-            private readonly int? _resultIndex;
-
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
                              int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp, 
                              GraphHelper.PaneKey paneKey)
             {
-                _resultIndex = iResult;
                 RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide
                 var uniqueSeq = new List<KeyValuePair<string, string>>();
@@ -371,7 +368,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     double groupMinY = double.MaxValue;
 
                     // ReSharper disable DoNotCallOverridableMethodsInConstructor
-                    int? resultIndex = _resultIndex;
+                    int? resultIndex = iResult.HasValue && iResult >= 0 ? iResult : null;
                     if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best && nodePep != null)
                     {
                         resultIndex = null;
