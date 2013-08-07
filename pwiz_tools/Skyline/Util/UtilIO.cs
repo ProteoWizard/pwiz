@@ -989,7 +989,7 @@ namespace pwiz.Skyline.Util
         public TemporaryDirectory(string dirPath)
         {
             DirPath = dirPath;
-            Directory.CreateDirectory(DirPath);
+            Helpers.TryTwice(() => Directory.CreateDirectory(DirPath));
         }
 
         public string DirPath { get; private set; }

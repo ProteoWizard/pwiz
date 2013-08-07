@@ -2455,11 +2455,11 @@ namespace pwiz.Skyline
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, null);
+                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, _parent);
                     }
                     else
                     {
-                        _tool.RunTool(_parent.Document, _parent, null, _parent, null);
+                        _tool.RunTool(_parent.Document, _parent, null, _parent, _parent);
                     }
                 }
                 catch (WebToolException e)

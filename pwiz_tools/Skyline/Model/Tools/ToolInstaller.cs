@@ -213,6 +213,9 @@ namespace pwiz.Skyline.Model.Tools
                                                                Func<string, string, List<ReportSpec>, string, string, bool?> shouldOverwrite,
                                                                Func<ProgramPathContainer, ICollection<string>,string> installProgram)
         {
+            //Removes any old folders that dont have Tools associated with them
+            CheckToolDirConsistency();
+
             UnzipToolReturnAccumulator retval = new UnzipToolReturnAccumulator();
             string name = Path.GetFileNameWithoutExtension(pathToZip);
             if (name == null)
@@ -299,6 +302,7 @@ namespace pwiz.Skyline.Model.Tools
                          * and all toolDescriptions in a directory come from the same installation */
                         DirectoryEx.SafeDelete(toolsToBeOverwritten.First().ToolDirPath);
                     }
+                    permToolPath = GetNewDirName(permToolPath);
 
                     // Overwrite all existing reports. 
                     foreach (ReportSpec item in existingReports)
@@ -360,11 +364,32 @@ namespace pwiz.Skyline.Model.Tools
 
                 if (retval.ValidToolsFound.Count != 0)
                 {
-                    Directory.Move(tempToolPath, permToolPath);
+                    Helpers.TryTwice(() => Directory.Move(tempToolPath, permToolPath));
                 }
             }
             return retval;
         }
+
+        /// <summary>
+        /// Removes any old folders in the ToolDir that dont have tools associated with them
+        /// For the case where we have used a dll and couldn't delete it in some past instance of Skyline.
+        /// </summary>
+        public static void CheckToolDirConsistency()
+        {
+            var referencedPaths = Settings.Default.ToolList.Where(t => !string.IsNullOrEmpty(t.ToolDirPath))
+                                              .Select(t => t.ToolDirPath).ToArray();
+            string toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
+            if (string.IsNullOrEmpty(toolsDir) || !Directory.Exists(toolsDir))
+                return;
+            foreach (var folder in Directory.EnumerateDirectories(toolsDir))
+            {
+                if (!referencedPaths.Contains(folder))
+                {
+                    DirectoryEx.SafeDelete(folder);
+                }
+            }
+        }
+
 
         private class ToolInfo
         {
@@ -798,7 +823,7 @@ namespace pwiz.Skyline.Model.Tools
                        : key;
         }
 
-        private static string GetNewDirName(string permToolPath)
+        public static string GetNewDirName(string permToolPath)
         {
             return Directory.Exists(permToolPath)
                        ? GetUniqueName(permToolPath, value => !Directory.Exists(value))

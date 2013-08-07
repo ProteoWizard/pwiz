@@ -302,86 +302,7 @@ namespace pwiz.Skyline.Model.Tools
                 //If there is an IToolArgsCollector run it!
                 if (!string.IsNullOrEmpty(ArgsCollectorDllPath) && !string.IsNullOrEmpty(ArgsCollectorClassName))
                 {
-                    Match file = Regex.Match(args, @"[^ \t]+\.csv"); //Not L10N
-                    string csvToParse = reportCsv;
-                    if (csvToParse == null && Match.Empty != file)
-                    {
-                        csvToParse = File.ReadAllText(file.Value);   
-                    }
-                    
-                    string oldArgs = PreviousCommandLineArgs;
-                    Assembly assembly;
-                    try
-                    {
-                        assembly = Assembly.LoadFrom(ArgsCollectorDllPath);
-                    }
-                    catch (Exception x)
-                    {
-                        exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
-                            Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_), Title), x));
-                        return;                        
-                    }
-                    
-                    Type type = assembly.GetType(ArgsCollectorClassName);
-                    if (type == null)
-                    {
-                        exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
-                            Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again),Title)));
-                        return;             
-                    }
-                    
-
-                    object[] collectorArgs = new object[] { parent  , csvToParse, (oldArgs != null) ? CommandLine.ParseInput(oldArgs) : null };
-                    object answer = null;
-
-                    try
-                    {
-                        // if there is a control given, use it to invoke the args collector form with that control as its parent. Otherwise just 
-                        // invoke the form by itself
-                        answer = parent != null
-                                     ? parent.Invoke(
-                                         Delegate.CreateDelegate(
-                                             typeof (Func<IWin32Window, string, string[], string[]>),
-                                             type.GetMethod("CollectArgs")), collectorArgs)
-                                     : type.GetMethod("CollectArgs").Invoke(null, collectorArgs);
-                    }
-                    catch (Exception x)
-                    {
-                        string message = x.Message;
-                        if (string.IsNullOrEmpty(message))
-                        {
-                            exceptionHandler.HandleException(new Exception(string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title)));    
-                        }
-                        else
-                        {
-                            exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
-                                Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_,
-                                message), Title)));    
-                        }                        
-                    }
-                    string[] commandLineArguments = answer as string[];
-                    if (commandLineArguments != null)
-                    {
-                        // Parse
-                        string argString = PreviousCommandLineArgs = CommandLine.ParseCommandLineArray(commandLineArguments);
-                        // Append to end of argument string
-                        if (args.Contains(ToolMacros.COLLECTED_ARGS))
-                        {
-                            startInfo.Arguments = args.Replace(ToolMacros.COLLECTED_ARGS, argString);
-                        }
-                        else
-                        {
-                            startInfo.Arguments = args + " " + argString;
-                        }                        
-                    }
-                    else
-                    {
-                        /*Establish an expectation that if an args collector returns null then there was some error
-                         * and the args collector displayed the relevant error and our job is to just terminate tool execution
-                         * If they would like the tool to run with no extra args they could return String.Empty
-                         */
-                        return; 
-                    } 
+                    if (CallArgsCollector(exceptionHandler, parent, args, reportCsv, startInfo)) return;
                 }
                
                 Process p = new Process {StartInfo = startInfo};
@@ -446,6 +367,99 @@ namespace pwiz.Skyline.Model.Tools
 //                    ReportTempPath_toDelete = null;
 //                }  
             }      
+        }
+
+        private bool CallArgsCollector(IExceptionHandler exceptionHandler, Control parent, string args, string reportCsv,
+                                       ProcessStartInfo startInfo)
+        {
+            Match file = Regex.Match(args, @"[^ \t]+\.csv"); //Not L10N
+            string csvToParse = reportCsv;
+            if (csvToParse == null && Match.Empty != file)
+            {
+                csvToParse = File.ReadAllText(file.Value);
+            }
+
+            string oldArgs = PreviousCommandLineArgs;
+            Assembly assembly;
+            try
+            {
+                assembly = Assembly.LoadFrom(ArgsCollectorDllPath);
+            }
+            catch (Exception x)
+            {
+                exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
+                    Resources
+                        .ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_),
+                                                                             Title), x));
+                return true;
+            }
+
+            Type type = assembly.GetType(ArgsCollectorClassName);
+            if (type == null)
+            {
+                exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
+                    Resources
+                        .ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again),
+                                                                             Title)));
+                return true;
+            }
+
+
+            object[] collectorArgs = new object[]
+                {parent, csvToParse, (oldArgs != null) ? CommandLine.ParseInput(oldArgs) : null};
+            object answer = null;
+
+            try
+            {
+                // if there is a control given, use it to invoke the args collector form with that control as its parent. Otherwise just 
+                // invoke the form by itself
+                answer = parent != null
+                             ? parent.Invoke(
+                                 Delegate.CreateDelegate(
+                                     typeof (Func<IWin32Window, string, string[], string[]>),
+                                     type.GetMethod("CollectArgs")), collectorArgs)
+                             : type.GetMethod("CollectArgs").Invoke(null, collectorArgs);
+            }
+            catch (Exception x)
+            {
+                string message = x.Message;
+                if (string.IsNullOrEmpty(message))
+                {
+                    exceptionHandler.HandleException(
+                        new Exception(string.Format(
+                            Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title)));
+                }
+                else
+                {
+                    exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
+                        Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_,
+                        message), Title)));
+                }
+            }
+            string[] commandLineArguments = answer as string[];
+            if (commandLineArguments != null)
+            {
+                // Parse
+                string argString = PreviousCommandLineArgs = CommandLine.ParseCommandLineArray(commandLineArguments);
+                // Append to end of argument string
+                if (args.Contains(ToolMacros.COLLECTED_ARGS))
+                {
+                    startInfo.Arguments = args.Replace(ToolMacros.COLLECTED_ARGS, argString);
+                }
+                else
+                {
+                    startInfo.Arguments = args + " " + argString;
+                }
+            }
+            else
+            {
+                /*Establish an expectation that if an args collector returns null then there was some error
+                         * and the args collector displayed the relevant error and our job is to just terminate tool execution
+                         * If they would like the tool to run with no extra args they could return String.Empty
+                         */
+                return true;
+            }
+            return false;
         }
 
         public IWebHelpers WebHelpers { get; set; }
