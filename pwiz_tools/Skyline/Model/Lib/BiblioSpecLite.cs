@@ -778,6 +778,11 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public override LibraryChromGroup LoadChromatogramData(object spectrumKey)
+        {
+            return null;
+        }
+
         public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)
         {
             var spectrumLiteKey = spectrumKey as SpectrumLiteKey;

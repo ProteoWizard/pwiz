@@ -674,7 +674,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected abstract SpectrumPeaksInfo.MI[] ReadSpectrum(TInfo info);
 
-        public sealed override LibraryChromGroup LoadChromatogramData(object spectrumKey)
+        public override LibraryChromGroup LoadChromatogramData(object spectrumKey)
         {
             return ReadChromatogram(_libraryEntries[(int) spectrumKey]);
         }
