@@ -2057,8 +2057,9 @@ namespace pwiz.Skyline.Controls
                          replicateIndex < transitionGroupDocNode.Results.Count;
                          replicateIndex++)
                     {
-                        if (transitionGroupDocNode.Results[replicateIndex].FirstOrDefault(
-                            transitionGroupChromInfo=> ReferenceEquals(chromInfo.FileId, transitionGroupChromInfo.FileId)) != null)
+                        var results = transitionGroupDocNode.Results[replicateIndex];
+                        if (null != results && results.Any(transitionGroupChromInfo 
+                            => ReferenceEquals(chromInfo.FileId, transitionGroupChromInfo.FileId)))
                         {
                             return replicateIndex;
                         }
@@ -2075,8 +2076,9 @@ namespace pwiz.Skyline.Controls
                         replicateIndex < transitionDocNode.Results.Count;
                         replicateIndex++)
                     {
-                        if (transitionDocNode.Results[replicateIndex].FirstOrDefault(
-                            transitionChromInfo => ReferenceEquals(chromInfo.FileId, transitionChromInfo.FileId)) != null)
+                        var results = transitionDocNode.Results[replicateIndex];
+                        if (null != results && results.Any(transitionChromInfo
+                            => ReferenceEquals(chromInfo.FileId, transitionChromInfo.FileId)))
                         {
                             return replicateIndex;
                         }
