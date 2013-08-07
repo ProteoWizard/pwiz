@@ -1744,10 +1744,10 @@ namespace pwiz.Skyline
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.importResultsMenuItem,
             this.importPeptideSearchMenuItem,
-            this.peakBoundariesToolStripMenuItem,
             this.importFASTAMenuItem,
             this.importMassListMenuItem,
-            this.importDocumentMenuItem});
+            this.importDocumentMenuItem,
+            this.peakBoundariesToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
             resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
             // 
