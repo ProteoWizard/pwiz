@@ -980,7 +980,7 @@ namespace pwiz.Skyline.ToolsUI
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
-                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel, SkylineWindowParent.InstallProgram);
+                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel, TestFindProgramPath ?? SkylineWindowParent.InstallProgram);
             }
             catch (MessageException x)
             {
@@ -1079,6 +1079,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             get { return ToolList[listTools.SelectedIndex]; }
         }
+
+        public Func<ProgramPathContainer, ICollection<string>, string> TestFindProgramPath { get; set; }
 
         #endregion
 

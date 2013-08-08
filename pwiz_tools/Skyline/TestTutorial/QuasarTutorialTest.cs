@@ -17,20 +17,20 @@
  * limitations under the License.
  */
 
-using System.Diagnostics;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            TestFilesZip = @"http://skyline.gs.washington.edu/tutorials/QuaSAR.zip";
+            TestFilesZip = @"http://skyline.gs.washington.edu/tutorials/QuaSAR-1_5.zip";
             RunFunctionalTest();
         }
 
@@ -62,41 +62,77 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             // p. 1 open the file
-            string documentFile = GetTestPath(@"QuaSAR_Tutorial.sky");
+            string documentFile = GetTestPath(@"QuaSAR_Tutorial.sky"); // Not L10N
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
 
             var document = SkylineWindow.Document;
             AssertEx.IsDocumentState(document, null, 34, 125, 250, 750);
 
-            var annotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
-            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(annotationsDlg.EditList);
-
-            PauseForScreenShot("p. 2 - Define Annotations");
-
-            var annotationDecls = new[]
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            RunUI(() =>
                 {
-                    new AnnotationDecl("SampleID", AnnotationDef.AnnotationType.text, 3),
-                    new AnnotationDecl("Analyte Concentration", AnnotationDef.AnnotationType.number, 4),
-                    new AnnotationDecl("IS Conc", AnnotationDef.AnnotationType.number, 5)
-                };
-            foreach (var annotationDecl in annotationDecls)
-            {
-                AddAnotation(editListDlg, annotationDecl);
+                    configureToolsDlg.RemoveAllTools();
+                    configureToolsDlg.SaveTools();
+                });
+
+            PauseForScreenShot("p. 2 - External Tools");
+
+            if (IsPauseForScreenShots)
+            {    
+                var rInstaller = ShowDialog<RInstaller>(() =>
+                    {
+                        configureToolsDlg.RemoveAllTools();
+                        configureToolsDlg.SaveTools();
+                        configureToolsDlg.UnpackZipTool(GetTestPath(@"QuaSAR.zip")); // Not L10N
+                    });
+
+                PauseForScreenShot("p. 3 - R Installer");
+
+                // cancel as we don't actually want to install R / Packages
+                OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
             }
 
-            OkDialog(editListDlg, editListDlg.OkDialog);
+            RunUI(() =>
+                {
+                    // bypass the R installer dialogue
+                    configureToolsDlg.TestFindProgramPath = (container, collection) => @"FakeDirectory\R.exe"; // Not L10N
+
+                    configureToolsDlg.UnpackZipTool(GetTestPath(@"QuaSAR.zip")); // Not L10N
+                    var installedQuaSAR = configureToolsDlg.ToolList[0];
+                    Assert.AreEqual(QUASAR.Title, installedQuaSAR.Title);
+                    Assert.AreEqual(QUASAR.Command, installedQuaSAR.Command);
+                    Assert.AreEqual(QUASAR.Arguments, installedQuaSAR.Arguments);
+                    Assert.AreEqual(QUASAR.InitialDirectory, installedQuaSAR.InitialDirectory);
+                    Assert.AreEqual(QUASAR.ReportTitle, installedQuaSAR.ReportTitle);
+                    Assert.AreEqual(QUASAR.OutputToImmediateWindow, installedQuaSAR.OutputToImmediateWindow);
+                });
+
+            PauseForScreenShot("p. 4 - External Tools (QuaSAR Installed)");
+
+            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            RunUI(() => SkylineWindow.PopulateToolsMenu());
+
+            var annotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
             RunUI(() =>
                 {
                     var checkedListBox = annotationsDlg.AnnotationsCheckedListBox;
                     for (int i = 0; i < checkedListBox.Items.Count; i++)
                     {
                         checkedListBox.SetItemChecked(i, true);
-                    }                    
+                    }
                 });
-            PauseForScreenShot("p. 6 - Annotation Settings");
+
+            PauseForScreenShot("p. 5 - Annotation Settings");
 
             OkDialog(annotationsDlg, annotationsDlg.OkDialog);
+
+            RunUI(() =>
+                {
+                    Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Contains(SAMPLEGROUP));
+                    Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Contains(IS_SPIKE));
+                    Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Contains(CONCENTRATION));
+                });
 
             RunUI(() => SkylineWindow.ShowResultsGrid(true));
             RunUI(() =>
@@ -111,18 +147,18 @@ namespace pwiz.SkylineTestTutorial
                 {
                     resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
                     colSampleId =
-                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => annotationDecls[0].Name == col.HeaderText);
+                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => SAMPLEGROUP.Name == col.HeaderText);
                     colConcentration =
-                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => annotationDecls[1].Name == col.HeaderText);
+                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => CONCENTRATION.Name == col.HeaderText);
                     colIsConc =
-                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => annotationDecls[2].Name == col.HeaderText);
+                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => IS_SPIKE.Name == col.HeaderText);
                 });
             WaitForCondition(() => resultsGrid != null && colSampleId != null && colConcentration != null && colIsConc != null);
 
             float[] concentrations =
                 new[] { 0f, .001f, .004f, .018f, .075f, .316f, 1.33f, 5.62f, 23.71f, 100 };
             string[] sampleIds =
-                new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
+                new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }; // Not L10N
 
             RunUI(() =>
             {
@@ -151,102 +187,55 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             PauseForScreenShot("p. 7 - Results Grid");
 
-            var separator = TextUtil.CsvSeparator;
-            var sb = new StringBuilder();
-            var writer = new StringWriter(sb);
-            const string headers = "SampleName,SampleID,Analyte Concentration,IS Conc,Concentration Ratio";
-            foreach (var header in headers.Split(','))
-            {
-                if (sb.Length > 0)
-                    writer.Write(separator);
-                writer.WriteDsvField(header, separator);
-            }
-            writer.WriteLine();
-            RunUI(() =>
-                {
-                    for (int i = 0; i < concentrations.Length * 4; i++)
-                    {
-                        var row = resultsGrid.Rows[i];
-                        row.Cells[0].Selected = true;
-                        writer.WriteDsvField(row.Cells[0].Value.ToString(), separator);
-                        writer.Write(separator);
-                        row.Cells[colSampleId.Index].Selected = true;
-                        writer.WriteDsvField(row.Cells[colSampleId.Index].Value.ToString(), separator);
-                        writer.Write(separator);
-                        row.Cells[colConcentration.Index].Selected = true;
-                        writer.WriteDsvField(row.Cells[colConcentration.Index].Value.ToString(), separator);
-                        writer.Write(separator);
-                        row.Cells[colIsConc.Index].Selected = true;
-                        writer.WriteDsvField(row.Cells[colIsConc.Index].Value.ToString(), separator);
-                        writer.WriteLine();
-                    }
-                });
-
-            var concentrationsPath = GetTestPath(@"Concentrations.csv");
-            File.WriteAllText(concentrationsPath, sb.ToString());
+            RunUI(() => SkylineWindow.ShowResultsGrid(false));
 
             if (IsPauseForScreenShots)
-                Process.Start(concentrationsPath);
-
-            PauseForScreenShot("p. 9 - Concentrations.csv in Excel");
-
-            var quasarInputPath = GetTestPath(@"QuaSAR_Tutorial.csv");
             {
-                var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-                RunUI(() => exportReportDlg.ReportName = "QuaSAR Input");
+                int formCount = Application.OpenForms.Count;
+                RunUI(() => SkylineWindow.RunTool(0));
+                WaitForCondition(() => Application.OpenForms.Count == formCount + 1);
+                Form argsCollector = Application.OpenForms["QuaSARUI"]; // Not L10N
+                Assert.IsNotNull(argsCollector);
+                PauseForScreenShot("p. 8 - Args Collector");
 
-                PauseForScreenShot("p. 10 - Export Report");
-
-                OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(quasarInputPath, TextUtil.CsvSeparator));
-            }
-
-            if (IsPauseForScreenShots)
-                Process.Start(quasarInputPath);
-
-            PauseForScreenShot("p. 11 - QuaSAR_Tutorial.csv in Excel");
-
-            if (IsPauseForScreenShots)
-                WebHelpers.OpenLink("http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR");
-
-            // Put input report path on the clipboard for easy setting
-            if (IsPauseForScreenShots)
-                Clipboard.SetText(quasarInputPath);
-
-            PauseForScreenShot("p. 11 - QuaSAR input form - paste input path");
-
-            PauseForScreenShot("p. 11 - QuaSAR output");
-        }
-
-        private void AddAnotation(EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef> editListDlg, AnnotationDecl annotationDecl)
-        {
-            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            RunUI(() =>
-            {
-                defineAnnotationDlg.AnnotationName = annotationDecl.Name;
-                defineAnnotationDlg.AnnotationType = annotationDecl.Type;
-                defineAnnotationDlg.AnnotationTargets =
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
-            });
-
-            PauseForScreenShot(string.Format("p. {0} - Define Annotation", annotationDecl.Page));
-            OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
-        }
-
-
-        private class AnnotationDecl
-        {
-            public string Name { get; private set; }
-            public AnnotationDef.AnnotationType Type { get; private set; }
-            public int Page { get; private set; }
-
-            public AnnotationDecl(string name, AnnotationDef.AnnotationType type, int page)
-            {
-                Name = name;
-                Type = type;
-                Page = page;
+                Action actCancel = () => argsCollector.CancelButton.PerformClick();
+                argsCollector.BeginInvoke(actCancel);
+                WaitForClosedForm(argsCollector);
             }
         }
 
+        private static readonly AnnotationDef SAMPLEGROUP = new AnnotationDef("SampleGroup", // Not L10N
+                                     AnnotationDef.AnnotationTargetSet.Singleton(
+                                         AnnotationDef.AnnotationTarget.replicate),
+                                      AnnotationDef.AnnotationType.text,
+                                     new List<string>());
+
+        private static readonly AnnotationDef IS_SPIKE = new AnnotationDef("IS Spike", // Not L10N
+                                           AnnotationDef.AnnotationTargetSet.Singleton(
+                                               AnnotationDef.AnnotationTarget.replicate),
+                                           AnnotationDef.AnnotationType.text,
+                                           new List<string>());
+
+        private static readonly AnnotationDef CONCENTRATION = new AnnotationDef("Concentration", // Not L10N
+                                                         AnnotationDef.AnnotationTargetSet.Singleton(
+                                                             AnnotationDef.AnnotationTarget.replicate),
+                                                         AnnotationDef.AnnotationType.text,
+                                                         new List<string>());
+
+        private static readonly ToolDescription QUASAR = new ToolDescription("QuaSAR", // Title Not L10N
+                                                                             "$(ProgramPath(R,3.0.1))", // Command Not L10N
+                                                                             "-f $(ToolDir)\\QuaSAR-GP.R --slave --no-save --args $(ToolDir)\\QuaSAR.R $(ToolDir)\\common.R $(InputReportTempPath) $(CollectedArgs)", // Arguments Not L10N
+                                                                             "$(DocumentDir)", // Initial Directory Not L10N
+                                                                             true, // Output to Immediate Window
+                                                                             "QuaSAR Full", // Input Report Name Not L10N
+                                                                             null, // Args Collector dll Path
+                                                                             null, // Args Collector class name
+                                                                             null, // Tool Directory path
+                                                                             new List<AnnotationDef> {SAMPLEGROUP, IS_SPIKE, CONCENTRATION}, // Annotations
+                                                                             null, // Package Version
+                                                                             null, // Package Identifier
+                                                                             null); // Package Name
+        
 /*
         private void SetCellValue(DataGridView dataGridView, int rowIndex, int columnIndex, object value)
         {

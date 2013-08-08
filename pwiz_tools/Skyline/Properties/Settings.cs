@@ -793,11 +793,13 @@ namespace pwiz.Skyline.Properties
                        {
                            new ToolDescription("SRM Collider",
                                "http://www.srmcollider.org/srmcollider/srmcollider.py",
-                               ReportSpecList.SRM_COLLIDER_REPORT_NAME),
-                           new ToolDescription("QuaSAR",
-                               "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR", string.Empty), 
+                               ReportSpecList.SRM_COLLIDER_REPORT_NAME)
                        };
         }
+
+        public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription("QuaSAR",
+                                                                              "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
+                                                                              string.Empty);
 
         // All list editing for tools is handled by the ConfigureToolsDlg
         public override string Title { get { throw new InvalidOperationException(); } }
@@ -1921,36 +1923,6 @@ namespace pwiz.Skyline.Properties
       <column name=""T1"">FragmentIon</column>
     </select>
   </report>").ChangeName(SRM_COLLIDER_REPORT_NAME),
-                                        (ReportSpec) DeserializeItem(
-@"<report name=""QuaSAR Input"">
-    <table name=""T1"">DbTransitionResult</table>
-    <table name=""T2"">DbTransition</table>
-    <select>
-      <column name=""T1"">PrecursorResult.PeptideResult.ProteinResult.FileName</column>
-      <column name=""T1"">PrecursorResult.PeptideResult.ProteinResult.SampleName</column>
-      <column name=""T1"">PrecursorResult.PeptideResult.ProteinResult.ReplicateName</column>
-      <column name=""T2"">Precursor.Peptide.Protein.Name</column>
-      <column name=""T2"">Precursor.Peptide.Sequence</column>
-      <column name=""T2"">Precursor.Charge</column>
-      <column name=""T2"">ProductCharge</column>
-      <column name=""T2"">FragmentIon</column>
-      <column name=""T2"">Precursor.Peptide.AverageMeasuredRetentionTime</column>
-    </select>
-    <group_by>
-      <column name=""T2"">ProductCharge</column>
-      <column name=""T2"">FragmentIon</column>
-      <column name=""T2"">Precursor.Peptide</column>
-      <column name=""T2"">Precursor.Charge</column>
-      <column name=""T1"">ResultFile.Replicate.Replicate</column>
-      <column name=""T1"">PrecursorResult.OptStep</column>
-    </group_by>
-    <cross_tab_headers>
-      <column name=""T2"">Precursor.IsotopeLabelType</column>
-    </cross_tab_headers>
-    <cross_tab_values>
-      <column name=""T1"">Area</column>
-    </cross_tab_values>
-  </report>").ChangeName(QUASAR_REPORT_NAME),
                                     });
             return listDefaults;
         }

@@ -178,6 +178,7 @@
             this.cboxLODLOQTable.TabIndex = 2;
             this.cboxLODLOQTable.Text = "&LOD/LOQ table";
             this.cboxLODLOQTable.UseVisualStyleBackColor = true;
+            this.cboxLODLOQTable.CheckedChanged += new System.EventHandler(this.cboxLODLOQTable_CheckedChanged);
             // 
             // cboxCVTable
             // 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ReportSpecList>
   <revision index="1" />
-  <report name="QuaSAR Full">
+  <report name="QuaSAR Input">
     <table name="T1">DbTransitionResult</table>
     <table name="T2">DbTransition</table>
     <select>

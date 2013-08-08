@@ -89,20 +89,20 @@ namespace QuaSAR
 
         private void RestorePreviousValues()
         {
-            if (Arguments != null && Arguments.Length == QuaSARConstants.ARGUMENT_COUNT)
+            if (Arguments != null && Arguments.Length == Constants.ARGUMENT_COUNT)
             {
                 tboxTitle.Text = Arguments[(int) ArgumentIndices.title];
 
                 // generate
-                cboxCalCurves.Checked = Arguments[(int) ArgumentIndices.calcurves].Equals(QuaSARConstants.TRUE_STRING);
-                cboxCVTable.Checked = Arguments[(int) ArgumentIndices.cv_table].Equals(QuaSARConstants.TRUE_STRING);
-                cboxLODLOQTable.Checked = Arguments[(int) ArgumentIndices.lodloq_table].Equals(QuaSARConstants.TRUE_STRING);
-                cboxLODLOQComp.Checked = Arguments[(int) ArgumentIndices.lodloq_comp].Equals(QuaSARConstants.TRUE_STRING);
-                cboxPeakAreaPlots.Checked = Arguments[(int) ArgumentIndices.peakplots].Equals(QuaSARConstants.TRUE_STRING);
+                cboxCalCurves.Checked = Arguments[(int) ArgumentIndices.calcurves].Equals(Constants.TRUE_STRING);
+                cboxCVTable.Checked = Arguments[(int) ArgumentIndices.cv_table].Equals(Constants.TRUE_STRING);
+                cboxLODLOQTable.Checked = Arguments[(int) ArgumentIndices.lodloq_table].Equals(Constants.TRUE_STRING);
+                cboxLODLOQComp.Checked = Arguments[(int) ArgumentIndices.lodloq_comp].Equals(Constants.TRUE_STRING);
+                cboxPeakAreaPlots.Checked = Arguments[(int) ArgumentIndices.peakplots].Equals(Constants.TRUE_STRING);
 
                 // options
-                cboxStandardPresent.Checked = Arguments[(int) ArgumentIndices.standard_present].Equals(QuaSARConstants.TRUE_STRING);
-                cboxPAR.Checked = Arguments[(int) ArgumentIndices.use_par].Equals(QuaSARConstants.TRUE_STRING);
+                cboxStandardPresent.Checked = Arguments[(int) ArgumentIndices.standard_present].Equals(Constants.TRUE_STRING);
+                cboxPAR.Checked = Arguments[(int) ArgumentIndices.use_par].Equals(Constants.TRUE_STRING);
                 comboBoxAnalyte.SelectedItem = comboBoxAnalyte.Items.Contains(Arguments[(int) ArgumentIndices.analyte])
                                                    ? Arguments[(int) ArgumentIndices.analyte]
                                                    : comboBoxAnalyte.Items[0];
@@ -117,12 +117,17 @@ namespace QuaSAR
                 tboxLogScale.Text = Arguments[(int)ArgumentIndices.max_log];
 
                 // AuDIT
-                cboxAuDIT.Checked = Arguments[(int)ArgumentIndices.perform_audit].Equals(QuaSARConstants.TRUE_STRING);
-                tboxAuDITCVThreshold.Text = Arguments[(int)ArgumentIndices.audit_threshold];
+                cboxAuDIT.Checked = Arguments[(int)ArgumentIndices.perform_audit].Equals(Constants.TRUE_STRING);
+                tboxAuDITCVThreshold.Text =
+                    Arguments[(int) ArgumentIndices.audit_threshold].Equals(Constants.NULL_STRING)
+                        ? Defaults.AUDIT_CV_THRESHOLD
+                        : Arguments[(int) ArgumentIndices.audit_threshold];
 
                 // endogenous estimation
-                cboxEndogenousCalc.Checked = Arguments[(int)ArgumentIndices.perform_endocalc].Equals(QuaSARConstants.TRUE_STRING);
-                tboxEndoConf.Text = Arguments[(int)ArgumentIndices.endo_ci];
+                cboxEndogenousCalc.Checked = Arguments[(int)ArgumentIndices.perform_endocalc].Equals(Constants.TRUE_STRING);
+                tboxEndoConf.Text = Arguments[(int) ArgumentIndices.endo_ci].Equals(Constants.NULL_STRING)
+                                        ? Defaults.ENDOGENOUS_CI
+                                        : Arguments[(int) ArgumentIndices.endo_ci];
             }
         }
 
@@ -186,27 +191,27 @@ namespace QuaSAR
 
         public void GenerateArguments()
         {
-            Arguments = new string[QuaSARConstants.ARGUMENT_COUNT];
+            Arguments = new string[Constants.ARGUMENT_COUNT];
 
-            Arguments[(int) ArgumentIndices.concentration_report] = QuaSARConstants.NULL_STRING;
+            Arguments[(int) ArgumentIndices.concentration_report] = Constants.NULL_STRING;
             Arguments[(int) ArgumentIndices.title] = tboxTitle.Text;
             Arguments[(int) ArgumentIndices.analyte] = comboBoxAnalyte.SelectedItem.ToString();
-            Arguments[(int) ArgumentIndices.standard_present] = cboxStandardPresent.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.standard_present] = cboxStandardPresent.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.standard] = comboBoxStandard.SelectedItem.ToString();
             Arguments[(int) ArgumentIndices.units] = tboxUnits.Text;
-            Arguments[(int) ArgumentIndices.cv_table] = cboxCVTable.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.calcurves] = cboxCalCurves.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.cv_table] = cboxCVTable.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.calcurves] = cboxCalCurves.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.ntransitions] = numberTransitions.Value.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) ArgumentIndices.lodloq_table] = cboxLODLOQTable.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.lodloq_comp] = cboxLODLOQComp.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.peakplots] = cboxPeakAreaPlots.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.use_par] = cboxPAR.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.lodloq_table] = cboxLODLOQTable.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.lodloq_comp] = cboxLODLOQComp.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.peakplots] = cboxPeakAreaPlots.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.use_par] = cboxPAR.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.max_linear] = tboxLinearScale.Text;
             Arguments[(int) ArgumentIndices.max_log] = tboxLogScale.Text;
-            Arguments[(int) ArgumentIndices.perform_audit] = cboxAuDIT.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.audit_threshold] = cboxAuDIT.Checked ? tboxAuDITCVThreshold.Text : QuaSARConstants.NULL_STRING;
-            Arguments[(int) ArgumentIndices.perform_endocalc] = cboxEndogenousCalc.Checked ? QuaSARConstants.TRUE_STRING : QuaSARConstants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.endo_ci] = cboxEndogenousCalc.Checked ? tboxEndoConf.Text : QuaSARConstants.NULL_STRING;
+            Arguments[(int) ArgumentIndices.perform_audit] = cboxAuDIT.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.audit_threshold] = cboxAuDIT.Checked ? tboxAuDITCVThreshold.Text : Constants.NULL_STRING;
+            Arguments[(int) ArgumentIndices.perform_endocalc] = cboxEndogenousCalc.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+            Arguments[(int) ArgumentIndices.endo_ci] = cboxEndogenousCalc.Checked ? tboxEndoConf.Text : Constants.NULL_STRING;
             Arguments[(int) ArgumentIndices.output_prefix] = tboxTitle.Text;
         }
         
@@ -258,16 +263,27 @@ namespace QuaSAR
             }
         }
 
-        private void cboxStandardPresent_CheckedChanged(object sender, EventArgs e)
+        private void cboxLODLOQTable_CheckedChanged(object sender, EventArgs e)
         {
-            if (!cboxStandardPresent.Checked)
+            if (cboxLODLOQTable.Checked)
             {
-                cboxCalCurves.Checked = false;
-                cboxCalCurves.Enabled = false;
+                cboxLODLOQComp.Enabled = true;
             }
             else
             {
+                cboxLODLOQComp.Enabled = cboxLODLOQComp.Checked = false;
+            }
+        }
+
+        private void cboxStandardPresent_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cboxStandardPresent.Checked)
+            {
                 cboxCalCurves.Enabled = true;
+            }
+            else
+            {
+                cboxCalCurves.Enabled = cboxCalCurves.Checked = false;
             }
         }
 
@@ -299,6 +315,7 @@ namespace QuaSAR
                 }
                 else
                 {
+                    dlg.StartPosition = FormStartPosition.WindowsDefaultLocation;
                     return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
                 }
             }

@@ -276,6 +276,8 @@ namespace pwiz.Skyline.Model.Tools
                 if (!HandleAnnotations(shouldOverwriteAnnotations, toolInfDir))
                     return null;
 
+                HandleLegacyQuaSAR(toolInfo);
+
                 var toolsToBeOverwritten = GetToolsToBeOverwritten(toolInfo.PackageIdentifier);
 
                 string permToolPath = GetPermToolPath(Path.Combine(outerToolsFolderPath, name), toolsToBeOverwritten);
@@ -515,6 +517,21 @@ namespace pwiz.Skyline.Model.Tools
                 Settings.Default.AnnotationDefList.SetValue(annotation);
             }
             return true;
+        }
+
+        private static void HandleLegacyQuaSAR(ToolInfo info)
+        {
+            if (info.PackageIdentifier.Equals("URN:LSID:carr.broadinstitute.org:quasar")) // Not L10N
+            {
+                var deprecatedQuaSAR = Settings.Default.ToolList.FirstOrDefault(toolDesc =>
+                   toolDesc.Title.Equals(ToolList.DEPRECATED_QUASAR.Title) &&
+                   toolDesc.Command.Equals(ToolList.DEPRECATED_QUASAR.Command));
+                if (deprecatedQuaSAR != null)
+                {
+                    Settings.Default.ToolList.Remove(deprecatedQuaSAR);
+                    Settings.Default.ReportSpecList.RemoveKey(ReportSpecList.QUASAR_REPORT_NAME);
+                }
+            }
         }
 
         private static List<ToolDescription> GetToolsToBeOverwritten(string packageIdentifier)

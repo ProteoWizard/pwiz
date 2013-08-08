@@ -21,7 +21,7 @@ using System.Text;
 
 namespace QuaSAR
 {
-    static class QuaSARConstants
+    static class Constants
     {
         public const string TRUE_STRING = "1";              // Not L10N
         public const string FALSE_STRING = "0";             // Not L10N
@@ -115,7 +115,7 @@ namespace QuaSAR
 
     static class Defaults
     {
-        public const string CONCENTRATION_REPORT = QuaSARConstants.NULL_STRING;                               
+        public const string CONCENTRATION_REPORT = Constants.NULL_STRING;                               
         public const bool STANDARD_PRESENT = true;
         public const string UNITS = "fmol/ul";                                      // Not L10N
         public const bool CV_TABLE = true;
