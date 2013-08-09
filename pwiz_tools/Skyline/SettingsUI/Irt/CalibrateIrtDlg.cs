@@ -194,7 +194,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return false;
 
                 if (FixedPointCount < 2)
-                    GridView.Rows[rowIndex].Cells[COLUMN_FIXED].Value = true;
+                    Items[rowIndex].FixedPoint = true;
 
                 return true;
             }
