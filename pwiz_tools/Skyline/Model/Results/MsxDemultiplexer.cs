@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var maxTransInSpectrum = _spectrumProcessor.MaxTransitions(1);
             _deconvBlock = new DeconvBlock(NumDeconvRegions, NumScansBlock, maxTransInSpectrum);
-            _solver = new NonNegLsSolver(NumDeconvRegions, NumScansBlock, maxTransInSpectrum);
+            _solver = new NonNegLsSolver(NumDeconvRegions, NumScansBlock, maxTransInSpectrum, true);
         }
 
         public override DeconvBlock PreprocessDeconvBlock(int[] deconvIndices)

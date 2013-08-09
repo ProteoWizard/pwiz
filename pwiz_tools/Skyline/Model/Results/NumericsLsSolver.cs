@@ -203,17 +203,43 @@ namespace pwiz.Skyline.Model.Results
 
     public class OverlapLsSolver : NonNegLsSolver
     {
-        public OverlapLsSolver(int numIsos, int maxRow, int maxTransitions):
-            base(numIsos,maxRow,maxTransitions)
+        private readonly Dictionary<Matrix<double>, DenseQR> _decompCache; 
+
+        public OverlapLsSolver(int numIsos, int maxRow, int maxTransitions, bool useFirstGuess = false):
+            base(numIsos,maxRow,maxTransitions, useFirstGuess)
         {
             double[] smoothCoefs = new[] { 1.0, 1.0, 1.0, 1.0, 1.0 };
             _conditioner = new WeightedConditioner(smoothCoefs);
+            _decompCache = new Dictionary<Matrix<double>, DenseQR>();
         }
 
         protected override void SetTolerance(DeconvBlock db)
         {
             base.SetTolerance(db);
             _tol = 1e-8;
+        }
+
+        // ReSharper disable UnusedMember.Local
+        protected override Vector<double> DecompSolve(Matrix<double> a, Vector<double> b)
+        // ReSharper restore UnusedMember.Local
+        {
+            return GetSolver(a).Solve(b);
+        }
+
+        protected override Matrix<double> DecompSolve(Matrix<double> a, Matrix<double> b)
+        {
+            return GetSolver(a).Solve(b);
+        }
+
+        protected DenseQR GetSolver(Matrix<double> a)
+        {
+            DenseQR solver;
+            if (!_decompCache.TryGetValue(a, out solver))
+            {
+                solver = new DenseQR((DenseMatrix)a);
+                _decompCache.Add(a, solver);
+            }
+            return solver;
         }
     }
 
@@ -242,11 +268,12 @@ namespace pwiz.Skyline.Model.Results
         private readonly Matrix<double> _matrixAxC;
         private readonly Matrix<double> _matrixDiff;
         private readonly Matrix<double> _matrixDiffBig;
+        private readonly bool _useFirstGuess;
 
         protected double? _tol;
         protected int? _maxIter;
 
-        public NonNegLsSolver(int numIsos, int maxRows, int maxTransitions)
+        public NonNegLsSolver(int numIsos, int maxRows, int maxTransitions, bool useFirstGuess = false)
         {
             _conditioner = new WeightedConditioner();
             _firstGuess = new DenseMatrix(numIsos, maxTransitions);
@@ -268,6 +295,7 @@ namespace pwiz.Skyline.Model.Results
             _matrixAxC = new DenseMatrix(maxRows, 1);
             _matrixDiff = new DenseMatrix(maxRows, 1);
             _matrixDiffBig = new DenseMatrix(maxRows, maxTransitions);
+            _useFirstGuess = useFirstGuess;
 
             SetMathNetParameters();
         }
@@ -341,6 +369,17 @@ namespace pwiz.Skyline.Model.Results
             matrixAt.Multiply(_matrixDiffBig, _matrixWs);
 
             var matrixResult = db.Solution;
+            // if useFirstGuess constructor parameter is true,
+            // don't bother iterating, just use the first guess
+            if (_useFirstGuess)
+            {
+                for (int colNum = 0; colNum < db.BinnedData.NumCols; ++colNum)
+                {
+                    _firstGuess.Column(colNum, _initializeCol);
+                    matrixResult.Matrix.SetColumn(colNum, _initializeCol);
+                }
+                return;
+            }
             for (int colNum = 0; colNum < db.BinnedData.NumCols; ++colNum)
             {
                 _initializeCol.Clear();
@@ -510,14 +549,14 @@ namespace pwiz.Skyline.Model.Results
         }
        
 // ReSharper disable UnusedMember.Local
-        private Vector<double> DecompSolve(Matrix<double> a, Vector<double> b)
+        protected virtual Vector<double> DecompSolve(Matrix<double> a, Vector<double> b)
 // ReSharper restore UnusedMember.Local
         {
             var solver = new DenseQR((DenseMatrix) a);
             return solver.Solve(b);
         }
 
-        private Matrix<double> DecompSolve(Matrix<double> a, Matrix<double> b)
+        protected virtual Matrix<double> DecompSolve(Matrix<double> a, Matrix<double> b)
         {
             var solver = new DenseQR((DenseMatrix) a);
             return solver.Solve(b);

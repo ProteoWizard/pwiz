@@ -208,9 +208,10 @@ namespace pwiz.Skyline.Model.Results
         {
             var originalDeconvBlock = _deconvBlock;
             _deconvBlock = deconvBlock;
+            List<int> binIndicesList = binIndicesSet.ToList();
             try
             {
-                CorrectPeakIntensities(ref originalSpectrum, binIndicesSet, isoIndices,deconvIndices, peakSums,
+                CorrectPeakIntensities(ref originalSpectrum, binIndicesList, isoIndices,deconvIndices, peakSums,
                     binToDeconvIndex, queryBinEnumerator, ref deconvIntensities, ref deconvMzs);
             }
             finally
@@ -221,7 +222,7 @@ namespace pwiz.Skyline.Model.Results
         #endregion
 
         protected void CorrectPeakIntensities(ref MsDataSpectrum originalSpectrum,
-                                              ICollection<int> binIndicesSet,
+                                              List<int> binIndicesList,
                                               IList<int> isoIndices,
                                               IList<int> deconvIndices,
                                               IList<double> peakSums,
@@ -230,6 +231,8 @@ namespace pwiz.Skyline.Model.Results
                                               ref double[][] deconvIntensities,
                                               ref double[][] deconvMzs)
         {
+            // Will do binary search on this
+            binIndicesList.Sort();
             for (int i = 0; i < deconvIntensities.Length; ++i)
             {
                 originalSpectrum.Intensities.CopyTo(deconvIntensities[i], 0);
@@ -293,7 +296,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 prevPeakIndex = peakIndex;
-                if (binIndicesSet.Contains(bin))
+                if (binIndicesList.BinarySearch(bin) >= 0)
                 {
                     // This bin (transition) is in one of the deconvolved spectra
                     ++binsConsidered;
@@ -302,10 +305,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // TODO: Figure out why this fires during the demultiplexing test
                         // Debug.Assert(isoIndices.Count == 1);
-                        var isoIndex = isoIndices[0];
+                        //var isoIndex = isoIndices[0];
                         var deconvIndex = deconvIndices[deconvSpecIndex];
                         // Find if this bin is in this deconvolved spectrum
-                        if (!_spectrumProcessor.TransBinner.BinInPrecursor(bin, isoIndex)) continue;
+                        //if (!_spectrumProcessor.TransBinner.BinInPrecursor(bin, isoIndex)) continue;
                         int tranIndex = binToDeconvIndex[bin];
                         if (peakSums[tranIndex] == 0.0) continue;
                         peakCorrections[deconvSpecIndex] +=
