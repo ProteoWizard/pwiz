@@ -86,36 +86,41 @@ namespace pwiz.Skyline.FileUI
                 }
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
-
-                var fileNames = (from object fileName in checkedListVars.CheckedItems select fileName.ToString()).ToList();
-
-                using (var longWaitDlg = new LongWaitDlg
-                    {
-                        Text = Resources.ExportChromatogramDlg_OkDialog_Exporting_Chromatograms,
-                    })
-                {
-                    try
-                    {
-                        longWaitDlg.PerformWork(this, 1000,
-                                                broker => WriteChromatograms(dlg.FileName,
-                                                                             broker,
-                                                                             fileNames,
-                                                                             CultureInfo.CurrentCulture,
-                                                                             _chromExtractors,
-                                                                             _chromSources));
-                        if (longWaitDlg.IsCanceled)
-                            return;
-                    }
-                    catch (Exception x)
-                    {
-                        var message = TextUtil.LineSeparate(string.Format(Resources.ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__, dlg.FileName),
-                                                            x.Message);
-                        MessageDlg.Show(this, message);
-                    }
-                }
+                WriteChromatograms(dlg.FileName);
             }
 
             DialogResult = DialogResult.OK;
+        }
+
+        public bool WriteChromatograms(string filePath)
+        {
+            var fileNames = (from object fileName in checkedListVars.CheckedItems select fileName.ToString()).ToList();
+
+            using (var longWaitDlg = new LongWaitDlg
+            {
+                Text = Resources.ExportChromatogramDlg_OkDialog_Exporting_Chromatograms,
+            })
+            {
+                try
+                {
+                    longWaitDlg.PerformWork(this, 1000,
+                                            broker => WriteChromatograms(filePath,
+                                                                         broker,
+                                                                         fileNames,
+                                                                         CultureInfo.CurrentCulture,
+                                                                         _chromExtractors,
+                                                                         _chromSources));
+                    if (longWaitDlg.IsCanceled)
+                        return false;
+                }
+                catch (Exception x)
+                {
+                    var message = TextUtil.LineSeparate(string.Format(Resources.ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__, filePath),
+                                                        x.Message);
+                    MessageDlg.Show(this, message);
+                }
+            }
+            return true;
         }
 
         public void  WriteChromatograms(string filePath, 
@@ -148,52 +153,52 @@ namespace pwiz.Skyline.FileUI
 
         private void checkAll_clicked(object sender, EventArgs e)
         {
-            UpdateCheckedAll();
+            UpdateCheckedAll(boxCheckAll.Checked);
         }
 
-        public void UpdateCheckedAll()
+        public void UpdateCheckedAll(bool isAllChecked)
         {
             for (int i = 0; i < checkedListVars.Items.Count; ++ i)
             {
-                checkedListVars.SetItemChecked(i, boxCheckAll.Checked);
+                checkedListVars.SetItemChecked(i, isAllChecked);
             }
         }
 
         private void checkBoxPrecursors_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateChromSources();
+            UpdateChromSources(checkBoxPrecursors.Checked, checkBoxProducts.Checked);
         }
 
         private void checkBoxProducts_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateChromSources();
+            UpdateChromSources(checkBoxPrecursors.Checked, checkBoxProducts.Checked);
         }
 
         private void checkBoxBasePeak_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateChromExtractors();
+            UpdateChromExtractors(checkBoxTic.Checked, checkBoxBasePeak.Checked);
         }
 
         private void checkBoxTic_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateChromExtractors();
+            UpdateChromExtractors(checkBoxTic.Checked, checkBoxBasePeak.Checked);
         }
 
-        private void UpdateChromExtractors()
+        public void UpdateChromExtractors(bool ticChecked, bool basePeakChecked)
         {
             _chromExtractors.Clear();
-            if (checkBoxTic.Checked)
+            if (ticChecked)
                 _chromExtractors.Add(ChromExtractor.summed);
-            if (checkBoxBasePeak.Checked)
+            if (basePeakChecked)
                 _chromExtractors.Add(ChromExtractor.base_peak);
         }
 
-        private void UpdateChromSources()
+        public void UpdateChromSources(bool precursorsChecked, bool productsChecked)
         {
             _chromSources.Clear();
-            if (checkBoxPrecursors.Checked)
+            if (precursorsChecked)
                 _chromSources.Add(ChromSource.ms1);
-            if (checkBoxProducts.Checked)
+            if (productsChecked)
                 _chromSources.Add(ChromSource.fragment);
         }
 
