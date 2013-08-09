@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -48,8 +49,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly LibKeyModificationMatcher _matcher;
         private SrmSettings[] _chargeSettingsMap;
         private BackgroundProteome _backgroundProteome;
-        private Digestion _digestion;
-
+        
         public Dictionary<PeptideSequenceModKey, PeptideMatch> PeptideMatches { get; private set; }
 
         public int MatchedPeptideCount { get; private set; }
@@ -79,8 +79,7 @@ namespace pwiz.Skyline.SettingsUI
         public void SetBackgroundProteome(BackgroundProteome backgroundProteome)
         {
             _backgroundProteome = backgroundProteome;
-            _digestion = _backgroundProteome.GetDigestion(_document.Settings.PeptideSettings);
-        }
+       }
 
         /// <summary>
         /// Matches library peptides to the current document settings and adds them to the document.
@@ -143,7 +142,7 @@ namespace pwiz.Skyline.SettingsUI
             _chargeSettingsMap = new SrmSettings[128];
 
             // Build a dictionary mapping sequence to proteins because getting this information is slow.
-            var dictSequenceProteins = new Dictionary<string, IList<Protein>>();
+            var dictSequenceProteins = new Dictionary<string, IList<ProteinInfo>>();
             var dictNewNodePeps = new Dictionary<PeptideSequenceModKey, PeptideMatch>();
 
             PeptideMatches = null;
@@ -168,7 +167,7 @@ namespace pwiz.Skyline.SettingsUI
                     // If peptide is already in the dictionary of peptides to add, merge the children.
                     if (!dictNewNodePeps.TryGetValue(nodePepMatched.SequenceKey, out peptideMatchInDict))
                     {
-                        IList<Protein> matchedProteins = null;
+                        IList<ProteinInfo> matchedProteins = null;
 
                         var sequence = nodePepMatched.Peptide.Sequence;
                         // This is only set if the user has checked the associate peptide box. 
@@ -178,8 +177,15 @@ namespace pwiz.Skyline.SettingsUI
                             // so sequences are mapped to protein lists in a dictionary.
                             if (!dictSequenceProteins.TryGetValue(sequence, out matchedProteins))
                             {
-                                matchedProteins = _digestion.GetProteinsWithSequence(sequence);
-                                dictSequenceProteins.Add(sequence, matchedProteins);
+                                using (var proteomeDb = _backgroundProteome.OpenProteomeDb())
+                                {
+                                    var digestion = _backgroundProteome.GetDigestion(proteomeDb, Settings.PeptideSettings);
+                                    if (digestion != null)
+                                    {
+                                        matchedProteins = digestion.GetProteinsWithSequence(sequence).Select(protein=>new ProteinInfo(protein)).ToList();
+                                        dictSequenceProteins.Add(sequence, matchedProteins);
+                                    }
+                                }
                             }
                             
                         }
@@ -224,12 +230,21 @@ namespace pwiz.Skyline.SettingsUI
             if (nodePep == null)
                 return null;
 
-            IList<Protein> matchedProteins = null;
+            IList<ProteinInfo> matchedProteins = null;
 
             // This is only set if the user has checked the associate peptide box. 
             var sequence = nodePep.Peptide.Sequence;
             if (_backgroundProteome != null)
-                matchedProteins = _digestion.GetProteinsWithSequence(sequence);
+            {
+                using (var proteomeDb = _backgroundProteome.OpenProteomeDb())
+                {
+                    var digestion = _backgroundProteome.GetDigestion(proteomeDb, Settings.PeptideSettings);
+                    if (digestion != null)
+                    {
+                        matchedProteins = digestion.GetProteinsWithSequence(sequence).Select(protein=>new ProteinInfo(protein)).ToArray();
+                    }
+                }
+            }
             
             PeptideMatches = new Dictionary<PeptideSequenceModKey, PeptideMatch>
                                  {{nodePep.SequenceKey, new PeptideMatch(nodePep, matchedProteins, 
@@ -535,7 +550,7 @@ namespace pwiz.Skyline.SettingsUI
                     continue;                    
                 
 
-                foreach (Protein protein in pepMatch.Proteins)
+                foreach (ProteinInfo protein in pepMatch.Proteins)
                 {
                     // Look for the protein in the document.
                     string name = protein.Name;
@@ -551,12 +566,7 @@ namespace pwiz.Skyline.SettingsUI
                         // If not, create a new PeptideGroupDocNode.
                         else
                         {
-                            List<AlternativeProtein> alternativeProteins = new List<AlternativeProtein>();
-                            foreach (var alternativeName in protein.AlternativeNames)
-                            {
-                                alternativeProteins.Add(new AlternativeProtein(alternativeName.Name,
-                                                                               alternativeName.Description));
-                            }
+                            List<AlternativeProtein> alternativeProteins = new List<AlternativeProtein>(protein.Alternatives);
                             peptideGroupDocNode = new PeptideGroupDocNode(
                                     new FastaSequence(name, protein.Description, alternativeProteins, protein.Sequence),
                                     null, null, new PeptideDocNode[0]);
@@ -726,17 +736,33 @@ namespace pwiz.Skyline.SettingsUI
 
         public struct PeptideMatch
         {
-            public PeptideMatch(PeptideDocNode nodePep, IList<Protein> proteins, bool matchesFilterSettings) : this()
+            public PeptideMatch(PeptideDocNode nodePep, IEnumerable<ProteinInfo> proteins, bool matchesFilterSettings) : this()
             {
                 NodePep = nodePep;
-                Proteins = proteins;
+                Proteins = proteins == null ? null : proteins.ToList();
                 MatchesFilterSettings = matchesFilterSettings;
             }
 
             public PeptideDocNode NodePep { get; set; }
 
-            public IList<Protein> Proteins { get; set; }
+            public List<ProteinInfo> Proteins { get; set; }
             public bool MatchesFilterSettings { get; private set; }
+
+        }
+        public class ProteinInfo
+        {
+            public ProteinInfo(Protein protein)
+            {
+                Name = protein.Name;
+                Description = protein.Description;
+                Sequence = protein.Sequence;
+                Alternatives = ImmutableList.ValueOf(protein.AlternativeNames.Select(
+                        alternative => new AlternativeProtein(alternative.Name, alternative.Description)));
+            }
+            public string Name { get; private set; }
+            public string Description { get; private set; }
+            public string Sequence { get; private set; }
+            public IList<AlternativeProtein> Alternatives { get; private set; }
         }
 
 

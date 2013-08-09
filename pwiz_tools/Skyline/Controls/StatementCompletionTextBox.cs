@@ -20,6 +20,7 @@ namespace pwiz.Skyline.Controls
         private ProteinMatchQuery _proteinMatcher;
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly ImageList _imageList = new ImageList();
+        private ProteomeDb _proteomeDb;
 
         // Don't let the name take more than half the space for item display
         private const int MAX_NAME_LENGTH = 40;
@@ -58,6 +59,11 @@ namespace pwiz.Skyline.Controls
             {
                 _proteinMatcher.Cancel();
                 _proteinMatcher = null;
+            }
+            if (null != _proteomeDb)
+            {
+                _proteomeDb.Dispose();
+                _proteomeDb = null;
             }
             TextBox.KeyDown -= TextBox_KeyDown;
             TextBox.TextChanged -= TextBox_TextChanged;
@@ -524,7 +530,7 @@ namespace pwiz.Skyline.Controls
             return newMatches;
         }
 
-        public static ProteinMatchSettings CreateProteinMatchSettings(SrmDocument srmDocument, ProteinMatchType matchTypes, String searchText)
+        private ProteinMatchSettings CreateProteinMatchSettings(SrmDocument srmDocument, ProteinMatchType matchTypes, String searchText)
         {
             var peptideSettings = srmDocument.Settings.PeptideSettings;
             var backgroundProteome = peptideSettings.BackgroundProteome;
@@ -534,7 +540,16 @@ namespace pwiz.Skyline.Controls
             }
             try
             {
-                return new ProteinMatchSettings(backgroundProteome.OpenProteomeDb(),
+                if (_proteomeDb != null && _proteomeDb.Path != backgroundProteome.DatabasePath)
+                {
+                    _proteomeDb.Dispose();
+                    _proteomeDb = null;
+                }
+                if (_proteomeDb == null)
+                {
+                    _proteomeDb = backgroundProteome.OpenProteomeDb();
+                }
+                return new ProteinMatchSettings(_proteomeDb,
                                             new ProteaseImpl(peptideSettings.Enzyme),
                                             matchTypes,
                                             searchText);

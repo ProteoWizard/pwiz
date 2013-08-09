@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                return (backgroundProteome.GetDigestion(peptideSettings) != null);
+                return (backgroundProteome.HasDigestion(peptideSettings));
             }));
 
             // Pasting FASTA Sequences, p. 5

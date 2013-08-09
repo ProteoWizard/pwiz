@@ -451,7 +451,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.GetDigestion(peptideSettings) != null;
+                return backgroundProteome.HasDigestion(peptideSettings);
             });
 
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>

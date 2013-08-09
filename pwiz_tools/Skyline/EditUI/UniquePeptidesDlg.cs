@@ -131,8 +131,7 @@ namespace pwiz.Skyline.EditUI
             }
             _peptideProteins = null;
             var peptideSettings = DocumentUIContainer.DocumentUI.Settings.PeptideSettings;
-            var digestion = BackgroundProteome.GetDigestion(peptideSettings);
-            if (digestion == null)
+            if (!BackgroundProteome.HasDigestion(peptideSettings))
             {
                 MessageDlg.Show(this, string.Format(Resources.UniquePeptidesDlg_OnShown_The_background_proteome__0__has_not_yet_finished_being_digested_with__1__,
                                                     BackgroundProteome.Name, peptideSettings.Enzyme.Name));
@@ -213,31 +212,32 @@ namespace pwiz.Skyline.EditUI
         private void QueryPeptideProteins(ILongWaitBroker longWaitBroker)
         {
             List<HashSet<Protein>> peptideProteins = new List<HashSet<Protein>>();
-            Digestion digestion = null;
             if (BackgroundProteome != null)
             {
-                digestion = BackgroundProteome.GetDigestion(SrmDocument.Settings.PeptideSettings.Enzyme,
-                                                            SrmDocument.Settings.PeptideSettings.DigestSettings);
-            }
-            foreach (var peptideDocNode in _peptideDocNodes)
-            {
-                HashSet<Protein> proteins = new HashSet<Protein>();
-                if (digestion != null)
+                using (var proteomeDb = BackgroundProteome.OpenProteomeDb())
                 {
-                    if (longWaitBroker.IsCanceled)
+                    Digestion digestion = BackgroundProteome.GetDigestion(proteomeDb, SrmDocument.Settings.PeptideSettings);
+                    foreach (var peptideDocNode in _peptideDocNodes)
                     {
-                        return;
-                    }
-                    foreach (Protein protein in digestion.GetProteinsWithSequence(peptideDocNode.Peptide.Sequence))
-                    {
-                        if (protein.Sequence == PeptideGroupDocNode.PeptideGroup.Sequence)
+                        HashSet<Protein> proteins = new HashSet<Protein>();
+                        if (digestion != null)
                         {
-                            continue;
+                            if (longWaitBroker.IsCanceled)
+                            {
+                                return;
+                            }
+                            foreach (Protein protein in digestion.GetProteinsWithSequence(peptideDocNode.Peptide.Sequence))
+                            {
+                                if (protein.Sequence == PeptideGroupDocNode.PeptideGroup.Sequence)
+                                {
+                                    continue;
+                                }
+                                proteins.Add(protein);
+                            }
                         }
-                        proteins.Add(protein);
+                        peptideProteins.Add(proteins);
                     }
                 }
-                peptideProteins.Add(proteins);
             }
             _peptideProteins = peptideProteins;
         }

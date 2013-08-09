@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NHibernate;
-using NHibernate.Cfg;
 using NHibernate.Criterion;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
@@ -40,23 +39,22 @@ namespace pwiz.ProteomeDatabase.API
     {
         public const string EXT_PROTDB = ".protdb";
 
-        private static readonly Type TYPE_DB = typeof(DbDigestion);
-        private static readonly Dictionary<String, ProteomeDb> PROTEOME_DBS = new Dictionary<string, ProteomeDb>();
+        internal static readonly Type TYPE_DB = typeof(DbDigestion);
         public const int MIN_SEQUENCE_LENGTH = 4;
         public const int MAX_SEQUENCE_LENGTH = 7;
+        private DatabaseResource _databaseResource;
         private ProteomeDb(String path)
         {
-            Path = path;
-            SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, TYPE_DB, false);
-            DatabaseLock = new ReaderWriterLock();
+            _databaseResource = DatabaseResource.GetDbResource(path);
         }
 
         public void Dispose()
         {
-            if (SessionFactory != null)
+            var databaseResource = _databaseResource;
+            _databaseResource = null;
+            if (null != databaseResource)
             {
-                SessionFactory.Dispose();
-                SessionFactory = null;
+                databaseResource.Release();
             }
         }
 
@@ -69,13 +67,8 @@ namespace pwiz.ProteomeDatabase.API
         {
             return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);        
         }
-        public ReaderWriterLock DatabaseLock { get; private set; }
-        public String Path { get; private set; }
-        public void ConfigureMappings(Configuration configuration)
-        {
-            SessionFactoryFactory.ConfigureMappings(configuration, TYPE_DB);
-        }
-
+        public ReaderWriterLock DatabaseLock { get { return _databaseResource.DatabaseLock; } }
+        public String Path { get { return _databaseResource.Path; } }
         private struct ProtIdNames
         {
             public ProtIdNames(long id, ICollection<DbProteinName> names) : this()
@@ -196,21 +189,10 @@ namespace pwiz.ProteomeDatabase.API
                 command.ExecuteNonQuery();
             }
         }
-        private ISessionFactory SessionFactory { get; set; }
-        public static ProteomeDb OpenProteomeDb(String path, bool isTempDb = false)
+        private ISessionFactory SessionFactory { get { return _databaseResource.SessionFactory; } }
+        public static ProteomeDb OpenProteomeDb(String path)
         {
-            if (isTempDb)
-                return new ProteomeDb(path);
-            lock (PROTEOME_DBS)
-            {
-                ProteomeDb proteomeDb;
-                if (!PROTEOME_DBS.TryGetValue(path, out proteomeDb))
-                {
-                    proteomeDb = new ProteomeDb(path);
-                    PROTEOME_DBS.Add(path, proteomeDb);
-                }
-                return proteomeDb;
-            }
+            return new ProteomeDb(path);
         }
 
         public static ProteomeDb CreateProteomeDb(String path)
@@ -219,16 +201,6 @@ namespace pwiz.ProteomeDatabase.API
             {
             }
             return OpenProteomeDb(path);
-        }
-
-        public static void ClearCache()
-        {
-            lock (PROTEOME_DBS)
-            {
-                foreach (var proteomeDb in PROTEOME_DBS.Values)
-                    proteomeDb.Dispose();
-                PROTEOME_DBS.Clear();
-            }
         }
 
         public IList<Digestion> ListDigestions()

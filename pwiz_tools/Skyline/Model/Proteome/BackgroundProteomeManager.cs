@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return true;
             }
             var peptideSettings = document.Settings.PeptideSettings;
-            return backgroundProteome.GetDigestion(peptideSettings) != null;
+            return backgroundProteome.HasDigestion(peptideSettings);
         }
         
         private static BackgroundProteome GetBackgroundProteome(SrmDocument document)
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Proteome
                     using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
                     {
                         File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
-                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName, true);
+                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName);
                         var digestion = digestHelper.Digest(ref progressStatus);
 
                         if (digestion == null)
@@ -133,6 +133,8 @@ namespace pwiz.Skyline.Model.Proteome
                             UpdateProgress(progressStatus.Cancel());
                             return false;
                         }
+                        // Consider(nicksh): We could use the ProteomeDb.DatabaseLock to ensure that no one is reading from the database file at the
+                        // time that we try to do this FileSaver commit.
                         if (!fs.Commit())
                         {
                             EndProcessing(docCurrent);
@@ -178,7 +180,6 @@ namespace pwiz.Skyline.Model.Proteome
             private readonly SrmDocument _document;
             private readonly string _nameProteome;
             private readonly string _pathProteome;
-            private readonly bool _isTempPath;
 
             private ProgressStatus _progressStatus;
 
@@ -186,25 +187,21 @@ namespace pwiz.Skyline.Model.Proteome
                                 IDocumentContainer container,
                                 SrmDocument document,
                                 string nameProteome,
-                                string pathProteome,
-                                bool isTempPath)
+                                string pathProteome)
             {
                 _manager = manager;
                 _container = container;
                 _document = document;
                 _nameProteome = nameProteome;
                 _pathProteome = pathProteome;
-                _isTempPath = isTempPath;
             }
 
 // ReSharper disable RedundantAssignment
             public Digestion Digest(ref ProgressStatus progressStatus)
 // ReSharper restore RedundantAssignment
             {
-                ProteomeDb proteomeDb = null;
-                try
+                using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome))
                 {
-                    proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome, _isTempPath);
                     var enzyme = _document.Settings.PeptideSettings.Enzyme;
 
                     _progressStatus = new ProgressStatus(
@@ -213,11 +210,6 @@ namespace pwiz.Skyline.Model.Proteome
                     progressStatus = _progressStatus;
 
                     return digestion;
-                }
-                finally
-                {
-                    if (proteomeDb != null && _isTempPath)
-                        proteomeDb.Dispose();
                 }
             }
 

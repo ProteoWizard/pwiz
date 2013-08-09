@@ -1254,13 +1254,16 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
-            var digestion = backgroundProteome.GetDigestion(document.Settings.PeptideSettings);
-            if (digestion == null)
+            using (var proteomeDb = backgroundProteome.OpenProteomeDb())
             {
-                return null;
+                var digestion = backgroundProteome.GetDigestion(proteomeDb, document.Settings.PeptideSettings);
+                if (digestion == null)
+                {
+                    return null;
+                }
+                var proteins = digestion.GetProteinsWithSequence(peptideSequence);
+                return proteins.ConvertAll(protein => protein.Name);
             }
-            var proteins = digestion.GetProteinsWithSequence(peptideSequence);
-            return proteins.ConvertAll(protein => protein.Name);
         }
 
         private void OnCellEndEdit(object sender, DataGridViewCellEventArgs e)

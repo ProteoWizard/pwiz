@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.ProteomeDatabase.API;
@@ -38,7 +39,7 @@ namespace pwiz.Skyline.Model.Proteome
         public static readonly BackgroundProteome NONE =
             new BackgroundProteome(BackgroundProteomeList.GetDefault());
 
-        private HashSet<Digestion> Digestions { get; set; }
+        private HashSet<string> DigestionNames { get; set; }
         public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) : this(backgroundProteomeSpec, false)
         {
         }
@@ -46,14 +47,17 @@ namespace pwiz.Skyline.Model.Proteome
         public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec, bool queryDigestions)
             : base(backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath)
         {
-            Digestions = new HashSet<Digestion>();
+            DigestionNames = new HashSet<string>();
             if (queryDigestions)
             {
                 if (!IsNone)
                 {
                     try
                     {
-                        Digestions.UnionWith(OpenProteomeDb().ListDigestions());
+                        using (var proteomeDb = OpenProteomeDb())
+                        {
+                            DigestionNames.UnionWith(proteomeDb.ListDigestions().Select(digestion=>digestion.Name));
+                        }
                     }
                     catch (Exception)
                     {
@@ -66,24 +70,17 @@ namespace pwiz.Skyline.Model.Proteome
 
         private BackgroundProteome()
         {
-            Digestions = new HashSet<Digestion>();
+            DigestionNames = new HashSet<string>();
         }
 
-        public Digestion GetDigestion(Enzyme enzyme, DigestSettings digestSettings)
+        public bool HasDigestion(PeptideSettings peptideSettings)
         {
-            foreach (var entry in Digestions)
-            {
-                if (entry.Name == enzyme.Name)
-                {
-                    return entry;
-                }
-            }
-            return null;
+            return DigestionNames.Contains(peptideSettings.Enzyme.Name);
         }
-
-        public Digestion GetDigestion(PeptideSettings peptideSettings)
+        
+        public Digestion GetDigestion(ProteomeDb proteomeDb, PeptideSettings peptideSettings)
         {
-            return GetDigestion(peptideSettings.Enzyme, peptideSettings.DigestSettings);
+            return proteomeDb.GetDigestion(peptideSettings.Enzyme.Name);
         }
 
         /// <summary>
@@ -130,18 +127,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return false;
             }
-            if (Digestions.Count != that.Digestions.Count)
-            {
-                return false;
-            }
-            foreach (var entry in Digestions)
-            {
-                if (!that.Digestions.Contains(entry))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return DigestionNames.SetEquals(that.DigestionNames);
         }
         // ReSharper disable InconsistentNaming
         public enum DuplicateProteinsFilter

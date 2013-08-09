@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                if (backgroundProteome.GetDigestion(peptideSettings) != null)
+                if (backgroundProteome.HasDigestion(peptideSettings))
                 {
                     break;
                 }
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
             }
             // Make sure digestion was successful
             var peptideSettingsFinal = Program.ActiveDocument.Settings.PeptideSettings;
-            Assert.IsNotNull(peptideSettingsFinal.BackgroundProteome.GetDigestion(peptideSettingsFinal));
+            Assert.IsNotNull(peptideSettingsFinal.BackgroundProteome.HasDigestion(peptideSettingsFinal));
 
             RunUI(() =>
                 {

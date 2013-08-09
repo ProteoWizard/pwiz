@@ -63,15 +63,6 @@ namespace pwiz.Skyline.Model.Proteome
             return ProteomeDb.OpenProteomeDb(DatabasePath);
         }
 
-        public ProteomeDb CreateOrOpenProteomeDb()
-        {
-            if (!File.Exists(DatabasePath))
-            {
-                ProteomeDb.CreateProteomeDb(DatabasePath);
-            }
-            return OpenProteomeDb();
-        }
-
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
@@ -104,12 +95,15 @@ namespace pwiz.Skyline.Model.Proteome
         public Digestion Digest(Enzyme enzyme, DigestSettings digestSettings, ILoadMonitor loader)
         {
             ProgressStatus progressStatus = new ProgressStatus(string.Format(Resources.BackgroundProteomeSpec_Digest_Digesting__0__, enzyme.Name));
-            return OpenProteomeDb().Digest(new ProteaseImpl(enzyme),
-                                        (s, i) =>
-                                        {
-                                            loader.UpdateProgress(progressStatus.ChangePercentComplete(i));
-                                            return !loader.IsCanceled;
-                                        });
+            using (var proteomeDb = OpenProteomeDb())
+            {
+                return proteomeDb.Digest(new ProteaseImpl(enzyme),
+                                            (s, i) =>
+                                            {
+                                                loader.UpdateProgress(progressStatus.ChangePercentComplete(i));
+                                                return !loader.IsCanceled;
+                                            });
+            }
         }
 
         public FastaSequence GetFastaSequence(String proteinName)
@@ -117,17 +111,20 @@ namespace pwiz.Skyline.Model.Proteome
             if (IsNone)
                 return null;
 
-            Protein protein = OpenProteomeDb().GetProteinByName(proteinName);
-            if (protein == null)
+            using (var proteomeDb = OpenProteomeDb())
             {
-                return null;
+                Protein protein = proteomeDb.GetProteinByName(proteinName);
+                if (protein == null)
+                {
+                    return null;
+                }
+                List<AlternativeProtein> alternativeProteins = new List<AlternativeProtein>();
+                foreach (var alternativeName in protein.AlternativeNames)
+                {
+                    alternativeProteins.Add(new AlternativeProtein(alternativeName.Name, alternativeName.Description));
+                }
+                return new FastaSequence(protein.Name, protein.Description, alternativeProteins, protein.Sequence);
             }
-            List<AlternativeProtein> alternativeProteins = new List<AlternativeProtein>();
-            foreach (var alternativeName in protein.AlternativeNames)
-            {
-                alternativeProteins.Add(new AlternativeProtein(alternativeName.Name, alternativeName.Description));
-            }
-            return new FastaSequence(protein.Name, protein.Description, alternativeProteins, protein.Sequence);
         }
 
         public override bool Equals(object obj)

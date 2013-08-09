@@ -228,7 +228,10 @@ namespace pwiz.Skyline.SettingsUI
                 int proteinCount = 0;
                 if (File.Exists(textPath.Text))
                 {
-                    proteinCount = ProteomeDb.OpenProteomeDb(textPath.Text).GetProteinCount();
+                    using (var proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text))
+                    {
+                        proteinCount = proteomeDb.GetProteinCount();
+                    }
                 }
                 if (proteinCount == 0)
                 {
@@ -240,7 +243,12 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     btnAddFastaFile_Click(btnAddFastaFile, new EventArgs());
                     if (File.Exists(textPath.Text))
-                        proteinCount = ProteomeDb.OpenProteomeDb(textPath.Text).GetProteinCount();
+                    {
+                        using (var proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text))
+                        {
+                            proteinCount = proteomeDb.GetProteinCount();
+                        }
+                    }
                 }
                 if (proteinCount == 0)
                 {
@@ -313,14 +321,21 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     longWaitDlg.PerformWork(this, 0, () =>
                     {
+                        ProteomeDb proteomeDb;
                         if (!File.Exists(databasePath))
                         {
-                            ProteomeDb.CreateProteomeDb(databasePath);
+                            proteomeDb = ProteomeDb.CreateProteomeDb(databasePath);
                         }
-                        var proteomeDb = ProteomeDb.OpenProteomeDb(databasePath);
-                        using (var reader = File.OpenText(fastaFilePath))
+                        else
                         {
-                            proteomeDb.AddFastaFile(reader, progressMonitor.UpdateProgress);
+                            proteomeDb = ProteomeDb.OpenProteomeDb(databasePath);
+                        }
+                        using (proteomeDb)
+                        {
+                            using (var reader = File.OpenText(fastaFilePath))
+                            {
+                                proteomeDb.AddFastaFile(reader, progressMonitor.UpdateProgress);
+                            }
                         }
                     });
                 }
@@ -427,15 +442,17 @@ namespace pwiz.Skyline.SettingsUI
 
             if (File.Exists(textPath.Text))
             {
+                ProteomeDb proteomeDb = null;
                 try
                 {
-                    ProteomeDb proteomeDb = null;
                     using (var longWaitDlg = new LongWaitDlg
-                        {
-                            Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File,
-                            Message = string.Format(Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__,
-                                                    textPath.Text)
-                        })
+                    {
+                        Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File,
+                        Message =
+                            string.Format(
+                                Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__,
+                                textPath.Text)
+                    })
                     {
                         longWaitDlg.PerformWork(this, 1000, () => proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text));
                     }
@@ -444,11 +461,13 @@ namespace pwiz.Skyline.SettingsUI
 
                     int proteinCount = proteomeDb.GetProteinCount();
                     var digestions = proteomeDb.ListDigestions();
-                    tbxStatus.Text = string.Format(Resources.BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_file_contains__0__proteins,
+                    tbxStatus.Text =
+                        string.Format(
+                            Resources.BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_file_contains__0__proteins,
                             proteinCount);
                     if (proteinCount != 0 && digestions.Count > 0)
                     {
-                        tbxStatus.Text = TextUtil.LineSeparate(tbxStatus.Text, 
+                        tbxStatus.Text = TextUtil.LineSeparate(tbxStatus.Text,
                             Resources.BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_has_already_been_digested);
                         BuildNew = false;
                         btnBuild.Enabled = false;
@@ -458,6 +477,13 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid;
                     btnAddFastaFile.Enabled = false;
+                }
+                finally
+                {
+                    if (null != proteomeDb)
+                    {
+                        proteomeDb.Dispose();
+                    }
                 }
             }
             else if (BuildNew)

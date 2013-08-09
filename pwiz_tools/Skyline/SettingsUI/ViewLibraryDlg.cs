@@ -1310,7 +1310,7 @@ namespace pwiz.Skyline.SettingsUI
                                         ViewLibraryDlg_EnsureBackgroundProteome_A_background_proteome_is_required_to_associate_proteins);
                     return false;
                 }
-                if(backgroundProteome.GetDigestion(document.Settings.PeptideSettings) == null)
+                if(!backgroundProteome.HasDigestion(document.Settings.PeptideSettings))
                 {
                     MessageDlg.Show(this,
                                     Resources.
