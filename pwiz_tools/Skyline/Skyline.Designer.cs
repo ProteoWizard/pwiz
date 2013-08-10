@@ -204,6 +204,7 @@ namespace pwiz.Skyline
             this.newToolBarButton = new System.Windows.Forms.ToolStripButton();
             this.openToolBarButton = new System.Windows.Forms.ToolStripButton();
             this.saveToolBarButton = new System.Windows.Forms.ToolStripButton();
+            this.publishToolbarButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator20 = new System.Windows.Forms.ToolStripSeparator();
             this.cutToolBarButton = new System.Windows.Forms.ToolStripButton();
             this.copyToolBarButton = new System.Windows.Forms.ToolStripButton();
@@ -223,10 +224,10 @@ namespace pwiz.Skyline
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importPeptideSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.peakBoundariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importMassListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peakBoundariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportIsolationListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1582,6 +1583,7 @@ namespace pwiz.Skyline
             this.newToolBarButton,
             this.openToolBarButton,
             this.saveToolBarButton,
+            this.publishToolbarButton,
             this.toolStripSeparator20,
             this.cutToolBarButton,
             this.copyToolBarButton,
@@ -1615,6 +1617,14 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.saveToolBarButton, "saveToolBarButton");
             this.saveToolBarButton.Name = "saveToolBarButton";
             this.saveToolBarButton.Click += new System.EventHandler(this.saveMenuItem_Click);
+            // 
+            // publishToolbarButton
+            // 
+            this.publishToolbarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.publishToolbarButton.Image = global::pwiz.Skyline.Properties.Resources.PanoramaPublish;
+            resources.ApplyResources(this.publishToolbarButton, "publishToolbarButton");
+            this.publishToolbarButton.Name = "publishToolbarButton";
+            this.publishToolbarButton.Click += new System.EventHandler(this.publishMenuItem_Click);
             // 
             // toolStripSeparator20
             // 
@@ -1730,8 +1740,9 @@ namespace pwiz.Skyline
             // 
             // publishMenuItem
             // 
-            this.publishMenuItem.Name = "publishMenuItem";
+            this.publishMenuItem.Image = global::pwiz.Skyline.Properties.Resources.PanoramaPublish;
             resources.ApplyResources(this.publishMenuItem, "publishMenuItem");
+            this.publishMenuItem.Name = "publishMenuItem";
             this.publishMenuItem.Click += new System.EventHandler(this.publishMenuItem_Click);
             // 
             // toolStripSeparator2
@@ -1763,12 +1774,6 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.importPeptideSearchMenuItem, "importPeptideSearchMenuItem");
             this.importPeptideSearchMenuItem.Click += new System.EventHandler(this.importPeptideSearchMenuItem_Click);
             // 
-            // peakBoundariesToolStripMenuItem
-            // 
-            this.peakBoundariesToolStripMenuItem.Name = "peakBoundariesToolStripMenuItem";
-            resources.ApplyResources(this.peakBoundariesToolStripMenuItem, "peakBoundariesToolStripMenuItem");
-            this.peakBoundariesToolStripMenuItem.Click += new System.EventHandler(this.peakBoundariesToolStripMenuItem_Click);
-            // 
             // importFASTAMenuItem
             // 
             this.importFASTAMenuItem.Name = "importFASTAMenuItem";
@@ -1786,6 +1791,12 @@ namespace pwiz.Skyline
             this.importDocumentMenuItem.Name = "importDocumentMenuItem";
             resources.ApplyResources(this.importDocumentMenuItem, "importDocumentMenuItem");
             this.importDocumentMenuItem.Click += new System.EventHandler(this.importDocumentMenuItem_Click);
+            // 
+            // peakBoundariesToolStripMenuItem
+            // 
+            this.peakBoundariesToolStripMenuItem.Name = "peakBoundariesToolStripMenuItem";
+            resources.ApplyResources(this.peakBoundariesToolStripMenuItem, "peakBoundariesToolStripMenuItem");
+            this.peakBoundariesToolStripMenuItem.Click += new System.EventHandler(this.peakBoundariesToolStripMenuItem_Click);
             // 
             // exportToolStripMenuItem
             // 
@@ -3274,6 +3285,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem splitGraphMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showLibraryChromatogramsSpectrumContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chromatogramsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton publishToolbarButton;
     }
 }
 

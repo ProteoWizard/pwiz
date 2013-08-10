@@ -1323,18 +1323,20 @@ namespace pwiz.Skyline.Model
 
     public class LineColNumberedIoException : IOException
     {
+        private const string END_SENTENCE = ".";    // Not L10N (CONSIDER: Is this international?
+
         public LineColNumberedIoException(string message, long lineNum, int colIndex)
             : base(FormatMessage(message, lineNum, colIndex))
         {
-            PlainMessage = message + "."; // Not L10N
+            PlainMessage = message + END_SENTENCE;
             LineNumber = lineNum;
             ColumnIndex = colIndex;
         }
 
         public LineColNumberedIoException(string message, string suggestion, long lineNum, int colIndex)
-            : base(FormatMessage(message, lineNum, colIndex) + "\r\n" + suggestion) // Not L10N
+            : base(TextUtil.LineSeparate(FormatMessage(message, lineNum, colIndex), suggestion)) // Not L10N
         {
-            PlainMessage = message + ".\r\n" + suggestion; // Not L10N
+            PlainMessage = TextUtil.LineSeparate(message + END_SENTENCE, suggestion); // Not L10N
             LineNumber = lineNum;
             ColumnIndex = colIndex;
         }
@@ -1342,7 +1344,7 @@ namespace pwiz.Skyline.Model
         public LineColNumberedIoException(string message, long lineNum, int colIndex, Exception inner)
             : base(FormatMessage(message, lineNum, colIndex), inner)
         {
-            PlainMessage = message + "."; // Not L10N
+            PlainMessage = message + END_SENTENCE; // Not L10N
             LineNumber = lineNum;
             ColumnIndex = colIndex;
         }
@@ -1350,9 +1352,9 @@ namespace pwiz.Skyline.Model
         private static string FormatMessage(string message, long lineNum, int colIndex)
         {
             if (colIndex == -1)
-                return string.Format("{0}, line {1}.", message, lineNum); // Not L10N
+                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
             else
-                return string.Format("{0}, line {1}, col {2}.", message, lineNum, colIndex + 1); // Not L10N
+                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
         }
 
         public string PlainMessage { get; private set; }

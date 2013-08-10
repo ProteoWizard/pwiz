@@ -5152,20 +5152,20 @@ Are you sure you want to continue?</value>
   <data name="GraphChromatogram_UpdateUI_No_TIC_chromatogram_found" xml:space="preserve">
     <value>No TIC chromatogram found</value>
   </data>
-  <data name="LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_">
-    <value xml:space="preserve">Document library specs cannot be persisted to XML.</value>
+  <data name="LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_" xml:space="preserve">
+    <value>Document library specs cannot be persisted to XML.</value>
   </data>
-  <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_">
-    <value xml:space="preserve">Removing library runs from document library.</value>
+  <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_" xml:space="preserve">
+    <value>Removing library runs from document library.</value>
   </data>
-  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_">
-    <value xml:space="preserve">Failed to remove library runs from the document library.</value>
+  <data name="SkylineWindow_ManageResults_Failed_to_remove_library_runs_from_the_document_library_" xml:space="preserve">
+    <value>Failed to remove library runs from the document library.</value>
   </data>
-  <data name="ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_">
-    <value xml:space="preserve">Some results files are still missing. Are you sure you want to continue?</value>
+  <data name="ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>Some results files are still missing. Are you sure you want to continue?</value>
   </data>
-  <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search">
-    <value xml:space="preserve">Import Peptide Search</value>
+  <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search" xml:space="preserve">
+    <value>Import Peptide Search</value>
   </data>
   <data name="SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_" xml:space="preserve">
     <value>Failed Reading the File.</value>
@@ -5491,10 +5491,10 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
-    <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_" xml:space="preserve">
+  <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the use of R {0}. Click Install to begin the installation process.</value>
   </data>
-    <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
+  <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the use of R {0} and the following packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_" xml:space="preserve">
@@ -5530,7 +5530,7 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
     <value>Check your network connection or contact the tool provider for installation support.</value>
   </data>
-    <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
+  <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
   </data>
   <data name="ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__" xml:space="preserve">
@@ -5539,70 +5539,70 @@ Are you sure you want to continue?</value>
   <data name="ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__" xml:space="preserve">
     <value>An error occurred attempting to find missing result files in {0}.</value>
   </data>
-    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
+  <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires Python {0} and the following packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
-    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process_" xml:space="preserve">
+  <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires Python {0}. Click install to begin the installation process.</value>
   </data>
-    <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
+  <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the following Python packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
-    <data name="PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_" xml:space="preserve">
     <value>Python installation failed. Canceling tool installation.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_" xml:space="preserve">
     <value>Package Installation was not completed. Canceling tool installation.</value>
   </data>
-    <data name="PythonInstaller_GetPython_Python_installation_completed_" xml:space="preserve">
+  <data name="PythonInstaller_GetPython_Python_installation_completed_" xml:space="preserve">
     <value>Python installation completed.</value>
   </data>
-    <data name="PythonInstaller_GetPackages_Package_installation_completed_" xml:space="preserve">
+  <data name="PythonInstaller_GetPackages_Package_installation_completed_" xml:space="preserve">
     <value>Package installation completed.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_" xml:space="preserve">
     <value>Skyline uses the Python tool setuptools and the Python package manager Pip to install packages from source. Click install to begin the installation process.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_" xml:space="preserve">
     <value>Python package installation cannot continue. Canceling tool installation.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Pip_installation_complete_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPackages_Pip_installation_complete_" xml:space="preserve">
     <value>Pip installation complete.</value>
   </data>
-    <data name="PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__" xml:space="preserve">
+  <data name="PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__" xml:space="preserve">
     <value>Pip installation failed. Error log output in immediate window.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
     <value>Install</value>
   </data>
-    <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
+  <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
     <value>Download failed.</value>
   </data>
-    <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
+  <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
     <value>Check your network connection or contact the tool provider for installation support.</value>
   </data>
-    <data name="PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_" xml:space="preserve">
+  <data name="PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_" xml:space="preserve">
     <value>Failed to download the following packages:</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
   </data>
-    <data name="RInstaller_GetR_R_installation_complete_" xml:space="preserve">
+  <data name="RInstaller_GetR_R_installation_complete_" xml:space="preserve">
     <value>R installation complete.</value>
   </data>
-    <data name="RInstaller_GetPackages_Package_installation_complete_" xml:space="preserve">
+  <data name="RInstaller_GetPackages_Package_installation_complete_" xml:space="preserve">
     <value>Package installation complete.</value>
   </data>
-    <data name="PythonInstaller_InstallPackages_Unknown_error_installing_packages_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPackages_Unknown_error_installing_packages_" xml:space="preserve">
     <value>Unknown error installing packages.</value>
   </data>
-    <data name="PythonInstaller_InstallPip_Unknown_error_installing_pip_" xml:space="preserve">
+  <data name="PythonInstaller_InstallPip_Unknown_error_installing_pip_" xml:space="preserve">
     <value>Unknown error installing pip.</value>
   </data>
-    <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
+  <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
     <value>Download failed. Check your network connection or contact Skyline developers.</value>
   </data>
-    <data name="TestNamedPipeProcessRunner_RunProcess_Error_running_process" xml:space="preserve">
+  <data name="TestNamedPipeProcessRunner_RunProcess_Error_running_process" xml:space="preserve">
     <value>Error running process</value>
   </data>
   <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
@@ -5614,28 +5614,28 @@ Are you sure you want to continue?</value>
   <data name="PivotReportDlg_ShowPreview_A_report_must_have_at_least_one_column_" xml:space="preserve">
     <value>A report must have at least one column.</value>
   </data>
-    <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0" xml:space="preserve">
+  <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>
-    <data name="ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_" xml:space="preserve">
     <value>Annotations with the following names already exist:</value>
   </data>
-    <data name="ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_" xml:space="preserve">
     <value>An annotation with the following name already exists:</value>
   </data>
-    <data name="ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_" xml:space="preserve">
     <value>Do you want to overwrite or keep the existing annotations?</value>
   </data>
-    <data name="ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_" xml:space="preserve">
+  <data name="ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_" xml:space="preserve">
     <value>Please re-install the tool and try again.</value>
   </data>
-    <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted" xml:space="preserve">
+  <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted" xml:space="preserve">
     <value>This tool requires the use of the following annotations which are missing or improperly formatted</value>
   </data>
-    <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document" xml:space="preserve">
+  <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document" xml:space="preserve">
     <value>This tool requires the use of the following annotations which are not enabled for this document</value>
   </data>
-    <data name="ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_" xml:space="preserve">
+  <data name="ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_" xml:space="preserve">
     <value>Please enable these annotations and fill in the appropriate data in order to use the tool.</value>
   </data>
   <data name="ChromatogramExporter_Export_Corrupted_chromatogram_data_at_charge__0__state_of_peptide__1_" xml:space="preserve">
@@ -5739,5 +5739,17 @@ Are you sure you want to continue?</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__" xml:space="preserve">
     <value>Failed to build the library {0}.</value>
+  </data>
+  <data name="LineColNumberedIoException_FormatMessage__0___line__1__" xml:space="preserve">
+    <value>{0}, line {1}.</value>
+  </data>
+  <data name="LineColNumberedIoException_FormatMessage__0___line__1___col__2__" xml:space="preserve">
+    <value>{0}, line {1}, col {2}.</value>
+  </data>
+  <data name="PanoramaPublish" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\panoramapublish.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Skyline_Daily" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\skyline_daily.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

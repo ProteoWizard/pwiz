@@ -423,6 +423,7 @@ namespace pwiz.Skyline
             DestroyGraphPeakArea();
             DestroyResultsGrid();
             DestroyImmediateWindow();
+            HideFindResults(true);
             DestroyAllChromatogramsGraph();
             foreach (GraphChromatogram graphChrom in _listGraphChrom)
                 DestroyGraphChrom(graphChrom);
@@ -850,6 +851,12 @@ namespace pwiz.Skyline
             _graphSpectrum.LockYAxis(Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked);
         }
 
+        private void showChromatogramsSpectrumContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowLibraryChromatograms = !Settings.Default.ShowLibraryChromatograms;
+            UpdateGraphPanes();
+        }
+
         private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             using (var dlg = new SpectrumChartPropertyDlg())
@@ -919,6 +926,7 @@ namespace pwiz.Skyline
                 _graphSpectrum.FormClosed -= graphSpectrum_FormClosed;
                 _graphSpectrum.VisibleChanged -= graphSpectrum_VisibleChanged;
                 _graphSpectrum.SelectedSpectrumChanged -= graphSpectrum_SelectedSpectrumChanged;
+                _graphSpectrum.HideOnClose = false;
                 _graphSpectrum.Close();
                 _graphSpectrum = null;
             }
@@ -1904,6 +1912,7 @@ namespace pwiz.Skyline
             graphChrom.ChangedPeakBounds -= graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum -= graphChromatogram_PickedSpectrum;
             graphChrom.ZoomAll -= graphChromatogram_ZoomAll;
+            graphChrom.HideOnClose = false;
             graphChrom.Close();
         }
 
@@ -2251,6 +2260,7 @@ namespace pwiz.Skyline
             {
                 _graphRetentionTime.FormClosed -= graphRetentinTime_FormClosed;
                 _graphRetentionTime.VisibleChanged -= graphRetentionTime_VisibleChanged;
+                _graphRetentionTime.HideOnClose = false;
                 _graphRetentionTime.Close();
                 _graphRetentionTime = null;
             }
@@ -3026,6 +3036,7 @@ namespace pwiz.Skyline
             {
                 _graphPeakArea.FormClosed -= graphPeakArea_FormClosed;
                 _graphPeakArea.VisibleChanged -= graphPeakArea_VisibleChanged;
+                _graphPeakArea.HideOnClose = false;
                 _graphPeakArea.Close();
                 _graphPeakArea = null;
             }
@@ -3592,6 +3603,7 @@ namespace pwiz.Skyline
             {
                 _resultsGridForm.FormClosed -= resultsGrid_FormClosed;
                 _resultsGridForm.VisibleChanged -= resultsGrid_VisibleChanged;
+                _resultsGridForm.HideOnClose = false;
                 _resultsGridForm.Close();
                 _resultsGridForm = null;
             }

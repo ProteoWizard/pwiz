@@ -1559,11 +1559,14 @@ namespace pwiz.Skyline
             }
         }
 
-        public void HideFindResults()
+        public void HideFindResults(bool destroy = false)
         {
             var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             if (findResultsForm != null)
-                findResultsForm.Close();            
+            {
+                findResultsForm.HideOnClose = !destroy;
+                findResultsForm.Close();
+            }
         }
 
         /// <summary>
@@ -3587,12 +3590,6 @@ namespace pwiz.Skyline
         public bool IsPasteKeys(Keys keys)
         {
             return Equals(pasteMenuItem.ShortcutKeys, keys);
-        }
-
-        private void showChromatogramsSpectrumContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowLibraryChromatograms = !Settings.Default.ShowLibraryChromatograms;
-            UpdateGraphPanes();
         }
     }
 }

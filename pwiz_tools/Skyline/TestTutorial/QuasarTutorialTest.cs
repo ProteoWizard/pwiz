@@ -49,13 +49,13 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            TestFilesZip = @"http://skyline.gs.washington.edu/tutorials/QuaSAR-1_5.zip";
+            TestFilesZip = @"http://skyline.gs.washington.edu/tutorials/QuaSARTutorial.zip";
             RunFunctionalTest();
         }
 
         private string GetTestPath(string relativePath)
         {
-            const string folderQuaser = "QuaSAR";
+            const string folderQuaser = "QuaSARTutorial";
             return TestFilesDir.GetTestPath(Path.Combine(folderQuaser, relativePath));
         }
 
@@ -227,7 +227,7 @@ namespace pwiz.SkylineTestTutorial
                                                                              "-f $(ToolDir)\\QuaSAR-GP.R --slave --no-save --args $(ToolDir)\\QuaSAR.R $(ToolDir)\\common.R $(InputReportTempPath) $(CollectedArgs)", // Arguments Not L10N
                                                                              "$(DocumentDir)", // Initial Directory Not L10N
                                                                              true, // Output to Immediate Window
-                                                                             "QuaSAR Full", // Input Report Name Not L10N
+                                                                             "QuaSAR Input", // Input Report Name Not L10N
                                                                              null, // Args Collector dll Path
                                                                              null, // Args Collector class name
                                                                              null, // Tool Directory path

@@ -27,7 +27,7 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
-    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily-64\</PublishUrl>
+    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -37,14 +37,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily-64/</InstallUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily/</InstallUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4646</ApplicationRevision>
-    <ApplicationVersion>1.4.1.4646</ApplicationVersion>
+    <ApplicationRevision>4756</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4756</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1051,6 +1051,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Skyline_Daily.ico" />
     <EmbeddedResource Include="Alerts\AboutDlg.resx">
       <DependentUpon>AboutDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1944,6 +1945,7 @@
     <Content Include="NamedPipeProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\PanoramaPublish.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

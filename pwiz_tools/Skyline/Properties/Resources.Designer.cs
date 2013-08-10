@@ -7691,6 +7691,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}, line {1}..
+        /// </summary>
+        public static string LineColNumberedIoException_FormatMessage__0___line__1__ {
+            get {
+                return ResourceManager.GetString("LineColNumberedIoException_FormatMessage__0___line__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, line {1}, col {2}..
+        /// </summary>
+        public static string LineColNumberedIoException_FormatMessage__0___line__1___col__2__ {
+            get {
+                return ResourceManager.GetString("LineColNumberedIoException_FormatMessage__0___line__1___col__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data import canceled.
         /// </summary>
         public static string LoadCanceledException_LoadCanceledException_Data_import_canceled {
@@ -9154,6 +9172,13 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Panorama {
             get {
                 object obj = ResourceManager.GetObject("Panorama", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap PanoramaPublish {
+            get {
+                object obj = ResourceManager.GetObject("PanoramaPublish", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -12321,6 +12346,13 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Icon Skyline {
             get {
                 object obj = ResourceManager.GetObject("Skyline", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        public static System.Drawing.Icon Skyline_Daily {
+            get {
+                object obj = ResourceManager.GetObject("Skyline_Daily", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
