@@ -197,16 +197,15 @@ namespace pwiz.SkylineTestFunctional
             CheckWindows(() =>
                 {
                     _calcDlg.Start = 50;
-                    _calcDlg.End = 2000;
-                    _calcDlg.WindowWidth = 1950;
+                    _calcDlg.End = 1900;
+                    _calcDlg.WindowWidth = 1850;
                     _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
                     _calcDlg.MarginLeft = 5;
                     _calcDlg.MarginRight = 25;
                     _calcDlg.GenerateTarget = true;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
-                55, 1951.1368, 1013.0684, 5, 25,
-                1951.1368, 1975, 1973.0684, 5, 25);
+                55, 1901.1140, 988.0570, 5, 25);
 
             // Four windows that fit exactly.
             CheckWindows(() =>
@@ -237,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
                 166, 199, null, 1, null,
                 199, 232, null, 1, null);
 
-            // One optimized window (becomes two).
+            // One optimized window.
             CheckWindows(() =>
                 {
                     _calcDlg.Start = 100;
@@ -245,7 +244,6 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.WindowWidth = 1;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
-                99.2950, 100.2955, null, null, null,
                 100.2955, 101.2959, null, null, null);
 
             // More than max number of windows.

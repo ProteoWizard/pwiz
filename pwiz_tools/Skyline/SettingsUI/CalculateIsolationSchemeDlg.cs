@@ -114,25 +114,34 @@ namespace pwiz.Skyline.SettingsUI
                 return isolationWindows;
             }
 
+            // Calculate how many windows will be needed.
+            double windowStep = windowWidth * (100 - overlap) / 100;
+            int windowCount = (int) Math.Ceiling((end - start)/windowStep);
+            if (Multiplexed && windowCount % windowsPerScan != 0)
+            {
+                windowCount = (windowCount/windowsPerScan + 1)*windowsPerScan;
+            }
+
             // For optimized window placement, we try to align windows with the low spots
             // in the chromatogram.  This requires us to adjust both the window width
             // and the starting offset of the windows.
             if (cbOptimizeWindowPlacement.Checked)
             {
                 windowWidth = Math.Ceiling(windowWidth) * OPTIMIZED_WINDOW_WIDTH_MULTIPLE;
-                start = Math.Floor(start / windowWidth) * windowWidth + OPTIMIZED_WINDOW_OFFSET;
+                windowStep = windowWidth * (100 - overlap) / 100;
+                start = Math.Ceiling(start / OPTIMIZED_WINDOW_WIDTH_MULTIPLE) * OPTIMIZED_WINDOW_WIDTH_MULTIPLE + OPTIMIZED_WINDOW_OFFSET;
+            }
+
+            while (start + (windowCount-1) * windowStep + windowWidth > TransitionFullScan.MAX_RES_MZ || windowCount > MAX_GENERATED_WINDOWS)
+            {
+                windowCount -= Multiplexed ? windowsPerScan : 1;
             }
 
             // Generate window list.
             bool generateTarget = cbGenerateMethodTarget.Checked;
             bool generateStartMargin = (comboMargins.SelectedItem.ToString() != WindowMargin.NONE);
             bool generateEndMargin = (comboMargins.SelectedItem.ToString() == WindowMargin.ASYMMETRIC);
-            double windowStep = windowWidth * (100 - overlap) / 100;
-            for (;
-                // For multiplexed windows, add extra windows to make number of windows a multiple of windows per scan.
-                (start < end || (Multiplexed && start < TransitionFullScan.MAX_RES_MZ && isolationWindows.Count % windowsPerScan != 0))
-                && isolationWindows.Count <= MAX_GENERATED_WINDOWS;
-                start += windowStep)
+            for (int i = 0; i < windowCount; i++, start += windowStep)
             {
                 // Apply instrument limits to method start and end.
                 var methodStart = Math.Max(start - marginLeft, TransitionFullScan.MIN_RES_MZ);
@@ -141,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Skip this isolation window if it is empty due to instrument limits.
                 if (methodStart + marginLeft >= methodEnd - marginRight)
                     continue;
-                
+
                 var window = new EditIsolationWindow
                 {
                     Start = methodStart + marginLeft,
