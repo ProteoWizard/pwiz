@@ -58,7 +58,8 @@ rule vendor-api-requirements ( properties * )
            <toolset-msvc:version>10.0express in $(properties)
         {
             result += <assembly>$(dll_location)/Clearcore2.Muni.dll ;
-            result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;        
+            result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
+            result += <assembly>$(dll_location)/Clearcore2.Compression.dll ;
         }
         result += <include>$(dll_location) ;
         result += <define>PWIZ_READER_ABI ;
@@ -121,7 +122,8 @@ rule install-requirements ( properties * )
            <toolset-msvc:version>10.0express in $(properties)
         {
             result += <source>$(dll_location)/Clearcore2.Muni.dll ;
-            result += <source>$(dll_location)/Clearcore2.RawXYProcessing.dll ;        
+            result += <source>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
+            result += <source>$(dll_location)/Clearcore2.Compression.dll ;
         }
     }
     return $(result) ;

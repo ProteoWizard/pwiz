@@ -262,6 +262,7 @@
 <?if $(var.Toolset)=10.0 or $(var.Toolset)=10.0express ?>
     <Component Feature="MainFeature"><File Id="_Clearcore2.Muni.dll" Name="Clearcore2.Muni.dll" Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Id="_Clearcore2.RawXYProcessing.dll" Name="Clearcore2.RawXYProcessing.dll" Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Clearcore2.Compression.dll" Name="Clearcore2.Compression.dll" Source="msvc-release\Clearcore2.Compression.dll" KeyPath="yes"/></Component>
 <?endif?>
 
 
