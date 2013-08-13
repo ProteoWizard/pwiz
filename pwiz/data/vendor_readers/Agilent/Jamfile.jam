@@ -114,6 +114,7 @@ rule warn-once ( message )
 }
 
 
+import feature ;
 rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
@@ -131,13 +132,13 @@ rule test-requirements ( properties * )
         warn-once "[$(READER_PATH)] Missing test data." ;
         result += <build>no ;
     }
-    else if  [ without-binary-msdata ] 
+    else if [ without-binary-msdata ] 
     {
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) )
+    else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
     {
-        warn-once "[$(READER_PATH)] MSVC 9.0: $(READER_NAME)_Test is not running due to a small mismatch between VC9 and VC10 behavior." ;
+        warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is using the .NET 3.5 DLLs which get slightly different test results, so the test will be skipped." ;
         result += <build>no ;
     }
     else if ! [ project-exists $(API_PATH) ]

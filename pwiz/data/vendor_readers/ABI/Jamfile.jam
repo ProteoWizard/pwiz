@@ -103,6 +103,17 @@ lib pwiz_reader_abi
     ;
 
 
+rule warn-once ( message )
+{
+    if ! $(.warn-once-test)
+    {
+        .warn-once-test = true ;
+        echo $(message) ;
+    }
+}
+
+
+import feature ;
 rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
@@ -114,32 +125,34 @@ rule test-requirements ( properties * )
     }
     
     local result ;
-    
-    if ! $(.warn-once-test)
+
+    if ! [ path.exists $(TEST_DATA_PATH) ]
     {
-        .warn-once-test = true ;
-        if ! [ path.exists $(TEST_DATA_PATH) ]
-        {
-            echo "[$(READER_PATH)] Missing test data." ;
-            result += <build>no ;
-        }
-        else if  [ without-binary-msdata ] 
-		{
-            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-		}
-        else if ! <toolset>msvc in $(properties)
-        {
-            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
-        else if ! [ project-exists $(API_PATH) ]
-        {
-            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
-        else if ! [ wiff-dll-location $(API_PATH) : $(properties) ]
-        {
-            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
+        warn-once "[$(READER_PATH)] Missing test data." ;
+        result += <build>no ;
     }
+    else if [ without-binary-msdata ] 
+	{
+        warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+	}
+    else if ! <toolset>msvc in $(properties)
+    {
+        warn-once "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
+    {
+        warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is using the .NET 3.5 DLLs which get slightly different test results, so the test will be skipped." ;
+        result += <build>no ;
+    }
+    else if ! [ project-exists $(API_PATH) ]
+    {
+        warn-once "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if ! [ wiff-dll-location $(API_PATH) : $(properties) ]
+    {
+        warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+
     return $(result) ;
 }
 

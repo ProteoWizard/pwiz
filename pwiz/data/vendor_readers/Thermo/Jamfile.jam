@@ -119,6 +119,16 @@ lib pwiz_reader_thermo
     ;
 
 
+rule warn-once ( message )
+{
+    if ! $(.warn-once-test)
+    {
+        .warn-once-test = true ;
+        echo $(message) ;
+    }
+}
+
+
 rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
@@ -131,33 +141,29 @@ rule test-requirements ( properties * )
     
     local result ;
 
-    if ! $(.warn-once-test)
+    if ! [ path.exists $(TEST_DATA_PATH) ]
     {
-        .warn-once-test = true ;
-        if ! [ path.exists $(TEST_DATA_PATH) ]
-        {
-            echo "[$(READER_PATH)] Missing test data." ;
-            result += <build>no ;
-        }
-        else if  [ without-binary-msdata ] 
-        {
-            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
-        else if ! <toolset>msvc in $(properties)
-        {
-            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
-        }
-        else if ! [ project-exists $(API_PATH) ]
-        {
-            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
-        }
-        else if ! $(.hasDLLs)
-        {
-            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
-        }
+        warn-once "[$(READER_PATH)] Missing test data." ;
+        result += <build>no ;
+    }
+    else if [ without-binary-msdata ] 
+    {
+        warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if ! <toolset>msvc in $(properties)
+    {
+        warn-once "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+    }
+    else if ! [ project-exists $(API_PATH) ]
+    {
+        warn-once "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+    }
+    else if ! $(.hasDLLs)
+    {
+        warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
     }
 
     return $(result) ;
