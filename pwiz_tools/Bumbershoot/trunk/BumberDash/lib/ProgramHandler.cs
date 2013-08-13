@@ -168,7 +168,7 @@ namespace BumberDash.lib
                     {
                         configString = PropertyListToOverrideString(hi.TagConfigFile.PropertyList);
                         //use intranal blosum and unimod files if not specified
-                        if (!configString.Contains("Blosum"))
+                        if (!configString.Contains("-Blosum "))
                             configString += string.Format("-{0} \"{1}\" ", "Blosum",
                                                           Path.Combine(
                                                               AppDomain.CurrentDomain.BaseDirectory,

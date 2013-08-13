@@ -825,7 +825,7 @@ namespace BumberDash.Forms
             this.TagReconInfoBox.Name = "TagReconInfoBox";
             this.TagReconInfoBox.ReadOnly = true;
             this.TagReconInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TagReconInfoBox.Size = new System.Drawing.Size(502, 307);
+            this.TagReconInfoBox.Size = new System.Drawing.Size(247, 201);
             this.TagReconInfoBox.TabIndex = 5;
             this.TagReconInfoBox.WordWrap = false;
             // 
@@ -857,7 +857,7 @@ namespace BumberDash.Forms
             this.DirecTagInfoBox.Name = "DirecTagInfoBox";
             this.DirecTagInfoBox.ReadOnly = true;
             this.DirecTagInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.DirecTagInfoBox.Size = new System.Drawing.Size(502, 238);
+            this.DirecTagInfoBox.Size = new System.Drawing.Size(250, 241);
             this.DirecTagInfoBox.TabIndex = 7;
             this.DirecTagInfoBox.WordWrap = false;
             // 
@@ -977,9 +977,9 @@ namespace BumberDash.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(691, 496);
             this.Controls.Add(this.FolderPanel);
+            this.Controls.Add(this.TagConfigInfoPanel);
             this.Controls.Add(this.PepConfigInfoPanel);
             this.Controls.Add(this.DatabaseConfigInfoPanel);
-            this.Controls.Add(this.TagConfigInfoPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AddJobForm";
