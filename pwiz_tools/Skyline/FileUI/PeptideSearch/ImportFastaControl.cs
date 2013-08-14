@@ -20,8 +20,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -42,12 +44,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
 
             ImportFastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError);
+
+            tbxFastaHeightDifference = Height - tbxFasta.Height;
         }
 
         private SkylineWindow SkylineWindow { get; set; }
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
         private ImportFastaHelper ImportFastaHelper { get; set; }
+
+        private const long MAX_FASTA_TEXTBOX_LENGTH = 5 << 20;    // 5 MB
+        private bool _fastaFile
+        {
+            get { return !tbxFasta.Multiline; }
+            set
+            {
+                tbxFasta.Multiline = !value;
+                if (tbxFasta.Multiline)
+                    tbxFasta.Height = Height - tbxFastaHeightDifference;
+            }
+        }
+        private readonly int tbxFastaHeightDifference;
 
         private void browseFastaBtn_Click(object sender, EventArgs e)
         {
@@ -74,7 +91,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void SetFastaContent(string fastaFilePath)
         {
-            tbxFasta.Text += GetFastaFileContent(fastaFilePath);
+            try
+            {
+                var fileInfo = new FileInfo(fastaFilePath);
+                if (fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
+                {
+                    _fastaFile = true;
+                    tbxFasta.Text = fastaFilePath;
+                }
+                else
+                {
+                    _fastaFile = false;
+                    tbxFasta.Text = GetFastaFileContent(fastaFilePath);
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(WizardForm, TextUtil.LineSeparate(string.Format(Resources.ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__, fastaFilePath), x.Message));
+            }
         }
 
         private string GetFastaFileContent(string fastaFileName)
@@ -84,8 +118,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 using (var readerFasta = new StreamReader(fastaFileName))
                 {
-                    fastaText = readerFasta.ReadToEnd();
-                    readerFasta.Close();
+                    var sb = new StringBuilder();
+                    string line;
+                    while ((line = readerFasta.ReadLine()) != null)
+                        sb.AppendLine(line);
+                    fastaText = sb.ToString();
                 }
             }
             catch (Exception x)
@@ -149,7 +186,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool ImportFasta()
         {
-            if (string.IsNullOrEmpty(tbxFasta.Text)) // The user didn't specify any FASTA content
+            if (string.IsNullOrWhiteSpace(tbxFasta.Text)) // The user didn't specify any FASTA content
             {
                 var docCurrent = SkylineWindow.DocumentUI;
                 // If the document has precursor transitions already, then just trust the user
@@ -197,23 +234,71 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 var nodeInsert = SkylineWindow.SequenceTree.SelectedNode as SrmTreeNode;
                 IdentityPath selectedPath = nodeInsert != null ? nodeInsert.Path : null;
-                bool succeeded = false;
-                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA,
-                    doc =>
+
+                if (!_fastaFile)
+                {
+                    // Import FASTA as content
+                    SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
+                        {
+                            int emptyPeptideGroups;
+                            var newDocument = ImportFastaHelper.AddFasta(doc, ref selectedPath, out emptyPeptideGroups);
+                            if (newDocument == null)
+                                return doc;
+                            newDocument = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, emptyPeptideGroups, newDocument);
+                            if (newDocument == null)
+                                return doc;
+                            return newDocument;
+                        });
+                }
+                else
+                {
+                    // Import FASTA as file
+                    var importer = new FastaImporter(SkylineWindow.Document, false);
+                    var docCurrent = SkylineWindow.Document;
+                    var docNew = docCurrent;
+                    var fastaPath = tbxFasta.Text;
+                    try
                     {
-                        var newDocument = ImportFastaHelper.AddFasta(doc, ref selectedPath);
-                        if (newDocument == null)
-                            return doc;
-                        succeeded = true;
-                        return newDocument;
-                    });
+                        using (TextReader reader = File.OpenText(fastaPath))
+                        using (var longWaitDlg = new LongWaitDlg(SkylineWindow) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
+                        {
+                            IdentityPath to = selectedPath;
+                            longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
+                                {
+                                    IdentityPath nextAdd;
+                                    docNew = docNew.AddPeptideGroups(importer.Import(reader, longWaitBroker, Helpers.CountLinesInFile(fastaPath)), false, to, out selectedPath, out nextAdd);
+                                    docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, importer.EmptyPeptideGroupCount, docNew);
+                                });
+                        }
+                        if (docNew == null)
+                            return false;
+                    }
+                    catch (Exception x)
+                    {
+                        MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
+                                                            fastaPath, x.Message));
+                        return false;
+                    }
+
+                    SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
+                        {
+                            if (!ReferenceEquals(doc, docCurrent))
+                                throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                            return docNew;
+                        });
+                }
 
                 if (!VerifyAtLeastOnePrecursorTransition(SkylineWindow.Document))
                     return false;
-                return succeeded;
             }
 
             return true;
+        }
+
+        private void clearBtn_Click(object sender, EventArgs e)
+        {
+            tbxFasta.Clear();
+            _fastaFile = false;
         }
     }
 }

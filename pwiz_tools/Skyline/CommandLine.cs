@@ -1565,7 +1565,8 @@ namespace pwiz.Skyline
                 IProgressMonitor progressMonitor = new NoMessageCommandWaitBroker(_out, new ProgressStatus(string.Empty));
                 IdentityPath selectPath;
                 long lines = Helpers.CountLinesInFile(path);
-                _doc = _doc.ImportFasta(readerFasta, progressMonitor, lines, false, null, out selectPath);
+                int emptiesIgnored;
+                _doc = _doc.ImportFasta(readerFasta, progressMonitor, lines, false, null, out selectPath, out emptiesIgnored);
             }
             
             // Remove all empty proteins unless otherwise specified

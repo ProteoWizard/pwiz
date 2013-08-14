@@ -208,8 +208,14 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath)
         {
+            int emptyPeptideGroups;
+            return GetNewDocument(document, validating, ref selectedPath, out emptyPeptideGroups);
+        }
+
+        private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out int emptyPeptideGroups)
+        {
             var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError);
-            if ((document = fastaHelper.AddFasta(document, ref selectedPath)) == null)
+            if ((document = fastaHelper.AddFasta(document, ref selectedPath, out emptyPeptideGroups)) == null)
             {
                 tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
                 return null;
@@ -1010,7 +1016,16 @@ namespace pwiz.Skyline.EditUI
                                               document =>
                                                   {
                                                       newSelectedPath = SelectedPath;
-                                                      var newDocument = GetNewDocument(document, false, ref newSelectedPath);
+                                                      int emptyPeptideGroups;
+                                                      var newDocument = GetNewDocument(document, false, ref newSelectedPath, out emptyPeptideGroups);
+                                                      if (newDocument == null)
+                                                      {
+                                                          error = true;
+                                                          return document;
+                                                      }
+                                                      // CONSIDER: This can show message boxes requesting user input
+                                                      //           Should it really be in the ModifyDocument function?
+                                                      newDocument = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, newDocument);
                                                       if (newDocument == null)
                                                       {
                                                           error = true;
@@ -1377,8 +1392,9 @@ namespace pwiz.Skyline.EditUI
         private readonly Panel _panelError;
         private Panel PanelError { get { return _panelError; } }
 
-        public SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath)
+        public SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath, out int emptyPeptideGroups)
         {
+            emptyPeptideGroups = 0;
             var text = TbxFasta.Text;
             if (text.Length == 0)
             {
@@ -1426,12 +1442,12 @@ namespace pwiz.Skyline.EditUI
                     char c = line[column];
                     if (AminoAcid.IsExAA(c))
                         aa++;
-                    else if (!char.IsWhiteSpace(c) && c != '*')
+                    else if (!Char.IsWhiteSpace(c) && c != '*')
                     {
                         ShowFastaError(new PasteError
                         {
                             Message =
-                                string.Format("'{0}' is not a capital letter that corresponds to an amino acid.", c),
+                                String.Format("'{0}' is not a capital letter that corresponds to an amino acid.", c),
                             Column = column,
                             Line = i,
                             Length = 1,
@@ -1453,11 +1469,11 @@ namespace pwiz.Skyline.EditUI
                 // TODO: support long-wait broker
                 document = document.AddPeptideGroups(importer.Import(reader, null, -1), false,
                     to, out firstAdded, out nextAdd);
+                emptyPeptideGroups = importer.EmptyPeptideGroupCount;
                 selectedPath = firstAdded;
             }
             catch (Exception exception)
             {
-                Console.Out.WriteLine(exception);
                 ShowFastaError(new PasteError
                 {
                     Message = "An unexpected error occurred: " + exception.Message + " (" + exception.GetType() + ")"
@@ -1506,6 +1522,27 @@ namespace pwiz.Skyline.EditUI
                 return false;
             }
             return true;
+        }
+
+        public static SrmDocument HandleEmptyPeptideGroups(IWin32Window parent, int emptyPeptideGroups, SrmDocument docCurrent)
+        {
+            SrmDocument docNew = docCurrent;
+            if (emptyPeptideGroups > FastaImporter.MaxEmptyPeptideGroupCount)
+            {
+                MessageDlg.Show(parent, String.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, emptyPeptideGroups));
+            }
+            else if (emptyPeptideGroups > 0)
+            {
+                using (var dlg = new EmptyProteinsDlg(emptyPeptideGroups))
+                {
+                    if (dlg.ShowDialog(parent) == DialogResult.Cancel)
+                        return null;
+                    // Remove all empty proteins, if requested by the user.
+                    if (!dlg.IsKeepEmptyProteins)
+                        docNew = new RefinementSettings { MinPeptidesPerProtein = 1 }.Refine(docNew);
+                }
+            }
+            return docNew;
         }
     }
 }

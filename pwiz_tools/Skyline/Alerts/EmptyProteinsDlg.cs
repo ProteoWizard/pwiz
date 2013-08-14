@@ -29,9 +29,13 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class EmptyProteinsDlg : FormEx
     {
+        public int EmptyProteins { get; private set; }
+
         public EmptyProteinsDlg(int countEmpty)
         {
             InitializeComponent();
+
+            EmptyProteins = countEmpty;
 
             string message = string.Format(labelMessage.Text, countEmpty == 1
                 ? Resources.EmptyProteinsDlg_EmptyProteinsDlg_1_new_protein 
@@ -56,6 +60,11 @@ namespace pwiz.Skyline.Alerts
         }
 
         private void btnKeep_Click(object sender, EventArgs e)
+        {
+            KeepEmptyProteins();
+        }
+
+        public void KeepEmptyProteins()
         {
             IsKeepEmptyProteins = true;
             OkDialog();

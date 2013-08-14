@@ -153,7 +153,7 @@
     <Compile Include="EditStaticModTest.cs" />
     <Compile Include="ExplicitMultiTypeTest.cs" />
     <Compile Include="ExplicitVariableTest.cs" />
-    <Compile Include="ImportPeptideSearchModificationsTest.cs" />
+    <Compile Include="ImportPeptideSearchTest.cs" />
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
     <Compile Include="InstallToolsTest.cs" />
@@ -227,7 +227,7 @@
     <None Include="ExportMethodDialogTest.zip" />
     <None Include="FullScanIdTest.zip" />
     <None Include="ImportDocTest.zip" />
-    <None Include="ImportPeptideSearchModifications.zip" />
+    <None Include="ImportPeptideSearchTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="InstallToolsTest.zip" />
     <None Include="IrtTest.zip" />

@@ -34,6 +34,13 @@ namespace pwiz.Skyline.Model
 {
     public class FastaImporter
     {
+        private const int MAX_EMPTY_PEPTIDE_GROUP_COUNT = 2000;
+
+        public static int MaxEmptyPeptideGroupCount
+        {
+            get { return TestMaxEmptyPeptideGroupCount ?? MAX_EMPTY_PEPTIDE_GROUP_COUNT; }
+        }
+
         private int _countPeptides;
         private int _countIons;
         readonly ModificationMatcher _modMatcher;
@@ -52,6 +59,7 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Document { get; private set; }
         public bool PeptideList { get; private set; }
+        public int EmptyPeptideGroupCount { get; private set; }
 
         public IEnumerable<PeptideGroupDocNode> Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount)
         {
@@ -68,7 +76,7 @@ namespace pwiz.Skyline.Model
                     set.Add(fastaSeq);
             }
 
-            List<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
+            var peptideGroupsNew = new List<PeptideGroupDocNode>();
             PeptideGroupBuilder seqBuilder = null;
 
             long linesRead = 0;
@@ -121,13 +129,31 @@ namespace pwiz.Skyline.Model
             return peptideGroupsNew;
         }
 
-        private void AddPeptideGroup(ICollection<PeptideGroupDocNode> listGroups,
+        private void AddPeptideGroup(List<PeptideGroupDocNode> listGroups,
             ICollection<FastaSequence> set, PeptideGroupBuilder builder)
         {
             PeptideGroupDocNode nodeGroup = builder.ToDocNode();
             FastaSequence fastaSeq = nodeGroup.Id as FastaSequence;
             if (fastaSeq != null && set.Contains(fastaSeq))
                 return;
+            if (nodeGroup.PeptideCount == 0)
+            {
+                EmptyPeptideGroupCount++;
+
+                // If more than MaxEmptyPeptideGroupCount, then don't keep the empty peptide groups
+                // This is not useful and is likely to cause memory and performance issues
+                if (EmptyPeptideGroupCount > MaxEmptyPeptideGroupCount)
+                {
+                    if (EmptyPeptideGroupCount == MaxEmptyPeptideGroupCount + 1)
+                    {
+                        var nonEmptyGroups = listGroups.Where(g => g.PeptideCount > 0).ToArray();
+                        listGroups.Clear();
+                        listGroups.AddRange(nonEmptyGroups);
+
+                    }
+                    return;
+                }
+            }
             listGroups.Add(nodeGroup);
             _countPeptides += nodeGroup.PeptideCount;
             _countIons += nodeGroup.TransitionCount;
@@ -165,6 +191,12 @@ namespace pwiz.Skyline.Model
             }
             return sb.ToString();
         }
+
+        #region Test support
+
+        public static int? TestMaxEmptyPeptideGroupCount { get; set; }
+
+        #endregion
     }
 
     public class MassListImporter

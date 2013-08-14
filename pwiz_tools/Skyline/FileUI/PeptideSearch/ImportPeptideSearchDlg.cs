@@ -367,6 +367,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return false;
         }
 
+        public void ClickNextButtonNoCheck()
+        {
+            btnNext.PerformClick();
+        }
+
         public void ClickCancelButton()
         {
             CancelButton.PerformClick();

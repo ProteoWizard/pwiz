@@ -6658,6 +6658,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error adding FASTA file {0}..
+        /// </summary>
+        public static string ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must contain at least one precursor transition in order to proceed..
         /// </summary>
         public static string ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_ {
@@ -8005,6 +8014,24 @@ namespace pwiz.Skyline.Properties {
         public static string MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings {
             get {
                 return ResourceManager.GetString("MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add checked modifications.
+        /// </summary>
+        public static string MatchModificationsControl_AddCheckedModifications_Add_checked_modifications {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_AddCheckedModifications_Add_checked_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add {0} modification {1}.
+        /// </summary>
+        public static string MatchModificationsControl_AddModification_Add__0__modification__1_ {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_AddModification_Add__0__modification__1_", resourceCulture);
             }
         }
         
@@ -12777,6 +12804,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportFasta_OK {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportFasta_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This operation discarded {0} proteins with no peptides matching the current filter settings..
+        /// </summary>
+        public static string SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_" +
+                        "matching_the_current_filter_settings_", resourceCulture);
             }
         }
         

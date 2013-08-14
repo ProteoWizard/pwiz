@@ -5752,4 +5752,16 @@ Are you sure you want to continue?</value>
   <data name="Skyline_Daily" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\skyline_daily.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="MatchModificationsControl_AddCheckedModifications_Add_checked_modifications" xml:space="preserve">
+    <value>Add checked modifications</value>
+  </data>
+  <data name="SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_" xml:space="preserve">
+    <value>This operation discarded {0} proteins with no peptides matching the current filter settings.</value>
+  </data>
+  <data name="ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__" xml:space="preserve">
+    <value>Error adding FASTA file {0}.</value>
+  </data>
+  <data name="MatchModificationsControl_AddModification_Add__0__modification__1_" xml:space="preserve">
+    <value>Add {0} modification {1}</value>
+  </data>
 </root>

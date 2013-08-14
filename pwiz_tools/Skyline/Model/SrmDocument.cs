@@ -669,29 +669,33 @@ namespace pwiz.Skyline.Model
         public SrmDocument ImportFasta(TextReader reader, bool peptideList,
                 IdentityPath to, out IdentityPath firstAdded)
         {
-            return ImportFasta(reader, null, -1, peptideList, to, out firstAdded);
+            int emptiesIgnored;
+            return ImportFasta(reader, null, -1, peptideList, to, out firstAdded, out emptiesIgnored);
         }
 
         public SrmDocument ImportFasta(TextReader reader, IProgressMonitor progressMonitor, long lines, bool peptideList,
-                IdentityPath to, out IdentityPath firstAdded)
+                IdentityPath to, out IdentityPath firstAdded, out int emptyPeptideGroups)
         {
             FastaImporter importer = new FastaImporter(this, peptideList);
             IdentityPath nextAdd;
-            return AddPeptideGroups(importer.Import(reader, progressMonitor, lines), peptideList,
-                to, out firstAdded, out nextAdd);
+            IEnumerable<PeptideGroupDocNode> imported = importer.Import(reader, progressMonitor, lines);
+            emptyPeptideGroups = importer.EmptyPeptideGroupCount;
+            return AddPeptideGroups(imported, peptideList, to, out firstAdded, out nextAdd);
         }
 
         public SrmDocument ImportFasta(TextReader reader, IProgressMonitor progressMonitor, long lines, 
-            ModificationMatcher matcher, IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdded)
+            ModificationMatcher matcher, IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdded, out int emptiesIgnored)
         {
             if (matcher == null)
             {
                 nextAdded = null;
-                return ImportFasta(reader, progressMonitor, lines, false, to, out firstAdded);
+                return ImportFasta(reader, progressMonitor, lines, false, to, out firstAdded, out emptiesIgnored);
             }
 
             FastaImporter importer = new FastaImporter(this, matcher);
-            return AddPeptideGroups(importer.Import(reader, progressMonitor, lines), true, to, out firstAdded, out nextAdded);
+            IEnumerable<PeptideGroupDocNode> imported = importer.Import(reader, progressMonitor, lines);
+            emptiesIgnored = importer.EmptyPeptideGroupCount;
+            return AddPeptideGroups(imported, true, to, out firstAdded, out nextAdded);
         }
 
         public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,

@@ -35,6 +35,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label3 = new System.Windows.Forms.Label();
             this.findResultsFilesButton = new System.Windows.Forms.Button();
             this.listResultsFilesMissing = new System.Windows.Forms.ListBox();
+            this.cbExcludeSourceFiles = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.resultsSplitContainer)).BeginInit();
             this.resultsSplitContainer.Panel1.SuspendLayout();
             this.resultsSplitContainer.Panel2.SuspendLayout();
@@ -62,8 +63,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.resultsSplitContainer.Panel2.Controls.Add(this.label3);
             this.resultsSplitContainer.Panel2.Controls.Add(this.findResultsFilesButton);
             this.resultsSplitContainer.Panel2.Controls.Add(this.listResultsFilesMissing);
-            this.resultsSplitContainer.Size = new System.Drawing.Size(381, 312);
-            this.resultsSplitContainer.SplitterDistance = 115;
+            this.resultsSplitContainer.Size = new System.Drawing.Size(381, 292);
+            this.resultsSplitContainer.SplitterDistance = 107;
             this.resultsSplitContainer.TabIndex = 0;
             this.resultsSplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.resultsSplitContainer_SplitterMoved);
             // 
@@ -84,13 +85,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.listResultsFilesFound.FormattingEnabled = true;
             this.listResultsFilesFound.Location = new System.Drawing.Point(19, 30);
             this.listResultsFilesFound.Name = "listResultsFilesFound";
-            this.listResultsFilesFound.Size = new System.Drawing.Size(340, 69);
+            this.listResultsFilesFound.Size = new System.Drawing.Size(340, 56);
             this.listResultsFilesFound.TabIndex = 1;
             // 
             // browseToResultsFileButton
             // 
             this.browseToResultsFileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.browseToResultsFileButton.Location = new System.Drawing.Point(18, 128);
+            this.browseToResultsFileButton.Location = new System.Drawing.Point(18, 116);
             this.browseToResultsFileButton.Name = "browseToResultsFileButton";
             this.browseToResultsFileButton.Size = new System.Drawing.Size(88, 23);
             this.browseToResultsFileButton.TabIndex = 2;
@@ -110,11 +111,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // findResultsFilesButton
             // 
             this.findResultsFilesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.findResultsFilesButton.Location = new System.Drawing.Point(112, 128);
+            this.findResultsFilesButton.Location = new System.Drawing.Point(112, 116);
             this.findResultsFilesButton.Name = "findResultsFilesButton";
             this.findResultsFilesButton.Size = new System.Drawing.Size(88, 23);
             this.findResultsFilesButton.TabIndex = 3;
-            this.findResultsFilesButton.Text = "&Find in Folder...";
+            this.findResultsFilesButton.Text = "F&ind in Folder...";
             this.findResultsFilesButton.UseVisualStyleBackColor = true;
             this.findResultsFilesButton.Click += new System.EventHandler(this.findResultsFilesButton_Click);
             // 
@@ -126,14 +127,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.listResultsFilesMissing.FormattingEnabled = true;
             this.listResultsFilesMissing.Location = new System.Drawing.Point(18, 25);
             this.listResultsFilesMissing.Name = "listResultsFilesMissing";
-            this.listResultsFilesMissing.Size = new System.Drawing.Size(340, 69);
+            this.listResultsFilesMissing.Size = new System.Drawing.Size(340, 56);
             this.listResultsFilesMissing.TabIndex = 1;
+            // 
+            // cbExcludeSourceFiles
+            // 
+            this.cbExcludeSourceFiles.AutoSize = true;
+            this.cbExcludeSourceFiles.Location = new System.Drawing.Point(19, 298);
+            this.cbExcludeSourceFiles.Name = "cbExcludeSourceFiles";
+            this.cbExcludeSourceFiles.Size = new System.Drawing.Size(166, 17);
+            this.cbExcludeSourceFiles.TabIndex = 1;
+            this.cbExcludeSourceFiles.Text = "&Exclude spectrum source files";
+            this.cbExcludeSourceFiles.UseVisualStyleBackColor = true;
+            this.cbExcludeSourceFiles.Visible = false;
             // 
             // ImportResultsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.cbExcludeSourceFiles);
             this.Controls.Add(this.resultsSplitContainer);
             this.Name = "ImportResultsControl";
             this.Size = new System.Drawing.Size(381, 315);
@@ -144,6 +157,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ((System.ComponentModel.ISupportInitialize)(this.resultsSplitContainer)).EndInit();
             this.resultsSplitContainer.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -156,5 +170,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Button findResultsFilesButton;
         private System.Windows.Forms.ListBox listResultsFilesMissing;
         private System.Windows.Forms.Button browseToResultsFileButton;
+        private System.Windows.Forms.CheckBox cbExcludeSourceFiles;
     }
 }

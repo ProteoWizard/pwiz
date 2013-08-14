@@ -16,9 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -34,18 +36,13 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestImportPeptideSearchModifications()
         {
-            TestFilesZip = @"TestFunctional\ImportPeptideSearchModifications.zip";
+            TestFilesZip = @"TestFunctional\ImportPeptideSearchTest.zip";
             RunFunctionalTest();
         }
 
         private string GetTestPath(string path)
         {
             return TestFilesDir.GetTestPath(path);
-        }
-
-        private string DocumentFile
-        {
-            get { return GetTestPath("ImportPeptideSearchModificationsTest.sky"); }
         }
 
         private const string MODS_BASE_NAME = "mods";
@@ -72,9 +69,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestImportModifications()
         {
-            EmptyDocument();
-
-            RunUI(() => SkylineWindow.SaveDocument());
+            PrepareDocument("ImportPeptideSearchTest.sky");
 
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -107,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // Define expected matched/unmatched modifications
-                var expectedMatched = new List<string> { "Acetyl (T)", "Carbamyl (K)" };
+                var expectedMatched = new List<string> { "Acetyl (T)", "Carbamyl (K)", "GIST-Quat:2H(9) (N-term)" };
                 var expectedUnmatched = new List<string> { "R[114]" };
                 // Verify matched/unmatched modifications
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
@@ -139,21 +134,28 @@ namespace pwiz.SkylineTestFunctional
 
             // Check for modifications.
             var expectedStaticMods = new List<string> { "Carbamidomethyl (C)", "Acetyl (T)", "Carbamyl (K)" };
-            var expectedHeavyMods = new List<string> { "Double Carbamidomethylation" };
-            AssertEx.AreEqualDeep(expectedStaticMods, ModNames(Settings.Default.StaticModList));
+            var expectedHeavyMods = new List<string> { "Double Carbamidomethylation", "GIST-Quat:2H(9) (N-term)" };
             AssertEx.AreEqualDeep(expectedStaticMods, ModNames(docModified.Settings.PeptideSettings.Modifications.StaticModifications));
-            AssertEx.AreEqualDeep(expectedHeavyMods, ModNames(Settings.Default.HeavyModList));
             AssertEx.AreEqualDeep(expectedHeavyMods, ModNames(docModified.Settings.PeptideSettings.Modifications.HeavyModifications));
 
-            // Make sure that Acetyl (T) and Carbamyl (K) are variable.
-            foreach (var mod in Settings.Default.StaticModList)
+            // Make sure that the proper modifications are variable.
+            foreach (var mod in docModified.Settings.PeptideSettings.Modifications.StaticModifications.Union(docModified.Settings.PeptideSettings.Modifications.HeavyModifications))
             {
-                if (mod.Name == "Carbamidomethyl (C)")
-                    Assert.IsFalse(mod.IsVariable);
-                else if (mod.Name == "Acetyl (T)" || mod.Name == "Carbamyl (K)")
-                    Assert.IsTrue(mod.IsVariable);
-                else
-                    Assert.Fail("Unexpected modification '{0}'", mod.Name);
+                switch (mod.Name)
+                {
+                    case "Carbamidomethyl (C)":
+                    case "Double Carbamidomethylation":
+                    case "GIST-Quat:2H(9) (N-term)":
+                        Assert.IsFalse(mod.IsVariable);
+                        break;
+                    case "Acetyl (T)":
+                    case "Carbamyl (K)":
+                        Assert.IsTrue(mod.IsVariable);
+                        break;
+                    default:
+                        Assert.Fail("Unexpected modification '{0}'", mod.Name);
+                        break;
+                }
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
@@ -169,9 +171,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestSkipWhenNoModifications()
         {
-            EmptyDocument();
-
-            RunUI(() => SkylineWindow.SaveDocument());
+            PrepareDocument("ImportPeptideSearchTest2.sky");
 
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -199,25 +199,54 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            // We should have skipped past the "Match Modifications" page of the wizard.
-            // Cancel out of wizard.
+            // We should have skipped past the "Match Modifications" page of the wizard onto the MS1 full scan settings page.
+            // Click next
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
-                importPeptideSearchDlg.ClickCancelButton();
+                importPeptideSearchDlg.ClickNextButton();
             });
 
+            // We're on the "Import FASTA" page of the wizard.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta"));
+            });
+
+            // Finish wizard and have empty proteins dialog come up. Only 1 out of the 10 proteins had a match.
+            var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(() => Assert.AreEqual(9, emptyProteinsDlg.EmptyProteins));
+
+            // Cancel empty proteins dialog.
+            var errorDlg = ShowDialog<MessageDlg>(emptyProteinsDlg.CancelDialog);
+            RunUI(errorDlg.OkDialog);
+
+            // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
+            FastaImporter.TestMaxEmptyPeptideGroupCount = 5;
+            var discardNotice = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(() =>
+            {
+                Assert.AreEqual(
+                    string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, 9),
+                    discardNotice.Message);
+                discardNotice.OkDialog();
+            });
+
+            // An error will appear because the spectrum file was empty.
+            errorDlg = ShowDialog<MessageDlg>(emptyProteinsDlg.OkDialog);
+            RunUI(errorDlg.OkDialog);
+            
             WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
-        private void EmptyDocument()
+        private void PrepareDocument(string documentFile)
         {
             RunUI(SkylineWindow.NewDocument);
-            RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
-                            doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
-            RunUI(() => SkylineWindow.SaveDocument(DocumentFile));
+            RunUI(() => SkylineWindow.ModifyDocument("Set default settings", doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(documentFile)));
         }
     }
 }

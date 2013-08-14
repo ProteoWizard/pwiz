@@ -65,7 +65,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private Library _docLib;
         private LibKeyModificationMatcher _matcher;
         private HashSet<StaticMod> _userDefinedTypedMods;
-        private IsotopeLabelType _docDefHeavyLabelType;
+        private IsotopeLabelType _defaultHeavyLabelType;
 
         public IEnumerable<string> CheckedModifications
         {
@@ -79,11 +79,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     modificationsListBox.SetItemChecked(i, false);
                     foreach (var mod in value)
-                        if (((ListBoxModification) modificationsListBox.Items[i]).Mod.Name == mod)
+                    {
+                        if (((ListBoxModification)modificationsListBox.Items[i]).Mod.Name == mod)
                         {
                             modificationsListBox.SetItemChecked(i, true);
                             break;
                         }
+                    }
                 }
             }
         }
@@ -121,18 +123,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void InitializeUserDefinedTypedMods()
         {
-            foreach (var type in SkylineWindow.Document.Settings.PeptideSettings.Modifications.GetModificationTypes())
+            var mods = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
+            foreach (var type in mods.GetModificationTypes())
             {
                 // Set the default heavy type to the first heavy type encountered.
-                if (!ReferenceEquals(type, IsotopeLabelType.light) && _docDefHeavyLabelType == null)
-                    _docDefHeavyLabelType = type;
-                foreach (StaticMod mod in SkylineWindow.Document.Settings.PeptideSettings.Modifications.GetModificationsByName(type.Name).Modifications.
-                         Where(m => !m.IsUserSet))
+                if (!ReferenceEquals(type, IsotopeLabelType.light) && _defaultHeavyLabelType == null)
+                    _defaultHeavyLabelType = type;
+
+                foreach (StaticMod mod in mods.GetModificationsByName(type.Name).Modifications.Where(m => !m.IsUserSet))
                     _userDefinedTypedMods.Add(mod);
             }
 
-            var staticMods = new TypedModifications(IsotopeLabelType.light, Settings.Default.StaticModList);
-            var heavyMods = new TypedModifications(_docDefHeavyLabelType, Settings.Default.HeavyModList);
+            var staticMods = new TypedModifications(IsotopeLabelType.light, mods.StaticModifications);
+            var heavyMods = new TypedModifications(_defaultHeavyLabelType, mods.GetModifications(_defaultHeavyLabelType));
 
             foreach (StaticMod mod in staticMods.Modifications.Union(heavyMods.Modifications))
                 _userDefinedTypedMods.Add(mod);
@@ -145,7 +148,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Get checked modifications
             var newStructuralMods = new List<StaticMod>();
-            var newHeavyMods = new List<TypedModifications> { new TypedModifications(IsotopeLabelType.heavy, new List<StaticMod>()) };
+            var newHeavyMods = new List<StaticMod>();
             PeptideModifications pepMods = _matcher.MatcherPepMods;
 
             // Find checked static mods
@@ -155,16 +158,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         newStructuralMods.Add(mod);
 
             // Find checked heavy mods
-            foreach (var mod in pepMods.GetModifications(_docDefHeavyLabelType))
+            foreach (var mod in pepMods.GetModifications(_defaultHeavyLabelType))
                 foreach (ListBoxModification checkedMod in modificationsListBox.CheckedItems)
                     if (mod.Equivalent(checkedMod.Mod))
-                        newHeavyMods.First().Modifications.Add(mod);
+                        newHeavyMods.Add(mod);
 
             // Update document modifications
-            _matcher.MatcherPepMods = new PeptideModifications(newStructuralMods, newHeavyMods);
+            _matcher.MatcherPepMods = new PeptideModifications(newStructuralMods, new[] {new TypedModifications(IsotopeLabelType.heavy, newHeavyMods)} );
             SrmSettings newSettings = SkylineWindow.Document.Settings.ChangePeptideModifications(
                 mods => _matcher.SafeMergeImplicitMods(SkylineWindow.Document));
-            SkylineWindow.ChangeSettings(newSettings, true, "Add checked modifications");
+            SkylineWindow.ChangeSettings(newSettings, true, Resources.MatchModificationsControl_AddCheckedModifications_Add_checked_modifications);
             SkylineWindow.Document.Settings.UpdateDefaultModifications(false);
         }
 
@@ -186,7 +189,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             unmatchedListBox.Items.Clear();
 
             PeptideModifications pepMods = _matcher.MatcherPepMods;
-            IEnumerable<StaticMod> allMods = pepMods.StaticModifications.Union(pepMods.GetModifications(_docDefHeavyLabelType));
+            IEnumerable<StaticMod> allMods = pepMods.StaticModifications.Union(pepMods.GetModifications(_defaultHeavyLabelType));
             foreach (var mod in allMods)
             {
                 bool skipThis = false;
@@ -208,17 +211,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 unmatchedListBox.Items.Add(uninterpretedMod);
         }
 
-        private void btnAddModification_Click(object sender, System.EventArgs e)
+        private void btnAddModification_Click(object sender, EventArgs e)
         {
-            menuAddModification.Show(this, btnAddModification.Left, btnAddModification.Bottom + 1);
+            menuAddModification.Show(btnAddModification, 0, btnAddModification.Height + 1);
         }
 
-        private void menuItemAddStructuralModification_Click(object sender, System.EventArgs e)
+        private void menuItemAddStructuralModification_Click(object sender, EventArgs e)
         {
             AddModification(ModType.structural);
         }
 
-        private void menuItemAddHeavyModification_Click(object sender, System.EventArgs e)
+        private void menuItemAddHeavyModification_Click(object sender, EventArgs e)
         {
             AddModification(ModType.heavy);
         }
@@ -239,7 +242,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                      : newPeptideSettings.ChangeModifications(newPeptideSettings.Modifications.ChangeHeavyModifications(newMods));
 
             SkylineWindow.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideSettings(newPeptideSettings), true,
-                string.Format("Add {0} modification {1}", type.ToString(), mod.Name));
+                string.Format(Resources.MatchModificationsControl_AddModification_Add__0__modification__1_, type.ToString(), mod.Name));
             SkylineWindow.Document.Settings.UpdateDefaultModifications(false);
 
             FillLists();

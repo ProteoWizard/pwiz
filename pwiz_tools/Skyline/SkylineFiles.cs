@@ -30,6 +30,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -1073,9 +1074,8 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this,
-                                string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
-                                              fastaFile, x.Message));
+                MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
+                                                    fastaFile, x.Message));
             }
         }
 
@@ -1123,11 +1123,12 @@ namespace pwiz.Skyline
             }
 
             SrmDocument docNew = null;
+            int emptyPeptideGroups = 0;
             using (var longWaitDlg = new LongWaitDlg(this) { Text = description })
             {
                 IdentityPath nextAdded;
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                           docNew = docCurrent.ImportFasta(reader, longWaitBroker, lineCount, matcher, to, out selectPath, out nextAdded));
+                    docNew = docCurrent.ImportFasta(reader, longWaitBroker, lineCount, matcher, to, out selectPath, out nextAdded, out emptyPeptideGroups));
 
                 if (docNew == null)
                     return;
@@ -1140,37 +1141,19 @@ namespace pwiz.Skyline
             }
 
             // If importing the FASTA produced any childless proteins
-            int countEmpty = docNew.PeptideGroups.Count(nodePepGroup => nodePepGroup.Children.Count == 0);
-            if (countEmpty > 0)
-            {
-                int countEmptyCurrent = docCurrent.PeptideGroups.Count(nodePepGroup => nodePepGroup.Children.Count == 0);
-                if (countEmpty > countEmptyCurrent)
-                {
-                    using (var dlg = new EmptyProteinsDlg(countEmpty - countEmptyCurrent))
-                    {
-                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                            return;
-                        // Remove all empty proteins, if requested by the user.
-                        if (!dlg.IsKeepEmptyProteins)
-                        {
-                            docNew = new RefinementSettings {MinPeptidesPerProtein = 1}.Refine(docNew);
-                            // This may result in no change from the original, if all proteins were empty
-                            if (Equals(docNew, docCurrent))
-                                return;
+            docNew = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, docNew);
+            if (docNew == null || Equals(docCurrent, docNew))
+                return;
 
-                            selectPath = null;
-                            var enumGroupsCurrent = docCurrent.PeptideGroups.GetEnumerator();
-                            foreach (PeptideGroupDocNode nodePepGroup in docNew.PeptideGroups)
-                            {
-                                if (enumGroupsCurrent.MoveNext() &&
-                                    !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
-                                {
-                                    selectPath = new IdentityPath(nodePepGroup.Id);
-                                    break;
-                                }
-                            }
-                        }
-                    }
+            selectPath = null;
+            var enumGroupsCurrent = docCurrent.PeptideGroups.GetEnumerator();
+            foreach (PeptideGroupDocNode nodePepGroup in docNew.PeptideGroups)
+            {
+                if (enumGroupsCurrent.MoveNext() &&
+                    !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                {
+                    selectPath = new IdentityPath(nodePepGroup.Id);
+                    break;
                 }
             }
 
