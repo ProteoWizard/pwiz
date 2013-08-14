@@ -238,17 +238,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (!_fastaFile)
                 {
                     // Import FASTA as content
+                    var docCurrent = SkylineWindow.Document;
+                    var docNew = docCurrent;
+                    int emptyPeptideGroups;
+
+                    docNew = ImportFastaHelper.AddFasta(docNew, ref selectedPath, out emptyPeptideGroups);
+                    if (docNew == null)
+                        return false;
+                    docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, emptyPeptideGroups, docNew);
+                    if (docNew == null)
+                        return false;
+
                     SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
-                        {
-                            int emptyPeptideGroups;
-                            var newDocument = ImportFastaHelper.AddFasta(doc, ref selectedPath, out emptyPeptideGroups);
-                            if (newDocument == null)
-                                return doc;
-                            newDocument = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, emptyPeptideGroups, newDocument);
-                            if (newDocument == null)
-                                return doc;
-                            return newDocument;
-                        });
+                    {
+                        if (!ReferenceEquals(doc, docCurrent))
+                            throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                        return docNew;
+                    });
                 }
                 else
                 {
@@ -266,10 +272,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                                 {
                                     IdentityPath nextAdd;
-                                    docNew = docNew.AddPeptideGroups(importer.Import(reader, longWaitBroker, Helpers.CountLinesInFile(fastaPath)), false, to, out selectedPath, out nextAdd);
-                                    docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, importer.EmptyPeptideGroupCount, docNew);
+                                    docNew = docCurrent.AddPeptideGroups(importer.Import(reader, longWaitBroker, Helpers.CountLinesInFile(fastaPath)), false, to, out selectedPath, out nextAdd);
                                 });
                         }
+                        docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, importer.EmptyPeptideGroupCount, docNew);
                         if (docNew == null)
                             return false;
                     }

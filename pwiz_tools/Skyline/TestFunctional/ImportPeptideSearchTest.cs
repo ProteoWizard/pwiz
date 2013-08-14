@@ -215,12 +215,13 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Finish wizard and have empty proteins dialog come up. Only 1 out of the 10 proteins had a match.
+            // Cancel the empty proteins dialog.
             var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            RunUI(() => Assert.AreEqual(9, emptyProteinsDlg.EmptyProteins));
-
-            // Cancel empty proteins dialog.
-            var errorDlg = ShowDialog<MessageDlg>(emptyProteinsDlg.CancelDialog);
-            RunUI(errorDlg.OkDialog);
+            RunUI(() =>
+            {
+                Assert.AreEqual(9, emptyProteinsDlg.EmptyProteins);
+                emptyProteinsDlg.CancelDialog();
+            });
 
             // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
             FastaImporter.TestMaxEmptyPeptideGroupCount = 5;
@@ -234,7 +235,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // An error will appear because the spectrum file was empty.
-            errorDlg = ShowDialog<MessageDlg>(emptyProteinsDlg.OkDialog);
+            var errorDlg = WaitForOpenForm<MessageDlg>();
             RunUI(errorDlg.OkDialog);
             
             WaitForClosedForm(importPeptideSearchDlg);
