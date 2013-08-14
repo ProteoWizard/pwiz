@@ -75,11 +75,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             return info.TransitionAreas.ToArray();
         }
 
-        private static IList<T> ListBeans<T>(IQuery query)
-        {
-            return query.SetResultTransformer(new AliasToBeanResultTransformer(typeof (T))).List<T>();
-        }
-
         protected override LibraryChromGroup ReadChromatogram(ChromLibSpectrumInfo info)
         {
             using (var session = _pooledSessionFactory.Connection.OpenSession())
@@ -219,7 +214,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         var id = (int) row[0];
                         var modifiedSequence = (string) row[1];
                         int charge = (int) row[2];
-                        double totalArea = (double) row[3];
+                        double totalArea = Convert.ToDouble(row[3]);
                         var libKey = new LibKey(SequenceMassCalc.NormalizeModifiedSequence(modifiedSequence), charge);
                         IList<SpectrumPeaksInfo.MI> transitionAreas;
                         allTransitionAreas.TryGetValue(id, out transitionAreas);
@@ -244,14 +239,14 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         {
             var allPeakAreas = new Dictionary<int, IList<SpectrumPeaksInfo.MI>>();
             var query =
-                session.CreateQuery("SELECT T.Precursor as First, T.Mz as Second, T.Area as Third FROM " + typeof(Data.Transition) + " T");
-            var rows = ListBeans<NHibernate.Linq.Tuple<Precursor, double, double>>(query);
-            var rowsLookup = rows.ToLookup(tuple => tuple.First);
+                session.CreateQuery("SELECT T.Precursor.Id as First, T.Mz, T.Area FROM " + typeof(Data.Transition) + " T");
+            var rows = query.List<object[]>();
+            var rowsLookup = rows.ToLookup(row => (int) (row[0]));
             foreach (var grouping in rowsLookup)
             {
                 var mis = ImmutableList.ValueOf(grouping.Select(row 
-                    => new SpectrumPeaksInfo.MI{Mz = row.Second, Intensity = (float) row.Third}));
-                allPeakAreas.Add(grouping.Key.Id, mis);
+                    => new SpectrumPeaksInfo.MI{Mz = Convert.ToDouble(row[1]), Intensity = Convert.ToSingle(row[2])}));
+                allPeakAreas.Add(grouping.Key, mis);
             }
             return allPeakAreas;
         }
