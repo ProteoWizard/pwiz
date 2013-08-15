@@ -5791,4 +5791,10 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_" xml:space="preserve">
     <value>Unknown error installing packages. Tool Installation Failed.</value>
   </data>
+  <data name="ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip" xml:space="preserve">
+    <value>Error: There is a file missing the {0}.zip</value>
+  </data>
+  <data name="ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_" xml:space="preserve">
+    <value>Tool Uses R and specifies Packages without an {0} file in the tool-inf directory.</value>
+  </data>
 </root>

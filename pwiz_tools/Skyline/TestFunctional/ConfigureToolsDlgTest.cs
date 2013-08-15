@@ -85,23 +85,23 @@ namespace pwiz.SkylineTestFunctional
         {
             public FakeWebHelper()
             {
-                _openLinkCalled = false;
-                _httpPostCalled = false;
+                OpenLinkCalled = false;
+                HttpPostCalled = false;
             }
 
-            public bool _openLinkCalled { get; set; }
-            public bool _httpPostCalled { get; set; }
+            public bool OpenLinkCalled { get; private set; }
+            public bool HttpPostCalled { get; private set; }
             
             #region Implementation of IWebHelpers
 
             public void OpenLink(string link)
             {
-                _openLinkCalled = true;
+                OpenLinkCalled = true;
             }
 
             public void PostToLink(string link, string postData)
             {
-                _httpPostCalled = true;
+                HttpPostCalled = true;
             }
 
             #endregion
@@ -146,14 +146,14 @@ namespace pwiz.SkylineTestFunctional
                     Settings.Default.ToolList[1].WebHelpers = fakeWebHelper;
 
                     SkylineWindow.PopulateToolsMenu();
-                    Assert.IsFalse(fakeWebHelper._openLinkCalled);
+                    Assert.IsFalse(fakeWebHelper.OpenLinkCalled);
                     SkylineWindow.RunTool(0);
-                    Assert.IsTrue(fakeWebHelper._openLinkCalled);
-                    Assert.IsFalse((fakeWebHelper._httpPostCalled));
+                    Assert.IsTrue(fakeWebHelper.OpenLinkCalled);
+                    Assert.IsFalse((fakeWebHelper.HttpPostCalled));
                     SkylineWindow.RunTool(1);
                 });
             // The post now happens on a background thread, since report export can take a long time
-            WaitForCondition(() => fakeWebHelper._httpPostCalled);
+            WaitForCondition(() => fakeWebHelper.HttpPostCalled);
             RunUI(() =>
                 {
                     // Remove all tools
@@ -283,12 +283,12 @@ namespace pwiz.SkylineTestFunctional
                 configureToolsDlg.RemoveAllTools();
                 configureToolsDlg.AddDialog(EXAMPLE, EXAMPLE_EXE, _empty, _empty);
                 Assert.AreEqual(_empty, configureToolsDlg.textArguments.Text);
-                configureToolsDlg.ClickMacro(configureToolsDlg._macroListArguments, 0);
-                string shortText = configureToolsDlg._macroListArguments[0].ShortText; 
+                configureToolsDlg.ClickMacro(configureToolsDlg.MacroListArguments, 0);
+                string shortText = configureToolsDlg.MacroListArguments[0].ShortText; 
                 Assert.AreEqual(shortText, configureToolsDlg.textArguments.Text);
                 Assert.AreEqual(_empty, configureToolsDlg.textInitialDirectory.Text); 
-                string shortText2 = configureToolsDlg._macroListInitialDirectory[0].ShortText; 
-                configureToolsDlg.ClickMacro(configureToolsDlg._macroListInitialDirectory, 0);
+                string shortText2 = configureToolsDlg.MacroListInitialDirectory[0].ShortText; 
+                configureToolsDlg.ClickMacro(configureToolsDlg.MacroListInitialDirectory, 0);
                 Assert.AreEqual(shortText2, configureToolsDlg.textInitialDirectory.Text);
                 configureToolsDlg.Remove();
                 configureToolsDlg.OkDialog();

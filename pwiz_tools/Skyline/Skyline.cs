@@ -3554,7 +3554,7 @@ namespace pwiz.Skyline
                     
                     using (var dlg = new RInstaller(programPathContainer, PackagesToInstall, _skylineTextBoxStreamWriterHelper, pathToPackageInstallScript))
                     {
-                        DialogResult result = dlg.ShowDialog(this);
+                        var result = dlg.ShowDialog(this);
                         if (result == DialogResult.Cancel || result == DialogResult.No)
                             return null;
                     }
@@ -3572,8 +3572,7 @@ namespace pwiz.Skyline
                     
                     using (var dlg = new PythonInstaller(programPathContainer, packages, _skylineTextBoxStreamWriterHelper))
                     {
-                        DialogResult result = dlg.ShowDialog(this);
-                        if (result == DialogResult.Cancel)
+                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
                             return null;
                     }
                 }

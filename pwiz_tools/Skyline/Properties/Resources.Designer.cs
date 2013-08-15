@@ -14871,6 +14871,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: There is a file missing the {0}.zip.
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The selected zip file is not a valid installable tool..
         /// </summary>
         public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_ {
@@ -14886,6 +14895,16 @@ namespace pwiz.Skyline.Properties {
         public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_ {
             get {
                 return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tool Uses R and specifies Packages without an {0} file in the tool-inf directory..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__fil" +
+                        "e_in_the_tool_inf_directory_", resourceCulture);
             }
         }
         

@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     // bypass the R installer dialogue
-                    configureToolsDlg.TestFindProgramPath = (container, collection) => @"FakeDirectory\R.exe"; // Not L10N
+                    configureToolsDlg.TestFindProgramPath = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
 
                     configureToolsDlg.UnpackZipTool(GetTestPath(@"QuaSAR.zip")); // Not L10N
                     var installedQuaSAR = configureToolsDlg.ToolList[0];

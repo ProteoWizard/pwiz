@@ -297,7 +297,7 @@ namespace pwiz.SkylineTestFunctional
                 // R Installation
                 rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient { DownloadSuccess = true, CancelDownload = false};
                 // Package Installation
-                rInstaller.packageInstallHelpers = new TestPackageInstallationHelper {PackagesToInstall = missingPackages ?? new List<string>(), RProgramPath = "testPath.exe", InternetConnectionDoesNotExists = cutoffInternet};
+                rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper {PackagesToInstall = missingPackages ?? new List<string>(), RProgramPath = "testPath.exe", InternetConnectionDoesNotExists = cutoffInternet};
                 rInstaller.TestNamePipeRunProcessWrapper = new TestNamedPipeRunProcess {stringToWriteToWriter = stringToWrite, ExitCode = packageInstallerExitCode, UserOkRunAsAdministrator = okAdminPrivledges, ConnectSuccess = connectionSuccess};
             });
             return rInstaller;
@@ -311,7 +311,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(() =>
                 {
-                    rInstaller.packageInstallHelpers = new TestPackageInstallationHelper {PackagesToInstall = new List<string>()};
+                    rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper {PackagesToInstall = new List<string>()};
                     rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
                         {
                             CancelDownload = false,

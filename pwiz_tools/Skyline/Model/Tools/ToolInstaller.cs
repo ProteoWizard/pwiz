@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model.Tools
         #endregion //Accessors
     }
 
-    public class ToolInstaller
+    public static class ToolInstaller
     {
         private const string TOOL_INF = "tool-inf";                    //Not L10N
         private const string INFO_PROPERTIES = "info.properties";      //Not L10N
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model.Tools
         public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip,
                                                                Func<List<AnnotationDef>, bool?> shouldOverwriteAnnotations,
                                                                Func<string, string, List<ReportSpec>, string, string, bool?> shouldOverwrite,
-                                                               Func<ProgramPathContainer, ICollection<string>,string, string> installProgram)
+                                                               Func<ProgramPathContainer, ICollection<string>, string, string> installProgram)
         {
             //Removes any old folders that dont have Tools associated with them
             CheckToolDirConsistency();
@@ -348,9 +348,9 @@ namespace pwiz.Skyline.Model.Tools
                             pathToPackageInstallScript = Path.Combine(tempToolPath, TOOL_INF, INSTALL_R_PACKAGES);
                             if (!File.Exists(pathToPackageInstallScript))
                             {
-                                throw new MessageException(TextUtil.LineSeparate(string.Format("Error: There is a file missing the {0}.zip", name),
+                                throw new MessageException(TextUtil.LineSeparate(string.Format(Resources.ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip, name),
                                                                         string.Empty,
-                                                                        string.Format("Tool Uses R and specifies Packages without an {0} file in the tool-inf directory.", INSTALL_R_PACKAGES)));
+                                                                        string.Format(Resources.ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_, INSTALL_R_PACKAGES)));
                             }
                         }
 

@@ -208,13 +208,13 @@ namespace pwiz.Skyline.ToolsUI
             if (PackagesToInstall.Count == 0)
                 return;
 
-            if (!packageInstallHelpers.CheckForInternetConnection())
+            if (!PackageInstallHelpers.CheckForInternetConnection())
             {
                 throw new MessageException(
                     TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Error__No_internet_connection_,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
             }
 
-            string programPath = packageInstallHelpers.FindRProgramPath(_version);
+            string programPath = PackageInstallHelpers.FindRProgramPath(_version);
             var argumentBuilder = new StringBuilder();
             argumentBuilder.Append("/C ").Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
             try
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
 
                 //Check for packages again. 
-                var failedPackages = packageInstallHelpers.WhichPackagesToInstall(PackagesToInstall, programPath);
+                var failedPackages = PackageInstallHelpers.WhichPackagesToInstall(PackagesToInstall, programPath);
                 if (failedPackages.Count != 0)
                 {
                     _writer.WriteLine(output);
@@ -276,7 +276,7 @@ namespace pwiz.Skyline.ToolsUI
             bool CheckForInternetConnection();
         } 
 
-        public IPackageInstallHelpers packageInstallHelpers
+        public IPackageInstallHelpers PackageInstallHelpers
         {
             get { return _packageInstallHelpers ?? (_packageInstallHelpers = new PackageInstallHelpers()); }
             set { _packageInstallHelpers = value; }

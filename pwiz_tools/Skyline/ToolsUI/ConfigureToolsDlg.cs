@@ -744,20 +744,20 @@ namespace pwiz.Skyline.ToolsUI
 
         #region Macros
 
-        public List<MacroMenuItem> _macroListArguments = new List<MacroMenuItem>();
-        public List<MacroMenuItem> _macroListInitialDirectory = new List<MacroMenuItem>();
+        public readonly List<MacroMenuItem> MacroListArguments = new List<MacroMenuItem>();
+        public readonly List<MacroMenuItem> MacroListInitialDirectory = new List<MacroMenuItem>();
 
         private void PopulateMacroList()
         {
             // Populate _macroListArguments.
             foreach (Macro macro in ToolMacros._listArguments)
             {
-                _macroListArguments.Add(new MacroMenuItem(macro, textArguments, true));
+                MacroListArguments.Add(new MacroMenuItem(macro, textArguments, true));
             }
             // Populate _macroListInitialDirectory.
             foreach (Macro macro in ToolMacros._listInitialDirectory)
             {
-                _macroListInitialDirectory.Add(new MacroMenuItem(macro, textInitialDirectory, false));
+                MacroListInitialDirectory.Add(new MacroMenuItem(macro, textInitialDirectory, false));
             }            
         }
         
@@ -825,7 +825,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public void btnArgumentsOpen()
         {
-            PopulateMacroDropdown(_macroListArguments, contextMenuMacroArguments);
+            PopulateMacroDropdown(MacroListArguments, contextMenuMacroArguments);
             contextMenuMacroArguments.Items.Insert(4, new ToolStripSeparator());
             contextMenuMacroArguments.Items.Insert(9, new ToolStripSeparator());
             contextMenuMacroArguments.Show(btnArguments, new Point(btnArguments.Width, 0));
@@ -834,12 +834,12 @@ namespace pwiz.Skyline.ToolsUI
         //For Functional Testing.
         public void PopulateListMacroArguments()
         {
-            PopulateMacroDropdown(_macroListArguments, contextMenuMacroArguments);
+            PopulateMacroDropdown(MacroListArguments, contextMenuMacroArguments);
         }
 
         public string GetMacroArgumentToolTip(string s)
         {
-            foreach (MacroMenuItem menuItem in _macroListArguments)
+            foreach (MacroMenuItem menuItem in MacroListArguments)
             {
                 if (menuItem != null && menuItem.Text == s)
                     return menuItem.ToolTipText;
@@ -857,7 +857,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public void btnInitialDirectoryOpen()
         {            
-            PopulateMacroDropdown(_macroListInitialDirectory, contextMenuMacroInitialDirectory);
+            PopulateMacroDropdown(MacroListInitialDirectory, contextMenuMacroInitialDirectory);
             contextMenuMacroInitialDirectory.Show(btnInitialDirectoryMacros, new Point(btnInitialDirectoryMacros.Width, 0));
         }
 
@@ -950,9 +950,8 @@ namespace pwiz.Skyline.ToolsUI
 
                 using (var dlg = new OpenFileDialog
                     {
-                        Filter =
-                            TextUtil.FileDialogFiltersAll(
-                                TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
+                        Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                            Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
                         Multiselect = false
                     })
                 {
@@ -969,7 +968,6 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        
         /// <summary>
         /// Copy a zip file's contents to the tools folder and loop through its .properties
         /// files adding the tools to the tools menu.
@@ -980,7 +978,8 @@ namespace pwiz.Skyline.ToolsUI
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
-                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel, SkylineWindowParent.InstallProgram);
+                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel,
+                    TestFindProgramPath ?? SkylineWindowParent.InstallProgram);
             }
             catch (MessageException x)
             {
@@ -1082,7 +1081,7 @@ namespace pwiz.Skyline.ToolsUI
             get { return ToolList[listTools.SelectedIndex]; }
         }
 
-        public Func<ProgramPathContainer, ICollection<string>, string> TestFindProgramPath { get; set; }
+        public Func<ProgramPathContainer, ICollection<string>, string, string> TestFindProgramPath { get; set; }
 
         #endregion
 
