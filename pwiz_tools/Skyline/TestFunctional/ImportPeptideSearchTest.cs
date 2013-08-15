@@ -31,10 +31,10 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ImportPeptideSearchModificationsTest : AbstractFunctionalTest
+    public class ImportPeptideSearchTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestImportPeptideSearchModifications()
+        public void TestImportPeptideSearch()
         {
             TestFilesZip = @"TestFunctional\ImportPeptideSearchTest.zip";
             RunFunctionalTest();
@@ -218,7 +218,6 @@ namespace pwiz.SkylineTestFunctional
             // Finish wizard and have empty proteins dialog come up. Only 1 out of the 10 proteins had a match.
             // Cancel the empty proteins dialog.
             var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            doc = WaitForDocumentChange(doc);
             RunUI(() =>
             {
                 Assert.AreEqual(9, emptyProteinsDlg.EmptyProteins);

@@ -218,50 +218,34 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 // If the user is about to add any new transitions by importing
                 // FASTA, set FragmentType='p' and AutoSelect=true
-                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Change_settings, doc =>
-                    {
-                        // First preserve the state of existing document nodes in the tree
-                        // Todo: There are better ways to do this than this brute force method; revisit later.
-                        if (doc.PeptideGroupCount > 0)
-                            doc = ChangeAutoManageChildren(doc, PickLevel.all, false);
-                        doc = SwitchToPrecursorTransitions(doc);
-                        doc = AutoSelectAllMatchingTransitions(doc);
-                        var pick = doc.Settings.PeptideSettings.Libraries.Pick;
-                        if (pick != PeptidePick.library && pick != PeptidePick.both)
-                            doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.library)));
-                        return doc;
-                    });
+                var docCurrent = SkylineWindow.Document;
+                var docNew = docCurrent;
+                // First preserve the state of existing document nodes in the tree
+                // Todo: There are better ways to do this than this brute force method; revisit later.
+                if (docNew.PeptideGroupCount > 0)
+                    docNew = ChangeAutoManageChildren(docNew, PickLevel.all, false);
+                docNew = SwitchToPrecursorTransitions(docNew);
+                docNew = AutoSelectAllMatchingTransitions(docNew);
+                var pick = docNew.Settings.PeptideSettings.Libraries.Pick;
+                if (pick != PeptidePick.library && pick != PeptidePick.both)
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.library)));
 
                 var nodeInsert = SkylineWindow.SequenceTree.SelectedNode as SrmTreeNode;
                 IdentityPath selectedPath = nodeInsert != null ? nodeInsert.Path : null;
+                int emptyPeptideGroups;
 
                 if (!_fastaFile)
                 {
                     // Import FASTA as content
-                    var docCurrent = SkylineWindow.Document;
-                    var docNew = docCurrent;
-                    int emptyPeptideGroups;
-
                     docNew = ImportFastaHelper.AddFasta(docNew, ref selectedPath, out emptyPeptideGroups);
+                    // Document will be null if there was an error
                     if (docNew == null)
                         return false;
-                    docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, emptyPeptideGroups, docNew);
-                    if (docNew == null)
-                        return false;
-
-                    SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
-                    {
-                        if (!ReferenceEquals(doc, docCurrent))
-                            throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
-                        return docNew;
-                    });
                 }
                 else
                 {
                     // Import FASTA as file
-                    var importer = new FastaImporter(SkylineWindow.Document, false);
-                    var docCurrent = SkylineWindow.Document;
-                    var docNew = docCurrent;
+                    var importer = new FastaImporter(docNew, false);
                     var fastaPath = tbxFasta.Text;
                     try
                     {
@@ -269,15 +253,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         using (var longWaitDlg = new LongWaitDlg(SkylineWindow) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
                         {
                             IdentityPath to = selectedPath;
+                            var docImportFasta = docNew;
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                                 {
                                     IdentityPath nextAdd;
-                                    docNew = docCurrent.AddPeptideGroups(importer.Import(reader, longWaitBroker, Helpers.CountLinesInFile(fastaPath)), false, to, out selectedPath, out nextAdd);
+                                    docImportFasta = docImportFasta.AddPeptideGroups(importer.Import(reader, longWaitBroker, Helpers.CountLinesInFile(fastaPath)), false, to, out selectedPath, out nextAdd);
                                 });
+                            docNew = docImportFasta;
                         }
-                        docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, importer.EmptyPeptideGroupCount, docNew);
-                        if (docNew == null)
-                            return false;
+                        emptyPeptideGroups = importer.EmptyPeptideGroupCount;
                     }
                     catch (Exception x)
                     {
@@ -285,14 +269,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                                             fastaPath, x.Message));
                         return false;
                     }
-
-                    SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
-                        {
-                            if (!ReferenceEquals(doc, docCurrent))
-                                throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
-                            return docNew;
-                        });
                 }
+                
+                // Check for empty proteins
+                docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, emptyPeptideGroups, docNew);
+                // Document will be null if user was given option to keep or remove empty proteins and pressed cancel
+                if (docNew == null)
+                    return false;
+
+                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
+                {
+                    if (!ReferenceEquals(doc, docCurrent))
+                        throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    return docNew;
+                });
 
                 if (!VerifyAtLeastOnePrecursorTransition(SkylineWindow.Document))
                     return false;
