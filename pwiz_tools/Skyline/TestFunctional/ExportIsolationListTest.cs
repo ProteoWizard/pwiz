@@ -64,8 +64,8 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentUnscheduledDda.csv",
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.None, ExportMethodType.Standard,
                 AgilentIsolationListExporter.GetDdaHeader(_fieldSeparator),
-                FieldSeparate("True", 582.318971, 20, 2, "Preferred", 0, "", isolationWidth, 20.4),
-                FieldSeparate("True", 444.55002, 20, 3, "Preferred", 0, "", isolationWidth, 19.2));
+                FieldSeparate("True", 582.318971, 20, 2, "Preferred", 0, string.Empty, isolationWidth, 20.4),
+                FieldSeparate("True", 444.55002, 20, 3, "Preferred", 0, string.Empty, isolationWidth, 19.2));
 
             // Export Agilent scheduled DDA list.
             ExportIsolationList(
@@ -76,52 +76,53 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate("True", 444.55002, 20, 3, "Preferred", 39.900, 2, isolationWidth, 19.2));
 
             // Export Thermo unscheduled DDA list.
+            const double nce = ThermoQExactiveIsolationListExporter.NARROW_NCE;
             ExportIsolationList(
                 "ThermoUnscheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Standard,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, "Positive", "", "", 20.4, 2, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, "Positive", "", "", 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", string.Empty, string.Empty, nce, "LVNELTEFAK (light)"),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", string.Empty, string.Empty, nce, "IKNLQS[+80.0]LDPSH (light)"));
 
             // Export Thermo scheduled DDA list.
             ExportIsolationList(
                 "ThermoScheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, "Positive", 45.79, 47.79, 20.4, 2, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, "Positive", 38.9, 40.90, 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", 45.79, 47.79, nce, "LVNELTEFAK (light)"),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", 38.9, 40.90, nce, "IKNLQS[+80.0]LDPSH (light)"));
 
             // Export Agilent unscheduled Targeted list.
             ExportIsolationList(
                 "AgilentUnscheduledTargeted.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 AgilentIsolationListExporter.GetTargetedHeader(_fieldSeparator),
-                FieldSeparate("True", 582.318971, 2, 0, "", isolationWidth, 20.4, ""),
-                FieldSeparate("True", 444.55002, 3, 0, "", isolationWidth, 19.2, ""));
+                FieldSeparate("True", 582.318971, 2, 0, string.Empty, isolationWidth, 20.4, string.Empty),
+                FieldSeparate("True", 444.55002, 3, 0, string.Empty, isolationWidth, 19.2, string.Empty));
 
             // Export Agilent scheduled Targeted list.
             ExportIsolationList(
                 "AgilentScheduledTargeted.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetTargetedHeader(_fieldSeparator),
-                FieldSeparate("True", 582.318971, 2, 46.790, 2, isolationWidth, 20.4, ""),
-                FieldSeparate("True", 444.55002, 3, 39.900, 2, isolationWidth, 19.2, ""));
+                FieldSeparate("True", 582.318971, 2, 46.790, 2, isolationWidth, 20.4, string.Empty),
+                FieldSeparate("True", 444.55002, 3, 39.900, 2, isolationWidth, 19.2, string.Empty));
 
             // Export Thermo unscheduled Targeted list.
             ExportIsolationList(
                 "ThermoUnscheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, "Positive", "", "", 20.4, 2, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, "Positive", "", "", 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", string.Empty, string.Empty, nce, "LVNELTEFAK (light)"),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", string.Empty, string.Empty, nce, "IKNLQS[+80.0]LDPSH (light)"));
 
             // Export Thermo scheduled Targeted list.
             ExportIsolationList(
                 "ThermoScheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, "Positive", 45.79, 47.79, 20.4, 2, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, "Positive", 38.9, 40.90, 19.2, 3, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", 45.79, 47.79, nce, "LVNELTEFAK (light)"),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", 38.9, 40.90, nce, "IKNLQS[+80.0]LDPSH (light)"));
 
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);

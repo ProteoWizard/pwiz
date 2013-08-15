@@ -768,9 +768,6 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromPeak : ISummaryPeakData
     {
-// ReSharper disable InconsistentNaming
-// ReSharper restore InconsistentNaming
-
         [Flags]
         public enum FlagValues
         {
@@ -788,7 +785,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
 // ReSharper disable InconsistentNaming
-        public static ChromPeak EMPTY;
+// ReSharper disable UnassignedField.Global
+        public static ChromPeak EMPTY;  // Zero filled struct
+// ReSharper restore UnassignedField.Global
 // ReSharper restore InconsistentNaming
 
         // Set default block size for BlockedArray<ChromPeak>
@@ -868,8 +867,12 @@ namespace pwiz.Skyline.Model.Results
                     totalIntensity += intensity;
                     massError += (massErrorLocal - massError)*intensity/totalIntensity;
                 }
-                flags |= FlagValues.mass_error_known;
-                FlagBits = ((uint) To10x(massError)) << 16;
+                // Only if intensity exceded the background at least once
+                if (totalIntensity > 0)
+                {
+                    flags |= FlagValues.mass_error_known;
+                    FlagBits = ((uint)To10x(massError)) << 16;
+                }
             }
             FlagBits |= (uint) flags;
         }
@@ -1121,7 +1124,7 @@ namespace pwiz.Skyline.Model.Results
     /// to the chromatogram cache file.
     /// The second method takes the string representation and parses the instrument information.
     /// </summary>
-    public sealed class InstrumentInfoUtil
+    public static class InstrumentInfoUtil
     {
         // Not L10N: Used for cache and testing
         public const string MODEL = "MODEL:";

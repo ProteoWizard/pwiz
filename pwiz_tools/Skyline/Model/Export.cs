@@ -1731,6 +1731,9 @@ namespace pwiz.Skyline.Model
 
     public class ThermoQExactiveIsolationListExporter : ThermoMassListExporter
     {
+        public const double NARROW_NCE = 27.0;
+        public const double WIDE_NCE = 30.0;
+
         public ThermoQExactiveIsolationListExporter(SrmDocument document)
             : base(document)
         {
@@ -1757,7 +1760,7 @@ namespace pwiz.Skyline.Model
 
         public static string GetHeader(char fieldSeparator)
         {
-            return "Mass [m/z],Polarity,Start [min],End [min],nCE,CS [z],Comment".Replace(',', fieldSeparator); // Not L10N
+            return "Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE,Comment".Replace(',', fieldSeparator); // Not L10N
         }
 
         protected override void WriteTransition(TextWriter writer,
@@ -1787,13 +1790,25 @@ namespace pwiz.Skyline.Model
             }
 
             string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);
-            string collisionEnergy = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
-
+            // Note that this is normalized CE (not absolute)
+            var fullScan = Document.Settings.TransitionSettings.FullScan;
+            bool wideWindowDia = false;
+            if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme != null)
+            {
+                // Suggested by Thermo to use 27 for normal isolation ranges and 30 for wider windows
+                var scheme = fullScan.IsolationScheme;
+                if (!scheme.FromResults && !scheme.IsAllIons)
+                {
+                    wideWindowDia = scheme.PrespecifiedIsolationWindows.Average(
+                        iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
+                }
+            }
+            string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
             string comment = string.Format("{0} ({1})", // Not L10N
                                            Document.Settings.GetModifiedSequence(nodePep),
                                            nodeTranGroup.TransitionGroup.LabelType);
 
-            Write(writer, precursorMz, "Positive", start, end, collisionEnergy, z, comment); // Not L10N
+            Write(writer, precursorMz, string.Empty, string.Empty, z, "Positive", start, end, collisionEnergy, comment); // Not L10N
         }
     }
 
