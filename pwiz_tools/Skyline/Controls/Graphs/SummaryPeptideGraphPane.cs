@@ -114,11 +114,20 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphData = CreateGraphData(document, selectedProtein, selectedGroup, displayType);
 
             int iColor = 0;
+            int colorOffset = 0;
+            if(selectedGroup != null && displayType == DisplayTypeChrom.products)
+            {
+                // If we are only displaying product ions, we want to use an offset in the colors array
+                // so that we do not re-use colors that would be used for any precursor ions.
+                colorOffset =
+                   GraphChromatogram.GetDisplayTransitions(selectedGroup, DisplayTypeChrom.precursors).Count();    
+            }
+
             foreach (var pointPairList in _graphData.PointPairLists)
             {
                 Color color = displayType == DisplayTypeChrom.total
                     ? COLORS_GROUPS[iColor++ % COLORS_GROUPS.Length]
-                    : COLORS_TRANSITION[iColor++ % COLORS_TRANSITION.Length];
+                    : COLORS_TRANSITION[(iColor++ + colorOffset)% COLORS_TRANSITION.Length];
 
                 BarItem curveItem;
                 if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))

@@ -451,19 +451,20 @@ namespace pwiz.Skyline.Controls.Graphs
                             else
                             {
                                 _graphHelper.ResetForChromatograms(new[] {nodeGroup.TransitionGroup});
-                                IList<TransitionDocNode> displayTransitions = new TransitionDocNode[0];
-                                if (nodeGroupTree != null)
-                                {
-                                    displayTransitions =
-                                        GraphChromatogram.GetDisplayTransitions(nodeGroupTree.DocNode,
-                                                                                DisplayTypeChrom.all).ToArray();
-                                }
-                                var allChromDatas = chromatogramData.ChromDatas.ToList();
+
+                                var displayType = GraphChromatogram.GetDisplayType(DocumentUI, nodeGroup);
+                                IList<TransitionDocNode>  displayTransitions =
+                                        GraphChromatogram.GetDisplayTransitions(nodeGroup, displayType).ToArray();
+                                int numTrans = displayTransitions.Count;
+                                var allChromDatas =
+                                    chromatogramData.ChromDatas.Where(
+                                        chromData => DisplayTypeMatches(chromData, displayType)).ToList();
                                 var chromDatas = new List<LibraryChromGroup.ChromData>();
-                                for (int iTran = 0; iTran < displayTransitions.Count; iTran++)
+                                for (int iTran = 0; iTran < numTrans; iTran++)
                                 {
-                                    double transitionMz = displayTransitions[iTran].Mz;
-                                    var indexMatch = allChromDatas.IndexOf(chromData => MzMatches(transitionMz, chromData.Mz));
+                                    var displayTransition = displayTransitions[iTran];
+                                    var indexMatch =
+                                        allChromDatas.IndexOf(chromData => IonMatches(displayTransition.Transition, chromData));
                                     if (indexMatch >= 0)
                                     {
                                         chromDatas.Add(allChromDatas[indexMatch]);
@@ -478,6 +479,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                 chromDatas.AddRange(allChromDatas);
                                 double maxHeight = chromDatas.Max(chromData => null == chromData ? double.MinValue : chromData.Height);
                                 int iChromDataPrimary = chromDatas.IndexOf(chromData => null != chromData && maxHeight == chromData.Height);
+                                int colorOffset = displayType == DisplayTypeChrom.products
+                                                      ? GraphChromatogram.GetDisplayTransitions(nodeGroup,
+                                                                                                DisplayTypeChrom.
+                                                                                                    precursors).Count()
+                                                      : 0;
                                 for (int iChromData = 0; iChromData < chromDatas.Count; iChromData++)
                                 {
                                     var chromData = chromDatas[iChromData];
@@ -497,12 +503,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                     }
                                     TransitionDocNode matchingTransition;
                                     Color color;
-                                    if (iChromData < displayTransitions.Count)
+                                    if (iChromData < numTrans)
                                     {
                                         matchingTransition = displayTransitions[iChromData];
                                         color =
                                             GraphChromatogram.COLORS_LIBRARY[
-                                                iChromData%GraphChromatogram.COLORS_LIBRARY.Length];
+                                                (iChromData + colorOffset)%GraphChromatogram.COLORS_LIBRARY.Length];
                                     }
                                     else
                                     {
@@ -526,7 +532,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     curve.Line.Width = Settings.Default.ChromatogramLineWidth;
                                     if (null != transition)
                                     {
-                                        if (MzMatches(chromData.Mz, transition.Mz))
+                                        if (IonMatches(transition.Transition, chromData))
                                         {
                                             color = ChromGraphItem.ColorSelected;
                                         }
@@ -560,9 +566,33 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private static bool MzMatches(double mz1, double mz2)
+        private static bool DisplayTypeMatches(LibraryChromGroup.ChromData chromData, DisplayTypeChrom displayType)
         {
-            return (float) mz1 == (float) mz2;
+            switch (displayType)
+            {
+                case DisplayTypeChrom.products:
+                    return (chromData.IonType != IonType.precursor);
+                case DisplayTypeChrom.precursors:
+                    return (chromData.IonType == IonType.precursor);
+                default:
+                    return true;
+            }  
+        }
+
+        private static bool IonMatches(Transition transition, LibraryChromGroup.ChromData chromData)
+        {
+            if(transition.IonType.Equals(chromData.IonType) && transition.Charge == chromData.Charge)
+            {
+                if(transition.IsPrecursor())
+                {
+                    return transition.MassIndex == chromData.MassIndex;
+                }
+                else
+                {
+                    return transition.Ordinal == chromData.Ordinal;
+                }
+            }
+            return false;
         }
 
         private static int FindNearestIndex(IList<float> times, float time)

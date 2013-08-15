@@ -99,8 +99,8 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.ShowProductTransitions();
                     Assert.AreEqual(6, graphChromatogramGraphControl.GraphPane.CurveList.Count);
                     // TODO(nicksh): Enable this when libraries filter based on precursor/product
-                    //AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
-                    //  libraryMatchGraphControl.GraphPane.CurveList);
+                    AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
+                      libraryMatchGraphControl.GraphPane.CurveList);
                     AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
                                          peakAreaSummary.GraphControl.GraphPane.CurveList);
                     SkylineWindow.ShowAllTransitions();

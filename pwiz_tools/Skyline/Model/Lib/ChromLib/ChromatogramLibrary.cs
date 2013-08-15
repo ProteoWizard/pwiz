@@ -92,6 +92,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                                 Mz = transition.Mz,
                                 Height = transition.Height,
                                 Intensities = timeIntensities.Intensities[transition.ChromatogramIndex],
+                                Charge = transition.Charge == 0 ? precursor.Charge : transition.Charge,
+                                IonType = Helpers.ParseEnum(transition.FragmentType, IonType.y),
+                                Ordinal = transition.FragmentOrdinal,
+                                MassIndex = transition.MassIndex
                             });
                         height = Math.Max(height, transition.Height);
                     }
@@ -212,6 +216,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     foreach (object[] row in precursorQuery.List<object[]>())
                     {
                         var id = (int) row[0];
+                        if (row[1] == null || row[2] == null)
+                        {
+                            continue; // Throw an error?
+                        }
                         var modifiedSequence = (string) row[1];
                         int charge = (int) row[2];
                         double totalArea = Convert.ToDouble(row[3]);

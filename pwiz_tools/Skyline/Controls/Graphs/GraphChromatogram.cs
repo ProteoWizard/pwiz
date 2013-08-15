@@ -1087,6 +1087,20 @@ namespace pwiz.Skyline.Controls.Graphs
             int iColor = 0;
             int lineWidth = LineWidth;
             float fontSize = FontSize;
+            // We want the product ion colors to stay the same whether they are displayed:
+            // 1. In a single pane with the precursor ions (Transitions -> All)
+            // 2. In a separate pane of the split graph (Transitions -> All AND Transitions -> Split Graph)
+            // 3. In a single pane by themselves (Transition -> Products)
+            // We will use an offset in the colors array for cases 2 and 3 so that we do not reuse the precursor ion colors.
+            var nodeDisplayType = GetDisplayType(DocumentUI, nodeGroup);
+            int colorOffset = 0;
+            if(displayType == DisplayTypeChrom.products && 
+                (nodeDisplayType != DisplayTypeChrom.single || 
+                (nodeDisplayType == DisplayTypeChrom.single && chromatograms.OptimizationFunction == null)))
+            {
+                colorOffset = GetDisplayTransitions(nodeGroup, DisplayTypeChrom.precursors).Count();
+            }
+
             for (int i = 0; i < numTrans; i++)
             {
                 var info = arrayChromInfo[i];
@@ -1104,11 +1118,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     color = ChromGraphItem.ColorSelected;
                     width++;
                 }
-                else if (nodeGroup.HasLibInfo)
-                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
-                else
-                    color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
-//                    color = COLORS_HEURISTIC[iColor % COLORS_HEURISTIC.Length];
+                color = COLORS_LIBRARY[(iColor + colorOffset) % COLORS_LIBRARY.Length];
 
                 TransitionChromInfo tranPeakInfoGraph = null;
                 if (bestPeakTran == i)

@@ -1221,6 +1221,10 @@ namespace pwiz.Skyline.Model.Lib
             public double Mz { get; set; }
             public double Height { get; set; }
             public float[] Intensities { get; set; }
+            public int Charge { get; set; }
+            public IonType IonType { get; set; }
+            public int Ordinal { get; set; }
+            public int MassIndex { get; set; }
         }
     }
 

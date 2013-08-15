@@ -1681,6 +1681,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowTransitionGraphs = displayType.ToString();
             UpdateChromGraphs();
+            UpdateSpectrumGraph();
             UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();
         }

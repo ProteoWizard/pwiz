@@ -301,6 +301,24 @@ namespace pwiz.Skyline.Controls.Graphs
             if (BarSettings.Type == BarType.Stack && countNodes == 1 && graphData.PointPairLists[0].Count == 1)
                 BarSettings.Type = BarType.Cluster;
 
+            int colorOffset = 0;
+            if(parentGroupNode != null)
+            {
+                // We want the product ion colors to stay the same whether they are displayed:
+                // 1. In a single pane with the precursor ions (Transitions -> All)
+                // 2. In a separate pane of the split graph (Transitions -> All AND Transitions -> Split Graph)
+                // 3. In a single pane by themselves (Transition -> Products)
+                // We will use an offset in the colors array for cases 2 and 3 so that we do not reuse the precursor ion colors.
+                var nodeDisplayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
+                if (displayType == DisplayTypeChrom.products && 
+                    (nodeDisplayType != DisplayTypeChrom.single || 
+                    (nodeDisplayType == DisplayTypeChrom.single && !optimizationPresent)))
+                {
+                    colorOffset =
+                        GraphChromatogram.GetDisplayTransitions(parentGroupNode, DisplayTypeChrom.precursors).Count();
+                }   
+            }
+            
             int iColor = 0, iCharge = -1, charge = -1;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             for (int i = 0; i < countNodes; i++)
@@ -329,7 +347,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        color = COLORS_TRANSITION[iColor%COLORS_TRANSITION.Length];
+                        color = COLORS_TRANSITION[(iColor + colorOffset) % COLORS_TRANSITION.Length];
                     }
                     iColor++;
                     // If showing ratios, do not add the standard type to the graph,

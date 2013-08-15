@@ -126,6 +126,15 @@ namespace pwiz.Skyline.Controls.Graphs
             double maxRetentionTime = -double.MaxValue;
             int iColor = 0, iCharge = -1, charge = -1;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
+            int colorOffset = 0;
+            var transitionGroupDocNode = parentNode as TransitionGroupDocNode;
+            if (transitionGroupDocNode != null && displayType == DisplayTypeChrom.products)
+            {
+                // If we are only displaying product ions, we want to use an offset in the colors array
+                // so that we do not re-use colors that would be used for any precursor ions.
+                colorOffset =
+                    GraphChromatogram.GetDisplayTransitions(transitionGroupDocNode, DisplayTypeChrom.precursors).Count();
+            }
             for (int i = 0; i < graphData.DocNodes.Count; i++)
             {
                 var docNode = graphData.DocNodes[i];
@@ -152,7 +161,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        color = COLORS_TRANSITION[iColor%COLORS_TRANSITION.Length];
+                        color = COLORS_TRANSITION[(iColor + colorOffset)%COLORS_TRANSITION.Length];
                     }
                     iColor++;
 
