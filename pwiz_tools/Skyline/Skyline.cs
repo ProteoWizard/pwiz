@@ -3527,19 +3527,32 @@ namespace pwiz.Skyline
         }
 
         // currently a work-around to get an R-installer
-        public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<string> packages)
+        public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<string> packages, string pathToPackageInstallScript)
         {
             if (programPathContainer.ProgramName.Equals("R"))
             {
-                if (!RUtil.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
+                bool installed = RUtil.CheckInstalled(programPathContainer.ProgramVersion);
+                if (!installed || packages.Count != 0)
                 {
+                    ICollection<string> PackagesToInstall;
+                    if (!installed)
+                    {
+                        PackagesToInstall = packages;
+                    }
+                    else
+                    {
+                        PackagesToInstall = RUtil.WhichPackagesToInstall(packages, RUtil.FindRProgramPath(programPathContainer.ProgramVersion));
+                    }
+                    if (installed && PackagesToInstall.Count == 0)
+                        return RUtil.FindRProgramPath(programPathContainer.ProgramVersion);
+                    
                     // we will need the immediate window to show output for package installation
-                    if (packages.Count != 0)
+                    if (PackagesToInstall.Count != 0)
                     {
                         ShowImmediateWindow();
                     }
                     
-                    using (var dlg = new RInstaller(programPathContainer, packages, _skylineTextBoxStreamWriterHelper))
+                    using (var dlg = new RInstaller(programPathContainer, PackagesToInstall, _skylineTextBoxStreamWriterHelper, pathToPackageInstallScript))
                     {
                         DialogResult result = dlg.ShowDialog(this);
                         if (result == DialogResult.Cancel || result == DialogResult.No)

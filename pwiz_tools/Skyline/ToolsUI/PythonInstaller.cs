@@ -189,7 +189,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void InstallPython()
         {
-            var processRunner = TestProcessRunner ?? new SynchronousProcessRunner();
+            var processRunner = TestRunProcess ?? new SynchronousRunProcess();
             var startInfo = new ProcessStartInfo
                 {
                     FileName = "msiexec", // Not L10N
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.ToolsUI
             // install packages with executable installers first
             foreach (var package in exePaths)
             {
-                var processRunner = TestProcessRunner ?? new SynchronousProcessRunner();
+                var processRunner = TestRunProcess ?? new SynchronousRunProcess();
                 if (processRunner.RunProcess(new Process {StartInfo = new ProcessStartInfo(package)}) != 0) {
                     throw new MessageException(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_);
                 }
@@ -343,7 +343,7 @@ namespace pwiz.Skyline.ToolsUI
                                  .Append("\""); // Not L10N
                 }
 
-                var pipedProcessRunner = TestNamedPipeProcessRunner ?? new NamedPipeProcessRunnerWrapper();
+                var pipedProcessRunner = TestNamedPipeRunProcess ?? new NamedPipeRunProcessWrapper();
                 try
                 {
                     if (pipedProcessRunner.RunProcess(argumentBuilder.ToString(), false, _writer) != 0)
@@ -422,7 +422,7 @@ namespace pwiz.Skyline.ToolsUI
                            .Append(TextUtil.SEPARATOR_SPACE)
                            .Append(PipPath); // Not L10N
 
-            var pipedProcessRunner = TestPipNamedPipeProcessRunner ?? new NamedPipeProcessRunnerWrapper();
+            var pipedProcessRunner = TestPipNamedPipeRunProcess ?? new NamedPipeRunProcessWrapper();
             try
             {
                 if (pipedProcessRunner.RunProcess(argumentBuilder.ToString(), false, _writer) != 0)
@@ -437,11 +437,11 @@ namespace pwiz.Skyline.ToolsUI
         #region Functional testing support
 
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
-        public IProcessRunner TestProcessRunner { get; set; }
-        public INamedPipeProcessRunnerWrapper TestNamedPipeProcessRunner { get; set; }
+        public IRunProcess TestRunProcess { get; set; }
+        public INamedPipeRunProcessWrapper TestNamedPipeRunProcess { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
-        public INamedPipeProcessRunnerWrapper TestPipNamedPipeProcessRunner { get; set; }
-        public IProcessRunner TestPipProcessRunner { get; set; }
+        public INamedPipeRunProcessWrapper TestPipNamedPipeRunProcess { get; set; }
+        public IRunProcess TestPipRunProcess { get; set; }
         public bool TestingPip { get; set; }
         
         public string Message

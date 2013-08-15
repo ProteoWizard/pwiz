@@ -18,13 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Skyline.Alerts;
@@ -36,100 +35,61 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    // TODO: (trevor) long-term allow for ranges of installations
-    // TODO: (trevor) long-term investigate the possibility of checking for currently installed packages?
+    // TODO: (trevor) long-term allow for ranges of versions
     public partial class RInstaller : FormEx
     {
-
         private readonly string _version;
         private readonly bool _installed;
         private readonly TextWriter _writer;
+        private string PathToInstallScript { get; set; }
+        private ICollection<string> PackagesToInstall { get; set; }
 
-        private IList<string> PackageUris { get; set; }
-        private IList<string> LocalPackages { get; set; } 
-
-        public RInstaller(ProgramPathContainer rPathContainer, IEnumerable<string> packages, TextWriter writer)
-            : this(rPathContainer, packages, RUtil.CheckInstalled(rPathContainer.ProgramVersion), writer)
+        public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packages, TextWriter writer, string pathToInstallScript)
+            : this(rPathContainer, packages, RUtil.CheckInstalled(rPathContainer.ProgramVersion), writer, pathToInstallScript)
         {
         }
 
-        public RInstaller(ProgramPathContainer rPathContainer, IEnumerable<string> packages, bool installed, TextWriter writer)
+        public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packages, bool installed, TextWriter writer, string pathToInstallScript)
         {
+            PackagesToInstall = packages;
             _version = rPathContainer.ProgramVersion;
             _installed = installed;
             _writer = writer;
-            AssignPackages(packages);
+            PathToInstallScript = pathToInstallScript;
             InitializeComponent();
         }
 
-        private void AssignPackages(IEnumerable<string> packages)
-        {
-            PackageUris = new List<string>();
-            LocalPackages = new List<string>();
-            foreach (var package in packages)
-            {
-                if (package.StartsWith("http")) // Not L10N
-                    PackageUris.Add(package);
-                else
-                    LocalPackages.Add(package);
-            }
-        }
-
-        public bool IsLoaded { get; set; }
+        public bool IsLoaded { get; private set; }
 
         private void RInstaller_Load(object sender, EventArgs e)
         {
-            if (!_installed && (PackageUris.Count + LocalPackages.Count) != 0)
+            if (!_installed && (PackagesToInstall.Count() != 0))
             {
-                PopulatePackageCheckListBox();
-                labelMessage.Text = string.Format(
-                    Resources
-                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_,
-                    _version);
+                PopulatePackageListBox();
+                labelMessage.Text = string.Format(Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages_,
+                                                  _version);
             }
             else if (!_installed)
             {
                 labelMessage.Text = string.Format(
-                    Resources
-                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_,
+                    Resources.RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_,
                     _version);
-                int shift = btnCancel.Top - checkedListBoxPackages.Top;
-                checkedListBoxPackages.Visible = checkedListBoxPackages.Enabled = false;
+                int shift = btnCancel.Top - listBoxPackages.Top;
+                listBoxPackages.Visible = listBoxPackages.Enabled = false;
                 Height -= shift;
             }
-            else if ((PackageUris.Count + LocalPackages.Count) != 0)
+            else if (PackagesToInstall.Count() != 0)
             {
-                PopulatePackageCheckListBox();
-                labelMessage.Text =
-                    Resources
-                        .RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_;
+                PopulatePackageListBox();
+                labelMessage.Text = Resources.RInstaller_RInstaller_Load_This_Tool_requires_the_use_of_the_following_R_Packages_;
             }
-
             IsLoaded = true;
         }
 
-        private void PopulatePackageCheckListBox()
+        private void PopulatePackageListBox()
         {
-            checkedListBoxPackages.DataSource = IsolatePackageNames(PackageUris).Concat(IsolatePackageNames(LocalPackages)).ToList();
-
-            // initially set them as checked
-            for (int i = 0; i < checkedListBoxPackages.Items.Count; i++)
-            {
-                checkedListBoxPackages.SetItemChecked(i, true);
-            }
+            listBoxPackages.DataSource = PackagesToInstall;
         }
-
-        private static IEnumerable<string> IsolatePackageNames(IEnumerable<string> packages)
-        { 
-            ICollection<string> packageNames = new Collection<string>();
-            const string pattern = @"([^/\\]*)\.(zip|tar\.gz)$"; // Not L10N
-            foreach (var package in packages)
-            {
-                Match name = Regex.Match(package, pattern);
-                packageNames.Add(name.Groups[1].ToString());
-            }
-            return packageNames;
-        } 
 
         private void btnInstall_Click(object sender, EventArgs e)
         {
@@ -140,7 +100,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             Hide();
 
-            if ((_installed || GetR()) && (checkedListBoxPackages.CheckedItems.Count == 0 || GetPackages()))
+            if ((_installed || GetR()) && (PackagesToInstall.Count == 0 || GetPackages()))
             {
                 DialogResult = DialogResult.Yes;
             }
@@ -213,7 +173,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void InstallR()
         {
-            var processRunner = TestProcessRunner ?? new SynchronousProcessRunner();
+            var processRunner = TestRunProcess ?? new SynchronousRunProcess();
             // an exit code of 0 indicates a successful installation
             if (processRunner.RunProcess(new Process {StartInfo = new ProcessStartInfo {FileName = DownloadPath}}) != 0)
                 throw new MessageException(
@@ -224,132 +184,108 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                ICollection<string> downloadablePackages = new Collection<string>();
-                ICollection<string> localPackages = new Collection<string>();
-                AssignPackagesToInstall(ref downloadablePackages, ref localPackages);
-
-                IEnumerable<string> packagePaths = null;
-                if (downloadablePackages.Count != 0)
-                {
-                    using (var dlg = new LongWaitDlg{Message = Resources.RInstaller_GetPackages_Downloading_packages, ProgressValue = 0})
-                    {
-                        dlg.PerformWork(this, 1000, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
-                    }
-                }
-                packagePaths = (packagePaths == null) ? localPackages : packagePaths.Concat(localPackages);
-                InstallPackages(CommandLine.ParseCommandLineArray(packagePaths.ToArray()));
-                MessageDlg.Show(this, Resources.RInstaller_GetPackages_Package_installation_complete_);
+                InstallPackages();
             }
-            catch (TargetInvocationException ex)
+            catch(Exception ex)
             {
-                if (ex.InnerException is MessageException)
+                //Win32Exception is thrown when the user does not ok Administrative Privileges
+                if (ex is MessageException || ex is System.ComponentModel.Win32Exception) 
                 {
-                    MessageDlg.Show(this, ex.InnerException.Message);
+                    MessageDlg.Show(this, ex.Message);
                     return false;
                 }
-            }
-            catch (MessageException ex)
-            {
-                MessageDlg.Show(this, ex.Message);
-                return false;
+                else
+                    throw;
             }
             return true;
         }
 
-        private void AssignPackagesToInstall(ref ICollection<string> downloadableFiles, ref ICollection<string> localFiles)
+        // Exit code when the user exits the package install command script before it finishes.
+        public const int EXIT_EARLY_CODE = -1073741510;
+
+        private void InstallPackages()
         {
-            foreach (int index in checkedListBoxPackages.CheckedIndices)
-            {
-                if (index < PackageUris.Count)
-                {
-                    downloadableFiles.Add(PackageUris[index]);
-                }
-                else
-                {
-                    localFiles.Add(LocalPackages[index - PackageUris.Count]);
-                }
-            }
-        }
-
-        /// <returns>An enumerable collection of package source file locations on the local file system</returns>
-        private IEnumerable<string> DownloadPackages(ILongWaitBroker longWaitBroker, ICollection<string> packages)
-        {
-            // create the webclient
-            using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, packages.Count))
-            {
-                // store filepaths
-                var packagePaths = new Collection<string>();
-
-                // collect failed package installs
-                var failedDownloads = new List<string>();
-
-                // download each package
-                foreach (var package in packages)
-                {
-                    var uri = new Uri(package);
-                    Match file = Regex.Match(uri.AbsolutePath, @"([^/]*\.)(zip|tar\.gz)"); // Not L10N
-                    string downloadPath = Path.GetTempPath() + file.Groups[1] + file.Groups[2];
-                    if (webClient.DownloadFileAsync(uri, downloadPath))
-                    {
-                        packagePaths.Add(downloadPath);
-                    }
-                    else
-                        failedDownloads.Add(package);
-                }
-
-                if (failedDownloads.Count > 0)
-                {
-                    throw new MessageException(
-                        TextUtil.LineSeparate(
-                            Resources.RInstaller_DownloadPackages_Failed_to_download_the_following_packages_,
-                            string.Empty,
-                            TextUtil.LineSeparate(failedDownloads),
-                            string.Empty,
-                            Resources
-                                .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
-                }
-
-                return packagePaths;
-            }
-        }
-
-        private void InstallPackages(string packagePaths)
-        {  
-            // ensure that there are Packages to install
-            if (string.IsNullOrEmpty(packagePaths))
+            if (PackagesToInstall.Count == 0)
                 return;
 
-            // then get the program path
-            string programPath = TestProgramPath ?? RUtil.FindRProgramPath(_version);
-            if (programPath == null)
-                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages_);
+            if (!packageInstallHelpers.CheckForInternetConnection())
+            {
+                throw new MessageException(
+                    TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Error__No_internet_connection_,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
+            }
 
-            // create argument string
+            string programPath = packageInstallHelpers.FindRProgramPath(_version);
             var argumentBuilder = new StringBuilder();
-            argumentBuilder.Append("/C \"").Append(programPath).Append("\" CMD INSTALL ").Append(packagePaths); // Not L10N
-
-            var processRunner = TestNamedPipeProcessRunner ?? new NamedPipeProcessRunnerWrapper();
+            argumentBuilder.Append("/C ").Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
             try
             {
-                if (processRunner.RunProcess(argumentBuilder.ToString(), true, _writer) != 0)
+                INamedPipeRunProcessWrapper processRunner = TestNamePipeRunProcessWrapper ?? new NamedPipeRunProcessWrapper();
+                var stringbuilder = new StringBuilder();
+                int exitCode;
+                using (var stringWriter = new StringWriter(stringbuilder))
                 {
-                    throw new MessageException(Resources.RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_);
+                    exitCode = processRunner.RunProcess(argumentBuilder.ToString(), true, stringWriter);
+                }
+                string output = stringbuilder.ToString();
+                if (exitCode == EXIT_EARLY_CODE) // When the user exits the command script before it finishes.
+                {
+                    _writer.WriteLine(output);
+                    throw new MessageException(string.Format(Resources.RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_));
+                }
+                if (exitCode != 0)
+                {
+                    _writer.WriteLine(output);
+                    throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_);
+                }
+
+                //Check for packages again. 
+                var failedPackages = packageInstallHelpers.WhichPackagesToInstall(PackagesToInstall, programPath);
+                if (failedPackages.Count != 0)
+                {
+                    _writer.WriteLine(output);
+
+                    if (failedPackages.Count == 1)
+                    {
+                        throw new MessageException(
+                            string.Format(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_package__0__failed_to_install_,
+                                                                string.Empty,
+                                                                Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_), failedPackages.First()));
+                    }
+
+                    throw new MessageException(
+                        TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_following_packages_failed_to_install_,
+                                                            string.Empty,                                    
+                                                            TextUtil.LineSeparate(failedPackages),
+                                                            string.Empty,
+                                                            Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_));
                 }
             }
-            catch (IOException)
+            catch (IOException ex)
             {
-                throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages_);
+                throw new MessageException(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_,
+                                                                  string.Empty,
+                                                                  ex.Message));
             }
         }
-
         #region Functional testing support
 
-        // test classes for functional testing
-        public IProcessRunner TestProcessRunner { get; set; }
+        public interface IPackageInstallHelpers
+        {
+            ICollection<string> WhichPackagesToInstall(ICollection<string> packages, string pathToR);
+            string FindRProgramPath(string rVersion);
+            bool CheckForInternetConnection();
+        } 
+
+        public IPackageInstallHelpers packageInstallHelpers
+        {
+            get { return _packageInstallHelpers ?? (_packageInstallHelpers = new PackageInstallHelpers()); }
+            set { _packageInstallHelpers = value; }
+        }
+        private IPackageInstallHelpers _packageInstallHelpers { get; set; }
+
+        public IRunProcess TestRunProcess { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
-        public INamedPipeProcessRunnerWrapper TestNamedPipeProcessRunner { get; set; }
-        public string TestProgramPath { get; set; }
-        public bool? TestConnectionSuccess { get; set; }
+        public INamedPipeRunProcessWrapper TestNamePipeRunProcessWrapper { get; set; }
 
         public string Message
         {
@@ -358,28 +294,31 @@ namespace pwiz.Skyline.ToolsUI
 
         public int PackagesListCount
         {
-            get { return checkedListBoxPackages.Items.Count; }
+            get { return listBoxPackages.Items.Count; }
         }
-
-        public int PackagesListCheckedCount
-        {
-            get { return checkedListBoxPackages.CheckedItems.Count; }
-        }
-
-        public void UncheckAllPackages()
-        {
-            foreach (int packageIndex in checkedListBoxPackages.CheckedIndices)
-            {
-                checkedListBoxPackages.SetItemCheckState(packageIndex, CheckState.Unchecked);
-            }
-        }
-
         #endregion
-
     }
 
-    public static class RUtil {
+    internal class PackageInstallHelpers : RInstaller.IPackageInstallHelpers
+    {
+        public ICollection<string> WhichPackagesToInstall(ICollection<string> packages, string pathToR)
+        {
+            return RUtil.WhichPackagesToInstall(packages, pathToR);
+        }
 
+        public string FindRProgramPath(string rVersion)
+        {
+            return RUtil.FindRProgramPath(rVersion);
+        }
+
+        public bool CheckForInternetConnection()
+        {
+            return RUtil.CheckForInternetConnection();
+        }
+    }
+
+    public static class RUtil
+    {
         private const string REGISTRY_LOCATION = @"SOFTWARE\R-core\R\"; // Not L10N
 
         // Checks the registry to see if the specified version of R is installed on
@@ -408,6 +347,91 @@ namespace pwiz.Skyline.ToolsUI
             return (installPath != null) ? installPath + "\\bin\\R.exe" : null; // Not L10N
         }
 
+        /// <summary>
+        ///  Writes a file with an R script that will check for each package.
+        /// </summary>
+        /// <param name="packages"> list of all packages to check.</param>
+        /// <returns> Path to R script</returns>
+        public static string WriteCheckForPackagesFile(IEnumerable<string> packages)
+        {
+            var filePath = Path.GetTempFileName();
+            using (StreamWriter file = new StreamWriter(filePath))
+            {
+                file.WriteLine("a<-installed.packages()"); // Not L10N
+                file.WriteLine("packages<-a[,1]"); // Not L10N
+                foreach (var package in packages)
+                {
+                    file.WriteLine("# Check For Package {0}", package); // Not L10N
+                    file.WriteLine("cat(\"{0} - \")", package); // Not L10N
+                    file.WriteLine("cat (is.element(\"{0}\",packages))", package); // Not L10N
+                    file.WriteLine("cat(\"\\n\")"); // Not L10N
+                }
+                file.Flush();
+            }
+            return filePath;
+        }
+
+        /// <summary>
+        ///  Given a list of packages it determines which need to be installed and which are already installed.
+        /// </summary>
+        /// <param name="packages">Collection of package names to check for</param>
+        /// <param name="pathToR">Path to R</param>
+        /// <returns>Collection of packages that need to be installed</returns>
+        public static ICollection<string> WhichPackagesToInstall(ICollection<string> packages, string pathToR)
+        {
+            List<string> packagesToInstall = new List<string>();
+            string pathToScript = WriteCheckForPackagesFile(packages);
+            string response = RunRscript(pathToR, pathToScript);
+            string[] lines = response.Split('\n');
+            foreach (var line in lines.Where(l => !string.IsNullOrEmpty(l)))
+            {
+                string[] split = line.Split('-');
+                if (split.Length > 1 && split[1].Contains("FALSE"))
+                {
+                    packagesToInstall.Add(split[0].Trim());
+                }
+            }
+            FileEx.SafeDelete(pathToScript);
+
+            return packagesToInstall;
+        }
+
+        /// <summary>
+        /// Runs a given R script
+        /// </summary>
+        private static string RunRscript(string pathToR, string pathToScriptFile)
+        {
+            string args = String.Format("-f {0} --slave", pathToScriptFile);
+            ProcessStartInfo startInfo = new ProcessStartInfo(pathToR, args)
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardError = true
+                };
+            Process p = new Process { StartInfo = startInfo };
+            p.Start();
+            return p.StandardOutput.ReadToEnd();
+        }
+
+        /// <summary>
+        /// Returns true if internet connection is avalible.
+        /// </summary>
+        public static bool CheckForInternetConnection()
+        {
+            try
+            {
+                using (var client = new WebClient())
+                using (client.OpenRead("http://www.google.com"))
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
 

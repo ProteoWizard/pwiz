@@ -22,11 +22,33 @@ using System.Text;
 
 namespace pwiz.Common.SystemUtil
 {
-    public class ProcessRunner
+    public interface IProcessRunner
+    {
+        string MessagePrefix { get; set; }
+        string HideLinePrefix { get; set; }
+        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status);
+        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status,
+                 TextWriter writer);
+    }
+
+    public class ProcessRunner : IProcessRunner
     {
         public string MessagePrefix { get; set; }
 
+        /// <summary>
+        /// Used in R package installation. We print progress % for processRunner progress
+        /// but we dont want that output to be shown to the user when we display the output
+        /// of the installation script to the immediate window. 
+        /// Any line that starts with the HideLinePrefix will not be written to the writer.
+        /// </summary>
+        public string HideLinePrefix { get; set; }
+
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status)
+        {
+            Run(psi, stdin, progress,ref status, null);
+        }
+
+        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status, TextWriter writer)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -53,6 +75,9 @@ namespace pwiz.Common.SystemUtil
             string line;
             while ((line = reader.ReadLine(progress)) != null)
             {
+                if (writer != null && !line.StartsWith(HideLinePrefix))
+                    writer.WriteLine(line);
+
                 if (progress == null || line.ToLower().StartsWith("error"))
                 {
                     sbError.AppendLine(line);
@@ -111,6 +136,34 @@ namespace pwiz.Common.SystemUtil
                     status = status.NextSegment();
                 if (progress != null)
                     progress.UpdateProgress(status);
+            }
+        }
+
+        public class ProcessRunnerTester: IProcessRunner
+        {
+            public string stringToWriteToWriter { get; set; }
+            public ProgressStatus progressStatus { get; set; }
+            public bool shouldCancel { get; set; }
+            public string MessagePrefix { get; set; }
+            public string HideLinePrefix { get; set; }
+            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status)
+            {
+                Run(psi, stdin, progress, ref status, null);
+            }
+
+            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref ProgressStatus status, TextWriter writer)
+            {
+                if (shouldCancel)
+                {
+                    status.Cancel();
+                    progress.UpdateProgress(status = status.Cancel());
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(stringToWriteToWriter))
+                    writer.WriteLine(stringToWriteToWriter);
+                status.ChangePercentComplete(100);
+                progress.UpdateProgress(status);
             }
         }
     }

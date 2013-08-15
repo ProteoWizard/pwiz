@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Util
 
     }
 
-    public interface INamedPipeProcessRunnerWrapper
+    public interface INamedPipeRunProcessWrapper
     {
         /// <summary>
         /// Wrapper interface for the NamedPipeProcessRunner class
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Util
         int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer);
     }
 
-    public class NamedPipeProcessRunnerWrapper : INamedPipeProcessRunnerWrapper
+    public class NamedPipeRunProcessWrapper : INamedPipeRunProcessWrapper
     {
         public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
         {
@@ -151,15 +151,24 @@ namespace pwiz.Skyline.Util
 
     // The test Named PipeProcess Runner allows us to simulate running NamedPipeProcessRunner.exe
     // by specifying its return code and whether the pipe connected or not
-    public class TestNamedPipeProcessRunner : INamedPipeProcessRunnerWrapper
+    public class TestNamedPipeRunProcess : INamedPipeRunProcessWrapper
     {
         public bool ConnectSuccess { get; set; }
+        public bool UserOkRunAsAdministrator { get { return _userOkRunAsAdministrator; } set { _userOkRunAsAdministrator = value; } }
+        private bool _userOkRunAsAdministrator = true; 
         public int ExitCode { get; set; }
+        public string stringToWriteToWriter { get; set; }
         
         public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
         {
+            if (!UserOkRunAsAdministrator)
+            {
+                throw new System.ComponentModel.Win32Exception("The operation was canceled by the user");
+            }
             if (!ConnectSuccess)
                 throw new IOException(Resources.TestNamedPipeProcessRunner_RunProcess_Error_running_process);
+            if (!string.IsNullOrEmpty(stringToWriteToWriter))
+                writer.WriteLine(stringToWriteToWriter);
             return ExitCode;
         }
     }
@@ -167,7 +176,7 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// The IProcessRunner serves as a wrapper class for running a process synchronously
     /// </summary>
-    public interface IProcessRunner
+    public interface IRunProcess
     {
         /// <summary>
         /// Returns the exit code that results from running a process
@@ -175,7 +184,7 @@ namespace pwiz.Skyline.Util
         int RunProcess(Process process);
     }
 
-    public class SynchronousProcessRunner : IProcessRunner
+    public class SynchronousRunProcess : IRunProcess
     {
         public int RunProcess(Process process)
         {
@@ -187,7 +196,7 @@ namespace pwiz.Skyline.Util
 
     // The test Process Runner allows us to simulate the synchronous execution of a Process by specifying
     // its return code
-    public class TestProcessRunner : IProcessRunner
+    public class TestRunProcess : IRunProcess
     {
         public int ExitCode { get; set; }
 

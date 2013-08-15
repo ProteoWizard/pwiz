@@ -11762,15 +11762,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download the following packages:.
-        /// </summary>
-        public static string RInstaller_DownloadPackages_Failed_to_download_the_following_packages_ {
-            get {
-                return ResourceManager.GetString("RInstaller_DownloadPackages_Failed_to_download_the_following_packages_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Download failed..
         /// </summary>
         public static string RInstaller_DownloadR_Download_failed_ {
@@ -11785,6 +11776,15 @@ namespace pwiz.Skyline.Properties {
         public static string RInstaller_GetPackages_Downloading_packages {
             get {
                 return ResourceManager.GetString("RInstaller_GetPackages_Downloading_packages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing Packages.
+        /// </summary>
+        public static string RInstaller_GetPAckages_Installing_Packages {
+            get {
+                return ResourceManager.GetString("RInstaller_GetPAckages_Installing_Packages", resourceCulture);
             }
         }
         
@@ -11807,6 +11807,62 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download Canceled.
+        /// </summary>
+        public static string RInstaller_InstallPackages_Download_Canceled {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Download_Canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: No internet connection..
+        /// </summary>
+        public static string RInstaller_InstallPackages_Error__No_internet_connection_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Error__No_internet_connection_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Package installation did not complete. Output logged to the Immediate Window..
+        /// </summary>
+        public static string RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_l" +
+                        "ogged_to_the_Immediate_Window_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error Installing Packages.
+        /// </summary>
+        public static string RInstaller_InstallPackages_Error_Installing_Packages {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Error_Installing_Packages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing R packages requires an internet connection. Please check your connection and try again.
+        /// </summary>
+        public static string RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection_" +
+                        "_Please_check_your_connection_and_try_again", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output logged to the Immediate Window..
+        /// </summary>
+        public static string RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Package installation failed. Error log output in immediate window..
         /// </summary>
         public static string RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_ {
@@ -11817,11 +11873,40 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown error installing packages..
+        ///   Looks up a localized string similar to The following packages failed to install:.
         /// </summary>
-        public static string RInstaller_InstallPackages_Unknown_error_installing_packages_ {
+        public static string RInstaller_InstallPackages_The_following_packages_failed_to_install_ {
             get {
-                return ResourceManager.GetString("RInstaller_InstallPackages_Unknown_error_installing_packages_", resourceCulture);
+                return ResourceManager.GetString("RInstaller_InstallPackages_The_following_packages_failed_to_install_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The package {0} failed to install:.
+        /// </summary>
+        public static string RInstaller_InstallPackages_The_package__0__failed_to_install_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_The_package__0__failed_to_install_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Error installing packages. Output logged to the Immediate Window..
+        /// </summary>
+        public static string RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_th" +
+                        "e_Immediate_Window_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error installing packages. Tool Installation Failed..
+        /// </summary>
+        public static string RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_ {
+            get {
+                return ResourceManager.GetString("RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_F" +
+                        "ailed_", resourceCulture);
             }
         }
         
@@ -11855,24 +11940,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This tool requires the use of R {0} and the following packages. Select packages to install and then click Install to begin the installation process..
+        ///   Looks up a localized string similar to This tool requires the use of R {0} and the following packages..
         /// </summary>
-        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_ {
+        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages_ {
             get {
                 return ResourceManager.GetString("RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_" +
-                        "packages__Select_packages_to_install_and_then_click_Install_to_begin_the_install" +
-                        "ation_process_", resourceCulture);
+                        "packages_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process..
+        ///   Looks up a localized string similar to This Tool requires the use of the following R Packages..
         /// </summary>
-        public static string RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_ {
+        public static string RInstaller_RInstaller_Load_This_Tool_requires_the_use_of_the_following_R_Packages_ {
             get {
-                return ResourceManager.GetString("RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages" +
-                        "__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_pr" +
-                        "ocess_", resourceCulture);
+                return ResourceManager.GetString("RInstaller_RInstaller_Load_This_Tool_requires_the_use_of_the_following_R_Packages" +
+                        "_", resourceCulture);
             }
         }
         

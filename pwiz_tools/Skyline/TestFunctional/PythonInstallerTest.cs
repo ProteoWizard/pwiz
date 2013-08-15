@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
                             CancelDownload = cancelDownload,
                             DownloadSuccess = downloadSuccess
                         };
-                    pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = installSuccess ? 0 : 1};
+                    pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = installSuccess ? 0 : 1};
                 });
             return pythonInstaller;
         }
@@ -380,7 +380,7 @@ namespace pwiz.SkylineTestFunctional
                             CancelDownload = cancelDownload,
                             DownloadSuccess = downloadSuccess
                         };
-                    pythonInstaller.TestPipNamedPipeProcessRunner = new TestNamedPipeProcessRunner
+                    pythonInstaller.TestPipNamedPipeRunProcess = new TestNamedPipeRunProcess
                         {
                             ConnectSuccess = connectSuccess,
                             ExitCode = installSuccess ? 0 : 1
@@ -399,7 +399,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestExecutableInstallFailure()
         {
             var pythonInstaller = FormatPackageInstallerOnlyExes(false, true, false);
-            RunUI(() => pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 1});
+            RunUI(() => pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = 1});
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
@@ -410,7 +410,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestExecutableInstallSuccess()
         {
             var pythonInstaller = FormatPackageInstallerOnlyExes(false, true, true);
-            RunUI(() => pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 0});
+            RunUI(() => pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = 0});
             var installSuccessDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_GetPackages_Package_installation_completed_, installSuccessDlg.Message));
             OkDialog(installSuccessDlg, installSuccessDlg.OkDialog);
@@ -422,7 +422,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPackageInstallerBothTypes(false, true, true, true);
             SetPipInstallResults(pythonInstaller, false, true, true, true);
-            RunUI(() => pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 0});
+            RunUI(() => pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = 0});
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message));
             var pipMessageDlg = ShowDialog<MessageDlg>(() => Accept(messageDlg));
@@ -467,7 +467,7 @@ namespace pwiz.SkylineTestFunctional
                             CancelDownload = cancelDownload,
                             DownloadSuccess = downloadSuccess
                         };
-                    pythonInstaller.TestNamedPipeProcessRunner = new TestNamedPipeProcessRunner
+                    pythonInstaller.TestNamedPipeRunProcess = new TestNamedPipeRunProcess
                         {
                             ConnectSuccess = connectSuccess,
                             ExitCode = installSuccess ? 0 : 1
@@ -492,13 +492,13 @@ namespace pwiz.SkylineTestFunctional
                             CancelDownload = false,
                             DownloadSuccess = true
                         };
-                    pythonInstaller.TestProcessRunner = new TestProcessRunner {ExitCode = 0};
+                    pythonInstaller.TestRunProcess = new TestRunProcess {ExitCode = 0};
                     pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
                         {
                             CancelDownload = false,
                             DownloadSuccess = true
                         };
-                    pythonInstaller.TestPipNamedPipeProcessRunner = pythonInstaller.TestNamedPipeProcessRunner = new TestNamedPipeProcessRunner
+                    pythonInstaller.TestPipNamedPipeRunProcess = pythonInstaller.TestNamedPipeRunProcess = new TestNamedPipeRunProcess
                         {
                             ConnectSuccess = true,
                             ExitCode = 0
@@ -526,7 +526,7 @@ namespace pwiz.SkylineTestFunctional
             using (var dlg = new PythonInstaller(ppc, packageUris, installed, null))
             {
                 // Keep OK button from doing anything ever
-                dlg.TestProcessRunner = new TestProcessRunner { ExitCode = 0 }; 
+                dlg.TestRunProcess = new TestRunProcess { ExitCode = 0 }; 
                 dlg.ShowDialog();
             }
         }

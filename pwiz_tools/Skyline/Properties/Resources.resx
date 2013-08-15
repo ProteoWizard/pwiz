@@ -5488,14 +5488,8 @@ Are you sure you want to continue?</value>
   <data name="UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_" xml:space="preserve">
     <value>The tool "{0}" requires report type titled "{1}" and it is not provided. Import canceled.</value>
   </data>
-  <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_the_following_R_Packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
-    <value>This tool requires the use of the following R Packages. Select packages to install and then click Install to begin the installation process.</value>
-  </data>
   <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_" xml:space="preserve">
     <value>This tool requires the use of R {0}. Click Install to begin the installation process.</value>
-  </data>
-  <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
-    <value>This tool requires the use of R {0} and the following packages. Select packages to install and then click Install to begin the installation process.</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_" xml:space="preserve">
     <value>Failed attempting to extract the tool from {0}</value>
@@ -5515,17 +5509,11 @@ Are you sure you want to continue?</value>
   <data name="RInstaller_GetPackages_Downloading_packages" xml:space="preserve">
     <value>Downloading packages</value>
   </data>
-  <data name="RInstaller_InstallPackages_Unknown_error_installing_packages_" xml:space="preserve">
-    <value>Unknown error installing packages.</value>
-  </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_" xml:space="preserve">
     <value>The selected zip file is not an installable tool.</value>
   </data>
   <data name="PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas" xml:space="preserve">
     <value>Duplicate transition '{0}' found for peak areas</value>
-  </data>
-  <data name="RInstaller_DownloadPackages_Failed_to_download_the_following_packages_" xml:space="preserve">
-    <value>Failed to download the following packages:</value>
   </data>
   <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
     <value>Check your network connection or contact the tool provider for installation support.</value>
@@ -5763,5 +5751,44 @@ Are you sure you want to continue?</value>
   </data>
   <data name="MatchModificationsControl_AddModification_Add__0__modification__1_" xml:space="preserve">
     <value>Add {0} modification {1}</value>
+  </data>
+  <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0__and_the_following_packages_" xml:space="preserve">
+    <value>This tool requires the use of R {0} and the following packages.</value>
+  </data>
+  <data name="RInstaller_RInstaller_Load_This_Tool_requires_the_use_of_the_following_R_Packages_" xml:space="preserve">
+    <value>This Tool requires the use of the following R Packages.</value>
+  </data>
+  <data name="RInstaller_InstallPackages_The_following_packages_failed_to_install_" xml:space="preserve">
+    <value>The following packages failed to install:</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_" xml:space="preserve">
+    <value>Output logged to the Immediate Window.</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
+    <value>Error: No internet connection.</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
+    <value>Installing R packages requires an internet connection. Please check your connection and try again</value>
+  </data>
+  <data name="RInstaller_GetPAckages_Installing_Packages" xml:space="preserve">
+    <value>Installing Packages</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Download_Canceled" xml:space="preserve">
+    <value>Download Canceled</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error_Installing_Packages" xml:space="preserve">
+    <value>Error Installing Packages</value>
+  </data>
+  <data name="RInstaller_InstallPackages_The_package__0__failed_to_install_" xml:space="preserve">
+    <value>The package {0} failed to install:</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_" xml:space="preserve">
+    <value>Error: Package installation did not complete. Output logged to the Immediate Window.</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_" xml:space="preserve">
+    <value>Unknown Error installing packages. Output logged to the Immediate Window.</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_" xml:space="preserve">
+    <value>Unknown error installing packages. Tool Installation Failed.</value>
   </data>
 </root>

@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         /// <summary>
-        ///  Method used to encapsolate the running of a executable for threading.
+        ///  Method used to encapsulate the running of a executable for threading.
         /// </summary>
         /// <param name="document"> Contains the document to base reports off of, as well as to serve as the parent for args collector forms. </param>
         /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>

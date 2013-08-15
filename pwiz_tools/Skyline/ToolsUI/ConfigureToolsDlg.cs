@@ -307,7 +307,7 @@ namespace pwiz.Skyline.ToolsUI
                 return true;
             }
             //If it is not a $(ProgramPath()) macro then do other checks.
-            if (ToolMacros.IsProgramPathMacro(tool.Command) == null)
+            if (ToolMacros.GetProgramPathContainer(tool.Command) == null)
             {
                 string supportedTypes = String.Join("; ", EXTENSIONS);
                 supportedTypes = supportedTypes.Replace(".", "*.");
@@ -678,7 +678,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnFindCommand_Click(object sender, EventArgs e)
         {
-            ProgramPathContainer pcc = ToolMacros.IsProgramPathMacro(textCommand.Text);
+            ProgramPathContainer pcc = ToolMacros.GetProgramPathContainer(textCommand.Text);
             if (pcc != null)
             {
                 contextMenuCommand.Show(btnFindCommand.Parent, btnFindCommand.Left, btnFindCommand.Bottom + 1);
@@ -702,7 +702,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void EditMacro()
         {
-            ProgramPathContainer pcc = ToolMacros.IsProgramPathMacro(textCommand.Text);
+            ProgramPathContainer pcc = ToolMacros.GetProgramPathContainer(textCommand.Text);
             var dlg = new LocateFileDlg(pcc);
             dlg.ShowDialog();
         }
@@ -980,7 +980,7 @@ namespace pwiz.Skyline.ToolsUI
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
-                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel, TestFindProgramPath ?? SkylineWindowParent.InstallProgram);
+                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel, SkylineWindowParent.InstallProgram);
             }
             catch (MessageException x)
             {
@@ -991,14 +991,6 @@ namespace pwiz.Skyline.ToolsUI
                 MessageDlg.Show(this, TextUtil.LineSeparate(string.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), x.Message));
             }
 
-            // The unzip function may have made changes that need to be reflected in the dialog box
-            // regardless of return value or exceptions thrown
-            RemoveAllTools();
-            //Reload the report dropdown menu!
-            _driverReportSpec.LoadList(string.Empty);
-            comboReport.Items.Insert(0, string.Empty);
-            comboReport.SelectedItem = string.Empty;
-
             if (result != null)
             {
                 foreach (var message in result.MessagesThrown)
@@ -1007,14 +999,24 @@ namespace pwiz.Skyline.ToolsUI
                     MessageDlg.Show(this, message);
                 }
             }
+            else
+            {
+                // If result is Null than we want to discard changes made to the toolsList
+                // SaveTools will overwrite Settings tools list with whatever we have in the Dialog toolList
+                SaveTools();
+            }
+            //Reload the report dropdown menu!
+            _driverReportSpec.LoadList(string.Empty);
+            comboReport.Items.Insert(0, string.Empty);
+            comboReport.SelectedItem = string.Empty;
 
             //Reload the tool list
+            RemoveAllTools();
+            Removelist.Clear();
             ToolList = Settings.Default.ToolList
-               .Select(t => new ToolDescription(t))
-               .ToList();
-
+                               .Select(t => new ToolDescription(t))
+                               .ToList();
             RefreshListBox();
-
             if (ToolList.Count == 0)
             {
                 listTools.SelectedIndex = -1;
@@ -1024,7 +1026,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                listTools.SelectedIndex = ToolList.Count-1;
+                listTools.SelectedIndex = ToolList.Count - 1;
                 btnRemove.Enabled = true;
             }
             Unsaved = false;

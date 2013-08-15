@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 if (macro.ShortText == PROGRAM_PATH)
                 {
-                    ProgramPathContainer ppc = IsProgramPathMacro(workingString);
+                    ProgramPathContainer ppc = GetProgramPathContainer(workingString);
                     if (ppc == null)
                     {
                         // Leave command as is.
@@ -331,8 +331,11 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         /// <param name="command">Command string to match on</param>
         /// <returns>Internal Matchings.</returns>
-        public static ProgramPathContainer IsProgramPathMacro(string command)
+        public static ProgramPathContainer GetProgramPathContainer(string command)
         {
+            if (string.IsNullOrEmpty(command))
+                return null;
+
             // Example String "$(ProgramPath(R,2.12.2))
             // Want to extract R,2.12.2 and then separate the two things.
             Match match = Regex.Match(command, PROGRAM_PATH); // @"\$\(ProgramPath\((.*)\)\)";
