@@ -187,7 +187,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            WaitForDocumentChange(doc);
+            doc = WaitForDocumentChange(doc);
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
@@ -206,6 +206,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
                 importPeptideSearchDlg.ClickNextButton();
             });
+            doc = WaitForDocumentChange(doc);
 
             // We're on the "Import FASTA" page of the wizard.
             RunUI(() =>
@@ -217,6 +218,7 @@ namespace pwiz.SkylineTestFunctional
             // Finish wizard and have empty proteins dialog come up. Only 1 out of the 10 proteins had a match.
             // Cancel the empty proteins dialog.
             var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            doc = WaitForDocumentChange(doc);
             RunUI(() =>
             {
                 Assert.AreEqual(9, emptyProteinsDlg.EmptyProteins);
@@ -233,6 +235,7 @@ namespace pwiz.SkylineTestFunctional
                     discardNotice.Message);
                 discardNotice.OkDialog();
             });
+            WaitForDocumentChange(doc);
 
             // An error will appear because the spectrum file was empty.
             var errorDlg = WaitForOpenForm<MessageDlg>();
