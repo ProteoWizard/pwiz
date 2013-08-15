@@ -310,6 +310,22 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public RetentionTimeRegression RetentionTime { get; set; }
 
+        public OptimizableRegression GetOptimizeFunction(string optimize)
+        {
+            if (Equals(optimize, ExportOptimize.CE))
+                return CollisionEnergy;
+            else if (Equals(optimize, ExportOptimize.DP))
+            {
+                if (DeclusteringPotential == null)
+                    throw new InvalidDataException(
+                        Resources.
+                            SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_decluserting_potential);
+
+                return DeclusteringPotential;
+            }
+            return null;
+        }
+
         #region Property change methods
 
         public TransitionPrediction ChangePrecursorMassType(MassType prop)
