@@ -1,0 +1,427 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="0.7">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="True" measured_rt_window="2" />
+      <peptide_filter start="2" min_length="7" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications>
+        <static_modifications>
+          <static_modification name="Carbamidomethyl Cysteine" aminoacid="C" formula="C2H3ON" />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name="13C K" aminoacid="K" terminus="C" formula="C'8 - C8" />
+          <static_modification name="13C R" aminoacid="R" terminus="C" formula="C'6 - C6" />
+          <static_modification name="13C V" aminoacid="V" formula="C'5 - C5" explicit_decl="true" />
+          <static_modification name="13C L" aminoacid="L" formula="C'6 - C6" explicit_decl="true" />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="ABI" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.0431" intercept="4.7556" />
+        </predict_collision_energy>
+        <predict_declustering_potential name="ABI" step_size="1" step_count="5" slope="0.0729" intercept="31.117" />
+      </transition_prediction>
+      <transition_filter precursor_charges="2" product_charges="1" fragment_types="y" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" auto_select="true" />
+      <transition_libraries ion_match_tolerance="0.5" ion_count="4" pick_from="none" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="2800" mz_match_tolerance="0.065" />
+    </transition_settings>
+    <data_settings />
+  </settings_summary>
+  <peptide_list label_name="APR">
+    <peptide sequence="AGLCQTFVYGGCR" calc_neutral_pep_mass="1487.664954" num_missed_cleavages="0">
+      <explicit_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="7" modification_name="13C V" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2">
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="1086.491664" product_charge="1">
+          <precursor_mz>744.839753</precursor_mz>
+          <product_mz>1087.49894</product_mz>
+          <collision_energy>36.858193</collision_energy>
+          <declustering_potential>85.415818</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="958.433087" product_charge="1">
+          <precursor_mz>744.839753</precursor_mz>
+          <product_mz>959.440363</product_mz>
+          <collision_energy>36.858193</collision_energy>
+          <declustering_potential>85.415818</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="857.385408" product_charge="1">
+          <precursor_mz>744.839753</precursor_mz>
+          <product_mz>858.392684</product_mz>
+          <collision_energy>36.858193</collision_energy>
+          <declustering_potential>85.415818</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy">
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="1091.508438" product_charge="1">
+          <precursor_mz>747.34814</precursor_mz>
+          <product_mz>1092.515714</product_mz>
+          <collision_energy>36.966305</collision_energy>
+          <declustering_potential>85.598679</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="963.449861" product_charge="1">
+          <precursor_mz>747.34814</precursor_mz>
+          <product_mz>964.457137</product_mz>
+          <collision_energy>36.966305</collision_energy>
+          <declustering_potential>85.598679</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="862.402182" product_charge="1">
+          <precursor_mz>747.34814</precursor_mz>
+          <product_mz>863.409458</product_mz>
+          <collision_energy>36.966305</collision_energy>
+          <declustering_potential>85.598679</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="LEP">
+    <peptide sequence="INDISHTQSVSAK" auto_manage_children="false" calc_neutral_pep_mass="1398.710307" num_missed_cleavages="0">
+      <precursor charge="3" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="719.381368" product_charge="1">
+          <precursor_mz>467.244045</precursor_mz>
+          <product_mz>720.388644</product_mz>
+          <collision_energy>24.893818</collision_energy>
+          <declustering_potential>65.179091</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="727.408207" product_charge="1">
+          <precursor_mz>469.919658</precursor_mz>
+          <product_mz>728.415483</product_mz>
+          <collision_energy>25.009137</collision_energy>
+          <declustering_potential>65.374143</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="12" calc_neutral_mass="1293.653082" product_charge="2">
+          <precursor_mz>469.919658</precursor_mz>
+          <product_mz>647.833817</product_mz>
+          <collision_energy>25.009137</collision_energy>
+          <declustering_potential>65.374143</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1179.610155" product_charge="2">
+          <precursor_mz>469.919658</precursor_mz>
+          <product_mz>590.812353</product_mz>
+          <collision_energy>25.009137</collision_energy>
+          <declustering_potential>65.374143</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="MYO">
+    <peptide sequence="LFTGHPETLEK" auto_manage_children="false" calc_neutral_pep_mass="1270.655752" num_missed_cleavages="0">
+      <precursor charge="3" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="715.37522" product_charge="1">
+          <precursor_mz>424.559193</precursor_mz>
+          <product_mz>716.382496</product_mz>
+          <collision_energy>23.054101</collision_energy>
+          <declustering_potential>62.067365</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="723.402059" product_charge="1">
+          <precursor_mz>427.234806</precursor_mz>
+          <product_mz>724.409335</product_mz>
+          <collision_energy>23.16942</collision_energy>
+          <declustering_potential>62.262417</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="1165.598527" product_charge="2">
+          <precursor_mz>427.234806</precursor_mz>
+          <product_mz>583.80654</product_mz>
+          <collision_energy>23.16942</collision_energy>
+          <declustering_potential>62.262417</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="1018.530114" product_charge="2">
+          <precursor_mz>427.234806</precursor_mz>
+          <product_mz>510.272333</product_mz>
+          <collision_energy>23.16942</collision_energy>
+          <declustering_potential>62.262417</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="MBP" auto_manage_children="false">
+    <peptide sequence="HGFLPR" calc_neutral_pep_mass="725.397293" num_missed_cleavages="0">
+      <precursor charge="2">
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="588.338381" product_charge="1">
+          <precursor_mz>363.705923</precursor_mz>
+          <product_mz>589.345657</product_mz>
+          <collision_energy>20.431325</collision_energy>
+          <declustering_potential>57.631162</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="531.316918" product_charge="1">
+          <precursor_mz>363.705923</precursor_mz>
+          <product_mz>532.324194</product_mz>
+          <collision_energy>20.431325</collision_energy>
+          <declustering_potential>57.631162</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="384.248504" product_charge="1">
+          <precursor_mz>363.705923</precursor_mz>
+          <product_mz>385.25578</product_mz>
+          <collision_energy>20.431325</collision_energy>
+          <declustering_potential>57.631162</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy">
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="594.35851" product_charge="1">
+          <precursor_mz>366.715987</precursor_mz>
+          <product_mz>595.365786</product_mz>
+          <collision_energy>20.561059</collision_energy>
+          <declustering_potential>57.850595</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="537.337047" product_charge="1">
+          <precursor_mz>366.715987</precursor_mz>
+          <product_mz>538.344323</product_mz>
+          <collision_energy>20.561059</collision_energy>
+          <declustering_potential>57.850595</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="390.268633" product_charge="1">
+          <precursor_mz>366.715987</precursor_mz>
+          <product_mz>391.275909</product_mz>
+          <collision_energy>20.561059</collision_energy>
+          <declustering_potential>57.850595</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="PSA">
+    <peptide sequence="IVGGWECEK" calc_neutral_pep_mass="1076.496081" num_missed_cleavages="0">
+      <explicit_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="1" modification_name="13C V" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="807.322139" product_charge="1">
+          <precursor_mz>539.255316</precursor_mz>
+          <product_mz>808.329415</product_mz>
+          <collision_energy>27.997504</collision_energy>
+          <declustering_potential>70.428713</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="807.322139" product_charge="1">
+          <precursor_mz>541.763703</precursor_mz>
+          <product_mz>808.329415</product_mz>
+          <collision_energy>28.105616</collision_energy>
+          <declustering_potential>70.611574</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="LSEPAELTDAVK" calc_neutral_pep_mass="1271.660897" num_missed_cleavages="0">
+      <precursor charge="2" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="845.449448" product_charge="1">
+          <precursor_mz>636.837725</precursor_mz>
+          <product_mz>846.456724</product_mz>
+          <collision_energy>32.203306</collision_energy>
+          <declustering_potential>77.54247</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="774.412334" product_charge="1">
+          <precursor_mz>636.837725</precursor_mz>
+          <product_mz>775.41961</product_mz>
+          <collision_energy>32.203306</collision_energy>
+          <declustering_potential>77.54247</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="853.476287" product_charge="1">
+          <precursor_mz>640.851144</precursor_mz>
+          <product_mz>854.483563</product_mz>
+          <collision_energy>32.376284</collision_energy>
+          <declustering_potential>77.835048</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="782.439173" product_charge="1">
+          <precursor_mz>640.851144</precursor_mz>
+          <product_mz>783.446449</product_mz>
+          <collision_energy>32.376284</collision_energy>
+          <declustering_potential>77.835048</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="HRP">
+    <peptide sequence="SSDLVALSGGHTFGK" auto_manage_children="false" calc_neutral_pep_mass="1474.741607" num_missed_cleavages="0">
+      <precursor charge="3" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="973.49813" product_charge="1">
+          <precursor_mz>492.587812</precursor_mz>
+          <product_mz>974.505406</product_mz>
+          <collision_energy>25.986135</collision_energy>
+          <declustering_potential>67.026651</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="789.376952" product_charge="1">
+          <precursor_mz>492.587812</precursor_mz>
+          <product_mz>790.384228</product_mz>
+          <collision_energy>25.986135</collision_energy>
+          <declustering_potential>67.026651</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="702.344923" product_charge="1">
+          <precursor_mz>492.587812</precursor_mz>
+          <product_mz>703.352199</product_mz>
+          <collision_energy>25.986135</collision_energy>
+          <declustering_potential>67.026651</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="10" calc_neutral_mass="981.524969" product_charge="1">
+          <precursor_mz>495.263425</precursor_mz>
+          <product_mz>982.532245</product_mz>
+          <collision_energy>26.101454</collision_energy>
+          <declustering_potential>67.221704</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="797.403791" product_charge="1">
+          <precursor_mz>495.263425</precursor_mz>
+          <product_mz>798.411067</product_mz>
+          <collision_energy>26.101454</collision_energy>
+          <declustering_potential>67.221704</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="710.371762" product_charge="1">
+          <precursor_mz>495.263425</precursor_mz>
+          <product_mz>711.379038</product_mz>
+          <collision_energy>26.101454</collision_energy>
+          <declustering_potential>67.221704</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="CRP">
+    <peptide sequence="ESDTSYVSLK" calc_neutral_pep_mass="1127.534634" num_missed_cleavages="0">
+      <precursor charge="2">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="796.43307" product_charge="1">
+          <precursor_mz>564.774593</precursor_mz>
+          <product_mz>797.440346</product_mz>
+          <collision_energy>29.097385</collision_energy>
+          <declustering_potential>72.289068</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="695.385391" product_charge="1">
+          <precursor_mz>564.774593</precursor_mz>
+          <product_mz>696.392667</product_mz>
+          <collision_energy>29.097385</collision_energy>
+          <declustering_potential>72.289068</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="608.353363" product_charge="1">
+          <precursor_mz>564.774593</precursor_mz>
+          <product_mz>609.360639</product_mz>
+          <collision_energy>29.097385</collision_energy>
+          <declustering_potential>72.289068</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="804.459909" product_charge="1">
+          <precursor_mz>568.788013</precursor_mz>
+          <product_mz>805.467185</product_mz>
+          <collision_energy>29.270363</collision_energy>
+          <declustering_potential>72.581646</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="703.41223" product_charge="1">
+          <precursor_mz>568.788013</precursor_mz>
+          <product_mz>704.419506</product_mz>
+          <collision_energy>29.270363</collision_energy>
+          <declustering_potential>72.581646</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="616.380202" product_charge="1">
+          <precursor_mz>568.788013</precursor_mz>
+          <product_mz>617.387478</product_mz>
+          <collision_energy>29.270363</collision_energy>
+          <declustering_potential>72.581646</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="GYSIFSYATK" calc_neutral_pep_mass="1135.554976" num_missed_cleavages="0">
+      <precursor charge="2" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="915.470183" product_charge="1">
+          <precursor_mz>568.784764</precursor_mz>
+          <product_mz>916.477459</product_mz>
+          <collision_energy>29.270223</collision_energy>
+          <declustering_potential>72.581409</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="828.438155" product_charge="1">
+          <precursor_mz>568.784764</precursor_mz>
+          <product_mz>829.445431</product_mz>
+          <collision_energy>29.270223</collision_energy>
+          <declustering_potential>72.581409</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="715.354091" product_charge="1">
+          <precursor_mz>568.784764</precursor_mz>
+          <product_mz>716.361367</product_mz>
+          <collision_energy>29.270223</collision_energy>
+          <declustering_potential>72.581409</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy" auto_manage_children="false">
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="923.497022" product_charge="1">
+          <precursor_mz>572.798183</precursor_mz>
+          <product_mz>924.504298</product_mz>
+          <collision_energy>29.443202</collision_energy>
+          <declustering_potential>72.873988</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="836.464994" product_charge="1">
+          <precursor_mz>572.798183</precursor_mz>
+          <product_mz>837.47227</product_mz>
+          <collision_energy>29.443202</collision_energy>
+          <declustering_potential>72.873988</declustering_potential>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="723.38093" product_charge="1">
+          <precursor_mz>572.798183</precursor_mz>
+          <product_mz>724.388206</product_mz>
+          <collision_energy>29.443202</collision_energy>
+          <declustering_potential>72.873988</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="YEVQGEVFTKPQLWP" calc_neutral_pep_mass="1819.914486" num_missed_cleavages="0">
+      <explicit_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="12" modification_name="13C L" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" auto_manage_children="false">
+        <transition fragment_type="b" fragment_ordinal="9" calc_neutral_mass="1052.481476" product_charge="1">
+          <precursor_mz>910.964519</precursor_mz>
+          <product_mz>1053.488752</product_mz>
+          <collision_energy>44.018171</collision_energy>
+          <declustering_potential>97.526313</declustering_potential>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="10" calc_neutral_mass="1180.57644" product_charge="1">
+          <precursor_mz>910.964519</precursor_mz>
+          <product_mz>1181.583716</product_mz>
+          <collision_energy>44.018171</collision_energy>
+          <declustering_potential>97.526313</declustering_potential>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="13" calc_neutral_mass="1518.771845" product_charge="1">
+          <precursor_mz>910.964519</precursor_mz>
+          <product_mz>1519.779121</product_mz>
+          <collision_energy>44.018171</collision_energy>
+          <declustering_potential>97.526313</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy" auto_manage_children="false">
+        <transition fragment_type="b" fragment_ordinal="9" calc_neutral_mass="1052.481476" product_charge="1">
+          <precursor_mz>913.974584</precursor_mz>
+          <product_mz>1053.488752</product_mz>
+          <collision_energy>44.147905</collision_energy>
+          <declustering_potential>97.745747</declustering_potential>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="10" calc_neutral_mass="1180.57644" product_charge="1">
+          <precursor_mz>913.974584</precursor_mz>
+          <product_mz>1181.583716</product_mz>
+          <collision_energy>44.147905</collision_energy>
+          <declustering_potential>97.745747</declustering_potential>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="13" calc_neutral_mass="1524.791974" product_charge="1">
+          <precursor_mz>913.974584</precursor_mz>
+          <product_mz>1525.79925</product_mz>
+          <collision_energy>44.147905</collision_energy>
+          <declustering_potential>97.745747</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

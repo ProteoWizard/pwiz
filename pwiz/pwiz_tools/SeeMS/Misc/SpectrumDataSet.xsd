@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="SpectrumDataSet" targetNamespace="http://tempuri.org/SpectrumDataSet.xsd" xmlns:mstns="http://tempuri.org/SpectrumDataSet.xsd" xmlns="http://tempuri.org/SpectrumDataSet.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections />
+        <Tables />
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="SpectrumDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_DataSetName="SpectrumDataSet" msprop:Generator_UserDSName="SpectrumDataSet" msprop:EnableTableAdapterManager="true">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="SpectrumTable" msdata:CaseSensitive="True" msprop:Generator_UserTableName="SpectrumTable" msprop:Generator_RowDeletedName="SpectrumTableRowDeleted" msprop:Generator_TableClassName="SpectrumTableDataTable" msprop:Generator_RowChangedName="SpectrumTableRowChanged" msprop:Generator_RowClassName="SpectrumTableRow" msprop:Generator_RowChangingName="SpectrumTableRowChanging" msprop:Generator_RowEvArgName="SpectrumTableRowChangeEvent" msprop:Generator_RowEvHandlerName="SpectrumTableRowChangeEventHandler" msprop:Generator_TablePropName="SpectrumTable" msprop:Generator_TableVarName="tableSpectrumTable" msprop:Generator_RowDeletingName="SpectrumTableRowDeleting">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Id" msprop:Generator_UserColumnName="Id" msprop:Generator_ColumnPropNameInRow="Id" msprop:Generator_ColumnVarNameInTable="columnId" msprop:Generator_ColumnPropNameInTable="IdColumn" type="xs:string" />
+              <xs:element name="Index" msprop:Generator_UserColumnName="Index" msprop:Generator_ColumnPropNameInRow="Index" msprop:Generator_ColumnVarNameInTable="columnIndex" msprop:Generator_ColumnPropNameInTable="IndexColumn" type="xs:int" />
+              <xs:element name="SpotId" msdata:Caption="Spot Id" msprop:Generator_UserColumnName="SpotId" msprop:Generator_ColumnPropNameInRow="SpotId" msprop:Generator_ColumnVarNameInTable="columnSpotId" msprop:Generator_ColumnPropNameInTable="SpotIdColumn" type="xs:string" minOccurs="0" />
+              <xs:element name="SpectrumType" msdata:Caption="Spectrum Type" msprop:Generator_UserColumnName="SpectrumType" msprop:Generator_ColumnPropNameInRow="SpectrumType" msprop:Generator_ColumnVarNameInTable="columnSpectrumType" msprop:Generator_ColumnPropNameInTable="SpectrumTypeColumn" type="xs:string" minOccurs="0" />
+              <xs:element name="MsLevel" msdata:Caption="MS Level" msprop:Generator_UserColumnName="MsLevel" msprop:Generator_ColumnPropNameInRow="MsLevel" msprop:Generator_ColumnVarNameInTable="columnMsLevel" msprop:Generator_ColumnPropNameInTable="MsLevelColumn" type="xs:int" minOccurs="0" />
+              <xs:element name="ScanTime" msdata:Caption="Scan Time" msprop:Generator_UserColumnName="ScanTime" msprop:Generator_ColumnPropNameInRow="ScanTime" msprop:Generator_ColumnVarNameInTable="columnScanTime" msprop:Generator_ColumnPropNameInTable="ScanTimeColumn" type="xs:double" minOccurs="0" />
+              <xs:element name="DataPoints" msdata:Caption="Data Points" msprop:Generator_UserColumnName="DataPoints" msprop:Generator_ColumnPropNameInRow="DataPoints" msprop:Generator_ColumnVarNameInTable="columnDataPoints" msprop:Generator_ColumnPropNameInTable="DataPointsColumn" type="xs:unsignedLong" minOccurs="0" />
+              <xs:element name="BasePeakMz" msdata:Caption="Base Peak m/z" msprop:Generator_UserColumnName="BasePeakMz" msprop:Generator_ColumnPropNameInRow="BasePeakMz" msprop:Generator_ColumnVarNameInTable="columnBasePeakMz" msprop:Generator_ColumnPropNameInTable="BasePeakMzColumn" type="xs:double" minOccurs="0" />
+              <xs:element name="BasePeakIntensity" msdata:Caption="Base Peak Intensity" msprop:Generator_UserColumnName="BasePeakIntensity" msprop:Generator_ColumnPropNameInRow="BasePeakIntensity" msprop:Generator_ColumnVarNameInTable="columnBasePeakIntensity" msprop:Generator_ColumnPropNameInTable="BasePeakIntensityColumn" type="xs:double" minOccurs="0" />
+              <xs:element name="TotalIonCurrent" msdata:Caption="Total Ion Current" msprop:Generator_UserColumnName="TotalIonCurrent" msprop:Generator_ColumnPropNameInRow="TotalIonCurrent" msprop:Generator_ColumnVarNameInTable="columnTotalIonCurrent" msprop:Generator_ColumnPropNameInTable="TotalIonCurrentColumn" type="xs:double" minOccurs="0" />
+              <xs:element name="IcId" msdata:Caption="IC Id" msprop:Generator_UserColumnName="IcId" msprop:Generator_ColumnPropNameInRow="IcId" msprop:Generator_ColumnVarNameInTable="columnIcId" msprop:Generator_ColumnPropNameInTable="IcIdColumn" type="xs:string" minOccurs="0" />
+              <xs:element name="DpId" msdata:Caption="DP Id" msprop:Generator_UserColumnName="DpId" msprop:Generator_ColumnPropNameInRow="DpId" msprop:Generator_ColumnVarNameInTable="columnDpId" msprop:Generator_ColumnPropNameInTable="DpIdColumn" type="xs:string" minOccurs="0" />
+              <xs:element name="PrecursorInfo" msdata:Caption="Precursor Info" msprop:Generator_UserColumnName="PrecursorInfo" msprop:Generator_ColumnPropNameInRow="PrecursorInfo" msprop:Generator_ColumnVarNameInTable="columnPrecursorInfo" msprop:Generator_ColumnPropNameInTable="PrecursorInfoColumn" type="xs:string" minOccurs="0" />
+              <xs:element name="ScanInfo" msdata:Caption="Scan Info" msprop:Generator_UserColumnName="ScanInfo" msprop:Generator_ColumnPropNameInRow="ScanInfo" msprop:Generator_ColumnVarNameInTable="columnScanInfo" msprop:Generator_ColumnPropNameInTable="ScanInfoColumn" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:SpectrumTable" />
+      <xs:field xpath="mstns:Index" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>

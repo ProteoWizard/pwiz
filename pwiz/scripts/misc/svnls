@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ "$1" = "--help" -o "$1" = "-h" ]
+then
+    echo Usage: svnls [path]
+    echo Recursively lists all files in the svn snapshot, ignoring local files.
+    exit 1
+fi
+
+# get verboose svn status, filter out local files, grab last field
+
+files=$(svn st -v $1 | grep -v ^? | awk '{print $NF}')
+
+# filter out directories
+
+for file in $files
+do
+    if [ -f $file ]; then echo $file; fi
+done
+

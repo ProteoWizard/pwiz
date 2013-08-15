@@ -1,0 +1,173 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+alias mstool-requirements : : : :
+        <library>../common
+        <library>../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
+        <library>../../pwiz/analysis//pwiz_analysis_version ;
+
+exe msdiff 
+    : msdiff.cpp
+      /ext/boost//program_options
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
+exe msconvert 
+    : msconvert.cpp
+      /ext/boost//program_options
+      /ext/boost//filesystem
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
+exe msdir
+    : msdir.cpp
+      /ext/boost//program_options
+      /ext/boost//filesystem
+      /ext/boost//date_time
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
+exe msaccess
+    : msaccess.cpp
+      ../../pwiz/analysis/passive//pwiz_analysis_passive
+      ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
+      ../../pwiz/utility/misc//pwiz_utility_image
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
+exe mspicture 
+    : mspicture.cpp
+      ../../pwiz/analysis/passive//pwiz_analysis_passive
+      ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
+      ../../pwiz/utility/misc//pwiz_utility_image
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
+exe pepsum
+    : pepsum.cpp
+      ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
+      ../../pwiz/utility/misc//pwiz_utility_image
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
+exe peakaboo
+    : peakaboo.cpp
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
+exe msistats
+    : msistats.cpp
+      ../../pwiz/utility/misc//pwiz_utility_misc
+      mstool-requirements
+    : <include>../../..
+      <warnings>off
+    ;
+
+
+exe chainsaw
+    : chainsaw.cpp
+      ../../pwiz/data/proteome//pwiz_data_proteome
+      ../../pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+      ../../pwiz/analysis//pwiz_analysis_version
+      ../../pwiz//pwiz_version
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    : <include>../../..
+    ;
+
+
+alias idtool-requirements : : : :
+        <library>../../pwiz/data/identdata//pwiz_data_identdata
+        <library>/ext/boost//program_options ;
+
+
+exe idconvert
+    : idconvert.cpp
+     idtool-requirements
+    : <include>../../..
+    ;
+
+
+exe idcat
+    : idcat.cpp
+     idtool-requirements
+    : <include>../../..
+    ;
+
+#exe mascot2mzid
+#    : mascot2mzid.cpp
+#      ../../pwiz/data/identdata//pwiz_data_identdata
+#      ../../pwiz//pwiz_version
+#      /ext/boost//program_options
+#    : <include>../../..
+#    ;
+
+exe pepcat
+    : pepcat.cpp
+      ../../pwiz/analysis/passive//pwiz_analysis_passive
+      /ext/boost//program_options
+    : <include>../../..
+    ;
+
+alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
+alias idtools : idconvert ;
+
+
+# local install for testing
+
+install bin 
+    : mstools idtools
+    : <location>bin ;
+
+explicit bin ;
+
+
+import package ;
+local install-requirements = <link>static:<install-dependencies>off ;
+if [ modules.peek : NT ] {
+    install-requirements += <install-default-prefix>"C:/Program Files/ProteoWizard/bin" ;
+} else if [ modules.peek : UNIX ] {
+    install-requirements += <install-default-prefix>/usr/local ;
+}
+
+package.install install
+    : $(install-requirements) release
+    : mstools idtools
+    : # no libraries
+    : # no headers
+    ;
+explicit install ;

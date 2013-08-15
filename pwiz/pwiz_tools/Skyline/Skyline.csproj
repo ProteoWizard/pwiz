@@ -1,0 +1,2102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>pwiz.Skyline</RootNamespace>
+    <AssemblyName>Skyline</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ApplicationIcon>Skyline.ico</ApplicationIcon>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <ManifestCertificateThumbprint>F98EE4EF7786EA098B4A4E267DF2D943B3C85EB2</ManifestCertificateThumbprint>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
+    <GenerateManifests>true</GenerateManifests>
+    <TargetZone>LocalIntranet</TargetZone>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <SignManifests>true</SignManifests>
+    <SignAssembly>false</SignAssembly>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
+    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Background</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily/</InstallUrl>
+    <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
+    <ProductName>Skyline-daily</ProductName>
+    <PublisherName>MacCoss Lab, UW</PublisherName>
+    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
+    <WebPage>index.html</WebPage>
+    <ApplicationRevision>4756</ApplicationRevision>
+    <ApplicationVersion>1.4.1.4756</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip, Version=1.8.4.5, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\DotNetZip-v1.8\Release\Ionic.Zip.dll</HintPath>
+    </Reference>
+    <Reference Include="Kajabity Tools">
+      <HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NHibernate, Version=2.0.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\NHibernate\bin\net-2.0\NHibernate.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Design" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="ZedGraph, Version=5.1.5.28844, Culture=neutral, PublicKeyToken=1a70eed8f3b670b9, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\ZedGraph.dll</HintPath>
+    </Reference>
+    <Reference Include="zlib.net, Version=1.0.3.0, Culture=neutral, PublicKeyToken=47d7877cb3620160">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\zlib.net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Alerts\AboutDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\AboutDlg.Designer.cs">
+      <DependentUpon>AboutDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\AlertLinkDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
+      <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\FilterMatchedPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\FilterMatchedPeptidesDlg.Designer.cs">
+      <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ImportDocResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ImportDocResultsDlg.Designer.cs">
+      <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\LocateFileDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\LocateFileDlg.Designer.cs">
+      <DependentUpon>LocateFileDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\MultiButtonMsgDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MultiButtonMsgDlg.Designer.cs">
+      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\EmptyProteinsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\EmptyProteinsDlg.Designer.cs">
+      <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\MissingFileDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MissingFileDlg.Designer.cs">
+      <DependentUpon>MissingFileDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ReportErrorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ReportErrorDlg.Designer.cs">
+      <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ShareTypeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ShareTypeDlg.Designer.cs">
+      <DependentUpon>ShareTypeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\MessageDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MessageDlg.Designer.cs">
+      <DependentUpon>MessageDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\PasteFilteredPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\PasteFilteredPeptidesDlg.Designer.cs">
+      <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\PasteTypeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\PasteTypeDlg.Designer.cs">
+      <DependentUpon>PasteTypeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\SpectrumLibraryInfoDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\SpectrumLibraryInfoDlg.Designer.cs">
+      <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\UpgradeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\UpgradeDlg.designer.cs">
+      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AlgLib\alglibinternal.cs" />
+    <Compile Include="AlgLib\alglibmisc.cs" />
+    <Compile Include="AlgLib\ap.cs" />
+    <Compile Include="AlgLib\dataanalysis.cs" />
+    <Compile Include="AlgLib\linalg.cs" />
+    <Compile Include="AlgLib\optimization.cs" />
+    <Compile Include="AlgLib\solvers.cs" />
+    <Compile Include="AlgLib\specialfunctions.cs" />
+    <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="CommandLine.cs" />
+    <Compile Include="Controls\FindResultsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\FindResultsForm.Designer.cs">
+      <DependentUpon>FindResultsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\AlignmentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AlignmentForm.Designer.cs">
+      <DependentUpon>AlignmentForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\Animation.cs" />
+    <Compile Include="Controls\Graphs\AreaGraphController.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AreaReplicateGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AreaPeptideGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AsyncChromatogramsGraph.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AsyncRenderControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AsyncRenderControl.Designer.cs">
+      <DependentUpon>AsyncRenderControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphHelper.cs" />
+    <Compile Include="Controls\Graphs\HiLowMiddleErrorBarItem.cs" />
+    <Compile Include="Controls\Graphs\LibraryChromGraphItem.cs" />
+    <Compile Include="Controls\Graphs\MeanErrorBarItem.cs" />
+    <Compile Include="Controls\Graphs\GraphRegression.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphRegression.Designer.cs">
+      <DependentUpon>GraphRegression.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\RTGraphController.cs" />
+    <Compile Include="Controls\Graphs\RTPeptideGraphPane.cs" />
+    <Compile Include="Controls\Graphs\SummaryBarGraphPaneBase.cs" />
+    <Compile Include="Controls\Graphs\GraphValues.cs" />
+    <Compile Include="Controls\Graphs\SummaryPeptideGraphPane.cs" />
+    <Compile Include="Controls\Graphs\SummaryReplicateGraphPane.cs" />
+    <Compile Include="Controls\Graphs\SummaryGraphPane.cs" />
+    <Compile Include="Controls\Graphs\GraphSummary.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphSummary.Designer.cs">
+      <DependentUpon>GraphSummary.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\DataGridViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\ChromGraphItem.cs" />
+    <Compile Include="Controls\Graphs\GraphChromatogram.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphChromatogram.Designer.cs">
+      <DependentUpon>GraphChromatogram.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\CustomTip.cs" />
+    <Compile Include="Controls\Graphs\GraphSpectrum.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphSpectrum.Designer.cs">
+      <DependentUpon>GraphSpectrum.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ImmediateWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\ImmediateWindow.Designer.cs">
+      <DependentUpon>ImmediateWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ResultsGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\RTLinearRegressionGraphPane.cs" />
+    <Compile Include="Controls\Graphs\RTReplicateGraphPane.cs" />
+    <Compile Include="Controls\LongWaitDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\LongWaitDlg.Designer.cs">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\RTScheduleGraphPane.cs" />
+    <Compile Include="Controls\ColumnChooser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\ColumnChooser.Designer.cs">
+      <DependentUpon>ColumnChooser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ResultsGridForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\ResultsGridForm.Designer.cs">
+      <DependentUpon>ResultsGridForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
+    <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
+    <Compile Include="Controls\PopupPickList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\PopupPickList.Designer.cs">
+      <DependentUpon>PopupPickList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SequenceTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\SequenceTreeForm.Designer.cs">
+      <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\StatementCompletionTextBox.cs">
+    </Compile>
+    <Compile Include="Controls\TreeViewMS.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\TreeViewStateRestorer.cs" />
+    <Compile Include="Controls\WizardPages.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditUI\ArrangeGraphsGroupedDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\ArrangeGraphsGroupedDlg.Designer.cs">
+      <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\StatementCompletionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\StatementCompletionForm.Designer.cs">
+      <DependentUpon>StatementCompletionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\ChromChartPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\ChromChartPropertyDlg.Designer.cs">
+      <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\AreaChartPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\AreaChartPropertyDlg.Designer.cs">
+      <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\CopyEmfToolStripMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditUI\CopyGraphDataToolStripMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditUI\RenameProteinsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\RenameProteinsDlg.Designer.cs">
+      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\GenerateDecoysDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\GenerateDecoysDlg.Designer.cs">
+      <DependentUpon>GenerateDecoysDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\RefineDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\RefineDlg.Designer.cs">
+      <DependentUpon>RefineDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\RefineListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\RefineListDlg.Designer.cs">
+      <DependentUpon>RefineListDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\RTChartPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\RTChartPropertyDlg.Designer.cs">
+      <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\SchedulingGraphPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SchedulingGraphPropertyDlg.Designer.cs">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ExportChromatogramDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ExportChromatogramDlg.Designer.cs">
+      <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ManageResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ManageResultsDlg.Designer.cs">
+      <DependentUpon>ManageResultsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\MinimizeResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\MinimizeResultsDlg.Designer.cs">
+      <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\MProphetFeaturesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\MProphetFeaturesDlg.Designer.cs">
+      <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\MatchModificationsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\MatchModificationsControl.Designer.cs">
+      <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.Designer.cs">
+      <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ImportFastaControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ImportFastaControl.Designer.cs">
+      <DependentUpon>ImportFastaControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.designer.cs">
+      <DependentUpon>ImportPeptideSearchDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ImportResultsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ImportResultsControl.Designer.cs">
+      <DependentUpon>ImportResultsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlg.Designer.cs">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\RenameResultDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\RenameResultDlg.Designer.cs">
+      <DependentUpon>RenameResultDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\RescoreResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\RescoreResultsDlg.Designer.cs">
+      <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\SchedulingOptionsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\SchedulingOptionsDlg.Designer.cs">
+      <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AbstractDiaExporter.cs" />
+    <Compile Include="Model\AbstractMassListExporter.cs" />
+    <Compile Include="Model\Esp\EspFeatureCalc.cs" />
+    <Compile Include="Model\Esp\EspFeatureDb.cs" />
+    <Compile Include="Model\Esp\GasPhaseBasicityCalc.cs" />
+    <Compile Include="Model\Esp\PiCalc.cs" />
+    <Compile Include="Model\DocSettings\IsolationScheme.cs" />
+    <Compile Include="Model\DocSettings\IsolationWindow.cs" />
+    <Compile Include="Model\ExportChromatograms.cs" />
+    <Compile Include="Model\Find\AbstractDocNodeFinder.cs" />
+    <Compile Include="Model\Find\MissingAnyResultsFinder.cs" />
+    <Compile Include="Model\Find\MissingLibraryDataFinder.cs" />
+    <Compile Include="Model\Find\MissingAllResultsFinder.cs" />
+    <Compile Include="Model\ImportPeakBoundaries.cs" />
+    <Compile Include="Model\Lib\AlignedRetentionTimes.cs" />
+    <Compile Include="Model\Lib\BlibData\DbModificationRedundant.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundantPeaks.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundant.cs" />
+    <Compile Include="Model\Lib\BlibData\DbScoreTypes.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromLibSpectrumHeaderInfo.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromLibSpectrumInfo.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromatogramLibrary.cs" />
+    <Compile Include="Model\Lib\ChromLib\ChromatogramLibrarySpec.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\ChromLibEntity.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\IsotopeModification.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Peptide.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Precursor.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\PrecursorRetentionTime.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Protein.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\SampleFile.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\Transition.cs" />
+    <Compile Include="Model\OptimizationStep.cs" />
+    <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
+    <Compile Include="Model\DocSettings\Loss.cs" />
+    <Compile Include="Model\DocSettings\MeasuredIon.cs" />
+    <Compile Include="Model\DocSettings\UniMod.cs" />
+    <Compile Include="Model\DocSettings\UniModData.cs" />
+    <Compile Include="Model\Find\AbstractFinder.cs" />
+    <Compile Include="Model\Find\AbstractTransitionResultFinder.cs" />
+    <Compile Include="Model\Find\Bookmark.cs" />
+    <Compile Include="Model\Find\BookmarkEnumerator.cs" />
+    <Compile Include="Model\Find\Finders.cs" />
+    <Compile Include="Model\Find\FindMatch.cs" />
+    <Compile Include="Model\Find\FindOptions.cs" />
+    <Compile Include="Model\Find\FindPredicate.cs" />
+    <Compile Include="Model\Find\FindResult.cs" />
+    <Compile Include="Model\Find\IFinder.cs" />
+    <Compile Include="Model\Find\ManuallyIntegratedPeakFinder.cs" />
+    <Compile Include="Model\Find\TruncatedPeakFinder.cs" />
+    <Compile Include="Model\Find\UnintegratedTransitionFinder.cs" />
+    <Compile Include="Model\Hibernate\DbPrecursorResultSummary.cs" />
+    <Compile Include="Model\Hibernate\DbRatioResult.cs" />
+    <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />
+    <Compile Include="Model\Hibernate\RatioPropertyAccessor.cs" />
+    <Compile Include="Model\Irt\DbIrtPeptide.cs" />
+    <Compile Include="Model\Irt\DbVersionInfo.cs" />
+    <Compile Include="Model\Irt\IrtDb.cs" />
+    <Compile Include="Model\Irt\IrtDbManager.cs" />
+    <Compile Include="Model\Irt\RCalcIrt.cs" />
+    <Compile Include="Model\IsotopeLabelType.cs" />
+    <Compile Include="Model\LibKeyModificationMatcher.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Model\Lib\BlibData\BlibDb.cs" />
+    <Compile Include="Model\Lib\BlibData\DbEntity.cs" />
+    <Compile Include="Model\Lib\BlibData\DbLibInfo.cs" />
+    <Compile Include="Model\Lib\BlibData\DbModification.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectra.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectraPeaks.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRetentionTimes.cs" />
+    <Compile Include="Model\Lib\BlibData\BlibSessionFactoryFactory.cs" />
+    <Compile Include="Model\Lib\BlibData\DbSpectrumSourceFiles.cs" />
+    <Compile Include="Model\Lib\LibraryRankedSpectrumInfo.cs" />
+    <Compile Include="Model\MemoryDocumentContainer.cs" />
+    <Compile Include="Model\AbstractModificationMatcher.cs" />
+    <Compile Include="Model\PeptideDocNode.cs" />
+    <Compile Include="Model\PeptideGroupDocNode.cs" />
+    <Compile Include="Model\RefinementSettings.cs" />
+    <Compile Include="EditUI\ChromatogramRTThresholdDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\ChromatogramRTThresholdDlg.Designer.cs">
+      <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\EditPepModsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\EditPepModsDlg.Designer.cs">
+      <DependentUpon>EditPepModsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\FindNodeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\FindNodeDlg.Designer.cs">
+      <DependentUpon>FindNodeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\PasteDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\PasteDlg.designer.cs">
+      <DependentUpon>PasteDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\SpectrumChartPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SpectrumChartPropertyDlg.Designer.cs">
+      <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ExportOptimizeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ExportOptimizeDlg.Designer.cs">
+      <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ShareListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\UniquePeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\UniquePeptidesDlg.Designer.cs">
+      <DependentUpon>UniquePeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ShareListDlg.Designer.cs">
+      <DependentUpon>ShareListDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ImportResultsSamplesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ImportResultsSamplesDlg.Designer.cs">
+      <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PivotReportDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PivotReportDlg.Designer.cs">
+      <DependentUpon>PivotReportDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ExportReportDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ExportReportDlg.Designer.cs">
+      <DependentUpon>ExportReportDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PreviewReportDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PreviewReportDlg.Designer.cs">
+      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\SpectrumGraphItem.cs" />
+    <Compile Include="Controls\SequenceTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ControlUtil.cs" />
+    <Compile Include="Controls\SeqNode\TransitionGroupTreeNode.cs" />
+    <Compile Include="Controls\SeqNode\TransitionTreeNode.cs" />
+    <Compile Include="Controls\UndoRedoList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\UndoRedoList.Designer.cs">
+      <DependentUpon>UndoRedoList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\EditNoteDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\EditNoteDlg.Designer.cs">
+      <DependentUpon>EditNoteDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\RegressionRTThresholdDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\RegressionRTThresholdDlg.Designer.cs">
+      <DependentUpon>RegressionRTThresholdDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ImportResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ImportResultsDlg.Designer.cs">
+      <DependentUpon>ImportResultsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ImportResultsNameDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ImportResultsNameDlg.Designer.cs">
+      <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Annotations.cs" />
+    <Compile Include="Model\BackgroundLoader.cs" />
+    <Compile Include="Model\DocNode.cs" />
+    <Compile Include="Model\DocSettings\AnnotationDef.cs" />
+    <Compile Include="Model\DocSettings\DataSettings.cs" />
+    <Compile Include="Model\DocSettings\Extensions\SettingsExtensions.cs" />
+    <Compile Include="Model\DocSettings\GridColumns.cs" />
+    <Compile Include="Model\DocSettings\ReportSpec.cs" />
+    <Compile Include="Model\Hibernate\AnnotationPropertyAccessor.cs" />
+    <Compile Include="Model\Hibernate\DbEntity.cs" />
+    <Compile Include="Model\Hibernate\DbPeptide.cs" />
+    <Compile Include="Model\Hibernate\DbPrecursor.cs" />
+    <Compile Include="Model\Hibernate\DbPrecursorResult.cs" />
+    <Compile Include="Model\Hibernate\DbProtein.cs" />
+    <Compile Include="Model\Hibernate\DbProteinResult.cs" />
+    <Compile Include="Model\Hibernate\DbReplicate.cs" />
+    <Compile Include="Model\Hibernate\DbResultFile.cs" />
+    <Compile Include="Model\Hibernate\DbTransition.cs" />
+    <Compile Include="Model\Hibernate\DbPeptideResult.cs" />
+    <Compile Include="Model\Hibernate\DbTransitionResult.cs" />
+    <Compile Include="Model\Hibernate\Formats.cs" />
+    <Compile Include="Model\Hibernate\Query\ColumnSet.cs" />
+    <Compile Include="Model\Hibernate\Query\Database.cs" />
+    <Compile Include="Model\Hibernate\Query\PivotReport.cs" />
+    <Compile Include="Model\Hibernate\Query\Identifier.cs" />
+    <Compile Include="Model\Hibernate\QueryColumn.cs" />
+    <Compile Include="Model\Hibernate\Query\PivotType.cs" />
+    <Compile Include="Model\Hibernate\Query\Report.cs" />
+    <Compile Include="Model\Hibernate\Query\ResultSet.cs" />
+    <Compile Include="Model\Hibernate\Query\Schema.cs" />
+    <Compile Include="Model\Hibernate\SessionFactoryFactory.cs" />
+    <Compile Include="Model\Identity.cs" />
+    <Compile Include="Model\Import.cs" />
+    <Compile Include="Model\Lib\BiblioSpecLite.cs" />
+    <Compile Include="Model\Lib\BiblioSpecLiteBuilder.cs" />
+    <Compile Include="Model\Lib\NistLibSpec.cs" />
+    <Compile Include="Model\Lib\SpectrastSpec.cs" />
+    <Compile Include="Model\Lib\XHunterSpec.cs" />
+    <Compile Include="Model\Lib\Library.cs" />
+    <Compile Include="Model\Lib\BiblioSpec.cs" />
+    <Compile Include="Model\PeptideGroup.cs" />
+    <Compile Include="Model\Peptide.cs" />
+    <Compile Include="Model\DocSettings\PeptideSettings.cs" />
+    <Compile Include="Model\DocSettings\TransitionSettings.cs" />
+    <Compile Include="Model\Proteome\BackgroundProteome.cs" />
+    <Compile Include="Model\Proteome\BackgroundProteomeManager.cs" />
+    <Compile Include="Model\Proteome\BackgroundProteomeSpec.cs" />
+    <Compile Include="Model\Results\AbstractDemultiplexer.cs" />
+    <Compile Include="Model\Results\ArrayPool.cs" />
+    <Compile Include="Model\Results\CachedChromatogramDataProvider.cs" />
+    <Compile Include="Model\Results\Chromatogram.cs" />
+    <Compile Include="Model\Results\ChromatogramCache.cs" />
+    <Compile Include="Controls\Graphs\AllChromatogramsGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AllChromatogramsGraph.Designer.cs">
+      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\ChromatogramLoadingStatus.cs" />
+    <Compile Include="Model\Results\ChromCacheBuilder.cs" />
+    <Compile Include="Model\Results\ChromCacheJoiner.cs" />
+    <Compile Include="Model\Results\ChromCacheMinimizer.cs" />
+    <Compile Include="Model\Results\ChromCacheWriter.cs" />
+    <Compile Include="Model\Results\ChromCollector.cs" />
+    <Compile Include="Model\Results\ChromData.cs" />
+    <Compile Include="Model\Results\ChromDataProvider.cs" />
+    <Compile Include="Model\Results\ChromDataSet.cs" />
+    <Compile Include="Model\Results\ChromHeaderInfo.cs" />
+    <Compile Include="Model\Results\ChromInfoData.cs" />
+    <Compile Include="Model\Results\Demultiplexer.cs" />
+    <Compile Include="Model\Results\DocNodeChromInfo.cs" />
+    <Compile Include="Model\Results\Exception.cs" />
+    <Compile Include="Model\Results\ExtractedSpectrum.cs" />
+    <Compile Include="Model\Results\IsotopeDistInfo.cs" />
+    <Compile Include="Model\Results\MeasuredResults.cs" />
+    <Compile Include="Model\Results\MsxDemultiplexer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Model\Results\NumericsLsSolver.cs" />
+    <Compile Include="Model\Results\OverlapDemultiplexer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Model\Results\PeptideChromData.cs" />
+    <Compile Include="Model\Results\PrecursorModSeq.cs" />
+    <Compile Include="Model\Results\ResultNameMap.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
+    <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
+    <Compile Include="Model\Results\Scoring\LegacyFeatureCalc.cs" />
+    <Compile Include="Model\Results\Scoring\LegacyScoringModel.cs" />
+    <Compile Include="Model\Results\Scoring\MProphetScoringModel.cs" />
+    <Compile Include="Model\Results\Scoring\MQuestFeatureCalc.cs" />
+    <Compile Include="Model\Results\Scoring\PeakFeatureEnumerator.cs" />
+    <Compile Include="Model\Results\Scoring\ScoredGroupPeaksSet.cs" />
+    <Compile Include="Model\Results\Scoring\ScoredPeak.cs" />
+    <Compile Include="Model\Results\Scoring\ScoredGroupPeaks.cs" />
+    <Compile Include="Model\Results\SpectraChromDataProvider.cs" />
+    <Compile Include="Model\Results\SpectrumFilter.cs" />
+    <Compile Include="Model\Results\SpectrumFilterPair.cs" />
+    <Compile Include="Model\Results\VendorIssueHelper.cs" />
+    <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
+    <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeManager.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeSource.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeValues.cs" />
+    <Compile Include="Model\SrmDocument.cs" />
+    <Compile Include="Model\SrmDocumentExtensions.cs" />
+    <Compile Include="Model\SrmDocumentSharing.cs" />
+    <Compile Include="Model\ModificationMatcher.cs" />
+    <Compile Include="Model\Tools\ToolDescription.cs" />
+    <Compile Include="Model\Tools\ToolInstaller.cs" />
+    <Compile Include="Model\Tools\ToolMacros.cs" />
+    <Compile Include="Model\Tools\ToolReportCache.cs" />
+    <Compile Include="Model\Transition.cs" />
+    <Compile Include="Model\TransitionCalc.cs" />
+    <Compile Include="Model\TransitionDocNode.cs" />
+    <Compile Include="Model\TransitionGroup.cs" />
+    <Compile Include="Model\TransitionGroupDocNode.cs" />
+    <Compile Include="Model\Undo.cs" />
+    <Compile Include="Controls\UndoRedoButtons.cs" />
+    <Compile Include="Model\V01\Sequence.cs" />
+    <Compile Include="Model\V01\XmlExport.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\AddPathsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\AddPathsDlg.Designer.cs">
+      <DependentUpon>AddPathsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditPeakScoringModelDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditPeakScoringModelDlg.Designer.cs">
+      <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditIsolationWindow.cs" />
+    <Compile Include="SettingsUI\CalculateIsolationSchemeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\CalculateIsolationSchemeDlg.Designer.cs">
+      <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditIsolationSchemeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditIsolationSchemeDlg.Designer.cs">
+      <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\FullScanSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\FullScanSettingsControl.Designer.cs">
+      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtCalculatorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtCalculatorDlg.Designer.cs">
+      <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtPeptidesDlg.Designer.cs">
+      <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtSpectralLibrary.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtSpectralLibrary.Designer.cs">
+      <DependentUpon>AddIrtSpectralLibrary.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtStandardsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtStandardsDlg.Designer.cs">
+      <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\BuildLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\BuildLibraryDlg.Designer.cs">
+      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\BuildBackgroundProteomeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\BuildBackgroundProteomeDlg.Designer.cs">
+      <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\CalibrateIrtDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\CalibrateIrtDlg.Designer.cs">
+      <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\ChooseAnnotationsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\ChooseAnnotationsDlg.Designer.cs">
+      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditIsotopeEnrichmentDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditIsotopeEnrichmentDlg.Designer.cs">
+      <DependentUpon>EditIsotopeEnrichmentDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditMeasuredIonDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditMeasuredIonDlg.Designer.cs">
+      <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\DefineAnnotationDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\DefineAnnotationDlg.Designer.cs">
+      <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditFragmentLossDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditFragmentLossDlg.Designer.cs">
+      <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditLabelTypeListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditLabelTypeListDlg.Designer.cs">
+      <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditLibraryDlg.Designer.cs">
+      <DependentUpon>EditLibraryDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\BuildLibraryNotification.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
+      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.Designer.cs">
+      <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.Designer.cs">
+      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\EditIrtCalcDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\EditIrtCalcDlg.Designer.cs">
+      <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
+    <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
+    <Compile Include="SettingsUI\ViewLibraryPepInfo.cs" />
+    <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
+    <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
+    <Compile Include="SettingsUI\SettingsListComboDriver.cs">
+    </Compile>
+    <Compile Include="Controls\SeqNode\SrmTreeNode.cs" />
+    <Compile Include="FileUI\ExportMethodDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ExportMethodDlg.Designer.cs">
+      <DependentUpon>ExportMethodDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\OpenDataSourceDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\OpenDataSourceDialog.designer.cs">
+      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DocSettings\Modification.cs" />
+    <Compile Include="Model\V01\XmlSrmDocument.cs" />
+    <Compile Include="Model\DocSettings\Prediction.cs" />
+    <Compile Include="Model\DocSettings\SrmSettings.cs" />
+    <Compile Include="SettingsUI\EditCEDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditCEDlg.Designer.cs">
+      <DependentUpon>EditCEDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditDPDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditDPDlg.Designer.cs">
+      <DependentUpon>EditDPDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditEnzymeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditEnzymeDlg.Designer.cs">
+      <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditListDlg.Designer.cs">
+      <DependentUpon>EditListDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditExclusionDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditExclusionDlg.Designer.cs">
+      <DependentUpon>EditExclusionDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DocSettings\Enzyme.cs" />
+    <Compile Include="SettingsUI\EditRTDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditRTDlg.Designer.cs">
+      <DependentUpon>EditRTDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditStaticModDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditStaticModDlg.Designer.cs">
+      <DependentUpon>EditStaticModDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\RTDetails.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\RTDetails.Designer.cs">
+      <DependentUpon>RTDetails.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\PeptideSettingsUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\PeptideSettingsUI.Designer.cs">
+      <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\SaveSettingsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\SaveSettingsDlg.Designer.cs">
+      <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Skyline_Daily.ico" />
+    <EmbeddedResource Include="Alerts\AboutDlg.resx">
+      <DependentUpon>AboutDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\AlertLinkDlg.resx">
+      <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\LocateFileDlg.resx">
+      <DependentUpon>LocateFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PasteTypeDlg.resx">
+      <DependentUpon>PasteTypeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AlignmentForm.resx">
+      <DependentUpon>AlignmentForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AsyncRenderControl.resx">
+      <DependentUpon>AsyncRenderControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ImmediateWindow.resx">
+      <DependentUpon>ImmediateWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\PopupPickList.resx">
+      <DependentUpon>PopupPickList.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SequenceTreeForm.resx">
+      <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RenameProteinsDlg.resx">
+      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportChromatogramDlg.resx">
+      <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportMethodDlg.resx">
+      <DependentUpon>ExportMethodDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.resx">
+      <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.resx">
+      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.resx">
+      <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.resx">
+      <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportFastaControl.resx">
+      <DependentUpon>ImportFastaControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.resx">
+      <DependentUpon>ImportPeptideSearchDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsControl.resx">
+      <DependentUpon>ImportResultsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlg.resx">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\RescoreResultsDlg.resx">
+      <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddPathsDlg.resx">
+      <DependentUpon>AddPathsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.resx">
+      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.resx">
+      <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.resx">
+      <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCEDlg.resx">
+      <DependentUpon>EditCEDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.resx">
+      <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.resx">
+      <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditListDlg.resx">
+      <DependentUpon>EditListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditExclusionDlg.resx">
+      <DependentUpon>EditExclusionDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditRTDlg.resx">
+      <DependentUpon>EditRTDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditStaticModDlg.resx">
+      <DependentUpon>EditStaticModDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.resx">
+      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.resx">
+      <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\RTDetails.resx">
+      <DependentUpon>RTDetails.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.resx">
+      <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.resx">
+      <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Skyline.resx">
+      <DependentUpon>Skyline.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.resx">
+      <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\PythonInstaller.resx">
+      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\RInstaller.resx">
+      <DependentUpon>RInstaller.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <Content Include="..\Shared\BiblioSpec\binaries\modifications.xml">
+      <Link>modifications.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\quantitation_1.xsd">
+      <Link>quantitation_1.xsd</Link>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\quantitation_2.xsd">
+      <Link>quantitation_2.xsd</Link>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\Interop.EDAL.SxS.manifest">
+      <Link>Interop.EDAL.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\Interop.HSREADWRITELib.SxS.manifest">
+      <Link>Interop.HSREADWRITELib.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\Interop.EDAL.SxS.manifest">
+      <Link>Interop.EDAL.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\Interop.HSREADWRITELib.SxS.manifest">
+      <Link>Interop.HSREADWRITELib.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Model\SequenceUtil.cs" />
+    <Compile Include="Properties\Settings.cs" />
+    <Compile Include="SettingsUI\SettingsUIUtil.cs" />
+    <Compile Include="SettingsUI\TransitionSettingsUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\TransitionSettingsUI.Designer.cs">
+      <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\ViewLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\ViewLibraryDlg.Designer.cs">
+      <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Skyline.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Skyline.designer.cs">
+      <DependentUpon>Skyline.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SkylineFiles.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SkylineGraphs.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ConfigureToolsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ConfigureToolsDlg.designer.cs">
+      <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\EditServerDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\PythonInstaller.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\PythonInstaller.Designer.cs">
+      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\RInstaller.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\RInstaller.Designer.cs">
+      <DependentUpon>RInstaller.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\ToolOptionsUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ToolOptionsUI.Designer.cs">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\DataGridViewPasteHandler.cs" />
+    <Compile Include="Util\DataSourceUtil.cs" />
+    <Compile Include="Util\DotTraceProfile.cs" />
+    <Compile Include="Util\Extensions\ActionUtil.cs" />
+    <Compile Include="Util\FileSize.cs" />
+    <Compile Include="Util\Install.cs" />
+    <Compile Include="Util\JetBrainsAnnotations.cs" />
+    <Compile Include="Util\Extensions\Text.cs" />
+    <Compile Include="Util\Extensions\UtilProcess.cs" />
+    <Compile Include="Util\FormAnimator.cs" />
+    <Compile Include="Util\Log.cs" />
+    <Compile Include="Util\SystemMetrics.cs" />
+    <Compile Include="Util\TextRendererHelper.cs" />
+    <Compile Include="Util\UtilInstall.cs" />
+    <Compile Include="Util\UtilUIExtra.cs" />
+    <Compile Include="Util\UtilIOExtra.cs" />
+    <Compile Include="Util\Extensions\UtilDB.cs" />
+    <Compile Include="Util\ListViewColumnSorter.cs" />
+    <Compile Include="Util\SSRCalc3.cs" />
+    <Compile Include="Util\Statistics.cs" />
+    <Compile Include="Util\Util.cs" />
+    <Compile Include="Model\Export.cs" />
+    <Compile Include="Util\UtilIO.cs" />
+    <Compile Include="Util\UtilUI.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Util\Xml.cs" />
+    <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
+    <Compile Include="Util\ClipboardEx.cs" />
+    <Compile Include="Util\FormEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\app.manifest" />
+    <EmbeddedResource Include="Resources\Blank.bmp" />
+    <EmbeddedResource Include="Resources\DataProcessing.png" />
+    <EmbeddedResource Include="Resources\File.png" />
+    <EmbeddedResource Include="Resources\Folder.png" />
+    <EmbeddedResource Include="Resources\DropImage.bmp" />
+    <EmbeddedResource Include="Resources\Filter.bmp" />
+    <EmbeddedResource Include="Resources\GreenCheck.bmp" />
+    <EmbeddedResource Include="Resources\Peptide.bmp" />
+    <EmbeddedResource Include="Resources\Protein.bmp" />
+    <EmbeddedResource Include="Resources\RedX.bmp" />
+    <EmbeddedResource Include="Resources\Skyline.bmp" />
+    <EmbeddedResource Include="SettingsUI\EditDPDlg.resx">
+      <DependentUpon>EditDPDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Skyline.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <FileAssociation Include=".sky">
+      <Visible>False</Visible>
+      <Description>Skyline SRM Document</Description>
+      <Progid>Skyline.Document.0</Progid>
+      <DefaultIcon>SkylineDoc.ico</DefaultIcon>
+    </FileAssociation>
+    <FileAssociation Include=".skyd">
+      <Visible>False</Visible>
+      <Description>Skyline SRM Data</Description>
+      <Progid>Skyline.Data.0</Progid>
+      <DefaultIcon>SkylineData.ico</DefaultIcon>
+    </FileAssociation>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcp100.dll">
+      <Link>msvcp100.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcr100.dll">
+      <Link>msvcr100.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcp100.dll">
+      <Link>msvcp100.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcr100.dll">
+      <Link>msvcr100.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\mfc90u.dll">
+      <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\Microsoft.VC90.MFC.manifest">
+      <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.MFC\x64\mfc100u.dll">
+      <Link>mfc100u.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0\MassLynxRaw.dll">
+      <Link>MassLynxRaw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x64_scl-0\MassLynxRaw.dll">
+      <Link>MassLynxRaw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86\BaseDataAccess.dll.config">
+      <Link>BaseDataAccess.dll.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x64\BaseDataAccess.dll.config">
+      <Link>BaseDataAccess.dll.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\BlibBuild.exe">
+      <Link>BlibBuild.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\BlibFilter.exe">
+      <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\msparser.dll">
+      <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\BuildAnalystMethod.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.AcqMethodDir.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.AcqMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.Analyst.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.AnalystService.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.DDEMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.IDAMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.MSMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.ParameterSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.QueueDispatcher.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.ROTMan.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\ROTMANLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\StdType.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\BuildAnalystMethod.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.AcqMethodDir.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.AcqMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.Analyst.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.AnalystService.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.DDEMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.IDAMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.MSMethodSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.ParameterSvr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.QueueDispatcher.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.ROTMan.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\QueueDispatcherLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\ROTMANLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\StdType.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\BuildAgilentMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\MethodCreator.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Bruker\BDal.Submethod.Wrapper.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Bruker\BDal.Submethod.Wrapper.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Bruker\BdalRetentionTimeMassList.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Bruker\BuildBrukerMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Thermo\BuildLTQMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Thermo\BuildTSQEZMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Waters\BuildWatersMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Waters\VerifyESkylineLibrary.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="Alerts\ImportDocResultsDlg.resx">
+      <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.resx">
+      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\EmptyProteinsDlg.resx">
+      <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MissingFileDlg.resx">
+      <DependentUpon>MissingFileDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.resx">
+      <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ReportErrorDlg.resx">
+      <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareTypeDlg.resx">
+      <DependentUpon>ShareTypeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MessageDlg.resx">
+      <DependentUpon>MessageDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.resx">
+      <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.resx">
+      <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\UpgradeDlg.resx">
+      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ColumnChooser.resx">
+      <DependentUpon>ColumnChooser.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FindResultsForm.resx">
+      <DependentUpon>FindResultsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphRegression.resx">
+      <DependentUpon>GraphRegression.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphSummary.resx">
+      <DependentUpon>GraphSummary.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphChromatogram.resx">
+      <DependentUpon>GraphChromatogram.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.resx">
+      <DependentUpon>GraphSpectrum.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\LongWaitDlg.resx">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ResultsGridForm.resx">
+      <DependentUpon>ResultsGridForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\TreeViewMS.resx">
+      <DependentUpon>TreeViewMS.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.resx">
+      <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\StatementCompletionForm.resx">
+      <DependentUpon>StatementCompletionForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ChromChartPropertyDlg.resx">
+      <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AreaChartPropertyDlg.resx">
+      <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\GenerateDecoysDlg.resx">
+      <DependentUpon>GenerateDecoysDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineDlg.resx">
+      <DependentUpon>RefineDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineListDlg.resx">
+      <DependentUpon>RefineListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RTChartPropertyDlg.resx">
+      <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SchedulingGraphPropertyDlg.resx">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ChromatogramRTThresholdDlg.resx">
+      <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditPepModsDlg.resx">
+      <DependentUpon>EditPepModsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\FindNodeDlg.resx">
+      <DependentUpon>FindNodeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PasteDlg.resx">
+      <DependentUpon>PasteDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SpectrumChartPropertyDlg.resx">
+      <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ManageResultsDlg.resx">
+      <DependentUpon>ManageResultsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportOptimizeDlg.resx">
+      <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MinimizeResultsDlg.resx">
+      <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\RenameResultDlg.resx">
+      <DependentUpon>RenameResultDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\SchedulingOptionsDlg.resx">
+      <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ShareListDlg.resx">
+      <DependentUpon>ShareListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\UniquePeptidesDlg.resx">
+      <DependentUpon>UniquePeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsSamplesDlg.resx">
+      <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PivotReportDlg.resx">
+      <DependentUpon>PivotReportDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportReportDlg.resx">
+      <DependentUpon>ExportReportDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PreviewReportDlg.resx">
+      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SequenceTree.resx">
+      <DependentUpon>SequenceTree.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\UndoRedoList.resx">
+      <DependentUpon>UndoRedoList.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditNoteDlg.resx">
+      <DependentUpon>EditNoteDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RegressionRTThresholdDlg.resx">
+      <DependentUpon>RegressionRTThresholdDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsDlg.resx">
+      <DependentUpon>ImportResultsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsNameDlg.resx">
+      <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\TransitionGroup.bmp" />
+    <EmbeddedResource Include="Resources\NoPeak.bmp" />
+    <EmbeddedResource Include="Resources\Keep.bmp" />
+    <EmbeddedResource Include="Resources\Peak.bmp" />
+    <EmbeddedResource Include="Resources\TransitionGroupLib.bmp" />
+    <EmbeddedResource Include="Resources\PeptideLib.bmp" />
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.resx">
+      <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtPeptidesDlg.resx">
+      <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtSpectralLibrary.resx">
+      <DependentUpon>AddIrtSpectralLibrary.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.resx">
+      <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.resx">
+      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.resx">
+      <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.resx">
+      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.resx">
+      <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.resx">
+      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditIsotopeEnrichmentDlg.resx">
+      <DependentUpon>EditIsotopeEnrichmentDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.resx">
+      <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.resx">
+      <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.resx">
+      <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLabelTypeListDlg.resx">
+      <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLibraryDlg.resx">
+      <DependentUpon>EditLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Hibernate\mapping.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Comment.bmp" />
+    <EmbeddedResource Include="Resources\PeakBlank.bmp" />
+    <EmbeddedResource Include="Resources\Copy.bmp" />
+    <EmbeddedResource Include="Resources\Cut.bmp" />
+    <EmbeddedResource Include="Resources\Delete.bmp" />
+    <EmbeddedResource Include="Resources\down-pro32.bmp" />
+    <EmbeddedResource Include="Resources\Edit_Redo.bmp" />
+    <EmbeddedResource Include="Resources\Edit_Undo.bmp" />
+    <EmbeddedResource Include="Resources\Find.bmp" />
+    <EmbeddedResource Include="Resources\FindNext.bmp" />
+    <EmbeddedResource Include="Resources\FragmentS.bmp" />
+    <EmbeddedResource Include="Resources\FragmentLibS.bmp" />
+    <EmbeddedResource Include="Resources\NewDocument.bmp" />
+    <EmbeddedResource Include="Resources\Note.bmp" />
+    <EmbeddedResource Include="Resources\Open.bmp" />
+    <EmbeddedResource Include="Resources\OpenFolder.bmp" />
+    <EmbeddedResource Include="Resources\Paste.bmp" />
+    <EmbeddedResource Include="Resources\PopupBtn.bmp" />
+    <EmbeddedResource Include="Resources\Save.bmp" />
+    <EmbeddedResource Include="Resources\up-pro32.bmp" />
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
+    <EmbeddedResource Include="Resources\Fragment.bmp" />
+    <EmbeddedResource Include="Resources\FragmentLib.bmp" />
+    <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.resx">
+      <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.resx">
+      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.resx">
+      <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.resx">
+      <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Wand.bmp" />
+    <EmbeddedResource Include="Resources\minus.bmp" />
+    <EmbeddedResource Include="Resources\plus.bmp" />
+    <EmbeddedResource Include="Resources\Dash.bmp" />
+    <EmbeddedResource Include="Resources\WandProhibit.bmp" />
+    <EmbeddedResource Include="Resources\Copy_Bitmap.bmp" />
+    <EmbeddedResource Include="Resources\Ions_1.bmp" />
+    <EmbeddedResource Include="Resources\Ions_2.bmp" />
+    <EmbeddedResource Include="Resources\Ions_A.bmp" />
+    <EmbeddedResource Include="Resources\Ions_B.bmp" />
+    <EmbeddedResource Include="Resources\Ions_C.bmp" />
+    <EmbeddedResource Include="Resources\Ions_X.bmp" />
+    <EmbeddedResource Include="Resources\Ions_Y.bmp" />
+    <EmbeddedResource Include="Resources\Ions_Z.bmp" />
+    <EmbeddedResource Include="Resources\Print.bmp" />
+    <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.MHDAC">
+      <Link>EULA.MHDAC</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\EULA.MSFileReader">
+      <Link>EULA.MSFileReader</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\unimod_2.xsd">
+      <Link>unimod_2.xsd</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\add-pro32.bmp" />
+    <None Include="SkylineLog4Net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Skyline_TemporaryKey.pfx" />
+    <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
+    <EmbeddedResource Include="Resources\PeptideLibStandard.bmp" />
+    <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
+    <EmbeddedResource Include="Model\Irt\mapping.xml" />
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
+    <EmbeddedResource Include="Resources\Calculator.bmp" />
+    <EmbeddedResource Include="Resources\FragmentDecoy.bmp" />
+    <EmbeddedResource Include="Resources\PeptideDecoy.bmp" />
+    <EmbeddedResource Include="Resources\ProteinDecoy.bmp" />
+    <EmbeddedResource Include="Resources\TransitionGroupDecoy.bmp" />
+    <EmbeddedResource Include="Resources\FindResults.ico" />
+    <EmbeddedResource Include="Resources\Immediate.ico" />
+    <EmbeddedResource Include="Resources\PeptideLibDecoy.bmp" />
+    <EmbeddedResource Include="Resources\TransitionGroupLibDecoy.bmp" />
+    <EmbeddedResource Include="Resources\FragmentLibDecoy.bmp" />
+    <EmbeddedResource Include="Resources\AllIonsStatusButton.bmp" />
+    <EmbeddedResource Include="Resources\Panorama.bmp" />
+    <EmbeddedResource Include="Resources\ChromLib.bmp" />
+    <EmbeddedResource Include="Resources\LabKey.bmp" />
+    <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
+    <Content Include="NamedPipeProcessRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="Resources\PanoramaPublish.bmp" />
+    <Content Include="SkylineData.ico" />
+    <Content Include="SkylineDoc.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj">
+      <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
+      <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\Crawdad\Crawdad.vcxproj">
+      <Project>{5C81BB57-E46C-4B3B-9764-82F835E643B8}</Project>
+      <Name>Crawdad</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
+      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\ProteomeDb\ProteomeDb.csproj">
+      <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
+      <Name>ProteomeDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
+      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
+      <Name>ProteowizardWrapper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PublishFile Include="BDal.BCO.Objects.xml">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="BDal.CCO.Objects.xml">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="BDal.CXt.Lc">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BDal.CXt.Lc.Factory">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BDal.CXt.Lc.Interfaces">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BDal.CXt.Lc.UntU2">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="FlexVariableTable.xml">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="ICRVariableTable.xml">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="modifications.xml">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="Skyline.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <Target Name="BeforePublish">
+    <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; /p Skyline! /v &quot;$(ProjectDir)obj\$(Platform)\$(ConfigurationName)\$(TargetFileName)&quot;" />
+  </Target>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+</Project>

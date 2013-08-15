@@ -1,0 +1,1881 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <metadata name="contextMenuResultsGrid.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="synchronizeSelectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>189, 22</value>
+  </data>
+  <data name="synchronizeSelectionContextMenuItem.Text" xml:space="preserve">
+    <value>Synchronize Selection</value>
+  </data>
+  <data name="chooseColumnsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>189, 22</value>
+  </data>
+  <data name="chooseColumnsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Choose Columns...</value>
+  </data>
+  <data name="contextMenuResultsGrid.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 48</value>
+  </data>
+  <data name="&gt;&gt;contextMenuResultsGrid.Name" xml:space="preserve">
+    <value>contextMenuResultsGrid</value>
+  </data>
+  <data name="&gt;&gt;contextMenuResultsGrid.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="resultsGrid.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn145.HeaderText" xml:space="preserve">
+    <value>Replicate Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn146.HeaderText" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn147.HeaderText" xml:space="preserve">
+    <value>Sample Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn148.HeaderText" xml:space="preserve">
+    <value>Modified Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn149.HeaderText" xml:space="preserve">
+    <value>Acquired Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn150.HeaderText" xml:space="preserve">
+    <value>Opt Step</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn151.HeaderText" xml:space="preserve">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn152.HeaderText" xml:space="preserve">
+    <value>Peptide Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn153.HeaderText" xml:space="preserve">
+    <value>Ratio To Standard</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn154.HeaderText" xml:space="preserve">
+    <value>Precursor Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn155.HeaderText" xml:space="preserve">
+    <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn156.HeaderText" xml:space="preserve">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn157.HeaderText" xml:space="preserve">
+    <value>Max Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn158.HeaderText" xml:space="preserve">
+    <value>Min Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn159.HeaderText" xml:space="preserve">
+    <value>Max End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn160.HeaderText" xml:space="preserve">
+    <value>Total Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn161.HeaderText" xml:space="preserve">
+    <value>Total Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn162.HeaderText" xml:space="preserve">
+    <value>Total Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn163.HeaderText" xml:space="preserve">
+    <value>Count Truncated</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn164.HeaderText" xml:space="preserve">
+    <value>Identified</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn165.HeaderText" xml:space="preserve">
+    <value>User Set Total</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn166.HeaderText" xml:space="preserve">
+    <value>Library Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn167.HeaderText" xml:space="preserve">
+    <value>Isotope Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn168.HeaderText" xml:space="preserve">
+    <value>Opt Collision Energy</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn169.HeaderText" xml:space="preserve">
+    <value>Opt Declustering Potential</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn170.HeaderText" xml:space="preserve">
+    <value>Transition Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn171.HeaderText" xml:space="preserve">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn172.HeaderText" xml:space="preserve">
+    <value>Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn173.HeaderText" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn174.HeaderText" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn175.HeaderText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn176.HeaderText" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn177.HeaderText" xml:space="preserve">
+    <value>Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn178.HeaderText" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn179.HeaderText" xml:space="preserve">
+    <value>Truncated</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn180.HeaderText" xml:space="preserve">
+    <value>Peak Rank</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn181.HeaderText" xml:space="preserve">
+    <value>User Set</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn109.HeaderText" xml:space="preserve">
+    <value>Replicate Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn110.HeaderText" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn111.HeaderText" xml:space="preserve">
+    <value>Sample Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn112.HeaderText" xml:space="preserve">
+    <value>Modified Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn113.HeaderText" xml:space="preserve">
+    <value>Acquired Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn114.HeaderText" xml:space="preserve">
+    <value>Opt Step</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn115.HeaderText" xml:space="preserve">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn116.HeaderText" xml:space="preserve">
+    <value>Peptide Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn117.HeaderText" xml:space="preserve">
+    <value>Ratio To Standard</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn118.HeaderText" xml:space="preserve">
+    <value>Precursor Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn119.HeaderText" xml:space="preserve">
+    <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn120.HeaderText" xml:space="preserve">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn121.HeaderText" xml:space="preserve">
+    <value>Max Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn122.HeaderText" xml:space="preserve">
+    <value>Min Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn123.HeaderText" xml:space="preserve">
+    <value>Max End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn124.HeaderText" xml:space="preserve">
+    <value>Total Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn125.HeaderText" xml:space="preserve">
+    <value>Total Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn126.HeaderText" xml:space="preserve">
+    <value>Total Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn127.HeaderText" xml:space="preserve">
+    <value>Count Truncated</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn128.HeaderText" xml:space="preserve">
+    <value>User Set Total</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn129.HeaderText" xml:space="preserve">
+    <value>Library Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn130.HeaderText" xml:space="preserve">
+    <value>Isotope Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn131.HeaderText" xml:space="preserve">
+    <value>Opt Collision Energy</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn132.HeaderText" xml:space="preserve">
+    <value>Opt Declustering Potential</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn133.HeaderText" xml:space="preserve">
+    <value>Transition Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn134.HeaderText" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn135.HeaderText" xml:space="preserve">
+    <value>Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn136.HeaderText" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn137.HeaderText" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn138.HeaderText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn139.HeaderText" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn140.HeaderText" xml:space="preserve">
+    <value>Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn141.HeaderText" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn142.HeaderText" xml:space="preserve">
+    <value>Truncated</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn143.HeaderText" xml:space="preserve">
+    <value>Peak Rank</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn144.HeaderText" xml:space="preserve">
+    <value>User Set</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn74.HeaderText" xml:space="preserve">
+    <value>Replicate Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn75.HeaderText" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn76.HeaderText" xml:space="preserve">
+    <value>Sample Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn77.HeaderText" xml:space="preserve">
+    <value>Modified Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn78.HeaderText" xml:space="preserve">
+    <value>Acquired Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn79.HeaderText" xml:space="preserve">
+    <value>Opt Step</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn80.HeaderText" xml:space="preserve">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn81.HeaderText" xml:space="preserve">
+    <value>Peptide Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn82.HeaderText" xml:space="preserve">
+    <value>Ratio To Standard</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn83.HeaderText" xml:space="preserve">
+    <value>Precursor Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn84.HeaderText" xml:space="preserve">
+    <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn85.HeaderText" xml:space="preserve">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn86.HeaderText" xml:space="preserve">
+    <value>Max Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn87.HeaderText" xml:space="preserve">
+    <value>Min Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn88.HeaderText" xml:space="preserve">
+    <value>Max End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn89.HeaderText" xml:space="preserve">
+    <value>Total Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn90.HeaderText" xml:space="preserve">
+    <value>Total Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn91.HeaderText" xml:space="preserve">
+    <value>Total Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn92.HeaderText" xml:space="preserve">
+    <value>Count Truncated</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn93.HeaderText" xml:space="preserve">
+    <value>User Set Total</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn94.HeaderText" xml:space="preserve">
+    <value>Library Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn95.HeaderText" xml:space="preserve">
+    <value>Opt Collision Energy</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn96.HeaderText" xml:space="preserve">
+    <value>Opt Declustering Potential</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn97.HeaderText" xml:space="preserve">
+    <value>Transition Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn98.HeaderText" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn99.HeaderText" xml:space="preserve">
+    <value>Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn100.HeaderText" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn101.HeaderText" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn102.HeaderText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn103.HeaderText" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn104.HeaderText" xml:space="preserve">
+    <value>Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn105.HeaderText" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn106.HeaderText" xml:space="preserve">
+    <value>Truncated</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn107.HeaderText" xml:space="preserve">
+    <value>Peak Rank</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn108.HeaderText" xml:space="preserve">
+    <value>User Set</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn49.HeaderText" xml:space="preserve">
+    <value>Replicate Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn50.HeaderText" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn51.HeaderText" xml:space="preserve">
+    <value>Sample Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn52.HeaderText" xml:space="preserve">
+    <value>Opt Step</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn53.HeaderText" xml:space="preserve">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn54.HeaderText" xml:space="preserve">
+    <value>Peptide Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn55.HeaderText" xml:space="preserve">
+    <value>Ratio To Standard</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn56.HeaderText" xml:space="preserve">
+    <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn57.HeaderText" xml:space="preserve">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn58.HeaderText" xml:space="preserve">
+    <value>Max Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn59.HeaderText" xml:space="preserve">
+    <value>Min Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn60.HeaderText" xml:space="preserve">
+    <value>Max End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn61.HeaderText" xml:space="preserve">
+    <value>Total Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn62.HeaderText" xml:space="preserve">
+    <value>Library Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn63.HeaderText" xml:space="preserve">
+    <value>Precursor Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn64.HeaderText" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn65.HeaderText" xml:space="preserve">
+    <value>Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn66.HeaderText" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn67.HeaderText" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn68.HeaderText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn69.HeaderText" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn70.HeaderText" xml:space="preserve">
+    <value>Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn71.HeaderText" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn72.HeaderText" xml:space="preserve">
+    <value>Peak Rank</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn73.HeaderText" xml:space="preserve">
+    <value>Transition Replicate Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn24.HeaderText" xml:space="preserve">
+    <value>Replicate Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn25.HeaderText" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn26.HeaderText" xml:space="preserve">
+    <value>Sample Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn27.HeaderText" xml:space="preserve">
+    <value>Opt Step</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn28.HeaderText" xml:space="preserve">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn29.HeaderText" xml:space="preserve">
+    <value>Peptide Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn30.HeaderText" xml:space="preserve">
+    <value>Ratio To Standard</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn31.HeaderText" xml:space="preserve">
+    <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn32.HeaderText" xml:space="preserve">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn33.HeaderText" xml:space="preserve">
+    <value>Max Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn34.HeaderText" xml:space="preserve">
+    <value>Min Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn35.HeaderText" xml:space="preserve">
+    <value>Max End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn36.HeaderText" xml:space="preserve">
+    <value>Total Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn37.HeaderText" xml:space="preserve">
+    <value>Library Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn38.HeaderText" xml:space="preserve">
+    <value>Precursor Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn39.HeaderText" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn40.HeaderText" xml:space="preserve">
+    <value>Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn41.HeaderText" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn42.HeaderText" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn43.HeaderText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn44.HeaderText" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn45.HeaderText" xml:space="preserve">
+    <value>Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn46.HeaderText" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn47.HeaderText" xml:space="preserve">
+    <value>Peak Rank</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn48.HeaderText" xml:space="preserve">
+    <value>Transition Note</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
+    <value>Replicate Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn2.HeaderText" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn3.HeaderText" xml:space="preserve">
+    <value>Sample Name</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn4.HeaderText" xml:space="preserve">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn5.HeaderText" xml:space="preserve">
+    <value>Peptide Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn6.HeaderText" xml:space="preserve">
+    <value>Ratio To Standard</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn7.HeaderText" xml:space="preserve">
+    <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn8.HeaderText" xml:space="preserve">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn9.HeaderText" xml:space="preserve">
+    <value>Fwhm</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn10.HeaderText" xml:space="preserve">
+    <value>Min Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn11.HeaderText" xml:space="preserve">
+    <value>Max End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn12.HeaderText" xml:space="preserve">
+    <value>Total Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn13.HeaderText" xml:space="preserve">
+    <value>Library Dot Product</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn14.HeaderText" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn15.HeaderText" xml:space="preserve">
+    <value>Full Width Half Max</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn16.HeaderText" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn17.HeaderText" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn18.HeaderText" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn19.HeaderText" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn20.HeaderText" xml:space="preserve">
+    <value>Area Ratio</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn21.HeaderText" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn22.HeaderText" xml:space="preserve">
+    <value>Peak Rank</value>
+  </data>
+  <data name="dataGridViewTextBoxColumn23.HeaderText" xml:space="preserve">
+    <value>Opt Step</value>
+  </data>
+  <data name="resultsGrid.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-2, -2</value>
+  </data>
+  <data name="resultsGrid.Size" type="System.Drawing.Size, System.Drawing">
+    <value>490, 315</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="resultsGrid.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;resultsGrid.Name" xml:space="preserve">
+    <value>resultsGrid</value>
+  </data>
+  <data name="&gt;&gt;resultsGrid.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.ResultsGrid, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;resultsGrid.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;resultsGrid.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>487, 312</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="recordNavBar1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="recordNavBar1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 312</value>
+  </data>
+  <data name="recordNavBar1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>487, 21</value>
+  </data>
+  <data name="recordNavBar1.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;recordNavBar1.Name" xml:space="preserve">
+    <value>recordNavBar1</value>
+  </data>
+  <data name="&gt;&gt;recordNavBar1.Type" xml:space="preserve">
+    <value>pwiz.Common.Controls.RecordNavBar, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;recordNavBar1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;recordNavBar1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>487, 333</value>
+  </data>
+  <data name="$this.TabText" xml:space="preserve">
+    <value>Results Grid</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Results Grid</value>
+  </data>
+  <data name="&gt;&gt;synchronizeSelectionContextMenuItem.Name" xml:space="preserve">
+    <value>synchronizeSelectionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;synchronizeSelectionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;chooseColumnsToolStripMenuItem.Name" xml:space="preserve">
+    <value>chooseColumnsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;chooseColumnsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn145.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn145</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn145.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn146.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn146</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn146.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn147.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn147</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn147.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn148.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn148</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn148.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn149.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn149</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn149.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn150.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn150</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn150.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn151.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn151</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn151.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn152.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn152</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn152.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn153.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn153</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn153.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn154.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn154</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn154.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn155.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn155</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn155.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn156.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn156</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn156.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn157.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn157</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn157.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn158.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn158</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn158.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn159.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn159</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn159.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn160.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn160</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn160.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn161.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn161</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn161.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn162.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn162</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn162.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn163.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn163</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn163.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn164.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn164</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn164.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn165.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn165</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn165.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn166.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn166</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn166.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn167.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn167</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn167.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn168.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn168</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn168.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn169.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn169</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn169.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn170.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn170</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn170.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn171.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn171</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn171.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn172.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn172</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn172.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn173.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn173</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn173.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn174.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn174</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn174.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn175.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn175</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn175.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn176.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn176</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn176.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn177.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn177</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn177.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn178.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn178</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn178.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn179.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn179</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn179.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn180.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn180</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn180.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn181.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn181</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn181.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn109.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn109</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn109.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn110.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn110</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn110.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn111.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn111</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn111.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn112.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn112</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn112.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn113.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn113</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn113.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn114.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn114</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn114.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn115.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn115</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn115.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn116.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn116</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn116.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn117.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn117</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn117.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn118.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn118</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn118.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn119.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn119</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn119.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn120.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn120</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn120.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn121.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn121</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn121.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn122.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn122</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn122.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn123.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn123</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn123.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn124.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn124</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn124.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn125.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn125</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn125.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn126.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn126</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn126.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn127.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn127</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn127.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn128.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn128</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn128.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn129.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn129</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn129.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn130.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn130</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn130.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn131.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn131</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn131.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn132.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn132</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn132.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn133.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn133</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn133.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn134.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn134</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn134.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn135.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn135</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn135.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn136.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn136</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn136.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn137.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn137</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn137.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn138.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn138</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn138.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn139.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn139</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn139.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn140.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn140</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn140.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn141.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn141</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn141.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn142.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn142</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn142.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn143.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn143</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn143.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn144.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn144</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn144.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn74.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn74</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn74.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn75.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn75</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn75.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn76.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn76</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn76.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn77.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn77</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn77.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn78.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn78</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn78.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn79.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn79</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn79.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn80.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn80</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn80.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn81.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn81</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn81.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn82.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn82</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn82.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn83.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn83</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn83.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn84.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn84</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn84.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn85.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn85</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn85.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn86.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn86</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn86.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn87.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn87</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn87.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn88.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn88</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn88.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn89.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn89</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn89.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn90.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn90</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn90.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn91.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn91</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn91.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn92.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn92</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn92.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn93.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn93</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn93.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn94.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn94</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn94.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn95.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn95</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn95.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn96.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn96</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn96.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn97.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn97</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn97.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn98.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn98</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn98.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn99.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn99</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn99.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn100.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn100</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn100.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn101.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn101</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn101.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn102.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn102</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn102.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn103.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn103</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn103.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn104.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn104</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn104.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn105.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn105</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn105.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn106.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn106</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn106.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn107.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn107</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn107.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn108.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn108</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn108.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn49.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn49</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn49.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn50.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn50</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn50.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn51.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn51</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn51.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn52.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn52</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn52.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn53.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn53</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn53.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn54.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn54</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn54.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn55.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn55</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn55.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn56.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn56</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn56.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn57.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn57</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn57.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn58.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn58</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn58.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn59.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn59</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn59.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn60.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn60</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn60.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn61.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn61</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn61.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn62.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn62</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn62.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn63.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn63</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn63.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn64.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn64</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn64.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn65.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn65</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn65.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn66.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn66</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn66.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn67.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn67</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn67.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn68.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn68</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn68.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn69.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn69</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn69.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn70.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn70</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn70.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn71.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn71</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn71.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn72.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn72</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn72.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn73.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn73</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn73.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn24.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn24</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn24.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn25.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn25</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn25.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn26.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn26</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn26.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn27.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn27</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn27.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn28.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn28</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn28.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn29.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn29</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn29.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn30.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn30</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn30.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn31.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn31</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn31.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn32.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn32</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn32.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn33.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn33</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn33.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn34.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn34</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn34.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn35.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn35</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn35.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn36.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn36</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn36.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn37.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn37</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn37.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn38.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn38</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn38.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn39.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn39</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn39.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn40.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn40</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn40.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn41.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn41</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn41.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn42.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn42</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn42.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn43.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn43</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn43.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn44.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn44</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn44.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn45.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn45</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn45.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn46.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn46</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn46.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn47.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn47</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn47.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn48.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn48</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn48.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn1</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn2</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn3</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn4.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn4</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn5.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn5</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn6.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn6</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn7.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn7</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn8.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn8</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn9.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn9</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn10.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn10</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn10.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn11.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn11</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn11.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn12.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn12</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn12.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn13.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn13</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn13.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn14.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn14</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn14.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn15.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn15</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn15.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn16.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn16</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn16.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn17.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn17</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn17.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn18.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn18</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn18.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn19.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn19</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn19.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn20.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn20</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn21.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn21</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn21.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn22.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn22</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn22.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn23.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn23</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn23.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ResultsGridForm</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

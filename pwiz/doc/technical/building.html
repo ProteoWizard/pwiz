@@ -1,0 +1,114 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: Building ProteoWizard</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+    <h1>Building ProteoWizard</h1>
+    <hr/>
+
+    <h2>Build Environment</h2>
+    <h3>Windows</h3>
+    <ul>
+        <li>Install Microsoft Visual C++ 2008 (Express edition is OK)</li>
+        <li>Install the Microsoft Visual C++ 2005 SP1 redistributable (needed by some of the vendor DLLs)</li>
+        <li>Install Visual Studio C# 2008 Express Edition (needed for SeeMS)</li>
+        <li>Install the Subversion client if you don't already have it</li>
+        <li>Install the Thermo DLLs from http://sjsupport.thermofinnigan.com/public/detail.asp?id=703</li>
+    </ul>
+    <h3>OSX</h3>
+    <ul>
+        <li>Install the Apple Developer Tools</li>
+        <li>Install Mac Ports</li>
+        <li>Use Mac Ports to install gd2 library (and its dependent libraries)</li>
+    </ul>
+    
+    <h3>Linux (Ubuntu)</h3>
+    <p>Linux comes with the dev tools you need, but you'll need to install these two packages:</p>
+    <ul>
+        <li>apt-get install libgd2-xpm-dev</li>
+        <li>apt-get install libfftw3-dev</li>
+    </ul>
+    <p>On other Linux distros, find the appropriate packages for the gd2 and fftw3 libraries.</p>
+    </ul>
+
+    <h2>Source Code</h2>
+    <p>
+        Use the following command to check out a snapshot of the current ProteoWizard
+        source code: <br/>
+        <code>
+            svn checkout
+            https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/trunk/pwiz
+            your_local_directory 
+        </code>
+        <p>
+        <code>your_local_directory</code> will be referred to as &lt;pwiz-root&gt; below.
+        </p>
+    </p>
+
+
+    <h2>Build</h2>
+    <h3>Windows</h3>
+    <p>
+        From your &lt;pwiz-root&gt; directory, run:<br/>
+        <code>quickbuild.bat</code>
+    </p>
+    <h3>OSX/Linux</h3>
+    <p>
+        From your &lt;pwiz-root&gt; directory, run:<br/>
+        <code>quickbuild.sh</code>
+    </p>
+
+    <h2>Known Issues</h2>
+    <h3>OSX 10.6 (Snow Leopard)</h3>
+    <p>
+        Link error involving gcc_eh in default build.  Workaround -- build with:<br/>
+        <code>quickbuild.sh runtime-link=shared</code>
+    </p>
+
+
+    <h2>Library Dependencies</h2>
+    <p>
+        ProteoWizard uses Boost.Build, a cross-platform build framework.
+        See <a href="http://boost.org/boost-build2" target="_blank">http://boost.org/boost-build2</a> for Boost.Build documentation.
+    </p>
+
+    <p>
+        Tested versions of all of ProteoWizard's library dependencies can be found
+        in &lt;pwiz-root&gt;/libraries.</p>
+    <p>
+        The following libraries are used by the ProteoWizard projects:
+        <ul>
+            <li><h3>Boost</h3> Several of the Boost C++ libraries 
+                are used, including <code>filesystem</code> for platform-independent filesystem
+                access, <code>program_options</code> for handling command-line parameters,
+                <code>ublas</code> for linear algebra routines, and <code>Boost.Build</code>
+                for platform-independent build files. 
+                <a href="http://boost.org" target="_blank">http://boost.org</a>
+            </li>
+
+            <li><h3>gd</h3> 
+                The <code>gd</code> graphics library is used by <code>msaccess/mspicture</code> for creating
+                images of mass spectra.
+                <a href="http://www.libgd.org" target="_blank">http://www.libgd.org</a>
+            </li>
+
+            <li><h3>fftw</h3>
+                The <code>fftw</code> Fourier Transform library is used for processing
+                FTMS transient data.
+                <a href="http://www.fftw.org" target="_blank">http://www.fftw.org</a>
+            </li>
+            <li><h3>Vendor Libraries</h3>
+                See <a href="formats/index.html">this page</a> for information on vendor libraries and formats.
+        </ul>
+    </p>
+
+    <hr/>
+    <a href="index.html">Technical documentation home</a>
+
+</body>
+</html>
+

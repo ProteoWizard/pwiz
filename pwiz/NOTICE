@@ -1,0 +1,16 @@
+
+ProteoWizard software library for mass spectrometry data analysis
+http://proteowizard.sourceforge.net
+
+
+Copyright 2005-2008 Spielberg Family Center for Applied Proteomics
+Cedars Sinai Medical Center, Los Angeles, California  90048
+http://sfcap.cshs.org
+
+
+This software makes use of the following libraries:
+  Boost C++ libraries (http://www.boost.org).
+  gd graphics library (http://www.libgd.org).
+  fftw library (http://www.fftw.org)  
+
+

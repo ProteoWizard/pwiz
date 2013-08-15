@@ -1,0 +1,49 @@
+#!/bin/bash
+
+
+function do_regression_test()
+{
+    if [ -e $testdir ]
+    then
+        echo Directory $testdir already exists!
+        echo $program regression failed!
+        exit 1
+    fi
+
+    # run the regression test
+    $program test $testdir
+
+    # filter regression tests
+    for file in $(find $testdir -name *.txt)
+    do
+        # replace e-00n by e-0n
+        sed -i 's/\(e[+-]\)00\([0-9]\)/\10\2/g' $file
+    done
+
+    # diff: recursive ignore-blanks brief ignore-.svn 
+    diff -r -b -q --exclude=.svn $testdir $gooddir
+    if [ $? -ne 0 ]
+    then
+        echo diff: failure 
+        echo $program regression failed!
+        exit 1
+    else
+        echo diff: success
+        echo Removing directory $testdir 
+        rm -rf $testdir 
+        echo $program regression ok
+    fi
+}
+
+
+testdir=regression_simerr_test
+gooddir=regression_simerr_good
+program=simerr
+do_regression_test
+
+testdir=regression_simcal_test
+gooddir=regression_simcal_good
+program=simcal
+do_regression_test
+
+

@@ -1,0 +1,92 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2012 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+import modules path feature ;
+
+path-constant THIS_PATH : . ;
+
+rule msbuild_deploy ( targets + : sources * : properties * )
+{
+    if <variant>debug in $(properties) ||
+       <debug-symbols>on in $(properties)
+    {
+        CONFIGURATION on $(targets) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(targets) = "Release" ;
+    }
+    
+    local address-model = [ feature.get-values <address-model> : $(properties) ] ;
+    ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
+    LOCATION on $(targets) = [ feature.get-values <location> : $(properties) ] ;
+    TOOLSET on $(targets) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
+    
+    if $(address-model) = 64
+    {
+        ARCH on $(targets) = x64 ;
+    }
+    else
+    {
+        ARCH on $(targets) = x86 ;
+    }
+}
+
+actions msbuild_deploy
+{
+    echo Building pwiz-setup in $(CONFIGURATION:L) configuration...
+    pushd $(THIS_PATH)
+    "%PYTHON_HOME%/python.exe" pwiz-setup.py "$(THIS_PATH)" "$(PWIZ_BUILD_PATH)" "$(LOCATION)" "$(PWIZ_VERSION_TAG)" $(ADDRESS_MODEL)
+    pushd $(PWIZ_BUILD_PATH)
+    "%WIX%\bin\candle.exe" -nologo *.wxs -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
+    "%WIX%\bin\light.exe" -nologo *.wixObj -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
+    set EXIT=%ERRORLEVEL%
+    popd
+    popd
+    if %EXIT% NEQ 0 exit %EXIT%
+}
+
+
+rule build-location ( properties * )
+{
+    local result ;
+    # don't override the location when it's already set
+    if ! <location> in $(properties:G)
+    {
+        return [ install-location $(properties) ] ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
+
+make pwiz-setup.exe
+    : # sources
+    : # actions
+        @msbuild_deploy
+    : # requirements
+        <variant>debug:<build>no # don't make debug installs
+        <dependency>../..//executables
+        <conditional>@build-location
+        <conditional>@msvc-requirement
+    ;

@@ -1,0 +1,17 @@
+exe rawdump
+    :   rawdump.cpp
+        ../rawfile
+    :   <toolset>gcc:<build>no 
+    ;
+
+exe readbacks 
+    :   readbacks.cpp
+        ../rawfile
+    :   <toolset>gcc:<build>no 
+    ;
+
+#install temp 
+#    : rawdump
+#    : <location>temp
+#    ;
+
