@@ -388,8 +388,8 @@ struct ParserImpl
                       "PRAGMA automatic_indexing=OFF;"
                       "PRAGMA cache_size=30000;"
                       "PRAGMA temp_store=MEMORY;"
-                      "PRAGMA page_size=32768"
-                     );
+                      "PRAGMA page_size=32768;"
+                      "PRAGMA mmap_size=70368744177664; -- 2^46");
 
         sqlite::transaction transaction(idpDb);
 

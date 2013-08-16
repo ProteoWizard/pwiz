@@ -111,6 +111,7 @@
 <Component Feature="MainFeature"><File Id="_Remotion.Data.Linq.dll" Name="Remotion.Data.Linq.dll" Source="msvc-release\Remotion.Data.Linq.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_SharpSvn.dll" Name="SharpSvn.dll" Source="msvc-release\SharpSvn.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_gene2protein.db3" Name="gene2protein.db3" Source="http://fenchurch.mc.vanderbilt.edu/bin/g2p/gene2protein.db3" KeyPath="yes"/></Component>
 <?if $(var.AddressModel)=32 ?>
     <Component Feature="MainFeature"><File Id="_SharpPlink_Win32.svnExe" Name="SharpPlink-Win32.svnExe" Source="msvc-release\SharpPlink-Win32.svnExe" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Id="_SharpSvn_DB44_20_Win32.dll" Name="SharpSvn-DB44-20-Win32.dll" Source="msvc-release\SharpSvn-DB44-20-Win32.dll" KeyPath="yes"/></Component>

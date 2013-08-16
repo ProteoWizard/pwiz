@@ -163,8 +163,8 @@ void test()
     bfs::remove("testEmbedder.fasta.index");
 
     // run embed on intermediate mzML
-    map<int, QuantitationMethod> quantitationMethodBySource;
-    quantitationMethodBySource[1] = QuantitationMethod::ITRAQ4plex;
+    map<int, Embedder::QuantitationConfiguration> quantitationMethodBySource;
+    quantitationMethodBySource[1] = Embedder::QuantitationConfiguration(QuantitationMethod::ITRAQ4plex);
     Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
 
     // remove test files

@@ -551,8 +551,8 @@ int main( int argc, char* argv[] )
 
         if (g_rtConfig->EmbedSpectrumSources || g_rtConfig->EmbedSpectrumScanTimes)
         {
-            map<int, QuantitationMethod> allSourcesQuantitationMethodMap;
-            allSourcesQuantitationMethodMap[0] = g_rtConfig->QuantitationMethod;
+            map<int, Embedder::QuantitationConfiguration> allSourcesQuantitationMethodMap;
+            allSourcesQuantitationMethodMap[0] = Embedder::QuantitationConfiguration(g_rtConfig->QuantitationMethod, g_rtConfig->ReporterIonMzTolerance);
 
             for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
             {

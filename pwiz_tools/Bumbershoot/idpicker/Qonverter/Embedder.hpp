@@ -31,6 +31,7 @@
 #include <vector>
 #include <map>
 #include "pwiz/utility/misc/IterationListener.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include <boost/date_time.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/shared_ptr.hpp>
@@ -71,6 +72,17 @@ using std::string;
 using std::vector;
 using std::map;
 using std::pair;
+using pwiz::chemistry::MZTolerance;
+
+
+struct QuantitationConfiguration
+{
+    QuantitationConfiguration(QuantitationMethod quantitationMethod = QuantitationMethod::None,
+                              MZTolerance reporterIonMzTolerance = MZTolerance(10, MZTolerance::PPM));
+
+    QuantitationMethod quantitationMethod;
+    MZTolerance reporterIonMzTolerance;
+};
 
 
 /// the default source extensions to search for, ordered by descending priority
@@ -80,7 +92,7 @@ extern const string defaultSourceExtensionPriorityList;
 /// and embed a MZ5 representation of the source's spectra in the MSDataBytes column of the idpDB
 void embed(const string& idpDbFilepath,
            const string& sourceSearchPath,
-           const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
+           const map<int, QuantitationConfiguration>& quantitationMethodBySource = map<int, QuantitationConfiguration>(),
            pwiz::util::IterationListenerRegistry* ilr = 0);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -88,14 +100,14 @@ void embed(const string& idpDbFilepath,
 void embed(const string& idpDbFilepath,
            const string& sourceSearchPath,
            const string& sourceExtensionPriorityList,
-           const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
+           const map<int, QuantitationConfiguration>& quantitationMethodBySource = map<int, QuantitationConfiguration>(),
            pwiz::util::IterationListenerRegistry* ilr = 0);
 
 /// search for source files of the idpDB using the given search path, using the default source extensions,
 /// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
 void embedScanTime(const string& idpDbFilepath,
                    const string& sourceSearchPath,
-                   const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
+                   const map<int, QuantitationConfiguration>& quantitationMethodBySource = map<int, QuantitationConfiguration>(),
                    pwiz::util::IterationListenerRegistry* ilr = 0);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -103,8 +115,11 @@ void embedScanTime(const string& idpDbFilepath,
 void embedScanTime(const string& idpDbFilepath,
                    const string& sourceSearchPath,
                    const string& sourceExtensionPriorityList,
-                   const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
+                   const map<int, QuantitationConfiguration>& quantitationMethodBySource = map<int, QuantitationConfiguration>(),
                    pwiz::util::IterationListenerRegistry* ilr = 0);
+
+/// checks whether the given idpDB has embedded gene metadata (although it may not necessarily be the most up-to-date)
+bool hasGeneMetadata(const string& idpDbFilepath);
 
 /// embed gene metadata in the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
 void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);

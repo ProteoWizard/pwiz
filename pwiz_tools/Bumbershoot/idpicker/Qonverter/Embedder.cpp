@@ -188,6 +188,11 @@ const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;ms2;cms2;mgf");
 }
 
 
+QuantitationConfiguration::QuantitationConfiguration(QuantitationMethod quantitationMethod, pwiz::chemistry::MZTolerance reporterIonMzTolerance)
+    : quantitationMethod(quantitationMethod), reporterIonMzTolerance(reporterIonMzTolerance)
+{}
+
+
 namespace {
 
 struct SpectrumSource
@@ -226,7 +231,7 @@ void getSources(sqlite::database& idpDb,
                 const string& idpDbFilepath,
                 const string& sourceSearchPath,
                 const string& sourceExtensionPriorityList,
-                const map<int, QuantitationMethod>& quantitationMethodBySource,
+                const map<int, QuantitationConfiguration>& quantitationMethodBySource,
                 pwiz::util::IterationListenerRegistry* ilr)
 {
     string databaseName = bfs::path(idpDbFilepath).replace_extension("").filename();
@@ -324,10 +329,10 @@ struct SpectrumList_Quantifier
 
     SpectrumList_Quantifier(const SpectrumListPtr& sl, const IntegerSet& filteredIndexes,
                             const map<string, int>& rowIdByNativeID,
-                            QuantitationMethod quantitationMethod)
+                            QuantitationConfiguration quantitationConfig)
         : rowIdByNativeID(rowIdByNativeID),
-          quantitationMethod(quantitationMethod),
-          tolerance(10, MZTolerance::PPM)
+          quantitationMethod(quantitationConfig.quantitationMethod),
+          tolerance(quantitationConfig.reporterIonMzTolerance)
     {
         double iTRAQ_masses[8] = { 113.107873, 114.111228, 115.108263, 116.111618, 117.114973, 118.112008, 119.115363, 121.122072 };
         for (int i=1; i < 5; ++i) itraq4plexIons.push_back(iTRAQ_masses[i]);
@@ -601,7 +606,7 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
 
 void embed(const string& idpDbFilepath,
            const string& sourceSearchPath,
-           const map<int, QuantitationMethod>& quantitationMethodBySource,
+           const map<int, QuantitationConfiguration>& quantitationMethodBySource,
            pwiz::util::IterationListenerRegistry* ilr)
 {
     embed(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, quantitationMethodBySource, ilr);
@@ -610,7 +615,7 @@ void embed(const string& idpDbFilepath,
 void embed(const string& idpDbFilepath,
            const string& sourceSearchPath,
            const string& sourceExtensionPriorityList,
-           const map<int, QuantitationMethod>& quantitationMethodBySource,
+           const map<int, QuantitationConfiguration>& quantitationMethodBySource,
            pwiz::util::IterationListenerRegistry* ilr)
 {
     sqlite::database idpDb;
@@ -661,19 +666,17 @@ void embed(const string& idpDbFilepath,
 
         scoped_ptr<SpectrumList_Quantifier> slq;
 
-        QuantitationMethod newQuantitationMethod;
+        QuantitationConfiguration newQuantitationConfig;
 
         if (quantitationMethodBySource.count(source.id) > 0)
-            newQuantitationMethod = quantitationMethodBySource.find(source.id)->second;
+            newQuantitationConfig = quantitationMethodBySource.find(source.id)->second;
         else if (quantitationMethodBySource.count(0) > 0)
-            newQuantitationMethod = quantitationMethodBySource.find(0)->second; // applies to all sources
-        else
-            newQuantitationMethod = QuantitationMethod::None;
+            newQuantitationConfig = quantitationMethodBySource.find(0)->second; // applies to all sources
 
-        if (newQuantitationMethod != source.quantitationMethod)
+        if (newQuantitationConfig.quantitationMethod != source.quantitationMethod)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "gathering quantitation data from \"" + sourceFilename + "\"");
-            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationMethod));
+            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationConfig));
         }
 
         ITERATION_UPDATE(ilr, i, sources.size(), "embedding scan times for \"" + sourceFilename + "\"");
@@ -718,22 +721,22 @@ void embed(const string& idpDbFilepath,
         try { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM UnfilteredSpectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
         catch (sqlite::database_error&) { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM Spectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
         
-        if (newQuantitationMethod == source.quantitationMethod)
+        if (newQuantitationConfig.quantitationMethod == source.quantitationMethod)
         {
             transaction.commit();
             continue;
         }
 
-        if (newQuantitationMethod != QuantitationMethod::None)
+        if (newQuantitationConfig.quantitationMethod != QuantitationMethod::None)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "adding spectrum quantitation data for \"" + source.name + "\"");
 
             scoped_ptr<sqlite::command> insertSpectrumQuantitation;
-            if (newQuantitationMethod == QuantitationMethod::ITRAQ4plex ||
-                newQuantitationMethod == QuantitationMethod::ITRAQ8plex)
+            if (newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ4plex ||
+                newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ8plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, iTRAQ_ReporterIonIntensities) VALUES (?,?)"));
-            else if (newQuantitationMethod == QuantitationMethod::TMT2plex ||
-                     newQuantitationMethod == QuantitationMethod::TMT6plex)
+            else if (newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT2plex ||
+                     newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT6plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, TMT_ReporterIonIntensities) VALUES (?,?)"));
 
             for (size_t i=0; i < slq->spectrumQuantitationRows.size(); ++i)
@@ -754,7 +757,7 @@ void embed(const string& idpDbFilepath,
                                     "WHERE Id = ?");
         cmd2.binder() << slq->totalSpectraByMSLevel[1] << slq->totalIonCurrentByMSLevel[1] <<
                          slq->totalSpectraByMSLevel[2] << slq->totalIonCurrentByMSLevel[2] <<
-                         newQuantitationMethod.value() <<
+                         newQuantitationConfig.quantitationMethod.value() <<
                          source.id;
         cmd2.execute();
         cmd2.reset();
@@ -766,7 +769,7 @@ void embed(const string& idpDbFilepath,
 
 void embedScanTime(const string& idpDbFilepath,
                    const string& sourceSearchPath,
-                   const map<int, QuantitationMethod>& quantitationMethodBySource,
+                   const map<int, QuantitationConfiguration>& quantitationMethodBySource,
                    pwiz::util::IterationListenerRegistry* ilr)
 {
     embedScanTime(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, quantitationMethodBySource, ilr);
@@ -775,7 +778,7 @@ void embedScanTime(const string& idpDbFilepath,
 void embedScanTime(const string& idpDbFilepath,
                    const string& sourceSearchPath,
                    const string& sourceExtensionPriorityList,
-                   const map<int, QuantitationMethod>& quantitationMethodBySource,
+                   const map<int, QuantitationConfiguration>& quantitationMethodBySource,
                    pwiz::util::IterationListenerRegistry* ilr)
 {
     sqlite::database idpDb;
@@ -826,19 +829,17 @@ void embedScanTime(const string& idpDbFilepath,
 
         scoped_ptr<SpectrumList_Quantifier> slq;
 
-        QuantitationMethod newQuantitationMethod;
+        QuantitationConfiguration newQuantitationConfig;
         
         if (quantitationMethodBySource.count(source.id) > 0)
-            newQuantitationMethod = quantitationMethodBySource.find(source.id)->second;
+            newQuantitationConfig = quantitationMethodBySource.find(source.id)->second;
         else if (quantitationMethodBySource.count(0) > 0)
-            newQuantitationMethod = quantitationMethodBySource.find(0)->second; // applies to all sources
-        else
-            newQuantitationMethod = QuantitationMethod::None;
+            newQuantitationConfig = quantitationMethodBySource.find(0)->second; // applies to all sources
 
-        if (newQuantitationMethod != source.quantitationMethod)
+        if (newQuantitationConfig.quantitationMethod != source.quantitationMethod)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "gathering quantitation data from \"" + sourceFilename + "\"");
-            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationMethod));
+            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationConfig));
         }
 
         ITERATION_UPDATE(ilr, i, sources.size(), "embedding scan times for \"" + sourceFilename + "\"");
@@ -851,19 +852,19 @@ void embedScanTime(const string& idpDbFilepath,
         try { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM UnfilteredSpectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
         catch (sqlite::database_error&) { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM Spectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
 
-        if (newQuantitationMethod == source.quantitationMethod)
+        if (newQuantitationConfig.quantitationMethod == source.quantitationMethod)
             continue;
 
-        if (newQuantitationMethod != QuantitationMethod::None)
+        if (newQuantitationConfig.quantitationMethod != QuantitationMethod::None)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "adding spectrum quantitation data for \"" + source.name + "\"");
 
             scoped_ptr<sqlite::command> insertSpectrumQuantitation;
-            if (newQuantitationMethod == QuantitationMethod::ITRAQ4plex ||
-                newQuantitationMethod == QuantitationMethod::ITRAQ8plex)
+            if (newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ4plex ||
+                newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ8plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, iTRAQ_ReporterIonIntensities) VALUES (?,?)"));
-            else if (newQuantitationMethod == QuantitationMethod::TMT2plex ||
-                     newQuantitationMethod == QuantitationMethod::TMT6plex)
+            else if (newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT2plex ||
+                     newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT6plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, TMT_ReporterIonIntensities) VALUES (?,?)"));
 
             for (size_t i=0; i < slq->spectrumQuantitationRows.size(); ++i)
@@ -884,7 +885,7 @@ void embedScanTime(const string& idpDbFilepath,
                                     "WHERE Id = ?");
         cmd.binder() << slq->totalSpectraByMSLevel[1] << slq->totalIonCurrentByMSLevel[1] <<
                         slq->totalSpectraByMSLevel[2] << slq->totalIonCurrentByMSLevel[2] <<
-                        newQuantitationMethod.value() <<
+                        newQuantitationConfig.quantitationMethod.value() <<
                         source.id;
         cmd.execute();
         cmd.reset();
@@ -914,6 +915,18 @@ void extract(const string& idpDbFilepath, const string& sourceName, const string
 }
 
 
+bool hasGeneMetadata(const string& idpDbFilepath)
+{
+    // open the database
+    sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
+    
+    idpDb.execute("PRAGMA mmap_size=70368744177664; -- 2^46");
+
+    // if there is at least 1 non-null GeneId, there is embedded gene metadata
+    return sqlite::query(idpDb, "SELECT COUNT(*) FROM Protein WHERE GeneId IS NOT NULL").begin()->get<int>(0) > 0;
+}
+
+
 void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
 {
     if (!bfs::exists("gene2protein.db3"))
@@ -934,15 +947,18 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
                                                                      boost::make_optional(!geneDescription.empty(), geneDescription));
         }
     }
+    
+    // drop filtered tables and update schema if necessary
+    Qonverter q;
+    q.dropFilters(idpDbFilepath);
 
     // open the database
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
     
-    idpDb.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
-
-    // drop filtered tables
-    Qonverter q;
-    q.dropFilters(idpDb.connected());
+    idpDb.execute("PRAGMA journal_mode=OFF;"
+                  "PRAGMA synchronous=OFF;"
+                  "PRAGMA cache_size=50000;"
+                  "PRAGMA mmap_size=70368744177664; -- 2^46");
 
     // reset GeneId column
     idpDb.execute("UPDATE Protein SET GeneId=NULL");

@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Reflection;
 using System.Linq;
 using System.Text;
@@ -51,9 +52,24 @@ namespace SetupDeployProject
             string addressModel = args[3];
             string installerSuffix = addressModel == "64" ? "-x86_64" : "-x86";
 
-            wxsTemplate = wxsTemplate.Replace("{ProductGuid}", guid);
-            wxsTemplate = wxsTemplate.Replace("{version}", version);
-            wxsTemplate = wxsTemplate.Replace("msvc-release", installPath);
+            wxsTemplate.Replace("{ProductGuid}", guid);
+            wxsTemplate.Replace("{version}", version);
+            wxsTemplate.Replace("msvc-release", installPath);
+
+            var httpSources = Regex.Matches(wxsTemplate.ToString(), "Name=\"(.*)\" Source=\"(http://.*?)\"");
+            WebClient webClient = null;
+            foreach (Match match in httpSources)
+            {
+                var nameCapture = match.Groups[1];
+                var sourceCapture = match.Groups[2];
+
+                // download file
+                webClient = webClient ?? new WebClient();
+                webClient.DownloadFile(sourceCapture.Value, Path.Combine(installPath, nameCapture.Value));
+
+                // replace http link with the path to the downloaded HTTP file
+                wxsTemplate.Replace(sourceCapture.Value, installPath + "\\" + nameCapture.Value);
+            }
 
             // delete old wxs files
             foreach (string filepath in Directory.GetFiles(buildPath, "*.wxs"))

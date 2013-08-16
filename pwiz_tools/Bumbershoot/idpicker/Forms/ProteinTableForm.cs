@@ -30,6 +30,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Threading;
 using System.IO;
@@ -142,6 +143,7 @@ namespace IDPicker.Forms
             public double? MeanProteinCoverage { get; private set; }
             public double[] iTRAQ_ReporterIonIntensities { get; private set; }
             public double[] TMT_ReporterIonIntensities { get; private set; }
+            public string ModifiedSites { get; private set; }
 
             public static IList<ProteinGroupRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
             {
@@ -156,9 +158,11 @@ namespace IDPicker.Forms
                                                        ", AVG(pro.Coverage)" +
                                                        ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
                                                        ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", DISTINCT_GROUP_CONCAT(ROUND_TO_INTEGER(mod.MonoMassDelta) || '@' || pm.Site || PARENS(pi.Offset+pm.Offset+1))" +
                                                        ", pro.ProteinGroup" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                                                         DataFilter.ProteinToSpectrum) +
+                                                                                         DataFilter.ProteinToSpectrum,
+                                                                                         DataFilter.ProteinToModification) +
                                                        "GROUP BY pro.ProteinGroup").List<object[]>();
 
                     // these columns are not affected by the view filter
@@ -182,6 +186,7 @@ namespace IDPicker.Forms
                 MeanProteinCoverage = (double?)basicColumns[++column];
                 iTRAQ_ReporterIonIntensities = (double[])iTRAQArrayUserType.Assemble(basicColumns[++column], null);
                 TMT_ReporterIonIntensities = (double[])TMTArrayUserType.Assemble(basicColumns[++column], null);
+                ModifiedSites = ProteinRow.RemoveTerminalSites((string)basicColumns[++column] ?? String.Empty);
                 ProteinGroup = Convert.ToInt32(basicColumns[++column]);
             }
             #endregion
@@ -192,6 +197,7 @@ namespace IDPicker.Forms
             public DataModel.Protein Protein { get; private set; }
             public double[] iTRAQ_ReporterIonIntensities { get; private set; }
             public double[] TMT_ReporterIonIntensities { get; private set; }
+            public string ModifiedSites { get; private set; }
 
             public static IList<ProteinRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
             {
@@ -202,9 +208,11 @@ namespace IDPicker.Forms
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
                                                        ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
                                                        ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", DISTINCT_GROUP_CONCAT(ROUND_TO_INTEGER(mod.MonoMassDelta) || '@' || pm.Site || PARENS(pi.Offset+pm.Offset+1))" +
                                                        ", pro" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                                                         DataFilter.ProteinToSpectrum) +
+                                                                                         DataFilter.ProteinToSpectrum,
+                                                                                         DataFilter.ProteinToModification) +
                                                        "GROUP BY pro.Id").List<object[]>();
 
                     // these columns are not affected by the view filter
@@ -224,9 +232,22 @@ namespace IDPicker.Forms
                 int column = AggregateRow.ColumnCount - 1;
                 iTRAQ_ReporterIonIntensities = (double[])iTRAQArrayUserType.Assemble(basicColumns[++column], null);
                 TMT_ReporterIonIntensities = (double[])TMTArrayUserType.Assemble(basicColumns[++column], null);
+                ModifiedSites = RemoveTerminalSites((string) basicColumns[++column] ?? String.Empty);
                 Protein = (DataModel.Protein) basicColumns[++column];
             }
             #endregion
+
+            public static string RemoveTerminalSites(string modifiedSites)
+            {
+                var sb = new StringBuilder(modifiedSites);
+                var matches = Regex.Matches(modifiedSites, @"\d+@[\(\)]-?\d+,?", RegexOptions.Compiled);
+                for (int i = matches.Count - 1; i >= 0; --i)
+                {
+                    var match = matches[i];
+                    sb.Remove(Math.Max(0, match.Index - 1), match.Length); // remove the delimiting comma as well
+                }
+                return sb.ToString();
+            }
         }
 
         public class GeneGroupRow : AggregateRow
@@ -788,6 +809,7 @@ namespace IDPicker.Forms
                 else if (columnIndex == chromosomeColumn.Index) return row.FirstProtein.Chromosome;
                 else if (columnIndex == geneFamilyColumn.Index) return row.FirstProtein.GeneFamily;
                 else if (columnIndex == descriptionColumn.Index) return row.FirstProtein.Description;
+                else if (columnIndex == modifiedSitesColumn.Index) return row.ModifiedSites;
                 else if (columnIndex == distinctPeptidesColumn.Index)return row.DistinctPeptides;
                 else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                 else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
@@ -810,6 +832,7 @@ namespace IDPicker.Forms
                 if (columnIndex == keyColumn.Index) return row.Protein.Accession;
                 else if (columnIndex == coverageColumn.Index && !row.Protein.IsDecoy) return row.Protein.Coverage;
                 else if (columnIndex == descriptionColumn.Index) return row.Protein.Description;
+                else if (columnIndex == modifiedSitesColumn.Index) return row.ModifiedSites;
                 else if (checkedGroupings.All(o => o.Mode != GroupBy.ProteinGroup))
                 {
                     if (columnIndex == clusterColumn.Index) return row.Protein.Cluster;
@@ -1437,7 +1460,7 @@ namespace IDPicker.Forms
                              //new Grouping<GroupBy>() { Mode = GroupBy.GeneFamily, Text = "Gene Family" },
                              //new Grouping<GroupBy>() { Mode = GroupBy.Chromosome, Text = "Chromosome" },
                              new Grouping<GroupBy>() { Mode = GroupBy.Cluster, Text = "Cluster" },
-                             new Grouping<GroupBy>() { Mode = GroupBy.ProteinGroup, Text = "Protein Group" });
+                             new Grouping<GroupBy>(true) { Mode = GroupBy.ProteinGroup, Text = "Protein Group" });
 
             groupingSetupControl.GroupingChanging += groupingSetupControl_GroupingChanging;
             return groupingChanged;
@@ -1460,6 +1483,7 @@ namespace IDPicker.Forms
                 { distinctMatchesColumn, new ColumnProperty {Type = typeof(int)}},
                 { filteredSpectraColumn, new ColumnProperty {Type = typeof(int)}},
                 { descriptionColumn, new ColumnProperty {Type = typeof(string)}},
+                { modifiedSitesColumn, new ColumnProperty {Type = typeof(string), Visible = false}},
                 { peptideGroupsColumn, new ColumnProperty {Type = typeof(string), Visible = false}},
                 { peptideSequencesColumn, new ColumnProperty {Type = typeof(string), Visible = false}},
             };
@@ -1492,6 +1516,7 @@ namespace IDPicker.Forms
                 {distinctMatchesColumn.Index, SortOrder.Descending},
                 {filteredSpectraColumn.Index, SortOrder.Descending},
                 {descriptionColumn.Index, SortOrder.Ascending},
+                {modifiedSitesColumn.Index, SortOrder.Ascending},
                 {peptideSequencesColumn.Index, SortOrder.Ascending},
                 {peptideGroupsColumn.Index, SortOrder.Ascending},
             };
@@ -1504,16 +1529,20 @@ namespace IDPicker.Forms
 
         private void groupingSetupControl_GroupingChanging (object sender, GroupingChangingEventArgs<GroupBy> e)
         {
-            // GroupBy.ProteinGroup cannot be before GroupBy.Cluster; GroupBy.Gene cannot be before GroupBy.GeneGroup
-            if (e.Grouping.Mode == GroupBy.ProteinGroup || e.Grouping.Mode == GroupBy.Cluster ||
-                e.Grouping.Mode == GroupBy.GeneGroup || e.Grouping.Mode == GroupBy.Gene)
+            // if the grouping hasn't been moved, skip the parent checking
+            if (groupingSetupControl.Groupings[e.NewIndex].Mode != e.Grouping.Mode)
             {
-                var newGroupings = new List<Grouping<GroupBy>>(groupingSetupControl.Groupings);
-                newGroupings.Remove(e.Grouping);
-                newGroupings.Insert(e.NewIndex, e.Grouping);
+                // GroupBy.ProteinGroup cannot be before GroupBy.Cluster; GroupBy.Gene cannot be before GroupBy.GeneGroup
+                if (e.Grouping.Mode == GroupBy.ProteinGroup || e.Grouping.Mode == GroupBy.Cluster ||
+                    e.Grouping.Mode == GroupBy.GeneGroup || e.Grouping.Mode == GroupBy.Gene)
+                {
+                    var newGroupings = new List<Grouping<GroupBy>>(groupingSetupControl.Groupings);
+                    newGroupings.Remove(e.Grouping);
+                    newGroupings.Insert(e.NewIndex, e.Grouping);
 
-                e.Cancel = GroupingSetupControl<GroupBy>.HasParentGrouping(newGroupings, GroupBy.Cluster, GroupBy.ProteinGroup) ||
-                           GroupingSetupControl<GroupBy>.HasParentGrouping(newGroupings, GroupBy.GeneGroup, GroupBy.Gene);
+                    e.Cancel = GroupingSetupControl<GroupBy>.HasParentGrouping(newGroupings, GroupBy.Cluster, GroupBy.ProteinGroup) ||
+                               GroupingSetupControl<GroupBy>.HasParentGrouping(newGroupings, GroupBy.GeneGroup, GroupBy.Gene);
+                }
             }
 
             if (e.Grouping.Checked)

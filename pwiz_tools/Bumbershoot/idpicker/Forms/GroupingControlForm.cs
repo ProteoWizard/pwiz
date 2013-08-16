@@ -724,7 +724,8 @@ namespace IDPicker.Forms
                 if (sourceGroupFile != null)
                 {
                     var dummy = new GroupingControlForm(session.SessionFactory);
-                    return dummy.applyAssemblyText(session, sourceGroupFile);
+                    dummy.applyAssemblyText(session, sourceGroupFile);
+                    return SetGroupingHierarchy(dummy._rootNode, dummy.session);
                 }
                 else
                     return new List<SpectrumSourceGroup>();

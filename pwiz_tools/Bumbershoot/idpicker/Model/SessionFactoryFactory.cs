@@ -65,6 +65,28 @@ namespace IDPicker.DataModel
             }
         }
 
+        public class Parens : StandardSQLFunction
+        {
+            public Parens() : base("parens", NHibernateUtil.String) { }
+
+            public override SqlString Render(IList args, NHibernate.Engine.ISessionFactoryImplementor factory)
+            {
+                var result = base.Render(args, factory);
+                return result.Replace("parens(", "(");
+            }
+        }
+
+        public class RoundToInteger : StandardSQLFunction
+        {
+            public RoundToInteger() : base("round_to_integer", NHibernateUtil.Double) { }
+
+            public override SqlString Render(IList args, NHibernate.Engine.ISessionFactoryImplementor factory)
+            {
+                var result = base.Render(args, factory);
+                return result.Replace("round_to_integer(", "cast(round(").Append(" as integer)");
+            }
+        }
+
         /// <summary>
         /// Takes two integers and returns the set of integers between them as a string delimited by commas.
         /// Both ends of the set are inclusive.
@@ -216,8 +238,10 @@ namespace IDPicker.DataModel
             public CustomSQLiteDialect ()
             {
                 RegisterFunction("round", new StandardSQLFunction("round"));
+                RegisterFunction("round_to_integer", new RoundToInteger());
                 RegisterFunction("group_concat", new StandardSQLFunction("group_concat", NHibernateUtil.String));
                 RegisterFunction("distinct_group_concat", new DistinctGroupConcat());
+                RegisterFunction("parens", new Parens());
                 RegisterFunction("range_concat", new StandardSQLFunction("range_concat", NHibernateUtil.String));
                 RegisterFunction("double_array_sum", new StandardSQLFunction("double_array_sum", NHibernateUtil.BinaryBlob));
                 RegisterFunction("distinct_double_array_sum", new StandardSQLFunction("distinct_double_array_sum", NHibernateUtil.BinaryBlob));
@@ -231,6 +255,7 @@ namespace IDPicker.DataModel
         static object mutex = new object();
         public static ISessionFactory CreateSessionFactory (string path, SessionFactoryConfig config)
         {
+
             // update the existing database's schema if necessary, and if updated, recreate the indexes
             if (File.Exists(path) &&
                 IsValidFile(path) &&
@@ -244,7 +269,8 @@ namespace IDPicker.DataModel
                                            PRAGMA automatic_indexing=OFF;
                                            PRAGMA cache_size=30000;
                                            PRAGMA temp_store=MEMORY;
-                                           PRAGMA page_size=32768");
+                                           PRAGMA page_size=32768;
+                                           PRAGMA mmap_size=70368744177664; -- 2^46");
                     DropIndexes(conn);
                     CreateIndexes(conn);
                 }
@@ -281,7 +307,8 @@ namespace IDPicker.DataModel
 
             sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA cache_size=10000;
                                                                    PRAGMA temp_store=MEMORY;
-                                                                   PRAGMA page_size=32768").ExecuteUpdate();
+                                                                   PRAGMA page_size=32768;
+                                                                   PRAGMA mmap_size=70368744177664; -- 2^46").ExecuteUpdate();
 
             if (config.CreateSchema)
                 CreateFile(path);
@@ -328,7 +355,8 @@ namespace IDPicker.DataModel
                                    PRAGMA automatic_indexing=OFF;
                                    PRAGMA cache_size=30000;
                                    PRAGMA temp_store=MEMORY;
-                                   PRAGMA page_size=32768");
+                                   PRAGMA page_size=32768;
+                                   PRAGMA mmap_size=70368744177664; -- 2^46");
 
             var transaction = conn.BeginTransaction();
             var cmd = conn.CreateCommand();

@@ -51,6 +51,16 @@ public enum class QuantitationMethod
 public ref struct Embedder abstract
 {
 
+
+ref struct QuantitationConfiguration
+{
+    QuantitationConfiguration(/*QuantitationMethod::None, MZTolerance(10, MZTolerance::PPM)*/);
+
+    property QuantitationMethod QuantitationMethod;
+    property pwiz::CLI::chemistry::MZTolerance^ ReporterIonMzTolerance;
+};
+
+
 /// the default source extensions to search for, ordered by descending priority
 static property String^ DefaultSourceExtensionPriorityList { String^ get(); }
 
@@ -58,7 +68,7 @@ static property String^ DefaultSourceExtensionPriorityList { String^ get(); }
 /// and embed a MZ5 representation of the source's spectra in the MSDataBytes column of the idpDB
 static void Embed(String^ idpDbFilepath,
                   String^ sourceSearchPath,
-                  IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
+                  IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                   pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -66,14 +76,14 @@ static void Embed(String^ idpDbFilepath,
 static void Embed(String^ idpDbFilepath,
                   String^ sourceSearchPath,
                   String^ sourceExtensionPriorityList,
-                  IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
+                  IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                   pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
 /// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
 static void EmbedScanTime(String^ idpDbFilepath,
                           String^ sourceSearchPath,
-                          IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
+                          IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                           pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -81,8 +91,11 @@ static void EmbedScanTime(String^ idpDbFilepath,
 static void EmbedScanTime(String^ idpDbFilepath,
                           String^ sourceSearchPath,
                           String^ sourceExtensionPriorityList,
-                          IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
+                          IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                           pwiz::CLI::util::IterationListenerRegistry^ ilr);
+
+/// checks whether the given idpDB has embedded gene metadata (although it may not necessarily be the most up-to-date)
+static bool HasGeneMetadata(String^ idpDbFilepath);
 
 /// embed gene metadata in the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
 static void EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr);

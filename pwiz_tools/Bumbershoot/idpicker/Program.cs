@@ -131,7 +131,7 @@ namespace IDPicker
         {
             if (MainWindow == null)
             {
-                if (IsHeadless)
+                if (IsHeadless && !System.Diagnostics.Debugger.IsAttached)
                 {
                     Console.Error.WriteLine("\r\nError: {0}\r\n\r\nDetails:\r\n{1}", e.Message, e.ToString());
                     System.Diagnostics.Process.GetCurrentProcess().Kill();
@@ -157,7 +157,7 @@ namespace IDPicker
             {
                 reportForm.StartPosition = FormStartPosition.CenterParent;
 
-                if (IsHeadless)
+                if (IsHeadless && !System.Diagnostics.Debugger.IsAttached)
                 {
                     Console.Error.WriteLine("\r\nError: {0}\r\n\r\nDetails:\r\n{1}", reportForm.ExceptionType, reportForm.MessageBody);
                     System.Diagnostics.Process.GetCurrentProcess().Kill();

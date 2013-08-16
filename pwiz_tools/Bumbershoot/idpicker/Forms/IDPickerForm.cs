@@ -669,6 +669,9 @@ namespace IDPicker
 
             workerThread.RunWorkerCompleted += (s, e) =>
             {
+                if (Program.IsHeadless)
+                    Close();
+
                 if (e.Result is Exception)
                 {
                     Program.HandleException(e.Result as Exception);
@@ -701,9 +704,6 @@ namespace IDPicker
             {
                 e.Result = ex;
             }
-
-            if (Program.IsHeadless)
-                Close();
         }
 
         void clearData ()
@@ -1211,9 +1211,34 @@ namespace IDPicker
                     toolStripStatusLabel.Text = "Loading qonverter settings...";
                     statusStrip.Refresh();
                     session = sessionFactory.OpenSession();
+
+
+                    // check for embedded gene metadata;
+                    // if it isn't there, ask the user if they want to embed it;
+                    // if not, disable gene-related features, else enable gene-related features
+                    if (!Program.IsHeadless && !Embedder.HasGeneMetadata(mergeTargetFilepath))
+                    {
+                        if (MessageBox.Show("In order to enable gene-related features, IDPicker needs to embed gene " +
+                                            "metadata in the idpDB file. It may also download/update the mapping file first. " +
+                                            "If you skip this step, these features will be disabled until you do " +
+                                            "the embed operation from the Tools menu.",
+                                            "Enable Gene Features?",
+                                            MessageBoxButtons.YesNo,
+                                            MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+                            loadRefSeqGeneMetadata();
+                            return;
+                        }
+                        else
+                        {
+
+                        }
+                    }
+
+
                     qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
-                    session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
+                    session.CreateSQLQuery("PRAGMA temp_store=MEMORY; PRAGMA mmap_size=70368744177664; -- 2^46").ExecuteUpdate();
 
                     _layoutManager.SetSession(session);
 
@@ -1226,12 +1251,12 @@ namespace IDPicker
                     var usedGroups = GroupingControlForm.SetInitialStructure(rootNode, session, defaultApplySourceGroupHierarchy);
                     if (usedGroups != null && usedGroups.Any())
                     {
-                        // TODO: select the remaining source groups where the names do not start with 
-                        var unusedGroups = session.QueryOver<SpectrumSourceGroup>().List();
-                        foreach (var item in usedGroups)
-                            unusedGroups.Remove(item);
-                        foreach (var item in unusedGroups)
-                            session.Delete(item);
+                        var allGroupsByName = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Name);
+                        var usedGroupsByName = usedGroups.ToDictionary(o => o.Name);
+
+                        // if usedGroupsByName does not contain a key from allGroupsByName, delete the group
+                        foreach (var unusedGroup in allGroupsByName.Where(o => !usedGroupsByName.ContainsKey(o.Key)))
+                            session.Delete(unusedGroup);
                     }
                     session.Flush();
 
@@ -1534,70 +1559,94 @@ namespace IDPicker
             if (session == null)
                 return;
 
+            IDictionary<Analysis, QonverterSettings> newSettings;
+
             lock (session)
             {
                 var oldSettings = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
                 bool cancel;
-                var qonverterSettings = qonverterSettingsHandler(oldSettings, out cancel);
+                newSettings = qonverterSettingsHandler(oldSettings, out cancel);
                 if (cancel)
                     return;
 
-                clearData();
-                basicFilterControl.Enabled = false;
+                qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
+            }
 
+            ApplyQonverterSettings(newSettings);
+        }
+
+        public void ApplyQonverterSettings(IDictionary<Analysis, QonverterSettings> qonverterSettings)
+        {
+            clearData();
+            basicFilterControl.Enabled = false;
+
+            var workerThread = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            workerThread.DoWork += (s, e) =>
+            {
                 var qonverter = new Qonverter();
                 qonverter.QonversionProgress += progressMonitor.UpdateProgress;
-                qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
                 foreach (var item in qonverterSettings)
                     qonverter.SettingsByAnalysis[(int) item.Key.Id] = item.Value.ToQonverterSettings();
 
                 //qonverter.LogQonversionDetails = true;
-                try
+                qonverter.Reset(Text);
+                qonverter.Qonvert(Text);
+            };
+
+            workerThread.RunWorkerCompleted += (s, e) =>
+            {
+                if (e.Result is Exception)
                 {
-                    qonverter.Reset(Text);
-                    qonverter.Qonvert(Text);
+                    Program.HandleException(e.Result as Exception);
+                    basicFilterControl.Enabled = true;
+                    return;
                 }
-                catch (Exception ex)
+
+                lock (session)
                 {
-                    MessageBox.Show("Error: " + ex.Message, "Qonversion failed");
+                    var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(Text, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
+                    session = sessionFactory.OpenSession();
+                    //session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
+                    _layoutManager.SetSession(session);
+
+                    // delete old filters since they are not valid with different qonverter settings
+                    session.CreateSQLQuery("DELETE FROM FilterHistory").ExecuteUpdate();
+                    session.Clear();
+
+                    if (basicFilter == null)
+                        basicFilter = new DataFilter()
+                        {
+                            MaximumQValue = 0.02,
+                            MinimumDistinctPeptidesPerProtein = 2,
+                            MinimumSpectraPerProtein = 2,
+                            MinimumAdditionalPeptidesPerProtein = 1
+                        };
+
+                    basicFilterControl.DataFilter = basicFilter;
+
+                    viewFilter = basicFilter;
+
+                    session.Close();
+                    sessionFactory.Close();
                 }
-            }
 
-            var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(Text, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
-            session = sessionFactory.OpenSession();
-            //session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
-            _layoutManager.SetSession(session);
+                progressMonitor = new ProgressMonitor();
+                progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
+                basicFilterControl = new BasicFilterControl();
+                basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+                basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
+                dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
+                dataFilterPopup.Closed += dataFilterPopup_Closed;
+                new Thread(() => OpenFiles(new List<string> { Text }, null)).Start();
+            };
 
-            // delete old filters since they are not valid with different qonverter settings
-            session.CreateSQLQuery("DELETE FROM FilterHistory").ExecuteUpdate();
-            session.Clear();
-
-            if (basicFilter == null)
-                basicFilter = new DataFilter()
-                                  {
-                                      MaximumQValue = 0.02,
-                                      MinimumDistinctPeptidesPerProtein = 2,
-                                      MinimumSpectraPerProtein = 2,
-                                      MinimumAdditionalPeptidesPerProtein = 1
-                                  };
-
-            basicFilterControl.DataFilter = basicFilter;
-
-            viewFilter = basicFilter;
-
-            session.Close();
-            sessionFactory.Close();
-
-            clearData();
-            progressMonitor = new ProgressMonitor();
-            progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
-            basicFilterControl = new BasicFilterControl();
-            basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
-            basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
-            dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
-            dataFilterPopup.Closed += dataFilterPopup_Closed;
-            new Thread(() => OpenFiles(new List<string> { Text }, null)).Start();
+            workerThread.RunWorkerAsync();
         }
 
         private void toExcelToolStripMenuItem_Click(object sender, EventArgs e)

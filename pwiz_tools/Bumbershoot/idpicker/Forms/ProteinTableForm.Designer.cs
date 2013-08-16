@@ -65,6 +65,7 @@ namespace IDPicker.Forms
             this.distinctMatchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.filteredSpectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.descriptionColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.modifiedSitesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.peptideSequencesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.peptideGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.SuspendLayout();
@@ -167,6 +168,13 @@ namespace IDPicker.Forms
             this.descriptionColumn.ReadOnly = true;
             this.descriptionColumn.Width = 200;
             // 
+            // modifiedSitesColumn
+            // 
+            this.modifiedSitesColumn.HeaderText = "Modified Sites";
+            this.modifiedSitesColumn.Name = "modifiedSitesColumn";
+            this.modifiedSitesColumn.ReadOnly = true;
+            this.modifiedSitesColumn.Width = 200;
+            // 
             // peptideSequencesColumn
             // 
             this.peptideSequencesColumn.HeaderText = "Peptide Sequences";
@@ -196,6 +204,7 @@ namespace IDPicker.Forms
                                               distinctMatchesColumn,
                                               filteredSpectraColumn,
                                               descriptionColumn,
+                                              modifiedSitesColumn,
                                               peptideSequencesColumn,
                                               peptideGroupsColumn);
             // 
@@ -230,6 +239,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctMatchesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn filteredSpectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn descriptionColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn modifiedSitesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn peptideSequencesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn peptideGroupsColumn;
 

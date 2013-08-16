@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Taskbar;
 using NHibernate.Linq;
 using IDPicker.DataModel;
+using pwiz.CLI.chemistry;
 using pwiz.CLI.util;
 
 namespace IDPicker.Forms
@@ -179,13 +180,17 @@ namespace IDPicker.Forms
                 // ignore if MergedFiles does not exist
             }
 
-            var quantitationMethodBySource = new Dictionary<int, QuantitationMethod>();
+            var quantitationMethodBySource = new Dictionary<int, Embedder.QuantitationConfiguration>();
             foreach (DataGridViewRow row in dataGridView.Rows)
             {
                 int id = (int) row.Cells[idColumn.Index].Value;
                 string methodString = (string) (row.Cells[quantitationMethodColumn.Index] as DataGridViewComboBoxCell).Value;
                 int methodIndex = quantitationMethodColumn.Items.IndexOf(methodString);
-                quantitationMethodBySource[id] = (QuantitationMethod) methodIndex;
+                quantitationMethodBySource[id] = new Embedder.QuantitationConfiguration
+                {
+                    QuantitationMethod = (QuantitationMethod)methodIndex,
+                    ReporterIonMzTolerance = new MZTolerance(10, MZTolerance.Units.PPM)
+                };
             }
 
             new Thread(() =>

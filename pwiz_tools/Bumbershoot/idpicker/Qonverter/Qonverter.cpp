@@ -62,8 +62,8 @@ typedef pair<string, string> AnalysisSourcePair;
 
 int getAnalysisSourcePairs(void* data, int columnCount, char** columnValues, char** columnNames)
 {
-    if (columnCount != 3)
-        throw runtime_error("[Qonverter::getAnalysisSourcePairs] result must have 3 columns");
+    if (columnCount != 2)
+        throw runtime_error("[Qonverter::getAnalysisSourcePairs] result must have 2 columns");
 
     vector<AnalysisSourcePair>* pairs = static_cast<vector<AnalysisSourcePair>*>(data);
     pairs->push_back(make_pair(columnValues[0], columnValues[1]));
@@ -232,7 +232,10 @@ void Qonverter::qonvert(const string& idpDbFilepath, const ProgressMonitor& prog
 {
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
-    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA cache_size=50000");
+    db.execute("PRAGMA journal_mode=OFF;"
+               "PRAGMA synchronous=OFF;"
+               "PRAGMA cache_size=50000;"
+               "PRAGMA mmap_size=70368744177664; -- 2^46");
 
     qonvert(db.connected(), progressMonitor);
 }
@@ -245,15 +248,10 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
     string sql;
 
     // get the set of distinct analysis/source pairs
-    sql = //"CREATE TEMP TABLE MostSpecificInstance (Peptide INTEGER PRIMARY KEY, Specificity INT);"
-          //"INSERT INTO MostSpecificInstance SELECT Peptide, MAX(NTerminusIsSpecific+CTerminusIsSpecific) FROM PeptideInstance GROUP BY Peptide;"
-          //"SELECT psm.Analysis, s.Source, psm.Charge, mostSpecificInstance.Specificity, COUNT(DISTINCT psm.Id) "
-          "SELECT psm.Analysis, s.Source, COUNT(DISTINCT psm.Id) "
+    sql = "SELECT psm.Analysis, s.Source "
           "FROM PeptideSpectrumMatch psm "
-          //"JOIN MostSpecificInstance mostSpecificInstance ON psm.Peptide=mostSpecificInstance.Peptide "
           "JOIN Spectrum s ON psm.Spectrum=s.Id "
           "WHERE psm.QValue > 1 AND Rank = 1 "
-          //(rerankMatches ? string() : string("AND Rank = 1 ")) +
           "GROUP BY psm.Analysis, s.Source";
     
     ProgressMonitor::UpdateMessage updateMessage;
@@ -557,7 +555,10 @@ void Qonverter::reset(const string& idpDbFilepath)
 
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
-    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
+    db.execute("PRAGMA journal_mode=OFF;"
+               "PRAGMA synchronous=OFF;"
+               "PRAGMA cache_size=50000;"
+               "PRAGMA mmap_size=70368744177664; -- 2^46");
 
     reset(db.connected());
 }
@@ -586,7 +587,10 @@ void Qonverter::dropFilters(const string& idpDbFilepath)
 
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
-    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
+    db.execute("PRAGMA journal_mode=OFF;"
+               "PRAGMA synchronous=OFF;"
+               "PRAGMA cache_size=50000;"
+               "PRAGMA mmap_size=70368744177664; -- 2^46");
 
     dropFilters(db.connected());
 }

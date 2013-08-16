@@ -107,7 +107,8 @@ namespace IDPicker.Controls
             {
                 var eventArgs = new GroupingChangingEventArgs<T>()
                 {
-                    Grouping = (e.Item as OLVListItem).RowObject as Grouping<T>
+                    Grouping = (e.Item as OLVListItem).RowObject as Grouping<T>,
+                    NewIndex = (e.Item as OLVListItem).Index
                 };
                 GroupingChanging(this, eventArgs);
                 if (eventArgs.Cancel)
