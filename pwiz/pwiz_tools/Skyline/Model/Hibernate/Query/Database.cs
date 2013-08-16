@@ -311,12 +311,17 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             Peptide peptide = nodePeptide.Peptide;
             string seq = peptide.Sequence;
             string seqModified = nodePeptide.ModifiedSequenceDisplay;
+            string seqModKey = docInfo.Settings.GetModifiedSequence(nodePeptide);
+            string standardType = null;
+            if (docInfo.RetentionTimeStandards.Contains(seqModKey))
+                standardType = "iRT";   // Not L10N
             Helpers.Assume(seqModified != null);
             DbPeptide dbPeptide = new DbPeptide
             {
                 Protein = dbProtein,
                 Sequence = seq,
                 ModifiedSequence = seqModified,
+                StandardType = standardType,
                 BeginPos = peptide.Begin,
                 // Convert from a non-inclusive end to an inclusive end
                 EndPos = (peptide.End.HasValue ? peptide.End.Value - 1 : (int?) null),
@@ -327,8 +332,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             double? scoreCalc = null;
             if (docInfo.PeptidePrediction.RetentionTime != null)
             {
-                string modSeq = docInfo.Settings.GetModifiedSequence(nodePeptide);
-                scoreCalc = docInfo.PeptidePrediction.RetentionTime.Calculator.ScoreSequence(modSeq);
+                scoreCalc = docInfo.PeptidePrediction.RetentionTime.Calculator.ScoreSequence(seqModKey);
                 dbPeptide.RetentionTimeCalculatorScore = scoreCalc;
                 if (scoreCalc.HasValue)
                 {
@@ -758,6 +762,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             public DocInfo(SrmDocument srmDocument)
             {
                 Settings = srmDocument.Settings;
+                RetentionTimeStandards = srmDocument.GetRetentionTimeStandards();
 
                 // Create replicate summaries
                 ReplicateSummaries = new List<ReplicateSummaryValues>();
@@ -798,6 +803,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             public SrmSettings Settings { get; private set; }
             public PeptidePrediction PeptidePrediction { get { return Settings.PeptideSettings.Prediction; } }
+            public HashSet<string> RetentionTimeStandards { get; private set; }
             public MeasuredResults MeasuredResults { get { return Settings.MeasuredResults; } }
             public List<ReplicateSummaryValues> ReplicateSummaries { get; private set; }
             public List<ReplicateResultFileMap> ReplicateResultFileMaps { get; private set; }

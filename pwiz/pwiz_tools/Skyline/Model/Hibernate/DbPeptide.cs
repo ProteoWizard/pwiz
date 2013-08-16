@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual string Sequence { get; set; }
         [QueryColumn(FullName = "PeptideModifiedSequence")] // Not L10N
         public virtual string ModifiedSequence { get; set; }
+        public virtual string StandardType { get; set; }    // iRT, Global
         public virtual int? BeginPos { get; set; }
         public virtual int? EndPos { get; set; }
         public virtual int MissedCleavages { get; set; }
