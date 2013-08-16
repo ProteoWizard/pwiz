@@ -152,7 +152,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void OpenSharedFile(string zipPath)
+        public void OpenSharedFile(string zipPath)
         {
             try
             {

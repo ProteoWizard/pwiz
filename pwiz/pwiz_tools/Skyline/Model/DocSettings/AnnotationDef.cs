@@ -46,11 +46,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public const string ANNOTATION_PREFIX = "annotation_"; // Not L10N
 
+        private ReadOnlyCollection<string> _items;
+
         public AnnotationDef(String name, AnnotationTargetSet annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
             AnnotationTargets = annotationTargets;
             Type = type;
-            Items = new ReadOnlyCollection<string>(items);
+            Items = items;
         }
         private AnnotationDef()
         {
@@ -73,7 +75,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
         }
-        public IList<String> Items { get; private set; }
+
+        public IList<String> Items
+        {
+            get { return _items; }
+            private set { _items = MakeReadOnly(value); }
+        }
+
+        public AnnotationDef ChangeItems(IList<string> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Items = prop);
+        }
 
         /// <summary>
         /// Returns the error message to be shown when the value cannot be parsed.
@@ -163,7 +175,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 reader.ReadEndElement();
             }
-            Items = new ReadOnlyCollection<string>(items);
+            Items = items;
         }
 
         public override void WriteXml(XmlWriter writer)

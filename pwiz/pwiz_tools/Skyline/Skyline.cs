@@ -2421,11 +2421,25 @@ namespace pwiz.Skyline
 
         public ToolMenuItem GetToolMenuItem(int i)
         {
-            foreach (var item in toolsMenu.DropDownItems)
+            return GetToolMenuItemRecursive(toolsMenu.DropDownItems, ref i);
+        }
+
+        public ToolMenuItem GetToolMenuItemRecursive(ToolStripItemCollection items, ref int i)
+        {
+            foreach (var item in items)
             {
+                // first check to see if it is a valid tool
                 var toolMenuItem = item as ToolMenuItem;
                 if (toolMenuItem != null && i-- == 0)
                     return toolMenuItem;
+                var toolStripDropDownItem = item as ToolStripDropDownItem;
+                if (toolStripDropDownItem != null)
+                {
+                    // recurse to find nested tools if possible
+                    var tool = GetToolMenuItemRecursive(toolStripDropDownItem.DropDownItems, ref i);
+                    if (tool != null)
+                        return tool;
+                }
             }
             return null;
         }

@@ -573,7 +573,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.PopulateToolsMenu());
 
             // Test running the tool with an unchecked annotation
-            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), dlg =>
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(4), dlg =>
                 {
                     Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
                                                                  string.Empty,
@@ -586,7 +586,7 @@ namespace pwiz.SkylineTestFunctional
             // Test running the tool with a missing annotation
             Settings.Default.AnnotationDefList = new AnnotationDefList();
             WaitForCondition(3*1000, () => Settings.Default.AnnotationDefList.Count == 0);
-            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), dlg =>
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(4), dlg =>
             {
                 Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted,
                                                               string.Empty,
