@@ -117,6 +117,15 @@ namespace pwiz.Skyline
         }
         public bool? ResolveToolConflictsBySkipping { get; private set; }
 
+        // For importing a tool from a zip file.
+        public bool InstallingToolsFromZip { get; private set; }
+        public string ZippedToolsPath { get; private set; }
+        public CommandLine.ResolveZipToolConflicts? ResolveZipToolConflictsBySkipping { get; private set; }
+        public bool? ResolveZipToolAnotationConflictsBySkipping { get; private set; }
+        public ProgramPathContainer ZippedToolsProgramPathContainer { get; private set; }
+        public string ZippedToolsProgramPathValue { get; private set; }
+        public bool ZippedToolsPackagesHandled { get; set; }
+        
         // For keeping track of when an in command is required.
         public bool RequiresSkylineDocument { get; private set; }
 
@@ -432,6 +441,62 @@ namespace pwiz.Skyline
                     {
                         ResolveSkyrConflictsBySkipping = true;
                     }
+                }
+                else if (IsNameValue(pair, "tool-add-zip"))
+                {
+                    InstallingToolsFromZip = true;
+                    ZippedToolsPath = pair.Value;
+                }
+                else if (IsNameValue(pair, "tool-zip-conflict-resolution"))
+                {
+                    string input = pair.Value.ToLower();
+                    if (input == "overwrite")
+                    {
+                        ResolveZipToolConflictsBySkipping = CommandLine.ResolveZipToolConflicts.overwrite;
+                    }
+                    if (input == "parallel")
+                    {
+                        ResolveZipToolConflictsBySkipping = CommandLine.ResolveZipToolConflicts.in_parallel;
+                    }
+                }
+                else if (IsNameValue(pair, "tool-zip-overwrite-annotations"))
+                {
+                    string input = pair.Value.ToLower();
+                    if (input == "true")
+                    {
+                        ResolveZipToolAnotationConflictsBySkipping = true;
+                    }
+                    if (input == "false")
+                    {
+                        ResolveZipToolAnotationConflictsBySkipping = false;
+                    }
+                }
+                else if (IsNameValue(pair, "tool-program-macro")) // example --tool-program-macro=R,2.15.2
+                {
+                    string [] spliced = pair.Value.Split(',');
+                    if (spliced.Count() > 2)
+                    {
+                        _out.WriteLine("Warning: Incorrect Usage of the --tool-program-macro command.");
+                    }
+                    else
+                    {
+                        string programName = spliced[0];
+                        string programVersion = null;
+                        if (spliced.Count() > 1)
+                        {
+                            // Extract the version if specified.
+                            programVersion = spliced[1];
+                        }
+                        ZippedToolsProgramPathContainer = new ProgramPathContainer(programName, programVersion);
+                    }
+                }
+                else if (IsNameValue(pair, "tool-program-path"))
+                {
+                    ZippedToolsProgramPathValue = pair.Value;
+                }
+                else if (IsNameOnly(pair, "tool-ignore-required-packages"))
+                {
+                    ZippedToolsPackagesHandled = true;
                 }
 
                 else if (IsNameValue(pair, "tool-add"))
@@ -961,6 +1026,11 @@ namespace pwiz.Skyline
 
             // First come the commands that do not depend on an --in command to run.
             // These commands modify Settings.Default instead of working with an open skyline document.
+            if (commandArgs.InstallingToolsFromZip)
+            {
+                ImportToolsFromZip(commandArgs.ZippedToolsPath, commandArgs.ResolveZipToolConflictsBySkipping, commandArgs.ResolveZipToolAnotationConflictsBySkipping,
+                                   commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue, commandArgs.ZippedToolsPackagesHandled );
+            }
             if (commandArgs.ImportingTool)
             {
                 ImportTool(commandArgs.ToolName, commandArgs.ToolCommand, commandArgs.ToolArguments,
@@ -1767,6 +1837,63 @@ namespace pwiz.Skyline
             }
         }
 
+        public enum ResolveZipToolConflicts
+        {
+            terminate,
+            overwrite,
+            in_parallel
+        }
+
+        public void ImportToolsFromZip(string path, ResolveZipToolConflicts? resolveConflicts, bool? overwriteAnnotations, ProgramPathContainer ppc, string programPath, bool arePackagesHandled)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                _out.WriteLine("Error: to import tools from a zip you must specify a path");
+                _out.WriteLine("        --tool-add-zip must be followed by an existing path.");
+                return;
+            }
+            if (!File.Exists(path))
+            {
+                _out.WriteLine("Error: the file specified with the --tool-add-zip command");
+                _out.WriteLine("       does not exist. Please verify the file location and try again.");
+                return;
+            }
+            if (Path.GetExtension(path) != ".zip")
+            {
+                _out.WriteLine("Error: the file specified with the --tool-add-zip command");
+                _out.WriteLine("       is not a .zip file. Please specify a valid .zip file.");
+                return;
+            }
+            string filename = Path.GetFileName(path);
+            _out.WriteLine(String.Format("Installing tools from {0}",filename));
+            ToolInstaller.UnzipToolReturnAccumulator result = null;
+            try
+            {
+                result = ToolInstaller.UnpackZipTool(path, new AddZipToolHelper(resolveConflicts, overwriteAnnotations, _out, filename, ppc,
+                                                                               programPath, arePackagesHandled));
+            }
+            catch (MessageException x)
+            {
+                _out.WriteLine(x.Message);
+            }
+            if (result != null)
+            {
+                foreach (var message in result.MessagesThrown)
+                {
+                    _out.WriteLine(message);
+                }
+                foreach (var tool in result.ValidToolsFound)
+                {
+                    _out.WriteLine(string.Format("Installed tool {0}", tool.Title));
+                }
+                Settings.Default.Save();
+            }
+            else
+            {
+                _out.WriteLine(String.Format("Canceled installing tools from {0}.", filename));
+            }
+        }
+
         // A function for adding tools to the Tools Menu.
         public void ImportTool (string title, string command, string arguments, string initialDirectory, string reportTitle, bool outputToImmediateWindow, bool? resolveToolConflictsBySkipping)
         {
@@ -2514,6 +2641,161 @@ namespace pwiz.Skyline
         protected override void WriteStatusMessage(string message)
         {
             // Do nothing
+        }
+    }
+
+    internal class AddZipToolHelper : IUnpackZipToolSupport
+    {
+        private string zipFileName { get; set; }
+        private CommandStatusWriter _out { get; set; }
+        private CommandLine.ResolveZipToolConflicts? resolveToolsAndReports { get; set; }
+        private bool? overwriteAnnotations { get; set; }
+        private ProgramPathContainer programPathContainer { get; set; }
+        private string programPath { get; set; }
+        private bool packagesHandled { get; set; }
+
+        public AddZipToolHelper(CommandLine.ResolveZipToolConflicts? howToResolve, bool? howToResolveAnnotations,
+                                CommandStatusWriter output,
+                                string fileName, ProgramPathContainer ppc, string inputProgramPath,
+                                bool arePackagesHandled)
+        {
+            resolveToolsAndReports = howToResolve;
+            overwriteAnnotations = howToResolveAnnotations;
+            _out = output;
+            zipFileName = fileName;
+            programPathContainer = ppc;
+            programPath = inputProgramPath;
+            packagesHandled = arePackagesHandled;
+        }
+
+        public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reports,
+                                     string foundVersion,
+                                     string newCollectionName)
+        {
+            if (resolveToolsAndReports == CommandLine.ResolveZipToolConflicts.in_parallel)
+                return false;
+            if (resolveToolsAndReports == CommandLine.ResolveZipToolConflicts.overwrite)
+            {
+                const string singularToolMessage = "Overwriting tool: {0}";
+                const string singularReportMessage = "Overwriting report: {0}";
+                const string plualReportMessage = "Overwriting reports: {0}";
+                if (reports.Count == 1)
+                {
+                    _out.WriteLine(string.Format(singularReportMessage, reports[0].GetKey()));
+                }
+                else if (reports.Count > 1)
+                {
+                    List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
+                    string reportTitlesJoined = string.Join(", ", reportTitles);
+                    _out.WriteLine(string.Format(plualReportMessage, reportTitlesJoined ));
+                }
+                if (toolCollectionName != null)
+                {
+                    _out.WriteLine(string.Format(singularToolMessage, toolCollectionName));
+                }           
+                return true;
+            }
+                
+            else //Conflicts and no way to handle them. Display Message.
+            {
+                string firstpart = string.Empty;
+                string secondpart = string.Empty;
+                if (reports.Count == 0)
+                {
+                    if (toolCollectionName != null)
+                    {
+                        secondpart = "Error: There is a conflicting tool";   
+                    }
+                }
+                else
+                {
+                    if (reports.Count == 1)
+                    {
+                        firstpart = "Error: There is a conflicting report";
+                    }
+                    if (reports.Count > 1)
+                    {
+                        firstpart = string.Format("Error: There are {0} conflicting reports", reports.Count);
+                    }
+                    if (toolCollectionName != null)
+                    {                     
+                        secondpart = " and a conflicting tool";
+                    }
+                }
+                string message = string.Format(string.Concat(firstpart, secondpart, " in the file {0}"), zipFileName); 
+
+                _out.WriteLine(message);
+                _out.WriteLine("    Please specify 'overwrite' or 'parallel' with the --tool-zip-conflict-resolution command.");
+                
+                const string singularToolMessage = "Conflicting tool: {0}";
+                const string singularReportMessage = "Conflicting report: {0}";
+                const string plualReportMessage = "Conflicting reports: {0}";
+                if (reports.Count == 1)
+                {
+                    _out.WriteLine(string.Format(singularReportMessage, reports[0].GetKey()));
+                }
+                else if (reports.Count > 1)
+                {
+                    List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
+                    string reportTitlesJoined = string.Join(", ", reportTitles);
+                    _out.WriteLine(string.Format(plualReportMessage, reportTitlesJoined));
+                }
+                if (toolCollectionName != null)
+                { 
+                    _out.WriteLine(string.Format(singularToolMessage, toolCollectionName));
+                }
+                return null;
+            }
+        }
+
+        public string installProgram(ProgramPathContainer missingProgramPathContainer, ICollection<string> packages, string pathToInstallScript)
+        {
+            if (packages.Count > 0 && !packagesHandled)
+            {
+                _out.WriteLine("Error: Package installation not handled in SkylineRunner.");
+                _out.WriteLine("       if you have already handled package installation use the --tool-ignore-required-packages flag");
+                return null;
+            }
+            string path;
+            return Settings.Default.ToolFilePaths.TryGetValue(missingProgramPathContainer, out path) ? path : FindProgramPath(missingProgramPathContainer);
+        }
+
+        public bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations)
+        {
+            if (overwriteAnnotations == null)
+            {
+                _out.WriteLine("There are annotations with conflicting names. Please use the --tool-zip-overwrite-annotations command.");
+            }
+            if (overwriteAnnotations == true)
+            {
+                _out.WriteLine("There are conflicting annotations. Overwriting.");
+                foreach (var annotationDef in annotations)
+                {
+                    _out.WriteLine(string.Format("    Warning: the annotation {0} is being overwritten", annotationDef.GetKey()));
+                }
+            }
+            if (overwriteAnnotations == false)
+            {
+                _out.WriteLine("There are conflicting annotations. Keeping existing.");
+                foreach (var annotationDef in annotations)
+                {
+                    _out.WriteLine(string.Format("    Warning: the annotation {0} may not be what your tool requires", annotationDef.GetKey()));
+                }
+            }
+            return overwriteAnnotations;
+        }
+
+        public string FindProgramPath(ProgramPathContainer missingProgramPathContainer)
+        {
+            if ((Equals(programPathContainer, missingProgramPathContainer)) && programPath != null)
+            {
+                //add to settings list
+                Settings.Default.ToolFilePaths.Add(programPathContainer,programPath);
+                return programPath;
+            }
+            _out.WriteLine(String.Format("A tool requires Program:{0} Version:{1} and it is not specified with the", missingProgramPathContainer.ProgramName, missingProgramPathContainer.ProgramVersion));
+            _out.WriteLine("--tool-program-macro and --tool-program-path commands. Tool Installation Canceled.");
+            return null;
         }
     }
 

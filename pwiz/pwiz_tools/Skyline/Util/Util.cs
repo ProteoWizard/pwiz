@@ -1265,7 +1265,12 @@ namespace pwiz.Skyline.Util
         /// <returns>A new unique name that can be safely added to the existing set without name conflict</returns>
         public static string GetUniqueName(string name, ICollection<string> set)
         {
-            if (!set.Contains(name))
+            return GetUniqueName(name, s => !set.Contains(s));
+        }
+
+        public static string GetUniqueName(string name, Func<string, bool> isUnique)
+        {
+            if (isUnique(name))
                 return name;
 
             int num = 1;
@@ -1278,7 +1283,7 @@ namespace pwiz.Skyline.Util
                 name = name.Substring(0, i);
             }
             // Loop until a unique base name and integer suffix combination is found.
-            while (set.Contains(name + num))
+            while (!isUnique(name + num))
                 num++;
             return name + num;
         }

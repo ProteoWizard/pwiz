@@ -2,7 +2,7 @@
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2012 University of Washington - Seattle, WA
+ * Copyright 2013 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -192,7 +192,23 @@ namespace pwiz.Skyline.Model.Tools
 
         #endregion //Accessors
     }
+    /// <summary>
+    /// shouldOverwrite - Function that when given a list of tools and a list of reports that would be removed by an installation
+    ///  it returns a bool, true for overwrite, false for in parallel and null for cancel installation.
+    /// installProgram - Function that finds a program path given a program path container.
+    /// </summary>
+    public interface IUnpackZipToolSupport
+    {
+        bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations);
+        bool? shouldOverwrite(string toolCollectionName,
+                              string toolCollectionVersion,
+                              List<ReportSpec> reportList,
+                              string foundVersion,
+                              string newCollectionName);
 
+        string installProgram(ProgramPathContainer ppc, ICollection<string> packages, string pathToInstallScript);
+    }
+    
     public static class ToolInstaller
     {
         private const string TOOL_INF = "tool-inf";                    //Not L10N
@@ -202,17 +218,10 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Function for unpacking zipped External tools.
         /// </summary>
-        /// <param name="pathToZip">Path to the zipped file that contains the tool and all its assicaited files.</param> 
-        /// <param name="shouldOverwriteAnnotations">Function that when given a list of annotations that would be overwritten by an installation,
-        /// returns true or false for overwrite, and null for cancel installation</param>       
-        /// <param name="shouldOverwrite">Function that takes a installation name that will be over written, its version, a list of reports
-        /// and the incoming installation name and version and prompts the user how to handle the conflicts. It returns null if they cancel</param>
-        /// <param name="installProgram">Function that finds a program path given a program path container.</param>
+        /// <param name="pathToZip">Path to the zipped file that contains the tool and all its assicaited files.</param>        
+        /// <param name="unpackSupport"> Interface that implements required functions that are dependent on context.</param>
         /// <returns></returns>
-        public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip,
-                                                               Func<List<AnnotationDef>, bool?> shouldOverwriteAnnotations,
-                                                               Func<string, string, List<ReportSpec>, string, string, bool?> shouldOverwrite,
-                                                               Func<ProgramPathContainer, ICollection<string>, string, string> installProgram)
+        public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip, IUnpackZipToolSupport unpackSupport)
         {
             //Removes any old folders that dont have Tools associated with them
             CheckToolDirConsistency();
@@ -242,7 +251,7 @@ namespace pwiz.Skyline.Model.Tools
             // Consider: Try to delete the existing directory in the temp directory.
             string tempToolPath = Path.Combine(tempFolderPath, name);
             if (Directory.Exists(tempToolPath))
-                tempToolPath = GetNewDirName(tempToolPath);
+                tempToolPath = DirectoryEx.GetUniqueName(tempToolPath);
 
             using (new TemporaryDirectory(tempToolPath))
             {
@@ -274,7 +283,7 @@ namespace pwiz.Skyline.Model.Tools
                 // Handle info.properties
                 var toolInfo = GetToolInfo(toolInfDir, retval);
 
-                if (!HandleAnnotations(shouldOverwriteAnnotations, toolInfDir))
+                if (!HandleAnnotations(unpackSupport.shouldOverwriteAnnotations, toolInfDir))
                     return null;
 
                 HandleLegacyQuaSAR(toolInfo);
@@ -284,7 +293,7 @@ namespace pwiz.Skyline.Model.Tools
                 List<ReportSpec> newReports;
                 var existingReports = FindReportConflicts(toolInfDir, tempToolPath, out newReports);
 
-                bool? overwrite = IsOverwrite(shouldOverwrite, toolsToBeOverwritten, existingReports, toolInfo);
+                bool? overwrite = IsOverwrite(unpackSupport.shouldOverwrite, toolsToBeOverwritten, existingReports, toolInfo);
                 if (!overwrite.HasValue)
                 {
                     // User canceled installation.
@@ -354,7 +363,7 @@ namespace pwiz.Skyline.Model.Tools
                             }
                         }
 
-                        string path = installProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript);
+                        string path = unpackSupport.installProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript);
                         if (path == null)
                         {
                             // Cancel installation
@@ -377,7 +386,7 @@ namespace pwiz.Skyline.Model.Tools
                     DirectoryEx.SafeDelete(DirectoryToRemove);
 
                 // Final Directory Location.
-                string permToolPath = GetNewDirName(Path.Combine(outerToolsFolderPath, name));
+                string permToolPath = DirectoryEx.GetUniqueName(Path.Combine(outerToolsFolderPath, name));
 
                 foreach (var tool in retval.ValidToolsFound)
                 {
@@ -414,7 +423,6 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
         }
-
 
         private class ToolInfo
         {
@@ -879,13 +887,6 @@ namespace pwiz.Skyline.Model.Tools
             return Settings.Default.ReportSpecList.ContainsKey(key)
                        ? GetUniqueName(key, value => !Settings.Default.ReportSpecList.ContainsKey(value))
                        : key;
-        }
-
-        public static string GetNewDirName(string permToolPath)
-        {
-            return Directory.Exists(permToolPath)
-                       ? GetUniqueName(permToolPath, value => !Directory.Exists(value))
-                       : permToolPath;
         }
 
         public class UnzipToolReturnAccumulator

@@ -2,7 +2,7 @@
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2012 University of Washington - Seattle, WA
+ * Copyright 2013 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,43 +86,6 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
         }
-
-        public class MovedDirectory : IDisposable
-        {
-            public const string MOVED_PREFIX = "Moved_"; // Not L10N
-
-            public MovedDirectory(string dirPath, bool isLoopingTest)
-            {
-                LoopingTest = isLoopingTest;
-                if (isLoopingTest)
-                {
-                    SrcDirPath = dirPath;
-                    DestDirPath = Path.Combine(Directory.GetParent(dirPath).FullName,
-                                               MOVED_PREFIX + Path.GetFileName(dirPath));
-                    if (Directory.Exists(DestDirPath))
-                    {
-                        DestDirPath = ToolInstaller.GetNewDirName(DestDirPath);
-                    }
-
-                    Helpers.TryTwice(() => Directory.Move(SrcDirPath, DestDirPath));
-                }
-            }
-
-            public string SrcDirPath { get; private set; }
-            public string DestDirPath { get; private set; }
-            public bool LoopingTest { get; private set; }
-
-            public void Dispose()
-            {
-                if (LoopingTest)
-                {
-                    if (Directory.Exists(SrcDirPath))
-                        Helpers.TryTwice(() => Directory.Delete(SrcDirPath));
-                    Helpers.TryTwice(() => Directory.Move(DestDirPath, SrcDirPath));
-                }
-            }
-        }
-
 
 
         private void AssertCleared()

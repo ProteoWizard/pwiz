@@ -1347,8 +1347,137 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(output9.Contains(string.Format("Error: Please import the report format for {0}.", reportTitle3)));
             Assert.IsTrue(output9.Contains("Use the --report-add parameter to add the missing custom report."));
             Assert.IsTrue(output9.Contains("The tool was not imported..."));
+        }
 
+        [TestMethod]
+        public void TestInstallFromZip()
+        {
+            using (new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Program.StressTest))
+            {
+                Settings.Default.ToolList.Clear();
+                var testFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+                {
+                    // Test bad input
+                    const string badFileName = "BadFilePath";
+                    Assert.IsFalse(File.Exists(badFileName));
+                    const string command = "--tool-add-zip=" + badFileName;
+                    string output = RunCommand(command);
+                    Assert.IsTrue(output.Contains("Error: the file specified with the --tool-add-zip command"));
+                    Assert.IsTrue(
+                        output.Contains("       does not exist. Please verify the file location and try again."));
+                }
+                {
+                    string notZip = testFilesDir.GetTestPath("Broken_file.sky");
+                    Assert.IsTrue(File.Exists(notZip));
+                    string command = "--tool-add-zip=" + notZip;
+                    string output = RunCommand(command);
+                    Assert.IsTrue(output.Contains("Error: the file specified with the --tool-add-zip command"));
+                    Assert.IsTrue(output.Contains("       is not a .zip file. Please specify a valid .zip file."));
+                }
+                {
+                    var uniqueReportZip = testFilesDir.GetTestPath("UniqueReport.zip");
+                    Assert.IsTrue(File.Exists(uniqueReportZip));
+                    string command = "--tool-add-zip=" + uniqueReportZip;
+                    string output = RunCommand(command);
 
+                    Assert.IsTrue(Settings.Default.ToolList.Count == 1);
+                    ToolDescription newTool = Settings.Default.ToolList.Last();
+                    Assert.AreEqual("HelloWorld", newTool.Title);
+                    Assert.IsTrue(newTool.OutputToImmediateWindow);
+                    Assert.AreEqual("UniqueReport", newTool.ReportTitle);
+                    string path = newTool.ToolDirPath;
+                    Assert.IsTrue(File.Exists(Path.Combine(path, "HelloWorld.exe")));
+                    Assert.IsTrue(output.Contains("Installed tool HelloWorld"));
+                    //Try to add the same tool again. Get conflicting report and tool with no overwrite specified.
+                    string output1 = RunCommand(command);
+                    Assert.IsTrue(output1.Contains("Error: There is a conflicting tool in the file UniqueReport.zip"));
+                    Assert.IsTrue(
+                        output1.Contains(
+                            "Please specify 'overwrite' or 'parallel' with the --tool-zip-conflict-resolution command."));
+                    //Now run with overwrite specified.
+                    string output2 = RunCommand(command, "--tool-zip-conflict-resolution=overwrite");
+                    Assert.IsTrue(output2.Contains("Overwriting tool: HelloWorld"));
+                    //Now install in parallel.
+                    string output3 = RunCommand(command, "--tool-zip-conflict-resolution=parallel");
+                    Assert.IsTrue(output3.Contains("Installed tool HelloWorld1"));
+                    ToolDescription newTool1 = Settings.Default.ToolList.Last();
+                    Assert.AreEqual("HelloWorld1", newTool1.Title);
+                    Assert.IsTrue(newTool1.OutputToImmediateWindow);
+                    Assert.AreEqual("UniqueReport", newTool1.ReportTitle);
+                    string path1 = newTool1.ToolDirPath;
+                    Assert.IsTrue(File.Exists(Path.Combine(path1, "HelloWorld.exe")));
+                    //Cleanup.
+                    Settings.Default.ToolList.Clear();
+                    DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
+                    Settings.Default.ReportSpecList.RemoveKey("UniqueReport");
+                    Settings.Default.ReportSpecList.RemoveKey("UniqueReport1");
+                }
+                {
+                    //Test working with packages and ProgramPath Macro.
+                    var testCommandLine = testFilesDir.GetTestPath("TestCommandLine.zip");
+                    Assert.IsTrue(File.Exists(testCommandLine));
+                    string command = "--tool-add-zip=" + testCommandLine;
+                    string output = RunCommand(command);
+                    Assert.IsTrue(output.Contains("Error: Package installation not handled in SkylineRunner."));
+                    Assert.IsTrue(
+                        output.Contains(
+                            "if you have already handled package installation use the --tool-ignore-required-packages flag"));
+                    string output1 = RunCommand(command, "--tool-ignore-required-packages");
+                    Assert.IsTrue(
+                        output1.Contains("A tool requires Program:Bogus Version:2.15.2 and it is not specified with the"));
+                    Assert.IsTrue(
+                        output1.Contains(
+                            "--tool-program-macro and --tool-program-path commands. Tool Installation Canceled."));
+
+                    string path = testFilesDir.GetTestPath("NumberWriter.exe");
+                    string output2 = RunCommand(command, "--tool-ignore-required-packages",
+                                                "--tool-program-macro=Bogus,2.15.2",
+                                                "--tool-program-path=" + path);
+                    Assert.IsTrue(output2.Contains("Installed tool TestCommandline"));
+                    ToolDescription newTool = Settings.Default.ToolList.Last();
+                    Assert.AreEqual("TestCommandline", newTool.Title);
+                    Assert.AreEqual("$(ProgramPath(Bogus,2.15.2))", newTool.Command);
+                    Assert.AreEqual("100 12", newTool.Arguments);
+                    ProgramPathContainer ppc = new ProgramPathContainer("Bogus", "2.15.2");
+                    Assert.IsTrue(Settings.Default.ToolFilePaths.ContainsKey(ppc));
+                    Assert.AreEqual(path, Settings.Default.ToolFilePaths[ppc]);
+                    Settings.Default.ToolFilePaths.Remove(ppc);
+                    Settings.Default.ToolList.Clear();
+                    DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
+                }
+                {
+                    //Test working with annotations.
+                    var testCommandLine = testFilesDir.GetTestPath("TestAnnotations.zip");
+                    Assert.IsTrue(File.Exists(testCommandLine));
+                    string command = "--tool-add-zip=" + testCommandLine;
+                    string output = RunCommand(command);
+                    Assert.IsTrue(output.Contains("Installed tool AnnotationTest\\Tool1"));
+                    Assert.IsTrue(output.Contains("Installed tool AnnotationTest\\Tool2"));
+                    Assert.IsTrue(output.Contains("Installed tool AnnotationTest\\Tool3"));
+                    Assert.IsTrue(output.Contains("Installed tool AnnotationTest\\Tool4"));
+                }
+                {
+                    var conflictingAnnotations = testFilesDir.GetTestPath("ConflictAnnotations.zip");
+                    Assert.IsTrue(File.Exists(conflictingAnnotations));
+                    string command = "--tool-add-zip=" + conflictingAnnotations;
+                    string output = RunCommand(command);
+                    Assert.IsTrue(
+                        output.Contains(
+                            "There are annotations with conflicting names. Please use the --tool-zip-overwrite-annotations command."));
+                    output = RunCommand(command, "--tool-zip-overwrite-annotations=false");
+                    Assert.IsTrue(output.Contains("There are conflicting annotations. Keeping existing."));
+                    Assert.IsTrue(
+                        output.Contains("    Warning: the annotation SampleID may not be what your tool requires"));
+
+                    output = RunCommand(command, "--tool-zip-overwrite-annotations=true");
+                    Assert.IsTrue(output.Contains("There are conflicting annotations. Overwriting."));
+                    Assert.IsTrue(output.Contains("    Warning: the annotation SampleID is being overwritten"));
+
+                    Settings.Default.AnnotationDefList = new AnnotationDefList();
+                    Settings.Default.ToolList.Clear();
+                    DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
+                }
+            }
         }
 
         [TestMethod]
@@ -1451,27 +1580,28 @@ namespace pwiz.SkylineTestA
             string filePath = Path.GetTempFileName();
             RunCommand("--tool-list-export=" + filePath);
 
-            StreamReader sr = new StreamReader(filePath);
-            string line1 = sr.ReadLine();
-            Assert.IsTrue(line1!=null);
-            Assert.IsTrue(line1.Contains(string.Format("--tool-add=\"{0}\"",title)));
-            Assert.IsTrue(line1.Contains(string.Format("--tool-command=\"{0}\"",command)));
-            Assert.IsTrue(line1.Contains(string.Format("--tool-arguments=\"{0}\"", arguments)));
-            Assert.IsTrue(line1.Contains(string.Format("--tool-initial-dir=\"{0}\"", initialDirectory)));
-            Assert.IsTrue(line1.Contains("--tool-conflict-resolution=skip"));
-            Assert.IsTrue(line1.Contains("--tool-report=\"\""));
+            using (StreamReader sr = new StreamReader(filePath))
+            {
+                string line1 = sr.ReadLine();
+                Assert.IsTrue(line1!=null);
+                Assert.IsTrue(line1.Contains(string.Format("--tool-add=\"{0}\"",title)));
+                Assert.IsTrue(line1.Contains(string.Format("--tool-command=\"{0}\"",command)));
+                Assert.IsTrue(line1.Contains(string.Format("--tool-arguments=\"{0}\"", arguments)));
+                Assert.IsTrue(line1.Contains(string.Format("--tool-initial-dir=\"{0}\"", initialDirectory)));
+                Assert.IsTrue(line1.Contains("--tool-conflict-resolution=skip"));
+                Assert.IsTrue(line1.Contains("--tool-report=\"\""));
 
-            string line2 = sr.ReadLine();
-            Assert.IsTrue(line2 != null);
-            Assert.IsTrue(line2.Contains(string.Format("--tool-add=\"{0}\"", newToolTitle)));
-            Assert.IsTrue(line2.Contains(string.Format("--tool-command=\"{0}\"", command)));
-            Assert.IsTrue(line2.Contains(string.Format("--tool-arguments=\"{0}\"", arguments)));
-            Assert.IsTrue(line2.Contains(string.Format("--tool-initial-dir=\"{0}\"", initialDirectory)));
-            Assert.IsTrue(line2.Contains("--tool-conflict-resolution=skip"));
-            Assert.IsTrue(line2.Contains(string.Format("--tool-report=\"{0}\"",reportTitle)));
-            Assert.IsTrue(line2.Contains("--tool-output-to-immediate-window"));
-
-            //todo:(danny) delete filePath.            
+                string line2 = sr.ReadLine();
+                Assert.IsTrue(line2 != null);
+                Assert.IsTrue(line2.Contains(string.Format("--tool-add=\"{0}\"", newToolTitle)));
+                Assert.IsTrue(line2.Contains(string.Format("--tool-command=\"{0}\"", command)));
+                Assert.IsTrue(line2.Contains(string.Format("--tool-arguments=\"{0}\"", arguments)));
+                Assert.IsTrue(line2.Contains(string.Format("--tool-initial-dir=\"{0}\"", initialDirectory)));
+                Assert.IsTrue(line2.Contains("--tool-conflict-resolution=skip"));
+                Assert.IsTrue(line2.Contains(string.Format("--tool-report=\"{0}\"",reportTitle)));
+                Assert.IsTrue(line2.Contains("--tool-output-to-immediate-window"));
+            }
+            FileEx.SafeDelete(filePath);   
         }        
 
         [TestMethod]

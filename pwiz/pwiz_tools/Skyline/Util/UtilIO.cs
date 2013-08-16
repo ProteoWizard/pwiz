@@ -796,6 +796,13 @@ namespace pwiz.Skyline.Util
 // ReSharper restore EmptyGeneralCatchClause
         }
 
+        public static string GetUniqueName(string dirName)
+        {
+            return Directory.Exists(dirName)
+                       ? Helpers.GetUniqueName(dirName, value => !Directory.Exists(value))
+                       : dirName;
+        }
+
         public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
             // Get the subdirectories for the specified directory.

@@ -123,6 +123,7 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="MemoryStreamManager.cs" />
+    <Compile Include="MovedDirectory.cs" />
     <Compile Include="PauseAndContinueForm.cs">
       <SubType>Form</SubType>
     </Compile>

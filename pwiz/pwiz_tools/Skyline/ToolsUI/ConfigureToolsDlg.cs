@@ -968,6 +968,37 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        public class UnpackZipToolHelper : IUnpackZipToolSupport
+        {
+            public UnpackZipToolHelper(SkylineWindow parentWindow, Func<ProgramPathContainer, ICollection<string>, string, string> testFindProgramPath)
+            {
+                parent = parentWindow;
+                _testFindProgramPath = testFindProgramPath;
+            }
+            private SkylineWindow parent { get; set; }
+            private Func<ProgramPathContainer, ICollection<string>, string, string> _testFindProgramPath { get; set; }
+
+            public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion, string newCollectionName)
+            {
+                return OverwriteOrInParallel(toolCollectionName, toolCollectionVersion, reportList, foundVersion, newCollectionName);
+            }
+
+            public string installProgram(ProgramPathContainer programPathContainer, ICollection<string> packages, string pathToInstallScript)
+            {
+                return _testFindProgramPath == null ? parent.InstallProgram(programPathContainer, packages, pathToInstallScript) : _testFindProgramPath(programPathContainer, packages, pathToInstallScript);
+            }
+
+            public bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations)
+            {
+                return OverwriteAnnotations(annotations);
+            }
+
+            public string FindProgramPath(ProgramPathContainer programPathContainer)
+            {
+                return parent.FindProgramPath(programPathContainer);
+            }
+        }
+
         /// <summary>
         /// Copy a zip file's contents to the tools folder and loop through its .properties
         /// files adding the tools to the tools menu.
@@ -978,8 +1009,7 @@ namespace pwiz.Skyline.ToolsUI
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
-                result = ToolInstaller.UnpackZipTool(fullpath, OverwriteAnnotations, OverwriteOrInParallel,
-                    TestFindProgramPath ?? SkylineWindowParent.InstallProgram);
+                result = ToolInstaller.UnpackZipTool(fullpath, new UnpackZipToolHelper(SkylineWindowParent, TestFindProgramPath));
             }
             catch (MessageException x)
             {
@@ -994,7 +1024,6 @@ namespace pwiz.Skyline.ToolsUI
             {
                 foreach (var message in result.MessagesThrown)
                 {
-                    // TODO: Make this a single form/message box
                     MessageDlg.Show(this, message);
                 }
             }

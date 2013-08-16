@@ -136,6 +136,7 @@ namespace pwiz.Skyline.Controls
         public void Clear()
         {
             textImWindow.Clear();
+            _textBoxStreamWriter.Clear();
         }
 
         public string TextContent
@@ -311,6 +312,11 @@ namespace pwiz.Skyline.Controls
         {
             get { return Encoding.UTF8; }
         }
+
+        public void Clear()
+        {
+            Text = string.Empty;
+        }
     }
     
     public delegate void WriteLineEvent(object sender, string args);
@@ -410,6 +416,11 @@ namespace pwiz.Skyline.Controls
         }
 
         #endregion
+
+        public void Clear()
+        {
+            WriterHelper.Clear();
+        }
     }
 
     public class BitArrayEx
