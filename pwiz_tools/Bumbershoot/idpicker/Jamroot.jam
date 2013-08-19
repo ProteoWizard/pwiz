@@ -661,7 +661,7 @@ make IDPickerTest.passed
         <conditional>@no-express-requirement
         <conditional>@msvc-dotnet-requirement
         <conditional>@build-location
-        <dependency>IDPicker.exe
+        <dependency>.//IDPicker.exe
     ;
 
 rule dotNET-dependencies ( properties * )
@@ -681,7 +681,7 @@ install install
         <conditional>@dotNET-dependencies
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
-        <dependency>VERSION   
+        <dependency>.//VERSION
     ;
 
 build-project Deploy ;
@@ -764,7 +764,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/freicore/libraries
-    <dependency>copy_boost_subset
+    <dependency>.//copy_boost_subset
   ;
 
 .exclusion-list =
@@ -835,7 +835,7 @@ tar.create $(application-name:L)-src.tar.bz2
   : # requirements
     <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
     <location>$(BUILD_PATH)
-    <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2
+    <dependency>.//boost_$(BOOST_VERSION:J=_).tar.bz2
   ;
 
 } # if SUBSET
