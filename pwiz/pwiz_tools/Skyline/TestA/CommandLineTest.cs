@@ -294,7 +294,7 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, rawPath, null, out status);
+            doc = CommandLine.ImportResults(doc, docPath, replicate, rawPath, null, null, out status);
             Assert.IsNull(status);
 
             using(Database database = new Database(doc.Settings))

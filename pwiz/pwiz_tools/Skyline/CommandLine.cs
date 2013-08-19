@@ -200,33 +200,35 @@ namespace pwiz.Skyline
         // comes from the document. Point being, there is no way to check the value in the accessor.
         public int MaxTransitionsPerInjection { get; set; }
 
-        private string _optimizeType;
-        public string OptimizeType
+        private string _importOptimizeType;
+        public string ImportOptimizeType
         {
-            get { return _optimizeType; }
-            set
-            {
-                if(value == null)
-                {
-                    _optimizeType = null;
-                    return;
-                }
+            get { return _importOptimizeType; }
+            set { _importOptimizeType = ToOptimizeString(value); }
+        }
 
-                var valueUpper = value.ToUpper();
-                switch(valueUpper)
-                {
-                    case "NONE":
-                        _optimizeType = ExportOptimize.NONE;
-                        break;
-                    case "CE":
-                        _optimizeType = ExportOptimize.CE;
-                        break;
-                    case "DP":
-                        _optimizeType = ExportOptimize.DP;
-                        break;
-                    default:
-                        throw new ArgumentException(string.Format("The instrument parameter {0} is not valid for optimization.", value));
-                }
+        private string _exportOptimizeType;
+        public string ExportOptimizeType
+        {
+            get { return _exportOptimizeType; }
+            set { _exportOptimizeType = ToOptimizeString(value); }
+        }
+
+        private static string ToOptimizeString(string value)
+        {
+            if (value == null)
+                return null;
+
+            switch (value.ToUpper())
+            {
+                case "NONE":
+                    return ExportOptimize.NONE;
+                case "CE":
+                    return ExportOptimize.CE;
+                case "DP":
+                    return ExportOptimize.DP;
+                default:
+                    throw new ArgumentException(string.Format("The instrument parameter {0} is not valid for optimization.", value));
             }
         }
 
@@ -306,7 +308,7 @@ namespace pwiz.Skyline
                     IgnoreProteins = IgnoreProteins,
                     MaxTransitions = MaxTransitionsPerInjection,
                     MethodType = ExportMethodType,
-                    OptimizeType = OptimizeType,
+                    OptimizeType = ExportOptimizeType,
                     RunLength = RunLength,
                     SchedulingAlgorithm = ExportSchedulingAlgorithm
                 };
@@ -325,7 +327,8 @@ namespace pwiz.Skyline
 
             ReportColumnSeparator = TextUtil.CsvSeparator;
             MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
-            OptimizeType = ExportOptimize.NONE;
+            ImportOptimizeType = ExportOptimize.NONE;
+            ExportOptimizeType = ExportOptimize.NONE;
             ExportStrategy = ExportStrategy.Single;
             ExportMethodType = ExportMethodType.Standard;
             PrimaryTransitionCount = AbstractMassListExporter.PRIMARY_COUNT_DEFAULT;
@@ -644,6 +647,21 @@ namespace pwiz.Skyline
                     }
                 }
 
+                else if (IsNameValue(pair, "import-optimizing"))
+                {
+                    try
+                    {
+                        ImportOptimizeType = pair.Value;
+                    }
+                    catch (ArgumentException)
+                    {
+                        _out.WriteLine(
+                            "Warning: Invalid optimization parameter ({0}). Use \"ce\", \"dp\", or \"none\".",
+                            pair.Value);
+                        _out.WriteLine("Defaulting to none.");
+                    }
+                }
+
                 else if (IsNameValue(pair, "import-before"))
                 {
                     var importBeforeDate = pair.Value;
@@ -840,7 +858,7 @@ namespace pwiz.Skyline
                 {
                     try
                     {
-                        OptimizeType = pair.Value;
+                        ExportOptimizeType = pair.Value;
                     }
                     catch (ArgumentException)
                     {
@@ -1059,12 +1077,24 @@ namespace pwiz.Skyline
             }
 
             if (commandArgs.ImportingResults)
-            {   
+            {
+                OptimizableRegression optimize = null;
+                try
+                {
+                    if (_doc != null)
+                        optimize = _doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(commandArgs.ImportOptimizeType);
+                }
+                catch (Exception x)
+                {
+                    _out.WriteLine("Error: Failed to get optimization function {0}. {1}", commandArgs.ImportOptimizeType, x.Message);
+                }
+
                 if (commandArgs.ImportingReplicateFile)
                 {
                     // If expected results are not imported successfully, terminate
                     if (!ImportResultsFile(commandArgs.ReplicateFile,
                                            commandArgs.ReplicateName,
+                                           optimize,
                                            commandArgs.ImportAppend))
                         return;
                 }
@@ -1072,7 +1102,7 @@ namespace pwiz.Skyline
                 {
                     // If expected results are not imported successfully, terminate
                     if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern,
-                                           commandArgs.ImportBeforeDate, commandArgs.ImportOnOrAfterDate))
+                                           commandArgs.ImportBeforeDate, commandArgs.ImportOnOrAfterDate, optimize))
                         return;
                 }
             }
@@ -1295,7 +1325,7 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, DateTime? importBefore, DateTime? importOnOrAfter)
+        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize)
         {
             var listNamedPaths = GetDataSources(sourceDir, namingPattern);
             if (listNamedPaths == null)
@@ -1324,7 +1354,7 @@ namespace pwiz.Skyline
                         return false;
                     }
 
-                    if (!ImportResultsFile(file, replicateName))
+                    if (!ImportResultsFile(file, replicateName, optimize))
                         return false;
                 }
             }
@@ -1509,7 +1539,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool ImportResultsFile(string replicateFile, string replicateName, bool append)
+        public bool ImportResultsFile(string replicateFile, string replicateName, OptimizableRegression optimize, bool append)
         {
             if (string.IsNullOrEmpty(replicateName))
                 replicateName = Path.GetFileNameWithoutExtension(replicateFile);
@@ -1542,10 +1572,10 @@ namespace pwiz.Skyline
                 }
             }
 
-            return ImportResultsFile(replicateFile, replicateName);
+            return ImportResultsFile(replicateFile, replicateName, optimize);
         }
 
-        public bool ImportResultsFile(string replicateFile, string replicateName)
+        public bool ImportResultsFile(string replicateFile, string replicateName, OptimizableRegression optimize)
         {
             _out.WriteLine("Adding results...");
 
@@ -1564,7 +1594,7 @@ namespace pwiz.Skyline
 
             try
             {
-                newDoc = ImportResults(_doc, _skylineFile, replicateName, replicateFile, progressMonitor, out status);
+                newDoc = ImportResults(_doc, _skylineFile, replicateName, replicateFile, optimize, progressMonitor, out status);
             }
             catch (Exception x)
             {
@@ -2263,13 +2293,13 @@ namespace pwiz.Skyline
             double optimizeStepSize = 0;
             int optimizeStepCount = 0;
 
-            if (Equals(args.OptimizeType, ExportOptimize.CE))
+            if (Equals(args.ExportOptimizeType, ExportOptimize.CE))
             {
                 var regression = prediction.CollisionEnergy;
                 optimizeStepSize = regression.StepSize;
                 optimizeStepCount = regression.StepCount;
             }
-            else if (Equals(args.OptimizeType, ExportOptimize.DP))
+            else if (Equals(args.ExportOptimizeType, ExportOptimize.DP))
             {
                 var regression = prediction.DeclusteringPotential;
                 optimizeStepSize = regression.StepSize;
@@ -2474,7 +2504,7 @@ namespace pwiz.Skyline
         /// does not exist, it will be added. If it does exist, it will be appended to.
         /// </summary>
         public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile,
-                                                IProgressMonitor progressMonitor, out ProgressStatus status)
+                                                OptimizableRegression optimize, IProgressMonitor progressMonitor, out ProgressStatus status)
         {
             var docContainer = new ResultsMemoryDocumentContainer(null, docPath) {ProgressMonitor = progressMonitor};
 
@@ -2504,7 +2534,8 @@ namespace pwiz.Skyline
                 else
                 {
                     string dataFileNormalized = Path.GetFullPath(dataFile);
-                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFileNormalized }));
+
+                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFileNormalized }, Annotations.EMPTY, optimize));
                 }
 
                 var results = doc.Settings.HasResults

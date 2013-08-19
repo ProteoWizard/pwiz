@@ -1465,19 +1465,7 @@ namespace pwiz.Skyline
 
         public SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, string[]>[] namedResults, string optimize)
         {
-            OptimizableRegression optimizationFunction = null;
-            var prediction = doc.Settings.TransitionSettings.Prediction;
-            if (Equals(optimize, ExportOptimize.CE))
-                optimizationFunction = prediction.CollisionEnergy;
-            else if (Equals(optimize, ExportOptimize.DP))
-            {
-                if (prediction.DeclusteringPotential == null)
-                    throw new InvalidDataException(
-                        Resources.
-                            SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_decluserting_potential);
-
-                optimizationFunction = prediction.DeclusteringPotential;
-            }
+            OptimizableRegression optimizationFunction = doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(optimize);
 
             if (namedResults.Length == 1)
                 return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
