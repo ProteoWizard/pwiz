@@ -265,7 +265,12 @@ namespace pwiz.Skyline.FileUI
 
         private bool CanTrigger
         {
-            get { return ExportInstrumentType.CanTrigger(InstrumentType, _document); }
+            get { return CanTriggerReplicate(null); }
+        }
+
+        private bool CanTriggerReplicate(int? replicateIndex)
+        {
+            return ExportInstrumentType.CanTrigger(InstrumentType, _document, replicateIndex);
         }
 
         private ExportSchedulingAlgorithm SchedulingAlgorithm
@@ -275,7 +280,7 @@ namespace pwiz.Skyline.FileUI
 
         private int? SchedulingReplicateNum
         {
-            set { _exportProperties.SchedulingReplicateNum = value ?? 0; }
+            set { _exportProperties.SchedulingReplicateNum = value; }
         }
 
         public bool IsFullScanInstrument
@@ -860,7 +865,8 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
-                    using (SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(_document))
+                    using (var schedulingOptionsDlg = new SchedulingOptionsDlg(_document, i =>
+                            _exportProperties.MethodType != ExportMethodType.Triggered || CanTriggerReplicate(i)))
                     {
                         if (schedulingOptionsDlg.ShowDialog(this) != DialogResult.OK)
                             return false;
@@ -995,16 +1001,16 @@ namespace pwiz.Skyline.FileUI
                 radioSingle.Checked = true;
             }
 
-            textMaxTransitions.Enabled = !radioSingle.Checked;
+            textMaxTransitions.Enabled = radioBuckets.Checked;
+            if (!textMaxTransitions.Enabled)
+                textMaxTransitions.Clear();
             cbIgnoreProteins.Enabled = radioBuckets.Checked;
             if (!radioBuckets.Checked)
                 cbIgnoreProteins.Checked = false;
 
             if (radioSingle.Checked)
             {
-// ReSharper disable LocalizableElement
-                labelMethodNum.Text = "1"; // Not L10N
-// ReSharper restore LocalizableElement
+                labelMethodNum.Text = 1.ToString(CultureInfo.CurrentCulture);
             }
             else
             {
@@ -1206,9 +1212,7 @@ namespace pwiz.Skyline.FileUI
 
             if (IsDia)
             {
-// ReSharper disable LocalizableElement
-                labelMethodNum.Text = "1"; // Not L10N
-// ReSharper restore LocalizableElement
+                labelMethodNum.Text = 1.ToString(CultureInfo.CurrentCulture);
                 return;
             }
 

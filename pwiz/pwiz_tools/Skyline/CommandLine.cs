@@ -2330,7 +2330,7 @@ namespace pwiz.Skyline
                         _out.WriteLine("Error: triggered acquistion requires a spectral library or imported results");
                         _out.WriteLine("       in order to rank transitions.");
                     }
-                    else if (!ExportInstrumentType.CanTrigger(instrument, _doc))
+                    else if (!ExportInstrumentType.CanTrigger(instrument, _doc, _exportProperties.SchedulingReplicateNum))
                     {
                         canTrigger = false;
                         _out.WriteLine("Error: The current document contains peptides without enough information");
@@ -2392,7 +2392,7 @@ namespace pwiz.Skyline
 
                 if (Equals(args.ExportSchedulingAlgorithm, ExportSchedulingAlgorithm.Average))
                 {
-                    _exportProperties.SchedulingReplicateNum = 0;
+                    _exportProperties.SchedulingReplicateNum = null;
                 }
                 else
                 {

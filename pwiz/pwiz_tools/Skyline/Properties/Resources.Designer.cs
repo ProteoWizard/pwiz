@@ -12186,6 +12186,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The replicate {0} contains peptides without enough information to rank transitions for triggered acquisition..
+        /// </summary>
+        public static string SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_ {
+            get {
+                return ResourceManager.GetString("SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_" +
+                        "information_to_rank_transitions_for_triggered_acquisition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Using trends in scheduling requires at least {0} replicates..
         /// </summary>
         public static string SchedulingOptionsDlg_TrendsError_Using_trends_in_scheduling_requires_at_least__0__replicates {

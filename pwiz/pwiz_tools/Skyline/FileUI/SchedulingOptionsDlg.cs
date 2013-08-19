@@ -31,24 +31,24 @@ namespace pwiz.Skyline.FileUI
     /// Allows users the Scheduling Options of either using average retention times 
     /// or using retention values from a single data set.
     /// </summary>
-
     public partial class SchedulingOptionsDlg : FormEx
     {
         private readonly SrmDocument _document;
+        private readonly Func<int, bool> _canTriggerReplicate;
 
-        public SchedulingOptionsDlg(SrmDocument document)
+        public SchedulingOptionsDlg(SrmDocument document, Func<int, bool> canTriggerReplicate)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
             _document = document;
+            _canTriggerReplicate = canTriggerReplicate;
 
             foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
             {
                 comboReplicateNames.Items.Add(chromatogramSet);
             }
-            comboReplicateNames.SelectedIndex = comboReplicateNames.Items.Count - 1;
             ComboHelper.AutoSizeDropDown(comboReplicateNames);
 
             radioSingleDataSet.Checked = !Settings.Default.ScheduleAvergeRT;
@@ -109,6 +109,12 @@ namespace pwiz.Skyline.FileUI
             if (Algorithm == ExportSchedulingAlgorithm.Single)
             {
                 ReplicateNum = comboReplicateNames.SelectedIndex;
+                if (!_canTriggerReplicate(ReplicateNum.Value))
+                {
+                    MessageDlg.Show(this, string.Format(Resources.SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_,
+                                                        comboReplicateNames.SelectedItem));
+                    return;
+                }
             }
             // TODO: Show radio botton and complete this code.
             else if (Algorithm == ExportSchedulingAlgorithm.Trends)
@@ -132,7 +138,10 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         private void radioSingleDataSet_CheckedChanged(object sender, EventArgs e)
         {
-            comboReplicateNames.Enabled = (radioSingleDataSet.Checked);
+            comboReplicateNames.Enabled = radioSingleDataSet.Checked;
+            comboReplicateNames.SelectedIndex = comboReplicateNames.Enabled
+                ? comboReplicateNames.Items.Count - 1
+                : -1;
 
             if (radioTrends.Checked && !HasMinTrendReplicates())
             {

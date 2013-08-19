@@ -371,9 +371,9 @@ namespace pwiz.Skyline.Model
             return baseId + i;
         }
 
-        public bool CanTrigger()
+        public bool CanTrigger(int? replicateIndex)
         {
-            return Peptides.All(p => p.CanTrigger());
+            return Peptides.All(p => p.CanTrigger(replicateIndex));
         }
 
         public bool CanSchedule(bool singleWindow)

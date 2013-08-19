@@ -32,12 +32,7 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideDocNode : DocNodeParent
     {
-        public PeptideDocNode(Peptide id)
-            : this(id, null)
-        {
-        }
-
-        public PeptideDocNode(Peptide id, ExplicitMods mods)
+        public PeptideDocNode(Peptide id, ExplicitMods mods = null)
             : this(id, null, mods, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
@@ -168,19 +163,16 @@ namespace pwiz.Skyline.Model
         public float? GetSchedulingTime(int i)
         {
             return GetMeasuredRetentionTime(i);
-//            return GetPeakCenterTime(i);
         }
 
         public float? SchedulingTime
         {
             get { return AverageMeasuredRetentionTime; }
-//            get { return AveragePeakCenterTime; }
         }
 
         public float? GetSchedulingTime(ChromFileInfoId fileId)
         {
             return GetMeasuredRetentionTime(fileId);
-//            return GetPeakCenterTime(fileId);
         }
 
         public float? GetMeasuredRetentionTime(int i)
@@ -470,13 +462,13 @@ namespace pwiz.Skyline.Model
             return nodeGroupPrimary;
         }
 
-        public bool CanTrigger()
+        public bool CanTrigger(int? replicateIndex)
         {
             foreach (var nodeGroup in TransitionGroups)
             {
                 var nodeGroupPrimary = GetPrimaryResultsGroup(nodeGroup);
                 // Return false, if any primary group lacks the ranking information necessary for tMRM/iSRM
-                if (!nodeGroupPrimary.HasResultRanks && !nodeGroupPrimary.HasLibRanks)
+                if (!nodeGroupPrimary.HasReplicateRanks(replicateIndex) && !nodeGroupPrimary.HasLibRanks)
                     return false;
             }
             return true;

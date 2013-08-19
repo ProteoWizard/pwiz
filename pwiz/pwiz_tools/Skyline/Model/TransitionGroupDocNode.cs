@@ -224,6 +224,13 @@ namespace pwiz.Skyline.Model
             get { return Transitions.Any(nodeTran => nodeTran.ResultsRank.HasValue); }
         }
 
+        public bool HasReplicateRanks(int? replicateIndex)
+        {
+            if (!replicateIndex.HasValue)
+                return HasResultRanks;
+            return Transitions.Any(nodeTran => nodeTran.GetPeakRank(replicateIndex.Value).HasValue);
+        }
+
         public float? GetPeakCountRatio(int i)
         {
             if (i == -1)

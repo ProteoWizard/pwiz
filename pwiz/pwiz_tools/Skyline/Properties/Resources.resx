@@ -5797,4 +5797,7 @@ Are you sure you want to continue?</value>
   <data name="ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_" xml:space="preserve">
     <value>Tool Uses R and specifies Packages without an {0} file in the tool-inf directory.</value>
   </data>
+  <data name="SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
+    <value>The replicate {0} contains peptides without enough information to rank transitions for triggered acquisition.</value>
+  </data>
 </root>
