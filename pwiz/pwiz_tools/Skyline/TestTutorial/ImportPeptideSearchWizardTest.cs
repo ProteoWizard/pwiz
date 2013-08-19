@@ -25,8 +25,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -77,28 +75,6 @@ namespace pwiz.SkylineTestTutorial
         {
             EmptyDocument();
 
-            SrmDocument doc = SkylineWindow.Document;
-            // Configure the peptide settings for the document.
-            var peptideSettingsUI = ShowPeptideSettings();
-
-            RunUI(() =>
-            {
-                peptideSettingsUI.MissedCleavages = 2;
-                peptideSettingsUI.OkDialog();
-            });
-            WaitForDocumentChange(doc);
-
-            doc = SkylineWindow.Document;
-            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
-            {
-                transitionSettingsUI.PrecursorCharges = "2,3,4";
-                transitionSettingsUI.ProductCharges = "1,2,3";
-                transitionSettingsUI.UseLibraryPick = false;
-                Assert.AreEqual(MassType.Monoisotopic, transitionSettingsUI.PrecursorMassType);
-                transitionSettingsUI.OkDialog();
-            });
-            WaitForDocumentChange(doc);
-
             RunUI(() => SkylineWindow.SaveDocument());
 
             // Launch the wizard
@@ -107,7 +83,7 @@ namespace pwiz.SkylineTestTutorial
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
-            doc = SkylineWindow.Document;
+            SrmDocument doc = SkylineWindow.Document;
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
@@ -131,7 +107,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // We're on the "Match Modifications" page of the wizard.
-            List<string> modsToCheck = new List<string>() { "Phospho (ST)", "Phospho (Y)", "Oxidation (M)" };
+            List<string> modsToCheck = new List<string> { "Phospho (ST)", "Phospho (Y)", "Oxidation (M)" };
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
@@ -146,6 +122,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] {2, 3, 4};
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 importPeptideSearchDlg.FullScanSettingsControl.Peaks = "3";
                 importPeptideSearchDlg.FullScanSettingsControl.RetentionTimeFilterType = RetentionTimeFilterType.none;
@@ -158,6 +135,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
+                importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 2;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("12_proteins.062011.fasta"));
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });

@@ -931,7 +931,7 @@ product ion mass-to-charge ratios</value>
   </data>
   <data name="textPrecursorCharges.ToolTip" xml:space="preserve">
     <value>A list of comma separated charge states to use for calculating
-precursur mass-to-charge ratios</value>
+precursor mass-to-charge ratios</value>
   </data>
   <data name="&gt;&gt;textPrecursorCharges.Name" xml:space="preserve">
     <value>textPrecursorCharges</value>
@@ -1940,85 +1940,6 @@ with predicted transition m/z values.
   </data>
   <data name="&gt;&gt;tabFullScan.ZOrder" xml:space="preserve">
     <value>4</value>
-  </data>
-  <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
-  </data>
-  <data name="comboPeakScoringModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboPeakScoringModel.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="comboPeakScoringModel.ToolTip" xml:space="preserve">
-    <value>Specifies a linear equation that may be used to predict retention
-times from a peptide specific hydrophobicity score.</value>
-  </data>
-  <data name="&gt;&gt;comboPeakScoringModel.Name" xml:space="preserve">
-    <value>comboPeakScoringModel</value>
-  </data>
-  <data name="&gt;&gt;comboPeakScoringModel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboPeakScoringModel.Parent" xml:space="preserve">
-    <value>tabPeaks</value>
-  </data>
-  <data name="&gt;&gt;comboPeakScoringModel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="label36.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
-    <value>103, 13</value>
-  </data>
-  <data name="label36.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label36.Text" xml:space="preserve">
-    <value>&amp;Peak scoring model:</value>
-  </data>
-  <data name="&gt;&gt;label36.Name" xml:space="preserve">
-    <value>label36</value>
-  </data>
-  <data name="&gt;&gt;label36.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label36.Parent" xml:space="preserve">
-    <value>tabPeaks</value>
-  </data>
-  <data name="&gt;&gt;label36.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="tabPeaks.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPeaks.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPeaks.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 491</value>
-  </data>
-  <data name="tabPeaks.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="tabPeaks.Text" xml:space="preserve">
-    <value>Peaks</value>
-  </data>
-  <data name="&gt;&gt;tabPeaks.Name" xml:space="preserve">
-    <value>tabPeaks</value>
-  </data>
-  <data name="&gt;&gt;tabPeaks.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPeaks.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPeaks.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>

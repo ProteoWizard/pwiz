@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.AddModification(newMod, MatchModificationsControl.ModType.heavy);
             });
             WaitForDocumentChange(doc);
-            
+
             // Click Next
             doc = SkylineWindow.Document;
             RunUI(() =>
@@ -239,7 +239,7 @@ namespace pwiz.SkylineTestFunctional
             // An error will appear because the spectrum file was empty.
             var errorDlg = WaitForOpenForm<MessageDlg>();
             RunUI(errorDlg.OkDialog);
-            
+
             WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());

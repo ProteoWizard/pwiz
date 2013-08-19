@@ -6591,6 +6591,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change digestion settings.
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Change_digestion_settings {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Change_digestion_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change settings.
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Change_settings {
@@ -6722,6 +6731,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_h" +
                         "ave_valid_retention_times_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full-scan MS1 filtering must be enabled in order to import a peptide search..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_ena" +
+                        "bled_in_order_to_import_a_peptide_search_", resourceCulture);
             }
         }
         

@@ -5800,4 +5800,10 @@ Are you sure you want to continue?</value>
   <data name="SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
     <value>The replicate {0} contains peptides without enough information to rank transitions for triggered acquisition.</value>
   </data>
+  <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
+    <value>Change digestion settings</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
+    <value>Full-scan MS1 filtering must be enabled in order to import a peptide search.</value>
+  </data>
 </root>

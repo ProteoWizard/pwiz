@@ -63,6 +63,8 @@
             this.labelIsolationScheme = new System.Windows.Forms.Label();
             this.comboAcquisitionMethod = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
+            this.lblPrecursorCharges = new System.Windows.Forms.Label();
+            this.textPrecursorCharges = new System.Windows.Forms.TextBox();
             this.groupBoxRetentionTimeToKeep.SuspendLayout();
             this.flowLayoutPanelTimeAroundMs2Ids.SuspendLayout();
             this.groupBoxMS1.SuspendLayout();
@@ -78,7 +80,7 @@
             this.groupBoxRetentionTimeToKeep.Location = new System.Drawing.Point(17, 385);
             this.groupBoxRetentionTimeToKeep.Name = "groupBoxRetentionTimeToKeep";
             this.groupBoxRetentionTimeToKeep.Size = new System.Drawing.Size(326, 92);
-            this.groupBoxRetentionTimeToKeep.TabIndex = 5;
+            this.groupBoxRetentionTimeToKeep.TabIndex = 4;
             this.groupBoxRetentionTimeToKeep.TabStop = false;
             this.groupBoxRetentionTimeToKeep.Text = "Retention time filtering";
             // 
@@ -179,7 +181,7 @@
             this.groupBoxMS1.Location = new System.Drawing.Point(17, 13);
             this.groupBoxMS1.Name = "groupBoxMS1";
             this.groupBoxMS1.Size = new System.Drawing.Size(326, 211);
-            this.groupBoxMS1.TabIndex = 3;
+            this.groupBoxMS1.TabIndex = 2;
             this.groupBoxMS1.TabStop = false;
             this.groupBoxMS1.Text = "&MS1 filtering";
             // 
@@ -333,7 +335,7 @@
             this.groupBoxMS2.Location = new System.Drawing.Point(17, 232);
             this.groupBoxMS2.Name = "groupBoxMS2";
             this.groupBoxMS2.Size = new System.Drawing.Size(326, 145);
-            this.groupBoxMS2.TabIndex = 4;
+            this.groupBoxMS2.TabIndex = 3;
             this.groupBoxMS2.TabStop = false;
             this.groupBoxMS2.Text = "M&S/MS filtering";
             // 
@@ -443,16 +445,36 @@
             this.label20.TabIndex = 0;
             this.label20.Text = "A&cquisition method:";
             // 
+            // lblPrecursorCharges
+            // 
+            this.lblPrecursorCharges.AutoSize = true;
+            this.lblPrecursorCharges.Location = new System.Drawing.Point(14, 480);
+            this.lblPrecursorCharges.Name = "lblPrecursorCharges";
+            this.lblPrecursorCharges.Size = new System.Drawing.Size(96, 13);
+            this.lblPrecursorCharges.TabIndex = 0;
+            this.lblPrecursorCharges.Text = "Precursor charges:";
+            this.lblPrecursorCharges.Visible = false;
+            // 
+            // textPrecursorCharges
+            // 
+            this.textPrecursorCharges.Location = new System.Drawing.Point(17, 496);
+            this.textPrecursorCharges.Name = "textPrecursorCharges";
+            this.textPrecursorCharges.Size = new System.Drawing.Size(76, 20);
+            this.textPrecursorCharges.TabIndex = 1;
+            this.textPrecursorCharges.Visible = false;
+            // 
             // FullScanSettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.textPrecursorCharges);
+            this.Controls.Add(this.lblPrecursorCharges);
             this.Controls.Add(this.groupBoxRetentionTimeToKeep);
             this.Controls.Add(this.groupBoxMS1);
             this.Controls.Add(this.groupBoxMS2);
             this.Name = "FullScanSettingsControl";
-            this.Size = new System.Drawing.Size(363, 491);
+            this.Size = new System.Drawing.Size(363, 521);
             this.groupBoxRetentionTimeToKeep.ResumeLayout(false);
             this.groupBoxRetentionTimeToKeep.PerformLayout();
             this.flowLayoutPanelTimeAroundMs2Ids.ResumeLayout(false);
@@ -462,6 +484,7 @@
             this.groupBoxMS2.ResumeLayout(false);
             this.groupBoxMS2.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -502,6 +525,8 @@
         private System.Windows.Forms.Label labelIsolationScheme;
         private System.Windows.Forms.ComboBox comboAcquisitionMethod;
         private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label lblPrecursorCharges;
+        private System.Windows.Forms.TextBox textPrecursorCharges;
 
     }
 }
