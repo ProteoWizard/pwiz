@@ -20,19 +20,17 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.BiblioSpec;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -55,16 +53,92 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        protected override void DoTest()
+        private string GetTestPath(string path)
         {
             var folderMs1Filtering = ExtensionTestContext.CanImportAbWiff ? "Ms1Filtering" : "Ms1FilteringMzml"; // Not L10N
+            return TestFilesDir.GetTestPath(folderMs1Filtering + '\\' + path);
+        }
 
+        protected override void DoTest()
+        {
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             d => d.ChangeSettings(SrmSettingsList.GetDefault())));
 
             SrmDocument doc = SkylineWindow.Document;
 
+            string documentFile = GetTestPath("Ms1FilterTutorial.sky");
+            RunUI(() => SkylineWindow.SaveDocument(documentFile));
+
+            // Launch the wizard
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+
+            // We're on the "Build Spectral Library" page of the wizard.
+            // Add the test xml file to the search files list and try to 
+            // build the document library.
+            string[] searchFiles = new[] { GetTestPath("100803_0005b_MCF7_TiTip3.group.xml") }; // Not L10N
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                            ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            doc = WaitForDocumentChange(doc);
+
+            // Verify document library was built
+            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(documentFile);
+            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+            var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            Assert.IsTrue(librarySettings.HasDocumentLibrary);
+
+            // We're on the "Extract Chromatograms" page of the wizard.
+            // All the test results files are in the same directory as the 
+            // document file, so all the files should be found, and we should
+            // just be able to move to the next page.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+            // We're on the "Match Modifications" page of the wizard.
+            List<string> modsToCheck = new List<string> { "Phospho (ST)", "Phospho (Y)", "Oxidation (M)" }; // Not L10N
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                importPeptideSearchDlg.MatchModificationsControl.CheckedModifications = modsToCheck;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            doc = WaitForDocumentChange(doc);
+
+            // We're on the "Configure MS1 Full-Scan Settings" page of the wizard.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
+                Assert.AreEqual(importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent, FullScanPrecursorIsotopes.Count);
+                Assert.AreEqual("3", importPeptideSearchDlg.FullScanSettingsControl.Peaks);
+                importPeptideSearchDlg.FullScanSettingsControl.RetentionTimeFilterType = RetentionTimeFilterType.none;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            doc = WaitForDocumentChange(doc);
+
+            // Last page of wizard - Import Fasta.
+            string fastaPath = GetTestPath("12_proteins.062011.fasta");
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
+                importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 2;
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPath);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            WaitForClosedForm(importPeptideSearchDlg);
+            WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 8 minutes
+
+            /*
             // Configure the peptide settings for your new document.
             var peptideSettingsUI = ShowPeptideSettings();
             const string carbamidomethylCysteineName = "Carbamidomethyl Cysteine"; // Not L10N
@@ -187,10 +261,11 @@ namespace pwiz.SkylineTestTutorial
             string fastaPath = TestFilesDir.GetTestPath(folderMs1Filtering + @"\12_proteins.062011.fasta");
             RunUI(() => SkylineWindow.ImportFastaFile(fastaPath)); // Not L10N
             WaitForDocumentChange(doc);
+            */
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 40, 40, 120);
 
             // Select the first transition group.
-            var documentPath = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1 Filtering_1118_2011_3.sky"); // Not L10N
+            var documentPath = GetTestPath("Template_MS1 Filtering_1118_2011_3.sky"); // Not L10N
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedPath =
@@ -206,9 +281,11 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();   // p. 12
 
             // MS1 filtering of raw data imported into Skyline.
+            /*
             doc = SkylineWindow.Document;
             ImportResultsFile("100803_0005b_MCF7_TiTip3" + ExtensionTestContext.ExtAbWiff); // Not L10N
             WaitForDocumentChange(doc); 
+            */
 
             doc = SkylineWindow.Document;
             RunUI(() =>
@@ -284,7 +361,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Eliminate extraneous chromatogram data.
             doc = SkylineWindow.Document;
-            var minimizedFile = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1Filtering_1118_2011_3-2min.sky"); // Not L10N
+            var minimizedFile = GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky"); // Not L10N
             var cacheFile = minimizedFile + "d"; // Not L10N
             {
                 var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);

@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -62,6 +63,8 @@ namespace pwiz.SkylineTestFunctional
         {
             TestImportModifications();
             TestSkipWhenNoModifications();
+            TestWizardBuildDocumentLibraryAndFinish();
+            TestWizardCancel();
         }
 
         /// <summary>
@@ -243,6 +246,63 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestWizardBuildDocumentLibraryAndFinish()
+        {
+            // Open the empty .sky file (has no peptides)
+            const string documentFile = "ImportPeptideSearch-EarlyFinish.sky";
+            PrepareDocument(documentFile);
+
+            // Launch the wizard
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+
+            // We're on the "Build Spectral Library" page of the wizard.
+            // Add the test xml file to the search files list and try to 
+            // build the document library.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                            ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
+                Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton());
+            });
+            WaitForClosedForm(importPeptideSearchDlg);
+
+            VerifyDocumentLibraryBuilt(documentFile);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestWizardCancel()
+        {
+            // Open the empty .sky file (has no peptides)
+            PrepareDocument("ImportPeptideSearch-Cancel.sky");
+
+            // Launch the wizard
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+
+            // We should be on the "Build Spectral Library" page of the wizard.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                            ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.ClickCancelButton();
+            });
+
+            WaitForClosedForm(importPeptideSearchDlg);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void VerifyDocumentLibraryBuilt(string path)
+        {
+            // Verify document library was built
+            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(GetTestPath(path));
+            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+            var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            Assert.IsTrue(librarySettings.HasDocumentLibrary);
         }
 
         private void PrepareDocument(string documentFile)
