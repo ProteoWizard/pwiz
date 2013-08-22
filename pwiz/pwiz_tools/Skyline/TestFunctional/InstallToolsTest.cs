@@ -78,6 +78,8 @@ namespace pwiz.SkylineTestFunctional
 
                 TestToolVersioning();
 
+                TestPackageVersioning();
+
                 ClearAllTools();
                 if (Skyline.Program.StressTest)
                 {
@@ -85,6 +87,42 @@ namespace pwiz.SkylineTestFunctional
                     AssertCleared();
                 }
             }
+        }
+
+        private class UnpackZipToolTestSupport: IUnpackZipToolSupport
+        {
+            public bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations)
+            {
+                return false;
+            }
+
+            public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion,
+                                         string newCollectionName)
+            {
+                return true;
+            }
+
+            public string installProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript)
+            {
+                return string.Empty;
+            }
+        }
+
+        private void TestPackageVersioning()
+        {
+            IUnpackZipToolSupport support = new UnpackZipToolTestSupport();
+            string version1 = TestFilesDir.GetTestPath("TestPackageVersioning.zip");
+            var retval = ToolInstaller.UnpackZipTool(version1, support);
+            Assert.AreEqual(1, retval.Installations.Count);
+            ProgramPathContainer ppc = new ProgramPathContainer("BogusProgram","3.0.0");
+            var ListPackages = retval.Installations[ppc];
+            Assert.AreEqual(3, ListPackages.Count);
+            Assert.AreEqual("TestPAckages", ListPackages[0].Name);
+            Assert.AreEqual("7.3-28",ListPackages[0].Version);
+            Assert.AreEqual("TestOtherPAckage",ListPackages[1].Name);
+            Assert.AreEqual("3.2.3",ListPackages[1].Version);
+            Assert.AreEqual("noVersionPackage", ListPackages[2].Name);
+            Assert.AreEqual(null,ListPackages[2].Version);
         }
 
 

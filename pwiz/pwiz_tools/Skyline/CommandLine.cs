@@ -2779,7 +2779,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public string installProgram(ProgramPathContainer missingProgramPathContainer, ICollection<string> packages, string pathToInstallScript)
+        public string installProgram(ProgramPathContainer missingProgramPathContainer, ICollection<ToolPackage> packages, string pathToInstallScript)
         {
             if (packages.Count > 0 && !packagesHandled)
             {

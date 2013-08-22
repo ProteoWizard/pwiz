@@ -54,6 +54,7 @@ namespace pwiz.Skyline.Model.Tools
             public const string ARGS_COLLECTOR_DLL = "ArgsCollectorDll";                //Not L10N
             public const string ARGS_COLLECTOR_TYPE = "ArgsCollectorType";              //Not L10N
             public const string PACKAGE = "Package{0}";                                 //Not L10N
+            public const string PACKAGE_VERSION = "Package{0}Version";                  //Not L10N
             public const string ANNOTATION = "Annotation{0}";                           //Not L10N
             //Package attributes in info.properties
             public const string NAME = "Name";                                          //Not L10N
@@ -151,11 +152,27 @@ namespace pwiz.Skyline.Model.Tools
         {
             get { return _properties.GetProperty(PropertiesConstants.DESCRIPTION); }
         }
-        public string GetPackage(int p)
+        public string GetPackageName(int p)
         {
             string lookup = string.Format(PropertiesConstants.PACKAGE, p);
             string package = _properties.GetProperty(lookup);
             return package != null ? package.Trim() : null;
+        }
+        public string GetPackageVersion(int p)
+        {
+            string lookup = string.Format(PropertiesConstants.PACKAGE_VERSION, p);
+            string packageVersion = _properties.GetProperty(lookup);
+            return packageVersion != null ? packageVersion.Trim() : null;
+        }
+        public ToolPackage GetPackageWithVersion(int p)
+        {
+            string name = GetPackageName(p);
+            if (name == null)
+            {
+                return null;
+            }
+            string version = GetPackageVersion(p);
+            return new ToolPackage{Name = name, Version = version};
         }
         public string Name
         {
@@ -206,7 +223,7 @@ namespace pwiz.Skyline.Model.Tools
                               string foundVersion,
                               string newCollectionName);
 
-        string installProgram(ProgramPathContainer ppc, ICollection<string> packages, string pathToInstallScript);
+        string installProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript);
     }
     
     public static class ToolInstaller
@@ -816,17 +833,17 @@ namespace pwiz.Skyline.Model.Tools
                                                   UnzipToolReturnAccumulator accumulator,
                                                   ProgramPathContainer programPathContainer)
         {
-            var packages = new List<string>();
+            var packages = new List<ToolPackage>();
             int i = 1;
-            string package = readin.GetPackage(i);
-            while (!string.IsNullOrEmpty(package))
+            var package = readin.GetPackageWithVersion(i);
+            while (package != null)
             {
                 // if the package is not a uri, it is stored locally in the tool-inf directory
                 //if (!package.StartsWith("http")) // Not L10N
                 //    package = Path.Combine(tempToolPath, TOOL_INF, package);
 
                 packages.Add(package);
-                package = readin.GetPackage(++i);
+                package = readin.GetPackageWithVersion(++i);
             }
 
             if (!Settings.Default.ToolFilePaths.ContainsKey(programPathContainer) || packages.Count > 0)
@@ -903,13 +920,14 @@ namespace pwiz.Skyline.Model.Tools
         {
             public List<ToolDescription> ValidToolsFound { get; private set; }
             public List<string> MessagesThrown { get; private set; }
-            public Dictionary<ProgramPathContainer,List<string>> Installations { get; private set; }
+            public Dictionary<ProgramPathContainer,List<ToolPackage>> 
+                Installations { get; private set; }
             
             public UnzipToolReturnAccumulator()
             {
                 ValidToolsFound = new List<ToolDescription>();
                 MessagesThrown = new List<string>();
-                Installations = new Dictionary<ProgramPathContainer, List<string>>();
+                Installations = new Dictionary<ProgramPathContainer, List<ToolPackage>>();
             }
 
             public void AddMessage(string s)
@@ -922,9 +940,9 @@ namespace pwiz.Skyline.Model.Tools
                 ValidToolsFound.Add(t);
             }
 
-            public void AddInstallation(ProgramPathContainer ppc, List<string> packages )
+            public void AddInstallation(ProgramPathContainer ppc, List<ToolPackage> packages )
             {
-                List<string> listPackages;
+                List<ToolPackage> listPackages;
                 if (Installations.TryGetValue(ppc, out listPackages))
                 {
                     listPackages.AddRange(packages.Where(p => !listPackages.Contains(p)));
@@ -935,5 +953,11 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
         }
+    }
+
+    public class ToolPackage
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
     }
 }

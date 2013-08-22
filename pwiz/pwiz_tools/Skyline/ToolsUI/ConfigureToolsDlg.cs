@@ -970,20 +970,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public class UnpackZipToolHelper : IUnpackZipToolSupport
         {
-            public UnpackZipToolHelper(SkylineWindow parentWindow, Func<ProgramPathContainer, ICollection<string>, string, string> testFindProgramPath)
+            public UnpackZipToolHelper(SkylineWindow parentWindow, Func<ProgramPathContainer, ICollection<ToolPackage>, string, string> testFindProgramPath)
             {
                 parent = parentWindow;
                 _testFindProgramPath = testFindProgramPath;
             }
             private SkylineWindow parent { get; set; }
-            private Func<ProgramPathContainer, ICollection<string>, string, string> _testFindProgramPath { get; set; }
+            private Func<ProgramPathContainer, ICollection<ToolPackage>, string, string> _testFindProgramPath { get; set; }
 
             public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion, string newCollectionName)
             {
                 return OverwriteOrInParallel(toolCollectionName, toolCollectionVersion, reportList, foundVersion, newCollectionName);
             }
 
-            public string installProgram(ProgramPathContainer programPathContainer, ICollection<string> packages, string pathToInstallScript)
+            public string installProgram(ProgramPathContainer programPathContainer, ICollection<ToolPackage> packages, string pathToInstallScript)
             {
                 return _testFindProgramPath == null ? parent.InstallProgram(programPathContainer, packages, pathToInstallScript) : _testFindProgramPath(programPathContainer, packages, pathToInstallScript);
             }
@@ -1110,7 +1110,7 @@ namespace pwiz.Skyline.ToolsUI
             get { return ToolList[listTools.SelectedIndex]; }
         }
 
-        public Func<ProgramPathContainer, ICollection<string>, string, string> TestFindProgramPath { get; set; }
+        public Func<ProgramPathContainer, ICollection<ToolPackage>, string, string> TestFindProgramPath { get; set; }
 
         #endregion
 

@@ -3541,14 +3541,14 @@ namespace pwiz.Skyline
         }
 
         // currently a work-around to get an R-installer
-        public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<string> packages, string pathToPackageInstallScript)
+        public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<ToolPackage> packages, string pathToPackageInstallScript)
         {
             if (programPathContainer.ProgramName.Equals("R"))
             {
                 bool installed = RUtil.CheckInstalled(programPathContainer.ProgramVersion);
                 if (!installed || packages.Count != 0)
                 {
-                    ICollection<string> PackagesToInstall;
+                    ICollection<ToolPackage> PackagesToInstall;
                     if (!installed)
                     {
                         PackagesToInstall = packages;
@@ -3584,7 +3584,11 @@ namespace pwiz.Skyline
                         ShowImmediateWindow();
                     }
                     
-                    using (var dlg = new PythonInstaller(programPathContainer, packages, _skylineTextBoxStreamWriterHelper))
+                    // No versioning of packages for Python yet. 
+                    // Here we just ignore all the versions attached to packages. 
+                    IEnumerable<string> pythonPackages = packages.Select(p => p.Name);
+
+                    using (var dlg = new PythonInstaller(programPathContainer, pythonPackages, _skylineTextBoxStreamWriterHelper))
                     {
                         if (dlg.ShowDialog(this) == DialogResult.Cancel)
                             return null;
