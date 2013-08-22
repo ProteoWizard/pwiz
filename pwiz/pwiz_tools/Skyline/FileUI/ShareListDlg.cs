@@ -97,10 +97,9 @@ namespace pwiz.Skyline.FileUI
             int countExclude = List.ExcludeDefaults;
             foreach (TItem item in List)
             {
-                if (index < countExclude)
+                if (index++ < countExclude)
                     continue;
                 ListBox.Items.Add(item.GetKey());
-                index++;
             }
             ListBox.EndUpdate();
         }
