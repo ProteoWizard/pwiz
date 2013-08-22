@@ -1118,7 +1118,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     color = ChromGraphItem.ColorSelected;
                     width++;
                 }
-                color = COLORS_LIBRARY[(iColor + colorOffset) % COLORS_LIBRARY.Length];
+                else
+                {
+                    color = COLORS_LIBRARY[(iColor + colorOffset) % COLORS_LIBRARY.Length];
+                }
 
                 TransitionChromInfo tranPeakInfoGraph = null;
                 if (bestPeakTran == i)
