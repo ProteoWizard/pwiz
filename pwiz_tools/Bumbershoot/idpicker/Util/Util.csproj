@@ -131,6 +131,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CookieAwareWebClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataGridViewCustomCells.cs">
       <SubType>Component</SubType>
     </Compile>

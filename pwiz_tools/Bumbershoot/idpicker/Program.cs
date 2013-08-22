@@ -28,6 +28,8 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using System.Net;
@@ -189,12 +191,45 @@ namespace IDPicker
         #endregion
 
         #region Update checking and error reporting
-        private static WebClient webClient = new WebClient();
-        public static WebClient WebClient { get { return webClient; } }
+        private static CookieAwareWebClient webClient = new CookieAwareWebClient();
+        public static CookieAwareWebClient WebClient { get { return webClient; } }
 
+        private const string loginAddress = "http://forge.fenchurch.mc.vanderbilt.edu/account/login.php";
+        private const string errorReportAddress = "http://forge.fenchurch.mc.vanderbilt.edu/tracker/index.php?func=add&group_id=10&atid=149";
+        
         private static void initializeWebClient ()
         {
-            new Thread(() => { try { lock (webClient) webClient.DownloadString("http://www.google.com"); } catch {/* TODO: log warning */} }).Start();
+            new Thread(() =>
+            {
+                try
+                {
+                    lock (webClient)
+                    {
+                        var tpw = new char[] { 'T', 'r', '4', '<', 'k', '3', 'r' };
+
+                        string html = webClient.DownloadString(loginAddress);
+                        Match m = Regex.Match(html, "name=\"form_key\" value=\"(?<key>\\S+)\"");
+                        if (!m.Groups["key"].Success)
+                        {
+                            MessageBox.Show("Unable to find form_key for login page.", "Error logging in to IDPicker exception tracker",
+                                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+
+                        NameValueCollection form = new NameValueCollection
+                                               {
+                                                   {"form_key", m.Groups["key"].Value},
+                                                   {"form_loginname", "idpicker"},
+                                                   {"form_pw", String.Join("", tpw)},
+                                                   {"login", "1"},
+                                                   {"return_to", "1"},
+                                               };
+
+                        webClient.UploadValues(loginAddress, form);
+                    }
+                }
+                catch {/* TODO: log warning */}
+            }).Start();
         }
 
         private static void automaticCheckForUpdates ()
@@ -314,11 +349,9 @@ namespace IDPicker
 
         private static void SendErrorReport (string messageBody, string exceptionType, string email, string username)
         {
-            const string address = "http://forge.fenchurch.mc.vanderbilt.edu/tracker/index.php?func=add&group_id=10&atid=149";
-
             lock (webClient)
             {
-                string html = webClient.DownloadString(address);
+                string html = webClient.DownloadString(errorReportAddress);
                 Match m = Regex.Match(html, "name=\"form_key\" value=\"(?<key>\\S+)\"");
                 if (!m.Groups["key"].Success)
                 {
@@ -341,7 +374,7 @@ namespace IDPicker
                                                    {"user_email", email},
                                                };
 
-                webClient.UploadValues(address, form);
+                webClient.UploadValues(errorReportAddress, form);
             }
         }
         #endregion
