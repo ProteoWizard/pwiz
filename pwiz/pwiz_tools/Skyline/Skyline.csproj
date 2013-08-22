@@ -1051,6 +1051,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="SkylineProcessRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="Skyline_Daily.ico" />
     <EmbeddedResource Include="Alerts\AboutDlg.resx">
       <DependentUpon>AboutDlg.cs</DependentUpon>
@@ -1942,9 +1945,6 @@
     <EmbeddedResource Include="Resources\ChromLib.bmp" />
     <EmbeddedResource Include="Resources\LabKey.bmp" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
-    <Content Include="NamedPipeProcessRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="Resources\PanoramaPublish.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />

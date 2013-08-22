@@ -300,7 +300,7 @@ namespace pwiz.SkylineTestFunctional
                 rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient { DownloadSuccess = true, CancelDownload = false };
                 // Package Installation
                 rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper { PackagesToInstall = missingPackages ?? new List<ToolPackage>(), RProgramPath = "testPath.exe", InternetConnectionDoesNotExists = cutoffInternet };
-                rInstaller.TestNamePipeRunProcessWrapper = new TestNamedPipeRunProcess { stringToWriteToWriter = stringToWrite, ExitCode = packageInstallerExitCode, UserOkRunAsAdministrator = okAdminPrivledges, ConnectSuccess = connectionSuccess };
+                rInstaller.TestSkylineProcessRunnerWrapper = new TestSkylineProcessRunner { stringToWriteToWriter = stringToWrite, ExitCode = packageInstallerExitCode, UserOkRunAsAdministrator = okAdminPrivledges, ConnectSuccess = connectionSuccess };
             });
             return rInstaller;
         }
@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestFunctional
                             DownloadSuccess = true
                         };
                     rInstaller.TestRunProcess = new TestRunProcess { ExitCode = 0 };
-                    rInstaller.TestNamePipeRunProcessWrapper = new TestNamedPipeRunProcess { ConnectSuccess = true, ExitCode = 0, stringToWriteToWriter = string.Empty, UserOkRunAsAdministrator = true };
+                    rInstaller.TestSkylineProcessRunnerWrapper = new TestSkylineProcessRunner { ConnectSuccess = true, ExitCode = 0, stringToWriteToWriter = string.Empty, UserOkRunAsAdministrator = true };
                 });
             var downloadRDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, downloadRDlg.Message));

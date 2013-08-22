@@ -24,9 +24,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.Text;
 
-namespace NamedPipeProcessRunner
+namespace SkylineProcessRunner
 {
-
     class Program
     {
         static int Main(string[] args)
@@ -86,8 +85,8 @@ namespace NamedPipeProcessRunner
 
         public static string ParseCommandLineArray(string[] arguments)
         {
-            StringBuilder commandLineArguments = new StringBuilder();
-            foreach (string argument in arguments)
+            var commandLineArguments = new StringBuilder();
+            foreach (var argument in arguments)
             {
                 if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty))
                 {

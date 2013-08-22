@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Util
 
     }
 
-    public interface INamedPipeRunProcessWrapper
+    public interface ISkylineProcessRunnerWrapper
     {
         /// <summary>
         /// Wrapper interface for the NamedPipeProcessRunner class
@@ -141,17 +141,17 @@ namespace pwiz.Skyline.Util
         int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer);
     }
 
-    public class NamedPipeRunProcessWrapper : INamedPipeRunProcessWrapper
+    public class SkylineProcessRunnerWrapper : ISkylineProcessRunnerWrapper
     {
         public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
         {
-            return NamedPipeProcessRunner.RunProcess(arguments, runAsAdministrator, writer);
+            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer);
         }
     }
 
     // The test Named PipeProcess Runner allows us to simulate running NamedPipeProcessRunner.exe
     // by specifying its return code and whether the pipe connected or not
-    public class TestNamedPipeRunProcess : INamedPipeRunProcessWrapper
+    public class TestSkylineProcessRunner : ISkylineProcessRunnerWrapper
     {
         public bool ConnectSuccess { get; set; }
         public bool UserOkRunAsAdministrator { get { return _userOkRunAsAdministrator; } set { _userOkRunAsAdministrator = value; } }

@@ -8,8 +8,8 @@
     <ProjectGuid>{591C1CC4-2821-4CB3-B666-EFE9AF879CAD}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NamedPipeProcessRunner</RootNamespace>
-    <AssemblyName>NamedPipeProcessRunner</AssemblyName>
+    <RootNamespace>SkylineProcessRunner</RootNamespace>
+    <AssemblyName>SkylineProcessRunner</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeProcessRunner", "NamedPipeProcessRunner\NamedPipeProcessRunner.csproj", "{591C1CC4-2821-4CB3-B666-EFE9AF879CAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineProcessRunner", "SkylineProcessRunner\SkylineProcessRunner.csproj", "{591C1CC4-2821-4CB3-B666-EFE9AF879CAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

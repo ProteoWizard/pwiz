@@ -236,7 +236,7 @@ namespace pwiz.Skyline.ToolsUI
             argumentBuilder.Append("/C ").Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
             try
             {
-                INamedPipeRunProcessWrapper processRunner = TestNamePipeRunProcessWrapper ?? new NamedPipeRunProcessWrapper();
+                ISkylineProcessRunnerWrapper processRunner = TestSkylineProcessRunnerWrapper ?? new SkylineProcessRunnerWrapper();
                 var stringbuilder = new StringBuilder();
                 int exitCode;
                 using (var stringWriter = new StringWriter(stringbuilder))
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public IRunProcess TestRunProcess { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
-        public INamedPipeRunProcessWrapper TestNamePipeRunProcessWrapper { get; set; }
+        public ISkylineProcessRunnerWrapper TestSkylineProcessRunnerWrapper { get; set; }   
 
         public string Message
         {

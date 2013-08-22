@@ -343,7 +343,7 @@ namespace pwiz.Skyline.ToolsUI
                                  .Append("\""); // Not L10N
                 }
 
-                var pipedProcessRunner = TestNamedPipeRunProcess ?? new NamedPipeRunProcessWrapper();
+                var pipedProcessRunner = TestSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
                 try
                 {
                     if (pipedProcessRunner.RunProcess(argumentBuilder.ToString(), false, _writer) != 0)
@@ -422,7 +422,7 @@ namespace pwiz.Skyline.ToolsUI
                            .Append(TextUtil.SEPARATOR_SPACE)
                            .Append(PipPath); // Not L10N
 
-            var pipedProcessRunner = TestPipNamedPipeRunProcess ?? new NamedPipeRunProcessWrapper();
+            var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             try
             {
                 if (pipedProcessRunner.RunProcess(argumentBuilder.ToString(), false, _writer) != 0)
@@ -438,9 +438,9 @@ namespace pwiz.Skyline.ToolsUI
 
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IRunProcess TestRunProcess { get; set; }
-        public INamedPipeRunProcessWrapper TestNamedPipeRunProcess { get; set; }
+        public ISkylineProcessRunnerWrapper TestSkylineProcessRunner { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
-        public INamedPipeRunProcessWrapper TestPipNamedPipeRunProcess { get; set; }
+        public ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
         public IRunProcess TestPipRunProcess { get; set; }
         public bool TestingPip { get; set; }
         
