@@ -94,11 +94,22 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             var dictTableAlias = new Dictionary<Type, string>();
             foreach (ReportColumn column in columns)
             {
+                ColumnInfo columnInfo;
+                try
+                {
+                    columnInfo = schema.GetColumnInfo(column);
+                }
+                catch (Exception x)
+                {
+                    var parts = column.Column.Parts;
+                    throw new ArgumentException(string.Format("Failed to find the column {0}", parts[parts.Count - 1]), x);
+                }
+
                 hql.Append(comma);
                 comma = ", ";
                 hql.Append(column.GetHql(dictTableAlias));
 
-                columnInfos.Add(schema.GetColumnInfo(column));
+                columnInfos.Add(columnInfo);
             }
             hql.Append("\nFROM "); // Not L10N
             comma = string.Empty;
