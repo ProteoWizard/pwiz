@@ -35,7 +35,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    // TODO: (trevor) long-term allow for ranges of versions
     public partial class RInstaller : FormEx
     {
         private readonly string _version;

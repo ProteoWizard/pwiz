@@ -176,6 +176,9 @@ namespace pwiz.Skyline.Model
                     foreach (PeptideDocNode nodePeptide in nodeResult.Children)
                         childrenNew.Add(nodePeptide.ChangeSettings(settingsNew, diff));
 
+                    if (PeptideGroup.Sequence != null)
+                        childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, false);
+
                     if (ArrayUtil.ReferencesEqual(childrenNew, Children))
                         childrenNew = Children;
 
