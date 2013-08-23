@@ -348,10 +348,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Chromatogram == null)
                 return;
 
+
             // Calculate maximum y for potential retention time indicators
-            double xTemp, yMax;
             PointF ptTop = new PointF(0, graphPane.Chart.Rect.Top);
-            graphPane.ReverseTransform(ptTop, out xTemp, out yMax);
 
             if (GraphChromatogram.ShowRT != ShowRTChrom.none)
             {
@@ -372,9 +371,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var time in AlignedRetentionMsMs)
                     {
                         var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, yMax, scaledTime.DisplayTime, 0)
+                        var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, ptTop.Y, scaledTime.DisplayTime, 1)
                         {
                             ZOrder = ZOrder.E_BehindCurves,
+                            Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
                             IsClippedToChartRect = true,
                             Tag = new GraphObjTag(this, GraphObjType.aligned_ms_id, scaledTime),
                         };
@@ -386,13 +386,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var time in UnalignedRetentionMsMs)
                     {
                         var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, yMax,
-                                               scaledTime.DisplayTime, 0)
-                                       {
-                                           ZOrder = ZOrder.E_BehindCurves,
-                                           IsClippedToChartRect = true,
-                                           Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
-                                       };
+                        var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, ptTop.Y,
+                                               scaledTime.DisplayTime, 1)
+                        {
+                            ZOrder = ZOrder.E_BehindCurves,
+                            Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                            IsClippedToChartRect = true,
+                            Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
+                        };
                         annotations.Add(line);
                     }
                 }
@@ -419,12 +420,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Draw background for retention time window
                 if (RetentionWindow > 0)
                 {
-                    double boxHeight = yMax;
+                    double boxHeight = ptTop.Y;
                     double x1 = ScaleRetentionTime(time - RetentionWindow/2).DisplayTime;
                     double x2 = ScaleRetentionTime(time + RetentionWindow/2).DisplayTime;
                     BoxObj box = new BoxObj(x1, boxHeight, x2-x1, boxHeight,
                                             COLOR_RETENTION_WINDOW, COLOR_RETENTION_WINDOW)
                                      {
+                                         Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
                                          IsClippedToChartRect = true,
                                          ZOrder = ZOrder.F_BehindGrid
                                      };
@@ -452,19 +454,18 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
             PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime)
         {
-            double xTemp;
             string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
             FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);
             SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
-            ptTop = new PointF(0, ptTop.Y + sizeLabel.Height + 10);
+            PointF realTopPoint = ptTop;
+            ptTop = new PointF(0, ptTop.Y + sizeLabel.Height + 15);
+            float chartHeightWithLabel = graphPane.Chart.Rect.Height + sizeLabel.Height + 15;
+            double intensityChartFraction = (ptTop.Y - realTopPoint.Y) / chartHeightWithLabel;
 
-            double intensity;
-            graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
-
-            LineObj stick = new LineObj(color, retentionTime.DisplayTime, intensity, retentionTime.DisplayTime, 0)
+            LineObj stick = new LineObj(color, retentionTime.DisplayTime, intensityChartFraction, retentionTime.DisplayTime, 1)
                                 {
                                     IsClippedToChartRect = true,
-                                    Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                    Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
                                     ZOrder = ZOrder.E_BehindCurves,
                                     Line = { Width = 1 },
                                     Tag = new GraphObjTag(this, graphObjType, retentionTime),
@@ -472,9 +473,9 @@ namespace pwiz.Skyline.Controls.Graphs
             annotations.Add(stick);
 
             ptTop = new PointF(0, ptTop.Y - 5);
-            graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
-            TextObj text = new TextObj(label, retentionTime.DisplayTime, intensity,
-                                       CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+            intensityChartFraction = (ptTop.Y - realTopPoint.Y) / chartHeightWithLabel;
+            TextObj text = new TextObj(label, retentionTime.DisplayTime, intensityChartFraction,
+                                       CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Bottom)
                                {
                                    IsClippedToChartRect = true,
                                    ZOrder = ZOrder.E_BehindCurves,

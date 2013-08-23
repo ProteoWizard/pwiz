@@ -45,6 +45,7 @@ namespace pwiz.MSGraph
 
             _currentItemType = MSGraphItemType.unknown;
             _pointAnnotations = new GraphObjList();
+            _manualLabels = new Dictionary<TextObj, RectangleF>();
         }
 
         public bool AllowCurveOverlap { get; set; }
@@ -90,11 +91,14 @@ namespace pwiz.MSGraph
         }
 
         protected GraphObjList _pointAnnotations;
+        protected Dictionary<TextObj, RectangleF> _manualLabels;
+
         private void drawLabels( Graphics g )
         {
             foreach( GraphObj pa in _pointAnnotations )
                 GraphObjList.Remove( pa );
             _pointAnnotations.Clear();
+            _manualLabels.Clear();
 
             Axis xAxis = XAxis;
             Axis yAxis = YAxis;
@@ -102,8 +106,10 @@ namespace pwiz.MSGraph
             yAxis.Scale.MinAuto = false;
             yAxis.Scale.Min = 0;
 
-            // setup axes scales to enable the Transform method
-            xAxis.Scale.SetupScaleData( this, xAxis );
+            // ensure that the chart rectangle is the right size
+            AxisChange(g);
+            // then setup axes scales to enable the Transform method
+            xAxis.Scale.SetupScaleData(this, xAxis);
             yAxis.Scale.SetupScaleData( this, yAxis );
 
             if( Chart.Rect.Width < 1 || Chart.Rect.Height < 1 )
@@ -143,8 +149,8 @@ namespace pwiz.MSGraph
             baseTextObj.FontSpec.Fill.IsVisible = false;
             PointF[] pts = baseTextObj.FontSpec.GetBox( g, baseLabel, 0, 0,
                                 AlignH.Center, AlignV.Bottom, 1.0f, new SizeF() );
-            float baseLabelWidth = (float) Math.Round( pts[1].X - pts[0].X );
-            float baseLabelHeight = (float) Math.Round( pts[2].Y - pts[0].Y );
+            float baseLabelWidth = pts[1].X - pts[0].X;
+            float baseLabelHeight = pts[2].Y - pts[0].Y;
             baseLabelWidth = (float) xAxis.Scale.ReverseTransform( xAxis.Scale.Transform( 0 ) + baseLabelWidth );
             baseLabelHeight = (float) yAxis.Scale.ReverseTransform( yAxis.Scale.Transform( 0 ) - baseLabelHeight );
             float labelLengthToWidthRatio = baseLabelWidth / baseLabel.Length;
@@ -156,7 +162,7 @@ namespace pwiz.MSGraph
             double yMin = yAxis.Scale.Min;
             double yMax = yAxis.Scale.Max;
 
-            // add manual annotations with TextObj priority over curve annoations
+            // add manual annotations with TextObj priority over curve annotations
             foreach (CurveItem item in CurveList)
             {
                 var info = item.Tag as IMSGraphItemExtended;
@@ -211,7 +217,7 @@ namespace pwiz.MSGraph
                     if( string.IsNullOrEmpty(annotation.Label) )
                         continue;
 
-                    float pointLabelWidth = labelLengthToWidthRatio * annotation.Label.Length;
+                    float pointLabelWidth = labelLengthToWidthRatio * annotation.Label.Split('\n').Max(o => o.Length);
 
                     double labelY = yAxis.Scale.ReverseTransform(yPixel - 5);
 
@@ -247,16 +253,14 @@ namespace pwiz.MSGraph
                                            ZOrder = ZOrder.A_InFront,
                                            FontSpec = annotation.FontSpec
                                        };
-                    //text.IsClippedToChartRect = true;
+                    text.IsClippedToChartRect = true;
 
-                    if( !detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item is StickItem ) )
+                    bool overlap2 = detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item is StickItem );
+                    _manualLabels[text] = textBoundsRegion.GetBounds(g);
+                    if (!overlap2)
                     {
-                        GraphObjList.Add( text );
-                        _pointAnnotations.Add( text );
-
-
-                        clipRegion.Union( textBoundsRegion );
-                        g.SetClip( clipRegion, CombineMode.Replace );
+                        _pointAnnotations.Add(text);
+                        AddAnnotations(g, item, clipRegion);
                     }
                 }
             }
@@ -269,30 +273,118 @@ namespace pwiz.MSGraph
                 if( info == null || points == null )
                     continue;
 
-                info.AddAnnotations(this, g,  points, _pointAnnotations);
+                info.AddAnnotations( this, g,  points, _pointAnnotations );
                 AddAnnotations(g, item, clipRegion);
             }
+
+            autoScaleForManualLabels(g);
+        }
+
+        private bool isXChartFractionObject(GraphObj obj)
+        {
+            return obj.Location.CoordinateFrame == CoordType.XChartFractionYPaneFraction ||
+                   obj.Location.CoordinateFrame == CoordType.ChartFraction ||
+                   obj.Location.CoordinateFrame == CoordType.XChartFractionYScale ||
+                   obj.Location.CoordinateFrame == CoordType.XChartFractionY2Scale;
+        }
+        
+        private bool isYChartFractionObject(GraphObj obj)
+        {
+            return obj.Location.CoordinateFrame == CoordType.XPaneFractionYChartFraction ||
+                   obj.Location.CoordinateFrame == CoordType.ChartFraction ||
+                   obj.Location.CoordinateFrame == CoordType.XScaleYChartFraction;
         }
 
         private void AddAnnotations(Graphics g, CurveItem item, Region clipRegion)
         {
             foreach (GraphObj obj in _pointAnnotations)
             {
-                if (!GraphObjList.Contains(obj))
+                TextObj text = obj as TextObj;
+                if (text != null)
                 {
-                    TextObj text = obj as TextObj;
-                    if (text != null)
-                    {
-                        Region textBoundsRegion;
-                        if (detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem))
-                            continue;
+                    if (isXChartFractionObject(text) && (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max))
+                        continue;
 
-                        clipRegion.Union(textBoundsRegion);
-                        g.SetClip(clipRegion, CombineMode.Replace);
+                    Region textBoundsRegion = null;
+                    bool overlap = detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem);
+                    if (overlap)
+                        continue;
+                    _manualLabels[text] = textBoundsRegion.GetBounds(g);
+
+                    clipRegion.Union(textBoundsRegion);
+                    g.SetClip(clipRegion, CombineMode.Replace);
+                }
+                else if (!GraphObjList.Contains(obj)) // always add non-text annotations
+                    GraphObjList.Add(obj);
+            }
+        }
+
+        /// <summary>
+        /// We know which labels are overlapping the data points, but we need to make sure the labels that will be
+        /// displayed can fit in the scale using the Min/MaxGrace properties and adjusting the label fractions if appropriate:
+        /// TextObjs with CoordType.AxisXYScale coordinates will move proportionally with Min/MaxGrace, but ChartFraction
+        /// coordinates will not.
+        /// </summary>
+        protected void autoScaleForManualLabels(Graphics g)
+        {
+            Axis yAxis = YAxis;
+            bool maxAuto = yAxis.Scale.MaxAuto;
+            try
+            {
+                if (maxAuto)
+                {
+                    AxisChange(g);
+                }
+
+                double yMaxRequired = YAxis.Scale.Max;
+                foreach (var kvp in _manualLabels)
+                {
+                    TextObj text = kvp.Key;
+                    if (text.Location.X >= XAxis.Scale.Min && text.Location.X <= XAxis.Scale.Max)
+                    {
+                        if (!YAxis.Scale.IsLog)
+                        {
+                            double axisHeight = YAxis.Scale.Max - YAxis.Scale.Min;
+
+                            PointF[] pts = text.FontSpec.GetBox(g, text.Text, 0, 0, AlignH.Center, AlignV.Bottom, 1.0f,
+                                new SizeF());
+                            double labelHeight = yAxis.Scale.ReverseTransform(pts[0].Y) -
+                                                    yAxis.Scale.ReverseTransform(pts[2].Y);
+                            if (labelHeight < axisHeight / 2)
+                            {
+                                // Ensure that the YAxis will have enough space to show the label.
+                                // Only do this if the labelHeight is going to take up less than half the space on the graph, because
+                                // otherwise the graph will be shrunk too much to have any useful information.
+
+                                // When calculating the scaling required, take into account that the height of the label
+                                // itself will not shrink when we shrink the YAxis.
+                                var labelYMaxRequired = (text.Location.Y - labelHeight*YAxis.Scale.Min/axisHeight)/
+                                                        (1 - labelHeight/axisHeight);
+                                yMaxRequired = Math.Max(yMaxRequired, labelYMaxRequired);
+                            }
+                        }
                     }
 
-                    GraphObjList.Add(obj);
+                    if (!GraphObjList.Any(
+                            o =>
+                                (o is TextObj) && (o as TextObj).Location == text.Location &&
+                                (o as TextObj).Text == text.Text))
+                    {
+                        if (_pointAnnotations.Contains(text))
+                            GraphObjList.Add(text);
+                    }
                 }
+
+                if (maxAuto)
+                {
+                    yAxis.Scale.Max = yMaxRequired;
+                }
+                // TODO: adjust objects with ChartFraction coordinates
+            }
+            finally
+            {
+                // Reset the value of MaxAuto since it may have been changed to false when Scale.Max was changed.
+                yAxis.Scale.MaxAuto = maxAuto;
             }
         }
 
