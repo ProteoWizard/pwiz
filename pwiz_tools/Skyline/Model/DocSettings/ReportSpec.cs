@@ -102,7 +102,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 database.AddSrmDocument(doc);
                 status = database.Status;
 
-                ResultSet resultSet = report.Execute(database);
+                ResultSet resultSet;
+                try
+                {
+                    resultSet = report.Execute(database);
+                }
+                catch (Exception)
+                {
+                    progressMonitor.UpdateProgress(status.Cancel());
+                    throw;
+                }
 
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(95));
 
