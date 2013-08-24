@@ -5806,4 +5806,22 @@ Are you sure you want to continue?</value>
   <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
     <value>Full-scan MS1 filtering must be enabled in order to import a peptide search.</value>
   </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
+    <value>The pasted text must have two columns.</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_" xml:space="preserve">
+    <value>Missing peptide sequence on line {0}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_" xml:space="preserve">
+    <value>The text {0} is not a valid peptide sequence on line {1}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_" xml:space="preserve">
+    <value>Missing value on line {0}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_" xml:space="preserve">
+    <value>Invalid decimal number format {0} on line {1}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_" xml:space="preserve">
+    <value>The time {0} must be greater than zero on line {1}</value>
+  </data>
 </root>

@@ -93,17 +93,55 @@ namespace pwiz.Skyline.SettingsUI
             return null;
         }
 
-        public static bool ValidateRow(object[] columns, int lineNumber)
+        public static bool ValidateRowWithTime(object[] columns, IWin32Window parent, int lineNumber)
         {
-            double x;
+            return ValidateRow(columns, parent, lineNumber, true);
+        }
+
+        public static bool ValidateRowWithIrt(object[] columns, IWin32Window parent, int lineNumber)
+        {
+            return ValidateRow(columns, parent, lineNumber, false);
+        }
+
+        public static bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber, bool postiveTime)
+        {
             if (columns.Length != 2)
+            {
+                MessageDlg.Show(parent, string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_));
                 return false;
+            }
+
             string seq = columns[COLUMN_SEQUENCE] as string;
             string time = columns[COLUMN_TIME] as string;
-            return (!string.IsNullOrEmpty(seq) &&
-                    FastaSequence.IsExSequence(seq) &&
-                    !string.IsNullOrEmpty(time) &&
-                    double.TryParse(time, out x));
+            double dTime;
+            string message;
+            if (string.IsNullOrWhiteSpace(seq))
+            {
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
+            }
+            else if (!FastaSequence.IsExSequence(seq))
+            {
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
+            }
+            else if (string.IsNullOrWhiteSpace(time))
+            {
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
+            }
+            else if (!double.TryParse(time, out dTime))
+            {
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, time, lineNumber);
+            }
+            else if (postiveTime && dTime <= 0)
+            {
+                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_, time, lineNumber);
+            }
+            else
+            {
+                return true;
+            }
+
+            MessageDlg.Show(parent, message);
+            return false;
         }
 
         private void gridView_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)

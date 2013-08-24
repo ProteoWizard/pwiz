@@ -513,12 +513,7 @@ namespace pwiz.Skyline.Model
             return result.UpdateResults(settings);
         }
 
-        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
-        {
-            return ChangeSettings(settingsNew, diff, true);
-        }
-
-        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse)
+        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
         {
             Helpers.Assume(!diff.DiffPeptideProps); // No settings dependent properties yet.
 
@@ -641,7 +636,7 @@ namespace pwiz.Skyline.Model
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, this, explicitMods, diff);
+                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
                         // Skip if the node can no longer be measured on the target instrument
                         if (!instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             continue;

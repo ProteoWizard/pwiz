@@ -9860,6 +9860,62 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid decimal number format {0} on line {1}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing peptide sequence on line {0}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing value on line {0}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The pasted text must have two columns..
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text {0} is not a valid peptide sequence on line {1}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on" +
+                        "_line__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The time {0} must be greater than zero on line {1}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line_" +
+                        "_1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The added lists contains {0} peptides which already appear in the {1} list..
         /// </summary>
         public static string PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list {

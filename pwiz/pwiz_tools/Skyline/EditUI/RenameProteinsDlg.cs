@@ -222,12 +222,12 @@ namespace pwiz.Skyline.EditUI
                     Items.Add(name);
             }
 
-            private bool ValidateRow(object[] columns, int lineNumber)
+            private bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber)
             {
                 // Should only have columns for current and new name
                 if (columns.Length > 2)
                 {
-                    MessageDlg.Show(MessageParent, string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns, lineNumber));
+                    MessageDlg.Show(parent, string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns, lineNumber));
                     return false;
                 }
                 return true;

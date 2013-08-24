@@ -715,7 +715,7 @@ namespace pwiz.Skyline.SettingsUI
                 return value;
             }
 
-            private bool ValidateRow(object[] columns, int lineNumber)
+            private bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber)
             {
                 try
                 {
@@ -724,7 +724,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(MessageParent, string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__1__, lineNumber, x.Message));
+                    MessageDlg.Show(parent, string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__1__, lineNumber, x.Message));
                     return false;
                 }
                 return true;
