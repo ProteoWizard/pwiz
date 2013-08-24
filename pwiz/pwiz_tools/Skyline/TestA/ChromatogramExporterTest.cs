@@ -24,6 +24,7 @@ using pwiz.Skyline.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -93,6 +94,10 @@ namespace pwiz.SkylineTestA
             AssertFileEquals(GetLocaleName(fileExpectedUs1), GetLocaleName(fileActualUs1));
             AssertFileEquals(GetLocaleName(fileExpectedUs2), GetLocaleName(fileActualUs2));
             AssertFileEquals(GetLocaleName(fileExpectedUsAll), GetLocaleName(fileActualUsAll));
+
+            // Close the .skyd file
+            var docEmpty = new SrmDocument(SrmSettingsList.GetDefault());
+            Assert.IsTrue(docContainer.SetDocument(docEmpty, docContainer.Document));
         }
 
         private static string GetActualName(string fileExpected)

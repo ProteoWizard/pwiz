@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -228,15 +229,17 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
-            FastaImporter.TestMaxEmptyPeptideGroupCount = 5;
-            var discardNotice = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            RunUI(() =>
+            using (new EmptyProteinGroupSetter(5))
             {
-                Assert.AreEqual(
-                    string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, 9),
-                    discardNotice.Message);
-                discardNotice.OkDialog();
-            });
+                var discardNotice = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+                RunUI(() =>
+                {
+                    Assert.AreEqual(
+                        string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, 9),
+                        discardNotice.Message);
+                    discardNotice.OkDialog();
+                });
+            }
             WaitForDocumentChange(doc);
 
             // An error will appear because the spectrum file was empty.
@@ -246,6 +249,19 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private class EmptyProteinGroupSetter : IDisposable
+        {
+            public EmptyProteinGroupSetter(int emptyCount)
+            {
+                FastaImporter.TestMaxEmptyPeptideGroupCount = emptyCount;
+            }
+
+            public void Dispose()
+            {
+                FastaImporter.TestMaxEmptyPeptideGroupCount = null;
+            }
         }
 
         private void TestWizardBuildDocumentLibraryAndFinish()
