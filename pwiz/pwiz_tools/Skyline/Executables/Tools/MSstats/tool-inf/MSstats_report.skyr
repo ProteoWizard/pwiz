@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ReportSpecList>
   <revision index="1" />
-  <report name="MSstats">
+  <report name="MSstats Input">
     <table name="T1">DbTransition</table>
     <table name="T2">DbTransitionResult</table>
     <select>
@@ -15,6 +15,7 @@
       <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_BioReplicate</column>
       <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_Run</column>
       <column name="T2">Area</column>
+      <column name="T1">Precursor.Peptide.StandardType</column>
     </select>
   </report>
 </ReportSpecList>

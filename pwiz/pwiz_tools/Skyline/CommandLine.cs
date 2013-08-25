@@ -2031,7 +2031,7 @@ namespace pwiz.Skyline
                         while ((input = sr.ReadLine()) != null)
                         {
                             // Parse the line and run it.
-                            string[] args = ParseInput(input);
+                            string[] args = ParseArgs(input);
                             Run(args);
                         }
                     }
@@ -2049,7 +2049,7 @@ namespace pwiz.Skyline
         /// </summary>
         /// <param name="inputs"> string on inputs </param>
         /// <returns> string[] of parsed commands </returns>
-        public static string[] ParseInput (string inputs)
+        public static string[] ParseArgs(string inputs)
         {            
             List<string> output = new List<string>();
             bool foundSingle = false;
@@ -2096,13 +2096,13 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// A method for parsing an array of individual arguments to be passed to the command line to generate
+        /// A method for joining an array of individual arguments to be passed to the command line to generate
         /// the string that will ultimately be passed. If a argument has white space, it is surrounded by quotes.
         /// If an empty (size 0) array is given, it returns string.Empty 
         /// </summary>
-        /// <param name="arguments">The arguments to parse</param>
+        /// <param name="arguments">The arguments to join</param>
         /// <returns>The appropriately formatted command line argument string</returns>
-        public static string ParseCommandLineArray(string[] arguments)
+        public static string JoinArgs(string[] arguments)
         {
             if (!arguments.Any())
             {

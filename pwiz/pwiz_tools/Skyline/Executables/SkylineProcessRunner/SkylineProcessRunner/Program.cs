@@ -50,7 +50,8 @@ namespace SkylineProcessRunner
 
                 var startInfo = new ProcessStartInfo("cmd.exe") // Not L10N
                 {
-                    Arguments = ParseCommandLineArray(cmdArgs.ToArray()),
+                    // Windows 8 needs the entire command line for cmd.exe to be quoted as a single argument
+                    Arguments = "/C \"" + JoinArgs(cmdArgs.ToArray()) + "\"",
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
                     UseShellExecute = false
@@ -83,7 +84,7 @@ namespace SkylineProcessRunner
             writer.WriteLine(data);
         }
 
-        public static string ParseCommandLineArray(string[] arguments)
+        public static string JoinArgs(string[] arguments)
         {
             var commandLineArguments = new StringBuilder();
             foreach (var argument in arguments)

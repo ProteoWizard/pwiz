@@ -1607,39 +1607,39 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void ConsoleParserTest()
         {            
-            // Assert.AreEqual(new[] { "--test=foo bar", "--new" }, CommandLine.ParseInput("\"--test=foo bar\" --new"));
+            // Assert.AreEqual(new[] { "--test=foo bar", "--new" }, CommandLine.ParseArgs("\"--test=foo bar\" --new"));
             // The above line of code would not pass so this other form works better.
             // Test case "--test=foo bar" --new
             string[] expected1 = new[] { "--test=foo bar", "--new" };
-            string[] actual1 = CommandLine.ParseInput("\"--test=foo bar\" --new");
+            string[] actual1 = CommandLine.ParseArgs("\"--test=foo bar\" --new");
             Assert.AreEqual(expected1[0], actual1[0]);
             Assert.AreEqual(expected1[1], actual1[1]);
             // Or even better. A function that does the same assertion as above.
-            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo bar", "--new" }, CommandLine.ParseInput("\"--test=foo bar\" --new")));
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo bar", "--new" }, CommandLine.ParseArgs("\"--test=foo bar\" --new")));
 
            // Test case --test="foo bar" --new
             string[] expected2 = new[] {"--test=foo bar", "--new"};
-            string[] actual2 = CommandLine.ParseInput("--test=\"foo bar\" --new");
+            string[] actual2 = CommandLine.ParseArgs("--test=\"foo bar\" --new");
             Assert.AreEqual(expected2[0],actual2[0]);
             Assert.AreEqual(expected2[1],actual2[1]);
-            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo bar", "--new" }, CommandLine.ParseInput("--test=\"foo bar\" --new")));
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo bar", "--new" }, CommandLine.ParseArgs("--test=\"foo bar\" --new")));
 
 
             // Test case --test="i said ""foo bar""" -new
             string[] expected3 = new[] { "--test=i said \"foo bar\"", "--new" };
-            string[] actual3 = CommandLine.ParseInput("--test=\"i said \"\"foo bar\"\"\" --new");
+            string[] actual3 = CommandLine.ParseArgs("--test=\"i said \"\"foo bar\"\"\" --new");
             Assert.AreEqual(expected3[0], actual3[0]);
             Assert.AreEqual(expected3[1], actual3[1]);
-            Assert.IsTrue(ParserTestHelper(new[] { "--test=i said \"foo bar\"", "--new" }, CommandLine.ParseInput("--test=\"i said \"\"foo bar\"\"\" --new")));
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=i said \"foo bar\"", "--new" }, CommandLine.ParseArgs("--test=\"i said \"\"foo bar\"\"\" --new")));
 
             // Test case "--test=foo --new --bar"
-            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo --new --bar" }, CommandLine.ParseInput("\"--test=foo --new --bar\"")));
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo --new --bar" }, CommandLine.ParseArgs("\"--test=foo --new --bar\"")));
             
             // Test case --test="" --new --bar
-            Assert.IsTrue(ParserTestHelper(new[] { "--test=", "--new", "--bar" }, CommandLine.ParseInput("--test=\"\" --new --bar")));
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=", "--new", "--bar" }, CommandLine.ParseArgs("--test=\"\" --new --bar")));
 
             // Test case of all spaces
-            string[] test = CommandLine.ParseInput("     ");
+            string[] test = CommandLine.ParseArgs("     ");
             Assert.IsTrue(ParserTestHelper(new string[] {}, test));
         }
 
@@ -1647,31 +1647,31 @@ namespace pwiz.SkylineTestA
         public void CommandLineArrayParserTest()
         {
             // Test case [] = "" - an empty array
-            Assert.AreEqual(string.Empty, CommandLine.ParseCommandLineArray(new string[0]));
+            Assert.AreEqual(string.Empty, CommandLine.JoinArgs(new string[0]));
             
             // Test case [a,b,c] = "a b c" - a simple array with no spaces
-            Assert.AreEqual("a b c", CommandLine.ParseCommandLineArray(new [] {"a", "b", "c"}));
+            Assert.AreEqual("a b c", CommandLine.JoinArgs(new [] {"a", "b", "c"}));
 
             // Test case [a b, c, d] = ""a b" c d" - multiword string at beginning of array
-            Assert.AreEqual("\"a b\" c d", CommandLine.ParseCommandLineArray(new [] {"a b", "c", "d"}));
+            Assert.AreEqual("\"a b\" c d", CommandLine.JoinArgs(new [] {"a b", "c", "d"}));
 
             // Test case [a, b, c d] = "a b "c d"" - multiword string at end of array
-            Assert.AreEqual("a b \"c d\"", CommandLine.ParseCommandLineArray(new [] { "a", "b", "c d" }));
+            Assert.AreEqual("a b \"c d\"", CommandLine.JoinArgs(new [] { "a", "b", "c d" }));
 
             // Test case [a, b c d, e] = " a "b c d" e" - multiword string at middle of array
-            Assert.AreEqual("a \"b c d\" e", CommandLine.ParseCommandLineArray(new [] { "a", "b c d", "e" }));
+            Assert.AreEqual("a \"b c d\" e", CommandLine.JoinArgs(new [] { "a", "b c d", "e" }));
 
             // Test case [a, b c, d e f, g, h i] = "a "b c" "d e f" g "h i"" - multiple multiword strings
-            Assert.AreEqual("a \"b c\" \"d e f\" g \"h i\"", CommandLine.ParseCommandLineArray(new [] { "a", "b c", "d e f", "g" , "h i" }));
+            Assert.AreEqual("a \"b c\" \"d e f\" g \"h i\"", CommandLine.JoinArgs(new [] { "a", "b c", "d e f", "g" , "h i" }));
 
             // Test case [a "b" c] = "a "b" c" - nested quotes
-            Assert.AreEqual("\"a \"b\" c\"", CommandLine.ParseCommandLineArray(new [] {"a \"b\" c"}));
+            Assert.AreEqual("\"a \"b\" c\"", CommandLine.JoinArgs(new [] {"a \"b\" c"}));
 
             // Test case [a   bc] = "a   bc" - tabbed whitespace only
-            Assert.AreEqual("\"a\tbc\"", CommandLine.ParseCommandLineArray(new [] {"a\tbc"}));
+            Assert.AreEqual("\"a\tbc\"", CommandLine.JoinArgs(new [] {"a\tbc"}));
 
             // Test case [a,,c] = "a "" c" - empty string
-            Assert.AreEqual("a \"\" c", CommandLine.ParseCommandLineArray(new [] {"a", string.Empty, "c"}));
+            Assert.AreEqual("a \"\" c", CommandLine.JoinArgs(new [] {"a", string.Empty, "c"}));
         }
 
         private static string GetTitleHelper()

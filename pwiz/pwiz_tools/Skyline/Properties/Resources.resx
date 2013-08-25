@@ -5824,4 +5824,7 @@ Are you sure you want to continue?</value>
   <data name="PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_" xml:space="preserve">
     <value>The time {0} must be greater than zero on line {1}</value>
   </data>
+  <data name="ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_" xml:space="preserve">
+    <value>Error loading report from the temporary file {0}</value>
+  </data>
 </root>

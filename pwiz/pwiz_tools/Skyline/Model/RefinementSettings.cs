@@ -186,8 +186,12 @@ namespace pwiz.Skyline.Model
 
                 // If there is a set of accepted peptides, and this is not one of them
                 // then skip it.
-                if (acceptedPeptides != null && !acceptedPeptides.Contains(nodePep.Peptide.Sequence))
+                if (acceptedPeptides != null &&
+                    !acceptedPeptides.Contains(nodePep.Peptide.Sequence) &&
+                    !acceptedPeptides.Contains(nodePep.ModifiedSequenceDisplay))
+                {
                     continue;
+                }
 
                 int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
                 float? peakFoundRatio = nodePep.GetPeakCountRatio(bestResultIndex);

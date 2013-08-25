@@ -14773,6 +14773,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error loading report from the temporary file {0}.
+        /// </summary>
+        public static string ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error running the installed tool {0}. It seems to have an error in one of its files. Please reinstall the tool and try again.
         /// </summary>
         public static string ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again {

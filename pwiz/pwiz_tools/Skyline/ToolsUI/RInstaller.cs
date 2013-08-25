@@ -114,8 +114,6 @@ namespace pwiz.Skyline.ToolsUI
 
         public void OkDialog()
         {
-            Hide();
-
             if ((_installed || GetR()) && (PackagesToInstall.Count == 0 || GetPackages()))
             {
                 DialogResult = DialogResult.Yes;
@@ -132,7 +130,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0})
                 {
-                    dlg.PerformWork(this, 500, DownloadR);
+                    // Short wait, because this can't possible happen fast enough to avoid
+                    // showing progress, except in testing
+                    dlg.PerformWork(this, 50, DownloadR);
                 }
                 InstallR();
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
@@ -232,25 +232,17 @@ namespace pwiz.Skyline.ToolsUI
 
             string programPath = PackageInstallHelpers.FindRProgramPath(_version);
             var argumentBuilder = new StringBuilder();
-            argumentBuilder.Append("/C ").Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
+            argumentBuilder.Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
             try
             {
                 ISkylineProcessRunnerWrapper processRunner = TestSkylineProcessRunnerWrapper ?? new SkylineProcessRunnerWrapper();
-                var stringbuilder = new StringBuilder();
-                int exitCode;
-                using (var stringWriter = new StringWriter(stringbuilder))
-                {
-                    exitCode = processRunner.RunProcess(argumentBuilder.ToString(), true, stringWriter);
-                }
-                string output = stringbuilder.ToString();
+                int exitCode = processRunner.RunProcess(argumentBuilder.ToString(), true, _writer);
                 if (exitCode == EXIT_EARLY_CODE) // When the user exits the command script before it finishes.
                 {
-                    _writer.WriteLine(output);
                     throw new MessageException(string.Format(Resources.RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_));
                 }
                 if (exitCode != 0)
                 {
-                    _writer.WriteLine(output);
                     throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_);
                 }
 
@@ -258,8 +250,6 @@ namespace pwiz.Skyline.ToolsUI
                 var failedPackages = PackageInstallHelpers.WhichPackagesToInstall(PackagesToInstall, programPath);
                 if (failedPackages.Count != 0)
                 {
-                    _writer.WriteLine(output);
-
                     if (failedPackages.Count == 1)
                     {
                         throw new MessageException(

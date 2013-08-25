@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
@@ -286,13 +285,18 @@ namespace pwiz.Skyline.Model.Tools
                                     
             if (args != null && initDir != null)
             {
-                ProcessStartInfo startInfo = OutputToImmediateWindow
-                                          ? new ProcessStartInfo(command, args) { WorkingDirectory = initDir, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true}
-                                          : new ProcessStartInfo(command, args) { WorkingDirectory = initDir };
+                ProcessStartInfo startInfo = new ProcessStartInfo(command, args) {WorkingDirectory = initDir};
+                if (OutputToImmediateWindow)
+                {
+                    startInfo.RedirectStandardOutput = true;
+                    startInfo.RedirectStandardError = true;
+                    startInfo.CreateNoWindow = true;
+                    startInfo.UseShellExecute = false;
+                }
 
                 // if it has a selected report title and its doesn't have a InputReportTempPath macro then the report needs to be piped to stdin.
                 string reportCsv = null;
-                if (!String.IsNullOrEmpty(ReportTitle) && !containsInputReportTempPath) // Then pipe to stdin.
+                if (!string.IsNullOrEmpty(ReportTitle) && !containsInputReportTempPath) // Then pipe to stdin.
                 {
                     reportCsv = ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, exceptionHandler);
                     startInfo.RedirectStandardInput = true;
@@ -302,7 +306,12 @@ namespace pwiz.Skyline.Model.Tools
                 //If there is an IToolArgsCollector run it!
                 if (!string.IsNullOrEmpty(ArgsCollectorDllPath) && !string.IsNullOrEmpty(ArgsCollectorClassName))
                 {
-                    if (CallArgsCollector(exceptionHandler, parent, args, reportCsv, startInfo)) return;
+                    string pathReportCsv = !string.IsNullOrEmpty(ReportTitle) && containsInputReportTempPath
+                        ? ToolMacros.GetReportTempPath(ReportTitle, Title)
+                        : null;
+
+                    if (!CallArgsCollector(exceptionHandler, parent, args, reportCsv, pathReportCsv, startInfo))
+                        return;
                 }
                
                 Process p = new Process {StartInfo = startInfo};
@@ -369,14 +378,21 @@ namespace pwiz.Skyline.Model.Tools
             }      
         }
 
-        private bool CallArgsCollector(IExceptionHandler exceptionHandler, Control parent, string args, string reportCsv,
-                                       ProcessStartInfo startInfo)
+        private bool CallArgsCollector(IExceptionHandler exceptionHandler, Control parent, string args, string reportCsv, string pathReportCsv, ProcessStartInfo startInfo)
         {
-            Match file = Regex.Match(args, @"[^ \t]+\.csv"); //Not L10N
             string csvToParse = reportCsv;
-            if (csvToParse == null && Match.Empty != file)
+            if (csvToParse == null && pathReportCsv != null)
             {
-                csvToParse = File.ReadAllText(file.Value);
+                try
+                {
+                    csvToParse = File.ReadAllText(pathReportCsv);
+                }
+                catch (Exception x)
+                {
+                    exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(string.Format(Resources.ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_, pathReportCsv),
+                                                                                         x.Message)));
+                    return false;
+                }
             }
 
             string oldArgs = PreviousCommandLineArgs;
@@ -387,26 +403,22 @@ namespace pwiz.Skyline.Model.Tools
             }
             catch (Exception x)
             {
-                exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
-                    Resources
-                        .ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_),
+                exceptionHandler.HandleException(new Exception(string.Format(Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_,
                                                                              Title), x));
-                return true;
+                return false;
             }
 
             Type type = assembly.GetType(ArgsCollectorClassName);
             if (type == null)
             {
-                exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
-                    Resources
-                        .ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again),
+                exceptionHandler.HandleException(new Exception(string.Format(Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again,
                                                                              Title)));
-                return true;
+                return false;
             }
 
 
             object[] collectorArgs = new object[]
-                {parent, csvToParse, (oldArgs != null) ? CommandLine.ParseInput(oldArgs) : null};
+                {parent, csvToParse, (oldArgs != null) ? CommandLine.ParseArgs(oldArgs) : null};
             object answer = null;
 
             try
@@ -426,21 +438,20 @@ namespace pwiz.Skyline.Model.Tools
                 if (string.IsNullOrEmpty(message))
                 {
                     exceptionHandler.HandleException(
-                        new Exception(string.Format(
-                            Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title)));
+                        new Exception(string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title)));
                 }
                 else
                 {
-                    exceptionHandler.HandleException(new Exception(string.Format(TextUtil.LineSeparate(
-                        Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_,
-                        message), Title)));
+                    exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_,
+                                                                                                       Title),
+                                                                                         message)));
                 }
             }
             string[] commandLineArguments = answer as string[];
             if (commandLineArguments != null)
             {
                 // Parse
-                string argString = PreviousCommandLineArgs = CommandLine.ParseCommandLineArray(commandLineArguments);
+                string argString = PreviousCommandLineArgs = CommandLine.JoinArgs(commandLineArguments);
                 // Append to end of argument string
                 if (args.Contains(ToolMacros.COLLECTED_ARGS))
                 {
@@ -457,9 +468,9 @@ namespace pwiz.Skyline.Model.Tools
                          * and the args collector displayed the relevant error and our job is to just terminate tool execution
                          * If they would like the tool to run with no extra args they could return String.Empty
                          */
-                return true;
+                return false;
             }
-            return false;
+            return true;
         }
 
         public IWebHelpers WebHelpers { get; set; }
@@ -651,7 +662,7 @@ namespace pwiz.Skyline.Model.Tools
         public MessageException(string message, Exception innerException) : base(message, innerException){}
     }
 
-    public class ToolDescriptionHelpers
+    public static class ToolDescriptionHelpers
     {
         /// <summary>
         ///  A helper function that generates the report with reportTitle from the SrmDocument.

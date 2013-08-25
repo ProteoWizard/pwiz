@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls
                     }
                 }
                 // Try to parse like SkylineRunner parameters 
-                string[] args = CommandLine.ParseInput(lineText);
+                string[] args = CommandLine.ParseArgs(lineText);
                 CommandLine commandLine = new CommandLine(new CommandStatusWriter(_textBoxStreamWriter));
                 commandLine.Run(args);
             }

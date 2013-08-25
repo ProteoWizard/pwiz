@@ -125,8 +125,6 @@ namespace pwiz.Skyline.ToolsUI
 
         public void OkDialog()
         {
-            Hide();
-
             if ((_installed || GetPython()) && (clboxPackages.CheckedIndices.Count == 0 || GetPackages()))
             {
                 DialogResult = DialogResult.OK;
@@ -143,7 +141,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 using (var waitDlg = new LongWaitDlg{ProgressValue = 0})
                 {
-                    waitDlg.PerformWork(this, 500, DownloadPython);
+                    // Short wait, because this can't possible happen fast enough to avoid
+                    // showing progress, except in testing
+                    waitDlg.PerformWork(this, 50, DownloadPython);
                 }
                 InstallPython();
                 MessageDlg.Show(this, Resources.PythonInstaller_GetPython_Python_installation_completed_);
@@ -314,25 +314,24 @@ namespace pwiz.Skyline.ToolsUI
                 // if it can't be found, install it
                 if (pipPath == null || TestingPip)
                 {
-                    var dlg =
-                        new MultiButtonMsgDlg(
+                    using (var dlg = new MultiButtonMsgDlg(
                             Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
-                            Resources.PythonInstaller_InstallPackages_Install);
-
-                    DialogResult result = dlg.ShowDialog(this);
-
-                    if (result == DialogResult.OK && GetPip())
+                            Resources.PythonInstaller_InstallPackages_Install))
                     {
-                        pipPath = PythonUtil.GetPipPath(_version);
-                        MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
-                    }
-                    else
-                    {
-                        throw new MessageException(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_);
+                        DialogResult result = dlg.ShowDialog(this);
+                        if (result == DialogResult.OK && GetPip())
+                        {
+                            pipPath = PythonUtil.GetPipPath(_version);
+                            MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
+                        }
+                        else
+                        {
+                            throw new MessageException(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_);
+                        }
                     }
                 }
 
-                var argumentBuilder = new StringBuilder("/C echo installing packages"); // Not L10N
+                var argumentBuilder = new StringBuilder("echo installing packages"); // Not L10N
                 foreach (var package in sourcePaths)
                 {
                     argumentBuilder.Append(" & ")
@@ -362,7 +361,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 using (var dlg = new LongWaitDlg{ProgressValue = 0})
                 {
-                    dlg.PerformWork(this, 500, DownloadPip);
+                    // Short wait, because this can't possible happen fast enough to avoid
+                    // showing progress, except in testing
+                    dlg.PerformWork(this, 50, DownloadPip);
                 }
                 InstallPip();
             }
@@ -413,8 +414,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             var argumentBuilder = new StringBuilder();
             string pythonPath = PythonUtil.GetProgramPath(_version);
-            argumentBuilder.Append("/C ")
-                           .Append(pythonPath)
+            argumentBuilder.Append(pythonPath)
                            .Append(TextUtil.SEPARATOR_SPACE)
                            .Append(SetupToolsPath)
                            .Append(" & ")
@@ -468,12 +468,10 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         #endregion
-
     }
 
     public static class PythonUtil
     {
-
         /// <summary>
         /// A utility function to check and see if the specified version of Python is installed
         /// on the user's machine
@@ -541,6 +539,5 @@ namespace pwiz.Skyline.ToolsUI
             Match versionBase = Regex.Match(version, @"(^[0-9]+\.[0-9]+).*"); // Not L10N
             return versionBase.Groups[1].ToString();
         }
-
     }
 }
