@@ -47,10 +47,16 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
+        private string GetTestPath(string relativePath)
+        {
+            const string folderQuaser = "MSstatsTutorial";
+            return TestFilesDir.GetTestPath(Path.Combine(folderQuaser, relativePath));
+        }
+
         protected override void DoTest()
         {
             // open the file
-            string documentFile = TestFilesDir.GetTestPath("Human_plasma.zip"); // Not L10N
+            string documentFile = GetTestPath("Human_plasma.zip"); // Not L10N
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenSharedFile(documentFile));
 
@@ -70,7 +76,7 @@ namespace pwiz.SkylineTestTutorial
             if (IsPauseForScreenShots)
             {
                 var rInstaller =
-                    ShowDialog<RInstaller>(() => configureToolsDlg.UnpackZipTool(TestFilesDir.GetTestPath("MSstats.zip"))); // Not L10
+                    ShowDialog<RInstaller>(() => configureToolsDlg.UnpackZipTool(GetTestPath("MSstats.zip"))); // Not L10
 
                 PauseForScreenShot("p. 3 - r Installer"); // Not L10
 
@@ -85,7 +91,7 @@ namespace pwiz.SkylineTestTutorial
                 // bypass the R installer dialogue
                 configureToolsDlg.TestFindProgramPath = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
 
-                configureToolsDlg.UnpackZipTool(TestFilesDir.GetTestPath(@"MSstats.zip")); // Not L10N
+                configureToolsDlg.UnpackZipTool(GetTestPath("MSstats.zip")); // Not L10N
                 AssertToolEquality(MSSTATS_QC, configureToolsDlg.ToolList[0]);
                 AssertToolEquality(MSSTATS_GC, configureToolsDlg.ToolList[1]);
                 AssertToolEquality(MSSTATS_DSS, configureToolsDlg.ToolList[2]);
@@ -208,10 +214,10 @@ namespace pwiz.SkylineTestTutorial
         
         private static readonly ToolDescription MSSTATS_QC = new ToolDescription("MSstats\\QC",                                                         // Not L10N
                                                                                  "$(ProgramPath(R,3.0.1))",                                             // Not L10N
-                                                                                 "-f $(ToolDir)\\MSStatsQC.r --slave --args $(InputReportTempPath)",    // Not L10N
+                                                                                 "-f \"$(ToolDir)\\MSStatsQC.r\" --slave --args \"$(InputReportTempPath)\"",    // Not L10N
                                                                                  "$(DocumentDir)",                                                      // Not L10N
                                                                                  true,
-                                                                                 "MSstats",                                                             // Not L10N
+                                                                                 "MSstats Input",                                                             // Not L10N
                                                                                  null,
                                                                                  null,
                                                                                  null,
@@ -222,10 +228,10 @@ namespace pwiz.SkylineTestTutorial
 
         private static readonly ToolDescription MSSTATS_GC = new ToolDescription("MSstats\\Group Comparison",                                           // Not L10N
                                                                          "$(ProgramPath(R,3.0.1))",                                                     // Not L10N
-                                                                         "-f $(ToolDir)\\MSStatsGC.r --slave --args $(InputReportTempPath)",            // Not L10N
+                                                                         "-f \"$(ToolDir)\\MSStatsGC.r\" --slave --args \"$(InputReportTempPath)\"",            // Not L10N
                                                                          "$(DocumentDir)",                                                              // Not L10N
                                                                          true,
-                                                                         "MSstats",                                                                     // Not L10N
+                                                                         "MSstats Input",                                                                     // Not L10N
                                                                          null,
                                                                          null,
                                                                          null,
@@ -236,10 +242,10 @@ namespace pwiz.SkylineTestTutorial
 
         private static readonly ToolDescription MSSTATS_DSS = new ToolDescription("MSstats\\Design Sample Size",                                        // Not L10N
                                                                          "$(ProgramPath(R,3.0.1))",                                                     // Not L10N
-                                                                         "-f $(ToolDir)\\MSStatsDSS.r --slave --args $(InputReportTempPath)",           // Not L10N
+                                                                         "-f \"$(ToolDir)\\MSStatsDSS.r\" --slave --args \"$(InputReportTempPath)\"",           // Not L10N
                                                                          "$(DocumentDir)",                                                              // Not L10N
                                                                          true,
-                                                                         "MSstats",                                                                     // Not L10N
+                                                                         "MSstats Input",                                                                     // Not L10N
                                                                          null,
                                                                          null,
                                                                          null,
