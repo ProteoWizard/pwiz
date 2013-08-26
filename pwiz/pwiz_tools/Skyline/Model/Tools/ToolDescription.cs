@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -212,16 +213,40 @@ namespace pwiz.Skyline.Model.Tools
             }           
         }
 
+        public static bool EquivalentAnnotations(AnnotationDef existingAnnotation, AnnotationDef annotationDef)
+        {
+            // if both annotations are value lists, we want to ignore the values in their lists in the comparison
+            if (existingAnnotation.Type.Equals(AnnotationDef.AnnotationType.value_list) &&
+                annotationDef.Type.Equals(AnnotationDef.AnnotationType.value_list))
+            {
+                return Equals(existingAnnotation.ChangeItems(new string[0]),
+                              annotationDef.ChangeItems(new string[0]));
+            }
+
+            return existingAnnotation.Equals(annotationDef);
+        }
+
         private void VerifyAnnotations(SrmDocument document)
         {
             var missingAnnotations = new List<string>();
             var uncheckedAnnotations = new List<string>();
             foreach (AnnotationDef annotationDef in Annotations)
             {
-                if (!Settings.Default.AnnotationDefList.Contains(annotationDef))
+                AnnotationDef existingAnnotation;
+                if (!Settings.Default.AnnotationDefList.TryGetValue(annotationDef.GetKey(), out existingAnnotation) ||
+                    !EquivalentAnnotations(existingAnnotation, annotationDef))
+                {
                     missingAnnotations.Add(annotationDef.GetKey());
-                else if (!document.Settings.DataSettings.AnnotationDefs.Contains(annotationDef))
-                    uncheckedAnnotations.Add(annotationDef.GetKey());
+                }
+                else
+                {
+                    existingAnnotation = document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(
+                        a => Equals(a.GetKey(), annotationDef.GetKey()));
+                    // Assume annotations are equivalent, if they exist in the document, based on the
+                    // test above in the if () clause
+                    if (existingAnnotation == null)
+                        uncheckedAnnotations.Add(annotationDef.GetKey());
+                }
             }
 
             if (missingAnnotations.Count != 0)

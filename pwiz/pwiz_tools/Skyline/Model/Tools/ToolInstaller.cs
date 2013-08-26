@@ -539,26 +539,13 @@ namespace pwiz.Skyline.Model.Tools
                 foreach (AnnotationDef annotationDef in document.Settings.DataSettings.AnnotationDefs)
                 {
                     AnnotationDef existingAnnotation;
-                    if (Settings.Default.AnnotationDefList.TryGetValue(annotationDef.GetKey(), out existingAnnotation))
-                    {
-                        // if both annotations are value lists, we want to ignore the values in their lists in the comparison
-                        if (existingAnnotation.Type.Equals(AnnotationDef.AnnotationType.value_list) &&
-                            annotationDef.Type.Equals(AnnotationDef.AnnotationType.value_list))
-                        {
-                            if (Equals(existingAnnotation.ChangeItems(new string[0]), annotationDef.ChangeItems(new string[0])))
-                            {
-                                continue;
-                            }
-                        }
-
-                        if (!existingAnnotation.Equals(annotationDef))
-                        {
-                            conflictAnnotations.Add(annotationDef);
-                        }
-                    }
-                    else
+                    if (!Settings.Default.AnnotationDefList.TryGetValue(annotationDef.GetKey(), out existingAnnotation))
                     {
                         newAnnotations.Add(annotationDef);
+                    }
+                    else if (!ToolDescription.EquivalentAnnotations(existingAnnotation, annotationDef))
+                    {
+                        conflictAnnotations.Add(annotationDef);
                     }
                 }
             }
