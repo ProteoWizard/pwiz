@@ -294,7 +294,7 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
             msExperiment->getBPC(times, intensities);
 
             for (int i=0; i < (int) times.size(); ++i)
-                if (intensities[i] > 0 && wifffile_->getSpectrum(msExperiment, i+1)->getDataSize(false) > 0)
+                if (intensities[i] > 0 /* && wifffile_->getSpectrum(msExperiment, i+1)->getDataSize(false) > 0 */)
                     experimentAndCycleByTime.insert(make_pair(times[i], make_pair(msExperiment, i+1)));
         }
     }

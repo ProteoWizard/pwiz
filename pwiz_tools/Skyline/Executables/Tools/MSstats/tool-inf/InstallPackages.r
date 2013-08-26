@@ -24,7 +24,7 @@ source("http://bioconductor.org/biocLite.R")
 biocLite("marray")
 }
 
-if (!is.element("MSstats",packages)){
+if (!is.element("MSstats",packages) || packageVersion("MSstats") < "0.99-0" ){
 directory <- tempdir()
 gsub("\\", "/", directory, fixed = TRUE)
 filename <- "MSstats_0.99.0.tar.gz"

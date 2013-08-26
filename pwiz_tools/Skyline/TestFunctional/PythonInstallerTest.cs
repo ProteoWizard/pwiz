@@ -380,7 +380,7 @@ namespace pwiz.SkylineTestFunctional
                             CancelDownload = cancelDownload,
                             DownloadSuccess = downloadSuccess
                         };
-                    pythonInstaller.TestPipNamedPipeRunProcess = new TestNamedPipeRunProcess
+                    pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
                         {
                             ConnectSuccess = connectSuccess,
                             ExitCode = installSuccess ? 0 : 1
@@ -467,7 +467,7 @@ namespace pwiz.SkylineTestFunctional
                             CancelDownload = cancelDownload,
                             DownloadSuccess = downloadSuccess
                         };
-                    pythonInstaller.TestNamedPipeRunProcess = new TestNamedPipeRunProcess
+                    pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
                         {
                             ConnectSuccess = connectSuccess,
                             ExitCode = installSuccess ? 0 : 1
@@ -498,7 +498,7 @@ namespace pwiz.SkylineTestFunctional
                             CancelDownload = false,
                             DownloadSuccess = true
                         };
-                    pythonInstaller.TestPipNamedPipeRunProcess = pythonInstaller.TestNamedPipeRunProcess = new TestNamedPipeRunProcess
+                    pythonInstaller.TestPipeSkylineProcessRunner = pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
                         {
                             ConnectSuccess = true,
                             ExitCode = 0

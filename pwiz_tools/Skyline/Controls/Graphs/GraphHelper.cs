@@ -56,7 +56,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return new KeyValuePair<PaneKey, ChromGraphItem>[0];
             }
-            return chromDisplayState.ChromGraphItems.ToLookup(kvp => kvp.Key).Select(grouping => grouping.Last());
+            return chromDisplayState.ChromGraphItems.Where(kvp => kvp.Value.Chromatogram != null)
+                                                    .ToLookup(kvp => kvp.Key)
+                                                    .Select(grouping => grouping.Last());
         }
 
         public void LockZoom()
@@ -177,8 +179,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     break;
                 case AutoZoomChrom.window:
                     {
-                        var chromGraph = chromDisplayState.ChromGraphItems[0].Value;
-                        if (chromGraph.RetentionWindow > 0)
+                        var chromGraph = GetRetentionTimeGraphItem(chromDisplayState);
+                        if (chromGraph != null)
                         {
                             // Put predicted RT in center with window occupying 2/3 of the graph
                             double windowHalf = chromGraph.RetentionWindow * 2 / 3;
@@ -199,14 +201,14 @@ namespace pwiz.Skyline.Controls.Graphs
                             start = bestStartTime;
                             end = bestEndTime;
                         }
-                        var chromGraph = chromDisplayState.ChromGraphItems[0];
-                        if (chromGraph.Value.RetentionWindow > 0)
+                        var chromGraph = GetRetentionTimeGraphItem(chromDisplayState);
+                        if (chromGraph != null)
                         {
                             // Put predicted RT in center with window occupying 2/3 of the graph
-                            double windowHalf = chromGraph.Value.RetentionWindow * 2 / 3;
-                            double predictedRT = chromGraph.Value.RetentionPrediction.HasValue
+                            double windowHalf = chromGraph.RetentionWindow * 2 / 3;
+                            double predictedRT = chromGraph.RetentionPrediction.HasValue
                                                      ? // ReSharper
-                                                     chromGraph.Value.RetentionPrediction.Value
+                                                     chromGraph.RetentionPrediction.Value
                                                      : 0;
                             // Make sure the peak has enough room to display, since it may be
                             // much narrower than the retention time window.
@@ -233,6 +235,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphPane.YAxis.Scale.Max = chromDisplayState.MaxIntensity;
                 }
             }
+        }
+
+        private static ChromGraphItem GetRetentionTimeGraphItem(ChromDisplayState chromDisplayState)
+        {
+            return chromDisplayState.ChromGraphItems.Select(p => p.Value)
+                                                    .FirstOrDefault(g => g.RetentionWindow > 0);
         }
 
         public void ZoomSpectrumToSettings(SrmDocument document, TransitionGroupDocNode nodeGroup)

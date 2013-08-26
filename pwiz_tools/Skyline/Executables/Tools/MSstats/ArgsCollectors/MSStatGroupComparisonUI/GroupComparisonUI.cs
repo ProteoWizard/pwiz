@@ -116,7 +116,20 @@ namespace MSStatArgsCollector
                 // Restore name
                 textBoxName.Text = Arguments[lastArg];
             }
-            
+            else
+            {
+                // If any of the groups begin with "control" or "healthy" make the first the default
+                // control group.
+                for (int i = 0; i < ControlGroupList.Length; i++)
+                {
+                    string group = ControlGroupList[i].ToLower();
+                    if (group.StartsWith("control") || group.StartsWith("healthy"))
+                    {
+                        ControlGroup.SelectedIndex = i;
+                        break;
+                    }
+                }
+            }            
         }
 
         private void ControlGroup_SelectedIndexChanged(object sender, EventArgs e)
@@ -222,11 +235,6 @@ namespace MSStatArgsCollector
 
             Arguments = commandLineArguments.ToArray();
         }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
-        }
     }
 
     public class MSstatsGroupComparisonCollector
@@ -255,11 +263,10 @@ namespace MSStatArgsCollector
 
             using (var dlg = new GroupComparisonUi(groups.ToArray(), oldArgs))
             {
-                if (parent != null)
-                {
-                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
-                }
-                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
+                var result = parent != null ? dlg.ShowDialog(parent) : dlg.ShowDialog();
+                if (result != DialogResult.OK)
+                    return null;
+                return dlg.Arguments;
             }
         }
     }

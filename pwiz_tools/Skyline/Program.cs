@@ -200,14 +200,16 @@ namespace pwiz.Skyline
 
             foreach (var tool in toolList)
             {
-                if (!string.IsNullOrEmpty(tool.ToolDirPath) && Directory.Exists(tool.ToolDirPath))
+                string toolDirPath = tool.ToolDirPath;
+                if (!string.IsNullOrEmpty(toolDirPath) && Directory.Exists(toolDirPath))
                 {
-                    string foldername = Path.GetFileName(tool.ToolDirPath) ?? string.Empty;
+                    string foldername = Path.GetFileName(toolDirPath) ?? string.Empty;
                     string newDir = Path.Combine(outerToolsFolderPath, foldername);
                     string tempNewDir = Path.Combine(tempOutterToolsFolderPath, foldername);
                     if (!Directory.Exists(tempNewDir))
-                        DirectoryEx.DirectoryCopy(tool.ToolDirPath, tempNewDir, true);
+                        DirectoryEx.DirectoryCopy(toolDirPath, tempNewDir, true);
                     tool.ToolDirPath = newDir; // Update the tool to point to its new directory.
+                    tool.ArgsCollectorDllPath = tool.ArgsCollectorDllPath.Replace(toolDirPath, newDir);
                 }
                 if (broker.IsCanceled)
                 {

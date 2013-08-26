@@ -35,21 +35,20 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    // TODO: (trevor) long-term allow for ranges of versions
     public partial class RInstaller : FormEx
     {
         private readonly string _version;
         private readonly bool _installed;
         private readonly TextWriter _writer;
         private string PathToInstallScript { get; set; }
-        private ICollection<string> PackagesToInstall { get; set; }
+        private ICollection<ToolPackage> PackagesToInstall { get; set; }
 
-        public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packages, TextWriter writer, string pathToInstallScript)
+        public RInstaller(ProgramPathContainer rPathContainer, ICollection<ToolPackage> packages, TextWriter writer, string pathToInstallScript)
             : this(rPathContainer, packages, RUtil.CheckInstalled(rPathContainer.ProgramVersion), writer, pathToInstallScript)
         {
         }
 
-        public RInstaller(ProgramPathContainer rPathContainer, ICollection<string> packages, bool installed, TextWriter writer, string pathToInstallScript)
+        public RInstaller(ProgramPathContainer rPathContainer, ICollection<ToolPackage> packages, bool installed, TextWriter writer, string pathToInstallScript)
         {
             PackagesToInstall = packages;
             _version = rPathContainer.ProgramVersion;
@@ -86,9 +85,26 @@ namespace pwiz.Skyline.ToolsUI
             IsLoaded = true;
         }
 
+        private IList<string> MakePackageList()
+        {
+            var packageList = new List<string>();
+            foreach (var packageContainer in PackagesToInstall)
+            {
+                if (packageContainer.Version == null)
+                {
+                    packageList.Add(packageContainer.Name);
+                }
+                else
+                {
+                    packageList.Add(string.Concat(packageContainer.Name, " (", packageContainer.Version, ")")); //Not L10N
+                }
+            }
+            return packageList;
+        } 
+
         private void PopulatePackageListBox()
         {
-            listBoxPackages.DataSource = PackagesToInstall;
+            listBoxPackages.DataSource = MakePackageList();
         }
 
         private void btnInstall_Click(object sender, EventArgs e)
@@ -98,8 +114,6 @@ namespace pwiz.Skyline.ToolsUI
 
         public void OkDialog()
         {
-            Hide();
-
             if ((_installed || GetR()) && (PackagesToInstall.Count == 0 || GetPackages()))
             {
                 DialogResult = DialogResult.Yes;
@@ -116,7 +130,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0})
                 {
-                    dlg.PerformWork(this, 500, DownloadR);
+                    // Short wait, because this can't possible happen fast enough to avoid
+                    // showing progress, except in testing
+                    dlg.PerformWork(this, 50, DownloadR);
                 }
                 InstallR();
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
@@ -216,25 +232,17 @@ namespace pwiz.Skyline.ToolsUI
 
             string programPath = PackageInstallHelpers.FindRProgramPath(_version);
             var argumentBuilder = new StringBuilder();
-            argumentBuilder.Append("/C ").Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
+            argumentBuilder.Append("\"" + programPath + "\"").Append(" -f \"").Append(PathToInstallScript).Append("\" --slave"); // Not L10N
             try
             {
-                INamedPipeRunProcessWrapper processRunner = TestNamePipeRunProcessWrapper ?? new NamedPipeRunProcessWrapper();
-                var stringbuilder = new StringBuilder();
-                int exitCode;
-                using (var stringWriter = new StringWriter(stringbuilder))
-                {
-                    exitCode = processRunner.RunProcess(argumentBuilder.ToString(), true, stringWriter);
-                }
-                string output = stringbuilder.ToString();
+                ISkylineProcessRunnerWrapper processRunner = TestSkylineProcessRunnerWrapper ?? new SkylineProcessRunnerWrapper();
+                int exitCode = processRunner.RunProcess(argumentBuilder.ToString(), true, _writer);
                 if (exitCode == EXIT_EARLY_CODE) // When the user exits the command script before it finishes.
                 {
-                    _writer.WriteLine(output);
                     throw new MessageException(string.Format(Resources.RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_));
                 }
                 if (exitCode != 0)
                 {
-                    _writer.WriteLine(output);
                     throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_);
                 }
 
@@ -242,20 +250,18 @@ namespace pwiz.Skyline.ToolsUI
                 var failedPackages = PackageInstallHelpers.WhichPackagesToInstall(PackagesToInstall, programPath);
                 if (failedPackages.Count != 0)
                 {
-                    _writer.WriteLine(output);
-
                     if (failedPackages.Count == 1)
                     {
                         throw new MessageException(
                             string.Format(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_package__0__failed_to_install_,
                                                                 string.Empty,
-                                                                Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_), failedPackages.First()));
+                                                                Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_), failedPackages.First().Name));
                     }
-
+                    IEnumerable<string> failedPackagesTitles = failedPackages.Select(p => p.Name);
                     throw new MessageException(
                         TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_following_packages_failed_to_install_,
                                                             string.Empty,                                    
-                                                            TextUtil.LineSeparate(failedPackages),
+                                                            TextUtil.LineSeparate(failedPackagesTitles),
                                                             string.Empty,
                                                             Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_));
                 }
@@ -271,7 +277,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public interface IPackageInstallHelpers
         {
-            ICollection<string> WhichPackagesToInstall(ICollection<string> packages, string pathToR);
+            ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR);
             string FindRProgramPath(string rVersion);
             bool CheckForInternetConnection();
         } 
@@ -285,7 +291,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public IRunProcess TestRunProcess { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
-        public INamedPipeRunProcessWrapper TestNamePipeRunProcessWrapper { get; set; }
+        public ISkylineProcessRunnerWrapper TestSkylineProcessRunnerWrapper { get; set; }   
 
         public string Message
         {
@@ -301,7 +307,7 @@ namespace pwiz.Skyline.ToolsUI
 
     internal class PackageInstallHelpers : RInstaller.IPackageInstallHelpers
     {
-        public ICollection<string> WhichPackagesToInstall(ICollection<string> packages, string pathToR)
+        public ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR)
         {
             return RUtil.WhichPackagesToInstall(packages, pathToR);
         }
@@ -352,18 +358,31 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         /// <param name="packages"> list of all packages to check.</param>
         /// <returns> Path to R script</returns>
-        public static string WriteCheckForPackagesFile(IEnumerable<string> packages)
+        public static string WriteCheckForPackagesFile(IEnumerable<ToolPackage> packages)
         {
             var filePath = Path.GetTempFileName();
             using (StreamWriter file = new StreamWriter(filePath))
             {
                 file.WriteLine("a<-installed.packages()"); // Not L10N
                 file.WriteLine("packages<-a[,1]"); // Not L10N
-                foreach (var package in packages)
+
+                // Function that looks up all the version of a specified package.
+                
+                foreach (ToolPackage package in packages)
                 {
-                    file.WriteLine("# Check For Package {0}", package); // Not L10N
-                    file.WriteLine("cat(\"{0} - \")", package); // Not L10N
-                    file.WriteLine("cat (is.element(\"{0}\",packages))", package); // Not L10N
+                    string name = package.Name;
+                    string version = package.Version;
+                    file.WriteLine("# Check For Package {0}", name); // Not L10N
+                    file.WriteLine("cat(\"{0} - \")", name); // Not L10N
+                    if (string.IsNullOrEmpty(version))
+                    {
+                        // Just check if it exists if there is no version provided
+                        file.WriteLine("cat (is.element(\"{0}\",packages))", name); // Not L10N
+                    }
+                    else
+                    {
+                        file.WriteLine("cat (is.element(\"{0}\",packages) && (packageVersion(\"{0}\") >= \"{1}\"))", name, version); // Not L10N
+                    }
                     file.WriteLine("cat(\"\\n\")"); // Not L10N
                 }
                 file.Flush();
@@ -377,9 +396,9 @@ namespace pwiz.Skyline.ToolsUI
         /// <param name="packages">Collection of package names to check for</param>
         /// <param name="pathToR">Path to R</param>
         /// <returns>Collection of packages that need to be installed</returns>
-        public static ICollection<string> WhichPackagesToInstall(ICollection<string> packages, string pathToR)
+        public static ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR)
         {
-            List<string> packagesToInstall = new List<string>();
+            List<ToolPackage> packagesToInstall = new List<ToolPackage>();
             string pathToScript = WriteCheckForPackagesFile(packages);
             string response = RunRscript(pathToR, pathToScript);
             string[] lines = response.Split('\n');
@@ -388,7 +407,9 @@ namespace pwiz.Skyline.ToolsUI
                 string[] split = line.Split('-');
                 if (split.Length > 1 && split[1].Contains("FALSE"))
                 {
-                    packagesToInstall.Add(split[0].Trim());
+                    string packageName = split[0].Trim();
+                    var toInstall = packages.First(packageContainer => Equals(packageContainer.Name, packageName));
+                    packagesToInstall.Add(toInstall);
                 }
             }
             FileEx.SafeDelete(pathToScript);

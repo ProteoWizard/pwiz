@@ -238,7 +238,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private bool ValidateRegressionCellValues(string[] values, int lineNumber)
+        private static bool ValidateRegressionCellValues(string[] values, IWin32Window parent, int lineNumber)
         {
             int tempInt;
             double tempDouble;
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.SettingsUI
             else
                 return true;
 
-            MessageDlg.Show(this, string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_On_line__0__1__, lineNumber, message));
+            MessageDlg.Show(parent, string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_On_line__0__1__, lineNumber, message));
             return false;
         }
 

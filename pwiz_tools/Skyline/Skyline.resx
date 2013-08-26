@@ -1212,6 +1212,9 @@
   <data name="publishToolbarButton.Text" xml:space="preserve">
     <value>toolStripButton1</value>
   </data>
+  <data name="publishToolbarButton.ToolTipText" xml:space="preserve">
+    <value>Publish to Panorama</value>
+  </data>
   <data name="toolStripSeparator20.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
   </data>

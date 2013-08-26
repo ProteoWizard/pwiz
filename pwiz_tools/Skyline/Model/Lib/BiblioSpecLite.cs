@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -1336,7 +1337,11 @@ namespace pwiz.Skyline.Model.Lib
                 SQLiteConnection conn = (SQLiteConnection) fact.CreateConnection();
                 if (conn != null)
                 {
-                    conn.ConnectionString = string.Format("Data Source={0};Version=3", FilePath); // Not L10N
+                    var connectionStringBuilder =
+                        SessionFactoryFactory.SQLiteConnectionStringBuilderFromFilePath(FilePath);
+                    connectionStringBuilder.Version = 3;
+
+                    conn.ConnectionString = connectionStringBuilder.ToString();
                     conn.Open();
                 }
                 return conn;

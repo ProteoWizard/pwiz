@@ -96,6 +96,7 @@
             this.Name = "PythonInstaller";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Python Installer";
             this.Load += new System.EventHandler(this.PythonInstaller_Load);
             this.ResumeLayout(false);

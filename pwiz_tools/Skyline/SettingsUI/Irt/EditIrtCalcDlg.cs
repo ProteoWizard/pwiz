@@ -531,7 +531,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             protected override void DoPaste()
             {
                 var standardPeptidesNew = new List<DbIrtPeptide>();
-                GridView.DoPaste(MessageParent, ValidateRow, values =>
+                GridView.DoPaste(MessageParent, ValidateRowWithIrt, values =>
                     standardPeptidesNew.Add(new DbIrtPeptide(values[0], double.Parse(values[1]), true, TimeSource.peak)));
 
                 Reset(standardPeptidesNew);
@@ -609,7 +609,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             protected override void DoPaste()
             {
                 var libraryPeptidesNew = new List<DbIrtPeptide>();
-                GridView.DoPaste(MessageParent, ValidateRow, values =>
+                GridView.DoPaste(MessageParent, ValidateRowWithIrt, values =>
                     libraryPeptidesNew.Add(new DbIrtPeptide(values[0], double.Parse(values[1]), false, TimeSource.peak)));
 
                 foreach (var peptide in libraryPeptidesNew)

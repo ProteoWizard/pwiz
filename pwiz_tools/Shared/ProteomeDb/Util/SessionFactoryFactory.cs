@@ -41,10 +41,7 @@ namespace pwiz.ProteomeDatabase.Util
                 //.SetProperty("show_sql", "true")
                 //.SetProperty("generate_statistics", "true")
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName) // Not L10N
-                .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder // Not L10N
-                {
-                    DataSource = path
-                }.ToString())
+                .SetProperty("connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString())
                 .SetProperty("connection.driver_class", // Not L10N
                 typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
             if (createSchema)
@@ -56,6 +53,24 @@ namespace pwiz.ProteomeDatabase.Util
             ConfigureMappings(configuration, typeDb, schemaFilename);
             ISessionFactory sessionFactory = configuration.BuildSessionFactory();
             return sessionFactory;
+        }
+
+        /// <summary>
+        /// Returns a ConnectionStringBuilder with the datasource set to the specified path.  This method takes
+        /// care of the special settings needed to work with UNC paths.
+        /// </summary>
+        public static SQLiteConnectionStringBuilder SQLiteConnectionStringBuilderFromFilePath(string path)
+        {
+            // when SQLite parses the connection string, it treats backslash as an escape character
+            // This is not normally an issue, because backslashes followed by a non-reserved character
+            // are not treated specially.
+
+            // Also, in order to prevent a drive letter being prepended to UNC paths, we specify ToFullPath=false
+            return new SQLiteConnectionStringBuilder
+            {
+                DataSource = path.Replace("\\", "\\\\"),
+                ToFullPath = false,
+            };
         }
 
         public static Configuration ConfigureMappings(Configuration configuration, Type typeDb, string schemaFilename = DEFAULT_SCHEMA_FILENAME)

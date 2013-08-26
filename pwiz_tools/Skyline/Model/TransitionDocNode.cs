@@ -263,9 +263,9 @@ namespace pwiz.Skyline.Model
         {
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-                return null;
-            return chromInfo.Rank;            
+            if (chromInfo != null && chromInfo.Rank > 0)
+                return chromInfo.Rank;
+            return null;
         }
 
         public int? GetRank(int? i, bool useResults)
@@ -348,17 +348,18 @@ namespace pwiz.Skyline.Model
 
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
-            // If the target peak is exactly the same as the proposed change,
-            // simply return the original document unchanged
-            foreach (var chromInfo in listChromInfo)
-            {
-                if (chromInfo.EquivalentTolerant(fileId, step, peak))
-                    return this;
-            }
             if (listChromInfo == null)
                 listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount));
             else
             {
+                // If the target peak is exactly the same as the proposed change,
+                // simply return the original document unchanged
+                foreach (var chromInfo in listChromInfo)
+                {
+                    if (chromInfo.EquivalentTolerant(fileId, step, peak))
+                        return this;
+                }
+
                 bool peakAdded = false;
                 foreach (var chromInfo in listChromInfo)
                 {

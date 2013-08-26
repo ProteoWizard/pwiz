@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -62,6 +64,8 @@ namespace pwiz.SkylineTestFunctional
         {
             TestImportModifications();
             TestSkipWhenNoModifications();
+            TestWizardBuildDocumentLibraryAndFinish();
+            TestWizardCancel();
         }
 
         /// <summary>
@@ -113,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.AddModification(newMod, MatchModificationsControl.ModType.heavy);
             });
             WaitForDocumentChange(doc);
-            
+
             // Click Next
             doc = SkylineWindow.Document;
             RunUI(() =>
@@ -225,24 +229,96 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
-            FastaImporter.TestMaxEmptyPeptideGroupCount = 5;
-            var discardNotice = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            RunUI(() =>
+            using (new EmptyProteinGroupSetter(5))
             {
-                Assert.AreEqual(
-                    string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, 9),
-                    discardNotice.Message);
-                discardNotice.OkDialog();
-            });
+                var discardNotice = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+                RunUI(() =>
+                {
+                    Assert.AreEqual(
+                        string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, 9),
+                        discardNotice.Message);
+                    discardNotice.OkDialog();
+                });
+            }
             WaitForDocumentChange(doc);
 
             // An error will appear because the spectrum file was empty.
             var errorDlg = WaitForOpenForm<MessageDlg>();
             RunUI(errorDlg.OkDialog);
-            
+
             WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private class EmptyProteinGroupSetter : IDisposable
+        {
+            public EmptyProteinGroupSetter(int emptyCount)
+            {
+                FastaImporter.TestMaxEmptyPeptideGroupCount = emptyCount;
+            }
+
+            public void Dispose()
+            {
+                FastaImporter.TestMaxEmptyPeptideGroupCount = null;
+            }
+        }
+
+        private void TestWizardBuildDocumentLibraryAndFinish()
+        {
+            // Open the empty .sky file (has no peptides)
+            const string documentFile = "ImportPeptideSearch-EarlyFinish.sky";
+            PrepareDocument(documentFile);
+
+            // Launch the wizard
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+
+            // We're on the "Build Spectral Library" page of the wizard.
+            // Add the test xml file to the search files list and try to 
+            // build the document library.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                            ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
+                Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton());
+            });
+            WaitForClosedForm(importPeptideSearchDlg);
+
+            VerifyDocumentLibraryBuilt(documentFile);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestWizardCancel()
+        {
+            // Open the empty .sky file (has no peptides)
+            PrepareDocument("ImportPeptideSearch-Cancel.sky");
+
+            // Launch the wizard
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+
+            // We should be on the "Build Spectral Library" page of the wizard.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                            ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.ClickCancelButton();
+            });
+
+            WaitForClosedForm(importPeptideSearchDlg);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void VerifyDocumentLibraryBuilt(string path)
+        {
+            // Verify document library was built
+            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(GetTestPath(path));
+            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+            var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            Assert.IsTrue(librarySettings.HasDocumentLibrary);
         }
 
         private void PrepareDocument(string documentFile)

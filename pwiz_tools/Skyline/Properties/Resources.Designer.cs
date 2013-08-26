@@ -6591,6 +6591,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change digestion settings.
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Change_digestion_settings {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Change_digestion_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change settings.
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Change_settings {
@@ -6722,6 +6731,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_h" +
                         "ave_valid_retention_times_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full-scan MS1 filtering must be enabled in order to import a peptide search..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_ena" +
+                        "bled_in_order_to_import_a_peptide_search_", resourceCulture);
             }
         }
         
@@ -9841,6 +9860,62 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid decimal number format {0} on line {1}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing peptide sequence on line {0}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing value on line {0}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The pasted text must have two columns..
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text {0} is not a valid peptide sequence on line {1}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on" +
+                        "_line__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The time {0} must be greater than zero on line {1}.
+        /// </summary>
+        public static string PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_ {
+            get {
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line_" +
+                        "_1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The added lists contains {0} peptides which already appear in the {1} list..
         /// </summary>
         public static string PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list {
@@ -12182,6 +12257,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SavitzkyGolaySmoother_WindowSize_SavitzkyGolaySmoother__Invalid_window_size___0__" +
                         "__argument_must_be_positive_and_odd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The replicate {0} contains peptides without enough information to rank transitions for triggered acquisition..
+        /// </summary>
+        public static string SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_ {
+            get {
+                return ResourceManager.GetString("SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_" +
+                        "information_to_rank_transitions_for_triggered_acquisition_", resourceCulture);
             }
         }
         
@@ -14684,6 +14769,16 @@ namespace pwiz.Skyline.Properties {
         public static string TextUtil_FileDialogFiltersAll_All_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FileDialogFiltersAll_All_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error loading report from the temporary file {0}.
+        /// </summary>
+        public static string ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0" +
+                        "_", resourceCulture);
             }
         }
         

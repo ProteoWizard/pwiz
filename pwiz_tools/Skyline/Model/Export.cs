@@ -242,10 +242,10 @@ namespace pwiz.Skyline.Model
                    ;
         }
 
-        public static bool CanTrigger(string instrumentType, SrmDocument document)
+        public static bool CanTrigger(string instrumentType, SrmDocument document, int? replicateIndex)
         {
             return CanTriggerInstrumentType(instrumentType) &&
-                document.CanTrigger();
+                document.CanTrigger(replicateIndex);
         }
 
         public static bool IsSingleWindowInstrumentType(string type)
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model
         public virtual string OptimizeType { get; set; }
         public virtual double OptimizeStepSize { get; set; }
         public virtual int OptimizeStepCount { get; set; }
-        public virtual int SchedulingReplicateNum { get; set; }
+        public virtual int? SchedulingReplicateNum { get; set; }
         public virtual ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
 
         public virtual int PrimaryTransitionCount { get; set; }

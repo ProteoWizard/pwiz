@@ -43,7 +43,7 @@ namespace pwiz.Skyline.SettingsUI
             }            
         }
 
-        public delegate bool ValidateCellValues(string[] values, int lineNumber);
+        public delegate bool ValidateCellValues(string[] values, IWin32Window parent, int lineNumber);
 
         public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate)
         {
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             return grid.DoPaste(parent, validate, (s, i) => addRow(s));
         }
 
-        public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[], int> addRow)
+        private static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[], int> addRow)
         {
             string textClip = GetClipBoardText(parent);
             if (string.IsNullOrEmpty(textClip) || !grid.EndEdit())
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.SettingsUI
                 for (int i = 0; i < columns.Length; i++)
                     columns[i] = columns[i].Trim();
 
-                if (!validate(columns, lineNum))
+                if (!validate(columns, parent, lineNum))
                     return false;
 
                 addRow(columns, lineNum);

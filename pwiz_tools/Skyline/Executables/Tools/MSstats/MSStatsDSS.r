@@ -10,6 +10,11 @@ library(MSstats)
 arguments<-commandArgs(trailingOnly=TRUE);
 
 raw<-read.csv(arguments[1])
+
+# remove the rows for iRT peptides
+raw<-raw[raw$StandardType!="iRT",]
+
+# change column name as Intensity
 colnames(raw)[10]<-"Intensity"
 raw$Intensity<-as.character(raw$Intensity)
 raw$Intensity<-as.numeric(raw$Intensity)

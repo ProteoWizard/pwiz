@@ -34,6 +34,7 @@
     <many-to-one class="DbProtein" name="Protein" />
     <property name="Sequence" />
     <property name="ModifiedSequence" />
+    <property name="StandardType" />
     <property name="BeginPos" />
     <property name="EndPos" />
     <property name="MissedCleavages" />

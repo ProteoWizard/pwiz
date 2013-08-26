@@ -26,6 +26,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -155,6 +156,16 @@ namespace pwiz.Skyline.SettingsUI
                         break;
                 }
             }
+        }
+
+        public TextBox PrecursorChargesTextBox
+        {
+            get { return textPrecursorCharges; }
+        }
+
+        public int[] PrecursorCharges
+        {
+            set { textPrecursorCharges.Text = value.ToArray().ToString(", "); } // Not L10N
         }
 
         private void InitializeMs1FilterUI()
@@ -770,14 +781,25 @@ namespace pwiz.Skyline.SettingsUI
             label.Text = labelText;
         }
 
-        public void ReduceOptions()
+        public void ModifyOptionsForImportPeptideSearchWizard()
         {
-            // Reduce MS1 filtering groupbox.
+            // Set up precursor charges input.
+            textPrecursorCharges.Text =
+                SkylineWindow.Document.Settings.TransitionSettings.Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N
+            int precursorChargesTopDifference = lblPrecursorCharges.Top - groupBoxMS1.Top;
+            lblPrecursorCharges.Top = groupBoxMS1.Top;
+            textPrecursorCharges.Top -= precursorChargesTopDifference;
+            textPrecursorCharges.Visible = true;
+            lblPrecursorCharges.Visible = true;
+
+            // Reduce and reposition MS1 filtering groupbox.
+            const int precursorChargesShift = 50;
             const int newMS1Height = 150;
             int ms1HeightDifference = groupBoxMS1.Height - newMS1Height;
             labelEnrichments.Hide();
             comboEnrichments.Hide();
             groupBoxMS1.Height = newMS1Height;
+            groupBoxMS1.Top += precursorChargesShift;
 
             // Hide MS/MS filtering groupbox entirely.
             groupBoxMS2.Hide();
@@ -786,7 +808,7 @@ namespace pwiz.Skyline.SettingsUI
             const int newRetentionTimeHeight = 70;
             int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
             int radioTimeAroundTopDifference = radioTimeAroundMs2Ids.Top - newRadioTimeAroundTop;
-            groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Top - ms1HeightDifference;
+            groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Top - ms1HeightDifference + precursorChargesShift;
             radioUseSchedulingWindow.Hide();
             radioTimeAroundMs2Ids.Top = newRadioTimeAroundTop;
             flowLayoutPanelTimeAroundMs2Ids.Top -= radioTimeAroundTopDifference;

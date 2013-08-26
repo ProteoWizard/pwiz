@@ -73,48 +73,47 @@
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // bioRepRes
             // 
             this.bioRepRes.AutoSize = true;
+            this.bioRepRes.Checked = true;
             this.bioRepRes.Location = new System.Drawing.Point(85, 19);
             this.bioRepRes.Name = "bioRepRes";
             this.bioRepRes.Size = new System.Drawing.Size(73, 17);
             this.bioRepRes.TabIndex = 1;
+            this.bioRepRes.TabStop = true;
             this.bioRepRes.Text = "Restricted";
             this.bioRepRes.UseVisualStyleBackColor = true;
             // 
             // bioRepExp
             // 
             this.bioRepExp.AutoSize = true;
-            this.bioRepExp.Checked = true;
             this.bioRepExp.Location = new System.Drawing.Point(6, 19);
             this.bioRepExp.Name = "bioRepExp";
             this.bioRepExp.Size = new System.Drawing.Size(73, 17);
             this.bioRepExp.TabIndex = 0;
-            this.bioRepExp.TabStop = true;
             this.bioRepExp.Text = "Expanded";
             this.bioRepExp.UseVisualStyleBackColor = true;
             // 
             // techRepRes
             // 
             this.techRepRes.AutoSize = true;
-            this.techRepRes.Checked = true;
             this.techRepRes.Location = new System.Drawing.Point(85, 19);
             this.techRepRes.Name = "techRepRes";
             this.techRepRes.Size = new System.Drawing.Size(73, 17);
             this.techRepRes.TabIndex = 1;
-            this.techRepRes.TabStop = true;
             this.techRepRes.Text = "Restricted";
             this.techRepRes.UseVisualStyleBackColor = true;
             // 
             // techRepExp
             // 
+            this.techRepExp.Checked = true;
             this.techRepExp.Location = new System.Drawing.Point(6, 19);
             this.techRepExp.Name = "techRepExp";
             this.techRepExp.Size = new System.Drawing.Size(73, 17);
             this.techRepExp.TabIndex = 0;
+            this.techRepExp.TabStop = true;
             this.techRepExp.Text = "Expanded";
             this.techRepExp.UseVisualStyleBackColor = true;
             // 

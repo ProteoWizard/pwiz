@@ -2,7 +2,7 @@
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2012 University of Washington - Seattle, WA
+ * Copyright 2013 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,6 +78,8 @@ namespace pwiz.SkylineTestFunctional
 
                 TestToolVersioning();
 
+                TestPackageVersioning();
+
                 ClearAllTools();
                 if (Skyline.Program.StressTest)
                 {
@@ -87,42 +89,41 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public class MovedDirectory : IDisposable
+        private class UnpackZipToolTestSupport: IUnpackZipToolSupport
         {
-            public const string MOVED_PREFIX = "Moved_"; // Not L10N
-
-            public MovedDirectory(string dirPath, bool isLoopingTest)
+            public bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations)
             {
-                LoopingTest = isLoopingTest;
-                if (isLoopingTest)
-                {
-                    SrcDirPath = dirPath;
-                    DestDirPath = Path.Combine(Directory.GetParent(dirPath).FullName,
-                                               MOVED_PREFIX + Path.GetFileName(dirPath));
-                    if (Directory.Exists(DestDirPath))
-                    {
-                        DestDirPath = ToolInstaller.GetNewDirName(DestDirPath);
-                    }
-
-                    Helpers.TryTwice(() => Directory.Move(SrcDirPath, DestDirPath));
-                }
+                return false;
             }
 
-            public string SrcDirPath { get; private set; }
-            public string DestDirPath { get; private set; }
-            public bool LoopingTest { get; private set; }
-
-            public void Dispose()
+            public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion,
+                                         string newCollectionName)
             {
-                if (LoopingTest)
-                {
-                    if (Directory.Exists(SrcDirPath))
-                        Helpers.TryTwice(() => Directory.Delete(SrcDirPath));
-                    Helpers.TryTwice(() => Directory.Move(DestDirPath, SrcDirPath));
-                }
+                return true;
+            }
+
+            public string installProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript)
+            {
+                return string.Empty;
             }
         }
 
+        private void TestPackageVersioning()
+        {
+            IUnpackZipToolSupport support = new UnpackZipToolTestSupport();
+            string version1 = TestFilesDir.GetTestPath("TestPackageVersioning.zip");
+            var retval = ToolInstaller.UnpackZipTool(version1, support);
+            Assert.AreEqual(1, retval.Installations.Count);
+            ProgramPathContainer ppc = new ProgramPathContainer("BogusProgram","3.0.0");
+            var ListPackages = retval.Installations[ppc];
+            Assert.AreEqual(3, ListPackages.Count);
+            Assert.AreEqual("TestPAckages", ListPackages[0].Name);
+            Assert.AreEqual("7.3-28",ListPackages[0].Version);
+            Assert.AreEqual("TestOtherPAckage",ListPackages[1].Name);
+            Assert.AreEqual("3.2.3",ListPackages[1].Version);
+            Assert.AreEqual("noVersionPackage", ListPackages[2].Name);
+            Assert.AreEqual(null,ListPackages[2].Version);
+        }
 
 
         private void AssertCleared()
@@ -610,7 +611,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.PopulateToolsMenu());
 
             // Test running the tool with an unchecked annotation
-            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), dlg =>
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(4), dlg =>
                 {
                     Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
                                                                  string.Empty,
@@ -623,7 +624,7 @@ namespace pwiz.SkylineTestFunctional
             // Test running the tool with a missing annotation
             Settings.Default.AnnotationDefList = new AnnotationDefList();
             WaitForCondition(3*1000, () => Settings.Default.AnnotationDefList.Count == 0);
-            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), dlg =>
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(4), dlg =>
             {
                 Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted,
                                                               string.Empty,

@@ -116,12 +116,12 @@
     <Compile Include="CustomReportsTutorialTest.cs" />
     <Compile Include="ExistingExperimentsTutorialTest.cs" />
     <Compile Include="GroupedStudiesTutorialTest.cs" />
-    <Compile Include="ImportPeptideSearchWizardTest.cs" />
     <Compile Include="IrtTutorialTest.cs" />
     <Compile Include="LibraryExplorerTutorialTest.cs" />
     <Compile Include="MethodEditTutorialTest.cs" />
     <Compile Include="MethodRefinementTutorialTest.cs" />
     <Compile Include="Ms1FullScanFilteringTutorial.cs" />
+    <Compile Include="MSstatsTutorialTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuasarTutorialTest.cs" />
     <Compile Include="TargetedMSMSTutorialTest.cs" />

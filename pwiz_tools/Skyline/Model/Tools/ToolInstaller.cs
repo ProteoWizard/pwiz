@@ -2,7 +2,7 @@
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2012 University of Washington - Seattle, WA
+ * Copyright 2013 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ namespace pwiz.Skyline.Model.Tools
             public const string ARGS_COLLECTOR_DLL = "ArgsCollectorDll";                //Not L10N
             public const string ARGS_COLLECTOR_TYPE = "ArgsCollectorType";              //Not L10N
             public const string PACKAGE = "Package{0}";                                 //Not L10N
+            public const string PACKAGE_VERSION = "Package{0}Version";                  //Not L10N
             public const string ANNOTATION = "Annotation{0}";                           //Not L10N
             //Package attributes in info.properties
             public const string NAME = "Name";                                          //Not L10N
@@ -151,11 +152,27 @@ namespace pwiz.Skyline.Model.Tools
         {
             get { return _properties.GetProperty(PropertiesConstants.DESCRIPTION); }
         }
-        public string GetPackage(int p)
+        public string GetPackageName(int p)
         {
             string lookup = string.Format(PropertiesConstants.PACKAGE, p);
             string package = _properties.GetProperty(lookup);
             return package != null ? package.Trim() : null;
+        }
+        public string GetPackageVersion(int p)
+        {
+            string lookup = string.Format(PropertiesConstants.PACKAGE_VERSION, p);
+            string packageVersion = _properties.GetProperty(lookup);
+            return packageVersion != null ? packageVersion.Trim() : null;
+        }
+        public ToolPackage GetPackageWithVersion(int p)
+        {
+            string name = GetPackageName(p);
+            if (name == null)
+            {
+                return null;
+            }
+            string version = GetPackageVersion(p);
+            return new ToolPackage{Name = name, Version = version};
         }
         public string Name
         {
@@ -192,7 +209,23 @@ namespace pwiz.Skyline.Model.Tools
 
         #endregion //Accessors
     }
+    /// <summary>
+    /// shouldOverwrite - Function that when given a list of tools and a list of reports that would be removed by an installation
+    ///  it returns a bool, true for overwrite, false for in parallel and null for cancel installation.
+    /// installProgram - Function that finds a program path given a program path container.
+    /// </summary>
+    public interface IUnpackZipToolSupport
+    {
+        bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations);
+        bool? shouldOverwrite(string toolCollectionName,
+                              string toolCollectionVersion,
+                              List<ReportSpec> reportList,
+                              string foundVersion,
+                              string newCollectionName);
 
+        string installProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript);
+    }
+    
     public static class ToolInstaller
     {
         private const string TOOL_INF = "tool-inf";                    //Not L10N
@@ -202,17 +235,10 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Function for unpacking zipped External tools.
         /// </summary>
-        /// <param name="pathToZip">Path to the zipped file that contains the tool and all its assicaited files.</param> 
-        /// <param name="shouldOverwriteAnnotations">Function that when given a list of annotations that would be overwritten by an installation,
-        /// returns true or false for overwrite, and null for cancel installation</param>       
-        /// <param name="shouldOverwrite">Function that takes a installation name that will be over written, its version, a list of reports
-        /// and the incoming installation name and version and prompts the user how to handle the conflicts. It returns null if they cancel</param>
-        /// <param name="installProgram">Function that finds a program path given a program path container.</param>
+        /// <param name="pathToZip">Path to the zipped file that contains the tool and all its assicaited files.</param>        
+        /// <param name="unpackSupport"> Interface that implements required functions that are dependent on context.</param>
         /// <returns></returns>
-        public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip,
-                                                               Func<List<AnnotationDef>, bool?> shouldOverwriteAnnotations,
-                                                               Func<string, string, List<ReportSpec>, string, string, bool?> shouldOverwrite,
-                                                               Func<ProgramPathContainer, ICollection<string>, string, string> installProgram)
+        public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip, IUnpackZipToolSupport unpackSupport)
         {
             //Removes any old folders that dont have Tools associated with them
             CheckToolDirConsistency();
@@ -242,7 +268,7 @@ namespace pwiz.Skyline.Model.Tools
             // Consider: Try to delete the existing directory in the temp directory.
             string tempToolPath = Path.Combine(tempFolderPath, name);
             if (Directory.Exists(tempToolPath))
-                tempToolPath = GetNewDirName(tempToolPath);
+                tempToolPath = DirectoryEx.GetUniqueName(tempToolPath);
 
             using (new TemporaryDirectory(tempToolPath))
             {
@@ -274,7 +300,7 @@ namespace pwiz.Skyline.Model.Tools
                 // Handle info.properties
                 var toolInfo = GetToolInfo(toolInfDir, retval);
 
-                if (!HandleAnnotations(shouldOverwriteAnnotations, toolInfDir))
+                if (!HandleAnnotations(unpackSupport.shouldOverwriteAnnotations, toolInfDir))
                     return null;
 
                 HandleLegacyQuaSAR(toolInfo);
@@ -284,7 +310,7 @@ namespace pwiz.Skyline.Model.Tools
                 List<ReportSpec> newReports;
                 var existingReports = FindReportConflicts(toolInfDir, tempToolPath, out newReports);
 
-                bool? overwrite = IsOverwrite(shouldOverwrite, toolsToBeOverwritten, existingReports, toolInfo);
+                bool? overwrite = IsOverwrite(unpackSupport.shouldOverwrite, toolsToBeOverwritten, existingReports, toolInfo);
                 if (!overwrite.HasValue)
                 {
                     // User canceled installation.
@@ -354,7 +380,7 @@ namespace pwiz.Skyline.Model.Tools
                             }
                         }
 
-                        string path = installProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript);
+                        string path = unpackSupport.installProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript);
                         if (path == null)
                         {
                             // Cancel installation
@@ -377,7 +403,7 @@ namespace pwiz.Skyline.Model.Tools
                     DirectoryEx.SafeDelete(DirectoryToRemove);
 
                 // Final Directory Location.
-                string permToolPath = GetNewDirName(Path.Combine(outerToolsFolderPath, name));
+                string permToolPath = DirectoryEx.GetUniqueName(Path.Combine(outerToolsFolderPath, name));
 
                 foreach (var tool in retval.ValidToolsFound)
                 {
@@ -414,7 +440,6 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
         }
-
 
         private class ToolInfo
         {
@@ -513,17 +538,14 @@ namespace pwiz.Skyline.Model.Tools
 
                 foreach (AnnotationDef annotationDef in document.Settings.DataSettings.AnnotationDefs)
                 {
-                    if (Settings.Default.AnnotationDefList.ContainsKey(annotationDef.GetKey()))
-                    {
-                        var existingAnnotation = Settings.Default.AnnotationDefList[annotationDef.GetKey()];
-                        if (!existingAnnotation.Equals(annotationDef))
-                        {
-                            conflictAnnotations.Add(annotationDef);
-                        }
-                    }
-                    else
+                    AnnotationDef existingAnnotation;
+                    if (!Settings.Default.AnnotationDefList.TryGetValue(annotationDef.GetKey(), out existingAnnotation))
                     {
                         newAnnotations.Add(annotationDef);
+                    }
+                    else if (!ToolDescription.EquivalentAnnotations(existingAnnotation, annotationDef))
+                    {
+                        conflictAnnotations.Add(annotationDef);
                     }
                 }
             }
@@ -798,17 +820,17 @@ namespace pwiz.Skyline.Model.Tools
                                                   UnzipToolReturnAccumulator accumulator,
                                                   ProgramPathContainer programPathContainer)
         {
-            var packages = new List<string>();
+            var packages = new List<ToolPackage>();
             int i = 1;
-            string package = readin.GetPackage(i);
-            while (!string.IsNullOrEmpty(package))
+            var package = readin.GetPackageWithVersion(i);
+            while (package != null)
             {
                 // if the package is not a uri, it is stored locally in the tool-inf directory
                 //if (!package.StartsWith("http")) // Not L10N
                 //    package = Path.Combine(tempToolPath, TOOL_INF, package);
 
                 packages.Add(package);
-                package = readin.GetPackage(++i);
+                package = readin.GetPackageWithVersion(++i);
             }
 
             if (!Settings.Default.ToolFilePaths.ContainsKey(programPathContainer) || packages.Count > 0)
@@ -881,24 +903,18 @@ namespace pwiz.Skyline.Model.Tools
                        : key;
         }
 
-        public static string GetNewDirName(string permToolPath)
-        {
-            return Directory.Exists(permToolPath)
-                       ? GetUniqueName(permToolPath, value => !Directory.Exists(value))
-                       : permToolPath;
-        }
-
         public class UnzipToolReturnAccumulator
         {
             public List<ToolDescription> ValidToolsFound { get; private set; }
             public List<string> MessagesThrown { get; private set; }
-            public Dictionary<ProgramPathContainer,List<string>> Installations { get; private set; }
+            public Dictionary<ProgramPathContainer,List<ToolPackage>> 
+                Installations { get; private set; }
             
             public UnzipToolReturnAccumulator()
             {
                 ValidToolsFound = new List<ToolDescription>();
                 MessagesThrown = new List<string>();
-                Installations = new Dictionary<ProgramPathContainer, List<string>>();
+                Installations = new Dictionary<ProgramPathContainer, List<ToolPackage>>();
             }
 
             public void AddMessage(string s)
@@ -911,9 +927,9 @@ namespace pwiz.Skyline.Model.Tools
                 ValidToolsFound.Add(t);
             }
 
-            public void AddInstallation(ProgramPathContainer ppc, List<string> packages )
+            public void AddInstallation(ProgramPathContainer ppc, List<ToolPackage> packages )
             {
-                List<string> listPackages;
+                List<ToolPackage> listPackages;
                 if (Installations.TryGetValue(ppc, out listPackages))
                 {
                     listPackages.AddRange(packages.Where(p => !listPackages.Contains(p)));
@@ -924,5 +940,11 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
         }
+    }
+
+    public class ToolPackage
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
     }
 }

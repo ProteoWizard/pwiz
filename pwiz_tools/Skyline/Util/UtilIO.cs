@@ -796,6 +796,13 @@ namespace pwiz.Skyline.Util
 // ReSharper restore EmptyGeneralCatchClause
         }
 
+        public static string GetUniqueName(string dirName)
+        {
+            return Directory.Exists(dirName)
+                       ? Helpers.GetUniqueName(dirName, value => !Directory.Exists(value))
+                       : dirName;
+        }
+
         public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
             // Get the subdirectories for the specified directory.
@@ -1139,10 +1146,10 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public static class NamedPipeProcessRunner
+    public static class SkylineProcessRunner
     {
         /// <summary>
-        /// Runs the NamedPipeProcessRunner executable file with the given arguments. These arguments
+        /// Runs the SkylineProcessRunner executable file with the given arguments. These arguments
         /// are passed to CMD.exe within the NamedPipeProcessRunner
         /// </summary>
         /// <param name="arguments">The arguments to run at the command line</param>
@@ -1157,7 +1164,7 @@ namespace pwiz.Skyline.Util
 
             var startInfo = new ProcessStartInfo
                 {
-                    FileName = "NamedPipeProcessRunner.exe", // Not L10N
+                    FileName = "SkylineProcessRunner.exe", // Not L10N
                     Arguments = guidSuffix + " " + arguments,
                 };
                 
@@ -1198,7 +1205,7 @@ namespace pwiz.Skyline.Util
                     throw new IOException("Error running process"); // TODO: localize
                 }
             }
-        }    
+        }
     }
     
     internal static class Kernel32

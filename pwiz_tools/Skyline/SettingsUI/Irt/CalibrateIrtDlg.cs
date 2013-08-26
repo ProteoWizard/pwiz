@@ -168,7 +168,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             protected override void DoPaste()
             {
                 var standardPeptidesNew = new List<StandardPeptide>();
-                GridView.DoPaste(MessageParent, ValidateRow,
+                GridView.DoPaste(MessageParent, ValidateRowWithTime,
                                           values =>
                                           standardPeptidesNew.Add(new StandardPeptide
                                           {
@@ -183,6 +183,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return;
                 }
 
+                if (standardPeptidesNew.Count > 0)
+                {
+                    standardPeptidesNew[0].FixedPoint = true;
+                    standardPeptidesNew[standardPeptidesNew.Count - 1].FixedPoint = true;
+                }
                 Items.Clear();
                 foreach (var peptide in standardPeptidesNew)
                     Items.Add(peptide);
@@ -193,7 +198,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (!base.DoRowValidating(rowIndex))
                     return false;
 
-                if (FixedPointCount < 2)
+                if (FixedPointCount < 2 && rowIndex < Items.Count)
                     Items[rowIndex].FixedPoint = true;
 
                 return true;

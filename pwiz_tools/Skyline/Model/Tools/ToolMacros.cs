@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Tools
         public const string COLLECTED_ARGS = "$(CollectedArgs)";                //Not L10N
 
         // Macros for Arguments.
-        public static Macro[] _listArguments = new[]
+        public static readonly Macro[] _listArguments = new[]
             {
                 new Macro(Resources.ToolMacros__listArguments_Document_Path, "$(DocumentPath)", GetDocumentFilePath, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run), 
                 new Macro(Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run),
@@ -77,13 +77,13 @@ namespace pwiz.Skyline.Model.Tools
             };
 
         // Macros for InitialDirectory.
-        public static Macro[] _listInitialDirectory = new[]
+        public static readonly Macro[] _listInitialDirectory = new[]
             {
                 new Macro(Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run) 
             };
 
         // Macros for Command.
-        public static Macro[] _listCommand = new[]
+        public static readonly Macro[] _listCommand = new[]
             {
                 new Macro(Resources.ToolMacros__listCommand_Program_Path, PROGRAM_PATH, GetProgramPath, TextUtil.LineSeparate(Resources.ToolMacros__listCommand_This_tool_requires_a_Program_Path_to_run_,Resources.ToolMacros__listCommand__No_Path_Provided__Tool_execution_cancled_)), 
                 new Macro(Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_)
@@ -235,21 +235,14 @@ namespace pwiz.Skyline.Model.Tools
             SrmDocument doc = toolMacroInfo.Doc;            
             string reportName = toolMacroInfo.ReportName;
             string toolTitle = toolMacroInfo.ToolTitle;
+
             if (String.IsNullOrEmpty(reportName))
-            {                
-                throw new Exception(string.Format(Resources.ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_, toolTitle));
+            {
+                throw new Exception(string.Format(Resources.ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_,
+                                                  toolTitle));
             }
 
-            string reportFileName = reportName.Replace(' ', '_');
-            string toolFileName = toolTitle.Replace(' ', '_').Replace('\\','_');            
-            string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            foreach (char c in invalid)
-            {                
-                reportFileName = reportFileName.Replace(c.ToString(CultureInfo.InvariantCulture), String.Empty);
-                toolFileName = toolFileName.Replace(c.ToString(CultureInfo.InvariantCulture), String.Empty);
-            }
-
-            string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + "_" + reportFileName + ".csv");
+            var tempFilePath = GetReportTempPath(reportName, toolTitle);
 
             string report = ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle, toolMacroInfo.ExceptionHandler);
             
@@ -279,6 +272,21 @@ namespace pwiz.Skyline.Model.Tools
                 }     
             }
             return null;
+        }
+
+        public static string GetReportTempPath(string reportName, string toolTitle)
+        {
+            string reportFileName = reportName.Replace(' ', '_');
+            string toolFileName = toolTitle.Replace(' ', '_').Replace('\\', '_');
+            string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            foreach (char c in invalid)
+            {
+                reportFileName = reportFileName.Replace(c.ToString(CultureInfo.InvariantCulture), String.Empty);
+                toolFileName = toolFileName.Replace(c.ToString(CultureInfo.InvariantCulture), String.Empty);
+            }
+
+            string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + "_" + reportFileName + ".csv");
+            return tempFilePath;
         }
 
         private static string GetDocumentFilePath(IToolMacroProvider toolMacroProvider)

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -46,12 +48,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportFastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError);
 
             tbxFastaHeightDifference = Height - tbxFasta.Height;
+
+            _driverEnzyme = new SettingsListComboDriver<Enzyme>(comboEnzyme, Settings.Default.EnzymeList);
+            _driverEnzyme.LoadList(SkylineWindow.Document.Settings.PeptideSettings.Enzyme.GetKey());
+
+            MaxMissedCleavages = skylineWindow.Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
         }
 
         private SkylineWindow SkylineWindow { get; set; }
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
         private ImportFastaHelper ImportFastaHelper { get; set; }
+        private readonly SettingsListComboDriver<Enzyme> _driverEnzyme;
 
         private const long MAX_FASTA_TEXTBOX_LENGTH = 5 << 20;    // 5 MB
         private bool _fastaFile
@@ -65,6 +73,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
         private readonly int tbxFastaHeightDifference;
+
+        public Enzyme Enzyme
+        {
+            get { return Settings.Default.GetEnzymeByName(comboEnzyme.SelectedItem.ToString()); }
+            set { comboEnzyme.SelectedItem = value; }
+        }
+
+        public int MaxMissedCleavages
+        {
+            get
+            {
+                return int.Parse(cbMissedCleavages.SelectedItem.ToString());
+            }
+            set
+            {
+                cbMissedCleavages.SelectedItem = value.ToString(CultureInfo.CurrentCulture);
+                if (cbMissedCleavages.SelectedIndex < 0)
+                    cbMissedCleavages.SelectedIndex = 0;
+            }
+        }
 
         private void browseFastaBtn_Click(object sender, EventArgs e)
         {
@@ -149,43 +177,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return doc.Transitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
         }
 
-        private static bool IsFragmentTypePrecursor(SrmDocument doc)
-        {
-            return doc.Settings.TransitionSettings.Filter.IonTypes.Contains(IonType.precursor);
-        }
-
-        private static SrmDocument AutoSelectAllMatchingTransitions(SrmDocument doc)
-        {
-            var settings = doc.Settings;
-            if (!settings.TransitionSettings.Filter.AutoSelect)
-            {
-                settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true));
-                return doc.ChangeSettings(settings);
-            }
-
-            return doc;
-        }
-
-        private SrmDocument SwitchToPrecursorTransitions(SrmDocument doc)
-        {
-            var settings = doc.Settings;
-            if (!IsFragmentTypePrecursor(doc))
-            {
-                settings = settings.ChangeTransitionFilter(filter => filter.ChangeIonTypes(new[] { IonType.precursor }));
-                return doc.ChangeSettings(settings);
-            }
-
-            return doc;
-        }
-
         private static SrmDocument ChangeAutoManageChildren(SrmDocument doc, PickLevel which, bool autoPick)
         {
-            var refine = new RefinementSettings {AutoPickChildrenAll = which, AutoPickChildrenOff = !autoPick };
+            var refine = new RefinementSettings { AutoPickChildrenAll = which, AutoPickChildrenOff = !autoPick };
             return refine.Refine(doc);
         }
 
         public bool ImportFasta()
         {
+            var settings = SkylineWindow.Document.Settings;
+            var peptideSettings = settings.PeptideSettings;
+            int missedCleavages = MaxMissedCleavages;
+            var enzyme = Enzyme;
+            if (!Equals(missedCleavages, peptideSettings.DigestSettings.MaxMissedCleavages) || !Equals(enzyme, peptideSettings.Enzyme))
+            {
+                var digest = new DigestSettings(missedCleavages, peptideSettings.DigestSettings.ExcludeRaggedEnds);
+                peptideSettings = peptideSettings.ChangeDigestSettings(digest).ChangeEnzyme(enzyme);
+                SkylineWindow.ModifyDocument(string.Format(Resources.ImportFastaControl_ImportFasta_Change_digestion_settings), doc =>
+                    doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
+            }
+
             if (string.IsNullOrWhiteSpace(tbxFasta.Text)) // The user didn't specify any FASTA content
             {
                 var docCurrent = SkylineWindow.DocumentUI;
@@ -206,13 +217,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
                     return false;
 
-                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Change_settings_to_add_precursors, doc =>
-                    {
-                        doc = SwitchToPrecursorTransitions(doc);
-                        doc = AutoSelectAllMatchingTransitions(doc);
-                        // Turn off auto-manage-children at the precursor level only.
-                        return ChangeAutoManageChildren(doc, PickLevel.transitions, true);
-                    });
+                SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Change_settings_to_add_precursors, doc => ChangeAutoManageChildren(doc, PickLevel.transitions, true));
             }
             else // The user specified some FASTA content
             {
@@ -224,8 +229,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Todo: There are better ways to do this than this brute force method; revisit later.
                 if (docNew.PeptideGroupCount > 0)
                     docNew = ChangeAutoManageChildren(docNew, PickLevel.all, false);
-                docNew = SwitchToPrecursorTransitions(docNew);
-                docNew = AutoSelectAllMatchingTransitions(docNew);
                 var pick = docNew.Settings.PeptideSettings.Libraries.Pick;
                 if (pick != PeptidePick.library && pick != PeptidePick.both)
                     docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.library)));
@@ -295,6 +298,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             tbxFasta.Clear();
             _fastaFile = false;
+        }
+
+        private void enzyme_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverEnzyme.SelectedIndexChangedEvent(sender, e);
         }
     }
 }

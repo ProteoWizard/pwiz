@@ -32,12 +32,7 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideDocNode : DocNodeParent
     {
-        public PeptideDocNode(Peptide id)
-            : this(id, null)
-        {
-        }
-
-        public PeptideDocNode(Peptide id, ExplicitMods mods)
+        public PeptideDocNode(Peptide id, ExplicitMods mods = null)
             : this(id, null, mods, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
@@ -168,19 +163,16 @@ namespace pwiz.Skyline.Model
         public float? GetSchedulingTime(int i)
         {
             return GetMeasuredRetentionTime(i);
-//            return GetPeakCenterTime(i);
         }
 
         public float? SchedulingTime
         {
             get { return AverageMeasuredRetentionTime; }
-//            get { return AveragePeakCenterTime; }
         }
 
         public float? GetSchedulingTime(ChromFileInfoId fileId)
         {
             return GetMeasuredRetentionTime(fileId);
-//            return GetPeakCenterTime(fileId);
         }
 
         public float? GetMeasuredRetentionTime(int i)
@@ -470,13 +462,13 @@ namespace pwiz.Skyline.Model
             return nodeGroupPrimary;
         }
 
-        public bool CanTrigger()
+        public bool CanTrigger(int? replicateIndex)
         {
             foreach (var nodeGroup in TransitionGroups)
             {
                 var nodeGroupPrimary = GetPrimaryResultsGroup(nodeGroup);
                 // Return false, if any primary group lacks the ranking information necessary for tMRM/iSRM
-                if (!nodeGroupPrimary.HasResultRanks && !nodeGroupPrimary.HasLibRanks)
+                if (!nodeGroupPrimary.HasReplicateRanks(replicateIndex) && !nodeGroupPrimary.HasLibRanks)
                     return false;
             }
             return true;
@@ -521,12 +513,7 @@ namespace pwiz.Skyline.Model
             return result.UpdateResults(settings);
         }
 
-        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
-        {
-            return ChangeSettings(settingsNew, diff, true);
-        }
-
-        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse)
+        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
         {
             Helpers.Assume(!diff.DiffPeptideProps); // No settings dependent properties yet.
 
@@ -649,7 +636,7 @@ namespace pwiz.Skyline.Model
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, this, explicitMods, diff);
+                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
                         // Skip if the node can no longer be measured on the target instrument
                         if (!instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             continue;

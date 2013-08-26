@@ -224,7 +224,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static readonly ToolDescription QUASAR = new ToolDescription("QuaSAR", // Title Not L10N
                                                                              "$(ProgramPath(R,3.0.1))", // Command Not L10N
-                                                                             "-f $(ToolDir)\\QuaSAR-GP.R --slave --no-save --args $(ToolDir)\\QuaSAR.R $(ToolDir)\\common.R $(InputReportTempPath) $(CollectedArgs)", // Arguments Not L10N
+                                                                             "-f \"$(ToolDir)\\QuaSAR-GP.R\" --slave --no-save --args \"$(ToolDir)\\QuaSAR.R\" \"$(ToolDir)\\common.R\" \"$(InputReportTempPath)\" $(CollectedArgs)", // Arguments Not L10N
                                                                              "$(DocumentDir)", // Initial Directory Not L10N
                                                                              true, // Output to Immediate Window
                                                                              "QuaSAR Input", // Input Report Name Not L10N

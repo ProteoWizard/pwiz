@@ -265,7 +265,7 @@ namespace pwiz.Skyline.SettingsUI
             protected override void DoPaste()
             {
                 var measuredPeptidesNew = new List<MeasuredPeptide>();
-                GridView.DoPaste(MessageParent, ValidateRow,
+                GridView.DoPaste(MessageParent, ValidateRowWithTime,
                                           values =>
                                           measuredPeptidesNew.Add(new MeasuredPeptide
                                           {

@@ -20,9 +20,11 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -84,7 +86,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
                                                Location = new Point(18, 50)
                                            };
-            FullScanSettingsControl.ReduceOptions();
+            FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard();
             ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
 
             ImportResultsControl = new ImportResultsControl(SkylineWindow)
@@ -248,20 +250,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
+
+
+            int[] precursorCharges;
+            if (!helper.ValidateNumberListTextBox(e, FullScanSettingsControl.PrecursorChargesTextBox, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
+                return false;
+            precursorCharges = precursorCharges.Distinct().ToArray();
+            var filter = TransitionSettings.Filter.ChangePrecursorCharges(precursorCharges);
+            if (!filter.IonTypes.Contains(IonType.precursor))
+                filter = filter.ChangeIonTypes(new[] {IonType.precursor});
+            if (!filter.AutoSelect)
+                filter = filter.ChangeAutoSelect(true);
+            Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);
+
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(e, helper, out fullScan))
                 return false;
 
             Helpers.AssignIfEquals(ref fullScan, TransitionSettings.FullScan);
 
-            TransitionPrediction prediction = new TransitionPrediction(precursorMassType,
-                                                           TransitionSettings.Prediction.FragmentMassType,
-                                                           TransitionSettings.Prediction.CollisionEnergy,
-                                                           TransitionSettings.Prediction.DeclusteringPotential,
-                                                           TransitionSettings.Prediction.OptimizedMethodType);
+            var prediction = TransitionSettings.Prediction.ChangePrecursorMassType(precursorMassType);
             Helpers.AssignIfEquals(ref prediction, TransitionSettings.Prediction);
 
-            TransitionSettings settings = new TransitionSettings(prediction, TransitionSettings.Filter,
+            TransitionSettings settings = new TransitionSettings(prediction, filter,
                 TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
 
             // Only update, if anything changed
@@ -278,7 +289,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // MS1 filtering must be enabled
             if (!FullScan.IsEnabledMs)
             {
-                MessageDlg.Show(this, "Full-scan MS1 filtering must be enabled in order to import peptide search.");
+                MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
                 return false;
             }
 
