@@ -23,9 +23,21 @@
 //
 
 #include "LibraryBabelFish.h"
+#include "../freicore/AhoCorasickTrie.hpp"
+using freicore::AhoCorasickTrie;
+typedef boost::shared_ptr<std::string> shared_string;
 
 namespace freicore
 {
+	struct AminoAcidTranslator
+	{
+		static int size() {return 26;}
+		static int translate(char aa) {return aa - 'A';};
+		static char translate(int index) {return static_cast<char>(index) + 'A';}
+	};
+
+	typedef AhoCorasickTrie<AminoAcidTranslator> PeptideTrie;
+
     namespace pepitome
     {
         LibraryBabelFish::LibraryBabelFish(const string& name)
@@ -129,7 +141,8 @@ namespace freicore
             }
 
             //identity = alignedLength[m][n];
-            bool result = ((double)(alignedLength[m][n]) >= minIdentity);
+			double temp = (double)(alignedLength[m][n]);
+            bool result = (temp >= minIdentity);
 
             for (unsigned int r = 0; r <= m; r++) 
             {
@@ -142,82 +155,469 @@ namespace freicore
             return (result);
         }
 
-        inline string shufflePeptideSequence(const DigestedPeptide& peptide)
+        inline string shufflePeptideSequence(const vector<string>& peptide)
         {
             // Amino acids containing modifications and also proline are not movable.
-            int peptideLength = (int) peptide.sequence().length();
-            ModificationMap& mods = const_cast<ModificationMap&>(peptide.modifications());
+			stringstream peptideSequence; 
+            int peptideLength = (int) peptide.size();
             int firstMovableAAIndex = 200;
             int lastMovableAAIndex = -1;
             vector<bool> immutable(peptideLength,false);
-            vector<char> movableAAs;
-            for(int position = 0; position < peptideLength -1; ++position)
+            vector<string> movableAAs;
+            for(int position = 0; position < peptideLength; ++position)
             {
-                if(peptide.sequence()[position] == 'P' || mods.find(position) != mods.end())
-                    immutable[position] = true;
+                if(position == peptideLength-1 || peptide[position].find("[") != string::npos)
+					immutable[position] = true;
                 else
                 {
-                    movableAAs.push_back(peptide.sequence()[position]);
+                    movableAAs.push_back(peptide[position]);
                     firstMovableAAIndex = firstMovableAAIndex > position ? position : firstMovableAAIndex;
                     lastMovableAAIndex = lastMovableAAIndex < position ? position : lastMovableAAIndex;
                 }
+				peptideSequence << peptide[position][0];
             }
 
             size_t numAttempts = 0;
             bool   foundDecoy = false;
             string shuffledSequence;
-            while(numAttempts < 10 && !foundDecoy)
+			string bestTry;
+			size_t bestTryNumber = 0;
+            while(numAttempts < 100 && !foundDecoy)
             {
                 stringstream shuffledPeptide;    
+				stringstream shuffledPeptideNoMods;
                 std::random_shuffle(movableAAs.begin(),movableAAs.end());
                 size_t randomAAIndex = 0;
-                for(int position = 0; position < peptideLength-1; ++position)
+				size_t repeat = 0;
+				size_t nonRepeat = 0;
+                for(int position = 0; position < peptideLength; ++position)
                 {
                     if(!immutable[position])
                     {
                         shuffledPeptide << movableAAs[randomAAIndex];
-                        ++randomAAIndex;
-                    } else
-                        shuffledPeptide << peptide.sequence()[position];
+						shuffledPeptideNoMods << movableAAs[randomAAIndex][0];
+						if (peptide[position] == movableAAs[randomAAIndex] ||
+							((peptide[position] == "L" || peptide[position] == "I") &&
+							(movableAAs[randomAAIndex] == "L" || movableAAs[randomAAIndex] == "I")) || // we consider I and L the same, K and Q the same
+							((peptide[position] == "K" || peptide[position] == "Q") &&
+							(movableAAs[randomAAIndex] == "K" || movableAAs[randomAAIndex] == "Q"))
+						)
+							++repeat;
+						else
+							++nonRepeat;
+						++randomAAIndex;
+                    }
+					else
+					{
+						shuffledPeptide << peptide[position];
+						shuffledPeptideNoMods << peptide[position][0];
+						++repeat;
+					}
+
                 }
-                bool firstAAIsSame = shuffledPeptide.str()[firstMovableAAIndex] == peptide.sequence()[firstMovableAAIndex] ? true : false;
-                bool lastAAIsSame = shuffledPeptide.str()[lastMovableAAIndex] == peptide.sequence()[lastMovableAAIndex] ? true : false;
-                bool isHomolog = checkForHomology(peptide.sequence(), shuffledPeptide.str(), 0.6);
-                foundDecoy = (!firstAAIsSame && !lastAAIsSame && !isHomolog);
+                bool wellScrambled = nonRepeat >= 1.5*repeat ? true : false;
+                //bool isHomolog = checkForHomology(peptideSequence.str(), shuffledPeptideNoMods.str(), 0.6);
+                foundDecoy = wellScrambled;
                 if(foundDecoy)
                     shuffledSequence = shuffledPeptide.str();
+				else if (nonRepeat > bestTryNumber)
+				{
+					bestTry = shuffledPeptide.str();
+					bestTryNumber = nonRepeat;
+				}
                 ++numAttempts;
             }
             if(shuffledSequence.length() > 0)
                 return shuffledSequence;
+			else if(bestTry.length() > 0)
+                return bestTry;
             return string();
         }
 
-        void LibraryBabelFish::decoyLibrary()
-        {
-            library.loadLibrary(libraryName);
-            size_t totalSpectra = library.size();
-            cout << "Generating decoys for " << totalSpectra << " found in the library." << endl;
-            set<string> decoys;
-            for(size_t index = 0; index < totalSpectra; ++ index)
-            {
-                if(!(index % 1000)) 
-                    cout << totalSpectra << ": " << index << '\r' << flush;
-                library[index]->readSpectrumForIndexing();
-                string decoy = shufflePeptideSequence(*library[index]->matchedPeptide);
-                if(decoys.find(decoy) != decoys.end())
-                {
-                    DigestedPeptide decoyedPeptide(decoy.begin(),decoy.end(), 0, 
-                                                    library[index]->matchedPeptide->missedCleavages() , 
-                                                    library[index]->matchedPeptide->NTerminusIsSpecific(), 
-                                                    library[index]->matchedPeptide->CTerminusIsSpecific(), 
-                                                    library[index]->matchedPeptide->NTerminusPrefix(), 
-                                                    library[index]->matchedPeptide->CTerminusSuffix());
-                }
+		std::string LibraryBabelFish::mergeDatabaseWithContam(std::string database, std::string contam)
+		{
+			cout << "Appending contaminants to database..." << endl;
 
-                library[index]->clearSpectrum();
-            }
-        }
+			//Get local contam database
+			string contamPath;
+			{
+				if (contam == "default")
+				{
+					char buffer[MAX_PATH];
+					GetModuleFileName(NULL,buffer,sizeof(buffer));
+					string exeDir(buffer);
+					exeDir = exeDir.substr(0, exeDir.find_last_of("/\\"));
+					path dataDir (exeDir);
+					path dataFile ("contams.fasta");
+					path data_full_path = dataDir / dataFile;
+					contamPath = data_full_path.string();
+				}
+				else if (contam == "")
+					return database;
+				else
+				{
+					ifstream testStream(contam);
+					if (testStream)
+					{
+						testStream.close();
+						contamPath = contam;
+					}
+					else
+						return database;
+				}
+			}
+			
+			ifstream originalData(database.c_str());
+			ifstream contamData(contamPath.c_str());
+			
+			//Set up output for new database
+			path originalDatabase(database);
+			path newDatabase(originalDatabase.stem() + "_with_contams.fasta");
+			path data_out_full_path = current_path() / newDatabase;
+			ofstream mergedDatabase(data_out_full_path.string().c_str());
+
+			//Merge databases together and close files
+			cout << contamPath + " & " + database << endl;
+			mergedDatabase << contamData.rdbuf();
+			mergedDatabase << originalData.rdbuf();
+			mergedDatabase.flush();
+			mergedDatabase.close();
+			contamData.close();
+			originalData.close();
+
+			return data_out_full_path.string();
+		}
+
+		std::string LibraryBabelFish::mergeLibraryWithContam(std::string library, std::string contam)
+		{
+			cout << "Appending contaminants to spectral library..." << endl;
+			bool appendContams = true;
+
+			//get location of contam library
+			string contamPath;
+			{
+				if (contam == "default")
+				{
+					char buffer[MAX_PATH];
+					GetModuleFileName(NULL,buffer,sizeof(buffer));
+					string exeDir(buffer);
+					exeDir = exeDir.substr(0, exeDir.find_last_of("/\\"));			
+					path contamDirectory (exeDir);
+					path contamFile ("contams.sptxt");
+					path contamFullPath = contamDirectory / contamFile;
+					contamPath = contamFullPath.string();
+				}
+				else if (contam == "")
+					appendContams = false;
+				else
+				{
+					ifstream testStream(contam);
+					if (testStream)
+					{
+						testStream.close();
+						contamPath = contam;
+					}
+					else
+						appendContams = false;
+				}
+			}
+			
+			//Set up output for merged library
+			string filenameSuffix;
+			if (appendContams)
+				filenameSuffix = "_with_contams.sptxt";
+			else
+				filenameSuffix = "_with_decoys.sptxt";
+			path originalLibraryPath(library);
+			path newLibraryFile(originalLibraryPath.stem() + filenameSuffix);
+			path newLibraryPath = current_path() / newLibraryFile;
+			ofstream mergedLibrary(newLibraryPath.string().c_str());
+
+			//open files to read
+			ifstream originalLib(originalLibraryPath.string().c_str());
+
+			//copy original library to merged file, except for last line
+			string nextLine;
+			getline(originalLib, nextLine);
+			while (!originalLib.eof())
+			{
+				/*if (nextLine != "")
+					lastEmpty = true;
+				else if (lastEmpty)
+				{
+					getline(originalLib, nextLine);
+					continue;
+				}*/
+				mergedLibrary << nextLine << "\n";
+				getline(originalLib, nextLine);
+			}
+			originalLib.close();
+
+			//copy entire contam library to merged file 
+			if (appendContams)
+			{
+				ifstream contamLib(contamPath.c_str());
+				mergedLibrary << contamLib.rdbuf();
+				contamLib.close();
+				mergedLibrary.flush();
+				mergedLibrary.close();
+			}
+
+			return newLibraryPath.string();
+		}
+
+		void LibraryBabelFish::refreshLibrary(string libraryPath, proteinStore proteins, string decoy = "rev_")
+		{
+			cout << "Synchronizing spectral library with database..." << endl;
+
+			PeptideTrie peptideTrie;
+			SpectraStore tempLibrary;
+
+			boost::regex removeModRegex ("\\[\\d+\\]",boost::regex_constants::icase|boost::regex_constants::perl);
+
+			//get all peptides from library and construct trie
+			{
+				vector<shared_string> peptides;
+				tempLibrary.loadLibrary(libraryPath);
+				NativeFileReader nativeReader(libraryPath);
+
+				cout << "Library Loaded- " << libraryPath << endl;
+				size_t totalSpectra = tempLibrary.size();
+                for(sqlite3_int64 x = 0; x < totalSpectra; ++x)
+				{
+					if (x%1000 == 0)
+						cout << "Gathering sequences: " << x << " of " << lexical_cast<string>(totalSpectra) << '\r' << flush;
+					//if (x > 50460)
+					//	cout << "Gathering sequences: " << x << " of " << lexical_cast<string>(totalSpectra) << '\r' << flush;
+
+					tempLibrary[x]->readHeader(nativeReader);
+                    tempLibrary[x]->readPeaks(nativeReader);
+
+					string rawSequence = tempLibrary[x]->matchedPeptide->sequence();
+					const string& sequence = boost::regex_replace(rawSequence, removeModRegex, "");
+					shared_string newSequence(new string(sequence));
+					peptides.push_back(newSequence);
+				}
+				cout << "Sequences Gathered...                    " << endl;
+				peptideTrie.insert(peptides.begin(), peptides.end());
+				cout << "Trie constructed..." << endl;
+			}
+
+			//search through each protein and save the peptides that are associated with it
+			map<string,string> peptideMap;
+			for (int x = 0; x < (int)proteins.size();x++)
+			{
+				if (x%1000 == 0)
+					cout << "Mapping peptides: " << x << " of " << lexical_cast<string>(proteins.size()) << '\r' << flush;
+				if(proteins[x].isDecoy())
+					continue;
+				proteinData currentProtein = proteins[x];
+				vector<PeptideTrie::SearchResult> peptideInstances = peptideTrie.find_all(currentProtein.getSequence());
+				if (peptideInstances.empty())
+                        continue;
+				BOOST_FOREACH(const PeptideTrie::SearchResult& instance, peptideInstances)
+                {
+					peptideMap[*instance.keyword().get()] = currentProtein.getName();
+				}
+			}
+
+			cout << "Peptides mapped...                    " << endl;
+
+			//copy library into new file with modified proteins
+			boost::regex findPeptideRegex ("^Name: ([^/]+)/",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex findCommentRegex ("(Comment: .*)(Protein=\\d/)([^ ]*)(.*Spec=)([^ ]*)(.*)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex aminoAcidRegex ("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex spectraRegex ("([\\d.]+)(\\t[\\d.]+)\\t([?a-zA-Z]\\d*)([+-]\\d+)?\\^?(\\d+)?i?\\/?([^,\\t]+)?[^\\t]*(.+)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex fullNameRegex ("(FullName: (?:\\w\\.)?)[\\w\\[\\]]+(\\.?\\w?\\/\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
+
+			ofstream outFile((libraryPath + ".tmp").c_str());
+			ifstream inFile(libraryPath.c_str());
+			string activeProtein = "";
+			string decoyPeptide;
+			string peptideFullName;
+			stringstream outputStream;
+			stringstream decoyStream;
+			bool isDecoy = false;
+			string newLine;
+			map<string,double> decoyIons;
+			map<double,string> decoySpectra;
+
+			getline(inFile,newLine);
+			int writeIndex = 0;
+
+			//go through file
+			while (!inFile.eof())
+			{
+				if (newLine.length() > 0 && newLine[0] == '#')
+				{
+					outputStream << newLine << endl;
+				}
+				//Initial name line
+				else if (boost::regex_search (newLine, findPeptideRegex, boost::regex_constants::format_perl))
+				{
+					string sequence = newLine.substr(6,(newLine.length()-8));
+					boost::match_results<std::string::const_iterator> regex_matches;
+					
+					string noModSequence = boost::regex_replace(sequence, removeModRegex, "");
+					map<string,string>::iterator it = peptideMap.find(noModSequence);
+					if (it != peptideMap.end())
+					{
+						//create decoy peptide					
+						boost::sregex_token_iterator originalAminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
+					    boost::sregex_token_iterator end;
+
+						vector<string> originalAminoAcidList;
+						vector<string> aminoAcidList;
+						for( ; originalAminoAcidLetter != end; ++originalAminoAcidLetter )
+							originalAminoAcidList.push_back(*originalAminoAcidLetter);
+						decoyPeptide = shufflePeptideSequence(originalAminoAcidList);
+						if (decoyPeptide.length()<sequence.length())
+							decoyPeptide = "";
+						boost::sregex_token_iterator aminoAcidLetter(decoyPeptide.begin(), decoyPeptide.end(), aminoAcidRegex, 0);
+						for( ; aminoAcidLetter != end; ++aminoAcidLetter )
+							aminoAcidList.push_back(*aminoAcidLetter);
+						
+
+						//calculate decoy ions
+						double b = 1;
+						double y = 19;
+						for (int x=0; x < aminoAcidList.size(); x++)
+						{
+							//calculate b
+							double mass = AminoAcid::Info::record(aminoAcidList[x][0]).residueFormula.monoisotopicMass();
+							if (aminoAcidList[x].length() > 1)
+							{
+								string tempString = aminoAcidList[x].substr(2,aminoAcidList[x].length()-3);
+								mass += lexical_cast<double>(tempString);
+							}
+							b += mass;
+							decoyIons.insert(pair<string,double>("b"+lexical_cast<string>(x+1),b));
+							decoyIons.insert(pair<string,double>("a"+lexical_cast<string>(x+1),b-28));
+
+							//calculate y
+							mass = AminoAcid::Info::record(aminoAcidList[aminoAcidList.size()-1-x][0]).residueFormula.monoisotopicMass();
+							if (aminoAcidList[aminoAcidList.size()-1-x].length() > 1)
+							{
+								string tempString = aminoAcidList[aminoAcidList.size()-1-x].substr(2,aminoAcidList[aminoAcidList.size()-1-x].length()-3);
+								mass += lexical_cast<double>(tempString);
+							}
+							y += mass;
+							decoyIons.insert(pair<string,double>("y"+lexical_cast<string>(x+1),y));
+						}
+						decoyIons.insert(pair<string,double>("p",y));
+						decoyStream << "Name: " << decoyPeptide << "/" << newLine[newLine.length()-1] << endl;
+					
+						activeProtein = it->second;
+						outputStream << newLine << endl;
+					}
+					else
+						activeProtein = "";
+				}
+				//only continue if there is a protein associated
+				else if (activeProtein != "")
+				{
+					//comment line
+					if (boost::regex_search (newLine, findCommentRegex, boost::regex_constants::format_perl))
+					{
+						boost::match_results<std::string::const_iterator> regex_matches;
+						if (boost::regex_search (newLine, regex_matches, findCommentRegex, boost::regex_constants::format_perl))
+						{
+							//check for decoy indicator
+							if (regex_matches[3].str().length() >= decoy.length() && regex_matches[3].str().substr(0,decoy.length()) == decoy)
+								isDecoy = true;
+
+							//create decoy comment
+							decoyStream << regex_matches[1] << "OrigPeptide=" << peptideFullName << " " << regex_matches[2] << decoy << activeProtein << " Remark=DECOY" << regex_matches[4] << "Decoy" << regex_matches[6] << endl;
+							newLine = boost::regex_replace(newLine, findCommentRegex, regex_matches[1] + " " + regex_matches[2] + activeProtein + regex_matches[4] + regex_matches[5] + regex_matches[6]);							
+						}
+
+						outputStream << newLine << endl;
+					}
+					//Fullname Line
+					else if (boost::regex_search (newLine, fullNameRegex, boost::regex_constants::format_perl))
+					{
+						boost::match_results<std::string::const_iterator> regex_matches;
+						if (boost::regex_search (newLine, regex_matches, fullNameRegex, boost::regex_constants::format_perl))
+							decoyStream << regex_matches[1] << decoyPeptide << regex_matches[2] << endl;
+						peptideFullName = newLine.substr(10);
+						outputStream << newLine << endl;
+					}
+					//Fullname Line
+					else if (newLine.length()>5 && newLine.substr(0,5) == "LibID")
+					{
+						outputStream << "LibID: " << writeIndex << endl;
+						decoyStream << "LibID: " << writeIndex+1 << endl;
+					}
+					//spectra line
+					else if (!isDecoy && boost::regex_search (newLine, spectraRegex, boost::regex_constants::format_perl))
+					{
+						boost::match_results<std::string::const_iterator> regex_matches;
+						if (boost::regex_search (newLine, regex_matches, spectraRegex, boost::regex_constants::format_perl))
+						{
+							string contents = regex_matches[2] + "\t" + regex_matches[3];
+							if (regex_matches[4].length() > 0)							
+								contents+= regex_matches[4];
+							if (regex_matches[5].length() > 0)							
+								contents+= "^" + regex_matches[5];
+							if (regex_matches[6].length() > 0)
+								contents+= "/" + regex_matches[6];
+							contents+= "\t" + regex_matches[7];
+							map<string,double>::iterator it = decoyIons.find(regex_matches[3]);
+							if (it != decoyIons.end())
+							{
+								double mass = decoyIons[regex_matches[3]];
+								if (regex_matches[4].length() > 0)							
+									mass += lexical_cast<double>(regex_matches[4]);
+								if (regex_matches[5].length() > 0)							
+									mass /= lexical_cast<double>(regex_matches[5]);
+								stringstream temp;
+								temp << std::fixed << std::setprecision(4) << mass;
+								decoySpectra.insert(pair<double, string>(mass, temp.str() + "\t" + contents));
+							}
+							else
+								decoySpectra.insert(pair<double, string>(lexical_cast<double>(regex_matches[1]), regex_matches[1] + "\t" + contents));
+							
+						}
+						outputStream << newLine << endl;
+					}
+					//end of spectra
+					else if (newLine.length() == 0)
+					{
+						//consolidate decoy spectra
+						map<double, string>::iterator it;
+						for (it = decoySpectra.begin(); it != decoySpectra.end(); ++it)
+							decoyStream << it->second << endl;
+
+						//write
+						if (!isDecoy && decoyPeptide.length() > 0)
+						{
+							outFile << outputStream.rdbuf() << endl;
+							outFile << decoyStream.rdbuf() << endl;
+							writeIndex+=2;
+							if (writeIndex%1000 == 0)
+								cout << "Refreshing spectra: " << writeIndex << '\r' << flush;
+						}
+						decoyPeptide = "";
+						decoySpectra.clear();
+						outputStream.str("");
+						decoyStream.str("");
+						decoyIons.clear();
+						isDecoy = false;
+					}
+					//any other line
+					else
+					{
+						outputStream << newLine << endl;
+						decoyStream << newLine << endl;
+					}
+				}
+				getline(inFile,newLine);
+			}
+			inFile.close();
+			outFile.close();
+			remove(libraryPath.c_str());
+			rename((libraryPath + ".tmp").c_str(),libraryPath.c_str());
+		}
 
         void LibraryBabelFish::indexLibrary()
         {

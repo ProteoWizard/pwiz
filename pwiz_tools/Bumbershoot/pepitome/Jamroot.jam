@@ -260,21 +260,22 @@ exe $(application-name:L)
       <library>$(LIBRARIES_PATH)/SQLite//sqlite3pp
   ;
 
-exe librarybabelfish
-   : # sources
-       LibraryBabelFish.cpp
-   : # requirements
-       <library>freicore
-       <library>$(LIBRARIES_PATH)/SQLite//sqlite3pp
-       <define>LIBRARYBABELFISH_EXE
-   ;
+
+install data-files
+    : # sources
+        $(ROOT_PATH)/contams.sptxt
+        $(ROOT_PATH)/contams.fasta
+    : # requirements
+        <conditional>@install-location
+    ;
 
 install install
-    : $(application-name:L)
+    : $(application-name:L) contams.sptxt contams.fasta
     : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
       <conditional>@gcc-install-dll-path
+	  <dependency>data-files
     ;
 
 

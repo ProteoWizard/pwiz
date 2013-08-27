@@ -37,11 +37,12 @@
 
 namespace freicore
 {
-namespace pepitome
-{
-    proteinStore					proteins;
-    boost::lockfree::fifo<size_t>   libraryTasks;
-    SearchStatistics                searchStatistics;
+    namespace pepitome
+    {
+        proteinStore					proteins;
+		proteinStore					originalProteins;
+        boost::lockfree::fifo<size_t>   libraryTasks;
+        SearchStatistics                searchStatistics;
 
     SpectraList						spectra;
     SpectraMassMapList				avgSpectraByChargeState;
@@ -66,7 +67,8 @@ namespace pepitome
                        "-cpus <value>                 : force use of <value> worker threads\n"
                        "-ignoreConfigErrors           : ignore errors in configuration file or the command-line\n"
                        "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
-                       "-dump                         : show runtime configuration settings before starting the run\n";
+                       "-dump                         : show runtime configuration settings before starting the run\n"
+					   "-preplib                      : (Beta) append contaminants (if provided) and decoys to spectral library then exit\n";
 
 	    bool ignoreConfigErrors = false;
         g_endianType = GetHostEndianType();
@@ -162,7 +164,89 @@ namespace pepitome
 		{
 			if( args[i][0] == '-' )
 			{
-                if (!ignoreConfigErrors)
+				if( args[i] == "-preplib")
+				{
+					cout << "!!! Warning: Pepitome library preparation is currently in beta mode. For critical data please use SpectraST to decoy libraries." << endl;
+					if (!bfs::exists(g_rtConfig->ProteinDatabase))
+					{
+						cerr << "Specified FASTA protein database not found or cannot be read.\n\n" << endl;
+						continue;
+					}
+					if (!bfs::exists(g_rtConfig->SpectralLibrary))
+					{
+						cerr << "Specified spectral library not found or cannot be read.\n\n" << endl;
+						continue;			
+					}
+					if (!bfs::exists(g_rtConfig->ContamDatabase))
+					{
+						string temp = g_rtConfig->ContamDatabase;
+						//if (std::string::npos != temp.find("default"))
+						if (boost::iequals(temp, "default"))
+							g_rtConfig->ContamDatabase = "default";
+						else
+						{
+							cerr << "Specified contaminant FASTA protein database not found or cannot be read." << endl << g_rtConfig->ContamDatabase << endl << endl;
+							continue;
+						}
+					}
+					if (!bfs::exists(g_rtConfig->ContamLibrary))
+					{
+						string temp = g_rtConfig->ContamLibrary;
+						//if (std::string::npos != temp.find("default"))
+						if (boost::iequals(temp, "default"))
+							g_rtConfig->ContamLibrary = "default";
+						else
+						{
+							cerr << "Specified contaminant spectral library not found or cannot be read.\n\n" << endl;
+							continue;			
+						}
+					}
+
+
+					//Create merged database and library
+					string newDatabase = LibraryBabelFish::mergeDatabaseWithContam(g_rtConfig->ProteinDatabase, g_rtConfig->ContamDatabase);
+					string newLibrary = LibraryBabelFish::mergeLibraryWithContam(g_rtConfig->SpectralLibrary, g_rtConfig->ContamLibrary);
+
+					// Read the protein database
+					cout << "Reading \"" << newDatabase << "\"" << endl;
+					Timer readTime(true);
+					try
+					{
+						originalProteins = proteinStore( g_rtConfig->DecoyPrefix );
+						originalProteins.readFASTA( newDatabase );
+					}
+					catch (std::exception& e)
+					{
+						cout << "Error loading protein database: " << e.what() << endl;
+						return 1;
+					}
+					cout << "Read " << originalProteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl << endl;
+
+
+
+					//refresh library against database
+					{
+						//LibraryBabelFish converter(newLibrary);
+						LibraryBabelFish::refreshLibrary(newLibrary, originalProteins,g_rtConfig->DecoyPrefix);
+					}
+
+					cout << endl << "Library refreshed and decoys created..." << endl;
+
+					//Set merged database as new g_rtConfig->ProteinDatabase
+					//Set decoyed library as new g_rtConfig->SpectralLibrary
+					g_rtConfig->SpectralLibrary = newLibrary;
+					g_rtConfig->ProteinDatabase = newDatabase;
+
+					cout << "New Database: " + g_rtConfig->ProteinDatabase << endl;
+					cout << "New Library: " + g_rtConfig->SpectralLibrary << endl << endl;
+
+					cout << "Library preparation complete." << endl << endl;
+					return 1;
+					//Note: currently exit program after library prep is complete. Errors sometimes occur in searching when
+					//preparation and searching is done in the same run of Pepitome. Best guess at the moment is memory allocation issue
+					
+				}
+                else if (!ignoreConfigErrors)
                 {
                     cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
                     return 1;
@@ -178,13 +262,13 @@ namespace pepitome
         {
             cerr << "No FASTA protein database specified.\n\n" << usage << endl;
             return 1;
-        }
+        }		
 
         if( g_rtConfig->SpectralLibrary.empty() )
         {
             cerr << "No spectral library specified.\n\n" << usage << endl;
             return 1;
-        }
+        }		
 
         if (args.size() == 1)
         {

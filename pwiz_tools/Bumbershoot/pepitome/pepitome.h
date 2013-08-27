@@ -101,6 +101,7 @@ namespace pepitome
     typedef pair<size_t, vector<SpectraMassMap::iterator> > Query;
     
 	extern proteinStore						proteins;
+	extern proteinStore						originalProteins;
     extern SpectraStore                     librarySpectra;
 	extern SpectraList						spectra;
 }

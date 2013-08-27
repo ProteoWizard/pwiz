@@ -26,6 +26,7 @@
 #define _LIBRARYBABELFISH_
 
 #include "pepitome.h"
+#include "spectraStore.h"
 
 namespace freicore {
 namespace pepitome {
@@ -41,7 +42,9 @@ struct LibraryBabelFish
     ~LibraryBabelFish();
 
     void initializeDatabase();
-    void decoyLibrary();
+	static std::string mergeDatabaseWithContam(std::string database, std::string contam);
+	static std::string mergeLibraryWithContam(std::string library, std::string contam);
+	static void refreshLibrary(string library, proteinStore database, string decoy);
     void indexLibrary();
     void appendContaminants();
 };

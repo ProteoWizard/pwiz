@@ -345,7 +345,7 @@ namespace pepitome
         virtual void readSpectrum()
         {
             //cout << "querying " << id.source << "," << id.index << endl;
-            sqlite::database library(id.source.c_str(), sqlite::no_mutex, sqlite::read_only);
+            sqlite::database library(id.source.c_str(), sqlite::full_mutex, sqlite::read_only);
             string queryStr = "SELECT NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id=" + lexical_cast<string>(index);
             sqlite::query qry(library, queryStr.c_str());
             sqlite3_int64 numPeaks;
@@ -582,6 +582,9 @@ namespace pepitome
             BaseLibrarySpectrum::clearSpectrum();
         }
 
+		string _attribute;
+        string _value;
+        string _peakAnn;
         void readPeaks(NativeFileReader& library)
         {
             library.seek(peakDataOffset);
@@ -605,15 +608,33 @@ namespace pepitome
                 string value = *(++itr);
                 string peakAnn;
                 //Skip the peak annotations if they exist
-                if(++itr != parser.end())
-                    peakAnn = *itr;
-                if(isdigit(attribute[0]))
-                {
-                    double peakMass = lexical_cast<double>(attribute);
-                    float intensity = lexical_cast<float>(value);
-                    peakPreData[peakMass] = intensity;
-                    peakAnns.insert(pair<float,string>(peakMass,peakAnn));
-                }
+                try
+				{
+					if(++itr != parser.end())
+						peakAnn = *itr;
+					if(isdigit(attribute[0]))
+					{
+						double peakMass = lexical_cast<double>(attribute);
+						float intensity = lexical_cast<float>(value);
+						peakPreData[peakMass] = intensity;
+						peakAnns.insert(pair<float,string>(peakMass,peakAnn));
+					}
+				}
+				catch( std::exception& e )
+				{
+					//cout << "'" << itr << "'";
+					//cout << "'" << parser.end() << "'";
+					cout << "'" << *itr << "'";
+					cout << "'" << _attribute << "' -> '"  << attribute << "'"<< endl;
+					cout << "'" << _value << "' -> '"  << value << "'"<< endl;
+					cout << "'" << _peakAnn << "' -> '"  << peakAnn << "'"<< endl;
+					stringstream msg;
+					msg << "Error caught! " << e.what();
+					throw runtime_error( msg.str() );
+				}
+				_attribute = attribute;
+				_value = value;
+				_peakAnn = peakAnn;
             }
         }
         
@@ -1011,7 +1032,7 @@ namespace pepitome
             cout << "Reading \"" << libraryName << "\"" << endl;
             Timer libReadTime(true);
             size_t spectrumIndex = 0;
-            library.reset(new sqlite::database(libraryName.c_str(), sqlite::no_mutex, sqlite::read_only));
+            library.reset(new sqlite::database(libraryName.c_str(), sqlite::full_mutex, sqlite::read_only));
             library->execute("PRAGMA journal_mode=OFF;"
                              "PRAGMA synchronous=OFF;"
                              "PRAGMA automatic_indexing=OFF;"
@@ -1226,30 +1247,42 @@ namespace pepitome
 
                 string queryStr = "SELECT Id, NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id IN (" + batchedIndices + ")";
 
-                sqlite::database db(libraryName.c_str(), sqlite::no_mutex, sqlite::read_only);
+                sqlite::database db(libraryName.c_str(), sqlite::full_mutex, sqlite::read_only);
 
                 flat_map<sqlite3_int64, shared_ptr<string> > spectraData;
+				int stack = 0;
                 try
                 {
                     //cout << boost::this_thread::get_id() << "fetching data" << endl;
                     START_PROFILER(0)
+					stack = 1;
                     sqlite::query qry(db, queryStr.c_str());
+					stack = 2;
                     for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
                     {
+						stack = 3;
                         sqlite3_int64 index;
                         int numPeaks;
+						stack = 4;
                         qItr->getter() >> index >> numPeaks;
+						stack = 5;
                         const void* data = qItr->get<const void*>(2);
+						stack = 6;
                         int dataLength = qItr->column_bytes(2);
+						stack = 7;
                         char* dataString = const_cast<char*>(static_cast<const char*>(data));
+						stack = 8;
                         spectraData[index] = shared_ptr<string>(new string(dataString, dataLength));
+						stack = 9;
                     }
+					stack = 10;
                     STOP_PROFILER(0)
+					stack = 11;
                     //cout << boost::this_thread::get_id() << "finished fetching data :" << spectraData.size() << endl;
                 }
                 catch(exception& e)
                 {
-                    cout << "Error reading library index: " << e.what();
+                    cout << stack << ": Error reading library index: " << e.what();
                 }
 
                 START_PROFILER(1)

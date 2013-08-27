@@ -81,6 +81,8 @@ using namespace pwiz::math;
     RTCONFIG_VARIABLE( int,			    IRSPeakCount,               50   		    ) \
     RTCONFIG_VARIABLE( string,          StaticMods,                 ""              ) \
     RTCONFIG_VARIABLE( string,          DynamicMods,                ""              ) \
+	RTCONFIG_VARIABLE( string,          ContamDatabase,				""              ) \
+    RTCONFIG_VARIABLE( string,          ContamLibrary,				""              ) \
     RTCONFIG_VARIABLE( int,             MaxDynamicMods,             2               ) 
 
 
