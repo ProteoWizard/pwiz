@@ -382,25 +382,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                        settingsNew.TransitionSettings.Integration.IsIntegrateAll)
                 return false;
 
-            // if the ChromatogramSet has changed, then we might have gone from
-            // "Chromatogram Information Unavailable" to being available.
-            if (settingsOld != null && settingsOld.HasResults && settingsNew.HasResults)
-            {
-                ChromatogramSet chromatogramSetOld;
-                int resultsIndexOld;
-                ChromatogramSet chromatogramSetNew;
-                int resultsIndexNew;
-                if (settingsOld.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out chromatogramSetOld, out resultsIndexOld)
-                    != settingsNew.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out chromatogramSetNew, out resultsIndexNew))
-                {
-                    return false;
-                }
-                if (!ReferenceEquals(chromatogramSetOld, chromatogramSetNew))
-                {
-                    return false;
-                }
-            }
-
             // Check if any of the charted transition groups have changed
             if (_nodeGroups == null)
                 return true;

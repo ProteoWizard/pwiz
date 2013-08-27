@@ -330,14 +330,11 @@ namespace pwiz.Skyline
                                 else if (graphChrom.Pane == null ||
                                          !graphChrom.Pane.DisplayingContents.Contains(graphChrom))
                                 {
-                                    if (graphChrom.Visible)
-                                    {
-                                        layoutLock.EnsureLocked();
-                                        ShowGraphChrom(name, true);
+                                    layoutLock.EnsureLocked();
+                                    ShowGraphChrom(name, true);
 
-                                        nameFirst = nameFirst ?? name;
-                                        nameLast = name;
-                                    }
+                                    nameFirst = nameFirst ?? name;
+                                    nameLast = name;
                                 }
                             }
 
