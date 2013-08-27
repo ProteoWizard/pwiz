@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Controls
                 HideStatementCompletionForm();
                 return;
             }
-            if (_proteinMatcherLast != null)
+            if (_proteinMatcherLast != null && ReferenceEquals(_proteomeDb, _proteinMatcherLast.Settings.ProteomeDb))
             {
                 //if (_proteinMatcherLast.Settings.SearchText == searchText)
                 //{
