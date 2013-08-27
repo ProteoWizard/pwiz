@@ -47,6 +47,7 @@ namespace pwiz.Skyline.EditUI
 
             if (Settings.Default.ChromatogramMaxIntensity != 0)
                 textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(CultureInfo.CurrentCulture);
+            cbHideOverlappingLabels.Checked = !Settings.Default.AllowLabelOverlap;
         }
 
         public void OkDialog()
@@ -85,7 +86,7 @@ namespace pwiz.Skyline.EditUI
             Settings.Default.ChromatogramMaxIntensity = maxIntensity;
             if (maxIntensity != 0)
                 Settings.Default.LockYChrom = true;
-
+            Settings.Default.AllowLabelOverlap = !cbHideOverlappingLabels.Checked;
             DialogResult = DialogResult.OK;
         }
 

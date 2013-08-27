@@ -54,7 +54,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
-            return new FontSpec(FONT_FACE, size, color, false, false, false, Color.Empty, null, FillType.None) {Border = {IsVisible = false}};
+            var fontSpec = new FontSpec(FONT_FACE, size, color, false, false, false);
+            if (Settings.Default.AllowLabelOverlap)
+            {
+                fontSpec.Fill = new Fill(Color.FromArgb(0xC0, 0xff, 0xff, 0xff));
+                fontSpec.Border = new Border(Color.FromArgb(0x40, 0xff, 0xff, 0xff), 2.0f);
+            }
+            else
+            {
+                fontSpec.Fill = new Fill(Color.Empty);
+                fontSpec.Border = new Border(false, Color.Empty, 0);
+            }
+            return fontSpec;
         }
 
         private readonly double[] _measuredTimes;

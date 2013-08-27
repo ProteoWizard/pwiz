@@ -1788,5 +1788,17 @@ namespace pwiz.Skyline.Properties {
                 return ((double)(this["VariableRtWindowIncreaseFraction"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AllowLabelOverlap {
+            get {
+                return ((bool)(this["AllowLabelOverlap"]));
+            }
+            set {
+                this["AllowLabelOverlap"] = value;
+            }
+        }
     }
 }
