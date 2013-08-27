@@ -114,6 +114,8 @@ namespace pwiz.Skyline.ToolsUI
 
         public void OkDialog()
         {
+            Enabled = false;
+
             if ((_installed || GetR()) && (PackagesToInstall.Count == 0 || GetPackages()))
             {
                 DialogResult = DialogResult.Yes;
@@ -134,7 +136,10 @@ namespace pwiz.Skyline.ToolsUI
                     // showing progress, except in testing
                     dlg.PerformWork(this, 50, DownloadR);
                 }
-                InstallR();
+                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.RInstaller_GetR_Installing_R})
+                {
+                    dlg.PerformWork(this, 50, InstallR);
+                }
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
             }
             catch (TargetInvocationException ex)
@@ -145,11 +150,6 @@ namespace pwiz.Skyline.ToolsUI
                     return false;
                 }
                 throw;
-            }
-            catch (MessageException ex)
-            {
-                MessageDlg.Show(this, ex.Message);
-                return false;
             }
             return true;
         }
@@ -200,12 +200,15 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                InstallPackages();
+                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.RInstaller_GetPAckages_Installing_Packages})
+                {
+                    dlg.PerformWork(this, 1000, InstallPackages);
+                }
             }
-            catch(Exception ex)
+            catch(TargetInvocationException ex)
             {
                 //Win32Exception is thrown when the user does not ok Administrative Privileges
-                if (ex is MessageException || ex is System.ComponentModel.Win32Exception) 
+                if (ex.InnerException is MessageException || ex.InnerException is System.ComponentModel.Win32Exception) 
                 {
                     MessageDlg.Show(this, ex.Message);
                     return false;

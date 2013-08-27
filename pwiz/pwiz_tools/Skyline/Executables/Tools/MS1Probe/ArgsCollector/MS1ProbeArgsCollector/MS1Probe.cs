@@ -43,7 +43,7 @@ namespace MS1ProbeArgsCollector
 
         private void RestoreValues()
         {
-            if (Arguments.Count() == ARGUMENT_COUNT)
+            if (Arguments != null && Arguments.Count() == ARGUMENT_COUNT)
             {
                 tboxNumerator.Text = Arguments[(int) ArgumentIndices.factor1];
                 tboxDenominator.Text = Arguments[(int) ArgumentIndices.factor2];

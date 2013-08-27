@@ -125,6 +125,8 @@ namespace pwiz.Skyline.ToolsUI
 
         public void OkDialog()
         {
+            Enabled = false;
+
             if ((_installed || GetPython()) && (clboxPackages.CheckedIndices.Count == 0 || GetPackages()))
             {
                 DialogResult = DialogResult.OK;
@@ -145,7 +147,10 @@ namespace pwiz.Skyline.ToolsUI
                     // showing progress, except in testing
                     waitDlg.PerformWork(this, 50, DownloadPython);
                 }
-                InstallPython();
+                using (var waitDlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPython_Installing_Python})
+                {
+                    waitDlg.PerformWork(this, 50, InstallPython);
+                }
                 MessageDlg.Show(this, Resources.PythonInstaller_GetPython_Python_installation_completed_);
                 return true;
             }
@@ -157,11 +162,6 @@ namespace pwiz.Skyline.ToolsUI
                     return false;
                 }
                 throw;
-            }
-            catch (MessageException ex)
-            {
-                MessageDlg.Show(this, ex.Message);
-                return false;
             }
         }
 
@@ -208,13 +208,65 @@ namespace pwiz.Skyline.ToolsUI
             IEnumerable<string> packagePaths = null;
             try
             {
+                // download packages
                 using (var waitDlg = new LongWaitDlg{ProgressValue = 0})
                 {
                     waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
                 }
-                packagePaths = (packagePaths == null) ? localPackages : packagePaths.Concat(localPackages);
-                InstallPackages(packagePaths);
-                MessageDlg.Show(this, Resources.PythonInstaller_GetPackages_Package_installation_completed_);
+
+                // separate packages
+                ICollection<string> exePaths = new Collection<string>();
+                ICollection<string> sourcePaths = new Collection<string>();
+                foreach (var package in (packagePaths == null) ? localPackages : packagePaths.Concat(localPackages))
+                {
+                    if (package.EndsWith(".exe")) // Not L10N
+                        exePaths.Add(package);
+                    else
+                        sourcePaths.Add(package);
+                }
+
+                // first install executable packages, if any
+                if (exePaths.Count != 0)
+                {
+                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    {
+                        waitDlg.PerformWork(this, 500, () => InstallExecutablePackages(exePaths));
+                    }   
+                }
+
+                // then install source paths, if any
+                if (sourcePaths.Count != 0)
+                {
+                    // try and find the path to the pip package manager .exe
+                    string pipPath = PythonUtil.GetPipPath(_version);
+
+                    // if it can't be found, install it
+                    if (pipPath == null || TestingPip)
+                    {
+                        using (var dlg = new MultiButtonMsgDlg(
+                                Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
+                                Resources.PythonInstaller_InstallPackages_Install))
+                        {
+                            DialogResult result = dlg.ShowDialog(this);
+                            if (result == DialogResult.OK && GetPip())
+                            {
+                                pipPath = PythonUtil.GetPipPath(_version);
+                                MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
+                            }
+                            else
+                            {
+                                MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_);
+                                return false;
+                            }
+                        }
+                    }
+
+                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    {
+                        waitDlg.PerformWork(this, 500, () => InstallSourcePackages(sourcePaths, pipPath));
+                    }   
+                }
+                MessageDlg.Show(this, Resources.PythonInstaller_GetPackages_Package_installation_completed_); 
                 return true;
             }
             catch (TargetInvocationException ex)
@@ -225,11 +277,6 @@ namespace pwiz.Skyline.ToolsUI
                     return false;
                 }
                 throw;
-            }
-            catch (MessageException ex)
-            {
-                MessageDlg.Show(this, ex.Message);
-                return false;
             }
         }
 
@@ -248,7 +295,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private ICollection<string> DownloadPackages(ILongWaitBroker waitBroker, IEnumerable<string> packagesToDownload)
+        private IEnumerable<string> DownloadPackages(ILongWaitBroker waitBroker, IEnumerable<string> packagesToDownload)
         {
             ICollection<string> downloadPaths = new Collection<string>();
             ICollection<string> failedDownloads = new Collection<string>();
@@ -283,56 +330,28 @@ namespace pwiz.Skyline.ToolsUI
             return downloadPaths;
         }
 
-        private void InstallPackages(IEnumerable<string> packages)
+        public void InstallExecutablePackages(IEnumerable<string> packages)
         {
-            // separate packages
-            ICollection<string> exePaths = new Collection<string>();
-            ICollection<string> sourcePaths = new Collection<string>();
             foreach (var package in packages)
             {
-                if (package.EndsWith(".exe")) // Not L10N
-                    exePaths.Add(package);
-                else
-                    sourcePaths.Add(package);
-            }
-            
-            // install packages with executable installers first
-            foreach (var package in exePaths)
-            {
                 var processRunner = TestRunProcess ?? new SynchronousRunProcess();
-                if (processRunner.RunProcess(new Process {StartInfo = new ProcessStartInfo(package)}) != 0) {
+                if (processRunner.RunProcess(new Process { StartInfo = new ProcessStartInfo(package) }) != 0)
+                {
                     throw new MessageException(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_);
                 }
             }
+        }
 
+        private void InstallSourcePackages(ICollection<string> packages, string pipPath)
+        {
             // then install packages from source
-            if (sourcePaths.Count != 0)
+            if (packages.Count != 0)
             {
-                // try and find the path to the pip package manager .exe
-                string pipPath = PythonUtil.GetPipPath(_version);
-                
-                // if it can't be found, install it
-                if (pipPath == null || TestingPip)
-                {
-                    using (var dlg = new MultiButtonMsgDlg(
-                            Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
-                            Resources.PythonInstaller_InstallPackages_Install))
-                    {
-                        DialogResult result = dlg.ShowDialog(this);
-                        if (result == DialogResult.OK && GetPip())
-                        {
-                            pipPath = PythonUtil.GetPipPath(_version);
-                            MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
-                        }
-                        else
-                        {
-                            throw new MessageException(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_);
-                        }
-                    }
-                }
+                if (!File.Exists(pipPath))
+                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
 
                 var argumentBuilder = new StringBuilder("echo installing packages"); // Not L10N
-                foreach (var package in sourcePaths)
+                foreach (var package in packages)
                 {
                     argumentBuilder.Append(" & ")
                                  .Append(pipPath)
@@ -365,7 +384,10 @@ namespace pwiz.Skyline.ToolsUI
                     // showing progress, except in testing
                     dlg.PerformWork(this, 50, DownloadPip);
                 }
-                InstallPip();
+                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPip_Installing_Pip})
+                {
+                    dlg.PerformWork(this, 50, InstallPip);
+                }
             }
             catch (TargetInvocationException ex)
             {
@@ -375,11 +397,6 @@ namespace pwiz.Skyline.ToolsUI
                     return false;
                 }
                 throw;
-            }
-            catch (MessageException ex)
-            {
-                MessageDlg.Show(this, ex.Message);
-                return false;
             }
             return true;
         }

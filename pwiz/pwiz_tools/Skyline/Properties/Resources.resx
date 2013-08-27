@@ -5827,4 +5827,16 @@ Are you sure you want to continue?</value>
   <data name="ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_" xml:space="preserve">
     <value>Error loading report from the temporary file {0}</value>
   </data>
+    <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>Installing Packages</value>
+  </data>
+    <data name="RInstaller_GetR_Installing_R" xml:space="preserve">
+    <value>Installing R</value>
+  </data>
+    <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>Installing Python</value>
+  </data>
+    <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>Installing Pip</value>
+  </data>
 </root>
