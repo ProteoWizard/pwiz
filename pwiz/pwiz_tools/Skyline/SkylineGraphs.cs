@@ -548,7 +548,15 @@ namespace pwiz.Skyline
             // Restart the timer at 100ms, giving the UI time to interrupt.
             _timerGraphs.Stop();
             _timerGraphs.Interval = 100;
-            _timerGraphs.Tag = graphPanes;
+            var previousGraphPanes = _timerGraphs.Tag as ICollection<IUpdatable>;
+            if (previousGraphPanes != null && previousGraphPanes.Count > 0)
+            {
+                _timerGraphs.Tag = previousGraphPanes.Concat(graphPanes).Distinct().ToList();
+            }
+            else
+            {
+                _timerGraphs.Tag = graphPanes;
+            }
             _timerGraphs.Start();
         }
 
