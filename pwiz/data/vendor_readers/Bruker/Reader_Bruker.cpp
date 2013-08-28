@@ -112,9 +112,9 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
     bool hasMS1 = false;
     bool hasMSn = false;
-    for (size_t scan=1, end=compassDataPtr->getMSSpectrumCount();
-         scan <= end && (!hasMS1 || !hasMSn);
-         ++scan)
+    size_t scan=1, end=compassDataPtr->getMSSpectrumCount();
+    if (format == Reader_Bruker_Format_FID) --scan, --end;
+    for (; scan <= end && (!hasMS1 || !hasMSn); ++scan)
     {
         int msLevel = sl->getMSSpectrumPtr(scan, vendor_api::Bruker::DetailLevel_InstantMetadata)->getMSMSStage();
         if (!hasMS1 && msLevel == 1)
