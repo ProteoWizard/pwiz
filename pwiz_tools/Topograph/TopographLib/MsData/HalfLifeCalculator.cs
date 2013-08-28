@@ -240,7 +240,7 @@ namespace pwiz.Topograph.MsData
                                               && peptideFileAnalysis.PeakData.DeconvolutionScore >= minScore)
                 .ToLookup(peptideFileAnalysis => peptideFileAnalysis.MsDataFile.Id,
                           peptideFileAnalysis => peptideFileAnalysis.PeakData.PrecursorEnrichment.GetValueOrDefault());
-            return valueLists.ToDictionary(grouping => grouping.Key, grouping => new Statistics(grouping.ToArray()).Median());
+            return valueLists.ToDictionary(grouping => grouping.Key, grouping => new Statistics(grouping.ToArray()).Median() * 100.0);
         }
 
         public void Run(LongOperationBroker longOperationBroker)
