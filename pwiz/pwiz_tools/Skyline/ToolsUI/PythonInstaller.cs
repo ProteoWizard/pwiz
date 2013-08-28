@@ -347,7 +347,7 @@ namespace pwiz.Skyline.ToolsUI
             // then install packages from source
             if (packages.Count != 0)
             {
-                if (!File.Exists(pipPath))
+                if (!File.Exists(pipPath) && !TestingPip)
                     throw new MessageException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
 
                 var argumentBuilder = new StringBuilder("echo installing packages"); // Not L10N
