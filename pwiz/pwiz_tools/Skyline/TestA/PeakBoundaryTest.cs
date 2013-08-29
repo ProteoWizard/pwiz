@@ -23,7 +23,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -363,20 +362,4 @@ namespace pwiz.SkylineTestA
             return a == b || (a != null && b != null && Math.Abs((double)a - (double)b) < tol);
         }
     }
-    public class TestLibraryLoader : ILoadMonitor
-    {
-        public IStreamManager StreamManager { get; set; }
-
-        public bool IsCanceled
-        {
-            get { return false; }
-        }
-
-        public void UpdateProgress(ProgressStatus status)
-        {
-        }
-
-        public bool HasUI { get { return false; } }
-    }
-
 }

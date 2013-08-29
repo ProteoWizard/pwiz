@@ -130,6 +130,7 @@
     <Compile Include="ChromCollectorTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="DecoysTest.cs" />
+    <Compile Include="DocLoadLibraryTest.cs" />
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
@@ -214,6 +215,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CommandLineTest.zip" />
+    <None Include="DocLoadLibraryTest.zip" />
     <None Include="FullScanPrecursor.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="MProphetScoringModelTest.zip" />

@@ -59,8 +59,18 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            
+            UpdateUI();
+        }
+
         public void UpdateUI()
         {
+            if (!Visible || IsDisposed)
+                return;
+
             resultsGrid.UpdateGrid();
         }
 
