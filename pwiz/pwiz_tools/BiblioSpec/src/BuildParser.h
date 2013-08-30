@@ -122,6 +122,8 @@ class BuildParser : protected SAXHandler{
   const char* getPsmFilePath(); // path containing file being parsed
   string getFilenameFromID(const string& idStr); // spectrum source file from spectrum ID
 
+  static bool validInts(vector<string>::const_iterator begin, vector<string>::const_iterator end);
+
  public:
   BuildParser(BlibBuilder& maker,
               const char* filename,
