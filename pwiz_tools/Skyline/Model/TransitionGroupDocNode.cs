@@ -348,6 +348,7 @@ namespace pwiz.Skyline.Model
         {
             public float CenterTime { get; set; }
             public float Width { get; set; }
+            public int? ReplicateNum { get; set; }
         }
 
         // TODO: Test this code.
@@ -409,16 +410,23 @@ namespace pwiz.Skyline.Model
         public static ScheduleTimes GetSchedulingPeakTimes(IEnumerable<TransitionGroupDocNode> schedulingGroups,
             SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum)
         {
-            var enumScheduleTimes = schedulingGroups.Select(nodeGroup =>
+            var arrayScheduleTimes = schedulingGroups.Select(nodeGroup =>
                     nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum))
                 .Where(scheduleTimes => scheduleTimes != null)
                 .ToArray();
-            if (enumScheduleTimes.Length < 2)
-                return enumScheduleTimes.FirstOrDefault();
+            if (arrayScheduleTimes.Length < 2)
+                return arrayScheduleTimes.FirstOrDefault();
 
+            // If multiple matching times, prefer any that matched the specified replicate
+            if (replicateNum.HasValue)
+            {
+                var matchingTimes = arrayScheduleTimes.Where(t => Equals(t.ReplicateNum, replicateNum)).ToArray();
+                if (matchingTimes.Length > 0)
+                    arrayScheduleTimes = matchingTimes;
+            }
             return new ScheduleTimes
                        {
-                           CenterTime = enumScheduleTimes.Average(st => st.CenterTime)
+                           CenterTime = arrayScheduleTimes.Average(st => st.CenterTime)
                        };
         }
 
@@ -429,12 +437,14 @@ namespace pwiz.Skyline.Model
 
             int valCount = 0;
             double valTotal = 0;
+            int? valReplicate = null;
             // Try to get a scheduling time from non-optimization data, unless this
             // document contains only optimization data.  This is because optimization
             // data may have been taken under completely different chromatographic
             // conditions.
             int valCountOpt = 0;
             double valTotalOpt = 0;
+            int? valReplicateOpt = null;
             ScheduleTimes scheduleTimes = new ScheduleTimes();
 
             // CONSIDER:  Need to set a width for algorithms other than trends?
@@ -460,7 +470,9 @@ namespace pwiz.Skyline.Model
 
                 // If no usable peak found for the specified replicate, try to find a
                 // usable peak in other replicates.
-                if (valCount == 0)
+                if (valCount != 0)
+                    valReplicate = replicateNum.Value;
+                else
                 {
                     // Iterate from end to give replicates closer to the end (more recent)
                     // higher priority over those closer to the beginning, when they are
@@ -488,12 +500,14 @@ namespace pwiz.Skyline.Model
                         {
                             valCount = valCountTmp;
                             valTotal = valTotalTmp;
+                            valReplicate = i;
                             deltaBest = deltaBestCompare;
                         }
                         else
                         {
                             valCountOpt = valCountTmp;
                             valTotalOpt = valTotalTmp;
+                            valReplicateOpt = i;
                             deltaBestOpt = deltaBestCompare;
                         }
                     }
@@ -508,12 +522,14 @@ namespace pwiz.Skyline.Model
             if (valCount != 0)
             {
                 scheduleTimes.CenterTime = (float)(valTotal/valCount);
+                scheduleTimes.ReplicateNum = valReplicate;
                 return scheduleTimes;
             }
             // If only optimization was found, then use it.
             else if (valTotalOpt != 0)
             {
                 scheduleTimes.CenterTime = (float) (valTotalOpt/valCountOpt);
+                scheduleTimes.ReplicateNum = valReplicateOpt;
                 return scheduleTimes;
             }
             // No usable data at all.

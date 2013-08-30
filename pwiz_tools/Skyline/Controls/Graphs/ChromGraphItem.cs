@@ -54,7 +54,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
-            return new FontSpec(FONT_FACE, size, color, false, false, false, Color.Empty, null, FillType.None) {Border = {IsVisible = false}};
+            var fontSpec = new FontSpec(FONT_FACE, size, color, false, false, false);
+            if (Settings.Default.AllowLabelOverlap)
+            {
+                fontSpec.Fill = new Fill(Color.FromArgb(0xC0, 0xff, 0xff, 0xff));
+                fontSpec.Border = new Border(Color.FromArgb(0x40, 0xff, 0xff, 0xff), 2.0f);
+            }
+            else
+            {
+                fontSpec.Fill = new Fill(Color.Empty);
+                fontSpec.Border = new Border(false, Color.Empty, 0);
+            }
+            return fontSpec;
         }
 
         private readonly double[] _measuredTimes;
@@ -363,7 +374,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             color = ColorSelected;
                         }
-                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, Resources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color, ScaleRetentionTime(retentionTime));
+                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
+                            Resources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
+                            ScaleRetentionTime(retentionTime));
                     }
                 }
                 if (AlignedRetentionMsMs != null)
@@ -371,9 +384,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var time in AlignedRetentionMsMs)
                     {
                         var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, ptTop.Y, scaledTime.DisplayTime, 1)
+                        var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
+                                               scaledTime.DisplayTime, 1)
                         {
-                            ZOrder = ZOrder.E_BehindCurves,
+                            ZOrder = ZOrder.F_BehindGrid,
                             Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
                             IsClippedToChartRect = true,
                             Tag = new GraphObjTag(this, GraphObjType.aligned_ms_id, scaledTime),
@@ -386,10 +400,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var time in UnalignedRetentionMsMs)
                     {
                         var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, ptTop.Y,
+                        var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
                                                scaledTime.DisplayTime, 1)
                         {
-                            ZOrder = ZOrder.E_BehindCurves,
+                            ZOrder = ZOrder.F_BehindGrid,
                             Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
                             IsClippedToChartRect = true,
                             Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),

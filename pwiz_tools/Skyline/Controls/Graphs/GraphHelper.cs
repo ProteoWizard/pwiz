@@ -394,6 +394,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public List<PaneKey> GraphPaneKeys { get; private set; }
             public bool AllowSplitPanes { get; protected set; }
             public bool ShowLegend { get; protected set; }
+            public bool AllowLabelOverlap { get; protected set; }
             public MSGraphPane GetGraphPane(MSGraphControl graphControl, PaneKey graphPaneKey)
             {
                 if (!AllowSplitPanes)
@@ -452,11 +453,12 @@ namespace pwiz.Skyline.Controls.Graphs
             /// (or initialize the properties of a newly  created pane) so that it's ready 
             /// to be used by a different set of graphs.
             /// </summary>
-            public virtual void ApplySettingsToGraphPane(GraphPane graphPane)
+            public virtual void ApplySettingsToGraphPane(MSGraphPane graphPane)
             {
                 graphPane.Legend.IsVisible = ShowLegend;
                 graphPane.Title.IsVisible = true;
                 graphPane.Title.Text = null;
+                graphPane.AllowLabelOverlap = AllowLabelOverlap;
             }
         }
 
@@ -471,6 +473,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 AllowSplitPanes = settings.SplitChromatogramGraph;
                 ChromGraphItems = new List<KeyValuePair<PaneKey, ChromGraphItem>>();
                 ShowLegend = settings.ShowChromatogramLegend;
+                AllowLabelOverlap = settings.AllowLabelOverlap;
             }
             
             public AutoZoomChrom AutoZoomChrom { get; private set; }

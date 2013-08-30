@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    // The test Process Runner allows us to simulate the synchronous execution of a Process by specifying
+    // The test Process Runner allows us to simulate the (a)synchronous execution of a Process by specifying
     // its return code
     public class TestRunProcess : IRunProcess
     {
@@ -206,4 +206,19 @@ namespace pwiz.Skyline.Util
         }
     }
 
+    public class AsynchronousRunProcess : IRunProcess
+    {   
+        public int RunProcess(Process process)
+        {
+            bool finished = false;
+            process.EnableRaisingEvents = true;
+            process.Exited += (sender, args) => finished = true;
+            process.Start();
+            while (!finished)
+            {
+                // continue
+            }
+            return process.ExitCode;
+        }
+    }
 }

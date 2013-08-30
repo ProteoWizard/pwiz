@@ -140,11 +140,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write tag attributes
             writer.WriteAttributeIfString(ATTR.formula, Formula);
-            if (Formula == null)
-            {
-                writer.WriteAttribute(ATTR.massdiff_monoisotopic, MonoisotopicMass);
-                writer.WriteAttribute(ATTR.massdiff_average, AverageMass);
-            }
+            writer.WriteAttribute(ATTR.massdiff_monoisotopic, MonoisotopicMass);
+            writer.WriteAttribute(ATTR.massdiff_average, AverageMass);
         }
 
         #endregion

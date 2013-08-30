@@ -433,7 +433,8 @@
     </Setting>
     <Setting Name="PanoramaServerExpansion" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
-    </Setting>    <Setting Name="FractionOfRtWindowAtWhichVariableSizeIsTriggered" Type="System.Double" Scope="Application">
+    </Setting>
+    <Setting Name="FractionOfRtWindowAtWhichVariableSizeIsTriggered" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.8</Value>
     </Setting>
     <Setting Name="ShowLibraryChromatograms" Type="System.Boolean" Scope="User">
@@ -444,6 +445,9 @@
     </Setting>
     <Setting Name="VariableRtWindowIncreaseFraction" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.2</Value>
+    </Setting>
+    <Setting Name="AllowLabelOverlap" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

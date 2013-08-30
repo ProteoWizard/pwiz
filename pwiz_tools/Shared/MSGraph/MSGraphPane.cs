@@ -49,6 +49,7 @@ namespace pwiz.MSGraph
         }
 
         public bool AllowCurveOverlap { get; set; }
+        public bool AllowLabelOverlap { get; set; }
 
         protected MSGraphItemType _currentItemType;
         public MSGraphItemType CurrentItemType
@@ -257,7 +258,7 @@ namespace pwiz.MSGraph
 
                     bool overlap2 = detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item is StickItem );
                     _manualLabels[text] = textBoundsRegion.GetBounds(g);
-                    if (!overlap2)
+                    if (AllowLabelOverlap || !overlap2)
                     {
                         _pointAnnotations.Add(text);
                         AddAnnotations(g, item, clipRegion);
@@ -307,7 +308,7 @@ namespace pwiz.MSGraph
 
                     Region textBoundsRegion = null;
                     bool overlap = detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem);
-                    if (overlap)
+                    if (!AllowLabelOverlap && overlap)
                         continue;
                     _manualLabels[text] = textBoundsRegion.GetBounds(g);
 

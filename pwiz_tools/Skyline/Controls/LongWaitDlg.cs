@@ -45,18 +45,18 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         private readonly IDocumentContainer _documentContainer;
 
-        public LongWaitDlg()
-            : this(null)
-        {
-        }
-
-        public LongWaitDlg(IDocumentContainer documentContainer)
+        public LongWaitDlg(IDocumentContainer documentContainer = null, bool allowCancel = true)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
             _documentContainer = documentContainer;
+
+            btnCancel.Visible = btnCancel.Enabled = IsCancellable = allowCancel;
+
+            if (!IsCancellable)
+                Height -= Height - btnCancel.Bottom;
         }
 
         public string Message
@@ -70,6 +70,8 @@ namespace pwiz.Skyline.Controls
             get { return _progressValue; }
             set { _progressValue = value; }
         }
+
+        public bool IsCancellable { get; private set; }
 
         public bool IsDocumentChanged(SrmDocument docOrig)
         {

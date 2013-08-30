@@ -1637,7 +1637,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 // then peptides must be updated.
                 if (oldLibrary == null ||
                     newLibrary == null ||
-                    oldLibrary.IsLoaded != newLibrary.IsLoaded ||
+                    // Do not check for difference in loaded state!!  This will cause
+                    // all precursors to load library spectra during file open, which
+                    // is too slow.
+                    // oldLibrary.IsLoaded != newLibrary.IsLoaded ||
                     !oldLibrary.IsSameLibrary(newLibrary) ||
                     oldLibrary.CompareRevisions(newLibrary) != 0)
                 {

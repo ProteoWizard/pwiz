@@ -46,17 +46,17 @@
   <static_modification name="NIPCAM (C)" aminoacid="C" formula="H9C5NO" unimod_id="17" />
   <static_modification name="Oxidation (HW)" aminoacid="H, W" formula="O" unimod_id="35" short_name="Oxi" />
   <static_modification name="Oxidation (M)" aminoacid="M" formula="O" unimod_id="35" short_name="Oxi">
-    <potential_loss formula="H4COS" />
+    <potential_loss formula="H4COS" massdiff_monoisotopic="63.998285" massdiff_average="64.10701" />
   </static_modification>
   <static_modification name="Phospho (ST)" aminoacid="S, T" formula="HO3P" unimod_id="21" short_name="Pho">
-    <potential_loss formula="H3O4P" />
+    <potential_loss formula="H3O4P" massdiff_monoisotopic="97.976896" massdiff_average="97.995181" />
   </static_modification>
   <static_modification name="Phospho (Y)" aminoacid="Y" formula="HO3P" unimod_id="21" short_name="Pho" />
   <static_modification name="Propionamide (C)" aminoacid="C" formula="C3H5NO" unimod_id="24" short_name="PPa" />
   <static_modification name="Pyridylethyl (C)" aminoacid="C" formula="H7C7N" unimod_id="31" short_name="Pye" />
   <static_modification name="Pyro-carbamidomethyl (N-term C)" aminoacid="C" terminus="N" formula="C2O" unimod_id="26" />
   <static_modification name="Sulfo (STY)" aminoacid="S, T, Y" formula="O3S" unimod_id="40" short_name="SuO">
-    <potential_loss formula="O3S" />
+    <potential_loss formula="O3S" massdiff_monoisotopic="79.956815" massdiff_average="80.0632" />
   </static_modification>
   <static_modification name="TMT2plex (K)" aminoacid="K" formula="H20C11C'N2O2" unimod_id="738" short_name="TM2" />
   <static_modification name="TMT2plex (N-term)" terminus="N" formula="H20C11C'N2O2" unimod_id="738" short_name="TM2" />
@@ -311,7 +311,7 @@
   <static_modification name="Decanoyl (S)" aminoacid="S" formula="H18C10O" unimod_id="449" short_name="Dec" />
   <static_modification name="Decanoyl (T)" aminoacid="T" formula="H18C10O" unimod_id="449" short_name="Dec" />
   <static_modification name="DEDGFLYMVYASQETFG (K)" aminoacid="K" formula="H122C89N18O31S" unimod_id="1010">
-    <potential_loss formula="H2O" />
+    <potential_loss formula="H2O" massdiff_monoisotopic="18.010565" massdiff_average="18.01528" />
   </static_modification>
   <static_modification name="Dehydrated (D)" aminoacid="D" formula="-H2O" unimod_id="23" short_name="Dhy" />
   <static_modification name="Dehydrated (Protein C-term N)" aminoacid="N" terminus="C" formula="-H2O" unimod_id="23" short_name="Dhy" />
@@ -506,23 +506,23 @@
   <static_modification name="Furan (Y)" aminoacid="Y" formula="H2C4O" unimod_id="1278" />
   <static_modification name="G-H1 (R)" aminoacid="R" formula="C2O" unimod_id="860" />
   <static_modification name="Galactosyl (K)" aminoacid="K" formula="H10C6O6" unimod_id="907">
-    <potential_loss formula="H10C6O5" />
+    <potential_loss formula="H10C6O5" massdiff_monoisotopic="162.052824" massdiff_average="162.1415" />
   </static_modification>
   <static_modification name="GeranylGeranyl (C)" aminoacid="C" formula="H32C20" unimod_id="48" />
   <static_modification name="GGQ (K)" aminoacid="K" formula="H14C9N4O4" unimod_id="1292" />
   <static_modification name="GIST-Quat (K)" aminoacid="K" formula="C7H13NO" unimod_id="60">
-    <potential_loss formula="H9C3N" />
+    <potential_loss formula="H9C3N" massdiff_monoisotopic="59.073499" massdiff_average="59.11071" />
   </static_modification>
   <static_modification name="GIST-Quat (N-term)" terminus="N" formula="C7H13NO" unimod_id="60">
-    <potential_loss formula="H9C3N" />
+    <potential_loss formula="H9C3N" massdiff_monoisotopic="59.073499" massdiff_average="59.11071" />
   </static_modification>
   <static_modification name="Glu (E)" aminoacid="E" formula="H7C5NO3" unimod_id="450" />
   <static_modification name="Gluconoylation (K)" aminoacid="K" formula="H10C6O6" unimod_id="1343" />
   <static_modification name="Gluconoylation (N-term)" terminus="N" formula="H10C6O6" unimod_id="1343" />
   <static_modification name="glucosone (R)" aminoacid="R" formula="H8C6O5" unimod_id="981" />
   <static_modification name="Glucosylgalactosyl (K)" aminoacid="K" formula="H20C12O11" unimod_id="393">
-    <potential_loss formula="H10C6O5" />
-    <potential_loss formula="H20C12O10" />
+    <potential_loss formula="H10C6O5" massdiff_monoisotopic="162.052824" massdiff_average="162.1415" />
+    <potential_loss formula="H20C12O10" massdiff_monoisotopic="324.105647" massdiff_average="324.283" />
   </static_modification>
   <static_modification name="Glucuronyl (S)" aminoacid="S" formula="H8C6O6" unimod_id="54" short_name="GCn" />
   <static_modification name="GluGlu (E)" aminoacid="E" formula="H14C10N2O6" unimod_id="451" />
@@ -923,10 +923,10 @@
   <static_modification name="Pyridylacetyl (K)" aminoacid="K" formula="H5C7NO" unimod_id="25" />
   <static_modification name="Pyridylacetyl (N-term)" terminus="N" formula="H5C7NO" unimod_id="25" />
   <static_modification name="pyrophospho (S)" aminoacid="S" formula="H2O6P2" unimod_id="898">
-    <potential_loss formula="H3O7P2" />
+    <potential_loss formula="H3O7P2" massdiff_monoisotopic="176.935402" massdiff_average="176.967142" />
   </static_modification>
   <static_modification name="pyrophospho (T)" aminoacid="T" formula="H2O6P2" unimod_id="898">
-    <potential_loss formula="H3O7P2" />
+    <potential_loss formula="H3O7P2" massdiff_monoisotopic="176.935402" massdiff_average="176.967142" />
   </static_modification>
   <static_modification name="PyruvicAcidIminyl (K)" aminoacid="K" formula="H2C3O2" unimod_id="422" short_name="PAI" />
   <static_modification name="PyruvicAcidIminyl (Protein N-term C)" aminoacid="C" terminus="N" formula="H2C3O2" unimod_id="422" short_name="PAI" />
@@ -971,13 +971,13 @@
   <static_modification name="Thioacyl (N-term)" terminus="N" formula="H4C3OS" unimod_id="126" />
   <static_modification name="thioacylPA (K)" aminoacid="K" formula="H9C6NO2S" unimod_id="967" />
   <static_modification name="Thiophos-S-S-biotin (S)" aminoacid="S" formula="H34C19N4O5PS3" unimod_id="332">
-    <potential_loss formula="H34C19N4O5PS3" />
+    <potential_loss formula="H34C19N4O5PS3" massdiff_monoisotopic="525.142894" massdiff_average="525.668671" />
   </static_modification>
   <static_modification name="Thiophos-S-S-biotin (T)" aminoacid="T" formula="H34C19N4O5PS3" unimod_id="332">
-    <potential_loss formula="H34C19N4O5PS3" />
+    <potential_loss formula="H34C19N4O5PS3" massdiff_monoisotopic="525.142894" massdiff_average="525.668671" />
   </static_modification>
   <static_modification name="Thiophos-S-S-biotin (Y)" aminoacid="Y" formula="H34C19N4O5PS3" unimod_id="332">
-    <potential_loss formula="H34C19N4O5PS3" />
+    <potential_loss formula="H34C19N4O5PS3" massdiff_monoisotopic="525.142894" massdiff_average="525.668671" />
   </static_modification>
   <static_modification name="Thiophospho (S)" aminoacid="S" formula="HO2PS" unimod_id="260" />
   <static_modification name="Thiophospho (T)" aminoacid="T" formula="HO2PS" unimod_id="260" />
@@ -985,16 +985,16 @@
   <static_modification name="Thrbiotinhydrazide (T)" aminoacid="T" formula="H16C10N4OS" unimod_id="361" />
   <static_modification name="Thyroxine (Y)" aminoacid="Y" formula="C6OI4" unimod_id="398" short_name="Trx" />
   <static_modification name="TMAB (K)" aminoacid="K" formula="H14C7NO" unimod_id="476">
-    <potential_loss formula="H9C3N" />
+    <potential_loss formula="H9C3N" massdiff_monoisotopic="59.073499" massdiff_average="59.11071" />
   </static_modification>
   <static_modification name="TMAB (N-term)" terminus="N" formula="H14C7NO" unimod_id="476">
-    <potential_loss formula="H9C3N" />
+    <potential_loss formula="H9C3N" massdiff_monoisotopic="59.073499" massdiff_average="59.11071" />
   </static_modification>
   <static_modification name="TMAB:2H(9) (K)" aminoacid="K" formula="H5H'9C7NO" unimod_id="477">
-    <potential_loss formula="H'9C3N" />
+    <potential_loss formula="H'9C3N" massdiff_monoisotopic="68.12999" massdiff_average="68.166166" />
   </static_modification>
   <static_modification name="TMAB:2H(9) (N-term)" terminus="N" formula="H5H'9C7NO" unimod_id="477">
-    <potential_loss formula="H'9C3N" />
+    <potential_loss formula="H'9C3N" massdiff_monoisotopic="68.12999" massdiff_average="68.166166" />
   </static_modification>
   <static_modification name="TMPP-Ac (N-term)" terminus="N" formula="H33C29O10P" unimod_id="827" />
   <static_modification name="TMT (H)" aminoacid="H" formula="H20C12N2O2" unimod_id="739" short_name="TM0" />
@@ -1014,7 +1014,7 @@
   <static_modification name="Triiodo (Y)" aminoacid="Y" formula="I3 - H3" unimod_id="131" short_name="3Io" />
   <static_modification name="Triiodothyronine (Y)" aminoacid="Y" formula="HC6OI3" unimod_id="397" short_name="3IT" />
   <static_modification name="Trimethyl (K)" aminoacid="K" formula="H6C3" unimod_id="37" short_name="3Me">
-    <potential_loss formula="H9C3N" />
+    <potential_loss formula="H9C3N" massdiff_monoisotopic="59.073499" massdiff_average="59.11071" />
   </static_modification>
   <static_modification name="Trimethyl (Protein N-term A)" aminoacid="A" terminus="N" formula="H6C3" unimod_id="37" short_name="3Me" />
   <static_modification name="Trimethyl (R)" aminoacid="R" formula="H6C3" unimod_id="37" short_name="3Me" />

@@ -559,6 +559,11 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public void UpdateUI()
         {
+            // Only worry about updates, if the graph is visible
+            // And make sure it is not disposed, since rendering happens on a timer
+            if (!Visible || IsDisposed)
+                return;
+
             // Clear existing data from the graph pane
             var graphPane = (MSGraphPane)graphControl.MasterPane[0];
             graphPane.CurveList.Clear();

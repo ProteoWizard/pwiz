@@ -10691,11 +10691,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installing Packages.
+        /// </summary>
+        public static string PythonInstaller_GetPackages_Installing_Packages {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPackages_Installing_Packages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Package installation completed..
         /// </summary>
         public static string PythonInstaller_GetPackages_Package_installation_completed_ {
             get {
                 return ResourceManager.GetString("PythonInstaller_GetPackages_Package_installation_completed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing Pip.
+        /// </summary>
+        public static string PythonInstaller_GetPip_Installing_Pip {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPip_Installing_Pip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing Python.
+        /// </summary>
+        public static string PythonInstaller_GetPython_Installing_Python {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPython_Installing_Python", resourceCulture);
             }
         }
         
@@ -11869,6 +11896,15 @@ namespace pwiz.Skyline.Properties {
         public static string RInstaller_GetPackages_Package_installation_complete_ {
             get {
                 return ResourceManager.GetString("RInstaller_GetPackages_Package_installation_complete_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing R.
+        /// </summary>
+        public static string RInstaller_GetR_Installing_R {
+            get {
+                return ResourceManager.GetString("RInstaller_GetR_Installing_R", resourceCulture);
             }
         }
         
