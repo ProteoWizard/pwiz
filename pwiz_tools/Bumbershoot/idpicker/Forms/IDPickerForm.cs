@@ -589,7 +589,7 @@ namespace IDPicker
 
             var psmRow = spectrumTableForm.GetRowFromRowHierarchy(rowIndexHierarchy) as SpectrumTableForm.PeptideSpectrumMatchRow;
 
-            spectrumTableForm_SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs(psmRow));
+            spectrumTableForm_SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs(session, psmRow));
         }
 
         void proteinTableForm_ProteinViewVisualize (object sender, ProteinViewVisualizeEventArgs e)

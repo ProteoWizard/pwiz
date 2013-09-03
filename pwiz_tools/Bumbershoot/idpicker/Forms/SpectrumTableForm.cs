@@ -1181,7 +1181,7 @@ namespace IDPicker.Forms
             else if (row is PeptideSpectrumMatchRow)
             {
                 if (SpectrumViewVisualize != null)
-                    SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs(row as PeptideSpectrumMatchRow));
+                    SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs(session, row as PeptideSpectrumMatchRow));
                 return;
             }
 
@@ -1767,14 +1767,20 @@ namespace IDPicker.Forms
 
     public class SpectrumViewVisualizeEventArgs : EventArgs
     {
-        public SpectrumViewVisualizeEventArgs (SpectrumTableForm.PeptideSpectrumMatchRow row)
+        public SpectrumViewVisualizeEventArgs (NHibernate.ISession session, SpectrumTableForm.PeptideSpectrumMatchRow row)
         {
             PeptideSpectrumMatchId = row.PeptideSpectrumMatchId;
             Spectrum = row.Spectrum;
             SpectrumSource = row.Source;
             Analysis = row.Analysis;
-            ModifiedSequence = row.ModifiedSequence;
             Charge = row.Charge;
+
+            lock (session)
+            {
+                var psm = session.Load<PeptideSpectrumMatch>(PeptideSpectrumMatchId);
+                ModifiedSequence = psm.ToModifiedString(5);
+                session.Evict(psm);
+            }
         }
 
         public long PeptideSpectrumMatchId { get; private set; }
