@@ -26,6 +26,7 @@ namespace QuaSAR
         public const string TRUE_STRING = "1";              // Not L10N
         public const string FALSE_STRING = "0";             // Not L10N
         public const string NULL_STRING = "NULL";           // Not L10N
+        public const string NONE_STRING = "None";           // Not L10N
         public const int ARGUMENT_COUNT = 20;
     }
 
@@ -50,7 +51,6 @@ namespace QuaSAR
         public const string ANALYTE = "";
         public const string STANDARD = "";
         public const string UNITS = "";
-        public const string STANDARD_PRESENT = "If there is no standard present, peak area plots will be generated instead of calibration curves";
         public const string NUMBER_TRANSITIONS = "Max number of transitions to be plotted on the calibration curves";
         public const string PAR =
             "If checked then use peak area ratio (PAR) for analysis (instead of concentration) with PAR on the y-axis and analyte concentration on the x-axis";
