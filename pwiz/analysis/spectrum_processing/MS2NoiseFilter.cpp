@@ -229,7 +229,7 @@ FilterSpectrum::FilterSpectrum(const MS2NoiseFilter::Config& params_,
 
 PWIZ_API_DECL void MS2NoiseFilter::describe(ProcessingMethod& method) const
 {
-    method.set(MS_data_filtering); // was MS_SpectrumFilter, now obsolete (and is_a "TOPP Software" so maybe not quite the thing anyway).  Possibly MS_smoothing is a better fit here?
+    method.set(MS_low_intensity_data_point_removal); // was MS_SpectrumFilter, now obsolete - MattC suggests this, which has def: "The removal of very low intensity data points that are likely to be spurious noise rather than real signal." 
     method.userParams.push_back(UserParam("num masses in window", lexical_cast<string>(params.numMassesInWindow)));
     method.userParams.push_back(UserParam("window width (Da)", lexical_cast<string>(params.windowWidth)));
     method.userParams.push_back(UserParam("allow more data below multiply charged precursor", lexical_cast<string>(params.relaxLowMass)));
