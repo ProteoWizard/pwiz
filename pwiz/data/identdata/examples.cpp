@@ -248,13 +248,13 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
 
     SearchModificationPtr sm(new SearchModification);
     sm->massDelta = acetylation.monoisotopicMass();
-    sm->specificityRules.cvid = MS_modification_specificity_N_term;
+    sm->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
     sm->set(UNIMOD_Acetyl);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = amidation.monoisotopicMass();
-    sm->specificityRules.cvid = MS_modification_specificity_C_term;
+    sm->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
     sm->set(UNIMOD_Amidated);
     sip->modificationParams.push_back(sm);
 
@@ -266,7 +266,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = pyroglutQ.monoisotopicMass();
-    sm->specificityRules.cvid = MS_modification_specificity_N_term;
+    sm->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
     sm->residues.push_back('Q');
     sm->set(UNIMOD_Gln__pyro_Glu);
     sip->modificationParams.push_back(sm);

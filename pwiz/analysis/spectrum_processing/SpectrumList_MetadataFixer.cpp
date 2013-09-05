@@ -94,13 +94,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MetadataFixer::spectrum(size_t index, boo
             }
         }
 
-        replaceCvParam(*s, MS_base_peak_intensity, bpi, MS_number_of_counts);
+        replaceCvParam(*s, MS_base_peak_intensity, bpi, MS_number_of_detector_counts);
         replaceCvParam(*s, MS_base_peak_m_z, bpmz, MS_m_z);
         replaceCvParam(*s, MS_lowest_observed_m_z, mzs.front(), MS_m_z);
         replaceCvParam(*s, MS_highest_observed_m_z, mzs.back(), MS_m_z);
     }
 
-    replaceCvParam(*s, MS_TIC, tic, MS_number_of_counts);
+    replaceCvParam(*s, MS_TIC, tic, MS_number_of_detector_counts);
 
     return s;
 }

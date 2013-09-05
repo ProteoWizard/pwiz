@@ -127,7 +127,7 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationItem& sii)
     current_line.push_back(oss.str());
     
     CVParam cvParam = sii.cvParamChild(
-        MS_search_engine_specific_score_for_peptides);
+        MS_search_engine_specific_score_for_PSMs);
 
     if (cvParam.cvid != CVID_Unknown)
         current_line.push_back(cvParam.value);

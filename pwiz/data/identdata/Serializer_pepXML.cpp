@@ -81,7 +81,7 @@ struct AnalysisSoftwareTranslation
 const AnalysisSoftwareTranslation analysisSoftwareTranslationTable[] =
 {
     {MS_pwiz, "ProteoWizard"},
-    {MS_Sequest, "Sequest"},
+    {MS_SEQUEST, "Sequest"},
     {MS_Mascot, "Mascot"},
     {MS_OMSSA, "OMSSA"},
     {MS_Phenyx, "Phenyx"},
@@ -150,8 +150,8 @@ struct ScoreTranslation
 
 const ScoreTranslation scoreTranslationTable[] =
 {
-    {MS_Sequest, MS_Sequest_xcorr, "xcorr"},
-    {MS_Sequest, MS_Sequest_deltacn, "deltacn;deltcn"},
+    {MS_SEQUEST, MS_SEQUEST_xcorr, "xcorr"},
+    {MS_SEQUEST, MS_SEQUEST_deltacn, "deltacn;deltcn"},
     {MS_Mascot, MS_Mascot_score, "ionscore;score"},
     {MS_Mascot, MS_Mascot_identity_threshold, "identityscore"},
     {MS_Mascot, MS_Mascot_homology_threshold, "homologyscore"},
@@ -504,7 +504,7 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
             {
                 if (sm->specificityRules.empty())
                     throw runtime_error("[write_search_summary] Empty SearchModification.");
-                if (sm->specificityRules == MS_modification_specificity_N_term)
+                if (sm->specificityRules == MS_modification_specificity_peptide_N_term)
                     residues.push_back('n');
                 else
                     residues.push_back('c');
@@ -529,9 +529,9 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
                     attributes.add("aminoacid", string(1, aa));
                     attributes.add("massdiff", sm->massDelta);
                     attributes.add("mass", sm->massDelta + aaMass);
-                    if (sm->specificityRules == MS_modification_specificity_N_term)
+                    if (sm->specificityRules == MS_modification_specificity_peptide_N_term)
                         attributes.add("peptide_terminus", "n");
-                    if (sm->specificityRules == MS_modification_specificity_C_term)
+                    if (sm->specificityRules == MS_modification_specificity_peptide_C_term)
                         attributes.add("peptide_terminus", "c");
                 }
                 attributes.add("variable", sm->fixedMod ? "N" : "Y");
@@ -689,7 +689,7 @@ void write_search_hit(XMLWriter& xmlWriter,
         {
             if (cvParam.cvid != MS_number_of_matched_peaks &&
                 cvParam.cvid != MS_number_of_unmatched_peaks &&
-                (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_peptides) ||
+                (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_PSMs) ||
                  regex_match(cvParam.value, what, numericRegex)))
             {
                 const string& preferredScoreName = ScoreTranslator::instance->translate(analysisSoftwareCVID, cvParam.cvid);
@@ -780,8 +780,10 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
 
                 if (sir.hasCVParam(MS_scan_start_time))
                     attributes.add("retention_time_sec", sir.cvParam(MS_scan_start_time).timeInSeconds());
-                else if (sir.hasCVParam(MS_retention_time_s_))
-                    attributes.add("retention_time_sec", sir.cvParam(MS_retention_time_s_).timeInSeconds());
+                else if (sir.hasCVParam(MS_retention_time))
+                    attributes.add("retention_time_sec", sir.cvParam(MS_retention_time).timeInSeconds());
+                else if (sir.hasCVParam(MS_retention_time_s__OBSOLETE))
+                    attributes.add("retention_time_sec", sir.cvParam(MS_retention_time_s__OBSOLETE).timeInSeconds());
 
                 xmlWriter.startElement("spectrum_query", attributes);
 
@@ -1265,9 +1267,9 @@ struct HandlerSearchSummary : public SAXParser::Handler
                 searchModification->fixedMod = lexical_cast<bool>(variable);
 
             if (bal::icontains(peptideTerminus, "n"))
-                searchModification->specificityRules.cvid = MS_modification_specificity_N_term;
+                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
             else if (bal::icontains(peptideTerminus, "c"))
-                searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
+                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
 
             _sip->modificationParams.push_back(searchModification);
 
@@ -1275,7 +1277,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
             if (peptideTerminus == "nc")
             {
                 searchModification.reset(new SearchModification(*searchModification));
-                searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
+                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
                 _sip->modificationParams.push_back(searchModification);
             }
         }
@@ -1290,9 +1292,9 @@ struct HandlerSearchSummary : public SAXParser::Handler
             searchModification->fixedMod = !(variable == "y" || lexical_cast<bool>(variable));
 
             if (terminus == "n")
-                searchModification->specificityRules.cvid = MS_modification_specificity_N_term;
+                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
             else if (terminus == "c")
-                searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
+                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
 
             _sip->modificationParams.push_back(searchModification);
         }

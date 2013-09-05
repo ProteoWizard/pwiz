@@ -117,7 +117,7 @@ void testMRU()
     for (size_t i=0; i<10; i++)
     {
         SpectrumPtr spectrum(new Spectrum);
-        spectrum->setMZIntensityPairs(pairs, MS_number_of_counts);
+        spectrum->setMZIntensityPairs(pairs, MS_number_of_detector_counts);
         spectrum->index = i;
         spectrum->id = "scan=" + lexical_cast<string>(i);
         sl->spectra.push_back(spectrum);
@@ -195,7 +195,7 @@ void testUpdateRequest()
     for (size_t i=0; i<10; i++)
     {
         SpectrumPtr spectrum(new Spectrum);
-        spectrum->setMZIntensityPairs(pairs, MS_number_of_counts);
+        spectrum->setMZIntensityPairs(pairs, MS_number_of_detector_counts);
         spectrum->index = i;
         spectrum->id = "scan=" + lexical_cast<string>(i);
         sl->spectra.push_back(spectrum);
@@ -237,7 +237,7 @@ void testAutomaticUpdate()
     for (size_t i=0; i<10; i++)
     {
         SpectrumPtr spectrum(new Spectrum);
-        spectrum->setMZIntensityPairs(pairs, MS_number_of_counts);
+        spectrum->setMZIntensityPairs(pairs, MS_number_of_detector_counts);
         spectrum->index = i;
         spectrum->id = "scan=" + lexical_cast<string>(i);
         sl->spectra.push_back(spectrum);

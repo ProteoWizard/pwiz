@@ -108,7 +108,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
         if (getBinaryData)
         {
-            result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+            result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
             result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
 
             automation_vector<double> yArray(*trace->GetValues(), automation_vector<double>::MOVE);

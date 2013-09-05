@@ -267,6 +267,9 @@ void parseTagValuePair(const string& line, Term& term)
              tag == "xref_analog" ||
              tag == "replaced_by" ||
              tag == "created_by" ||
+             tag == "has_domain" || // first appeared in psi-ms.obo 3.52.0
+             tag == "has_order"  || // first appeared in psi-ms.obo 3.52.0
+             tag == "subset"  ||    // first appeared in unit.obo in rev 2755
              tag == "creation_date")
         ; // ignore these tags
     else

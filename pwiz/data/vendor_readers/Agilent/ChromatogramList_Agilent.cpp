@@ -94,7 +94,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
         {
             if (getBinaryData)
             {
-                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
                 result->getTimeArray()->data.assign(rawfile_->getTicTimes().begin(), rawfile_->getTicTimes().end());
                 result->getIntensityArray()->data.assign(rawfile_->getTicIntensities().begin(), rawfile_->getTicIntensities().end());
 
@@ -119,7 +119,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
             if (getBinaryData)
             {
-                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
 
                 automation_vector<double> xArray;
                 chromatogramPtr->getXArray(xArray);
@@ -144,7 +144,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
             if (getBinaryData)
             {
-                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_counts);
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
 
                 automation_vector<double> xArray;
                 chromatogramPtr->getXArray(xArray);

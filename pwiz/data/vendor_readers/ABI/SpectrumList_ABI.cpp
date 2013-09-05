@@ -214,13 +214,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 
         //result->set(MS_lowest_observed_m_z, spectrum->getMinX(), MS_m_z);
         //result->set(MS_highest_observed_m_z, spectrum->getMaxX(), MS_m_z);
-        result->set(MS_base_peak_intensity, spectrum->getBasePeakY(), MS_number_of_counts);
+        result->set(MS_base_peak_intensity, spectrum->getBasePeakY(), MS_number_of_detector_counts);
         result->set(MS_base_peak_m_z, spectrum->getBasePeakX(), MS_m_z);
-        result->set(MS_total_ion_current, spectrum->getSumY(), MS_number_of_counts);
+        result->set(MS_total_ion_current, spectrum->getSumY(), MS_number_of_detector_counts);
 
         if (getBinaryData)
         {
-            result->setMZIntensityArrays(std::vector<double>(), std::vector<double>(), MS_number_of_counts);
+            result->setMZIntensityArrays(std::vector<double>(), std::vector<double>(), MS_number_of_detector_counts);
             BinaryDataArrayPtr mzArray = result->getMZArray();
             BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 

@@ -149,7 +149,7 @@ void testChromatograms()
         TimeIntensityPairList^ pairs = gcnew TimeIntensityPairList();
         for (int j=0; j<10; j++) pairs->Add(gcnew TimeIntensityPair(j, 10*i+j));
         cls->chromatograms->Add(gcnew Chromatogram());
-        cls->chromatograms->default[cls->chromatograms->Count-1]->setTimeIntensityPairs(pairs, CVID::UO_minute, CVID::MS_number_of_counts);
+        cls->chromatograms->default[cls->chromatograms->Count-1]->setTimeIntensityPairs(pairs, CVID::UO_minute, CVID::MS_number_of_detector_counts);
     }
 
     ChromatogramList^ cl = cls;

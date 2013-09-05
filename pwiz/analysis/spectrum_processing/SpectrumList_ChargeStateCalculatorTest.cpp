@@ -307,7 +307,7 @@ int test()
 
             vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
             vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-            s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+            s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
 
             s->precursors.push_back(Precursor(t.inputPrecursorMZ));
             vector<double> inputChargeStateArray = parseDoubleArray(t.inputChargeStateArray);

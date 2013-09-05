@@ -124,8 +124,8 @@ PWIZ_API_DECL Site site(char symbol);
 
 /// returns a Position corresponding to one of the following CVIDs:
 /// CVID_Unknown: Position::Anywhere
-/// MS_modification_specificity_N_term: Position::AnyNTerminus
-/// MS_modification_specificity_C_term: Position::AnyCTerminus
+/// MS_modification_specificity_peptide_N_term: Position::AnyNTerminus
+/// MS_modification_specificity_peptide_C_term: Position::AnyCTerminus
 /// Else: invalid_argument exception
 PWIZ_API_DECL Position position(CVID cvid = CVID_Unknown);
 

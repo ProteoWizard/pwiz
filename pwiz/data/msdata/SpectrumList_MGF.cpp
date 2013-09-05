@@ -152,7 +152,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         double basePeakMZ = 0;
         double basePeakIntensity = 0;
         spectrum.defaultArrayLength = 0;
-        spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+        spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
         vector<double>& mzArray = spectrum.getMZArray()->data;
         vector<double>& intensityArray = spectrum.getIntensityArray()->data;
 	    while (getline(*is_, lineStr))
@@ -209,7 +209,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 if (delim2 != string::npos)
                                 {
                                     selectedIon.set(MS_selected_ion_m_z, value.substr(0, delim2), MS_m_z);
-                                    selectedIon.set(MS_peak_intensity, value.substr(delim2+1), MS_number_of_counts);
+                                    selectedIon.set(MS_peak_intensity, value.substr(delim2+1), MS_number_of_detector_counts);
                                 }
                                 else
                                     selectedIon.set(MS_selected_ion_m_z, value, MS_m_z);

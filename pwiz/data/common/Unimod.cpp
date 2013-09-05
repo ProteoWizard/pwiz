@@ -302,8 +302,8 @@ PWIZ_API_DECL Position position(CVID cvid)
     switch (cvid)
     {
         case CVID_Unknown: return Position::Anywhere;
-        case MS_modification_specificity_N_term: return Position::AnyNTerminus;
-        case MS_modification_specificity_C_term: return Position::AnyCTerminus;
+        case MS_modification_specificity_peptide_N_term: return Position::AnyNTerminus;
+        case MS_modification_specificity_peptide_C_term: return Position::AnyCTerminus;
         default: throw invalid_argument("[unimod::position] invalid cvid");
     }
 }

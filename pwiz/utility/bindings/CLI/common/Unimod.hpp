@@ -150,8 +150,8 @@ static Site site(System::Char symbol);
 /// <summary>
 /// returns a Position corresponding to one of the following CVIDs:
 /// CVID.CVID_Unknown: Position.Anywhere
-/// MS_modification_specificity_N_term: Position.AnyNTerminus
-/// MS_modification_specificity_C_term: Position.AnyCTerminus
+/// MS_modification_specificity_peptide_N_term: Position.AnyNTerminus
+/// MS_modification_specificity_peptide_C_term: Position.AnyCTerminus
 /// Else: InvalidArgumentException
 /// </summary>
 static Position position(CVID cvid);

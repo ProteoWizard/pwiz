@@ -63,7 +63,7 @@ void test(bool indexed)
     dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
     dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
     dummy.softwarePtrs.push_back(SoftwarePtr(new Software("pwiz")));
-    dummy.softwarePtrs.back()->set(MS_ProteoWizard);
+    dummy.softwarePtrs.back()->set(MS_ProteoWizard_software);
     dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("1")));
     dummy.instrumentConfigurationPtrs.back()->set(MS_LCQ_Deca);
     dummy.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("doobie", "420"));

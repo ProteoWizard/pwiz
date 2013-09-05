@@ -927,7 +927,7 @@ void testSpectrumIdentificationProtocol()
     a.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("a_as"));
 
     a.searchType.cvid = MS_pmf_search;
-    a.additionalSearchParams.set(MS_Sequest_CleavesAt, "cleavage");
+    a.additionalSearchParams.set(MS_SEQUEST_CleavesAt, "cleavage");
     SearchModificationPtr smp(new SearchModification());
     smp->fixedMod = true;
     a.modificationParams.push_back(smp);
@@ -957,7 +957,7 @@ void testSpectrumIdentificationProtocol()
     b.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("b_as"));
 
     b.searchType.cvid = MS_ms_ms_search;
-    b.additionalSearchParams.set(MS_Sequest_CleavesAt, "land");
+    b.additionalSearchParams.set(MS_SEQUEST_CleavesAt, "land");
     b.modificationParams.clear();
     b.enzymes.enzymes.clear();
     b.massTable.clear();

@@ -244,7 +244,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
             if (detailLevel == DetailLevel_FullData)
             {
-                result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+                result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
                 result->defaultArrayLength = lcX.size();
 
                 BinaryDataArrayPtr mzArray = result->getMZArray();
@@ -427,7 +427,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
         if (detailLevel == DetailLevel_FullData)
         {
-            result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+            result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
 	        automation_vector<double> mzArray, intensityArray;
             if (getLineData)
                 spectrum->getLineData(mzArray, intensityArray);

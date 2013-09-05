@@ -376,7 +376,7 @@ void testSearchModification()
     a.residues.push_back('Q');
     a.residues.push_back('E');
     a.set(UNIMOD_Gln__pyro_Glu);
-    a.specificityRules.cvid = MS_modification_specificity_N_term;
+    a.specificityRules.cvid = MS_modification_specificity_peptide_N_term;
 
     testObject(a);
 }

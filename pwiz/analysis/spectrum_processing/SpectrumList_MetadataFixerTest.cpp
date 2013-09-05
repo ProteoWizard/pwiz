@@ -86,8 +86,8 @@ void test()
 
         vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s0->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
-        s1->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s0->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
+        s1->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
 
         SpectrumListPtr fixer(new SpectrumList_MetadataFixer(originalList));
 

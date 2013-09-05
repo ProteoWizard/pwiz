@@ -380,9 +380,12 @@ vector<TextRecord> fetchSpectrumIdResults(
         // Fetch the retention time.
         //
         // Retention time should be kept in the cvParams under accession
-        // "MS:1001114"
+        // MS_retention_time_s__OBSOLETE "MS:1001114", formerly, or
+        // MS_retention_time "MS:1000894"
 
         CVParam rtParam = sir->cvParam(MS_retention_time);
+        if (rtParam.cvid == CVID_Unknown)
+            rtParam = sir->cvParam(MS_retention_time_s__OBSOLETE);
         if (rtParam.cvid != CVID_Unknown)
         {
             ostringstream oss;

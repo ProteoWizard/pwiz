@@ -146,13 +146,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI_T2D::spectrum(size_t index, bool getB
     double bpmz, bpi;
     spectrum->getBasePeak(bpmz, bpi);
     result->set(MS_base_peak_m_z, bpmz, MS_m_z);
-    result->set(MS_base_peak_intensity, bpi, MS_number_of_counts);
+    result->set(MS_base_peak_intensity, bpi, MS_number_of_detector_counts);
 
-    result->set(MS_total_ion_current, spectrum->getTIC(), MS_number_of_counts);
+    result->set(MS_total_ion_current, spectrum->getTIC(), MS_number_of_detector_counts);
 
     if (getBinaryData)
     {
-        result->setMZIntensityArrays(std::vector<double>(), std::vector<double>(), MS_number_of_counts);
+        result->setMZIntensityArrays(std::vector<double>(), std::vector<double>(), MS_number_of_detector_counts);
         BinaryDataArrayPtr mzArray = result->getMZArray();
         BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 

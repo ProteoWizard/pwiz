@@ -132,8 +132,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     result->set(translateAsSpectrumType(scanType));
 
     result->set(MS_base_peak_m_z, scanRecordPtr->getBasePeakMZ(), MS_m_z);
-    result->set(MS_base_peak_intensity, rawfile_->getBpcIntensities()[ie.rowNumber], MS_number_of_counts);
-    result->set(MS_total_ion_current, rawfile_->getTicIntensities()[ie.rowNumber], MS_number_of_counts);
+    result->set(MS_base_peak_intensity, rawfile_->getBpcIntensities()[ie.rowNumber], MS_number_of_detector_counts);
+    result->set(MS_total_ion_current, rawfile_->getTicIntensities()[ie.rowNumber], MS_number_of_detector_counts);
 
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
@@ -210,7 +210,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
 
         double precursorIntensity;
         if (spectrumPtr->getPrecursorIntensity(precursorIntensity) && precursorIntensity > 0)
-            selectedIon.set(MS_peak_intensity, precursorIntensity, MS_number_of_counts);
+            selectedIon.set(MS_peak_intensity, precursorIntensity, MS_number_of_detector_counts);
     }
 
     MSStorageMode storageMode = spectrumPtr->getMSStorageMode();
@@ -234,7 +234,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
 
     if (detailLevel == DetailLevel_FullData)
     {
-        result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+        result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
 
         vector<double>& mzArray = result->getMZArray()->data;
         vector<double>& intensityArray = result->getIntensityArray()->data;

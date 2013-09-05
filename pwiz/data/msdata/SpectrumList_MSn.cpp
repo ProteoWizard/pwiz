@@ -229,7 +229,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     double basePeakMZ = 0;
     double basePeakIntensity = 0;
     spectrum.defaultArrayLength = 0;
-    spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+    spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
     vector<double>& mzArray = spectrum.getMZArray()->data;
     vector<double>& intensityArray = spectrum.getIntensityArray()->data;
     double precursor_mz = 0;
@@ -571,7 +571,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     double basePeakMZ = 0;  // we may already have these but we have to read the peaks anyway...
     double basePeakIntensity = 0;
     spectrum.defaultArrayLength = 0;
-    spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+    spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
     vector<double>& mzArray = spectrum.getMZArray()->data;
     vector<double>& intensityArray = spectrum.getIntensityArray()->data;
     double mz = 0;

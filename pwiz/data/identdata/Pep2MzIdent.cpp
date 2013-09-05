@@ -900,7 +900,7 @@ CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
 {
     static const CVID cvids[][2] = {
         {MS_Mascot, MS_Mascot_score},
-        {MS_Sequest, MS_Sequest_probability},
+        {MS_SEQUEST, MS_SEQUEST_probability},
         {MS_Phenyx, MS_Phenyx_Score},
         {CVID_Unknown, CVID_Unknown}
     };
@@ -934,7 +934,7 @@ CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
 AnalysisSoftwarePtr guessAnalysisSoftware(
     const vector<AnalysisSoftwarePtr>& software)
 {
-    static const CVID cvids[] = {MS_Mascot, MS_Sequest,
+    static const CVID cvids[] = {MS_Mascot, MS_SEQUEST,
                                  MS_Phenyx, CVID_Unknown};
     AnalysisSoftwarePtr asp(new AnalysisSoftware());
 
@@ -1277,7 +1277,7 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
         iequals(summary->searchEngine, "Mascot"))
         searchDatabase->fileFormat.set(MS_Mascot_DAT_file);
     else if (iequals(summary->searchEngine, "Sequest"))
-        searchDatabase->fileFormat.set(MS_Sequest_out_file);
+        searchDatabase->fileFormat.set(MS_SEQUEST_out_file);
     else if (iequals(summary->searchEngine, "X_Tandem"))
         searchDatabase->fileFormat.set(MS_X_Tandem_xml_file);
     */
@@ -1989,7 +1989,7 @@ CVID Pep2MzIdent::Impl::getCVID(const string& name)
         }
         else if (iequals(name, "Sequest"))
         {
-            id = MS_Sequest;
+            id = MS_SEQUEST;
         }
         else if (iequals(name, "phenyx"))
         {

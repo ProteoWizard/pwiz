@@ -69,7 +69,7 @@ void initializeTinyMS1(MSData& msd)
     Scan& s20scan = s20.scanList.scans.back();
     s20scan.set(MS_scan_start_time, 4, UO_second);
 
-    s20.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+    s20.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
     vector<double>& s20_mz = s20.getMZArray()->data;
     vector<double>& s20_intensity = s20.getIntensityArray()->data;
 
@@ -123,7 +123,7 @@ void initializeTinyMS2(MSData& msd)
     Scan& s20scan = s20.scanList.scans.back();
     s20scan.set(MS_scan_start_time, 4, UO_second);
 
-    s20.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+    s20.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
     vector<double>& s20_mz = s20.getMZArray()->data;
     vector<double>& s20_intensity = s20.getIntensityArray()->data;
 

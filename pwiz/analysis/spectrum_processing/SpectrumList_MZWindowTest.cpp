@@ -68,7 +68,7 @@ SpectrumListPtr createSpectrumList()
         // data: (i,1000) (i+1,1001) (i+2,1002) (i+3,1003) (i+4,1004)
         vector<MZIntensityPair> data(5);
         for (size_t j=0; j<5; j++) data[j] = MZIntensityPair(i+j, 1000+j); 
-        spectrum->setMZIntensityPairs(data, MS_number_of_counts);
+        spectrum->setMZIntensityPairs(data, MS_number_of_detector_counts);
 
         sl->spectra.push_back(spectrum);
     }

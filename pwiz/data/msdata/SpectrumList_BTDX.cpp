@@ -244,7 +244,7 @@ class HandlerCompound : public SAXParser::Handler
             int zValue = lexical_cast<int>(z);
 
             spectrum_.precursors.push_back(
-                Precursor(mzValue, iValue, zValue, MS_number_of_counts));
+                Precursor(mzValue, iValue, zValue, MS_number_of_detector_counts));
             // TODO: support sn: spectrum_.precursors.back().set(MS_signal_to_noise, sn);
             return Status::Ok;
         }
@@ -260,7 +260,7 @@ class HandlerCompound : public SAXParser::Handler
         }
         else if (name == "ms_peaks")
         {
-            spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+            spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
 
             handlerPeaks_ = shared_ptr<HandlerPeaks>(
                                new HandlerPeaks(spectrum_, getBinaryData_,

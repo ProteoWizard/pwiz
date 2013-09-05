@@ -91,7 +91,7 @@ SpectrumPtr makeSpectrumPtr(size_t index, const string& id)
     spectrum->set(MS_MSn_spectrum);
     spectrum->set(MS_ms_level, 2);
     spectrum->precursors.push_back(Precursor(123.4));
-    spectrum->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+    spectrum->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
     BinaryDataArray& mzArray = *spectrum->getMZArray();
     BinaryDataArray& intensityArray = *spectrum->getIntensityArray();
     for (size_t i=0; i < (index+1)*10; ++i)

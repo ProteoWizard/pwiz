@@ -66,7 +66,7 @@ SpectrumListPtr createSpectrumList()
         SpectrumPtr spectrum(new Spectrum);
         spectrum->index = i;
         spectrum->id = "scan=" + lexical_cast<string>(100+i);
-        spectrum->setMZIntensityPairs(vector<MZIntensityPair>(i), MS_number_of_counts);
+        spectrum->setMZIntensityPairs(vector<MZIntensityPair>(i), MS_number_of_detector_counts);
 
         // add mz/intensity to the spectra for mzPresent filter
         vector<MZIntensityPair> mzint(i*2);
@@ -74,7 +74,7 @@ SpectrumListPtr createSpectrumList()
         {
             mzint.insert(mzint.end(), MZIntensityPair(j*100, j*j));
         }
-        spectrum->setMZIntensityPairs(mzint, MS_number_of_counts);
+        spectrum->setMZIntensityPairs(mzint, MS_number_of_detector_counts);
 
         bool isMS1 = i%3==0;
         spectrum->set(MS_ms_level, isMS1 ? 1 : 2);

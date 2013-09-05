@@ -53,8 +53,8 @@ void test()
 
 
     unit_assert_operator_equal(Position::Anywhere, position());
-    unit_assert_operator_equal(Position::AnyNTerminus, position(MS_modification_specificity_N_term));
-    unit_assert_operator_equal(Position::AnyCTerminus, position(MS_modification_specificity_C_term));
+    unit_assert_operator_equal(Position::AnyNTerminus, position(MS_modification_specificity_peptide_N_term));
+    unit_assert_operator_equal(Position::AnyCTerminus, position(MS_modification_specificity_peptide_C_term));
     unit_assert_throws_what(position(MS_ion_trap), invalid_argument, "[unimod::position] invalid cvid");
 
 

@@ -141,7 +141,7 @@ struct HandlerPrecursor : public SAXParser::Handler
             precursor->selectedIons.push_back(SelectedIon());
 
             if (!precursorIntensity.empty() && precursorIntensity != "0")
-                precursor->selectedIons.back().set(MS_peak_intensity, precursorIntensity, MS_number_of_counts);
+                precursor->selectedIons.back().set(MS_peak_intensity, precursorIntensity, MS_number_of_detector_counts);
 
             if (!precursorCharge.empty())
                 precursor->selectedIons.back().set(MS_charge_state, precursorCharge);
@@ -264,7 +264,7 @@ class HandlerPeaks : public SAXParser::Handler
     {
         if (peaksCount == 0)
         {
-            spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+            spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
             return Status::Ok;
         }
 
@@ -276,7 +276,7 @@ class HandlerPeaks : public SAXParser::Handler
             throw runtime_error("[SpectrumList_mzXML::HandlerPeaks] Invalid peak count."); 
 
         spectrum_.setMZIntensityPairs(reinterpret_cast<const MZIntensityPair*>(&decoded[0]),
-                                      peaksCount, MS_number_of_counts);
+                                      peaksCount, MS_number_of_detector_counts);
         return Status::Ok;
     }
  
@@ -487,7 +487,7 @@ class HandlerScan : public SAXParser::Handler
 
             if (!getBinaryData_ || handlerPeaks_.peaksCount == 0)
             {
-                spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+                spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
                 spectrum_.defaultArrayLength = handlerPeaks_.peaksCount;
                 return Status::Ok;
             }

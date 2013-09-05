@@ -67,7 +67,7 @@ void initialize(MSData& msd)
         spectrum->id = "scan=" + lexical_cast<string>(18+(int)i);
         spectrum->scanList.scans.push_back(Scan());
         spectrum->scanList.scans.back().cvParams.push_back(CVParam(MS_scan_start_time, 420+int(i), UO_second));
-        spectrum->setMZIntensityPairs((MZIntensityPair*)data_[i], 7, MS_number_of_counts);
+        spectrum->setMZIntensityPairs((MZIntensityPair*)data_[i], 7, MS_number_of_detector_counts);
     }
 }
 

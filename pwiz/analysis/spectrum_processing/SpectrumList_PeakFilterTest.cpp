@@ -160,7 +160,7 @@ void testPrecursorMassRemoval()
         s->set(MS_MSn_spectrum);
         s->set(MS_ms_level, 2);
 
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
         s->precursors.resize(1);
         s->precursors[0].activation.set(MS_electron_transfer_dissociation);
         s->precursors[0].selectedIons.resize(1);
@@ -362,7 +362,7 @@ void testIntensityThresholding()
 
         vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
 
         SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new ThresholdFilter(t.byType, t.threshold, t.orientation));
         SpectrumListPtr thresholder(new SpectrumList_PeakFilter(originalList, pFilter));
@@ -393,7 +393,7 @@ void testIntensityThresholding()
 
         vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
 
         SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new ThresholdFilter(t.byType, t.threshold, t.orientation, IntegerSet(2)));
         SpectrumListPtr thresholder(new SpectrumList_PeakFilter(originalList, pFilter));
@@ -454,7 +454,7 @@ void testDeisotoping()
 
         vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
         s->set(MS_MSn_spectrum);
         s->set(MS_ms_level, 2);
         s->precursors.resize(1);
@@ -540,7 +540,7 @@ void testMS2Denoising()
 
         vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
         vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
         s->set(MS_MSn_spectrum);
         s->set(MS_ms_level, 2);
         s->precursors.resize(1);
@@ -617,7 +617,7 @@ void testZeroSamplesFilter() {
 
     vector<double> inputMZArray = parseDoubleArray(RawX);
     vector<double> inputIntensityArray = parseDoubleArray(RawY);
-    s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+    s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_detector_counts);
     s->set(MS_MSn_spectrum);
     s->set(MS_ms_level, 2);
     s->precursors.resize(1);

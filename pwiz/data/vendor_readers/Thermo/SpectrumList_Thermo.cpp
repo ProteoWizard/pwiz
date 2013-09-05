@@ -250,7 +250,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             if (getBinaryData)
             {
                 result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(xyList->data()), 
-                                            xyList->size(), MS_number_of_counts);
+                                            xyList->size(), MS_number_of_detector_counts);
 
                 // replace "m/z array" term with "wavelength array"
                 BinaryDataArray& xArray = *result->getMZArray();
@@ -310,7 +310,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         }
 
         result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), MS_m_z);
-        result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity(), MS_number_of_counts);
+        result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity(), MS_number_of_detector_counts);
         result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
         if (scanInfo->FAIMSOn())
@@ -535,7 +535,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                             peakIntensity = max(peakIntensity, massList->data()[i].intensity);
                     }
                     if (peakIntensity > 0)
-                        selectedIon.set(MS_peak_intensity, peakIntensity, MS_number_of_counts);
+                        selectedIon.set(MS_peak_intensity, peakIntensity, MS_number_of_detector_counts);
                     */
 
                     if (detailLevel >= DetailLevel_FullMetadata)
@@ -559,7 +559,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                             throw runtime_error("[SpectrumList_Thermo::spectrum()] No chromatogram time points for the scan time.");
 
                         if (c->data()[0].intensity > 0)
-                            selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_counts);
+                            selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_detector_counts);
                     }
                 }
             }
@@ -613,7 +613,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 			if (getBinaryData)
 			{
 				result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
-											massList->size(), MS_number_of_counts);
+											massList->size(), MS_number_of_detector_counts);
 			}
 		}
 
