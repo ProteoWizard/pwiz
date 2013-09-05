@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestFunctional
             // Check WindowWidth values.
             CheckError(() => _calcDlg.WindowWidth = 0.99, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
             CheckError(() => _calcDlg.WindowWidth = 1951, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
-            CheckError(() => _calcDlg.WindowWidth = 1950, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.WindowWidth = 1950, Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range);
             CheckError(() => _calcDlg.WindowWidth = 1);
 
             // Check Overlap values.

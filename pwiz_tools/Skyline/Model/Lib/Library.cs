@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder)
         {
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+            LocalizationHelper.InitThread();
             // This blocks all library loading, while a library is being built
             // TODO: Something better than locking for the entire build
             lock (_loadedLibraries)

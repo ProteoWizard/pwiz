@@ -2,6 +2,9 @@
 <TestSettings name="TestSettings_x86" id="e16f41a3-c72c-4c2b-a8ec-f0850c1ab70e" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
   <Description>These are default test settings for a local test run.</Description>
   <Deployment>
+    <!-- Localization -->
+    <DeploymentItem filename="bin\x86\Release\ja\Skyline.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x86\Debug\ja\Skyline.resources.dll" outputDirectory="ja" />
     <!-- SQLite -->
     <DeploymentItem filename="..\..\libraries\SQLite\x86\System.Data.SQLite.dll" />
     <!-- Vendor readers -->

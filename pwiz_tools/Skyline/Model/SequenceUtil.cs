@@ -68,6 +68,18 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public static IEnumerable<char> All
+        {
+            get
+            {
+                for (char aa = 'A'; aa <= 'Z'; aa++)
+                {
+                    if (IsAA(aa))
+                        yield return aa;
+                }
+            }
+        }
+
         public static bool IsExAA(char c)
         {
             if (IsAA(c))

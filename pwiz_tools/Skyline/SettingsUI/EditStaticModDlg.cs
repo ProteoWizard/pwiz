@@ -52,6 +52,14 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
+            // Amino acid characters and termini should not be localized
+            comboAA.Items.Add(string.Empty);
+            foreach (char aa in AminoAcid.All)
+                comboAA.Items.Add(aa.ToString(CultureInfo.InvariantCulture));
+            comboTerm.Items.Add(string.Empty);
+            comboTerm.Items.Add(ModTerminus.N.ToString());
+            comboTerm.Items.Add(ModTerminus.C.ToString());
+
             ComboNameVisible = !_editing;
             TextNameVisible = _editing;
 

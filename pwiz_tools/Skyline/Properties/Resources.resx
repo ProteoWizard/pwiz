@@ -5839,4 +5839,10 @@ Are you sure you want to continue?</value>
     <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
     <value>Installing Pip</value>
   </data>
+  <data name="TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_" xml:space="preserve">
+    <value>The label {0} is not a valid start fragment filter.</value>
+  </data>
+  <data name="TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_" xml:space="preserve">
+    <value>The label {0} is not a valid end fragment filter.</value>
+  </data>
 </root>

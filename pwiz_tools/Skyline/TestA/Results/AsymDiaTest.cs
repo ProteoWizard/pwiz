@@ -42,6 +42,8 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void AsymmetricIsolationTest()
         {
+            LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized
+
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("Asym_DIA.sky");
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);

@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.AddDialog("OpenLinkTest", "http://www.google.com", _empty, _empty, false, _empty);
                     // Not L10N
                     configureToolsDlg.AddDialog("HttpPostTest", "http://www.google.com", _empty, _empty, false,
-                                                "Transition Results"); // Not L10N
+                                                Resources.ReportSpecList_GetDefaults_Transition_Results);
                     Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
                     configureToolsDlg.OkDialog();
                 });
@@ -176,9 +176,9 @@ namespace pwiz.SkylineTestFunctional
                     //Remove all tools.
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.AddDialog("ImWindowTest", exePath, _empty, _empty, true,
-                                                "Peptide RT Results"); // Report passed via stdin. // Not L10N
+                                                Resources.ReportSpecList_GetDefaults_Peptide_RT_Results); // Report passed via stdin. // Not L10N
                     configureToolsDlg.AddDialog("ImWindowTestWithMacro", exePath, ToolMacros.INPUT_REPORT_TEMP_PATH,
-                                                _empty, true, "Transition Results");
+                                                _empty, true, Resources.ReportSpecList_GetDefaults_Transition_Results);
                     // Report passed as an argument. // Not L10N
                     Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
                     configureToolsDlg.OkDialog();
@@ -302,7 +302,7 @@ namespace pwiz.SkylineTestFunctional
                 {                    
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.Add();
-                    Assert.AreEqual("[New Tool1]", configureToolsDlg.ToolList[0].Title); // Not L10N
+                    Assert.AreEqual(string.Format(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, 1), configureToolsDlg.ToolList[0].Title); // Not L10N
                     Assert.AreEqual(1, configureToolsDlg.ToolList.Count);
                     Assert.IsFalse(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsFalse(configureToolsDlg.btnMoveDown.Enabled);
@@ -821,7 +821,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestNewToolName()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            RunUI(() => configureToolsDlg.AddDialog("[New Tool1]", EXAMPLE1_EXE, _empty, _empty));
+            RunUI(() => configureToolsDlg.AddDialog(string.Format(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, 1), EXAMPLE1_EXE, _empty, _empty));
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.Add, messageDlg =>
             {
                 AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);

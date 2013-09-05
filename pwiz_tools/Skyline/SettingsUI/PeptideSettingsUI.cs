@@ -74,6 +74,8 @@ namespace pwiz.Skyline.SettingsUI
             // Initialize digestion settings
             _driverEnzyme = new SettingsListComboDriver<Enzyme>(comboEnzyme, Settings.Default.EnzymeList);
             _driverEnzyme.LoadList(_peptideSettings.Enzyme.GetKey());
+            for (int i = DigestSettings.MIN_MISSED_CLEAVAGES; i <= DigestSettings.MAX_MISSED_CLEAVAGES; i++)
+                cbMissedCleavages.Items.Add(i.ToString(CultureInfo.InvariantCulture));
             cbMissedCleavages.SelectedItem = Digest.MaxMissedCleavages.ToString(CultureInfo.CurrentCulture);
             if (cbMissedCleavages.SelectedIndex < 0)
                 cbMissedCleavages.SelectedIndex = 0;

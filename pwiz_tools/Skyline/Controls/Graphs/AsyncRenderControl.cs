@@ -72,6 +72,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Name = "AllChromatograms background render",    // Not L10N
                     IsBackground = true
                 };
+            LocalizationHelper.InitThread(_backgroundRenderThread);
             _backgroundRenderThread.Start();
         }
 

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 
@@ -391,6 +393,20 @@ EndSelection:<<<<<<<3
                 return prefix;
             }
             return prefix;
+        }
+    }
+
+    public static class LocalizationHelper
+    {
+        public static void InitThread()
+        {
+            InitThread(Thread.CurrentThread);            
+        }
+
+        public static void InitThread(Thread thread)
+        {
+            thread.CurrentUICulture = CultureInfo.CurrentCulture;
+//            thread.CurrentUICulture = new CultureInfo("ja");
         }
     }
 }

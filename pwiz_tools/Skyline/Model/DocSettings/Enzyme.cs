@@ -404,6 +404,9 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("digest_settings")]
     public sealed class DigestSettings : IXmlSerializable
     {
+        public const int MIN_MISSED_CLEAVAGES = 0;
+        public const int MAX_MISSED_CLEAVAGES = 9;
+
         public DigestSettings(int maxMissedCleavages, bool excludeRaggedEnds)
         {
             MaxMissedCleavages = maxMissedCleavages;
@@ -431,7 +434,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            ValidateIntRange(Resources.DigestSettings_Validate_maximum_missed_cleavages, MaxMissedCleavages, 0, 9);
+            ValidateIntRange(Resources.DigestSettings_Validate_maximum_missed_cleavages, MaxMissedCleavages,
+                MIN_MISSED_CLEAVAGES, MAX_MISSED_CLEAVAGES);
         }
 
         private static void ValidateIntRange(string label, int n, int min, int max)

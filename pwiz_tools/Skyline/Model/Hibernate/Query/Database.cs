@@ -629,7 +629,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             Transition transition = nodeTran.Transition;
             IsotopeLabelType labelType = transition.Group.LabelType;
-            string fragmentIon = transition.FragmentIonName;
+            string fragmentIon = transition.GetFragmentIonName(CultureInfo.InvariantCulture);
             if (transition.IonType == IonType.precursor)
                 fragmentIon += Transition.GetMassIndexText(transition.MassIndex);
             DbTransition dbTransition = new DbTransition

@@ -146,29 +146,6 @@
             // comboAA
             // 
             this.comboAA.FormattingEnabled = true;
-            this.comboAA.Items.AddRange(new object[] {
-            resources.GetString("comboAA.Items"),
-            resources.GetString("comboAA.Items1"),
-            resources.GetString("comboAA.Items2"),
-            resources.GetString("comboAA.Items3"),
-            resources.GetString("comboAA.Items4"),
-            resources.GetString("comboAA.Items5"),
-            resources.GetString("comboAA.Items6"),
-            resources.GetString("comboAA.Items7"),
-            resources.GetString("comboAA.Items8"),
-            resources.GetString("comboAA.Items9"),
-            resources.GetString("comboAA.Items10"),
-            resources.GetString("comboAA.Items11"),
-            resources.GetString("comboAA.Items12"),
-            resources.GetString("comboAA.Items13"),
-            resources.GetString("comboAA.Items14"),
-            resources.GetString("comboAA.Items15"),
-            resources.GetString("comboAA.Items16"),
-            resources.GetString("comboAA.Items17"),
-            resources.GetString("comboAA.Items18"),
-            resources.GetString("comboAA.Items19"),
-            resources.GetString("comboAA.Items20"),
-            resources.GetString("comboAA.Items21")});
             resources.ApplyResources(this.comboAA, "comboAA");
             this.comboAA.Name = "comboAA";
             this.comboAA.SelectedIndexChanged += new System.EventHandler(this.comboAA_SelectedIndexChanged);
@@ -180,10 +157,6 @@
             resources.ApplyResources(this.comboTerm, "comboTerm");
             this.comboTerm.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboTerm.FormattingEnabled = true;
-            this.comboTerm.Items.AddRange(new object[] {
-            resources.GetString("comboTerm.Items"),
-            resources.GetString("comboTerm.Items1"),
-            resources.GetString("comboTerm.Items2")});
             this.comboTerm.Name = "comboTerm";
             // 
             // label6

@@ -28,6 +28,7 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FilterMatchedPeptidesDlg));
             this.radioNoDuplicates = new System.Windows.Forms.RadioButton();
             this.radioFirstOccurence = new System.Windows.Forms.RadioButton();
             this.radioAddToAll = new System.Windows.Forms.RadioButton();
@@ -51,129 +52,78 @@ namespace pwiz.Skyline.Alerts
             // 
             // radioNoDuplicates
             // 
-            this.radioNoDuplicates.AutoSize = true;
+            resources.ApplyResources(this.radioNoDuplicates, "radioNoDuplicates");
             this.radioNoDuplicates.Checked = true;
-            this.radioNoDuplicates.Location = new System.Drawing.Point(6, 26);
             this.radioNoDuplicates.Name = "radioNoDuplicates";
-            this.radioNoDuplicates.Size = new System.Drawing.Size(78, 17);
-            this.radioNoDuplicates.TabIndex = 0;
             this.radioNoDuplicates.TabStop = true;
-            this.radioNoDuplicates.Text = "Do not add";
             this.radioNoDuplicates.UseVisualStyleBackColor = true;
             // 
             // radioFirstOccurence
             // 
-            this.radioFirstOccurence.AutoSize = true;
-            this.radioFirstOccurence.Location = new System.Drawing.Point(6, 49);
+            resources.ApplyResources(this.radioFirstOccurence, "radioFirstOccurence");
             this.radioFirstOccurence.Name = "radioFirstOccurence";
-            this.radioFirstOccurence.Size = new System.Drawing.Size(196, 17);
-            this.radioFirstOccurence.TabIndex = 1;
-            this.radioFirstOccurence.Text = "Add to only the first matching protein";
             this.radioFirstOccurence.UseVisualStyleBackColor = true;
             // 
             // radioAddToAll
             // 
-            this.radioAddToAll.AutoSize = true;
-            this.radioAddToAll.Location = new System.Drawing.Point(6, 72);
+            resources.ApplyResources(this.radioAddToAll, "radioAddToAll");
             this.radioAddToAll.Name = "radioAddToAll";
-            this.radioAddToAll.Size = new System.Drawing.Size(155, 17);
-            this.radioAddToAll.TabIndex = 2;
-            this.radioAddToAll.Text = "Add to all matching proteins";
             this.radioAddToAll.UseVisualStyleBackColor = true;
             // 
             // radioFilterUnmatched
             // 
-            this.radioFilterUnmatched.AutoSize = true;
+            resources.ApplyResources(this.radioFilterUnmatched, "radioFilterUnmatched");
             this.radioFilterUnmatched.Checked = true;
-            this.radioFilterUnmatched.Location = new System.Drawing.Point(6, 29);
             this.radioFilterUnmatched.Name = "radioFilterUnmatched";
-            this.radioFilterUnmatched.Size = new System.Drawing.Size(78, 17);
-            this.radioFilterUnmatched.TabIndex = 2;
             this.radioFilterUnmatched.TabStop = true;
-            this.radioFilterUnmatched.Text = "Do not add";
             this.radioFilterUnmatched.UseVisualStyleBackColor = true;
             // 
             // radioAddUnmatched
             // 
-            this.radioAddUnmatched.AutoSize = true;
-            this.radioAddUnmatched.Location = new System.Drawing.Point(6, 52);
+            resources.ApplyResources(this.radioAddUnmatched, "radioAddUnmatched");
             this.radioAddUnmatched.Name = "radioAddUnmatched";
-            this.radioAddUnmatched.Size = new System.Drawing.Size(118, 17);
-            this.radioAddUnmatched.TabIndex = 1;
-            this.radioAddUnmatched.Text = "Add to a peptide list";
             this.radioAddUnmatched.UseVisualStyleBackColor = true;
             // 
             // msgUnmatchedPeptides
             // 
-            this.msgUnmatchedPeptides.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.msgUnmatchedPeptides.Location = new System.Drawing.Point(1, 0);
+            resources.ApplyResources(this.msgUnmatchedPeptides, "msgUnmatchedPeptides");
             this.msgUnmatchedPeptides.Name = "msgUnmatchedPeptides";
-            this.msgUnmatchedPeptides.Size = new System.Drawing.Size(318, 26);
-            this.msgUnmatchedPeptides.TabIndex = 0;
-            this.msgUnmatchedPeptides.Text = "label2";
             // 
             // msgDuplicatePeptides
             // 
-            this.msgDuplicatePeptides.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.msgDuplicatePeptides.Location = new System.Drawing.Point(1, 0);
+            resources.ApplyResources(this.msgDuplicatePeptides, "msgDuplicatePeptides");
             this.msgDuplicatePeptides.Name = "msgDuplicatePeptides";
-            this.msgDuplicatePeptides.Size = new System.Drawing.Size(318, 23);
-            this.msgDuplicatePeptides.TabIndex = 5;
-            this.msgDuplicatePeptides.Text = "label1";
             // 
             // msgFilteredPeptides
             // 
-            this.msgFilteredPeptides.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.msgFilteredPeptides.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.msgFilteredPeptides, "msgFilteredPeptides");
             this.msgFilteredPeptides.Name = "msgFilteredPeptides";
-            this.msgFilteredPeptides.Size = new System.Drawing.Size(318, 25);
-            this.msgFilteredPeptides.TabIndex = 0;
-            this.msgFilteredPeptides.Text = "label3";
             // 
             // radioKeepFiltered
             // 
-            this.radioKeepFiltered.AutoSize = true;
-            this.radioKeepFiltered.Location = new System.Drawing.Point(6, 51);
+            resources.ApplyResources(this.radioKeepFiltered, "radioKeepFiltered");
             this.radioKeepFiltered.Name = "radioKeepFiltered";
-            this.radioKeepFiltered.Size = new System.Drawing.Size(116, 17);
-            this.radioKeepFiltered.TabIndex = 2;
-            this.radioKeepFiltered.Text = "Include all peptides";
             this.radioKeepFiltered.UseVisualStyleBackColor = true;
             // 
             // radioDoNotAddFiltered
             // 
-            this.radioDoNotAddFiltered.AutoSize = true;
+            resources.ApplyResources(this.radioDoNotAddFiltered, "radioDoNotAddFiltered");
             this.radioDoNotAddFiltered.Checked = true;
-            this.radioDoNotAddFiltered.Location = new System.Drawing.Point(6, 28);
             this.radioDoNotAddFiltered.Name = "radioDoNotAddFiltered";
-            this.radioDoNotAddFiltered.Size = new System.Drawing.Size(78, 17);
-            this.radioDoNotAddFiltered.TabIndex = 1;
             this.radioDoNotAddFiltered.TabStop = true;
-            this.radioDoNotAddFiltered.Text = "Do not add";
             this.radioDoNotAddFiltered.UseVisualStyleBackColor = true;
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(257, 330);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 4;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOK
             // 
-            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(177, 330);
+            resources.ApplyResources(this.btnOK, "btnOK");
             this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 3;
-            this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOk_Click);
             // 
@@ -183,48 +133,37 @@ namespace pwiz.Skyline.Alerts
             this.panelMultiple.Controls.Add(this.radioAddToAll);
             this.panelMultiple.Controls.Add(this.radioFirstOccurence);
             this.panelMultiple.Controls.Add(this.radioNoDuplicates);
-            this.panelMultiple.Location = new System.Drawing.Point(11, 39);
+            resources.ApplyResources(this.panelMultiple, "panelMultiple");
             this.panelMultiple.Name = "panelMultiple";
-            this.panelMultiple.Size = new System.Drawing.Size(324, 101);
-            this.panelMultiple.TabIndex = 0;
             // 
             // panelUnmatched
             // 
             this.panelUnmatched.Controls.Add(this.radioAddUnmatched);
             this.panelUnmatched.Controls.Add(this.radioFilterUnmatched);
             this.panelUnmatched.Controls.Add(this.msgUnmatchedPeptides);
-            this.panelUnmatched.Location = new System.Drawing.Point(11, 146);
+            resources.ApplyResources(this.panelUnmatched, "panelUnmatched");
             this.panelUnmatched.Name = "panelUnmatched";
-            this.panelUnmatched.Size = new System.Drawing.Size(324, 80);
-            this.panelUnmatched.TabIndex = 1;
             // 
             // panelFiltered
             // 
             this.panelFiltered.Controls.Add(this.msgFilteredPeptides);
             this.panelFiltered.Controls.Add(this.radioKeepFiltered);
             this.panelFiltered.Controls.Add(this.radioDoNotAddFiltered);
-            this.panelFiltered.Location = new System.Drawing.Point(11, 232);
+            resources.ApplyResources(this.panelFiltered, "panelFiltered");
             this.panelFiltered.Name = "panelFiltered";
-            this.panelFiltered.Size = new System.Drawing.Size(324, 83);
-            this.panelFiltered.TabIndex = 2;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(11, 13);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(210, 13);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "Please specify how to handle the following:";
             // 
             // FilterMatchedPeptidesDlg
             // 
             this.AcceptButton = this.btnOK;
             this.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(341, 366);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.panelFiltered);
             this.Controls.Add(this.panelUnmatched);
@@ -236,8 +175,6 @@ namespace pwiz.Skyline.Alerts
             this.MinimizeBox = false;
             this.Name = "FilterMatchedPeptidesDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Filter Peptides";
             this.panelMultiple.ResumeLayout(false);
             this.panelMultiple.PerformLayout();
             this.panelUnmatched.ResumeLayout(false);

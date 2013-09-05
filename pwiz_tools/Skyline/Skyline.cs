@@ -109,7 +109,7 @@ namespace pwiz.Skyline
         /// </summary>
         public SkylineWindow()
         {
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+            LocalizationHelper.InitThread();
 
             InitializeComponent();
 

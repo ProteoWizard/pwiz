@@ -57,6 +57,7 @@ namespace pwiz.SkylineTestTutorial
             var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";
             // Generating a Transition List, p. 4
             {
+                var doc = SkylineWindow.Document;
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>
                           {
@@ -83,6 +84,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot();
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+                WaitForDocumentChange(doc);
             }
 
             // Configuring Peptide settings p. 4

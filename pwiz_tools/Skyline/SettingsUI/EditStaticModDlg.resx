@@ -122,10 +122,10 @@
     <value>Top, Left, Right</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="textName.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 29</value>
   </data>
-  <data name="textName.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>238, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -147,10 +147,10 @@
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 12</value>
   </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>38, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
@@ -174,10 +174,10 @@
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>268, 42</value>
   </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
@@ -201,10 +201,10 @@
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>268, 12</value>
   </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
@@ -228,10 +228,10 @@
   <data name="labelChemicalFormula.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelChemicalFormula.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelChemicalFormula.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 137</value>
   </data>
-  <data name="labelChemicalFormula.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelChemicalFormula.Size" type="System.Drawing.Size, System.Drawing">
     <value>90, 13</value>
   </data>
   <data name="labelChemicalFormula.TabIndex" type="System.Int32, mscorlib">
@@ -252,10 +252,10 @@
   <data name="&gt;&gt;labelChemicalFormula.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
-  <data name="textFormula.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textFormula.Location" type="System.Drawing.Point, System.Drawing">
     <value>5, 5</value>
   </data>
-  <data name="textFormula.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textFormula.Size" type="System.Drawing.Size, System.Drawing">
     <value>160, 20</value>
   </data>
   <data name="textFormula.TabIndex" type="System.Int32, mscorlib">
@@ -276,10 +276,10 @@
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 193</value>
   </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
@@ -300,10 +300,10 @@
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
-  <data name="textMonoMass.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textMonoMass.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 209</value>
   </data>
-  <data name="textMonoMass.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textMonoMass.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 20</value>
   </data>
   <data name="textMonoMass.TabIndex" type="System.Int32, mscorlib">
@@ -324,10 +324,10 @@
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
     <value>133, 193</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
@@ -348,10 +348,10 @@
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="textAverageMass.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textAverageMass.Location" type="System.Drawing.Point, System.Drawing">
     <value>136, 209</value>
   </data>
-  <data name="textAverageMass.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="textAverageMass.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 20</value>
   </data>
   <data name="textAverageMass.TabIndex" type="System.Int32, mscorlib">
@@ -372,10 +372,10 @@
   <data name="labelAA.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelAA.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelAA.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 73</value>
   </data>
-  <data name="labelAA.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelAA.Size" type="System.Drawing.Size, System.Drawing">
     <value>62, 13</value>
   </data>
   <data name="labelAA.TabIndex" type="System.Int32, mscorlib">
@@ -396,76 +396,10 @@
   <data name="&gt;&gt;labelAA.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
-  <data name="comboAA.Items" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="comboAA.Items1" xml:space="preserve">
-    <value>A</value>
-  </data>
-  <data name="comboAA.Items2" xml:space="preserve">
-    <value>C</value>
-  </data>
-  <data name="comboAA.Items3" xml:space="preserve">
-    <value>D</value>
-  </data>
-  <data name="comboAA.Items4" xml:space="preserve">
-    <value>E</value>
-  </data>
-  <data name="comboAA.Items5" xml:space="preserve">
-    <value>F</value>
-  </data>
-  <data name="comboAA.Items6" xml:space="preserve">
-    <value>G</value>
-  </data>
-  <data name="comboAA.Items7" xml:space="preserve">
-    <value>H</value>
-  </data>
-  <data name="comboAA.Items8" xml:space="preserve">
-    <value>I</value>
-  </data>
-  <data name="comboAA.Items9" xml:space="preserve">
-    <value>K</value>
-  </data>
-  <data name="comboAA.Items10" xml:space="preserve">
-    <value>L</value>
-  </data>
-  <data name="comboAA.Items11" xml:space="preserve">
-    <value>M</value>
-  </data>
-  <data name="comboAA.Items12" xml:space="preserve">
-    <value>N</value>
-  </data>
-  <data name="comboAA.Items13" xml:space="preserve">
-    <value>P</value>
-  </data>
-  <data name="comboAA.Items14" xml:space="preserve">
-    <value>Q</value>
-  </data>
-  <data name="comboAA.Items15" xml:space="preserve">
-    <value>R</value>
-  </data>
-  <data name="comboAA.Items16" xml:space="preserve">
-    <value>S</value>
-  </data>
-  <data name="comboAA.Items17" xml:space="preserve">
-    <value>T</value>
-  </data>
-  <data name="comboAA.Items18" xml:space="preserve">
-    <value>U</value>
-  </data>
-  <data name="comboAA.Items19" xml:space="preserve">
-    <value>V</value>
-  </data>
-  <data name="comboAA.Items20" xml:space="preserve">
-    <value>W</value>
-  </data>
-  <data name="comboAA.Items21" xml:space="preserve">
-    <value>Y</value>
-  </data>
-  <data name="comboAA.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboAA.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 89</value>
   </data>
-  <data name="comboAA.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboAA.Size" type="System.Drawing.Size, System.Drawing">
     <value>59, 21</value>
   </data>
   <data name="comboAA.TabIndex" type="System.Int32, mscorlib">
@@ -486,19 +420,10 @@
   <data name="comboTerm.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="comboTerm.Items" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="comboTerm.Items1" xml:space="preserve">
-    <value>N</value>
-  </data>
-  <data name="comboTerm.Items2" xml:space="preserve">
-    <value>C</value>
-  </data>
-  <data name="comboTerm.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboTerm.Location" type="System.Drawing.Point, System.Drawing">
     <value>95, 89</value>
   </data>
-  <data name="comboTerm.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboTerm.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 21</value>
   </data>
   <data name="comboTerm.TabIndex" type="System.Int32, mscorlib">
@@ -522,10 +447,10 @@
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
     <value>92, 73</value>
   </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
     <value>53, 13</value>
   </data>
   <data name="label6.TabIndex" type="System.Int32, mscorlib">
@@ -546,10 +471,10 @@
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <data name="btnFormulaPopup.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnFormulaPopup.Location" type="System.Drawing.Point, System.Drawing">
     <value>170, 3</value>
   </data>
-  <data name="btnFormulaPopup.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnFormulaPopup.Size" type="System.Drawing.Size, System.Drawing">
     <value>24, 23</value>
   </data>
   <data name="btnFormulaPopup.TabIndex" type="System.Int32, mscorlib">
@@ -570,67 +495,67 @@
   <metadata name="contextFormula.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="hContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="hContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="hContextMenuItem.Text" xml:space="preserve">
     <value>H</value>
   </data>
-  <data name="h2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="h2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="h2ContextMenuItem.Text" xml:space="preserve">
     <value>2H</value>
   </data>
-  <data name="cContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="cContextMenuItem.Text" xml:space="preserve">
     <value>C</value>
   </data>
-  <data name="c13ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="c13ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="c13ContextMenuItem.Text" xml:space="preserve">
     <value>13C</value>
   </data>
-  <data name="nContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="nContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="nContextMenuItem.Text" xml:space="preserve">
     <value>N</value>
   </data>
-  <data name="n15ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="n15ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="n15ContextMenuItem.Text" xml:space="preserve">
     <value>15N</value>
   </data>
-  <data name="oContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="oContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="oContextMenuItem.Text" xml:space="preserve">
     <value>O</value>
   </data>
-  <data name="o18ToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="o18ToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="o18ToolStripMenuItem.Text" xml:space="preserve">
     <value>18O</value>
   </data>
-  <data name="pContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="pContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="pContextMenuItem.Text" xml:space="preserve">
     <value>P</value>
   </data>
-  <data name="sContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="sContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="sContextMenuItem.Text" xml:space="preserve">
     <value>S</value>
   </data>
-  <data name="contextFormula.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="contextFormula.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 224</value>
   </data>
   <data name="&gt;&gt;contextFormula.Name" xml:space="preserve">
@@ -639,10 +564,10 @@
   <data name="&gt;&gt;contextFormula.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="panelFormula.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelFormula.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 150</value>
   </data>
-  <data name="panelFormula.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelFormula.Size" type="System.Drawing.Size, System.Drawing">
     <value>288, 31</value>
   </data>
   <data name="panelFormula.TabIndex" type="System.Int32, mscorlib">
@@ -666,10 +591,10 @@
   <data name="cb2H.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cb2H.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb2H.Location" type="System.Drawing.Point, System.Drawing">
     <value>222, 10</value>
   </data>
-  <data name="cb2H.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb2H.Size" type="System.Drawing.Size, System.Drawing">
     <value>40, 17</value>
   </data>
   <data name="cb2H.TabIndex" type="System.Int32, mscorlib">
@@ -693,10 +618,10 @@
   <data name="cb18O.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cb18O.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb18O.Location" type="System.Drawing.Point, System.Drawing">
     <value>154, 10</value>
   </data>
-  <data name="cb18O.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb18O.Size" type="System.Drawing.Size, System.Drawing">
     <value>46, 17</value>
   </data>
   <data name="cb18O.TabIndex" type="System.Int32, mscorlib">
@@ -720,10 +645,10 @@
   <data name="cb15N.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cb15N.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb15N.Location" type="System.Drawing.Point, System.Drawing">
     <value>86, 10</value>
   </data>
-  <data name="cb15N.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb15N.Size" type="System.Drawing.Size, System.Drawing">
     <value>46, 17</value>
   </data>
   <data name="cb15N.TabIndex" type="System.Int32, mscorlib">
@@ -747,10 +672,10 @@
   <data name="cb13C.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cb13C.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb13C.Location" type="System.Drawing.Point, System.Drawing">
     <value>19, 10</value>
   </data>
-  <data name="cb13C.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cb13C.Size" type="System.Drawing.Size, System.Drawing">
     <value>45, 17</value>
   </data>
   <data name="cb13C.TabIndex" type="System.Int32, mscorlib">
@@ -771,10 +696,10 @@
   <data name="&gt;&gt;cb13C.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="panelAtoms.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelAtoms.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 149</value>
   </data>
-  <data name="panelAtoms.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelAtoms.Size" type="System.Drawing.Size, System.Drawing">
     <value>287, 36</value>
   </data>
   <data name="panelAtoms.TabIndex" type="System.Int32, mscorlib">
@@ -795,10 +720,10 @@
   <data name="cbChemicalFormula.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbChemicalFormula.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbChemicalFormula.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 133</value>
   </data>
-  <data name="cbChemicalFormula.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbChemicalFormula.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 17</value>
   </data>
   <data name="cbChemicalFormula.TabIndex" type="System.Int32, mscorlib">
@@ -825,10 +750,10 @@
   <data name="btnLoss.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnLoss.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnLoss.Location" type="System.Drawing.Point, System.Drawing">
     <value>268, 207</value>
   </data>
-  <data name="btnLoss.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="btnLoss.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnLoss.TabIndex" type="System.Int32, mscorlib">
@@ -849,10 +774,10 @@
   <data name="&gt;&gt;btnLoss.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
-  <data name="comboRelativeRT.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboRelativeRT.Location" type="System.Drawing.Point, System.Drawing">
     <value>222, 277</value>
   </data>
-  <data name="comboRelativeRT.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboRelativeRT.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 21</value>
   </data>
   <data name="comboRelativeRT.TabIndex" type="System.Int32, mscorlib">
@@ -873,10 +798,10 @@
   <data name="labelRelativeRT.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelRelativeRT.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelRelativeRT.Location" type="System.Drawing.Point, System.Drawing">
     <value>222, 259</value>
   </data>
-  <data name="labelRelativeRT.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelRelativeRT.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 13</value>
   </data>
   <data name="labelRelativeRT.TabIndex" type="System.Int32, mscorlib">
@@ -900,10 +825,10 @@
   <data name="cbVariableMod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbVariableMod.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbVariableMod.Location" type="System.Drawing.Point, System.Drawing">
     <value>183, 91</value>
   </data>
-  <data name="cbVariableMod.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="cbVariableMod.Size" type="System.Drawing.Size, System.Drawing">
     <value>64, 17</value>
   </data>
   <data name="cbVariableMod.TabIndex" type="System.Int32, mscorlib">
@@ -927,10 +852,10 @@
   <data name="listNeutralLosses.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="listNeutralLosses.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="listNeutralLosses.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="listNeutralLosses.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="listNeutralLosses.Size" type="System.Drawing.Size, System.Drawing">
     <value>214, 70</value>
   </data>
   <data name="listNeutralLosses.TabIndex" type="System.Int32, mscorlib">
@@ -951,10 +876,10 @@
   <data name="labelLoss.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelLoss.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelLoss.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 258</value>
   </data>
-  <data name="labelLoss.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="labelLoss.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 13</value>
   </data>
   <data name="labelLoss.TabIndex" type="System.Int32, mscorlib">
@@ -984,7 +909,7 @@
   <data name="tbbAddLoss.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
-  <data name="tbbAddLoss.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="tbbAddLoss.Size" type="System.Drawing.Size, System.Drawing">
     <value>21, 20</value>
   </data>
   <data name="tbbAddLoss.Text" xml:space="preserve">
@@ -999,7 +924,7 @@
   <data name="tbbEditLoss.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
-  <data name="tbbEditLoss.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="tbbEditLoss.Size" type="System.Drawing.Size, System.Drawing">
     <value>21, 20</value>
   </data>
   <data name="tbbEditLoss.Text" xml:space="preserve">
@@ -1014,7 +939,7 @@
   <data name="tbbDeleteLoss.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
-  <data name="tbbDeleteLoss.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="tbbDeleteLoss.Size" type="System.Drawing.Size, System.Drawing">
     <value>21, 20</value>
   </data>
   <data name="tbbDeleteLoss.Text" xml:space="preserve">
@@ -1023,10 +948,10 @@
   <data name="tbbDeleteLoss.ToolTipText" xml:space="preserve">
     <value>Delete neutral loss</value>
   </data>
-  <data name="toolBarLosses.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="toolBarLosses.Location" type="System.Drawing.Point, System.Drawing">
     <value>214, 0</value>
   </data>
-  <data name="toolBarLosses.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="toolBarLosses.Size" type="System.Drawing.Size, System.Drawing">
     <value>24, 70</value>
   </data>
   <data name="toolBarLosses.TabIndex" type="System.Int32, mscorlib">
@@ -1044,10 +969,10 @@
   <data name="&gt;&gt;toolBarLosses.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="panelLoss.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelLoss.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 274</value>
   </data>
-  <data name="panelLoss.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="panelLoss.Size" type="System.Drawing.Size, System.Drawing">
     <value>238, 70</value>
   </data>
   <data name="panelLoss.TabIndex" type="System.Int32, mscorlib">
@@ -1068,13 +993,13 @@
   <data name="comboMod.IntegralHeight" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="comboMod.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboMod.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 28</value>
   </data>
   <data name="comboMod.MaxDropDownItems" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name="comboMod.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="comboMod.Size" type="System.Drawing.Size, System.Drawing">
     <value>238, 21</value>
   </data>
   <data name="comboMod.TabIndex" type="System.Int32, mscorlib">

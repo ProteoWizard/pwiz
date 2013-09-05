@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Controls
             try
             {
                 // Called in a UI thread
-                Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+                LocalizationHelper.InitThread();
                 performWork(this);
             }
             catch (Exception x)

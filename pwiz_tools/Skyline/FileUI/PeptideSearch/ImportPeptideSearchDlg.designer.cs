@@ -29,6 +29,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportPeptideSearchDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
@@ -76,24 +77,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(315, 401);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 7;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnNext
             // 
-            this.btnNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnNext.Location = new System.Drawing.Point(234, 401);
+            resources.ApplyResources(this.btnNext, "btnNext");
             this.btnNext.Name = "btnNext";
-            this.btnNext.Size = new System.Drawing.Size(75, 23);
-            this.btnNext.TabIndex = 6;
-            this.btnNext.Text = "&Next >";
             this.btnNext.UseVisualStyleBackColor = true;
             this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
             // 
@@ -108,182 +101,125 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbMissedCleavages.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbMissedCleavages.FormattingEnabled = true;
             this.cbMissedCleavages.Items.AddRange(new object[] {
-            "0",
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9"});
-            this.cbMissedCleavages.Location = new System.Drawing.Point(28, 95);
+            resources.GetString("cbMissedCleavages.Items"),
+            resources.GetString("cbMissedCleavages.Items1"),
+            resources.GetString("cbMissedCleavages.Items2"),
+            resources.GetString("cbMissedCleavages.Items3"),
+            resources.GetString("cbMissedCleavages.Items4"),
+            resources.GetString("cbMissedCleavages.Items5"),
+            resources.GetString("cbMissedCleavages.Items6"),
+            resources.GetString("cbMissedCleavages.Items7"),
+            resources.GetString("cbMissedCleavages.Items8"),
+            resources.GetString("cbMissedCleavages.Items9")});
+            resources.ApplyResources(this.cbMissedCleavages, "cbMissedCleavages");
             this.cbMissedCleavages.Name = "cbMissedCleavages";
-            this.cbMissedCleavages.Size = new System.Drawing.Size(44, 21);
-            this.cbMissedCleavages.TabIndex = 3;
-            this.helpTip.SetToolTip(this.cbMissedCleavages, "The maximum number of missed cleavages allowed in a peptide when\r\nconsidering pro" +
-        "tein digestion.");
+            this.helpTip.SetToolTip(this.cbMissedCleavages, resources.GetString("cbMissedCleavages.ToolTip"));
             // 
             // comboEnzyme
             // 
             this.comboEnzyme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboEnzyme.FormattingEnabled = true;
-            this.comboEnzyme.Location = new System.Drawing.Point(28, 36);
+            resources.ApplyResources(this.comboEnzyme, "comboEnzyme");
             this.comboEnzyme.Name = "comboEnzyme";
-            this.comboEnzyme.Size = new System.Drawing.Size(169, 21);
-            this.comboEnzyme.TabIndex = 1;
-            this.helpTip.SetToolTip(this.comboEnzyme, "The protease enzyme used for digesting proteins into peptides prior\r\nto injection" +
-        " into the mass spectrometer\r\n");
+            this.helpTip.SetToolTip(this.comboEnzyme, resources.GetString("comboEnzyme.ToolTip"));
             // 
             // comboBackgroundProteome
             // 
             this.comboBackgroundProteome.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBackgroundProteome.FormattingEnabled = true;
-            this.comboBackgroundProteome.Location = new System.Drawing.Point(28, 158);
+            resources.ApplyResources(this.comboBackgroundProteome, "comboBackgroundProteome");
             this.comboBackgroundProteome.Name = "comboBackgroundProteome";
-            this.comboBackgroundProteome.Size = new System.Drawing.Size(169, 21);
-            this.comboBackgroundProteome.TabIndex = 5;
-            this.helpTip.SetToolTip(this.comboBackgroundProteome, "Processed FASTA sequence information specifying the full\r\nset of proteins that ma" +
-        "y be present in the sample matrix to be\r\ninjected into the mass spectrometer.");
+            this.helpTip.SetToolTip(this.comboBackgroundProteome, resources.GetString("comboBackgroundProteome.ToolTip"));
             // 
             // comboBox1
             // 
             this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Items.AddRange(new object[] {
-            "0",
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9"});
-            this.comboBox1.Location = new System.Drawing.Point(28, 95);
+            resources.GetString("comboBox1.Items"),
+            resources.GetString("comboBox1.Items1"),
+            resources.GetString("comboBox1.Items2"),
+            resources.GetString("comboBox1.Items3"),
+            resources.GetString("comboBox1.Items4"),
+            resources.GetString("comboBox1.Items5"),
+            resources.GetString("comboBox1.Items6"),
+            resources.GetString("comboBox1.Items7"),
+            resources.GetString("comboBox1.Items8"),
+            resources.GetString("comboBox1.Items9")});
+            resources.ApplyResources(this.comboBox1, "comboBox1");
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(44, 21);
-            this.comboBox1.TabIndex = 3;
-            this.helpTip.SetToolTip(this.comboBox1, "The maximum number of missed cleavages allowed in a peptide when\r\nconsidering pro" +
-        "tein digestion.");
+            this.helpTip.SetToolTip(this.comboBox1, resources.GetString("comboBox1.ToolTip"));
             // 
             // comboBox2
             // 
             this.comboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Location = new System.Drawing.Point(28, 36);
+            resources.ApplyResources(this.comboBox2, "comboBox2");
             this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(169, 21);
-            this.comboBox2.TabIndex = 1;
-            this.helpTip.SetToolTip(this.comboBox2, "The protease enzyme used for digesting proteins into peptides prior\r\nto injection" +
-        " into the mass spectrometer\r\n");
+            this.helpTip.SetToolTip(this.comboBox2, resources.GetString("comboBox2.ToolTip"));
             // 
             // comboBox3
             // 
             this.comboBox3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBox3.FormattingEnabled = true;
-            this.comboBox3.Location = new System.Drawing.Point(28, 158);
+            resources.ApplyResources(this.comboBox3, "comboBox3");
             this.comboBox3.Name = "comboBox3";
-            this.comboBox3.Size = new System.Drawing.Size(169, 21);
-            this.comboBox3.TabIndex = 5;
-            this.helpTip.SetToolTip(this.comboBox3, "Processed FASTA sequence information specifying the full\r\nset of proteins that ma" +
-        "y be present in the sample matrix to be\r\ninjected into the mass spectrometer.");
+            this.helpTip.SetToolTip(this.comboBox3, resources.GetString("comboBox3.ToolTip"));
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(25, 79);
+            resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(117, 13);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "&Max missed cleavages:";
             // 
             // label5
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(25, 20);
+            resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(47, 13);
-            this.label5.TabIndex = 0;
-            this.label5.Text = "&Enzyme:";
             // 
             // label15
             // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(25, 142);
+            resources.ApplyResources(this.label15, "label15");
             this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(115, 13);
-            this.label15.TabIndex = 4;
-            this.label15.Text = "&Background proteome:";
             // 
             // label6
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(25, 79);
+            resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(117, 13);
-            this.label6.TabIndex = 2;
-            this.label6.Text = "&Max missed cleavages:";
             // 
             // label8
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(25, 20);
+            resources.ApplyResources(this.label8, "label8");
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(47, 13);
-            this.label8.TabIndex = 0;
-            this.label8.Text = "&Enzyme:";
             // 
             // label9
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(25, 142);
+            resources.ApplyResources(this.label9, "label9");
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(115, 13);
-            this.label9.TabIndex = 4;
-            this.label9.Text = "&Background proteome:";
             // 
             // btnEarlyFinish
             // 
-            this.btnEarlyFinish.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEarlyFinish.Enabled = false;
-            this.btnEarlyFinish.Location = new System.Drawing.Point(153, 401);
+            resources.ApplyResources(this.btnEarlyFinish, "btnEarlyFinish");
             this.btnEarlyFinish.Name = "btnEarlyFinish";
-            this.btnEarlyFinish.Size = new System.Drawing.Size(75, 23);
-            this.btnEarlyFinish.TabIndex = 9;
-            this.btnEarlyFinish.Text = "&Finish";
             this.btnEarlyFinish.UseVisualStyleBackColor = true;
             this.btnEarlyFinish.Click += new System.EventHandler(this.btnEarlyFinish_Click);
             // 
             // wizardPagesImportPeptideSearch
             // 
-            this.wizardPagesImportPeptideSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.wizardPagesImportPeptideSearch, "wizardPagesImportPeptideSearch");
             this.wizardPagesImportPeptideSearch.Controls.Add(this.buildSearchSpecLibPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.getChromatogramsPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.matchModificationsPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.ms1FullScanSettingsPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.importFastaPage);
-            this.wizardPagesImportPeptideSearch.Location = new System.Drawing.Point(0, 0);
             this.wizardPagesImportPeptideSearch.Name = "wizardPagesImportPeptideSearch";
             this.wizardPagesImportPeptideSearch.SelectedIndex = 0;
-            this.wizardPagesImportPeptideSearch.Size = new System.Drawing.Size(402, 395);
-            this.wizardPagesImportPeptideSearch.TabIndex = 8;
             // 
             // buildSearchSpecLibPage
             // 
             this.buildSearchSpecLibPage.BackColor = System.Drawing.Color.Transparent;
-            this.buildSearchSpecLibPage.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            resources.ApplyResources(this.buildSearchSpecLibPage, "buildSearchSpecLibPage");
             this.buildSearchSpecLibPage.Controls.Add(this.buildSpectralLibraryTitlePanel);
-            this.buildSearchSpecLibPage.Location = new System.Drawing.Point(4, 22);
             this.buildSearchSpecLibPage.Name = "buildSearchSpecLibPage";
-            this.buildSearchSpecLibPage.Padding = new System.Windows.Forms.Padding(3);
-            this.buildSearchSpecLibPage.Size = new System.Drawing.Size(394, 369);
-            this.buildSearchSpecLibPage.TabIndex = 0;
-            this.buildSearchSpecLibPage.Text = "1";
             this.buildSearchSpecLibPage.UseVisualStyleBackColor = true;
             // 
             // buildSpectralLibraryTitlePanel
@@ -291,33 +227,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.buildSpectralLibraryTitlePanel.BackColor = System.Drawing.Color.GhostWhite;
             this.buildSpectralLibraryTitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.buildSpectralLibraryTitlePanel.Controls.Add(this.label14);
-            this.buildSpectralLibraryTitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.buildSpectralLibraryTitlePanel.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.buildSpectralLibraryTitlePanel, "buildSpectralLibraryTitlePanel");
             this.buildSpectralLibraryTitlePanel.Name = "buildSpectralLibraryTitlePanel";
-            this.buildSpectralLibraryTitlePanel.Size = new System.Drawing.Size(388, 43);
-            this.buildSpectralLibraryTitlePanel.TabIndex = 15;
             // 
             // label14
             // 
-            this.label14.AutoSize = true;
-            this.label14.Font = new System.Drawing.Font("Arial Rounded MT Bold", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            resources.ApplyResources(this.label14, "label14");
             this.label14.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label14.Location = new System.Drawing.Point(8, 9);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(181, 18);
-            this.label14.TabIndex = 0;
-            this.label14.Text = "Build Spectral Library";
             // 
             // getChromatogramsPage
             // 
             this.getChromatogramsPage.BackColor = System.Drawing.Color.Transparent;
             this.getChromatogramsPage.Controls.Add(this.panel1);
-            this.getChromatogramsPage.Location = new System.Drawing.Point(4, 22);
+            resources.ApplyResources(this.getChromatogramsPage, "getChromatogramsPage");
             this.getChromatogramsPage.Name = "getChromatogramsPage";
-            this.getChromatogramsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.getChromatogramsPage.Size = new System.Drawing.Size(394, 374);
-            this.getChromatogramsPage.TabIndex = 1;
-            this.getChromatogramsPage.Text = "2";
             this.getChromatogramsPage.UseVisualStyleBackColor = true;
             // 
             // panel1
@@ -325,32 +249,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panel1.BackColor = System.Drawing.Color.GhostWhite;
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panel1.Controls.Add(this.label20);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel1.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(388, 43);
-            this.panel1.TabIndex = 17;
             // 
             // label20
             // 
-            this.label20.AutoSize = true;
-            this.label20.Font = new System.Drawing.Font("Arial Rounded MT Bold", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            resources.ApplyResources(this.label20, "label20");
             this.label20.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label20.Location = new System.Drawing.Point(12, 9);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(199, 18);
-            this.label20.TabIndex = 0;
-            this.label20.Text = "Extract Chromatograms";
             // 
             // matchModificationsPage
             // 
             this.matchModificationsPage.Controls.Add(this.addModsTitlePanel);
-            this.matchModificationsPage.Location = new System.Drawing.Point(4, 22);
+            resources.ApplyResources(this.matchModificationsPage, "matchModificationsPage");
             this.matchModificationsPage.Name = "matchModificationsPage";
-            this.matchModificationsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.matchModificationsPage.Size = new System.Drawing.Size(394, 374);
-            this.matchModificationsPage.TabIndex = 3;
-            this.matchModificationsPage.Text = "3";
             this.matchModificationsPage.UseVisualStyleBackColor = true;
             // 
             // addModsTitlePanel
@@ -358,32 +270,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.addModsTitlePanel.BackColor = System.Drawing.Color.GhostWhite;
             this.addModsTitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.addModsTitlePanel.Controls.Add(this.label16);
-            this.addModsTitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.addModsTitlePanel.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.addModsTitlePanel, "addModsTitlePanel");
             this.addModsTitlePanel.Name = "addModsTitlePanel";
-            this.addModsTitlePanel.Size = new System.Drawing.Size(388, 43);
-            this.addModsTitlePanel.TabIndex = 0;
             // 
             // label16
             // 
-            this.label16.AutoSize = true;
-            this.label16.Font = new System.Drawing.Font("Arial Rounded MT Bold", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            resources.ApplyResources(this.label16, "label16");
             this.label16.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label16.Location = new System.Drawing.Point(12, 9);
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(149, 18);
-            this.label16.TabIndex = 0;
-            this.label16.Text = "Add Modifications";
             // 
             // ms1FullScanSettingsPage
             // 
             this.ms1FullScanSettingsPage.Controls.Add(this.ms1FullScanSettingsTitlePanel);
-            this.ms1FullScanSettingsPage.Location = new System.Drawing.Point(4, 22);
+            resources.ApplyResources(this.ms1FullScanSettingsPage, "ms1FullScanSettingsPage");
             this.ms1FullScanSettingsPage.Name = "ms1FullScanSettingsPage";
-            this.ms1FullScanSettingsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.ms1FullScanSettingsPage.Size = new System.Drawing.Size(394, 374);
-            this.ms1FullScanSettingsPage.TabIndex = 5;
-            this.ms1FullScanSettingsPage.Text = "4";
             this.ms1FullScanSettingsPage.UseVisualStyleBackColor = true;
             // 
             // ms1FullScanSettingsTitlePanel
@@ -391,32 +291,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ms1FullScanSettingsTitlePanel.BackColor = System.Drawing.Color.GhostWhite;
             this.ms1FullScanSettingsTitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.ms1FullScanSettingsTitlePanel.Controls.Add(this.label19);
-            this.ms1FullScanSettingsTitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.ms1FullScanSettingsTitlePanel.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.ms1FullScanSettingsTitlePanel, "ms1FullScanSettingsTitlePanel");
             this.ms1FullScanSettingsTitlePanel.Name = "ms1FullScanSettingsTitlePanel";
-            this.ms1FullScanSettingsTitlePanel.Size = new System.Drawing.Size(388, 43);
-            this.ms1FullScanSettingsTitlePanel.TabIndex = 16;
             // 
             // label19
             // 
-            this.label19.AutoSize = true;
-            this.label19.Font = new System.Drawing.Font("Arial Rounded MT Bold", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            resources.ApplyResources(this.label19, "label19");
             this.label19.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label19.Location = new System.Drawing.Point(12, 9);
             this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(272, 18);
-            this.label19.TabIndex = 0;
-            this.label19.Text = "Configure MS1 Full-Scan Settings";
             // 
             // importFastaPage
             // 
             this.importFastaPage.Controls.Add(this.importFASTATitlePanel);
-            this.importFastaPage.Location = new System.Drawing.Point(4, 22);
+            resources.ApplyResources(this.importFastaPage, "importFastaPage");
             this.importFastaPage.Name = "importFastaPage";
-            this.importFastaPage.Padding = new System.Windows.Forms.Padding(3);
-            this.importFastaPage.Size = new System.Drawing.Size(394, 374);
-            this.importFastaPage.TabIndex = 4;
-            this.importFastaPage.Text = "5";
             this.importFastaPage.UseVisualStyleBackColor = true;
             // 
             // importFASTATitlePanel
@@ -424,40 +312,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFASTATitlePanel.BackColor = System.Drawing.Color.GhostWhite;
             this.importFASTATitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.importFASTATitlePanel.Controls.Add(this.label18);
-            this.importFASTATitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.importFASTATitlePanel.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.importFASTATitlePanel, "importFASTATitlePanel");
             this.importFASTATitlePanel.Name = "importFASTATitlePanel";
-            this.importFASTATitlePanel.Size = new System.Drawing.Size(388, 43);
-            this.importFASTATitlePanel.TabIndex = 15;
             // 
             // label18
             // 
-            this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Arial Rounded MT Bold", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            resources.ApplyResources(this.label18, "label18");
             this.label18.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label18.Location = new System.Drawing.Point(12, 9);
             this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(119, 18);
-            this.label18.TabIndex = 0;
-            this.label18.Text = "Import FASTA";
             // 
             // ImportPeptideSearchDlg
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(402, 437);
             this.Controls.Add(this.btnEarlyFinish);
             this.Controls.Add(this.wizardPagesImportPeptideSearch);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnNext);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(416, 475);
             this.Name = "ImportPeptideSearchDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Import Peptide Search";
             this.wizardPagesImportPeptideSearch.ResumeLayout(false);
             this.buildSearchSpecLibPage.ResumeLayout(false);
             this.buildSpectralLibraryTitlePanel.ResumeLayout(false);

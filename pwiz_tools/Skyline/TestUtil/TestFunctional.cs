@@ -414,9 +414,13 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static bool IsPauseForScreenShots { get; set; }
 
+        public static bool IsDemoMode { get; set; }
+
         public void PauseForScreenShot(string description = null)
         {
-            if (IsPauseForScreenShots)
+            if (IsDemoMode)
+                Thread.Sleep(5*1000);
+            else if (IsPauseForScreenShots)
                 PauseAndContinue(description);
         }
 
@@ -471,11 +475,16 @@ namespace pwiz.SkylineTestUtil
             try
             {
                 Program.FunctionalTest = true;
+                LocalizationHelper.InitThread();
 
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
-//                Settings.Default.MainWindowMaximized = true;
-                var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread", CurrentUICulture = Thread.CurrentThread.CurrentCulture }; // Not L10N
+
+                // For automated demos, start with the main window maximized
+                if (IsDemoMode)
+                    Settings.Default.MainWindowMaximized = true;
+                var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread" }; // Not L10N
+                LocalizationHelper.InitThread(threadTest);
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();

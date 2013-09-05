@@ -1743,9 +1743,9 @@ namespace pwiz.Skyline.Properties
                         new[] { 2 }, // PrecursorCharges
                         new[] { 1 }, // ProductCharges
                         new[] { IonType.y }, // FragmentTypes
-                        Resources.SrmSettingsList_DEFAULT_m_z_precursor, // FragmentRangeFirst
-                        Resources.SrmSettingsList_DEFAULT_3_ions,       // FragmentRangeLast // TODO: Not L10N? Appears to be used for XML
-                        new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon // Not L10N
+                        TransitionFilter.DEFAULT_START_FINDER,  // FragmentRangeFirst
+                        TransitionFilter.DEFAULT_END_FINDER,    // FragmentRangeLast
+                        new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon
                         0,     // PrecursorMzWindow
                         true   // AutoSelect
                     ),

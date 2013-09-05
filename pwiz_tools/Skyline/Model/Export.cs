@@ -678,7 +678,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.WriteDsvField(nodePepGroup.Name, FieldSeparator);
             writer.Write(FieldSeparator);
-            writer.Write(nodeTran.Transition.FragmentIonName);
+            writer.Write(nodeTran.Transition.GetFragmentIonName(CultureInfo.InvariantCulture));
             writer.Write(FieldSeparator);
             if (nodeTran.HasLibInfo)
                 writer.Write(nodeTran.LibInfo.Rank);
@@ -1144,13 +1144,14 @@ namespace pwiz.Skyline.Model
 
         private static string GetTransitionName(int precursorCharge, TransitionDocNode transitionNode)
         {
+            string ionName = transitionNode.GetFragmentIonName(CultureInfo.InvariantCulture);
             if (transitionNode.Transition.IsPrecursor())
             {
-                return GetPrecursorTransitionName(precursorCharge, transitionNode.FragmentIonName, transitionNode.Transition.MassIndex);
+                return GetPrecursorTransitionName(precursorCharge, ionName, transitionNode.Transition.MassIndex);
             }
             else
             {
-                return GetTransitionName(precursorCharge, transitionNode.FragmentIonName, transitionNode.Transition.Charge);
+                return GetTransitionName(precursorCharge, ionName, transitionNode.Transition.Charge);
             }
         }
 
@@ -1510,7 +1511,7 @@ namespace pwiz.Skyline.Model
             }
 
             // Extra information not used by instrument
-            writer.Write(nodeTran.Transition.FragmentIonName);
+            writer.Write(nodeTran.Transition.GetFragmentIonName(CultureInfo.InvariantCulture));
             writer.Write(FieldSeparator);
             if (nodeTran.HasLibInfo)
                 writer.Write(nodeTran.LibInfo.Rank);
@@ -1931,7 +1932,7 @@ namespace pwiz.Skyline.Model
             // Extra information not used by instrument
             writer.Write(nodePep.Peptide.Sequence);
             writer.Write(FieldSeparator);
-            writer.Write(nodeTran.Transition.FragmentIonName);
+            writer.Write(nodeTran.Transition.GetFragmentIonName(CultureInfo.InvariantCulture));
             writer.Write(FieldSeparator);
             if (nodeTran.HasLibInfo)
                 writer.Write(nodeTran.LibInfo.Rank);

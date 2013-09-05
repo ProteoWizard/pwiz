@@ -28,6 +28,7 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PublishDocumentDlg));
             this.lblPanoramaFolders = new System.Windows.Forms.Label();
             this.treeViewFolders = new System.Windows.Forms.TreeView();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -39,83 +40,53 @@ namespace pwiz.Skyline.FileUI
             // 
             // lblPanoramaFolders
             // 
-            this.lblPanoramaFolders.AutoSize = true;
-            this.lblPanoramaFolders.Location = new System.Drawing.Point(12, 54);
+            resources.ApplyResources(this.lblPanoramaFolders, "lblPanoramaFolders");
             this.lblPanoramaFolders.Name = "lblPanoramaFolders";
-            this.lblPanoramaFolders.Size = new System.Drawing.Size(95, 13);
-            this.lblPanoramaFolders.TabIndex = 3;
-            this.lblPanoramaFolders.Text = "Panorama Folders:";
             // 
             // treeViewFolders
             // 
-            this.treeViewFolders.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.treeViewFolders, "treeViewFolders");
             this.treeViewFolders.HideSelection = false;
-            this.treeViewFolders.Location = new System.Drawing.Point(15, 70);
             this.treeViewFolders.Name = "treeViewFolders";
-            this.treeViewFolders.Size = new System.Drawing.Size(447, 220);
-            this.treeViewFolders.TabIndex = 4;
             this.treeViewFolders.DoubleClick += new System.EventHandler(this.treeViewFolders_DoubleClick);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(387, 296);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOK
             // 
-            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(306, 296);
+            resources.ApplyResources(this.btnOK, "btnOK");
             this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 5;
-            this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // lblFile
             // 
-            this.lblFile.AutoSize = true;
-            this.lblFile.Location = new System.Drawing.Point(12, 9);
+            resources.ApplyResources(this.lblFile, "lblFile");
             this.lblFile.Name = "lblFile";
-            this.lblFile.Size = new System.Drawing.Size(26, 13);
-            this.lblFile.TabIndex = 0;
-            this.lblFile.Text = "File:";
             // 
             // tbFilePath
             // 
-            this.tbFilePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbFilePath.Location = new System.Drawing.Point(15, 25);
+            resources.ApplyResources(this.tbFilePath, "tbFilePath");
             this.tbFilePath.Name = "tbFilePath";
-            this.tbFilePath.Size = new System.Drawing.Size(366, 20);
-            this.tbFilePath.TabIndex = 1;
             // 
             // btnBrowse
             // 
-            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowse.Location = new System.Drawing.Point(387, 23);
+            resources.ApplyResources(this.btnBrowse, "btnBrowse");
             this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(75, 23);
-            this.btnBrowse.TabIndex = 2;
-            this.btnBrowse.Text = "Browse...";
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // PublishDocumentDlg
             // 
             this.AcceptButton = this.btnOK;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(474, 326);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.tbFilePath);
             this.Controls.Add(this.lblFile);
@@ -127,8 +98,6 @@ namespace pwiz.Skyline.FileUI
             this.MinimizeBox = false;
             this.Name = "PublishDocumentDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Publish Document";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PublishDocumentDlg_FormClosing);
             this.Load += new System.EventHandler(this.PublishDocumentDlg_Load);
             this.ResumeLayout(false);

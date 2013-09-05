@@ -474,6 +474,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_EXCLUSION_WINDOW = 0.01;
         public const double MAX_EXCLUSION_WINDOW = 50.0;
 
+        public const string DEFAULT_START_FINDER = "m/z > precursor";   // Not L10N
+        public const string DEFAULT_END_FINDER = "3 ions";   // Not L10N
+
+
         private ReadOnlyCollection<int> _precursorCharges;
         private ReadOnlyCollection<int> _productCharges;
         private ReadOnlyCollection<IonType> _ionTypes;
@@ -842,16 +846,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return FragmentStartFinders.Select(f => f.Label);
         }
 
-        public static string GetStartFragmentIndex(string label)
+        public static string GetStartFragmentNameFromLabel(string label)
         {
             for (int i = 0; i < FragmentStartFinders.SafeLength(); i++)
             {
                 if (string.Equals(FragmentStartFinders[i].Label, label))
                 {
-                    return i.ToString(CultureInfo.InvariantCulture);
+                    return FragmentStartFinders[i].Name;
                 }
             }
-            return null;
+            throw new ArgumentException(string.Format(Resources.TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_, label));
         }
 
         public static IStartFragmentFinder GetStartFragmentFinder(string finderName)
@@ -860,13 +864,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 StartFragmentFinder result;
                 string name;
-                int index;
                 if (FragmentStartFinders.TryGetValue(finderName, out result))
                     return result;
                 if (_mapLegacyStartNames.TryGetValue(finderName, out name))
                     return FragmentStartFinders[name];
-                if (int.TryParse(finderName, out index))
-                    return FragmentStartFinders[index];
             }
             throw new InvalidDataException(string.Format(Resources.TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__, finderName));
         }
@@ -879,15 +880,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     _fragmentStartFinders = new MappedList<string, StartFragmentFinder>
                     {
-                        new OrdinalFragmentFinder("ion 1", Resources.TransitionFilter_FragmentStartFinders_ion_1, 1),   // Not L10N
-                        new OrdinalFragmentFinder("ion 2", Resources.TransitionFilter_FragmentStartFinders_ion_2, 2),   // Not L10N
-                        new OrdinalFragmentFinder("ion 3", Resources.TransitionFilter_FragmentStartFinders_ion_3, 3),   // Not L10N
-                        new OrdinalFragmentFinder("ion 4", Resources.TransitionFilter_FragmentStartFinders_ion_4, 4),   // Not L10N
-                        new MzFragmentFinder("m/z > precursor", Resources.TransitionFilter_FragmentStartFinders_m_z_precursor, 0),   // Not L10N
-                        new MzFragmentFinder("(m/z > precursor) - 1", Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1, -1),   // Not L10N
-                        new MzFragmentFinder("(m/z > precursor) - 2", Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2, -2),   // Not L10N
-                        new MzFragmentFinder("(m/z > precursor) + 1", Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1, 1),   // Not L10N
-                        new MzFragmentFinder("(m/z > precursor) + 2", Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2, 2)   // Not L10N
+                        // Use functions for labels to make sure resources come from the right thread locale
+                        new OrdinalFragmentFinder("ion 1", () => Resources.TransitionFilter_FragmentStartFinders_ion_1, 1),   // Not L10N
+                        new OrdinalFragmentFinder("ion 2", () => Resources.TransitionFilter_FragmentStartFinders_ion_2, 2),   // Not L10N
+                        new OrdinalFragmentFinder("ion 3", () => Resources.TransitionFilter_FragmentStartFinders_ion_3, 3),   // Not L10N
+                        new OrdinalFragmentFinder("ion 4", () => Resources.TransitionFilter_FragmentStartFinders_ion_4, 4),   // Not L10N
+                        new MzFragmentFinder(DEFAULT_START_FINDER, () => Resources.TransitionFilter_FragmentStartFinders_m_z_precursor, 0),
+                        new MzFragmentFinder("(m/z > precursor) - 1", () => Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1, -1),   // Not L10N
+                        new MzFragmentFinder("(m/z > precursor) - 2", () => Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2, -2),   // Not L10N
+                        new MzFragmentFinder("(m/z > precursor) + 1", () => Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1, 1),   // Not L10N
+                        new MzFragmentFinder("(m/z > precursor) + 2", () => Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2, 2)   // Not L10N
                     };
 
                     _mapLegacyStartNames = new Dictionary<string, string>
@@ -902,16 +904,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public static string GetEndFragmentIndex(string label)
+        public static string GetEndFragmentNameFromLabel(string label)
         {
             for (int i = 0; i < FragmentEndFinders.SafeLength(); i++)
             {
                 if (string.Equals(FragmentEndFinders[i].Label, label))
                 {
-                    return i.ToString(CultureInfo.InvariantCulture);
+                    return FragmentEndFinders[i].Name;
                 }
             }
-            return null;
+            throw new ArgumentException(string.Format(Resources.TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_, label));
         }
 
         public static IEnumerable<string> GetEndFragmentFinderLabels()
@@ -925,13 +927,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 EndFragmentFinder result;
                 string name;
-                int index;
                 if (FragmentEndFinders.TryGetValue(finderName, out result))
                     return result;
                 if (_mapLegacyEndNames.TryGetValue(finderName, out name))
                     return FragmentEndFinders[name];
-                if (int.TryParse(finderName, out index))
-                    return FragmentEndFinders[index];
             }
             throw new InvalidDataException(string.Format(Resources.TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__, finderName));
         } 
@@ -944,28 +943,29 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     _fragmentEndFinders = new MappedList<string, EndFragmentFinder>
                                               {
-                                                  new LastFragmentFinder("last ion", Resources.TransitionFilter_FragmentEndFinders_last_ion, 0),
-                                                  new LastFragmentFinder("last ion - 1", Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1, 1),
-                                                  new LastFragmentFinder("last ion - 2", Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_2, 2),
-                                                  new LastFragmentFinder("last ion - 3", Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_3, 3),
-                                                  new DeltaFragmentFinder("1 ion", Resources.TransitionFilter_FragmentEndFinders_1_ion, 1),
-                                                  new DeltaFragmentFinder("2 ions", Resources.TransitionFilter_FragmentEndFinders_2_ions, 2),
-                                                  new DeltaFragmentFinder("3 ions", Resources.TransitionFilter_FragmentEndFinders_3_ions, 3),
-                                                  new DeltaFragmentFinder("4 ions", Resources.TransitionFilter_FragmentEndFinders_4_ions, 4),
-                                                  new DeltaFragmentFinder("5 ions", Resources.TransitionFilter_FragmentEndFinders_5_ions, 5),
-                                                  new DeltaFragmentFinder("6 ions", Resources.TransitionFilter_FragmentEndFinders_6_ions, 6)
+                                                  // Use functions for labels to make sure resources come from the right thread locale
+                                                  new LastFragmentFinder("last ion", () => Resources.TransitionFilter_FragmentEndFinders_last_ion, 0),   // Not L10N
+                                                  new LastFragmentFinder("last ion - 1", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1, 1),   // Not L10N
+                                                  new LastFragmentFinder("last ion - 2", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_2, 2),   // Not L10N
+                                                  new LastFragmentFinder("last ion - 3", () => Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_3, 3),   // Not L10N
+                                                  new DeltaFragmentFinder("1 ion", () => Resources.TransitionFilter_FragmentEndFinders_1_ion, 1),   // Not L10N
+                                                  new DeltaFragmentFinder("2 ions", () => Resources.TransitionFilter_FragmentEndFinders_2_ions, 2),   // Not L10N
+                                                  new DeltaFragmentFinder(DEFAULT_END_FINDER, () => Resources.TransitionFilter_FragmentEndFinders_3_ions, 3),
+                                                  new DeltaFragmentFinder("4 ions", () => Resources.TransitionFilter_FragmentEndFinders_4_ions, 4),   // Not L10N
+                                                  new DeltaFragmentFinder("5 ions", () => Resources.TransitionFilter_FragmentEndFinders_5_ions, 5),   // Not L10N
+                                                  new DeltaFragmentFinder("6 ions", () => Resources.TransitionFilter_FragmentEndFinders_6_ions, 6)   // Not L10N
                                               };
 
                     _mapLegacyEndNames = new Dictionary<string, string>
                                              {
-                                                   {"last y-ion", "last ion"},
-                                                   {"last y-ion - 1", "last ion - 1"},
-                                                   {"last y-ion - 2", "last ion - 2"},
-                                                   {"last y-ion - 3", "last ion - 3"},
-                                                   {"start + 3", "3 ions"},
-                                                   {"start + 4", "4 ions"},
-                                                   {"start + 5", "5 ions"},
-                                                   {"start + 6", "6 ions"},
+                                                   {"last y-ion", "last ion"},   // Not L10N
+                                                   {"last y-ion - 1", "last ion - 1"},   // Not L10N
+                                                   {"last y-ion - 2", "last ion - 2"},   // Not L10N
+                                                   {"last y-ion - 3", "last ion - 3"},   // Not L10N
+                                                   {"start + 3", "3 ions"},   // Not L10N
+                                                   {"start + 4", "4 ions"},   // Not L10N
+                                                   {"start + 5", "5 ions"},   // Not L10N
+                                                   {"start + 6", "6 ions"},   // Not L10N
                                              };
                 }
                 return _fragmentEndFinders;
@@ -974,13 +974,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private abstract class StartFragmentFinder : NamedElement, IStartFragmentFinder
         {
-            protected StartFragmentFinder(string name, string label)
+            private readonly Func<string> _getLabel;
+
+            protected StartFragmentFinder(string name, Func<string> label)
                 : base(name)
             {
-                Label = label;
+                _getLabel = label;
             }
 
-            public string Label { get; private set; }
+            public string Label { get { return _getLabel(); } }
 
             public abstract int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, double precursorMzWindow, out double startMz);
         }
@@ -989,7 +991,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             private readonly int _ordinal;
 
-            public OrdinalFragmentFinder(string name, string label, int ordinal)
+            public OrdinalFragmentFinder(string name, Func<string> label, int ordinal)
                 : base(name, label)
             {
                 _ordinal = Math.Max(1, ordinal);
@@ -1016,7 +1018,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             private readonly int _offset;
 
-            public MzFragmentFinder(string name, string label, int offset)
+            public MzFragmentFinder(string name, Func<string> label, int offset)
                 : base(name, label)
             {
                 _offset = offset;
@@ -1097,13 +1099,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private abstract class EndFragmentFinder : NamedElement, IEndFragmentFinder
         {
-            protected EndFragmentFinder(string name, string label)
+            private readonly Func<string> _getLabel;
+
+            protected EndFragmentFinder(string name, Func<string> label)
                 : base(name)
             {
-                Label = label;
+                _getLabel = label;
             }
 
-            public string Label { get; private set; }
+            public string Label { get { return _getLabel(); } }
 
             public abstract int FindEndFragment(IonType type, int start, int length);
         }
@@ -1112,7 +1116,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             private readonly int _offset;
 
-            public LastFragmentFinder(string name, string label, int offset)
+            public LastFragmentFinder(string name, Func<string> label, int offset)
                 : base(name, label)
             {
                 _offset = offset;
@@ -1138,7 +1142,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             private readonly int _count;
 
-            public DeltaFragmentFinder(string name, string label, int count)
+            public DeltaFragmentFinder(string name, Func<string> label, int count)
                 : base(name, label)
             {
                 _count = Math.Max(1, count);

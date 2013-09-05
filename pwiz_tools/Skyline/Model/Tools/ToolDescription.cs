@@ -286,6 +286,7 @@ namespace pwiz.Skyline.Model.Tools
         private Thread RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent)
         {
             var thread = new Thread(() => RunExecutableBackground(document, toolMacroProvider, textWriter, exceptionHandler, parent));
+            LocalizationHelper.InitThread(thread);
             thread.Start();
             return thread;
         }

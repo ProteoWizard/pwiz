@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
@@ -97,11 +98,13 @@ namespace pwiz.Skyline.Model
 
         public string FragmentIonName
         {
-            get
-            {
-                string ionName = Transition.FragmentIonName;
-                return (HasLoss ? string.Format("{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName); // Not L10N
-            }
+            get { return GetFragmentIonName(CultureInfo.CurrentCulture); }
+        }
+
+        public string GetFragmentIonName(CultureInfo cultureInfo)
+        {
+            string ionName = Transition.GetFragmentIonName(cultureInfo);
+            return (HasLoss ? string.Format("{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName); // Not L10N
         }
 
         /// <summary>

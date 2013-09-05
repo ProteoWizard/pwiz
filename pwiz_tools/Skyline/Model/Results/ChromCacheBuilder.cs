@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Results
         private void BuildNextFile()
         {
             // Called on a new UI thread.
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+            LocalizationHelper.InitThread();
             lock (this)
             {
                 try
@@ -851,7 +851,7 @@ namespace pwiz.Skyline.Model.Results
         private void WriteLoop(int currentFileIndex, bool primeThread)
         {
             // Called in a new thread
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+            LocalizationHelper.InitThread();
             // HACK: This is a huge hack, for a temporary work-around to the problem
             // of Reader_Waters (or DACServer.dll) killing the ThreadPool.  WriteLoop
             // is called once as a no-op to force the thread it will use during

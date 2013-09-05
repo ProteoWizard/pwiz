@@ -40,9 +40,9 @@ namespace pwiz.Skyline.Alerts
             string message = string.Format(labelMessage.Text, countEmpty == 1
                 ? Resources.EmptyProteinsDlg_EmptyProteinsDlg_1_new_protein 
                 : string.Format(Resources.EmptyProteinsDlg_EmptyProteinsDlg__0__new_proteins, countEmpty));
-            if (countEmpty < 500)
-                message = message.Substring(0, message.LastIndexOf('\r')); // Not L10N
             labelMessage.Text = message;
+            if (countEmpty < 500)
+                labelPerf.Visible = false;
         }
 
         public bool IsKeepEmptyProteins { get; set; }

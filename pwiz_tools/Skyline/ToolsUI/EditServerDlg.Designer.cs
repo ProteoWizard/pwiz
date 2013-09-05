@@ -28,6 +28,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditServerDlg));
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.instructionLabel = new System.Windows.Forms.Label();
@@ -49,41 +50,26 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // btnOK
             // 
-            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(178, 194);
+            resources.ApplyResources(this.btnOK, "btnOK");
             this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 8;
-            this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(259, 194);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 9;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // instructionLabel
             // 
-            this.instructionLabel.AutoSize = true;
-            this.instructionLabel.Location = new System.Drawing.Point(9, 6);
+            resources.ApplyResources(this.instructionLabel, "instructionLabel");
             this.instructionLabel.Name = "instructionLabel";
-            this.instructionLabel.Size = new System.Drawing.Size(306, 39);
-            this.instructionLabel.TabIndex = 0;
-            this.instructionLabel.Text = "Once your project has been created, and you have registered a\r\nuser account, plea" +
-    "se enter the email and password for your\r\nuser account below.";
             // 
             // InputPanel
             // 
-            this.InputPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.InputPanel, "InputPanel");
             this.InputPanel.Controls.Add(this.lblProjectInfo);
             this.InputPanel.Controls.Add(this.btnCancel);
             this.InputPanel.Controls.Add(this.btnOK);
@@ -94,125 +80,74 @@ namespace pwiz.Skyline.ToolsUI
             this.InputPanel.Controls.Add(this.lblPassword);
             this.InputPanel.Controls.Add(this.lblUsername);
             this.InputPanel.Controls.Add(this.textUsername);
-            this.InputPanel.Location = new System.Drawing.Point(3, 65);
             this.InputPanel.Name = "InputPanel";
-            this.InputPanel.Size = new System.Drawing.Size(337, 220);
-            this.InputPanel.TabIndex = 10;
             // 
             // lblProjectInfo
             // 
-            this.lblProjectInfo.AutoSize = true;
-            this.lblProjectInfo.Location = new System.Drawing.Point(13, 10);
+            resources.ApplyResources(this.lblProjectInfo, "lblProjectInfo");
             this.lblProjectInfo.Name = "lblProjectInfo";
-            this.lblProjectInfo.Size = new System.Drawing.Size(188, 13);
-            this.lblProjectInfo.TabIndex = 0;
-            this.lblProjectInfo.Text = "&URL (e.g. https://panoramaweb.org/):";
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(229, 151);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(50, 13);
-            this.label2.TabIndex = 7;
-            this.label2.Text = "(optional)";
             // 
             // textServerURL
             // 
-            this.textServerURL.Location = new System.Drawing.Point(16, 26);
+            resources.ApplyResources(this.textServerURL, "textServerURL");
             this.textServerURL.Name = "textServerURL";
-            this.textServerURL.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textServerURL.Size = new System.Drawing.Size(303, 20);
-            this.textServerURL.TabIndex = 1;
             // 
             // textPassword
             // 
-            this.textPassword.Location = new System.Drawing.Point(16, 148);
+            resources.ApplyResources(this.textPassword, "textPassword");
             this.textPassword.Name = "textPassword";
-            this.textPassword.PasswordChar = '*';
-            this.textPassword.Size = new System.Drawing.Size(207, 20);
-            this.textPassword.TabIndex = 6;
             this.textPassword.UseSystemPasswordChar = true;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(229, 90);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(50, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "(optional)";
             // 
             // lblPassword
             // 
-            this.lblPassword.AutoSize = true;
-            this.lblPassword.Location = new System.Drawing.Point(13, 128);
+            resources.ApplyResources(this.lblPassword, "lblPassword");
             this.lblPassword.Name = "lblPassword";
-            this.lblPassword.Size = new System.Drawing.Size(56, 13);
-            this.lblPassword.TabIndex = 5;
-            this.lblPassword.Text = "&Password:";
             // 
             // lblUsername
             // 
-            this.lblUsername.AutoSize = true;
-            this.lblUsername.Location = new System.Drawing.Point(13, 69);
+            resources.ApplyResources(this.lblUsername, "lblUsername");
             this.lblUsername.Name = "lblUsername";
-            this.lblUsername.Size = new System.Drawing.Size(35, 13);
-            this.lblUsername.TabIndex = 2;
-            this.lblUsername.Text = "&Email:";
             // 
             // textUsername
             // 
-            this.textUsername.Location = new System.Drawing.Point(16, 87);
+            resources.ApplyResources(this.textUsername, "textUsername");
             this.textUsername.Name = "textUsername";
-            this.textUsername.Size = new System.Drawing.Size(207, 20);
-            this.textUsername.TabIndex = 3;
             // 
             // InstructionPanel
             // 
-            this.InstructionPanel.AutoSize = true;
+            resources.ApplyResources(this.InstructionPanel, "InstructionPanel");
             this.InstructionPanel.Controls.Add(this.instructionLabel);
-            this.InstructionPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.InstructionPanel.Location = new System.Drawing.Point(3, 3);
             this.InstructionPanel.Name = "InstructionPanel";
-            this.InstructionPanel.Size = new System.Drawing.Size(337, 56);
-            this.InstructionPanel.TabIndex = 10;
-            this.InstructionPanel.Visible = false;
             // 
             // ComponentOrganizer
             // 
-            this.ComponentOrganizer.AutoSize = true;
-            this.ComponentOrganizer.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ComponentOrganizer.ColumnCount = 1;
-            this.ComponentOrganizer.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            resources.ApplyResources(this.ComponentOrganizer, "ComponentOrganizer");
             this.ComponentOrganizer.Controls.Add(this.InstructionPanel, 0, 0);
             this.ComponentOrganizer.Controls.Add(this.InputPanel, 0, 1);
-            this.ComponentOrganizer.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ComponentOrganizer.Location = new System.Drawing.Point(0, 0);
             this.ComponentOrganizer.Name = "ComponentOrganizer";
-            this.ComponentOrganizer.RowCount = 2;
-            this.ComponentOrganizer.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.ComponentOrganizer.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 226F));
-            this.ComponentOrganizer.Size = new System.Drawing.Size(343, 288);
-            this.ComponentOrganizer.TabIndex = 12;
             // 
             // EditServerDlg
             // 
             this.AcceptButton = this.btnOK;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(343, 288);
             this.Controls.Add(this.ComponentOrganizer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditServerDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Server";
             this.InputPanel.ResumeLayout(false);
             this.InputPanel.PerformLayout();
             this.InstructionPanel.ResumeLayout(false);

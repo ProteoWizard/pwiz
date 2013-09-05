@@ -52,8 +52,6 @@ namespace pwiz.Skyline.Model
         private readonly float _matchTolerance;
         private readonly IList<ChromatogramSet> _chromatogramSets;
 
-        public const string PRECURSOR = "precursor";
-
         public static readonly string[] FIELD_NAMES = new[]
             {
                 "FileName",
@@ -177,10 +175,11 @@ namespace pwiz.Skyline.Model
                     continue;
                 foreach (var nodeTran in groupNode.Transitions)
                 {
-                    string fragmentIon = nodeTran.FragmentIonName;
-                    if (fragmentIon == PRECURSOR && !chromSources.Contains(ChromSource.ms1))
+                    // TODO: Check a source attribute on the transition chrom info
+                    bool isMs1 = nodeTran.Transition.IsPrecursor() && !nodeTran.HasLoss;
+                    if (isMs1 && !chromSources.Contains(ChromSource.ms1))
                         continue;
-                    if (fragmentIon != PRECURSOR && !chromSources.Contains(ChromSource.fragment))
+                    if (!isMs1 && !chromSources.Contains(ChromSource.fragment))
                         continue;
                     int productCharge = nodeTran.Transition.Charge;
                     float productMz = (float)nodeTran.Mz;
@@ -203,7 +202,7 @@ namespace pwiz.Skyline.Model
                                         peptideModifiedSequence,
                                         System.Convert.ToString(precursorCharge, cultureInfo),
                                         System.Convert.ToString(productMz, cultureInfo),
-                                        fragmentIon,
+                                        nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture),
                                         System.Convert.ToString(productCharge, cultureInfo),
                                         labelType,
                                         System.Convert.ToString(tic, cultureInfo)

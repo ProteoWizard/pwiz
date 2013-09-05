@@ -230,13 +230,16 @@ namespace pwiz.Skyline.Model
 
         public string FragmentIonName
         {
-            get
-            {
-                string ionName = IonType.GetLocalizedString();
-                if (!IsPrecursor())
-                    ionName += Ordinal;
-                return ionName;
-            }
+            get { return GetFragmentIonName(CultureInfo.CurrentCulture); }
+        }
+
+        public string GetFragmentIonName(CultureInfo cultureInfo)
+        {
+            string ionName = ReferenceEquals(cultureInfo, CultureInfo.InvariantCulture)
+                ? IonType.ToString() : IonType.GetLocalizedString();
+            if (!IsPrecursor())
+                ionName += Ordinal;
+            return ionName;
         }
 
         public bool IsNTerminal()

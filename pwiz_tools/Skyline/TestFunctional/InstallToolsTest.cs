@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual("$(ProgramPath(TESTPROGRAM,1))", configureToolsDlg.textCommand.Text);
                     Assert.AreEqual("TestArgs", configureToolsDlg.textArguments.Text);
                     Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual("Transition Results", configureToolsDlg.comboReport.SelectedItem);
+                    Assert.AreEqual(string.Empty, configureToolsDlg.comboReport.SelectedItem);
                 });
 
             {

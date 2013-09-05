@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 // Made on a new thread.
-                Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+                LocalizationHelper.InitThread();
                 SrmDocument docCurrent = container.Document;
                 // If the document identity has changed, or the current document is loaded,
                 // then end the processing.

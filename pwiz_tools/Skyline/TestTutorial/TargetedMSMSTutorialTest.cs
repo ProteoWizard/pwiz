@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestTutorial
                         RunUI(() =>
                         {
                             picklist.SetItemChecked(0, true);
-                            Assert.IsTrue(picklist.GetItemLabel(0).Contains("precursor"));
+                            Assert.IsTrue(picklist.GetItemLabel(0).Contains(IonType.precursor.GetLocalizedString()));
                             Assert.IsTrue(picklist.GetItemChecked(0));
                         });
                         if (!pausedForScreenShot)
@@ -312,7 +312,7 @@ namespace pwiz.SkylineTestTutorial
             // p. 16 screenshot of full 5-point dilution curve
 
             // Select precursor
-            FindNode("R.DRVYIHPF.- [34, 41] (missed 1)");
+            FindNode("R.DRVYIHPF.- [34, 41]");  // May be localized " (missed 1)"
             WaitForGraphs();
 
             // Check graph p. 17 (checked)
@@ -420,7 +420,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot("p. 21 - Chromatogram and area replicate graphs");
 
-            FindNode("R.DRVYIHPF.- [34, 41] (missed 1)");
+            FindNode("R.DRVYIHPF.- [34, 41]");  // May be localized " (missed 1)"
             PauseForScreenShot("p. 22 - Chromatogram selectivity");
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));

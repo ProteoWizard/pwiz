@@ -28,6 +28,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportResultsControl));
             this.resultsSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label2 = new System.Windows.Forms.Label();
             this.listResultsFilesFound = new System.Windows.Forms.ListBox();
@@ -44,13 +45,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // resultsSplitContainer
             // 
-            this.resultsSplitContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.resultsSplitContainer.IsSplitterFixed = true;
-            this.resultsSplitContainer.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.resultsSplitContainer, "resultsSplitContainer");
             this.resultsSplitContainer.Name = "resultsSplitContainer";
-            this.resultsSplitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // resultsSplitContainer.Panel1
             // 
@@ -63,94 +59,58 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.resultsSplitContainer.Panel2.Controls.Add(this.label3);
             this.resultsSplitContainer.Panel2.Controls.Add(this.findResultsFilesButton);
             this.resultsSplitContainer.Panel2.Controls.Add(this.listResultsFilesMissing);
-            this.resultsSplitContainer.Size = new System.Drawing.Size(381, 272);
-            this.resultsSplitContainer.SplitterDistance = 111;
-            this.resultsSplitContainer.TabIndex = 0;
             this.resultsSplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.resultsSplitContainer_SplitterMoved);
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(19, 10);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(96, 13);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "&Results files found:";
             // 
             // listResultsFilesFound
             // 
-            this.listResultsFilesFound.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listResultsFilesFound, "listResultsFilesFound");
             this.listResultsFilesFound.FormattingEnabled = true;
-            this.listResultsFilesFound.Location = new System.Drawing.Point(19, 30);
             this.listResultsFilesFound.Name = "listResultsFilesFound";
-            this.listResultsFilesFound.Size = new System.Drawing.Size(340, 69);
-            this.listResultsFilesFound.TabIndex = 1;
             // 
             // browseToResultsFileButton
             // 
-            this.browseToResultsFileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.browseToResultsFileButton.Location = new System.Drawing.Point(18, 100);
+            resources.ApplyResources(this.browseToResultsFileButton, "browseToResultsFileButton");
             this.browseToResultsFileButton.Name = "browseToResultsFileButton";
-            this.browseToResultsFileButton.Size = new System.Drawing.Size(88, 23);
-            this.browseToResultsFileButton.TabIndex = 2;
-            this.browseToResultsFileButton.Text = "&Find...";
             this.browseToResultsFileButton.UseVisualStyleBackColor = true;
             this.browseToResultsFileButton.Click += new System.EventHandler(this.browseToResultsFileButton_Click);
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(18, 5);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(99, 13);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "&Missing results files:";
             // 
             // findResultsFilesButton
             // 
-            this.findResultsFilesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.findResultsFilesButton.Location = new System.Drawing.Point(112, 100);
+            resources.ApplyResources(this.findResultsFilesButton, "findResultsFilesButton");
             this.findResultsFilesButton.Name = "findResultsFilesButton";
-            this.findResultsFilesButton.Size = new System.Drawing.Size(88, 23);
-            this.findResultsFilesButton.TabIndex = 3;
-            this.findResultsFilesButton.Text = "F&ind in Folder...";
             this.findResultsFilesButton.UseVisualStyleBackColor = true;
             this.findResultsFilesButton.Click += new System.EventHandler(this.findResultsFilesButton_Click);
             // 
             // listResultsFilesMissing
             // 
-            this.listResultsFilesMissing.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listResultsFilesMissing, "listResultsFilesMissing");
             this.listResultsFilesMissing.FormattingEnabled = true;
-            this.listResultsFilesMissing.Location = new System.Drawing.Point(18, 25);
             this.listResultsFilesMissing.Name = "listResultsFilesMissing";
-            this.listResultsFilesMissing.Size = new System.Drawing.Size(340, 69);
-            this.listResultsFilesMissing.TabIndex = 1;
             // 
             // cbExcludeSourceFiles
             // 
-            this.cbExcludeSourceFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cbExcludeSourceFiles.AutoSize = true;
-            this.cbExcludeSourceFiles.Location = new System.Drawing.Point(19, 278);
+            resources.ApplyResources(this.cbExcludeSourceFiles, "cbExcludeSourceFiles");
             this.cbExcludeSourceFiles.Name = "cbExcludeSourceFiles";
-            this.cbExcludeSourceFiles.Size = new System.Drawing.Size(166, 17);
-            this.cbExcludeSourceFiles.TabIndex = 1;
-            this.cbExcludeSourceFiles.Text = "&Exclude spectrum source files";
             this.cbExcludeSourceFiles.UseVisualStyleBackColor = true;
-            this.cbExcludeSourceFiles.Visible = false;
             // 
             // ImportResultsControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
             this.Controls.Add(this.cbExcludeSourceFiles);
             this.Controls.Add(this.resultsSplitContainer);
             this.Name = "ImportResultsControl";
-            this.Size = new System.Drawing.Size(381, 315);
             this.resultsSplitContainer.Panel1.ResumeLayout(false);
             this.resultsSplitContainer.Panel1.PerformLayout();
             this.resultsSplitContainer.Panel2.ResumeLayout(false);

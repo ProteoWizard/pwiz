@@ -249,19 +249,14 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            string fragmentRangeFirst = TransitionFilter.GetStartFragmentIndex(comboRangeFrom.SelectedItem.ToString());
-            string fragmentRangeLast = TransitionFilter.GetEndFragmentIndex(comboRangeTo.SelectedItem.ToString());
+            string fragmentRangeFirst = TransitionFilter.GetStartFragmentNameFromLabel(comboRangeFrom.SelectedItem.ToString());
+            string fragmentRangeLast = TransitionFilter.GetEndFragmentNameFromLabel(comboRangeTo.SelectedItem.ToString());
            
-            if (fragmentRangeFirst == null)
-                fragmentRangeFirst = comboRangeFrom.SelectedItem.ToString();
-            if (fragmentRangeLast == null)
-                fragmentRangeLast = comboRangeTo.SelectedItem.ToString();
-
             var measuredIons = _driverIons.Chosen;
             bool autoSelect = cbAutoSelect.Checked;
-            TransitionFilter filter = new TransitionFilter(precursorCharges, productCharges, types,
-                                                           fragmentRangeFirst, fragmentRangeLast, measuredIons,
-                                                           exclusionWindow, autoSelect);
+            var filter = new TransitionFilter(precursorCharges, productCharges, types,
+                                              fragmentRangeFirst, fragmentRangeLast, measuredIons,
+                                              exclusionWindow, autoSelect);
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and store library settings
@@ -459,7 +454,8 @@ namespace pwiz.Skyline.SettingsUI
                 }               
             }
 
-            string fragmentRangeLastName = comboRangeTo.SelectedItem.ToString();
+            string fragmentRangeLastLabel = comboRangeTo.SelectedItem.ToString();
+            string fragmentRangeLastName = TransitionFilter.GetEndFragmentNameFromLabel(fragmentRangeLastLabel);
             var countFinder = TransitionFilter.GetEndFragmentFinder(fragmentRangeLastName) as IEndCountFragmentFinder;
             if (countFinder != null)
             {

@@ -15636,6 +15636,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The label {0} is not a valid end fragment filter..
+        /// </summary>
+        public static string TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_ {
+            get {
+                return ResourceManager.GetString("TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fra" +
+                        "gment_filter_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The label {0} is not a valid start fragment filter..
+        /// </summary>
+        public static string TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_ {
+            get {
+                return ResourceManager.GetString("TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start" +
+                        "_fragment_filter_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to At least one ion type is required..
         /// </summary>
         public static string TransitionFilter_IonTypes_At_least_one_ion_type_is_required {

@@ -214,6 +214,10 @@ namespace pwiz.Skyline
             set { _exportOptimizeType = ToOptimizeString(value); }
         }
 
+        public const string OPT_NONE = "NONE";
+        public const string OPT_CE = "CE";
+        public const string OPT_DP = "DP";
+
         private static string ToOptimizeString(string value)
         {
             if (value == null)
@@ -221,11 +225,11 @@ namespace pwiz.Skyline
 
             switch (value.ToUpper())
             {
-                case "NONE":
+                case OPT_NONE:
                     return ExportOptimize.NONE;
-                case "CE":
+                case OPT_CE:
                     return ExportOptimize.CE;
-                case "DP":
+                case OPT_DP:
                     return ExportOptimize.DP;
                 default:
                     throw new ArgumentException(string.Format("The instrument parameter {0} is not valid for optimization.", value));
@@ -327,8 +331,8 @@ namespace pwiz.Skyline
 
             ReportColumnSeparator = TextUtil.CsvSeparator;
             MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
-            ImportOptimizeType = ExportOptimize.NONE;
-            ExportOptimizeType = ExportOptimize.NONE;
+            ImportOptimizeType = OPT_NONE;
+            ExportOptimizeType = OPT_NONE;
             ExportStrategy = ExportStrategy.Single;
             ExportMethodType = ExportMethodType.Standard;
             PrimaryTransitionCount = AbstractMassListExporter.PRIMARY_COUNT_DEFAULT;

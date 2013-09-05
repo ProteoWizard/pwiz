@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model
                     if (!settings.TransitionSettings.Filter.AutoSelect && !AutoPickChildrenOff)
                         settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(!AutoPickChildrenOff));
                     nodePepRefined = nodePepRefined.ChangeSettings(settings,
-                        new SrmSettingsDiff(false, false, true, false, false, false));
+                        new SrmSettingsDiff(false, false, true, false, AutoPickTransitionsAll, false));
                 }
 
                 nodePepRefined = Refine(nodePepRefined, document, bestResultIndex);

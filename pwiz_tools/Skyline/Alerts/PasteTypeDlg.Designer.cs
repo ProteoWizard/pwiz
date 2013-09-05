@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PasteTypeDlg));
             this.label1 = new System.Windows.Forms.Label();
             this.radioProtein = new System.Windows.Forms.RadioButton();
             this.radioPeptides = new System.Windows.Forms.RadioButton();
@@ -37,65 +38,44 @@
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 13);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(100, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "The pasted text is a";
             // 
             // radioProtein
             // 
-            this.radioProtein.AutoSize = true;
-            this.radioProtein.Location = new System.Drawing.Point(16, 30);
+            resources.ApplyResources(this.radioProtein, "radioProtein");
             this.radioProtein.Name = "radioProtein";
-            this.radioProtein.Size = new System.Drawing.Size(140, 17);
-            this.radioProtein.TabIndex = 1;
             this.radioProtein.TabStop = true;
-            this.radioProtein.Text = "&single protein sequence.";
             this.radioProtein.UseVisualStyleBackColor = true;
             // 
             // radioPeptides
             // 
-            this.radioPeptides.AutoSize = true;
-            this.radioPeptides.Location = new System.Drawing.Point(16, 54);
+            resources.ApplyResources(this.radioPeptides, "radioPeptides");
             this.radioPeptides.Name = "radioPeptides";
-            this.radioPeptides.Size = new System.Drawing.Size(147, 17);
-            this.radioPeptides.TabIndex = 2;
             this.radioPeptides.TabStop = true;
-            this.radioPeptides.Text = "&list of peptides sequences";
             this.radioPeptides.UseVisualStyleBackColor = true;
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(171, 87);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 3;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(90, 87);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 4;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // PasteTypeDlg
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(258, 122);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.radioPeptides);
@@ -106,8 +86,6 @@
             this.MinimizeBox = false;
             this.Name = "PasteTypeDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Paste Type";
             this.ResumeLayout(false);
             this.PerformLayout();
 
