@@ -353,7 +353,10 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         }
 
         if (!relatedTerm)
-             cerr << "[writeCpp] Warning: unable to find object of term relationship." << endl;
+        {
+            if ("PATO" != jt->second.first) // we don't follow the UO -> PATO relationships because we don't download pato.obo
+                cerr << "[writeCpp] Warning: unable to find object of term relationship for term \"" << term.name << "\"." << endl;
+        }
         else
             os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", "
                << "\"" << jt->first << "\", " << correctedEnumNameMaps[obo2-obos.begin()][relatedTerm->id] << "},\n";
