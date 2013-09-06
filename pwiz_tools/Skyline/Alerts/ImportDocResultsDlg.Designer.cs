@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportDocResultsDlg));
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -40,94 +41,61 @@
             // 
             // btnOK
             // 
-            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(205, 176);
+            resources.ApplyResources(this.btnOK, "btnOK");
             this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 6;
-            this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(285, 176);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 7;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 13);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(291, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "How do you want to handle document results for this import?";
             // 
             // radioRemove
             // 
-            this.radioRemove.AutoSize = true;
+            resources.ApplyResources(this.radioRemove, "radioRemove");
             this.radioRemove.Checked = true;
-            this.radioRemove.Location = new System.Drawing.Point(16, 39);
             this.radioRemove.Name = "radioRemove";
-            this.radioRemove.Size = new System.Drawing.Size(152, 17);
-            this.radioRemove.TabIndex = 1;
             this.radioRemove.TabStop = true;
-            this.radioRemove.Text = "Remove results information";
             this.radioRemove.UseVisualStyleBackColor = true;
             // 
             // radioMergeByName
             // 
-            this.radioMergeByName.AutoSize = true;
-            this.radioMergeByName.Location = new System.Drawing.Point(16, 62);
+            resources.ApplyResources(this.radioMergeByName, "radioMergeByName");
             this.radioMergeByName.Name = "radioMergeByName";
-            this.radioMergeByName.Size = new System.Drawing.Size(234, 17);
-            this.radioMergeByName.TabIndex = 2;
-            this.radioMergeByName.Text = "Merge with existing results by replicate name";
             this.radioMergeByName.UseVisualStyleBackColor = true;
             // 
             // radioMergeByIndex
             // 
-            this.radioMergeByIndex.AutoSize = true;
-            this.radioMergeByIndex.Location = new System.Drawing.Point(16, 87);
+            resources.ApplyResources(this.radioMergeByIndex, "radioMergeByIndex");
             this.radioMergeByIndex.Name = "radioMergeByIndex";
-            this.radioMergeByIndex.Size = new System.Drawing.Size(232, 17);
-            this.radioMergeByIndex.TabIndex = 3;
-            this.radioMergeByIndex.Text = "Merge with existing results by replicate order";
             this.radioMergeByIndex.UseVisualStyleBackColor = true;
             // 
             // radioAdd
             // 
-            this.radioAdd.AutoSize = true;
-            this.radioAdd.Location = new System.Drawing.Point(16, 111);
+            resources.ApplyResources(this.radioAdd, "radioAdd");
             this.radioAdd.Name = "radioAdd";
-            this.radioAdd.Size = new System.Drawing.Size(115, 17);
-            this.radioAdd.TabIndex = 4;
-            this.radioAdd.Text = "Add new replicates";
             this.radioAdd.UseVisualStyleBackColor = true;
             // 
             // cbMergePeptides
             // 
-            this.cbMergePeptides.AutoSize = true;
-            this.cbMergePeptides.Location = new System.Drawing.Point(16, 146);
+            resources.ApplyResources(this.cbMergePeptides, "cbMergePeptides");
             this.cbMergePeptides.Name = "cbMergePeptides";
-            this.cbMergePeptides.Size = new System.Drawing.Size(145, 17);
-            this.cbMergePeptides.TabIndex = 5;
-            this.cbMergePeptides.Text = "Merge matching peptides";
             this.cbMergePeptides.UseVisualStyleBackColor = true;
             // 
             // ImportDocResultsDlg
             // 
             this.AcceptButton = this.btnOK;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(372, 211);
             this.Controls.Add(this.cbMergePeptides);
             this.Controls.Add(this.radioAdd);
             this.Controls.Add(this.radioMergeByIndex);
@@ -141,7 +109,6 @@
             this.MinimizeBox = false;
             this.Name = "ImportDocResultsDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.ResumeLayout(false);
             this.PerformLayout();
 
