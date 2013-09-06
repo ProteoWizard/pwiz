@@ -133,7 +133,8 @@ Spectral Library Building
 http://proteome.gs.washington.edu/software/bibliospec
 
 Bruker
-CompassXport Data Conversion Program
+CompassXtract Data Reader Library
+Copyright © 2011 by Bruker Daltonik GmbH. All rights reserved.
 http://www.bruker.com/
 
 Crawdad
@@ -198,7 +199,7 @@ Data Compression
 http://www.zlib.net</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2012 University of Washington, all rights reserved
+    <value>Copyright © 2008-2013 University of Washington, all rights reserved
 
 MacCoss Lab, Department of Genome Sciences, UW
 
