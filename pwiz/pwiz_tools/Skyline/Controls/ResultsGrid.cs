@@ -428,7 +428,10 @@ namespace pwiz.Skyline.Controls
             var annotationDef = column.Tag as AnnotationDef;
             if (annotationDef != null)
             {
-                MessageDlg.Show(this, annotationDef.ValidationErrorMessage);
+                if (0 != (dataGridViewDataErrorEventArgs.Context & DataGridViewDataErrorContexts.Commit))
+                {
+                    MessageDlg.Show(this, annotationDef.ValidationErrorMessage);
+                }
                 return;
             }
             dataGridViewDataErrorEventArgs.ThrowException = true;
