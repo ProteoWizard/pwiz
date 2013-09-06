@@ -101,9 +101,10 @@ namespace pwiz.Skyline.Alerts
                             userInputIndicator = "*";
                         else if (!string.IsNullOrEmpty(tbMessage.Text))
                             userInputIndicator = "+";
+                        string version = Install.Version;
                         string guid = UserGuid;
                         guid = guid.Substring(guid.LastIndexOf('-') + 1);
-                        return userInputIndicator + exceptionType + " | " + location + " | " + guid;
+                        return userInputIndicator + exceptionType + " | " + location + " | " + version + " | " + guid;
                     }
                 }
                 return exceptionType;
