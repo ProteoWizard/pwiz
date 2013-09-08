@@ -78,13 +78,14 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("p. 2 - External Tools");
 
+            const string installZipName = "QuaSAR-1_0.zip"; // Not L10N
             if (IsPauseForScreenShots)
             {    
                 var rInstaller = ShowDialog<RInstaller>(() =>
                     {
                         configureToolsDlg.RemoveAllTools();
                         configureToolsDlg.SaveTools();
-                        configureToolsDlg.UnpackZipTool(GetTestPath(@"QuaSAR.zip")); // Not L10N
+                        configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
                     });
 
                 PauseForScreenShot("p. 3 - R Installer");
@@ -98,7 +99,7 @@ namespace pwiz.SkylineTestTutorial
                     // bypass the R installer dialogue
                     configureToolsDlg.TestFindProgramPath = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
 
-                    configureToolsDlg.UnpackZipTool(GetTestPath(@"QuaSAR.zip")); // Not L10N
+                    configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
                     var installedQuaSAR = configureToolsDlg.ToolList[0];
                     Assert.AreEqual(QUASAR.Title, installedQuaSAR.Title);
                     Assert.AreEqual(QUASAR.Command, installedQuaSAR.Command);
@@ -224,7 +225,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static readonly ToolDescription QUASAR = new ToolDescription("QuaSAR", // Title Not L10N
                                                                              "$(ProgramPath(R,3.0.1))", // Command Not L10N
-                                                                             "-f $(ToolDir)\\QuaSAR-GP.R --slave --no-save --args $(ToolDir)\\QuaSAR.R $(ToolDir)\\common.R $(InputReportTempPath) $(CollectedArgs)", // Arguments Not L10N
+                                                                             "-f \"$(ToolDir)\\QuaSAR-GP.R\" --slave --no-save --args \"$(ToolDir)\\QuaSAR.R\" \"$(ToolDir)\\common.R\" \"$(InputReportTempPath)\" $(CollectedArgs)", // Arguments Not L10N
                                                                              "$(DocumentDir)", // Initial Directory Not L10N
                                                                              true, // Output to Immediate Window
                                                                              "QuaSAR Input", // Input Report Name Not L10N
