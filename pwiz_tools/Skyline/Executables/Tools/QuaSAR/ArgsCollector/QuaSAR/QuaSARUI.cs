@@ -58,7 +58,6 @@ namespace QuaSAR
             helpTip.SetToolTip(cboxPeakAreaPlots, ArgumentDocumentation.PEAKAREAPLOTS);
 
             // options
-            helpTip.SetToolTip(cboxStandardPresent, ArgumentDocumentation.STANDARD_PRESENT);
             helpTip.SetToolTip(cboxPAR, ArgumentDocumentation.PAR);
             helpTip.SetToolTip(comboBoxAnalyte, ArgumentDocumentation.ANALYTE);
             helpTip.SetToolTip(comboBoxStandard, ArgumentDocumentation.STANDARD);
@@ -80,11 +79,22 @@ namespace QuaSAR
 
         private void PopulateAnalyteAndStandard()
         {
-            comboBoxAnalyte.DataSource = new List<string>(Areas);
-            comboBoxStandard.DataSource = new List<string>(Areas);
-            // make the standard a different value than the analyte so that the tool can run without the user
-            // having to make any changes at all
-            comboBoxStandard.SelectedIndex = 1;
+            if (Areas.Count() == 1)
+            {
+                // if there is only area available, make it the analyte and set the standard to "None" and
+                // disable its combobox
+                comboBoxAnalyte.DataSource = new List<string>(Areas);
+                comboBoxStandard.DataSource = new[] {Constants.NONE_STRING};
+                comboBoxStandard.Enabled = false;
+            }
+            else
+            {
+                comboBoxAnalyte.DataSource = new List<string>(Areas);
+                comboBoxStandard.DataSource = new List<string>(Areas.Concat(new [] {Constants.NONE_STRING}));
+                // make the standard a different value than the analyte so that the tool can run without the user
+                // having to make any changes at all
+                comboBoxStandard.SelectedIndex = 1;
+            }
         }
 
         private void RestorePreviousValues()
@@ -101,14 +111,14 @@ namespace QuaSAR
                 cboxPeakAreaPlots.Checked = Arguments[(int) ArgumentIndices.peakplots].Equals(Constants.TRUE_STRING);
 
                 // options
-                cboxStandardPresent.Checked = Arguments[(int) ArgumentIndices.standard_present].Equals(Constants.TRUE_STRING);
                 cboxPAR.Checked = Arguments[(int) ArgumentIndices.use_par].Equals(Constants.TRUE_STRING);
                 comboBoxAnalyte.SelectedItem = comboBoxAnalyte.Items.Contains(Arguments[(int) ArgumentIndices.analyte])
                                                    ? Arguments[(int) ArgumentIndices.analyte]
                                                    : comboBoxAnalyte.Items[0];
-                comboBoxStandard.SelectedItem = comboBoxStandard.Items.Contains(Arguments[(int)ArgumentIndices.standard])
+                comboBoxStandard.SelectedItem = comboBoxStandard.Enabled && comboBoxStandard.Items.Contains(Arguments[(int)ArgumentIndices.standard])
                                                    ? Arguments[(int)ArgumentIndices.standard]
                                                    : comboBoxStandard.Items[0];
+
                 tboxUnits.Text = Arguments[(int) ArgumentIndices.units];
 
                 // plots
@@ -196,8 +206,8 @@ namespace QuaSAR
             Arguments[(int) ArgumentIndices.concentration_report] = Constants.NULL_STRING;
             Arguments[(int) ArgumentIndices.title] = tboxTitle.Text;
             Arguments[(int) ArgumentIndices.analyte] = comboBoxAnalyte.SelectedItem.ToString();
-            Arguments[(int) ArgumentIndices.standard_present] = cboxStandardPresent.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.standard] = comboBoxStandard.SelectedItem.ToString();
+            Arguments[(int) ArgumentIndices.standard_present] = comboBoxStandard.SelectedItem.Equals(Constants.NONE_STRING) ? Constants.FALSE_STRING : Constants.TRUE_STRING;
+            Arguments[(int) ArgumentIndices.standard] = comboBoxStandard.SelectedItem.Equals(Constants.NONE_STRING) ? Constants.NULL_STRING : comboBoxStandard.SelectedItem.ToString();
             Arguments[(int) ArgumentIndices.units] = tboxUnits.Text;
             Arguments[(int) ArgumentIndices.cv_table] = cboxCVTable.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.calcurves] = cboxCalCurves.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
@@ -230,7 +240,6 @@ namespace QuaSAR
             cboxPeakAreaPlots.Checked = Defaults.PEAK_AREA_PLOTS;
 
             // options group box
-            cboxStandardPresent.Checked = Defaults.STANDARD_PRESENT;
             cboxPAR.Checked = Defaults.USE_PAR;
             tboxUnits.Text = Defaults.UNITS;
 
@@ -272,18 +281,6 @@ namespace QuaSAR
             else
             {
                 cboxLODLOQComp.Enabled = cboxLODLOQComp.Checked = false;
-            }
-        }
-
-        private void cboxStandardPresent_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cboxStandardPresent.Checked)
-            {
-                cboxCalCurves.Enabled = true;
-            }
-            else
-            {
-                cboxCalCurves.Enabled = cboxCalCurves.Checked = false;
             }
         }
 

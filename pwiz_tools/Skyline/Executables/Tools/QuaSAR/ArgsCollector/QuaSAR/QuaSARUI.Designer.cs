@@ -53,7 +53,6 @@
             this.cboxEndogenousCalc = new System.Windows.Forms.CheckBox();
             this.labelEndogenousConfidence = new System.Windows.Forms.Label();
             this.tboxEndoConf = new System.Windows.Forms.TextBox();
-            this.cboxStandardPresent = new System.Windows.Forms.CheckBox();
             this.labelNumberTransitions = new System.Windows.Forms.Label();
             this.numberTransitions = new System.Windows.Forms.NumericUpDown();
             this.gboxOptions = new System.Windows.Forms.GroupBox();
@@ -195,7 +194,7 @@
             // cboxPAR
             // 
             this.cboxPAR.AutoSize = true;
-            this.cboxPAR.Location = new System.Drawing.Point(16, 61);
+            this.cboxPAR.Location = new System.Drawing.Point(16, 28);
             this.cboxPAR.Name = "cboxPAR";
             this.cboxPAR.Size = new System.Drawing.Size(125, 17);
             this.cboxPAR.TabIndex = 1;
@@ -285,7 +284,7 @@
             // btnDefault
             // 
             this.btnDefault.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.btnDefault.Location = new System.Drawing.Point(97, 487);
+            this.btnDefault.Location = new System.Drawing.Point(97, 455);
             this.btnDefault.Name = "btnDefault";
             this.btnDefault.Size = new System.Drawing.Size(85, 23);
             this.btnDefault.TabIndex = 3;
@@ -323,19 +322,6 @@
             this.tboxEndoConf.Text = "0.95";
             this.tboxEndoConf.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
             // 
-            // cboxStandardPresent
-            // 
-            this.cboxStandardPresent.AutoSize = true;
-            this.cboxStandardPresent.Checked = true;
-            this.cboxStandardPresent.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cboxStandardPresent.Location = new System.Drawing.Point(16, 29);
-            this.cboxStandardPresent.Name = "cboxStandardPresent";
-            this.cboxStandardPresent.Size = new System.Drawing.Size(107, 17);
-            this.cboxStandardPresent.TabIndex = 0;
-            this.cboxStandardPresent.Text = "&Standard present";
-            this.cboxStandardPresent.UseVisualStyleBackColor = true;
-            this.cboxStandardPresent.CheckedChanged += new System.EventHandler(this.cboxStandardPresent_CheckedChanged);
-            // 
             // labelNumberTransitions
             // 
             this.labelNumberTransitions.AutoSize = true;
@@ -370,11 +356,10 @@
             this.gboxOptions.Controls.Add(this.labelUnits);
             this.gboxOptions.Controls.Add(this.labelStandard);
             this.gboxOptions.Controls.Add(this.labelAnalyte);
-            this.gboxOptions.Controls.Add(this.cboxStandardPresent);
             this.gboxOptions.Controls.Add(this.cboxPAR);
             this.gboxOptions.Location = new System.Drawing.Point(9, 184);
             this.gboxOptions.Name = "gboxOptions";
-            this.gboxOptions.Size = new System.Drawing.Size(221, 191);
+            this.gboxOptions.Size = new System.Drawing.Size(221, 162);
             this.gboxOptions.TabIndex = 1;
             this.gboxOptions.TabStop = false;
             this.gboxOptions.Text = "&Options";
@@ -383,7 +368,7 @@
             // 
             this.comboBoxStandard.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxStandard.FormattingEnabled = true;
-            this.comboBoxStandard.Location = new System.Drawing.Point(69, 120);
+            this.comboBoxStandard.Location = new System.Drawing.Point(69, 88);
             this.comboBoxStandard.Name = "comboBoxStandard";
             this.comboBoxStandard.Size = new System.Drawing.Size(134, 21);
             this.comboBoxStandard.TabIndex = 5;
@@ -392,14 +377,14 @@
             // 
             this.comboBoxAnalyte.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxAnalyte.FormattingEnabled = true;
-            this.comboBoxAnalyte.Location = new System.Drawing.Point(69, 90);
+            this.comboBoxAnalyte.Location = new System.Drawing.Point(69, 56);
             this.comboBoxAnalyte.Name = "comboBoxAnalyte";
             this.comboBoxAnalyte.Size = new System.Drawing.Size(134, 21);
             this.comboBoxAnalyte.TabIndex = 3;
             // 
             // tboxUnits
             // 
-            this.tboxUnits.Location = new System.Drawing.Point(69, 151);
+            this.tboxUnits.Location = new System.Drawing.Point(69, 121);
             this.tboxUnits.Name = "tboxUnits";
             this.tboxUnits.Size = new System.Drawing.Size(134, 20);
             this.tboxUnits.TabIndex = 7;
@@ -408,7 +393,7 @@
             // labelUnits
             // 
             this.labelUnits.AutoSize = true;
-            this.labelUnits.Location = new System.Drawing.Point(13, 154);
+            this.labelUnits.Location = new System.Drawing.Point(14, 124);
             this.labelUnits.Name = "labelUnits";
             this.labelUnits.Size = new System.Drawing.Size(34, 13);
             this.labelUnits.TabIndex = 6;
@@ -417,7 +402,7 @@
             // labelStandard
             // 
             this.labelStandard.AutoSize = true;
-            this.labelStandard.Location = new System.Drawing.Point(13, 123);
+            this.labelStandard.Location = new System.Drawing.Point(13, 91);
             this.labelStandard.Name = "labelStandard";
             this.labelStandard.Size = new System.Drawing.Size(53, 13);
             this.labelStandard.TabIndex = 4;
@@ -426,7 +411,7 @@
             // labelAnalyte
             // 
             this.labelAnalyte.AutoSize = true;
-            this.labelAnalyte.Location = new System.Drawing.Point(13, 93);
+            this.labelAnalyte.Location = new System.Drawing.Point(13, 59);
             this.labelAnalyte.Name = "labelAnalyte";
             this.labelAnalyte.Size = new System.Drawing.Size(45, 13);
             this.labelAnalyte.TabIndex = 2;
@@ -476,7 +461,7 @@
             this.tabControl.Location = new System.Drawing.Point(15, 58);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(252, 423);
+            this.tabControl.Size = new System.Drawing.Size(252, 390);
             this.tabControl.TabIndex = 2;
             // 
             // tabPage1
@@ -486,7 +471,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(244, 397);
+            this.tabPage1.Size = new System.Drawing.Size(244, 364);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Basic";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -497,7 +482,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(244, 397);
+            this.tabPage2.Size = new System.Drawing.Size(244, 364);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Plots";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -508,7 +493,7 @@
             this.tabPage3.Controls.Add(this.gboxEndogenousEstimation);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(244, 397);
+            this.tabPage3.Size = new System.Drawing.Size(244, 364);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Additional Tools";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -519,7 +504,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(367, 522);
+            this.ClientSize = new System.Drawing.Size(367, 490);
             this.ControlBox = false;
             this.Controls.Add(this.tabControl);
             this.Controls.Add(this.btnDefault);
@@ -584,7 +569,6 @@
         private System.Windows.Forms.CheckBox cboxEndogenousCalc;
         private System.Windows.Forms.Label labelEndogenousConfidence;
         private System.Windows.Forms.TextBox tboxEndoConf;
-        private System.Windows.Forms.CheckBox cboxStandardPresent;
         private System.Windows.Forms.Label labelNumberTransitions;
         private System.Windows.Forms.NumericUpDown numberTransitions;
         private System.Windows.Forms.GroupBox gboxOptions;

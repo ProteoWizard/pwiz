@@ -104,21 +104,23 @@ namespace MSStatArgsCollector
             OkDialog();
         }
 
+        private const string PERIOD_STRING = ".";
+
         private void OkDialog()
         {
             if (!rBtnPower.Checked && string.IsNullOrEmpty(numberPower.Text))
             {
                 MessageBox.Show(this, "Please enter a value for Power.");
             }
-            else if (string.IsNullOrEmpty(numberFDR.Text))
+            else if (string.IsNullOrEmpty(numberFDR.Text) || numberFDR.Text.Equals(PERIOD_STRING))
             {
                 MessageBox.Show(this, "Please enter a value for FDR.");
             }
-            else if (string.IsNullOrEmpty(numberLDFC.Text))
+            else if (string.IsNullOrEmpty(numberLDFC.Text) || numberLDFC.Text.Equals(PERIOD_STRING))
             {
                 MessageBox.Show(this, "Please enter a value for the lower desired fold change.");
             }
-            else if (string.IsNullOrEmpty(numberUDFC.Text))
+            else if (string.IsNullOrEmpty(numberUDFC.Text) || numberLDFC.Text.Equals(PERIOD_STRING))
             {
                 MessageBox.Show(this, "Please enter a value for the upper desired fold change.");
             }

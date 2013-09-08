@@ -73,10 +73,11 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("p. 2 - external tools"); // Not L10
 
             // R or the associated MS stats packages must be uninstalled for this screenshot to work
+            const string installZipName = "MSstats-1_0.zip"; // Not L10N
             if (IsPauseForScreenShots)
             {
                 var rInstaller =
-                    ShowDialog<RInstaller>(() => configureToolsDlg.UnpackZipTool(GetTestPath("MSstats.zip"))); // Not L10
+                    ShowDialog<RInstaller>(() => configureToolsDlg.UnpackZipTool(GetTestPath(installZipName))); // Not L10
 
                 PauseForScreenShot("p. 3 - r Installer"); // Not L10
 
@@ -91,7 +92,7 @@ namespace pwiz.SkylineTestTutorial
                 // bypass the R installer dialogue
                 configureToolsDlg.TestFindProgramPath = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
 
-                configureToolsDlg.UnpackZipTool(GetTestPath("MSstats.zip")); // Not L10N
+                configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
                 AssertToolEquality(MSSTATS_QC, configureToolsDlg.ToolList[0]);
                 AssertToolEquality(MSSTATS_GC, configureToolsDlg.ToolList[1]);
                 AssertToolEquality(MSSTATS_DSS, configureToolsDlg.ToolList[2]);

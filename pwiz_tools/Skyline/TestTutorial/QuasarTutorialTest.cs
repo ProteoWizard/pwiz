@@ -78,13 +78,14 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("p. 2 - External Tools");
 
+            const string installZipName = "QuaSAR-1_0.zip"; // Not L10N
             if (IsPauseForScreenShots)
             {    
                 var rInstaller = ShowDialog<RInstaller>(() =>
                     {
                         configureToolsDlg.RemoveAllTools();
                         configureToolsDlg.SaveTools();
-                        configureToolsDlg.UnpackZipTool(GetTestPath(@"QuaSAR.zip")); // Not L10N
+                        configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
                     });
 
                 PauseForScreenShot("p. 3 - R Installer");
@@ -98,7 +99,7 @@ namespace pwiz.SkylineTestTutorial
                     // bypass the R installer dialogue
                     configureToolsDlg.TestFindProgramPath = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
 
-                    configureToolsDlg.UnpackZipTool(GetTestPath(@"QuaSAR.zip")); // Not L10N
+                    configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
                     var installedQuaSAR = configureToolsDlg.ToolList[0];
                     Assert.AreEqual(QUASAR.Title, installedQuaSAR.Title);
                     Assert.AreEqual(QUASAR.Command, installedQuaSAR.Command);

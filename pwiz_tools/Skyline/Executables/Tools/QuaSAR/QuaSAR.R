@@ -411,7 +411,7 @@ calculate <-
     
     ## endogenous level calculations
     if (!is.null (endogenous.level.ci)) {
-      print (' calculating endogenous levels', quote=FALSE)
+      print (' calculating endogenous levels (this may take several minutes)', quote=FALSE)
       endogenous.levels <- NULL
       temp <- by (non.blank, non.blank[, c('peptide','transition')],
                   function (x) {

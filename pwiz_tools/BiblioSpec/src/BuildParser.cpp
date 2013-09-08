@@ -836,21 +836,20 @@ string BuildParser::getFilenameFromID(const string& idStr){
         // check for TPP/SEQUEST format <basename>.<start scan>.<end scan>.<charge>[.dta]
         vector<string> parts;
         boost::split(parts, idStr, boost::is_any_of("."));
-        if ((parts.size() == 4 || (parts.size() == 5 && strcmp(parts[4].c_str(), "dta") == 0))
-                              && atoi(parts[1].c_str()) != 0
-                              && atoi(parts[2].c_str()) != 0
-                              && atoi(parts[3].c_str()) != 0){
 
-            filename = parts[0];
+        if ((parts.size() == 4 || (parts.size() == 5 && strcmp(parts[4].c_str(), "dta") == 0))){            
+            if (validInts(parts.begin() + 1, parts.begin() + 4)) {
+                filename = parts[0];
 
-            // check for special ScaffoldIDNumber prefix
-            const char* scaffoldPrefix = "ScaffoldIDNumber_";
-            size_t lenPrefix = strlen(scaffoldPrefix);
-            if (strncmp(filename.c_str(), scaffoldPrefix, lenPrefix) == 0) {
-                size_t endPrefix = filename.find("_", lenPrefix);
-                if (endPrefix != string::npos && endPrefix < filename.length() - 1
-                        && atoi(filename.substr(lenPrefix, endPrefix - lenPrefix).c_str()) != 0)
-                    filename = filename.substr(endPrefix + 1, filename.length() - endPrefix - 1);
+                // check for special ScaffoldIDNumber prefix
+                const char* scaffoldPrefix = "ScaffoldIDNumber_";
+                size_t lenPrefix = strlen(scaffoldPrefix);
+                if (strncmp(filename.c_str(), scaffoldPrefix, lenPrefix) == 0) {
+                    size_t endPrefix = filename.find("_", lenPrefix);
+                    if (endPrefix != string::npos && endPrefix < filename.length() - 1
+                            && atoi(filename.substr(lenPrefix, endPrefix - lenPrefix).c_str()) != 0)
+                        filename = filename.substr(endPrefix + 1, filename.length() - endPrefix - 1);
+                }
             }
         }
     }
@@ -865,17 +864,31 @@ string BuildParser::getFilenameFromID(const string& idStr){
                 vector<string> parts;
                 string startAndEnd = idStr.substr(suffixStart, idStr.length() - suffixStart);
                 boost::split(parts, startAndEnd, boost::is_any_of("_"));
-                if (parts.size() == 2
-                        && atoi(parts[0].c_str()) != 0
-                        && atoi(parts[1].c_str()) != 0
-                        && atoi(idStr.substr(spectrumStart, lastDash - spectrumStart).c_str()) != 0){
-                    filename = idStr.substr(0, lastDash2);
+
+                if (parts.size() == 2){
+
+                    parts.push_back(idStr.substr(spectrumStart, lastDash - spectrumStart));
+                    if (validInts(parts.begin(), parts.end())) {
+                        filename = idStr.substr(0, lastDash2);
+                    }
                 }
             }
         }
     }
 
     return filename;
+}
+
+bool BuildParser::validInts(vector<string>::const_iterator begin, vector<string>::const_iterator end) {
+    for (vector<string>::const_iterator i = begin; i != end; ++i) {
+        int testInt = 0;
+        stringstream intStream(*i);
+        intStream >> testInt;
+        if (intStream.get() != EOF || testInt == 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace

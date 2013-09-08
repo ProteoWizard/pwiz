@@ -196,7 +196,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) && Equals(other.AnnotationTargets, AnnotationTargets) && ArrayUtil.EqualsDeep(other.Items, Items);
+            return base.Equals(other) && Equals(other.AnnotationTargets, AnnotationTargets) &&
+                   other.Type == Type && ArrayUtil.EqualsDeep(other.Items, Items);
         }
 
         public override bool Equals(object obj)
@@ -212,7 +213,8 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ AnnotationTargets.GetHashCode();
-                result = (result*397) ^ Items.GetHashCodeDeep();
+                result = (result * 397) ^ Type.GetHashCode();
+                result = (result * 397) ^ Items.GetHashCodeDeep();
                 return result;
             }
         }

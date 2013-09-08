@@ -61,7 +61,7 @@ namespace pwiz.Skyline.FileUI
             var libraries = settings.PeptideSettings.Libraries;
             if (libraries.HasLibraries && libraries.HasDocumentLibrary)
             {
-                DocumentLibrarySpec = libraries.LibrarySpecs.First(x => x.IsDocumentLibrary);
+                DocumentLibrarySpec = libraries.LibrarySpecs.FirstOrDefault(x => x.IsDocumentLibrary);
                 if (null != DocumentLibrarySpec)
                 {
                     DocumentLibrary = libraryManager.TryGetLibrary(DocumentLibrarySpec);
