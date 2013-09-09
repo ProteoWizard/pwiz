@@ -5827,16 +5827,16 @@ Are you sure you want to continue?</value>
   <data name="ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_" xml:space="preserve">
     <value>Error loading report from the temporary file {0}</value>
   </data>
-    <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
     <value>Installing Packages</value>
   </data>
-    <data name="RInstaller_GetR_Installing_R" xml:space="preserve">
+  <data name="RInstaller_GetR_Installing_R" xml:space="preserve">
     <value>Installing R</value>
   </data>
-    <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
     <value>Installing Python</value>
   </data>
-    <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
     <value>Installing Pip</value>
   </data>
   <data name="TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_" xml:space="preserve">
@@ -5844,5 +5844,77 @@ Are you sure you want to continue?</value>
   </data>
   <data name="TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_" xml:space="preserve">
     <value>The label {0} is not a valid end fragment filter.</value>
+  </data>
+  <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
+    <value>Error downloading tool</value>
+  </data>
+  <data name="ToolStoreDlg_DownloadSelectedTool_Downloading__0_" xml:space="preserve">
+    <value>Downloading {0}</value>
+  </data>
+  <data name="ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages" xml:space="preserve">
+    <value>Failed to download updates for the following packages</value>
+  </data>
+  <data name="ToolUpdatesDlg_DownloadTools_Downloading_updates_for__0_" xml:space="preserve">
+    <value>Downloading updates for {0}</value>
+  </data>
+  <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
+    <value>Installing updates to {0}</value>
+  </data>
+  <data name="ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_" xml:space="preserve">
+    <value>Please select at least one tool to update.</value>
+  </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools" xml:space="preserve">
+    <value>Failed to update the following tools</value>
+  </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools" xml:space="preserve">
+    <value>Successfully updated the following tools</value>
+  </data>
+  <data name="ToolUpdatesDlg_InstallUpdates_User_cancelled_installation" xml:space="preserve">
+    <value>User cancelled installation</value>
+  </data>
+  <data name="ToolUpdatesDlg_GetTools_Downloading_Updates" xml:space="preserve">
+    <value>Downloading Updates</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Contacting_the_server" xml:space="preserve">
+    <value>Contacting the server</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store" xml:space="preserve">
+    <value>Unknown error connecting to the tool store</value>
+  </data>
+  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_" xml:space="preserve">
+    <value>Error connecting to the Tool Store: {0}</value>
+  </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool" xml:space="preserve">
+    <value>Successfully updated the following tool</value>
+  </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool" xml:space="preserve">
+    <value>Failed to update the following tool</value>
+  </data>
+  <data name="ExternalTool" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ExternalTool.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+    <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
+    <value>Not currently installed. Version: {0} is available</value>
+  </data>
+    <data name="ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_" xml:space="preserve">
+    <value>Version {0} currently installed. Version {1} is available.</value>
+  </data>
+    <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
+    <value>Currently installed and fully updated (Version: {0}).</value>
+  </data>
+    <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
+    <value>Cannot find a file with that identifier.</value>
+  </data>
+    <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
+    <value>Downloading Updates</value>
+  </data>
+    <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
+    <value>Reinstall</value>
   </data>
 </root>

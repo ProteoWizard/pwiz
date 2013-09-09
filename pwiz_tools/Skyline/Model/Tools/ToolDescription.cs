@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         public ToolDescription(ToolDescription t)
-            : this(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle, t.ArgsCollectorDllPath, t.ArgsCollectorClassName, t.ToolDirPath, t.Annotations, t.PackageVersion, t.PackageIdentifier, t.PackageName )
+            : this(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle, t.ArgsCollectorDllPath, t.ArgsCollectorClassName, t.ToolDirPath, t.Annotations, t.PackageVersion, t.PackageIdentifier, t.PackageName, t.UpdateAvailable )
         {            
         }
 
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public ToolDescription(string title, string command, string arguments, string initialDirectory,
                                bool outputToImmediateWindow, string reportTitle, string argsCollectorDllPath, 
-                               string argsCollectorClassName, string toolDirPath, List<AnnotationDef> annotations, string packageVersion, string packageIdentifier, string packageName )
+                               string argsCollectorClassName, string toolDirPath, List<AnnotationDef> annotations, string packageVersion, string packageIdentifier, string packageName, bool updateAvailable = false )
         {
             Title = title;
             Command = command;
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Tools
             PackageVersion = packageVersion;
             PackageIdentifier = packageIdentifier;
             PackageName = packageName;
-            
+            UpdateAvailable = updateAvailable;
 
             //Validate();  //Not immutable
         }
@@ -122,6 +122,7 @@ namespace pwiz.Skyline.Model.Tools
         public string PackageVersion { get; set; }
         public string PackageIdentifier { get; set; }
         public string PackageName { get; set; }
+        public bool UpdateAvailable { get; set; }
 
         public bool IsWebPage { get { return IsWebPageCommand(Command); } }
 
@@ -527,7 +528,8 @@ namespace pwiz.Skyline.Model.Tools
             tool_dir_path,
             package_version,
             package_identifier,
-            package_name
+            package_name,
+            update_available
         }
         
         private enum EL
@@ -563,6 +565,7 @@ namespace pwiz.Skyline.Model.Tools
             PackageVersion = reader.GetAttribute(ATTR.package_version) ?? string.Empty;
             PackageIdentifier = reader.GetAttribute(ATTR.package_identifier) ?? string.Empty;
             PackageName = reader.GetAttribute(ATTR.package_name) ?? string.Empty;
+            UpdateAvailable = reader.GetBoolAttribute(ATTR.update_available);
             Annotations = new List<AnnotationDef>();
             if (!reader.IsEmptyElement)
             {
@@ -592,6 +595,7 @@ namespace pwiz.Skyline.Model.Tools
             writer.WriteAttributeIfString(ATTR.package_version, PackageVersion);
             writer.WriteAttributeIfString(ATTR.package_identifier, PackageIdentifier);
             writer.WriteAttributeIfString(ATTR.package_name, PackageName);
+            writer.WriteAttribute(ATTR.update_available, UpdateAvailable);
             writer.WriteElementList(EL.annotation, Annotations ?? new List<AnnotationDef>());
         }
 

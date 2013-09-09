@@ -2413,6 +2413,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Contacting the server.
+        /// </summary>
+        public static string ConfigureToolsDlg_AddFromWeb_Contacting_the_server {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_AddFromWeb_Contacting_the_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error connecting to the tool store.
+        /// </summary>
+        public static string ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Executables.
         /// </summary>
         public static string ConfigureToolsDlg_btnFindCommand_Click_All_Executables {
@@ -2634,6 +2652,15 @@ namespace pwiz.Skyline.Properties {
         public static string ConfigureToolsDlg_GetTitle__New_Tool_0__ {
             get {
                 return ResourceManager.GetString("ConfigureToolsDlg_GetTitle__New_Tool_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error connecting to the Tool Store: {0}.
+        /// </summary>
+        public static string ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_", resourceCulture);
             }
         }
         
@@ -5528,6 +5555,13 @@ namespace pwiz.Skyline.Properties {
         public static string ExportStrategyExtension_LOCALIZED_VALUES_Single {
             get {
                 return ResourceManager.GetString("ExportStrategyExtension_LOCALIZED_VALUES_Single", resourceCulture);
+            }
+        }
+        
+        public static System.Drawing.Bitmap ExternalTool {
+            get {
+                object obj = ResourceManager.GetObject("ExternalTool", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -14782,6 +14816,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find a file with that identifier..
+        /// </summary>
+        public static string TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_ {
+            get {
+                return ResourceManager.GetString("TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error downloading tool.
+        /// </summary>
+        public static string TestToolStoreClient_GetToolZipFile_Error_downloading_tool {
+            get {
+                return ResourceManager.GetString("TestToolStoreClient_GetToolZipFile_Error_downloading_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CSV (Comma delimited).
         /// </summary>
         public static string TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_ {
@@ -15311,6 +15363,172 @@ namespace pwiz.Skyline.Properties {
         public static string ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run {
             get {
                 return ResourceManager.GetString("ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading {0}.
+        /// </summary>
+        public static string ToolStoreDlg_DownloadSelectedTool_Downloading__0_ {
+            get {
+                return ResourceManager.GetString("ToolStoreDlg_DownloadSelectedTool_Downloading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Currently installed and fully updated (Version: {0})..
+        /// </summary>
+        public static string ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___ {
+            get {
+                return ResourceManager.GetString("ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0" +
+                        "___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not currently installed. Version: {0} is available.
+        /// </summary>
+        public static string ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available {
+            get {
+                return ResourceManager.GetString("ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version {0} currently installed. Version {1} is available..
+        /// </summary>
+        public static string ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_ {
+            get {
+                return ResourceManager.GetString("ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_av" +
+                        "ailable_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string ToolStoreDlg_UpdateDisplayedTool_Install {
+            get {
+                return ResourceManager.GetString("ToolStoreDlg_UpdateDisplayedTool_Install", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reinstall.
+        /// </summary>
+        public static string ToolStoreDlg_UpdateDisplayedTool_Reinstall {
+            get {
+                return ResourceManager.GetString("ToolStoreDlg_UpdateDisplayedTool_Reinstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Update.
+        /// </summary>
+        public static string ToolStoreDlg_UpdateDisplayedTool_Update {
+            get {
+                return ResourceManager.GetString("ToolStoreDlg_UpdateDisplayedTool_Update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select at least one tool to update..
+        /// </summary>
+        public static string ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_ {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download updates for the following packages.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_followin" +
+                        "g_packages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to update the following tool.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to update the following tools.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully updated the following tool.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully updated the following tools.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading updates for {0}.
+        /// </summary>
+        public static string ToolUpdatesDlg_DownloadTools_Downloading_updates_for__0_ {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DownloadTools_Downloading_updates_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading Updates.
+        /// </summary>
+        public static string ToolUpdatesDlg_GetTools_Downloading_Updates {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_GetTools_Downloading_Updates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading Updates.
+        /// </summary>
+        public static string ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing updates to {0}.
+        /// </summary>
+        public static string ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_ {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User cancelled installation.
+        /// </summary>
+        public static string ToolUpdatesDlg_InstallUpdates_User_cancelled_installation {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_InstallUpdates_User_cancelled_installation", resourceCulture);
             }
         }
         

@@ -58,6 +58,7 @@
             // clboxPackages
             // 
             resources.ApplyResources(this.clboxPackages, "clboxPackages");
+            this.clboxPackages.CheckOnClick = true;
             this.clboxPackages.FormattingEnabled = true;
             this.clboxPackages.Name = "clboxPackages";
             // 

@@ -144,6 +144,9 @@ namespace pwiz.Skyline
             _retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
             _retentionTimeManager.Register(this);
 
+            // Begin ToolStore check for updates to currently installed tools
+            ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()));
+
             ToolReportCache.Instance.Register(this);
 
             // Get placement values before changing anything.
@@ -2298,6 +2301,26 @@ namespace pwiz.Skyline
             }
         }
 
+        private void updatesToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowToolUpdatesDlg();
+        }
+
+        public void ShowToolUpdatesDlg()
+        {
+            ShowToolUpdatesDlg(new ToolUpdateHelper());
+        }
+
+        public void ShowToolUpdatesDlg(IToolUpdateHelper updateHelper)
+        {
+            using (var dlg = new ToolUpdatesDlg(this,
+                                                Settings.Default.ToolList.Where(tool => tool.UpdateAvailable).ToList(),
+                                                updateHelper))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
         private void configureToolsMenuItem_Click(object sender, EventArgs e)
         {
             ShowConfigureToolsDlg();
@@ -2319,7 +2342,7 @@ namespace pwiz.Skyline
         public void PopulateToolsMenu()
         {
             // Remove all items from the toolToolStripMenuItem.
-            while (!ReferenceEquals(toolsMenu.DropDownItems[0], configureToolsMenuItem))
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], updatesToolsMenuItem) && !(ReferenceEquals(toolsMenu.DropDownItems[0], configureToolsMenuItem)))
             {
                 toolsMenu.DropDownItems.RemoveAt(0);
                 //Consider: (danny) When we remove menu items do we have to dispose of them?
@@ -2329,42 +2352,50 @@ namespace pwiz.Skyline
             var toolList = Settings.Default.ToolList;
             foreach (ToolDescription tool in toolList)
             {
-                if (tool.Title.Contains('\\'))
+                if (tool.Title.Contains('\\'))  // Not L10N
                 {
-                    ToolStripMenuItem curent = toolsMenu;
-                    string[] spliced = tool.Title.Split('\\');
+                    ToolStripMenuItem current = toolsMenu;
+                    string[] spliced = tool.Title.Split('\\');  // Not L10N
                     for (int i = 0; i < spliced.Length-1; i++)
                     {
                         ToolStripMenuItem item;
-                        int index = toolExists(curent, spliced[i]);
+                        int index = toolExists(current, spliced[i]);
                         if ( index >= 0)
                         {
-                            item = (ToolStripMenuItem) curent.DropDownItems[index];
+                            item = (ToolStripMenuItem) current.DropDownItems[index];
                         }
                         else
                         {
-                            item = new ToolStripMenuItem(spliced[i]);
-                            if (curent == toolsMenu)
+                            item = new ToolStripMenuItem(spliced[i])
+                                {
+                                    Image = tool.UpdateAvailable ? SystemIcons.Exclamation.ToBitmap() : null
+                                };
+                            if (current == toolsMenu)
                             {
-                                curent.DropDownItems.Insert(lastInsertIndex++, item);
+                                current.DropDownItems.Insert(lastInsertIndex++, item);
                             }
                             else
                             {
-                                curent.DropDownItems.Add(item);
+                                current.DropDownItems.Add(item);
                             }    
                         }
                         
-                        curent = item;
+                        current = item;
                     }
                     ToolMenuItem final = new ToolMenuItem(tool, this) { Text = spliced.Last() };
-                    curent.DropDownItems.Add(final);
+                    current.DropDownItems.Add(final);
                 }
                 else
                 {
-                    ToolMenuItem menuItem = new ToolMenuItem(tool, this) { Text = tool.Title };
+                    ToolMenuItem menuItem = new ToolMenuItem(tool, this)
+                        {
+                            Text = tool.Title, 
+                            Image = tool.UpdateAvailable ? SystemIcons.Exclamation.ToBitmap() : null
+                        };
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++ , menuItem);
                 }
             }
+            updatesToolsMenuItem.Enabled = updatesToolsMenuItem.Visible = toolList.Contains(tool => tool.UpdateAvailable);
         }
         /// <summary>
         /// Helper Function that determines if a tool exists on a menu by it's title. 
@@ -2407,6 +2438,11 @@ namespace pwiz.Skyline
         public string GetTextByIndex(int i)
         {
             return toolsMenu.DropDownItems[i].Text;
+        }
+
+        public bool UpdatesMenuEnabled()
+        {
+            return updatesToolsMenuItem.Enabled;
         }
 
         public bool ConfigMenuPresent()

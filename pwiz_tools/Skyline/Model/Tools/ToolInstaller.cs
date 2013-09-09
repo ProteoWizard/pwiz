@@ -228,8 +228,8 @@ namespace pwiz.Skyline.Model.Tools
     
     public static class ToolInstaller
     {
-        private const string TOOL_INF = "tool-inf";                    //Not L10N
-        private const string INFO_PROPERTIES = "info.properties";      //Not L10N
+        public const string TOOL_INF = "tool-inf";                    //Not L10N
+        public const string INFO_PROPERTIES = "info.properties";      //Not L10N
         private const string INSTALL_R_PACKAGES = "InstallPackages.r"; //Not L10N
 
         /// <summary>

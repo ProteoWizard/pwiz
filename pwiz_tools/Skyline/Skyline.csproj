@@ -1227,6 +1227,12 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="ToolsUI\ToolStoreDlg.resx">
+      <DependentUpon>ToolStoreDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ToolUpdatesDlg.resx">
+      <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <None Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\Interop.EDAL.SxS.manifest">
       <Link>Interop.EDAL.SxS.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1313,6 +1319,18 @@
     <Compile Include="ToolsUI\ToolOptionsUI.Designer.cs">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\ToolStoreDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ToolStoreDlg.Designer.cs">
+      <DependentUpon>ToolStoreDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\ToolUpdatesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ToolUpdatesDlg.Designer.cs">
+      <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
@@ -1355,6 +1373,7 @@
     <EmbeddedResource Include="Resources\Folder.png" />
     <EmbeddedResource Include="Resources\DropImage.bmp" />
     <EmbeddedResource Include="Resources\Filter.bmp" />
+    <EmbeddedResource Include="Resources\ExternalTool.bmp" />
     <EmbeddedResource Include="Resources\GreenCheck.bmp" />
     <EmbeddedResource Include="Resources\Peptide.bmp" />
     <EmbeddedResource Include="Resources\Protein.bmp" />

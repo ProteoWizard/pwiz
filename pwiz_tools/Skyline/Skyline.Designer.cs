@@ -373,6 +373,7 @@ namespace pwiz.Skyline
             this.integrateAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.updatesToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
             this.immediateWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2805,6 +2806,7 @@ namespace pwiz.Skyline
             // 
             this.toolsMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.placeholderToolsMenuItem,
+            this.updatesToolsMenuItem,
             this.configureToolsMenuItem,
             this.toolStripSeparator46,
             this.immediateWindowToolStripMenuItem,
@@ -2818,6 +2820,12 @@ namespace pwiz.Skyline
             // 
             this.placeholderToolsMenuItem.Name = "placeholderToolsMenuItem";
             resources.ApplyResources(this.placeholderToolsMenuItem, "placeholderToolsMenuItem");
+            // 
+            // updatesToolsMenuItem
+            // 
+            resources.ApplyResources(this.updatesToolsMenuItem, "updatesToolsMenuItem");
+            this.updatesToolsMenuItem.Name = "updatesToolsMenuItem";
+            this.updatesToolsMenuItem.Click += new System.EventHandler(this.updatesToolsMenuItem_Click);
             // 
             // configureToolsMenuItem
             // 
@@ -3286,6 +3294,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem showLibraryChromatogramsSpectrumContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chromatogramsToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton publishToolbarButton;
+        private System.Windows.Forms.ToolStripMenuItem updatesToolsMenuItem;
     }
 }
 

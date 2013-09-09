@@ -2406,6 +2406,18 @@
   <data name="placeholderToolsMenuItem.Text" xml:space="preserve">
     <value>&lt;placeholder&gt;</value>
   </data>
+  <data name="updatesToolsMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="updatesToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>178, 22</value>
+  </data>
+  <data name="updatesToolsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Updates...</value>
+  </data>
+  <data name="updatesToolsMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="configureToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 22</value>
   </data>
@@ -4489,6 +4501,12 @@
     <value>placeholderToolsMenuItem</value>
   </data>
   <data name="&gt;&gt;placeholderToolsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;updatesToolsMenuItem.Name" xml:space="preserve">
+    <value>updatesToolsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;updatesToolsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;configureToolsMenuItem.Name" xml:space="preserve">

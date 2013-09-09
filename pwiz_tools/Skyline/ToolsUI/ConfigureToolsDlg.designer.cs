@@ -264,8 +264,8 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // fromWebAddContextMenuItem
             // 
-            this.fromWebAddContextMenuItem.Name = "fromWebAddContextMenuItem";
             resources.ApplyResources(this.fromWebAddContextMenuItem, "fromWebAddContextMenuItem");
+            this.fromWebAddContextMenuItem.Name = "fromWebAddContextMenuItem";
             this.fromWebAddContextMenuItem.Click += new System.EventHandler(this.fromWebAddContextMenuItem_Click);
             // 
             // contextMenuCommand

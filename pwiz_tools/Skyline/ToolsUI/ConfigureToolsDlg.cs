@@ -22,8 +22,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -52,6 +54,10 @@ namespace pwiz.Skyline.ToolsUI
             _driverReportSpec.LoadList(string.Empty);
             comboReport.Items.Insert(0, string.Empty);
             comboReport.SelectedItem = string.Empty;
+
+            ToolStoreClient = ToolStoreUtil.CreateClient();
+            if (ToolStoreClient != null)
+                fromWebAddContextMenuItem.Visible = fromWebAddContextMenuItem.Enabled = true;
             
             // Value for keeping track of the previously selected tool 
             // Used to check if the tool meets requirements before allowing you to navigate away from it.
@@ -913,14 +919,14 @@ namespace pwiz.Skyline.ToolsUI
 
         #endregion // Macros
 
-        private void fromWebAddContextMenuItem_Click(object sender, EventArgs e)
-        {
-            //Curently hidden from the menu.
-        }
-
         private void customAddContextMenuItem_Click(object sender, EventArgs e)
         {
             Add();
+        }
+
+        private void fromWebAddContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFromWeb();
         }
 
         private void fromFileAddContextMenuItem_Click(object sender, EventArgs e)
@@ -928,46 +934,97 @@ namespace pwiz.Skyline.ToolsUI
             AddFromFile();
         }
 
-        private void AddFromFile()
+        public void AddFromWeb()
+        {
+            AddViaZip(GetZipFromWeb);
+        }
+
+        public void AddFromFile()
+        {
+            AddViaZip(GetZipFromFile);
+        }
+        
+        private void AddViaZip(Action addTool)
         {
             if (CheckPassTool(PreviouslySelectedIndex))
             {
-                if (Unsaved)
+                if (PromptForSave())
                 {
-                    //Prompt them to save first!
-                    MultiButtonMsgDlg saveDlg = new MultiButtonMsgDlg(string.Format(Resources.ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_),
-                               MultiButtonMsgDlg.BUTTON_YES, Resources.ConfigureToolsDlg_AddFromFile_Cancel , false);
-                    DialogResult toSave = saveDlg.ShowDialog(this);
-                    switch (toSave)
+                    addTool.Invoke();
+                    if (ToolList.Count == 1)
                     {
-                        case (DialogResult.Yes):
-                            SaveTools();
-                            break;
-                        case (DialogResult.No):
-                            return;
+                        PreviouslySelectedIndex = 0;
                     }
                 }
-
-                using (var dlg = new OpenFileDialog
-                    {
-                        Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                            Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
-                        Multiselect = false
-                    })
-                {
-                    DialogResult result = dlg.ShowDialog();
-                    if (result == DialogResult.OK)
-                    {
-                        UnpackZipTool(dlg.FileName);
-                    }
-                }
-            }
-            if (ToolList.Count == 1)
-            {
-                PreviouslySelectedIndex = 0;
             }
         }
 
+        private void GetZipFromFile()
+        {
+            using (var dlg = new OpenFileDialog
+            {
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
+                Multiselect = false
+            })
+            {
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    UnpackZipTool(dlg.FileName);
+            }
+        }
+
+        public IToolStoreClient ToolStoreClient { get; set; }
+
+        private void GetZipFromWeb()
+        {
+            try
+            {
+                IList<ToolStoreItem> toolStoreItems = null;
+                using (var dlg = new LongWaitDlg { Message = Resources.ConfigureToolsDlg_AddFromWeb_Contacting_the_server })
+                {
+                    dlg.PerformWork(this, 1000, () =>
+                        {
+                            toolStoreItems = ToolStoreClient.GetToolStoreItems();
+                        });
+                }
+                if (toolStoreItems == null || toolStoreItems.Count == 0)
+                {
+                    MessageDlg.Show(this, Resources.ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store);
+                }
+                using (var dlg = new ToolStoreDlg(ToolStoreClient, toolStoreItems))
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                        UnpackZipTool(dlg.DownloadPath);
+                }
+            }
+            catch (TargetInvocationException x)
+            {
+                if (x.InnerException.GetType() == typeof(MessageException))
+                    MessageDlg.Show(this, string.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
+                else
+                    throw;
+            }
+        }
+
+        // returns true if the tools are saved
+        private bool PromptForSave()
+        {
+            if (Unsaved)
+            {
+                MultiButtonMsgDlg saveDlg = new MultiButtonMsgDlg(string.Format(Resources.ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_),
+                           MultiButtonMsgDlg.BUTTON_YES, Resources.ConfigureToolsDlg_AddFromFile_Cancel, false);
+                DialogResult toSave = saveDlg.ShowDialog(this);
+                switch (toSave)
+                {
+                    case (DialogResult.Yes):
+                        SaveTools();
+                        return true;
+                    case (DialogResult.No):
+                        return false;
+                }
+            }
+            return true;
+        }
         public class UnpackZipToolHelper : IUnpackZipToolSupport
         {
             public UnpackZipToolHelper(SkylineWindow parentWindow, Func<ProgramPathContainer, ICollection<ToolPackage>, string, string> testFindProgramPath)

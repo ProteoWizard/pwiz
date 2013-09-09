@@ -33,7 +33,7 @@ namespace TestRunner
 {
     internal static class Program
     {
-        private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
+        private static readonly string[] TEST_DLLS = {"TestTutorial.dll"};
 
         [STAThread]
         static void Main(string[] args)
@@ -76,23 +76,7 @@ namespace TestRunner
                     return;
                 }
 
-                // Pause before first test for profiling.
-                bool profiling = commandLineArgs.ArgAsBool("profile");
-                if (profiling)
-                {
-                    Console.WriteLine("\nPausing for 10 seconds to allow memory snapshot...\n");
-                    Thread.Sleep(10 * 1000);
-                }
-
                 RunTests(testList, commandLineArgs);
-
-                // Pause for profiling
-                if (profiling)
-                {
-                    GC.Collect();
-                    Console.WriteLine("\nSleeping to allow memory profiling...\n");
-                    Thread.Sleep(24 * 60 * 60 * 1000);    // 24 hours
-                }
             }
             catch (Exception e)
             {
@@ -206,6 +190,28 @@ namespace TestRunner
             // Run all test passes.
             for (var pass = 1; pass <= passes || passes == 0; pass++)
             {
+                // Pause before first test for profiling.
+                if (pass == 2 || pass % 5 == 0)
+                {
+                    bool profiling = commandLineArgs.ArgAsBool("profile");
+                    if (profiling)
+                    {
+                        Console.WriteLine("\nPausing for 10 seconds to allow memory snapshot...\n");
+                        Thread.Sleep(10 * 1000);
+                    }
+                }
+
+                if (pass == passes)
+                {
+                    // Pause for profiling
+                    if (commandLineArgs.ArgAsBool("profile"))
+                    {
+                        GC.Collect();
+                        Console.WriteLine("\nSleeping to allow memory profiling...\n");
+                        Thread.Sleep(24 * 60 * 60 * 1000);    // 24 hours
+                    }                    
+                }
+
                 // Create test order for this pass.
                 testOrder.AddRange(testList.Select((t, i) => i));
 
