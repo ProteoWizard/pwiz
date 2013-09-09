@@ -390,16 +390,21 @@ namespace pwiz.Skyline.ToolsUI
         /// <returns>True if the a tool with the given identifier is installed.</returns>
         public static bool IsInstalled(string identifier)
         {
-            return Settings.Default.ToolList.Contains(description => description.PackageIdentifier.Equals(identifier));
+            return Settings.Default.ToolList.Contains(
+                description =>
+                    description.PackageIdentifier != null &&
+                    description.PackageIdentifier.Equals(identifier));
         }
 
         /// <returns>True if the a tool with the given identifier is the most recent.</returns>
         public static bool IsMostRecentVersion(string identifier, string version)
         {
-            return
-                Settings.Default.ToolList.Contains(
+            return Settings.Default.ToolList.Contains(
                     description =>
-                    description.PackageIdentifier.Equals(identifier) && new Version(description.PackageVersion) >= new Version(version));
+                        !string.IsNullOrEmpty(description.PackageIdentifier) &&
+                        description.PackageIdentifier.Equals(identifier) &&
+                        !string.IsNullOrEmpty(description.PackageVersion) &&
+                        new Version(description.PackageVersion) >= new Version(version));
         }
 
         /// <returns>The string representation of the version of the installed tool with the given identifier. If the tool
