@@ -240,10 +240,10 @@ namespace pwiz.Skyline.Model
                     features.Id.NodePep.ModifiedSequence,
                     features.Id.NodePepGroup.Name,
                     Convert.ToString(features.Id.NodePep.IsDecoy ? 1 : 0, cultureInfo),
-                    Convert.ToString(mProphetScore, cultureInfo),
-                    Convert.ToString(zScore, cultureInfo),
-                    Convert.ToString(pValue, cultureInfo),
-                    Convert.ToString(qValue, cultureInfo),
+                    Convert.ToString((float) mProphetScore, cultureInfo),
+                    Convert.ToString((float) zScore, cultureInfo),
+                    Convert.ToString((float) pValue, cultureInfo),
+                    Convert.ToString((float) qValue, cultureInfo),
                 };
             foreach (var name in fieldsArray)
             {
