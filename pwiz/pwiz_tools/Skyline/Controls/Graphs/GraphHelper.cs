@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
@@ -381,14 +382,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             protected DisplayState(IEnumerable<TransitionGroup> transitionGroups)
             {
-                TransitionGroups = new HashSet<TransitionGroup>();
-                if (null != transitionGroups)
-                {
-                    TransitionGroups.UnionWith(transitionGroups);
-                }
+                TransitionGroups = transitionGroups == null ? new TransitionGroup[0] : transitionGroups.ToArray();
                 GraphPaneKeys = new List<PaneKey>();
             }
-            protected HashSet<TransitionGroup> TransitionGroups { get; private set; }
+            protected TransitionGroup[] TransitionGroups { get; private set; }
             public abstract bool CanUseZoomStateFrom(DisplayState displayStatePrev);
             public bool ZoomStateValid { get; set; }
             public List<PaneKey> GraphPaneKeys { get; private set; }
@@ -492,7 +489,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Equals(TimeRange, prevChromDisplayState.TimeRange) &&
                         Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime))
                     {
-                        return TransitionGroups.SetEquals(prevChromDisplayState.TransitionGroups);
+                        return ArrayUtil.ReferencesEqual(TransitionGroups, prevChromDisplayState.TransitionGroups);
                     }
                 }
                 return false;

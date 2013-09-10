@@ -952,7 +952,14 @@ namespace pwiz.Skyline.Controls
                 int currentRowIndex = CurrentCell.RowIndex;
                 ClearSelection();
                 if (currentRowIndex != -1)
-                    CurrentCell = Rows[currentRowIndex].Cells[0];
+                {
+                    var firstVisibleColumn = Columns.Cast<DataGridViewColumn>()
+                        .FirstOrDefault(col => col != column && col.Visible);
+                    if (null != firstVisibleColumn)
+                    {
+                        CurrentCell = Rows[currentRowIndex].Cells[firstVisibleColumn.Index];
+                    }
+                }
             }
             column.Visible = show;
         }

@@ -398,6 +398,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             foreach (var specLiteKey in redundantSpectraIds)
             {
+                if (specLiteKey.Key.RedundantId == 0)
+                {
+                    continue;
+                }
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
                 long spectrumSourceId = GetSpecturmSourceId(sessionRedundant, specLiteKey.FilePath, dictFiles);

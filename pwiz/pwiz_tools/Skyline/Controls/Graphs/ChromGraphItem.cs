@@ -434,10 +434,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Draw background for retention time window
                 if (RetentionWindow > 0)
                 {
-                    double boxHeight = ptTop.Y;
                     double x1 = ScaleRetentionTime(time - RetentionWindow/2).DisplayTime;
                     double x2 = ScaleRetentionTime(time + RetentionWindow/2).DisplayTime;
-                    BoxObj box = new BoxObj(x1, boxHeight, x2-x1, boxHeight,
+                    BoxObj box = new BoxObj(x1, 0, x2-x1, 1,
                                             COLOR_RETENTION_WINDOW, COLOR_RETENTION_WINDOW)
                                      {
                                          Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
