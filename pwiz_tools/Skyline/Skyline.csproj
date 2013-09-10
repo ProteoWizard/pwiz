@@ -398,6 +398,12 @@
     <Compile Include="EditUI\CopyGraphDataToolStripMenuItem.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="EditUI\ReintegrateDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\ReintegrateDlg.Designer.cs">
+      <DependentUpon>ReintegrateDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\RenameProteinsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -543,6 +549,7 @@
     <Compile Include="Model\Lib\ChromLib\Data\Protein.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\SampleFile.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\Transition.cs" />
+    <Compile Include="Model\MProphetResultsHandler.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />
@@ -1086,6 +1093,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\SequenceTreeForm.resx">
       <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ReintegrateDlg.resx">
+      <DependentUpon>ReintegrateDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RenameProteinsDlg.resx">
       <DependentUpon>RenameProteinsDlg.cs</DependentUpon>

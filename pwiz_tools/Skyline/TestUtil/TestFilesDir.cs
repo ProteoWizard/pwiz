@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -73,6 +74,33 @@ namespace pwiz.SkylineTestUtil
         {
             return Path.Combine(FullPath, relativePath);
         }
+
+        /// <summary>
+        /// Returns a full path to a file in the unzipped directory, with "_Intl" appended.
+        /// </summary>
+        /// <param name="relativePath">Relative path, as stored in the ZIP file, to the file</param>
+        /// <returns>Absolute path to the file for use in tests</returns>
+        public string GetTestPathIntl(string relativePath)
+        {
+            string testPath = GetTestPath(relativePath);
+            return Path.Combine(Path.GetDirectoryName(testPath) ?? "",
+                    Path.GetFileNameWithoutExtension(testPath) + "_Intl" +
+                    Path.GetExtension(testPath));
+        }
+
+        /// <summary>
+        /// Returns a full path to a file in the unzipped directory, with "_Intl" appended
+        /// if the current culture does not use a comma for .csv.
+        /// </summary>
+        /// <param name="relativePath">Relative path, as stored in the ZIP file, to the file</param>
+        /// <returns>Absolute path to the file for use in tests</returns>
+        public string GetTestPathLocale(string relativePath)
+        {
+            if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
+                return GetTestPath(relativePath);
+            return GetTestPathIntl(relativePath);
+        }
+
 
         /// <summary>
         /// Attempts to move the directory to make sure no file handles are open.

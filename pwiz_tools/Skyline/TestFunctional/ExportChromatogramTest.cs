@@ -17,12 +17,10 @@
  * limitations under the License.
  */
 
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -89,8 +87,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
             // Check that exporting the file through the UI gives the correct result
-            string exportExpectedUs = TestFilesDir.GetTestPath("ChromToExportAll.tsv");
-            string exportExpected = GetLocaleName(exportExpectedUs);
+            string exportExpected = TestFilesDir.GetTestPathLocale("ChromToExportAll.tsv");
             var exportActual = TestFilesDir.GetTestPath("ActualFile.tsv");
             RunUI(() =>
             {
@@ -99,31 +96,9 @@ namespace pwiz.SkylineTestFunctional
                 exportChromDlg.UpdateChromExtractors(true, true);
                 exportChromDlg.WriteChromatograms(exportActual);
             });
-            AssertFileEquals(exportExpected, exportActual);
+            AssertEx.FileEquals(exportExpected, exportActual);
             RunUI(exportChromDlg.CancelDialog);
             WaitForClosedForm(exportChromDlg);
-        }
-
-        private static void AssertFileEquals(string path1, string path2)
-        {
-            string file1 = File.ReadAllText(path1);
-            string file2 = File.ReadAllText(path2);
-            AssertEx.NoDiff(file1, file2);
-        }
-
-        private static string GetLocaleName(string fileExpected)
-        {
-            if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
-                return fileExpected;
-
-            return GetIntlName(fileExpected);
-        }
-
-        private static string GetIntlName(string fileExpected)
-        {
-            return Path.Combine(Path.GetDirectoryName(fileExpected) ?? "",
-                                Path.GetFileNameWithoutExtension(fileExpected) + "_Intl" +
-                                Path.GetExtension(fileExpected));
         }
     }
 }

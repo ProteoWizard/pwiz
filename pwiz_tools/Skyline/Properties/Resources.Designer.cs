@@ -8441,6 +8441,34 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to save mProphet features to {0}..
+        /// </summary>
+        public static string MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__ {
+            get {
+                return ResourceManager.GetString("MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mProphet Feature Files.
+        /// </summary>
+        public static string MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files {
+            get {
+                return ResourceManager.GetString("MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To export MProphet features first train an MProphet model..
+        /// </summary>
+        public static string MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_ {
+            get {
+                return ResourceManager.GetString("MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_" +
+                        "model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MProphetScoringModel was given a peak with {0} features, but it has {1} peak feature calculators.
         /// </summary>
         public static string MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators {
@@ -9681,6 +9709,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeakCalculatorWeight_Validate___0___is_not_a_known_name_for_a_peak_feature_calcul" +
                         "ator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating peak group scores for {0}.
+        /// </summary>
+        public static string PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_ {
+            get {
+                return ResourceManager.GetString("PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_", resourceCulture);
             }
         }
         
@@ -11156,6 +11193,24 @@ namespace pwiz.Skyline.Properties {
         public static string RegressionUnconversion_CalculatorScoreValueFormat {
             get {
                 return ResourceManager.GetString("RegressionUnconversion_CalculatorScoreValueFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to reintegrate peaks..
+        /// </summary>
+        public static string ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_ {
+            get {
+                return ResourceManager.GetString("ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrating.
+        /// </summary>
+        public static string ReintegrateDlg_OkDialog_Reintegrating {
+            get {
+                return ResourceManager.GetString("ReintegrateDlg_OkDialog_Reintegrating", resourceCulture);
             }
         }
         
@@ -13165,11 +13220,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed Reading the File..
+        ///   Looks up a localized string similar to Failed reading the file {0}..
         /// </summary>
-        public static string SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_ {
+        public static string SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__ {
             get {
-                return ResourceManager.GetString("SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__", resourceCulture);
             }
         }
         
@@ -13877,6 +13932,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must contain peptides for which to export features..
+        /// </summary>
+        public static string SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_peptides_for_w" +
+                        "hich_to_export_features_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must have imported results..
+        /// </summary>
+        public static string SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Continue.
         /// </summary>
         public static string SkylineWindow_ShowPublishDlg_Continue {
@@ -13928,6 +14003,44 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowRefineDlg_Refine {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowRefineDlg_Refine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegration of results requires a trained peak scoring model..
+        /// </summary>
+        public static string SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_p" +
+                        "eak_scoring_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must have imported results..
+        /// </summary>
+        public static string SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must have peptides in order to reintegrate chromatograms..
+        /// </summary>
+        public static string SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_r" +
+                        "eintegrate_chromatograms_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected document change during operation..
+        /// </summary>
+        public static string SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_", resourceCulture);
             }
         }
         

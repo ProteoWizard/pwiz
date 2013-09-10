@@ -41,6 +41,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -957,6 +958,43 @@ namespace pwiz.Skyline
             }
         }
 
+        private void reintegrateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowReintegrateDialog();
+        }
+        
+        public void ShowReintegrateDialog()
+        {
+            if (!DocumentUI.Settings.HasResults)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
+                return;
+            }
+            if (DocumentUI.PeptideCount == 0)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_);
+                return;
+            }
+            if (DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel is LegacyScoringModel)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_);
+                return;
+            }
+            var documentOld = DocumentUI;
+            using (var dlg = new ReintegrateDlg(documentOld))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+                ModifyDocument(null, doc =>
+                    {
+                        if (!ReferenceEquals(documentOld, doc))
+                            throw new InvalidDataException(
+                                Resources.SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_);
+                        return dlg.Document;
+                    });
+            }
+        }
+
         private void mProphetFeaturesMenuItem_Click(object sender, EventArgs e)
         {
             ShowMProphetFeaturesDialog();
@@ -966,12 +1004,12 @@ namespace pwiz.Skyline
         {
             if (!DocumentUI.Settings.HasResults)
             {
-                MessageDlg.Show(this, "The document must mast have imported results.");
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_);
                 return;
             }
             if (DocumentUI.PeptideCount == 0)
             {
-                MessageDlg.Show(this, "The document must contain peptides for which to export features.");
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features_);
                 return;
             }
 
@@ -1010,8 +1048,9 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 MessageDlg.Show(this,
-                                string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_,
-                                              peakBoundariesFile, x.Message));
+                                TextUtil.LineSeparate(
+                                string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
+                                              peakBoundariesFile), x.Message));
             }         
         }
 

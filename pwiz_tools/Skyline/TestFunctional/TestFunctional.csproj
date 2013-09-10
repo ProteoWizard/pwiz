@@ -185,6 +185,7 @@
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
     <Compile Include="TreeRestorationTest.cs" />
+    <Compile Include="ReintegrateDlgTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">

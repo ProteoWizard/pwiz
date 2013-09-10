@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -74,7 +75,7 @@ namespace pwiz.Skyline.FileUI
                 Title = Resources.MProphetFeaturesDlg_OkDialog_Export_mProphet_Features,
                 OverwritePrompt = true,
                 DefaultExt = EXT,
-                Filter = TextUtil.FileDialogFilterAll("mProphet Feature Files", EXT),
+                Filter = TextUtil.FileDialogFilterAll(Resources.MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files, EXT),
             })
             {
                 if (!string.IsNullOrEmpty(DocumentFilePath))
@@ -86,9 +87,17 @@ namespace pwiz.Skyline.FileUI
                     return;
 
                 string mainVarName = comboMainVar.SelectedItem.ToString();
-                var listCalculators = new List<IPeakFeatureCalculator> { GetCalcFromName(mainVarName) };
-                foreach (var itemCalc in checkedListVars.CheckedItems)
-                    listCalculators.Add(GetCalcFromName(itemCalc.ToString()));
+                var displayCalcs = new List<IPeakFeatureCalculator> {GetCalcFromName(mainVarName)};
+                displayCalcs.AddRange(from object calcName in checkedListVars.CheckedItems select GetCalcFromName(calcName.ToString()));
+
+                IPeakScoringModel currentPeakScoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+                var mProphetScoringModel = currentPeakScoringModel as MProphetPeakScoringModel;
+                if (mProphetScoringModel == null)
+                {
+                    MessageDlg.Show(this, Resources.MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_);
+                    return;
+                }
+                var resultsHandler = new MProphetResultsHandler(Document, mProphetScoringModel);
 
                 using (var longWaitDlg = new LongWaitDlg
                 {
@@ -97,17 +106,20 @@ namespace pwiz.Skyline.FileUI
                 {
                     try
                     {
-                        longWaitDlg.PerformWork(this, 1000,
-                                                b => WriteFeatures(dlg.FileName,
-                                                                   listCalculators,
-                                                                   Document.GetPeakFeatures(listCalculators, b),
-                                                                   CultureInfo.CurrentCulture));
+                        longWaitDlg.PerformWork(this, 1000, b =>
+                                                            WriteFeatures(dlg.FileName,
+                                                                          resultsHandler,
+                                                                          displayCalcs,
+                                                                          CultureInfo.CurrentCulture,
+                                                                          checkBoxBestOnly.Checked,
+                                                                          !checkBoxTargetsOnly.Checked,
+                                                                          b));
                         if (longWaitDlg.IsCanceled)
                             return;
                     }
                     catch (Exception x)
                     {
-                        var message = TextUtil.LineSeparate(string.Format("Failed attempting to save mProphet features to {0}.", dlg.FileName),
+                        var message = TextUtil.LineSeparate(string.Format(Resources.MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__, dlg.FileName),
                                                                           x.Message);
                         MessageDlg.Show(this, message);
                     }
@@ -117,89 +129,21 @@ namespace pwiz.Skyline.FileUI
             DialogResult = DialogResult.OK;
         }
 
-        public static void WriteFeatures(string filePath, IEnumerable<IPeakFeatureCalculator> calcs,
-            IEnumerable<PeakTransitionGroupFeatures> features, CultureInfo cultureInfo)
+        public static void WriteFeatures(string filePath, 
+                                         MProphetResultsHandler resultsHandler,
+                                         IList<IPeakFeatureCalculator> calcs,
+                                         CultureInfo cultureInfo,
+                                         bool bestOnly,
+                                         bool includeDecoys,
+                                         IProgressMonitor progressMonitor)
         {
             using (var fs = new FileSaver(filePath))
             using (var writer = new StreamWriter(fs.SafeName))
             {
-                WriteFeatures(writer, calcs, features, cultureInfo);
-
+                resultsHandler.ScoreFeatures(progressMonitor);
+                resultsHandler.WriteScores(writer, cultureInfo, calcs, bestOnly, includeDecoys, progressMonitor);
                 writer.Close();
                 fs.Commit();
-            }
-        }
-
-        public static void WriteFeatures(TextWriter writer, IEnumerable<IPeakFeatureCalculator> calcs,
-            IEnumerable<PeakTransitionGroupFeatures> features, CultureInfo cultureInfo)
-        {
-            WriteHeaderRow(writer, calcs, cultureInfo);
-            foreach (var peakTransitionGroupFeatures in features)
-                WriteRow(writer, peakTransitionGroupFeatures, cultureInfo);
-        }
-
-        private static void WriteHeaderRow(TextWriter writer, IEnumerable<IPeakFeatureCalculator> calcs,
-            CultureInfo cultureInfo)
-        {
-            char separator = TextUtil.GetCsvSeparator(cultureInfo);
-            writer.Write("transition_group_id");
-            writer.Write(separator);
-            writer.Write("run_id");
-            writer.Write(separator);
-            writer.Write("filename");
-            writer.Write(separator);
-            writer.Write("RT");
-            writer.Write(separator);
-            writer.Write("Sequence");
-            writer.Write(separator);
-            writer.Write("FullPeptideName");
-            writer.Write(separator);
-            writer.Write("ProteinName");
-            writer.Write(separator);
-            writer.Write("decoy");
-            bool first = true;
-            foreach (var peakFeatureCalculator in calcs)
-            {
-                writer.Write(separator);
-                writer.Write(first ? "main_var_{0}" : "var_{0}", peakFeatureCalculator.Name.Replace(" ", "_"));
-                first = false;
-            }
-            writer.WriteLine();
-        }
-
-        private static void WriteRow(TextWriter writer,
-                                     PeakTransitionGroupFeatures features,
-                                     CultureInfo cultureInfo)
-        {
-            char separator = TextUtil.GetCsvSeparator(cultureInfo);
-
-            foreach (var peakGroupFeatures in features.PeakGroupFeatures)
-            {
-                writer.Write(features.Id);
-                writer.Write(separator);
-                writer.Write(features.Id.Run);
-                writer.Write(separator);
-                writer.Write(features.Id.FilePath);
-                writer.Write(separator);
-                writer.Write(peakGroupFeatures.RetentionTime);
-                writer.Write(separator);
-                writer.Write(features.Id.NodePep.Peptide.Sequence);
-                writer.Write(separator);
-                writer.Write(features.Id.NodePep.ModifiedSequence);
-                writer.Write(separator);
-                writer.Write(features.Id.NodePepGroup.Name);
-                writer.Write(separator);
-                writer.Write(features.Id.NodePep.IsDecoy ? 1 : 0);
-
-                foreach (float featureColumn in peakGroupFeatures.Features)
-                {
-                    writer.Write(separator);
-                    if (float.IsNaN(featureColumn))
-                        writer.Write(TextUtil.EXCEL_NA);
-                    else
-                        writer.Write(featureColumn);
-                }
-                writer.WriteLine();
             }
         }
 

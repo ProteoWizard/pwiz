@@ -148,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -178,7 +178,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="comboMainVar.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -202,7 +202,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboMainVar.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -229,16 +229,16 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="checkedListVars.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="checkedListVars.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 97</value>
+    <value>12, 85</value>
   </data>
   <data name="checkedListVars.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 229</value>
+    <value>226, 244</value>
   </data>
   <data name="checkedListVars.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -253,13 +253,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;checkedListVars.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 81</value>
+    <value>9, 69</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>70, 13</value>
@@ -280,6 +280,63 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="checkBoxBestOnly.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxBestOnly.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxBestOnly.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 364</value>
+  </data>
+  <data name="checkBoxBestOnly.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 17</value>
+  </data>
+  <data name="checkBoxBestOnly.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="checkBoxBestOnly.Text" xml:space="preserve">
+    <value>Best scoring peaks only</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBestOnly.Name" xml:space="preserve">
+    <value>checkBoxBestOnly</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBestOnly.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBestOnly.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBestOnly.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="checkBoxTargetsOnly.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxTargetsOnly.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 342</value>
+  </data>
+  <data name="checkBoxTargetsOnly.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 17</value>
+  </data>
+  <data name="checkBoxTargetsOnly.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="checkBoxTargetsOnly.Text" xml:space="preserve">
+    <value>Target peptides only</value>
+  </data>
+  <data name="&gt;&gt;checkBoxTargetsOnly.Name" xml:space="preserve">
+    <value>checkBoxTargetsOnly</value>
+  </data>
+  <data name="&gt;&gt;checkBoxTargetsOnly.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxTargetsOnly.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxTargetsOnly.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -289,7 +346,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>360, 345</value>
+    <value>360, 392</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

@@ -35,6 +35,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.checkedListVars = new System.Windows.Forms.CheckedListBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.checkBoxBestOnly = new System.Windows.Forms.CheckBox();
+            this.checkBoxTargetsOnly = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -76,12 +78,26 @@
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             // 
+            // checkBoxBestOnly
+            // 
+            resources.ApplyResources(this.checkBoxBestOnly, "checkBoxBestOnly");
+            this.checkBoxBestOnly.Name = "checkBoxBestOnly";
+            this.checkBoxBestOnly.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxTargetsOnly
+            // 
+            resources.ApplyResources(this.checkBoxTargetsOnly, "checkBoxTargetsOnly");
+            this.checkBoxTargetsOnly.Name = "checkBoxTargetsOnly";
+            this.checkBoxTargetsOnly.UseVisualStyleBackColor = true;
+            // 
             // MProphetFeaturesDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.checkBoxTargetsOnly);
+            this.Controls.Add(this.checkBoxBestOnly);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.checkedListVars);
             this.Controls.Add(this.label1);
@@ -105,5 +121,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckedListBox checkedListVars;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox checkBoxBestOnly;
+        private System.Windows.Forms.CheckBox checkBoxTargetsOnly;
     }
 }

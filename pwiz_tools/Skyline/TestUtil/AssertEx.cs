@@ -322,6 +322,13 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void FileEquals(string path1, string path2)
+        {
+            string file1 = File.ReadAllText(path1);
+            string file2 = File.ReadAllText(path2);
+            NoDiff(file1, file2);
+        }
+
         public static void FieldsEqual(string target, string actual, int countFields)
         {
             FieldsEqual(target, actual, countFields, null);

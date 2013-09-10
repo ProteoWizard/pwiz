@@ -151,7 +151,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 throw new InvalidDataException(
                     string.Format(Resources.MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators,
                     features.Length, PeakFeatureCalculators.Count));
-            return features.Select((t, i) => t * Weights[i]).Sum();
+            double score = 0;
+            for (int i = 0; i < features.Length; ++i)
+            {
+                if (!double.IsNaN(Weights[i]))
+                    score += Weights[i] * features[i];
+            }
+            return score;
         }
 
         /// <summary>

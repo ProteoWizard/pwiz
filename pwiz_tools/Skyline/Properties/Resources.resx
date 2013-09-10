@@ -5167,9 +5167,6 @@ Are you sure you want to continue?</value>
   <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search" xml:space="preserve">
     <value>Import Peptide Search</value>
   </data>
-  <data name="SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__1_" xml:space="preserve">
-    <value>Failed Reading the File.</value>
-  </data>
   <data name="SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries" xml:space="preserve">
     <value>Import Peak Boundaries</value>
   </data>
@@ -5844,6 +5841,45 @@ Are you sure you want to continue?</value>
   </data>
   <data name="TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_" xml:space="preserve">
     <value>The label {0} is not a valid end fragment filter.</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_" xml:space="preserve">
+    <value>To export MProphet features first train an MProphet model.</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__" xml:space="preserve">
+    <value>Failed attempting to save mProphet features to {0}.</value>
+  </data>
+  <data name="MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files" xml:space="preserve">
+    <value>mProphet Feature Files</value>
+  </data>
+  <data name="ReintegrateDlg_OkDialog_Reintegrating" xml:space="preserve">
+    <value>Reintegrating</value>
+  </data>
+  <data name="ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_" xml:space="preserve">
+    <value>Failed attempting to reintegrate peaks.</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
+    <value>The document must have imported results.</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_" xml:space="preserve">
+    <value>The document must have peptides in order to reintegrate chromatograms.</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
+    <value>Unexpected document change during operation.</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__" xml:space="preserve">
+    <value>Failed reading the file {0}.</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
+    <value>The document must have imported results.</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features_" xml:space="preserve">
+    <value>The document must contain peptides for which to export features.</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
+    <value>Reintegration of results requires a trained peak scoring model.</value>
+  </data>
+  <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_" xml:space="preserve">
+    <value>Calculating peak group scores for {0}</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>Error downloading tool</value>

@@ -270,6 +270,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator43 = new System.Windows.Forms.ToolStripSeparator();
             this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateDecoysMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reintegrateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
             this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
@@ -2032,6 +2033,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator43,
             this.acceptPeptidesMenuItem,
             this.generateDecoysMenuItem,
+            this.reintegrateToolStripMenuItem,
             this.toolStripSeparator35,
             this.refineAdvancedMenuItem});
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
@@ -2094,6 +2096,12 @@ namespace pwiz.Skyline
             this.generateDecoysMenuItem.Name = "generateDecoysMenuItem";
             resources.ApplyResources(this.generateDecoysMenuItem, "generateDecoysMenuItem");
             this.generateDecoysMenuItem.Click += new System.EventHandler(this.generateDecoysMenuItem_Click);
+            // 
+            // reintegrateToolStripMenuItem
+            // 
+            this.reintegrateToolStripMenuItem.Name = "reintegrateToolStripMenuItem";
+            resources.ApplyResources(this.reintegrateToolStripMenuItem, "reintegrateToolStripMenuItem");
+            this.reintegrateToolStripMenuItem.Click += new System.EventHandler(this.reintegrateToolStripMenuItem_Click);
             // 
             // toolStripSeparator35
             // 
@@ -3294,6 +3302,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem showLibraryChromatogramsSpectrumContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chromatogramsToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton publishToolbarButton;
+        private System.Windows.Forms.ToolStripMenuItem reintegrateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updatesToolsMenuItem;
     }
 }
