@@ -402,7 +402,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("page 19, (fig. 2)"); // Not L10N
 
-            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[2].GetTestPath(@"p24.view"), FileMode.Open)));
+            RestoreViewOnScreen(TestFilesDirs[2].GetTestPath(@"p24.view"));
 
             // Creating a Scheduled Transition List, p. 20 
             {

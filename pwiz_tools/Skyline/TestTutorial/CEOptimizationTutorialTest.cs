@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
             FindNode("IHGFDLAAINLQR");
-            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p8.view"), FileMode.Open)));
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p8.view"));
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
 
             PauseForScreenShot();   // Skyline window

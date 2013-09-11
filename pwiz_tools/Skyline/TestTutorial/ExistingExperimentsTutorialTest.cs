@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
             }
             WaitForCondition(() =>
                 SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p25.view"), FileMode.Open)));
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p25.view"));
 
             // Inspecting and Adjusting Peak Integration, p. 24.
             RunUI(() =>
@@ -391,7 +391,7 @@ namespace pwiz.SkylineTestTutorial
             // Data Inspection with Peak Areas View, p. 27.
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(NormalizeGraphToHeavy);
-            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p28.view"), FileMode.Open)));
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p28.view"));
             PauseForScreenShot();
 
             FindNode((564.7746).ToString(CultureInfo.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N

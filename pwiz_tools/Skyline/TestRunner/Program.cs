@@ -120,7 +120,10 @@ namespace TestRunner
                 Console.WriteLine("Running {0} tests {1} times each...\n", testList.Count, passes);
             }
 
-            var skyline = Assembly.LoadFrom(GetAssemblyPath("Skyline.exe"));
+            var skylinePath = GetAssemblyPath("Skyline-daily.exe");
+            if (!File.Exists(skylinePath))
+                skylinePath = GetAssemblyPath("Skyline.exe");
+            var skyline = Assembly.LoadFrom(skylinePath);
             var program = skyline.GetType("pwiz.Skyline.Program");
             program.GetMethod("set_StressTest").Invoke(null, new object[] { true });
             program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { commandLineArgs.ArgAsBool("offscreen") });

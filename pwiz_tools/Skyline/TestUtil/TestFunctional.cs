@@ -654,6 +654,12 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(() => true);
         }
 
+        public void RestoreViewOnScreen(string viewFilePath)
+        {
+            if (!Program.SkylineOffscreen)
+                RunUI(() => SkylineWindow.LoadLayout(new FileStream(viewFilePath, FileMode.Open)));            
+        }
+
         protected abstract void DoTest();
 
         public void FindNode(string searchText)

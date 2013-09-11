@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>4940</ApplicationRevision>
-    <ApplicationVersion>2.1.1.4940</ApplicationVersion>
+    <ApplicationRevision>4943</ApplicationRevision>
+    <ApplicationVersion>2.1.1.4943</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2099,7 +2099,7 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-    <PublishFile Include="Skyline.pdb">
+    <PublishFile Include="Skyline-daily.pdb">
       <Visible>False</Visible>
       <Group>
       </Group>
