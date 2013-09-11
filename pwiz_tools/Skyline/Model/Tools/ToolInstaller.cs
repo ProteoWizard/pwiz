@@ -240,6 +240,9 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns></returns>
         public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip, IUnpackZipToolSupport unpackSupport)
         {
+            if (!File.Exists(pathToZip))
+                throw new FileNotFoundException(pathToZip);
+
             //Removes any old folders that dont have Tools associated with them
             CheckToolDirConsistency();
 
