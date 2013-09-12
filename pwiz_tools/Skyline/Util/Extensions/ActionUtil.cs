@@ -38,15 +38,9 @@ namespace pwiz.Skyline.Util.Extensions
         /// For methods with arguments, use a lambda:  ActionUtil.RunAsync(() => MyMethodWithArgs(1, true));
         /// </summary>
         /// <param name="action">Action to be executed on a thread from the thread pool</param>
-        /// <param name="callback">Optional Action to be executed when the first action is finished</param>
-        public static void RunAsync(Action action, Action callback = null)
+        public static void RunAsync(Action action)
         {
-            action.BeginInvoke(iar =>
-            {
-                action.EndInvoke(iar);  // required (see above)
-                if (callback != null)
-                    callback();
-            }, null);
+            action.BeginInvoke(action.EndInvoke, null);
         }
     }
 }

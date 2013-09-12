@@ -19,7 +19,6 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -113,7 +112,7 @@ namespace pwiz.Skyline.FileUI
                     cbxDiscardUnmatchedChromatograms.Checked = Settings.DiscardUnmatchedChromatograms;
                     if (Settings.NoiseTimeRange.HasValue)
                     {
-                        tbxNoiseTimeRange.Text = Settings.NoiseTimeRange.Value.ToString(CultureInfo.CurrentCulture);
+                        tbxNoiseTimeRange.Text = Settings.NoiseTimeRange.Value.ToString(LocalizationHelper.CurrentCulture);
                         tbxNoiseTimeRange.Enabled = true;
                         cbxLimitNoiseTime.Checked = true;
                     }
@@ -178,8 +177,7 @@ namespace pwiz.Skyline.FileUI
                 _statisticsCollector = value;
                 if (StatisticsCollector != null)
                 {
-                    new Action(StatisticsCollector.CollectStatistics)
-                        .BeginInvoke(null, null);
+                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics);
                 }
             }
         }

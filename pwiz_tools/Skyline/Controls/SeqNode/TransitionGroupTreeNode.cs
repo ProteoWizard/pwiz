@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -460,7 +461,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
                 var precursorMz = nodeGroup.PrecursorMz;
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
-                                          precursorCharge.ToString(CultureInfo.CurrentCulture), rt);
+                                          precursorCharge.ToString(LocalizationHelper.CurrentCulture), rt);
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                                           string.Format("{0:F04}", precursorMz), rt); // Not L10N
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mh,
@@ -470,7 +471,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (decoyMassShift.HasValue)
                 {
                     tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift,
-                                              decoyMassShift.Value.ToString(CultureInfo.CurrentCulture), rt);
+                                              decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);
                 }
                 if (nodeGroup.HasLibInfo)
                 {

@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
@@ -74,7 +72,7 @@ namespace pwiz.Skyline.Model
                     }
 
                     Action<IDocumentContainer, SrmDocument> loader = OnLoadBackground;
-                    loader.BeginInvoke(container, document, null, null);
+                    loader.BeginInvoke(container, document, loader.EndInvoke, null);
                 }
             }
         }

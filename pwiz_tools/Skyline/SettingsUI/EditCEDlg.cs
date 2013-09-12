@@ -19,9 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -67,8 +67,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = string.Empty;
                     gridRegression.Rows.Clear();
-                    textStepSize.Text = CollisionEnergyRegression.DEFAULT_STEP_SIZE.ToString(CultureInfo.CurrentCulture);
-                    textStepCount.Text = CollisionEnergyRegression.DEFAULT_STEP_COUNT.ToString(CultureInfo.CurrentCulture);
+                    textStepSize.Text = CollisionEnergyRegression.DEFAULT_STEP_SIZE.ToString(LocalizationHelper.CurrentCulture);
+                    textStepCount.Text = CollisionEnergyRegression.DEFAULT_STEP_COUNT.ToString(LocalizationHelper.CurrentCulture);
                 }
                 else
                 {
@@ -76,12 +76,12 @@ namespace pwiz.Skyline.SettingsUI
                     gridRegression.Rows.Clear();
                     foreach (ChargeRegressionLine r in _regression.Conversions)
                     {
-                        gridRegression.Rows.Add(r.Charge.ToString(CultureInfo.CurrentCulture),
-                                                r.Slope.ToString(CultureInfo.CurrentCulture),
-                                                r.Intercept.ToString(CultureInfo.CurrentCulture));
+                        gridRegression.Rows.Add(r.Charge.ToString(LocalizationHelper.CurrentCulture),
+                                                r.Slope.ToString(LocalizationHelper.CurrentCulture),
+                                                r.Intercept.ToString(LocalizationHelper.CurrentCulture));
                     }
-                    textStepSize.Text = _regression.StepSize.ToString(CultureInfo.CurrentCulture);
-                    textStepCount.Text = _regression.StepCount.ToString(CultureInfo.CurrentCulture);
+                    textStepSize.Text = _regression.StepSize.ToString(LocalizationHelper.CurrentCulture);
+                    textStepCount.Text = _regression.StepCount.ToString(LocalizationHelper.CurrentCulture);
                 }
             }
         }
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.SettingsUI
                     continue;
                 gridRegression.Rows.Add(new object[]
                                             {
-                                                i.ToString(CultureInfo.CurrentCulture),
+                                                i.ToString(LocalizationHelper.CurrentCulture),
                                                 string.Format("{0:F04}", regressionLine.Slope), // Not L10N
                                                 string.Format("{0:F04}", regressionLine.Intercept) // Not L10N
                                             });

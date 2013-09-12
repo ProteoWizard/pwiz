@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_COPIES,
-                    SpectrumCount.ToString(CultureInfo.CurrentCulture));
+                    SpectrumCount.ToString(LocalizationHelper.CurrentCulture));
             }
         }
 
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Model.Lib
                 LibraryDetails details = new LibraryDetails
                 {
                     Format = "BiblioSpec", // Not L10N
-                    Revision = Revision.ToString(CultureInfo.CurrentCulture),
+                    Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
                     PeptideCount = SpectrumCount
                 };
 

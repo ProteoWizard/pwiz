@@ -19,7 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -216,11 +216,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
-                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, nodeTran.Transition.Charge.ToString(CultureInfo.CurrentCulture), rt);
+                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, nodeTran.Transition.Charge.ToString(LocalizationHelper.CurrentCulture), rt);
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Product_m_z, string.Format("{0:F04}", nodeTran.Mz), rt); // Not L10N
                 int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
                 if (decoyMassShift.HasValue)
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Decoy_Mass_Shift, decoyMassShift.Value.ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Decoy_Mass_Shift, decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);
 
                 if (nodeTran.HasLoss)
                 {
@@ -238,10 +238,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                 if (nodeTran.HasLibInfo)
                 {
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_rank, nodeTran.LibInfo.Rank.ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_rank, nodeTran.LibInfo.Rank.ToString(LocalizationHelper.CurrentCulture), rt);
                     float intensity = nodeTran.LibInfo.Intensity;
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
-                        (intensity < 10 ? 1 : 0), 4).ToString(CultureInfo.CurrentCulture), rt);
+                        (intensity < 10 ? 1 : 0), 4).ToString(LocalizationHelper.CurrentCulture), rt);
                 }
 
                 SizeF size = table.CalcDimensions(g);

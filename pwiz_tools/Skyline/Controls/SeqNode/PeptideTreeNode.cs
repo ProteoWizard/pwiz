@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -620,12 +621,12 @@ namespace pwiz.Skyline.Controls.SeqNode
                     if (table.Count > 0)
                         table.AddDetailRow(" ", " ", rt); // Not L10N
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Previous, peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_First, peptide.Begin.Value.ToString(CultureInfo.CurrentCulture), rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Last, ((peptide.End ?? 1) - 1).ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_First, peptide.Begin.Value.ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Last, ((peptide.End ?? 1) - 1).ToString(LocalizationHelper.CurrentCulture), rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Next, peptide.NextAA.ToString(CultureInfo.InvariantCulture), rt);
                 }
                 if (nodePep.Rank.HasValue)
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Rank, nodePep.Rank.Value.ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Rank, nodePep.Rank.Value.ToString(LocalizationHelper.CurrentCulture), rt);
                
                 SizeF size = table.CalcDimensions(g);
                 if (draw)

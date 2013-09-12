@@ -18,9 +18,9 @@
  */
 using System;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.EditUI
             set
             {
                 _numDecoys = value;
-                textNumberOfDecoys.Text = _numDecoys.ToString(CultureInfo.CurrentCulture);
+                textNumberOfDecoys.Text = _numDecoys.ToString(LocalizationHelper.CurrentCulture);
             }
         }
 
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             // Set initial decoys number
-            textNumberOfDecoys.Text = RefinementSettings.CountDecoys(document).ToString(CultureInfo.CurrentCulture);
+            textNumberOfDecoys.Text = RefinementSettings.CountDecoys(document).ToString(LocalizationHelper.CurrentCulture);
 
             // Fill method type combo box
             comboDecoysGenerationMethod.Items.AddRange(DecoyGeneration.Methods.Cast<object>().ToArray());

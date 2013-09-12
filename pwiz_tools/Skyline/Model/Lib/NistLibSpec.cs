@@ -173,11 +173,11 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 yield return new KeyValuePair<PeptideRankId, string>(NistLibSpecBase.PEP_RANK_TFRATIO,
-                    TFRatio.ToString(CultureInfo.CurrentCulture));
+                    TFRatio.ToString(LocalizationHelper.CurrentCulture));
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_TOTAL_INTENSITY,
                     string.Format("{0:F0}", TotalIntensity));
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_COPIES,
-                    SpectrumCount.ToString(CultureInfo.CurrentCulture));
+                    SpectrumCount.ToString(LocalizationHelper.CurrentCulture));
             }
         }
 

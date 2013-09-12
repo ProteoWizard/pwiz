@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-using System.Globalization;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(25, insertTransitionListDlg.TransitionRowCount);
             RunUI(insertTransitionListDlg.ValidateCells);
             WaitForConditionUI(() => insertTransitionListDlg.ErrorText != null);
-            RunUI(() => Assert.IsTrue(insertTransitionListDlg.ErrorText.Contains((506.7821).ToString(CultureInfo.CurrentCulture)), 
+            RunUI(() => Assert.IsTrue(insertTransitionListDlg.ErrorText.Contains((506.7821).ToString(LocalizationHelper.CurrentCulture)), 
                 string.Format("Unexpected error: {0}", insertTransitionListDlg.ErrorText)));
 
             RunUI(() =>
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             get
             {
                 return TRANSITIONS_CLIPBOARD_TEXT.Replace(".",
-                    CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                    LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             }
         }
 

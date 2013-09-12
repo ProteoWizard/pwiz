@@ -18,10 +18,10 @@
  */
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestTutorial
                             {
                                 if (string.Equals(c[8], "protein_name"))
                                     return null;
-//                                c[17] = double.Parse(c[17], CultureInfo.InvariantCulture).ToString(CultureInfo.CurrentCulture);
+//                                c[17] = double.Parse(c[17], CultureInfo.InvariantCulture).ToString(LocalizationHelper.CurrentCulture);
                                 return string.Equals(c[8], peptideStandardsName) ? c : null;
                             });
                         editIrtCalcDlg.DoPasteStandard();
@@ -159,7 +159,7 @@ namespace pwiz.SkylineTestTutorial
                             if (string.Equals(c[8], peptideStandardsName) || string.Equals(c[8], "protein_name"))
                                 return null;
                             c[15] = c[15].Replace("[C160]", carbC).Replace("C[160]", carbC);
-//                            c[17] = double.Parse(c[17], CultureInfo.InvariantCulture).ToString(CultureInfo.CurrentCulture);
+//                            c[17] = double.Parse(c[17], CultureInfo.InvariantCulture).ToString(LocalizationHelper.CurrentCulture);
                             return c;
                         });
                 });
@@ -254,7 +254,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void SetTransitionClipboardText(int[] columnIndices, Func<string[], string[]> convertColumns = null)
         {
-            var filePath = GetTestPath(!Equals(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, ".")
+            var filePath = GetTestPath(!Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, ".")
                                            ? @"Ovarian Cancer\raw\1-transitions-intl.txt"
                                            : @"Ovarian Cancer\raw\1-transitions.txt"); // Not L10N
             using (var transitionReader = new StreamReader(filePath))

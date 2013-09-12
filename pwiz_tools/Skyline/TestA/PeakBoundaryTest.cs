@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -114,14 +115,14 @@ namespace pwiz.SkylineTestA
             SrmDocument docResults = docContainer.Document;
             // Test Tsv import, looking at first .raw file
             DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
-                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1,_tsvAreas1, _peptides, 0);
+                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0);
             // Test Tsv import, looking at second .raw file
             DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
                 _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1);
 
             // Test Csv import for local format
             DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
-                _csvMinTime1, _csvMaxTime1,_csvIdentified1,_csvAreas1, _peptides, 0);
+                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0);
             DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
                 _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1);
 
@@ -139,7 +140,7 @@ namespace pwiz.SkylineTestA
             Assert.AreSame(docNew, docRoundTrip);
 
 
-            var cult = CultureInfo.CurrentCulture;
+            var cult = LocalizationHelper.CurrentCulture;
             var cultI = CultureInfo.InvariantCulture;
             // 1. Empty file - 
             ImportThrowsException(docResults, string.Empty,
@@ -258,10 +259,10 @@ namespace pwiz.SkylineTestA
         private ReportSpec MakeReportSpec()
         {
             Type tableTran = typeof(DbTransition);
-            Type tableTranRes = typeof (DbTransitionResult);
+            Type tableTranRes = typeof(DbTransitionResult);
             return new ReportSpec("PeakBoundaries", new QueryDef
-                                              {
-                                                  Select = new[]
+            {
+                Select = new[]
                                                                {
                                         new ReportColumn(tableTran, "Precursor", "Charge"),
                                         new ReportColumn(tableTranRes, "ResultFile", "FileName"),
@@ -269,7 +270,7 @@ namespace pwiz.SkylineTestA
                                         new ReportColumn(tableTranRes, "PrecursorResult", "MaxEndTime"),
                                         new ReportColumn(tableTran, "Precursor", "Peptide", "ModifiedSequence"),
                                                                }
-                                              });
+            });
 
         }
 
@@ -314,7 +315,7 @@ namespace pwiz.SkylineTestA
                 database.AddSrmDocument(doc);
                 var resultSet = report.Execute(database);
                 char separator = TextUtil.CsvSeparator;
-                ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo.CurrentCulture);
+                ResultSet.WriteReportHelper(resultSet, separator, writer, LocalizationHelper.CurrentCulture);
                 writer.Flush();
                 writer.Close();
                 saver.Commit();
@@ -340,7 +341,7 @@ namespace pwiz.SkylineTestA
                 ++i;
             }
             int j = 0;
-            foreach (TransitionGroupDocNode groupNode in  docNew.TransitionGroups)
+            foreach (TransitionGroupDocNode groupNode in docNew.TransitionGroups)
             {
                 // Make sure charge on each transition group is correct
                 Assert.AreEqual(groupNode.TransitionGroup.PrecursorCharge, chargeList[j]);
@@ -357,7 +358,7 @@ namespace pwiz.SkylineTestA
             }
         }
 
-        private bool ApproxEqualNullable(double? a, double? b,double tol)
+        private bool ApproxEqualNullable(double? a, double? b, double tol)
         {
             return a == b || (a != null && b != null && Math.Abs((double)a - (double)b) < tol);
         }

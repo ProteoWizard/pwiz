@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.V01
             // Write special ID for ABI software
             var fastaSequence = new FastaSequence(sequence.Name, sequence.Description, null, peptide.Sequence);
             var newPeptide = new Peptide(fastaSequence, peptide.Sequence, 0, peptide.Sequence.Length, peptide.MissedCleavages);
-            var nodePep = new PeptideDocNode(newPeptide, null);
+            var nodePep = new PeptideDocNode(newPeptide);
             string modifiedPepSequence = AbiMassListExporter.GetSequenceWithModsString(nodePep, _document.Settings); // Not L10N;
             
             string extGroupId = string.Format("{0}.{1}.{2}", // Not L10N

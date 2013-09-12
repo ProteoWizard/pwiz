@@ -19,8 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -67,16 +67,16 @@ namespace pwiz.Skyline.SettingsUI
                     textName.Text = string.Empty;
                     textSlope.Text = string.Empty;
                     textIntercept.Text = string.Empty;
-                    textStepSize.Text = DeclusteringPotentialRegression.DEFAULT_STEP_SIZE.ToString(CultureInfo.CurrentCulture);
-                    textStepCount.Text = DeclusteringPotentialRegression.DEFAULT_STEP_COUNT.ToString(CultureInfo.CurrentCulture);
+                    textStepSize.Text = DeclusteringPotentialRegression.DEFAULT_STEP_SIZE.ToString(LocalizationHelper.CurrentCulture);
+                    textStepCount.Text = DeclusteringPotentialRegression.DEFAULT_STEP_COUNT.ToString(LocalizationHelper.CurrentCulture);
                 }
                 else
                 {
                     textName.Text = _regression.Name;
-                    textSlope.Text = _regression.Slope.ToString(CultureInfo.CurrentCulture);
-                    textIntercept.Text = _regression.Intercept.ToString(CultureInfo.CurrentCulture);
-                    textStepSize.Text = _regression.StepSize.ToString(CultureInfo.CurrentCulture);
-                    textStepCount.Text = _regression.StepCount.ToString(CultureInfo.CurrentCulture);
+                    textSlope.Text = _regression.Slope.ToString(LocalizationHelper.CurrentCulture);
+                    textIntercept.Text = _regression.Intercept.ToString(LocalizationHelper.CurrentCulture);
+                    textStepSize.Text = _regression.StepSize.ToString(LocalizationHelper.CurrentCulture);
+                    textStepCount.Text = _regression.StepCount.ToString(LocalizationHelper.CurrentCulture);
                 }                
             }
         }

@@ -1091,7 +1091,7 @@ namespace pwiz.Skyline.Model
             sep = '\0'; // Not L10N
             int endLine = text.IndexOf('\n'); // Not L10N 
             string line = (endLine != -1 ? text.Substring(0, endLine) : text);
-            string localDecimalSep = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            string localDecimalSep = LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator;
             string[] columns;
             if (TrySplitColumns(line, TextUtil.SEPARATOR_TSV, out columns)) 
             {
@@ -1101,16 +1101,16 @@ namespace pwiz.Skyline.Model
                 string invDecimalSep = CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator;
                 if (!Equals(localDecimalSep, invDecimalSep))
                 {
-                    if (CountDecimals(columns, CultureInfo.CurrentCulture) >
+                    if (CountDecimals(columns, LocalizationHelper.CurrentCulture) >
                             CountDecimals(columns, CultureInfo.InvariantCulture))
-                        provider = CultureInfo.CurrentCulture;
+                        provider = LocalizationHelper.CurrentCulture;
                 }
                 sep = TextUtil.SEPARATOR_TSV;
             }
             // Excel CSVs for cultures with a comma decimal use semi-colons.
             else if (Equals(",", localDecimalSep) && TrySplitColumns(line, TextUtil.SEPARATOR_CSV_INTL, out columns)) // Not L10N
             {
-                provider = CultureInfo.CurrentCulture;
+                provider = LocalizationHelper.CurrentCulture;
                 sep = TextUtil.SEPARATOR_CSV_INTL;           
             }
             else if (TrySplitColumns(line, TextUtil.SEPARATOR_CSV, out columns))

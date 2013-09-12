@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -148,9 +149,9 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         Formula = string.Empty;
                         textMonoMass.Text = (modification.MonoisotopicMass.HasValue ?
-                            modification.MonoisotopicMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
+                            modification.MonoisotopicMass.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
                         textAverageMass.Text = (modification.AverageMass.HasValue ?
-                            modification.AverageMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
+                            modification.AverageMass.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
                         // Force the label atom check boxes to show, if any are checked
                         if (modification.LabelAtoms != LabelAtoms.None)
                             cbChemicalFormula.Checked = false;
@@ -544,9 +545,9 @@ namespace pwiz.Skyline.SettingsUI
                 try
                 {
                     textMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC,
-                        formula).ToString(CultureInfo.CurrentCulture);
+                        formula).ToString(LocalizationHelper.CurrentCulture);
                     textAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE,
-                        formula).ToString(CultureInfo.CurrentCulture);
+                        formula).ToString(LocalizationHelper.CurrentCulture);
                     textFormula.ForeColor = Color.Black;
                 }
                 catch (ArgumentException)

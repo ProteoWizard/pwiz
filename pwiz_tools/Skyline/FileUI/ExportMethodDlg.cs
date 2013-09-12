@@ -148,7 +148,7 @@ namespace pwiz.Skyline.FileUI
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
             cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
-            textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(CultureInfo.CurrentCulture);
+            textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             panelThermoColumns.Top = labelDwellTime.Top;
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
@@ -417,7 +417,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.PrimaryTransitionCount = value;
-                textPrimaryCount.Text = _exportProperties.PrimaryTransitionCount.ToString(CultureInfo.CurrentCulture);
+                textPrimaryCount.Text = _exportProperties.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             }
         }
 
@@ -430,7 +430,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.DwellTime = value;
-                textDwellTime.Text = _exportProperties.DwellTime.ToString(CultureInfo.CurrentCulture);
+                textDwellTime.Text = _exportProperties.DwellTime.ToString(LocalizationHelper.CurrentCulture);
             }
         }
 
@@ -443,7 +443,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.RunLength = value;
-                textRunLength.Text = _exportProperties.RunLength.ToString(CultureInfo.CurrentCulture);
+                textRunLength.Text = _exportProperties.RunLength.ToString(LocalizationHelper.CurrentCulture);
             }
         }
 
@@ -457,7 +457,7 @@ namespace pwiz.Skyline.FileUI
             {
                 _exportProperties.MaxTransitions = value;
                 textMaxTransitions.Text = (_exportProperties.MaxTransitions.HasValue
-                    ? _exportProperties.MaxTransitions.Value.ToString(CultureInfo.CurrentCulture)
+                    ? _exportProperties.MaxTransitions.Value.ToString(LocalizationHelper.CurrentCulture)
                     : string.Empty);
             }
         }
@@ -1010,7 +1010,7 @@ namespace pwiz.Skyline.FileUI
 
             if (radioSingle.Checked)
             {
-                labelMethodNum.Text = 1.ToString(CultureInfo.CurrentCulture);
+                labelMethodNum.Text = 1.ToString(LocalizationHelper.CurrentCulture);
             }
             else
             {
@@ -1212,7 +1212,7 @@ namespace pwiz.Skyline.FileUI
 
             if (IsDia)
             {
-                labelMethodNum.Text = 1.ToString(CultureInfo.CurrentCulture);
+                labelMethodNum.Text = 1.ToString(LocalizationHelper.CurrentCulture);
                 return;
             }
 
@@ -1279,7 +1279,7 @@ namespace pwiz.Skyline.FileUI
         private void UpdateMethodCount(int? methodCount)
         {
             labelMethodNum.Text = methodCount.HasValue
-                ? methodCount.Value.ToString(CultureInfo.CurrentCulture)
+                ? methodCount.Value.ToString(LocalizationHelper.CurrentCulture)
                 : string.Empty;
 
             var recalcMethodCountStatus = _recalcMethodCountStatus;

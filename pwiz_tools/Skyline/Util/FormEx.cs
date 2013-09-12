@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -25,12 +26,30 @@ using DigitalRune.Windows.Docking;
 namespace pwiz.Skyline.Util
 {
     public class FormEx : Form
-	{
+    {
+        private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
+
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            if (Program.SkylineOffscreen)
-                SetOffscreen(this);
+
+            if (Program.FunctionalTest)
+            {
+                // For unit testing, move window offscreen.
+                if (Program.SkylineOffscreen)
+                    SetOffscreen(this);
+
+                // Track undisposed forms.
+                _undisposedForms.Add(this);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if (Program.FunctionalTest && disposing)
+                _undisposedForms.Remove(this);
         }
 
         public void CheckDisposed()
@@ -39,6 +58,12 @@ namespace pwiz.Skyline.Util
             {
                 throw new ObjectDisposedException("Form disposed"); // Not L10N
             }
+        }
+
+        public static void CheckAllFormsDisposed()
+        {
+            if (_undisposedForms.Count != 0)
+                throw new ApplicationException("Form was not disposed"); // Not L10N
         }
 
         public static void SetOffscreen(Form form)

@@ -18,8 +18,8 @@
  */
 using System;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -34,11 +34,11 @@ namespace pwiz.Skyline.EditUI
 
             cbDecimalCvs.Checked = Settings.Default.PeakDecimalCv;
             if (Settings.Default.PeakTimeMax != 0)
-                textMaxTime.Text = Settings.Default.PeakTimeMax.ToString(CultureInfo.CurrentCulture);
+                textMaxTime.Text = Settings.Default.PeakTimeMax.ToString(LocalizationHelper.CurrentCulture);
             if (Settings.Default.PeakTimeMin != 0)
-                textMinTime.Text = Settings.Default.PeakTimeMin.ToString(CultureInfo.CurrentCulture);
+                textMinTime.Text = Settings.Default.PeakTimeMin.ToString(LocalizationHelper.CurrentCulture);
             if (Settings.Default.PeakTimeMaxCv != 0)
-                textMaxCv.Text = Settings.Default.PeakTimeMaxCv.ToString(CultureInfo.CurrentCulture);
+                textMaxCv.Text = Settings.Default.PeakTimeMaxCv.ToString(LocalizationHelper.CurrentCulture);
         }
 
         public void OkDialog()
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.EditUI
             double factor = (cbDecimalCvs.Checked ? 0.01 : 100);
             double maxCv;
             if (double.TryParse(textMaxCv.Text, out maxCv))
-                textMaxCv.Text = (maxCv * factor).ToString(CultureInfo.CurrentCulture);
+                textMaxCv.Text = (maxCv * factor).ToString(LocalizationHelper.CurrentCulture);
         }
     }
 }

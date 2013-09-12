@@ -122,6 +122,11 @@ namespace pwiz.Skyline.SettingsUI
             _gridView.EndEdit();
         }
 
+        public void SetCellValue(int col, int row, double d)
+        {
+            _gridView[col, row].Value = d;
+        }
+
         public void SelectRow(int row)
         {
             _gridView.ClearSelection();

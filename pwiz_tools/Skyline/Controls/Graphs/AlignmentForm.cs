@@ -35,7 +35,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class AlignmentForm : Form
+    public partial class AlignmentForm : FormEx
     {
         private readonly BindingList<DataRow> _dataRows = new BindingList<DataRow>
                                                               {

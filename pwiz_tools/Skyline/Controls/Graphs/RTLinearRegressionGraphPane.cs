@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -31,6 +30,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -325,8 +325,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (refine && !IsRefined)
                         {
                             // Do refinement on a background thread.
-                            Action refineData = RefineData;
-                            refineData.BeginInvoke(null, null);
+                            ActionUtil.RunAsync(RefineData);
                         }
                     }
                 }
@@ -345,7 +344,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void RefineData()
         {
             // Called on a new thread
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+            Thread.CurrentThread.CurrentUICulture = LocalizationHelper.CurrentCulture;
             try
             {
                 if (Refine(() => !IsValidFor(GraphSummary.DocumentUIContainer.Document)))

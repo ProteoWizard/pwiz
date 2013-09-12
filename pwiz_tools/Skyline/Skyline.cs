@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
+using log4net;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -101,8 +102,6 @@ namespace pwiz.Skyline
 
         // Set false to disable the "Loading chromatograms" progress window.
         private static bool SHOW_LOADING_CHROMATOGRAMS { get { return true; }}
-
-        private static readonly Log LOG = new Log<SkylineWindow>();
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -746,7 +745,7 @@ namespace pwiz.Skyline
             ToolReportCache.Instance.Register(null);
 
             if (!Program.FunctionalTest)
-                LOG.Info("Skyline closed.\r\n-----------------------");
+                LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
             
             base.OnClosed(e);
         }
@@ -3560,8 +3559,10 @@ namespace pwiz.Skyline
             DialogResult result = DialogResult.No;
             RunUIAction(() =>
                 {
-                    LocateFileDlg dlg = new LocateFileDlg(programPathContainer);
-                    result = dlg.ShowDialog(this);                    
+                    using (var dlg = new LocateFileDlg(programPathContainer))
+                    {
+                        result = dlg.ShowDialog(this);
+                    }
                     wh.Set();
                 });
             wh.WaitOne();

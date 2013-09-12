@@ -22,7 +22,6 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -221,8 +220,8 @@ namespace pwiz.Skyline.Model.Lib
                 LibraryDetails details = new LibraryDetails
                                              {
                                                  Format = "BiblioSpec", // Not L10N
-                                                 Revision = Revision.ToString(CultureInfo.CurrentCulture),
-                                                 Version = SchemaVersion.ToString(CultureInfo.CurrentCulture),
+                                                 Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
+                                                 Version = SchemaVersion.ToString(LocalizationHelper.CurrentCulture),
                                                  PeptideCount = SpectrumCount,
                                                  DataFiles = dataFiles
                                              };

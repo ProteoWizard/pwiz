@@ -29,6 +29,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
@@ -477,6 +478,17 @@ namespace pwiz.SkylineTestUtil
                 Program.FunctionalTest = true;
                 LocalizationHelper.InitThread();
 
+                // Unzip test files.
+                if (TestFilesZipPaths != null)
+                {
+                    TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                    for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                    {
+                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName);
+                    }
+                }
+
+                // Run test in new thread (Skyline on main thread).
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
 
@@ -488,11 +500,32 @@ namespace pwiz.SkylineTestUtil
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
+
+                // Were all windows disposed?
+                FormEx.CheckAllFormsDisposed();
+
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
             }
             catch (Exception x)
             {
                 _testExceptions.Add(x);
+            }
+
+            // Delete unzipped test files.
+            if (TestFilesDirs != null)
+            {
+                foreach (TestFilesDir dir in TestFilesDirs)
+                {
+                    try
+                    {
+                        if (dir != null)
+                            dir.Dispose();
+                    }
+                    catch (Exception x)
+                    {
+                        _testExceptions.Add(x);
+                    }
+                }
             }
 
             if (_testExceptions.Count > 0)
@@ -518,42 +551,15 @@ namespace pwiz.SkylineTestUtil
                 }
                 Settings.Default.Reset();
 
-                if (TestFilesZipPaths == null)
-                {
-                    RunTest();
-                }
-                else
-                {
-                    TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                    for (int i = 0; i < TestFilesZipPaths.Length; i++)
-                    {
-                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName);
-                    }
-                    RunTest();
-                }
+                RunTest();
             }
             catch (Exception x)
             {
-                // An exception occurred outside RunTest
+                // Save exception for reporting from main thread.
                 _testExceptions.Add(x);
             }
 
             EndTest();
-
-            if (TestFilesDirs != null)
-            {
-                foreach(TestFilesDir dir in TestFilesDirs)
-                {
-                    try
-                    {
-                        dir.Dispose();
-                    }
-                    catch (Exception x)
-                    {
-                        _testExceptions.Add(x);
-                    }
-                }
-            }
         }
 
         private void RunTest()
@@ -629,7 +635,7 @@ namespace pwiz.SkylineTestUtil
             _testCompleted = true;
 
             // Clear the clipboard to avoid the appearance of a memory leak.
-            ClipboardEx.Clear();
+            ClipboardEx.Release();
 
             try
             {

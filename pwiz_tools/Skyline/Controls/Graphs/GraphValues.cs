@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using ZedGraph;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -332,7 +331,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public RTPeptideValue RtPeptideValue { get; private set; }
-            [CanBeNull]
             public IRetentionTimeTransformOp RtTransformOp { get; private set; }
             public AggregateOp AggregateOp { get; private set; }
 

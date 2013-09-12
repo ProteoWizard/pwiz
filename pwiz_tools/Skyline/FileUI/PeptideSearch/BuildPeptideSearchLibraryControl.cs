@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -49,7 +48,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             InitializeComponent();
 
-            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(CultureInfo.CurrentCulture);
+            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(LocalizationHelper.CurrentCulture);
         }
 
         public event EventHandler<InputFilesChangedEventArgs> InputFilesChanged;

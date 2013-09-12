@@ -306,7 +306,7 @@ namespace pwiz.MSGraph
                     if (isXChartFractionObject(text) && (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max))
                         continue;
 
-                    Region textBoundsRegion = null;
+                    Region textBoundsRegion;
                     bool overlap = detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem);
                     if (!AllowLabelOverlap && overlap)
                         continue;

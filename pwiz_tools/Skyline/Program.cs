@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -159,13 +158,14 @@ namespace pwiz.Skyline
                     }
                 }
 
-                MainWindow = new SkylineWindow();
+                using (MainWindow = new SkylineWindow())
+                {
+                    // Position window offscreen for stress testing.
+                    if (SkylineOffscreen)
+                        FormEx.SetOffscreen(MainWindow);
 
-                // Position window offscreen for stress testing.
-                if (SkylineOffscreen)
-                    FormEx.SetOffscreen(MainWindow);
-
-                Application.Run(MainWindow);
+                    Application.Run(MainWindow);
+                }
             }
             catch (Exception x)
             {

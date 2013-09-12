@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -107,9 +106,9 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 yield return new KeyValuePair<PeptideRankId, string>(XHunterLibSpec.PEP_RANK_EXPECT,
-                    Expect.ToString(CultureInfo.CurrentCulture));
+                    Expect.ToString(LocalizationHelper.CurrentCulture));
                 yield return new KeyValuePair<PeptideRankId, string>(XHunterLibSpec.PEP_RANK_PROCESSED_INTENSITY,
-                    ProcessedIntensity.ToString(CultureInfo.CurrentCulture));
+                    ProcessedIntensity.ToString(LocalizationHelper.CurrentCulture));
             }
         }
 

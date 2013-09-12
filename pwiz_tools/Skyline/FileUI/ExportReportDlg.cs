@@ -46,7 +46,7 @@ namespace pwiz.Skyline.FileUI
 
             InitializeComponent();
 
-            CultureInfo = CultureInfo.CurrentCulture;
+            CultureInfo = LocalizationHelper.CurrentCulture;
 
             LoadList();
 

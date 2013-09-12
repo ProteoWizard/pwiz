@@ -72,7 +72,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IDocumentUIContainer _documentUiContainer;
         private SrmDocument Document { get { return _documentUiContainer.Document; }  }
         private readonly Bitmap _peptideImg;
-        private MSGraphPane GraphPane { get { return (MSGraphPane)graphControl.MasterPane[0]; } }
         public ViewLibSpectrumGraphItem GraphItem { get; private set; }
         public GraphSpectrumSettings GraphSettings { get; private set; }
         public int LineWidth { get; set; }
@@ -467,14 +466,17 @@ namespace pwiz.Skyline.SettingsUI
                                                         Resources.ViewLibraryDlg_MatchModifications__0__Would_you_like_to_use_the_Unimod_definitions_for__1__modifications_The_document_will_not_change_until_peptides_with_these_modifications_are_added,
                                                         matcher.UnmatchedSequences.Any() ? (TextUtil.LineSeparate(matcher.UninterpretedMods, string.Empty, string.Empty)) : string.Empty, 
                                                         matcher.UnmatchedSequences.Any() ? Resources.ViewLibraryDlg_MatchModifications_the_matching : Resources.ViewLibraryDlg_MatchModifications_these));
-                var dlg =
+                using (var dlg =
                     new MultiButtonMsgDlg(message,
-                        Resources.ViewLibraryDlg_MatchModifications_Yes, Resources.ViewLibraryDlg_MatchModifications_No, false);
-                var result = dlg.ShowDialog(this);
-                if (result != DialogResult.Yes)
+                                          Resources.ViewLibraryDlg_MatchModifications_Yes,
+                                          Resources.ViewLibraryDlg_MatchModifications_No, false))
                 {
-                    _matcher.ClearMatches();
-                    return false;
+                    var result = dlg.ShowDialog(this);
+                    if (result != DialogResult.Yes)
+                    {
+                        _matcher.ClearMatches();
+                        return false;
+                    }
                 }
             }
             _matcher = matcher;

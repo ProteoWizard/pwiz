@@ -38,6 +38,8 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestModificationMatcher()
         {
+            InitSeqs();
+
             var carbC = StaticModList.GetDefaultsOn()[0];
 
             // Test exception thrown if unable to match - mass.
@@ -117,9 +119,9 @@ namespace pwiz.SkylineTestA
             // Test exception thrown if match doesn't make sense - wrong AA.
             UpdateMatcherFail(STR_FAIL_OX_ON_D);
             // Test exception thrown if match doesn't make sense - wrong terminus.
-            SEQS.Add(STR_FAIL_OX_TERM);
+            _seqs.Add(STR_FAIL_OX_TERM);
             AssertEx.ThrowsException<FormatException>(() => UpdateMatcher(new[] {OXIDATION_M_C_TERM}, null, null, null));
-            SEQS.Remove(STR_FAIL_OX_TERM);
+            _seqs.Remove(STR_FAIL_OX_TERM);
 
             // Heavy 15N - All AAs.
             UpdateMatcher(new[] { carbC, METHIONINE_OXIDATION }, new[] {LABEL15_N}, null, null);
@@ -236,17 +238,17 @@ namespace pwiz.SkylineTestA
         private static void UpdateMatcherFail(string seq)
         {
             if (seq != null)
-                SEQS.Add(seq);
+                _seqs.Add(seq);
             AssertEx.ThrowsException<FormatException>(() => 
                 UpdateMatcher(null, null, null, null));
-            SEQS.Remove(seq);
+            _seqs.Remove(seq);
         }
 
         private static void UpdateMatcher(
             StaticMod[] docStatMods, StaticMod[] docHeavyMods, 
             StaticMod[] globalStatMods, StaticMod[] globalHeavyMods)
         {
-            UpdateMatcher(docStatMods, docHeavyMods, globalStatMods, globalHeavyMods, SEQS);
+            UpdateMatcher(docStatMods, docHeavyMods, globalStatMods, globalHeavyMods, _seqs);
         }
 
         private static void UpdateMatcher(
@@ -281,9 +283,9 @@ namespace pwiz.SkylineTestA
         }
 
         private const string STR_NO_MODS = "ALSIGFETCR"; 
-        private static readonly string STR_HEAVY_15 = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R{+4}";
+        private static string STR_HEAVY_15 { get { return "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R{+4}"; } }
         private const string STR_HEAVY_15_F = "VAILIPF{+1}R";
-        private static readonly string STR_HEAVY_15_NOT_ALL = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R";
+        private static string STR_HEAVY_15_NOT_ALL { get { return "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R"; } }
         private const string STR_MOD_BY_NAME = "S[Phospho (ST)]LLYFVYVAPGIVNT[Phospho (ST)]YLFMMQAQGILIR";
         private const string STR_TERM_ONLY = "VAILIPFR{Label:13C(6) (C-term R)}";
         private const string STR_MOD_BY_NAME_TERMINUS = "SLLAALFFFSLSSSLLYFVYVAPGIVNT[Phospho (ST)]";
@@ -291,7 +293,7 @@ namespace pwiz.SkylineTestA
         private const string STR_LIGHT_ONLY = "A{+1}E{+1}I{+1}D{+1}M{+1}[+695]L{+1}D{+1}I{+1}R{+4}";
         private const string STR_CYS_AND_OXI = "AFC[+57]AVPWQGTM[+16]TLSK";
         private const string STR_CYS_OXI_PHOS = "AFC[+57]AVPWQGTM[+16]T[Phospho (ST)]LSK";
-        private static readonly string STR_METOX_LONG_MASS = "AFCSFQIYAVPWQGTM[+" + 15.99 + "49151234567890]TLSK";
+        private static string STR_METOX_LONG_MASS { get { return "AFCSFQIYAVPWQGTM[+" + 15.99 + "49151234567890]TLSK"; } }
         private const string STR_AMMONIA_LOSS = "C[-17]AVPWQGTMTLSK";
 
         // Fails
@@ -299,7 +301,7 @@ namespace pwiz.SkylineTestA
         private const string STR_FAIL_NAME = "VAILIP[Gibberish]FR";
         private const string STR_FAIL_EMPTY_MOD = "IHGF[]DLAAI[]NLQR";
         private const string STR_FAIL_EMPTY_MOD2 = "IHGF{}DLAAI{}NLQR";
-        private static readonly string STR_FAIL_NOT_A_NUMBER = "IHGF[+" + 5.1 + "" + 1.5 + "]DLAAINLQR";
+        private static string STR_FAIL_NOT_A_NUMBER { get { return "IHGF[+" + 5.1 + "" + 1.5 + "]DLAAINLQR"; } }
         private const string STR_FAIL_DOUBLE_MOD = "V{+1}{+5}A{+1}I{+1}L{+1}I{+1}P{+1}F{+1}R{+4}{+1}";
         private const string STR_FAIL_OX_ON_D = "PEMGFD[Oxidation (M)]LER";
         private const string STR_FAIL_OX_TERM = "PEM[Oxidation (M) C-term]GFDLER";
@@ -310,11 +312,16 @@ namespace pwiz.SkylineTestA
         private static readonly StaticMod LABEL15_N = new StaticMod("Label:15N", null, null, LabelAtoms.N15);
         private static readonly StaticMod MET_OX_ROUNDED = new StaticMod("Met Ox Rounded", "M", null, null, LabelAtoms.None, 16.0, 16.0);
 
-        private static readonly List<string> SEQS = new List<string> 
+        private static List<string> _seqs;
+        private static void InitSeqs()
         {
-            STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL, STR_CYS_OXI_PHOS,
-            STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
-            STR_AMMONIA_LOSS
-        };    
+            _seqs = new List<string>
+                {
+                    STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL,
+                    STR_CYS_OXI_PHOS,
+                    STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
+                    STR_AMMONIA_LOSS
+                };
+        }   
     }
 }

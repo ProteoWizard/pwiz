@@ -20,9 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -121,8 +121,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             double irt2 = comboFixedPoint2.SelectedItem != null
                               ? Math.Round(((DbIrtPeptide) comboFixedPoint2.SelectedItem).Irt, 2)
                               : 100;
-            textMinIrt.Text = Math.Min(irt1, irt2).ToString(CultureInfo.CurrentCulture);
-            textMaxIrt.Text = Math.Max(irt1, irt2).ToString(CultureInfo.CurrentCulture);
+            textMinIrt.Text = Math.Min(irt1, irt2).ToString(LocalizationHelper.CurrentCulture);
+            textMaxIrt.Text = Math.Max(irt1, irt2).ToString(LocalizationHelper.CurrentCulture);
         }
     }
 }

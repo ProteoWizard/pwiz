@@ -97,6 +97,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _displayTimer.Stop();
             Close();
+            Dispose();
         }
 
         private void CloseNotification(bool animate)

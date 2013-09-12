@@ -22,11 +22,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding
 {
@@ -402,7 +400,9 @@ namespace pwiz.Common.DataBinding
             {
                 var constructor = newType.GetConstructor(new Type[0]);
                 Debug.Assert(null != constructor);
+// ReSharper disable PossibleNullReferenceException
                 var newColumn = (DataGridViewColumn) constructor.Invoke(new object[0]);
+// ReSharper restore PossibleNullReferenceException
                 newColumn.DisplayIndex = srcColumn.DisplayIndex;
                 newColumn.DataPropertyName = srcColumn.DataPropertyName;
                 newColumn.HeaderText = srcColumn.HeaderText;

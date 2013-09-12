@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,6 +25,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -922,7 +922,7 @@ namespace pwiz.Skyline
                 try
                 {
                     EspFeatureCalc.WriteFeatures(dlg.FileName,
-                        DocumentUI.Peptides.Select(nodePep => nodePep.Peptide.Sequence), CultureInfo.CurrentCulture);
+                        DocumentUI.Peptides.Select(nodePep => nodePep.Peptide.Sequence), LocalizationHelper.CurrentCulture);
                 }
                 catch (IOException x)
                 {
@@ -1734,10 +1734,12 @@ namespace pwiz.Skyline
                 return;
             }
 
-            var dlg = new ImportPeptideSearchDlg(this, _libraryManager);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager))
             {
-                // Nothing to do; the dialog does all the work.
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
             }
         }
 

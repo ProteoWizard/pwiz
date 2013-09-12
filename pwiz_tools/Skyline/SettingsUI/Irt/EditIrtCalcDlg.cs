@@ -456,7 +456,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             StandardPeptideList.Clear();
             foreach (var peptide in standard.Where(pep => pep.Standard))
-                StandardPeptideList.Add(peptide);
+                StandardPeptideList.Add(new DbIrtPeptide(peptide));
         }
 
         private void LoadLibrary(IEnumerable<DbIrtPeptide> library)
@@ -555,13 +555,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     int iPep;
                     if ((iPep = LibraryPeptideList.IndexOf(p => Equals(p.PeptideModSeq, sequence))) != -1)
                     {
-                        peptideExist = LibraryPeptideList[iPep];                        
+                        peptideExist = new DbIrtPeptide(LibraryPeptideList[iPep]);
                         // Remove from the library list, so that it is in only one list
                         LibraryPeptideList.RemoveAt(iPep);
                     }
                     else if ((iPep = Items.IndexOf(p => Equals(p.PeptideModSeq, sequence))) != -1)
                     {
-                        peptideExist = Items[iPep];
+                        peptideExist = new DbIrtPeptide(Items[iPep]);
                     }
                     else
                     {
@@ -583,7 +583,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                         select standardPeptide)
                 {
                     peptide.Standard = false;
-                    LibraryPeptideList.Add(peptide);
+                    LibraryPeptideList.Add(new DbIrtPeptide(peptide));
                 }
 
                 Items.Clear();

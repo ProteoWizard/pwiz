@@ -19,12 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -610,7 +610,7 @@ namespace pwiz.Skyline.EditUI
             IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes;
             try
             {
-                var importer = new MassListImporter(document, CultureInfo.CurrentCulture, TRANSITION_LIST_SEPARATOR);
+                var importer = new MassListImporter(document, LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
                 // TODO: support long-wait broker
                 peptideGroupDocNodes = importer.Import(new StringReader(sbTransitionList.ToString()),
                                                        null,

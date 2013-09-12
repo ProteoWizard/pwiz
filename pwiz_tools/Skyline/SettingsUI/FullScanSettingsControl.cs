@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
@@ -206,7 +207,7 @@ namespace pwiz.Skyline.SettingsUI
             if (precursorMassAnalyzer == FullScanMassAnalyzerType.qit)
             {
                 comboPrecursorIsotopes.SelectedItem = FullScanPrecursorIsotopes.Count.GetLocalizedString();
-                textPrecursorIsotopeFilter.Text = 1.ToString(CultureInfo.CurrentCulture);
+                textPrecursorIsotopeFilter.Text = 1.ToString(LocalizationHelper.CurrentCulture);
                 comboEnrichments.SelectedIndex = -1;
                 comboEnrichments.Enabled = false;
             }
@@ -243,7 +244,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (precursorIsotopes == FullScan.PrecursorIsotopes)
                 {
                     textPrecursorIsotopeFilter.Text = FullScan.PrecursorIsotopeFilter.HasValue
-                                                          ? FullScan.PrecursorIsotopeFilter.Value.ToString(CultureInfo.CurrentCulture)
+                                                          ? FullScan.PrecursorIsotopeFilter.Value.ToString(LocalizationHelper.CurrentCulture)
                                                           : string.Empty;
                     if (FullScan.IsotopeEnrichments != null)
                         comboEnrichments.SelectedItem = FullScan.IsotopeEnrichments.Name;
@@ -254,7 +255,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textPrecursorIsotopeFilter.Text = (percentType
                                                            ? TransitionFullScan.DEFAULT_ISOTOPE_PERCENT
-                                                           : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString(CultureInfo.CurrentCulture);
+                                                           : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString(LocalizationHelper.CurrentCulture);
 
                     var precursorMassAnalyzer = PrecursorMassAnalyzer;
                     if (!comboPrecursorAnalyzerType.Enabled || (percentType && precursorMassAnalyzer == FullScanMassAnalyzerType.qit))
@@ -771,8 +772,8 @@ namespace pwiz.Skyline.SettingsUI
                 labelAt.Visible = variableRes;
                 textAt.Visible = variableRes;
                 textAt.Text = resMzCurrent.HasValue
-                                  ? resMzCurrent.Value.ToString(CultureInfo.CurrentCulture)
-                                  : TransitionFullScan.DEFAULT_RES_MZ.ToString(CultureInfo.CurrentCulture);
+                                  ? resMzCurrent.Value.ToString(LocalizationHelper.CurrentCulture)
+                                  : TransitionFullScan.DEFAULT_RES_MZ.ToString(LocalizationHelper.CurrentCulture);
 
                 labelTh.Visible = (textMz != null);
                 if (textMz != null)

@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
@@ -89,9 +90,9 @@ namespace pwiz.SkylineTestA
                 SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_ALL, SOURCES_ALL);
             }
 
-            SaveChrom(docResults, fileActual1, FILE_NAMES_1.ToList(), CultureInfo.CurrentCulture, EXTRACTOR_1, SOURCES_1);
-            SaveChrom(docResults, fileActual2, FILE_NAMES_2.ToList(), CultureInfo.CurrentCulture, EXTRACTOR_2, SOURCES_2);
-            SaveChrom(docResults, fileActualAll, FILE_NAMES_ALL.ToList(), CultureInfo.CurrentCulture, EXTRACTOR_ALL, SOURCES_ALL);
+            SaveChrom(docResults, fileActual1, FILE_NAMES_1.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_1, SOURCES_1);
+            SaveChrom(docResults, fileActual2, FILE_NAMES_2.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_2, SOURCES_2);
+            SaveChrom(docResults, fileActualAll, FILE_NAMES_ALL.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_ALL, SOURCES_ALL);
 
             AssertEx.FileEquals(fileExpected1, fileActual1);
             AssertEx.FileEquals(fileExpected2, fileActual2);

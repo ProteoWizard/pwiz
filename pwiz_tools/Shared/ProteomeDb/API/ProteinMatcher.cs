@@ -97,7 +97,8 @@ namespace pwiz.ProteomeDatabase.API
         public void BeginExecute(Action<ProteinMatchQuery> callback)
         {
             _callback = callback;
-            new Action(ExecuteBackground).BeginInvoke(null, null);
+            var runner = new Action(ExecuteBackground);
+            runner.BeginInvoke(runner.EndInvoke, null);
         }
 
         /// <summary>

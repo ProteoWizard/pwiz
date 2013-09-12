@@ -20,9 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows.Forms;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
@@ -59,13 +59,13 @@ namespace pwiz.Skyline.EditUI
             {
                 textPrimaryTransitionCount.Text = value == 0
                     ? string.Empty
-                    : value.ToString(CultureInfo.CurrentCulture);
+                    : value.ToString(LocalizationHelper.CurrentCulture);
             }
         }
 
         private static string WindowsToString(IEnumerable<double> windows)
         {
-            return string.Join(", ", windows.Select(v => v.ToString(CultureInfo.CurrentCulture)).ToArray()); // Not L10N
+            return string.Join(", ", windows.Select(v => v.ToString(LocalizationHelper.CurrentCulture)).ToArray()); // Not L10N
         }
 
         private void btnOk_Click(object sender, EventArgs e)

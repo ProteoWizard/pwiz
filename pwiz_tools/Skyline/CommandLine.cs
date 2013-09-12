@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1852,7 +1851,7 @@ namespace pwiz.Skyline
 
                             broker.UpdateProgress(status = status.ChangePercentComplete(95));
                             ResultSet.WriteReportHelper(resultSet, reportColSeparator, writer,
-                                                        CultureInfo.CurrentCulture);
+                                                        LocalizationHelper.CurrentCulture);
                         }
 
                         writer.Flush();

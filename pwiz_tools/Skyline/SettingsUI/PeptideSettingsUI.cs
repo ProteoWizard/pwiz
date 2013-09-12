@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverEnzyme.LoadList(_peptideSettings.Enzyme.GetKey());
             for (int i = DigestSettings.MIN_MISSED_CLEAVAGES; i <= DigestSettings.MAX_MISSED_CLEAVAGES; i++)
                 cbMissedCleavages.Items.Add(i.ToString(CultureInfo.InvariantCulture));
-            cbMissedCleavages.SelectedItem = Digest.MaxMissedCleavages.ToString(CultureInfo.CurrentCulture);
+            cbMissedCleavages.SelectedItem = Digest.MaxMissedCleavages.ToString(LocalizationHelper.CurrentCulture);
             if (cbMissedCleavages.SelectedIndex < 0)
                 cbMissedCleavages.SelectedIndex = 0;
             cbRaggedEnds.Checked = Digest.ExcludeRaggedEnds;
@@ -87,15 +88,15 @@ namespace pwiz.Skyline.SettingsUI
             _driverRT.LoadList(sel);
             cbUseMeasuredRT.Checked = textMeasureRTWindow.Enabled = Prediction.UseMeasuredRTs;
             if (Prediction.MeasuredRTWindow.HasValue)
-                textMeasureRTWindow.Text = Prediction.MeasuredRTWindow.Value.ToString(CultureInfo.CurrentCulture);
+                textMeasureRTWindow.Text = Prediction.MeasuredRTWindow.Value.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize filter settings
             _driverExclusion = new SettingsListBoxDriver<PeptideExcludeRegex>(listboxExclusions, Settings.Default.PeptideExcludeList);
             _driverExclusion.LoadList(null, Filter.Exclusions);
 
-            textExcludeAAs.Text = Filter.ExcludeNTermAAs.ToString(CultureInfo.CurrentCulture);
-            textMaxLength.Text = Filter.MaxPeptideLength.ToString(CultureInfo.CurrentCulture);
-            textMinLength.Text = Filter.MinPeptideLength.ToString(CultureInfo.CurrentCulture);
+            textExcludeAAs.Text = Filter.ExcludeNTermAAs.ToString(LocalizationHelper.CurrentCulture);
+            textMaxLength.Text = Filter.MaxPeptideLength.ToString(LocalizationHelper.CurrentCulture);
+            textMinLength.Text = Filter.MinPeptideLength.ToString(LocalizationHelper.CurrentCulture);
             cbAutoSelect.Checked = Filter.AutoSelect;
 
             // Initialize spectral library settings
@@ -113,7 +114,7 @@ namespace pwiz.Skyline.SettingsUI
 
             _lastRankId = Libraries.RankId;
             _lastPeptideCount = Libraries.PeptideCount.HasValue
-                                    ? Libraries.PeptideCount.Value.ToString(CultureInfo.CurrentCulture)
+                                    ? Libraries.PeptideCount.Value.ToString(LocalizationHelper.CurrentCulture)
                                     : null;
 
             UpdateRanks(null);
@@ -124,8 +125,8 @@ namespace pwiz.Skyline.SettingsUI
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod, 
                 labelStandardType, comboStandardType, listStandardTypes);
-            textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(CultureInfo.CurrentCulture);
-            textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(CultureInfo.CurrentCulture);
+            textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
+            textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize peak scoring settings.
             tabControl1.TabPages.Remove(tabIntegration);  // TODO: Remove this line when the Integration tab is ready
@@ -785,7 +786,7 @@ namespace pwiz.Skyline.SettingsUI
         public int MissedCleavages
         { 
             get { return Convert.ToInt32(cbMissedCleavages.SelectedItem); }
-            set { cbMissedCleavages.SelectedItem = value.ToString(CultureInfo.CurrentCulture); }
+            set { cbMissedCleavages.SelectedItem = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public string[] AvailableLibraries
@@ -833,13 +834,13 @@ namespace pwiz.Skyline.SettingsUI
         public int MaxVariableMods
         {
             get { return Convert.ToInt32(textMaxVariableMods.Text); }
-            set { textMaxVariableMods.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textMaxVariableMods.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public int MaxNeutralLosses
         {
             get { return Convert.ToInt32(textMaxNeutralLosses.Text); }
-            set { textMaxNeutralLosses.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textMaxNeutralLosses.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public PeptideRankId RankID
@@ -857,7 +858,7 @@ namespace pwiz.Skyline.SettingsUI
         public int PeptidesPerProtein
         {
             get { return Convert.ToInt32(textPeptideCount.Text); }
-            set { textPeptideCount.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textPeptideCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public IEnumerable<IsotopeLabelType> LabelTypes
@@ -872,7 +873,7 @@ namespace pwiz.Skyline.SettingsUI
         public int TimeWindow
         {
             get { return Convert.ToInt32(textMeasureRTWindow.Text); }
-            set { textMeasureRTWindow.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textMeasureRTWindow.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public void AddPeakScoringModel()

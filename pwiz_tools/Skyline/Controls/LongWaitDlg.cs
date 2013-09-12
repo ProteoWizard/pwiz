@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -107,7 +106,7 @@ namespace pwiz.Skyline.Controls
             try
             {
                 Action<Action<ILongWaitBroker>> runner = RunWork;
-                var result = runner.BeginInvoke(performWork, null, null);
+                var result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
 
                 // Allow application to update itself.
                 Application.DoEvents();

@@ -19,9 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var label = new StringBuilder(type.GetLocalizedString());
             if (!Transition.IsPrecursor(type))
-                label.Append(ordinal.ToString(CultureInfo.CurrentCulture));
+                label.Append(ordinal.ToString(LocalizationHelper.CurrentCulture));
             if (losses != null)
             {
                 label.Append(" -"); // Not L10N

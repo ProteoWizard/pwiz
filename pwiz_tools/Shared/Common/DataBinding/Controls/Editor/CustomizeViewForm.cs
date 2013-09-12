@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
@@ -137,12 +138,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 int newWidth;
                 if (AdvancedShowing)
                 {
-                    btnAdvanced.Text = "<< Hide &Advanced";
+                    btnAdvanced.Text = Resources.CustomizeViewForm_AdvancedShowing____Hide__Advanced;
                     newWidth = Width + _advancedPanelWidth;
                 }
                 else
                 {
-                    btnAdvanced.Text = "Show &Advanced >>";
+                    btnAdvanced.Text = Resources.CustomizeViewForm_AdvancedShowing_Show__Advanced___;
                     newWidth = Width - _advancedPanelWidth;
                 }
                 
@@ -240,7 +241,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 row.Cells[colFilterColumn.Index].Value = filterInfo.FilterSpec.Column;
                 row.Cells[colFilterColumn.Index].Style.Font = new Font(dataGridViewFilter.Font, FontStyle.Strikeout);
-                row.Cells[colFilterColumn.Index].ToolTipText = "This column does not exist";
+                row.Cells[colFilterColumn.Index].ToolTipText = Resources.CustomizeViewForm_SetFilterInfo_This_column_does_not_exist;
             }
             else
             {
@@ -304,18 +305,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             string errorMessage = null;
             if (string.IsNullOrEmpty(name))
             {
-                errorMessage = "View name cannot be blank.";
+                errorMessage = Resources.CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_;
             }
             else if (ViewContext.BuiltInViewSpecs.FirstOrDefault(viewSpec=>name==viewSpec.Name) != null)
             {
-                errorMessage = string.Format("There is already a built in view named '{0}'.", name);
+                errorMessage = string.Format(Resources.CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___, name);
             }
             else
             {
                 var currentExistingView = ViewContext.CustomViewSpecs.FirstOrDefault(viewSpec => name == viewSpec.Name);
                 if (currentExistingView != null && name != OriginalViewSpec.Name)
                 {
-                    if (ViewContext.ShowMessageBox(this, string.Format("Do you want to overwrite the existing view named '{0}'", name), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    if (ViewContext.ShowMessageBox(this, string.Format(Resources.CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__, name), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     {
                         formClosingEventArgs.Cancel = true;
                     }
@@ -338,7 +339,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 listViewColumns.SelectedIndices.Cast<int>().Select(i => ViewInfo.DisplayColumns[i]).ToArray();
             if (selectedColumns.Length == 1)
             {
-                groupBoxProperties.Text = "Column Properties";
+                groupBoxProperties.Text = Resources.CustomizeViewForm_UpdatePropertySheet_Column_Properties;
                 var selectedColumn = selectedColumns[0];
 
                 if (selectedColumn.ColumnSpec.Caption != null)
@@ -368,7 +369,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             else
             {
-                groupBoxProperties.Text = selectedColumns.Length == 0 ? "No Selection" : "Multiple Selection";
+                groupBoxProperties.Text = selectedColumns.Length == 0 ? Resources.CustomizeViewForm_UpdatePropertySheet_No_Selection : Resources.CustomizeViewForm_UpdatePropertySheet_Multiple_Selection;
                 groupBoxCaption.Visible = false;
                 cbxHidden.Visible = false;
                 comboSortOrder.Visible = false;
@@ -491,7 +492,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             comboSublist.Items.Clear();
             foreach (var idPath in sublistIdArray)
             {
-                string label = idPath.IsRoot ? "<None>" : GetSublistLabel(idPath);
+                string label = idPath.IsRoot ? Resources.CustomizeViewForm_UpdateSublistCombo__None_ : GetSublistLabel(idPath);
                 comboSublist.Items.Add(new SublistItem(label, idPath));
                 if (Equals(idPath, ViewSpec.SublistId))
                 {
@@ -522,7 +523,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 }
             }
             parts.Reverse();
-            return string.Join(":", parts.ToArray());
+            return string.Join(":", parts.ToArray());   // Not L10N
         }
 
         private void TbxCaptionOnLeave(object sender, EventArgs e)
@@ -955,7 +956,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void dataGridViewFilter_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            Trace.TraceError("DataGridViewFilterOnDataError:{0}", e.Exception);
+            Trace.TraceError("DataGridViewFilterOnDataError:{0}", e.Exception); // Not L10N
         }
     }
 }

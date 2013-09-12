@@ -18,11 +18,11 @@
  */
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             set
             {
-                cbMissedCleavages.SelectedItem = value.ToString(CultureInfo.CurrentCulture);
+                cbMissedCleavages.SelectedItem = value.ToString(LocalizationHelper.CurrentCulture);
                 if (cbMissedCleavages.SelectedIndex < 0)
                     cbMissedCleavages.SelectedIndex = 0;
             }

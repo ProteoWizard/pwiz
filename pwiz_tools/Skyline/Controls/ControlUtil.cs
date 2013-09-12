@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 using System;
-using System.Globalization;
 using System.Windows.Forms;
 using System.ComponentModel;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls
             val = default(double);
             try
             {
-                val = double.Parse(control.Text, CultureInfo.CurrentCulture);
+                val = double.Parse(control.Text, LocalizationHelper.CurrentCulture);
                 valid = true;
             }
             catch (FormatException)

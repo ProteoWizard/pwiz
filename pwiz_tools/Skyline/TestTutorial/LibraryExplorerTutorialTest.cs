@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 using System;
-using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -314,7 +314,7 @@ namespace pwiz.SkylineTestTutorial
             var docPhospho = WaitForDocumentChange(docInitial);
             Assert.IsTrue(docPhospho.Settings.PeptideSettings.Modifications.StaticModifications.Count == 2);
 
-            string lossText = Math.Round(-phosphoSt.Losses[0].MonoisotopicMass, 1).ToString(CultureInfo.CurrentCulture);
+            string lossText = Math.Round(-phosphoSt.Losses[0].MonoisotopicMass, 1).ToString(LocalizationHelper.CurrentCulture);
             const int countLossLabels1 = 12;
             const int countLossLabels2 = 15;
             const int countPrecursors1 = 1;

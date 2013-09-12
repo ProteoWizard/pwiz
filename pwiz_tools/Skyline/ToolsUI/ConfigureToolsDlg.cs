@@ -344,17 +344,20 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 if (!File.Exists(adjustedCommand))
                 {
-                    var dlg =
-                    new MultiButtonMsgDlg(
-                        string.Format(TextUtil.LineSeparate(
+                    using (var dlg =
+                        new MultiButtonMsgDlg(
+                            string.Format(TextUtil.LineSeparate(
                                 Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__,
                                 Resources.ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
-                                        tool.Title), Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, false);
-                    DialogResult result = dlg.ShowDialog(this);
-                    if (result == DialogResult.Yes)
+                                tool.Title), 
+                            Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, false))
                     {
-                        textCommand.Focus();
-                        return false;
+                        DialogResult result = dlg.ShowDialog(this);
+                        if (result == DialogResult.Yes)
+                        {
+                            textCommand.Focus();
+                            return false;
+                        }
                     }
                 }
             }
@@ -612,17 +615,22 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                var dlg = new MultiButtonMsgDlg(Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_, Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, true);
-                DialogResult result = dlg.ShowDialog(this);
-                switch (result)
+                using (var dlg =
+                    new MultiButtonMsgDlg(
+                        Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_,
+                        Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, true))
                 {
-                    case DialogResult.Yes:
-                        if (SaveTools())
-                            DialogResult = DialogResult.OK;
-                        break;
-                    case DialogResult.No:
-                        DialogResult = DialogResult.Cancel;
-                        break;
+                    DialogResult result = dlg.ShowDialog(this);
+                    switch (result)
+                    {
+                        case DialogResult.Yes:
+                            if (SaveTools())
+                                DialogResult = DialogResult.OK;
+                            break;
+                        case DialogResult.No:
+                            DialogResult = DialogResult.Cancel;
+                            break;
+                    }
                 }
             }
         }
@@ -709,8 +717,10 @@ namespace pwiz.Skyline.ToolsUI
         public void EditMacro()
         {
             ProgramPathContainer pcc = ToolMacros.GetProgramPathContainer(textCommand.Text);
-            var dlg = new LocateFileDlg(pcc);
-            dlg.ShowDialog();
+            using (var dlg = new LocateFileDlg(pcc))
+            {
+                dlg.ShowDialog();
+            }
         }
 
         public void CommandBtnClick()
@@ -1228,16 +1238,20 @@ namespace pwiz.Skyline.ToolsUI
                 message = string.Format(reportMessageFormat, TextUtil.LineSeparate(reportTitles));
             }
 
-            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(message, buttonText, Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true);
-            DialogResult result = dlg.ShowDialog();
-            switch (result)
+            using (
+                var dlg = new MultiButtonMsgDlg(message, buttonText,
+                                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true))
             {
-                case DialogResult.Cancel:
-                    return null;
-                case DialogResult.Yes:
-                    return true;
-                case DialogResult.No:
-                    return false;
+                DialogResult result = dlg.ShowDialog();
+                switch (result)
+                {
+                    case DialogResult.Cancel:
+                        return null;
+                    case DialogResult.Yes:
+                        return true;
+                    case DialogResult.No:
+                        return false;
+                }
             }
             return false;
         }
@@ -1280,16 +1294,22 @@ namespace pwiz.Skyline.ToolsUI
 
             string messageFormat = TextUtil.LineSeparate(annotationMessage, question);
 
-            MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)), Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite, Resources.ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing, true);
-            DialogResult result = dlg.ShowDialog();
-            switch (result)
+            using (var dlg =
+                new MultiButtonMsgDlg(
+                    string.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)),
+                    Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite,
+                    Resources.ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing, true))
             {
+                DialogResult result = dlg.ShowDialog();
+                switch (result)
+                {
                     case DialogResult.Cancel:
                         return null;
                     case DialogResult.Yes:
                         return true;
                     case DialogResult.No:
                         return false;
+                }
             }
             return false;
         }

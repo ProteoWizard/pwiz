@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -136,7 +136,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static string I18n(string text)
         {
-            return text.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            return text.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
         }
 
         private static void VerifyTransitionListError(PasteDlg insertTransDlg, string insertListText,

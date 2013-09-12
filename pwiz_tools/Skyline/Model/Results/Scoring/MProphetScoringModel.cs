@@ -37,7 +37,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class MProphetPeakScoringModel : PeakScoringModelSpec
     {
         private ReadOnlyCollection<IPeakFeatureCalculator> _peakFeatureCalculators;
-        private ScoredGroupPeaksSet _allTransitionGroups;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
         private const int MAX_ITERATIONS = 7;

@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 using System;
-using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -601,7 +601,7 @@ namespace pwiz.SkylineTestFunctional
                 editRTDlg.ChooseCalculator(ssrCalc);
                 editRTDlg.SetRegressionName("EditMethodDialogTest");
                 const double slope = 1.0;
-                editRTDlg.SetSlope(slope.ToString(CultureInfo.CurrentCulture));
+                editRTDlg.SetSlope(slope.ToString(LocalizationHelper.CurrentCulture));
                 editRTDlg.SetIntercept("0");
                 editRTDlg.SetTimeWindow(10);
 

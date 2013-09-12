@@ -221,8 +221,6 @@ namespace pwiz.Skyline.Model.Results
         {
             public static Allocator Instance;
 
-            private static readonly Log LOG = new Log<Allocator>();
-
             private const int MEGABYTES = 1024 * 1024;
 
             /// <summary>
@@ -373,33 +371,35 @@ namespace pwiz.Skyline.Model.Results
                 var memoryUsedForBuffers = 0;
                 foreach (var buffer in _buffers)
                     memoryUsedForBuffers += (buffer != null) ? _bufferSize : 0;
-                LOG.InfoFormat("Length of buffers for chrom data: {0:0.0} MB", (double) memoryUsedForBuffers*sizeof (float)/MEGABYTES); // Not L10N
-                LOG.InfoFormat("Length of paging file: {0:0.0} MB", (double) _fileLength/MEGABYTES); // Not L10N
 
-                var collectorCount = 0;
-                var maxCollectorLength = 0;
-                var averageCollectorLength = 0;
-                foreach (var collectorList in _collectors)
-                {
-                    if (collectorList != null)
-                    {
-                        foreach (var collector in collectorList)
-                        {
-                            if (collector != _endCollector)
-                            {
-                                collectorCount++;
-                                averageCollectorLength += collector.Length;
-                                maxCollectorLength = Math.Max(maxCollectorLength, collector.Length);
-                            }
-                        }
-                    }
-                }
+                var log = log4net.LogManager.GetLogger(typeof (Allocator).Name);
+                log.InfoFormat("Length of buffers for chrom data: {0:0.0} MB", (double) memoryUsedForBuffers*sizeof (float)/MEGABYTES); // Not L10N
+                log.InfoFormat("Length of paging file: {0:0.0} MB", (double) _fileLength/MEGABYTES); // Not L10N
 
-                LOG.InfoFormat("Collector count: {0}", collectorCount); // Not L10N
-                LOG.InfoFormat("Average collector length: {0}", collectorCount == 0 ? 0 : averageCollectorLength/collectorCount);   // Not L10N
-                LOG.InfoFormat("Max. collector length: {0}", maxCollectorLength); // Not L10N
-                LOG.InfoFormat("Collector buffer length (in floats) at end: {0}", _blockSize); // Not L10N
-                LOG.InfoFormat("Average size of block write to paging file: {0} bytes", AverageBytesPerPagedBlock); // Not L10N
+//                var collectorCount = 0;
+//                var maxCollectorLength = 0;
+//                var averageCollectorLength = 0;
+//                foreach (var collectorList in _collectors)
+//                {
+//                    if (collectorList != null)
+//                    {
+//                        foreach (var collector in collectorList)
+//                        {
+//                            if (collector != _endCollector)
+//                            {
+//                                collectorCount++;
+//                                averageCollectorLength += collector.Length;
+//                                maxCollectorLength = Math.Max(maxCollectorLength, collector.Length);
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                log.InfoFormat("Collector count: {0}", collectorCount); // Not L10N
+//                log.InfoFormat("Average collector length: {0}", collectorCount == 0 ? 0 : averageCollectorLength/collectorCount);   // Not L10N
+//                log.InfoFormat("Max. collector length: {0}", maxCollectorLength); // Not L10N
+//                log.InfoFormat("Collector buffer length (in floats) at end: {0}", _blockSize); // Not L10N
+//                log.InfoFormat("Average size of block write to paging file: {0} bytes", AverageBytesPerPagedBlock); // Not L10N
             }
 
             public long Write(float[] data, int index, int length)

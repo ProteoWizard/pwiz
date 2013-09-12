@@ -20,10 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -100,8 +100,8 @@ namespace pwiz.Skyline.SettingsUI
                     else
                     {
                         cbAutoCalc.Checked = false;
-                        textSlope.Text = _regression.Conversion.Slope.ToString(CultureInfo.CurrentCulture);
-                        textIntercept.Text = _regression.Conversion.Intercept.ToString(CultureInfo.CurrentCulture);
+                        textSlope.Text = _regression.Conversion.Slope.ToString(LocalizationHelper.CurrentCulture);
+                        textIntercept.Text = _regression.Conversion.Intercept.ToString(LocalizationHelper.CurrentCulture);
                     }
                     textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow); // Not L10N
                 }
@@ -639,7 +639,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetTimeWindow(double time)
         {
-            textTimeWindow.Text = time.ToString(CultureInfo.CurrentCulture);
+            textTimeWindow.Text = time.ToString(LocalizationHelper.CurrentCulture);
         }
 
         public void SetRegressionName(string name)

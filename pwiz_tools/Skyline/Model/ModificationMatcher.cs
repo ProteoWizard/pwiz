@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -109,7 +110,7 @@ namespace pwiz.Skyline.Model
                         modTerminus = ModTerminus.N;
                     if (indexAA == aas.Length - 1)
                         modTerminus = ModTerminus.C;
-                    int decPlace = mod.IndexOf(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator,
+                    int decPlace = mod.IndexOf(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator,
                         StringComparison.Ordinal);
                     string name = null;
                     var roundedTo = Math.Min(decPlace == -1 ? 0 : mod.Length - decPlace - 1,

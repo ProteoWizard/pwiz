@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Model
 
         public string FragmentIonName
         {
-            get { return GetFragmentIonName(CultureInfo.CurrentCulture); }
+            get { return GetFragmentIonName(LocalizationHelper.CurrentCulture); }
         }
 
         public string GetFragmentIonName(CultureInfo cultureInfo)

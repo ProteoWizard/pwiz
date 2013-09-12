@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Internal;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -117,19 +118,19 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     if (queryResults.SourceRows == null)
                     {
-                        lblFilterApplied.Text = string.Format("({0})", WaitingMessage);
+                        lblFilterApplied.Text = string.Format("({0})", WaitingMessage); // Not L10N
                         lblFilterApplied.Visible = true;
                     }
                     else
                     {
                         if (BindingListView.IsRequerying)
                         {
-                            lblFilterApplied.Text = "Transforming data...";
+                            lblFilterApplied.Text = Resources.NavBar_RefreshUi_Transforming_data___;
                             lblFilterApplied.Visible = true;
                         }
                         else if (queryResults.ResultRows.Count != queryResults.PivotedRows.Count)
                         {
-                            lblFilterApplied.Text = string.Format("(Filtered from {0})", queryResults.PivotedRows.Count);
+                            lblFilterApplied.Text = string.Format(Resources.NavBar_RefreshUi__Filtered_from__0__, queryResults.PivotedRows.Count);
                             lblFilterApplied.Visible = true;
                         }
                         else
@@ -140,14 +141,14 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 else
                 {
-                    lblFilterApplied.Text = "(Transforming data...)";
+                    lblFilterApplied.Text = Resources.NavBar_RefreshUi__Transforming_data____;
                     lblFilterApplied.Visible = true;
                 }
             }
             else
             {
                 tbxFind.Enabled = false;
-                lblFilterApplied.Text = string.Format("({0})", WaitingMessage);
+                lblFilterApplied.Text = string.Format("({0})", WaitingMessage); // Not L10N
                 lblFilterApplied.Visible = true;
             }
         }
@@ -170,8 +171,8 @@ namespace pwiz.Common.DataBinding.Controls
                     contextMenu.Items.AddRange(customViewItems);
                     contextMenu.Items.Add(new ToolStripSeparator());
                 }
-                contextMenu.Items.Add(new ToolStripMenuItem("Customize View...", null, OnCustomizeView));
-                contextMenu.Items.Add(new ToolStripMenuItem("Manage Views...", null, OnManageViews));
+                contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View___, null, OnCustomizeView));
+                contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___, null, OnManageViews));
             }
             navBarButtonViews.DropDown = contextMenu;
 

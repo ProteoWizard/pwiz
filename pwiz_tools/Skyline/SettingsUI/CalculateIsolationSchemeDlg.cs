@@ -20,9 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             set
             {
-                textWindowsPerScan.Text = value.ToString(CultureInfo.CurrentCulture);
+                textWindowsPerScan.Text = value.ToString(LocalizationHelper.CurrentCulture);
                 cbMultiplexed.Checked = (WindowsPerScan != 0);
             }
         }

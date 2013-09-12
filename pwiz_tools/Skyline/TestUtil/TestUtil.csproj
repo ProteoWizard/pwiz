@@ -122,6 +122,7 @@
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
+    <Compile Include="MemoryProfiler.cs" />
     <Compile Include="MemoryStreamManager.cs" />
     <Compile Include="MovedDirectory.cs" />
     <Compile Include="PauseAndContinueForm.cs">

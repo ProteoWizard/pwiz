@@ -34,7 +34,6 @@ namespace pwiz.SkylineTestUtil
     [DeploymentItem("SkylineLog4Net.config")]
     public class AbstractUnitTest
     {
-        private static readonly Log LOG = new Log<AbstractUnitTest>();
         private static readonly Stopwatch STOPWATCH = new Stopwatch();
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -52,7 +51,9 @@ namespace pwiz.SkylineTestUtil
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
-            LOG.Info(TestContext.TestName + " started");
+            var log = new Log<AbstractUnitTest>();
+            log.Info(TestContext.TestName + " started");
+
             STOPWATCH.Restart();
         }
 
@@ -67,7 +68,8 @@ namespace pwiz.SkylineTestUtil
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();
 
-            LOG.Info(
+            var log = new Log<AbstractUnitTest>();
+            log.Info(
                 string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
                 STOPWATCH.ElapsedMilliseconds / 1000.0));
         }

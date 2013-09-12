@@ -210,7 +210,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
                 importPeptideSearchDlg.ClickNextButton();
             });
-            doc = WaitForDocumentChange(doc);
+            WaitForDocumentChange(doc);
 
             // We're on the "Import FASTA" page of the wizard.
             RunUI(() =>
@@ -221,8 +221,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Finish wizard and have empty proteins dialog come up. Only 1 out of the 10 proteins had a match.
             // Cancel the empty proteins dialog.
-            var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            RunUI(() =>
+            RunDlg<EmptyProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
             {
                 Assert.AreEqual(9, emptyProteinsDlg.EmptyProteins);
                 emptyProteinsDlg.CancelDialog();
@@ -231,22 +230,27 @@ namespace pwiz.SkylineTestFunctional
             // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
             using (new EmptyProteinGroupSetter(5))
             {
-                var discardNotice = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-                RunUI(() =>
+                RunUI(() => importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-9.fasta")));
+                RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, discardNotice =>
                 {
                     Assert.AreEqual(
                         string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, 9),
                         discardNotice.Message);
                     discardNotice.OkDialog();
                 });
+
+                // An error will appear because the spectrum file was empty.
+                var errorDlg = WaitForOpenForm<MessageDlg>();
+                RunUI(() =>
+                    {
+                        Assert.AreEqual(Resources.ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_,
+                            errorDlg.Message);
+                        errorDlg.OkDialog();
+                    });
+
+                RunUI(importPeptideSearchDlg.CancelDialog);
+                WaitForClosedForm(importPeptideSearchDlg);
             }
-            WaitForDocumentChange(doc);
-
-            // An error will appear because the spectrum file was empty.
-            var errorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(errorDlg.OkDialog);
-
-            WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());
         }

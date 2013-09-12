@@ -277,7 +277,6 @@
     </Compile>
     <Compile Include="Controls\Graphs\GraphHelper.cs" />
     <Compile Include="Controls\Graphs\HiLowMiddleErrorBarItem.cs" />
-    <Compile Include="Controls\Graphs\LibraryChromGraphItem.cs" />
     <Compile Include="Controls\Graphs\MeanErrorBarItem.cs" />
     <Compile Include="Controls\Graphs\GraphRegression.cs">
       <SubType>Form</SubType>
@@ -1348,7 +1347,6 @@
     <Compile Include="Util\Extensions\ActionUtil.cs" />
     <Compile Include="Util\FileSize.cs" />
     <Compile Include="Util\Install.cs" />
-    <Compile Include="Util\JetBrainsAnnotations.cs" />
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />

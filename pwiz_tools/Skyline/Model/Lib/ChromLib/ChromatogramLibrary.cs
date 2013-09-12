@@ -26,7 +26,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using NHibernate;
 using NHibernate.Criterion;
-using NHibernate.Transform;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.ChromLib.Data;

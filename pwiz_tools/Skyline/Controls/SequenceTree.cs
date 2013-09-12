@@ -20,9 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -887,7 +887,7 @@ namespace pwiz.Skyline.Controls
             if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
                 BeginEdit(true);
-                string keyChar = e.KeyChar.ToString(CultureInfo.CurrentCulture);
+                string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
                 if (IsKeyLocked(Keys.CapsLock))
                     keyChar = keyChar.ToLower();
                 SendKeys.Send(keyChar);

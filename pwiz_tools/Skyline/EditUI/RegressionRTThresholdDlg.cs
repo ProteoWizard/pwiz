@@ -18,8 +18,8 @@
  */
 using System;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.EditUI
             set
             {
                 _threshold = value;
-                textThreshold.Text = _threshold.ToString(CultureInfo.CurrentCulture);
+                textThreshold.Text = _threshold.ToString(LocalizationHelper.CurrentCulture);
             }
         }
 

@@ -110,7 +110,7 @@ namespace pwiz.Skyline.FileUI
                                                             WriteFeatures(dlg.FileName,
                                                                           resultsHandler,
                                                                           displayCalcs,
-                                                                          CultureInfo.CurrentCulture,
+                                                                          LocalizationHelper.CurrentCulture,
                                                                           checkBoxBestOnly.Checked,
                                                                           !checkBoxTargetsOnly.Checked,
                                                                           b));

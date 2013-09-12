@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
@@ -115,7 +114,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(95));
 
-                ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo.CurrentCulture);
+                ResultSet.WriteReportHelper(resultSet, separator, writer, LocalizationHelper.CurrentCulture);
             }
             writer.Flush();
             string csv = writer.ToString();

@@ -340,8 +340,10 @@ namespace pwiz.Skyline.Controls
         {
             // If we have nodes, then we have to draw them - and that means everything
             // about the node.
-            var backColorBrush = new SolidBrush(BackColor);
-            e.Graphics.FillRectangle(backColorBrush, ClientRectangle);
+            using (var backColorBrush = new SolidBrush(BackColor))
+            {
+                e.Graphics.FillRectangle(backColorBrush, ClientRectangle);
+            }
 
             // No painting beyond the background while updating, since it can cause
             // unexpected exceptions.  This used to happen during a node removal that

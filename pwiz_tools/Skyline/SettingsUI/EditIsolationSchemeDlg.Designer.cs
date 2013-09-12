@@ -59,14 +59,14 @@
             this.labelIsolationWidth = new System.Windows.Forms.Label();
             this.rbUseResultsData = new System.Windows.Forms.RadioButton();
             this.gridIsolationWindows = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.startDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.endDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.targetDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.startMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.endMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.labelDeconvPre = new System.Windows.Forms.Label();
             this.comboDeconvPre = new System.Windows.Forms.ComboBox();
+            this.colStart = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTarget = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStartMargin = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colEndMargin = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.gridIsolationWindows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.editIsolationWindowBindingSource)).BeginInit();
             this.SuspendLayout();
@@ -208,11 +208,11 @@
             this.gridIsolationWindows.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridIsolationWindows.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridIsolationWindows.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.startDataGridViewTextBoxColumn,
-            this.endDataGridViewTextBoxColumn,
-            this.targetDataGridViewTextBoxColumn,
-            this.startMarginDataGridViewTextBoxColumn,
-            this.endMarginDataGridViewTextBoxColumn});
+            this.colStart,
+            this.colEnd,
+            this.colTarget,
+            this.colStartMargin,
+            this.colEndMargin});
             this.gridIsolationWindows.DataSource = this.editIsolationWindowBindingSource;
             dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Window;
@@ -231,51 +231,7 @@
             dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridIsolationWindows.RowHeadersDefaultCellStyle = dataGridViewCellStyle8;
-            // 
-            // startDataGridViewTextBoxColumn
-            // 
-            this.startDataGridViewTextBoxColumn.DataPropertyName = "Start";
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle2.Format = "N4";
-            this.startDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle2;
-            resources.ApplyResources(this.startDataGridViewTextBoxColumn, "startDataGridViewTextBoxColumn");
-            this.startDataGridViewTextBoxColumn.Name = "startDataGridViewTextBoxColumn";
-            // 
-            // endDataGridViewTextBoxColumn
-            // 
-            this.endDataGridViewTextBoxColumn.DataPropertyName = "End";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle3.Format = "N4";
-            this.endDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle3;
-            resources.ApplyResources(this.endDataGridViewTextBoxColumn, "endDataGridViewTextBoxColumn");
-            this.endDataGridViewTextBoxColumn.Name = "endDataGridViewTextBoxColumn";
-            // 
-            // targetDataGridViewTextBoxColumn
-            // 
-            this.targetDataGridViewTextBoxColumn.DataPropertyName = "Target";
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle4.Format = "N4";
-            this.targetDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle4;
-            resources.ApplyResources(this.targetDataGridViewTextBoxColumn, "targetDataGridViewTextBoxColumn");
-            this.targetDataGridViewTextBoxColumn.Name = "targetDataGridViewTextBoxColumn";
-            // 
-            // startMarginDataGridViewTextBoxColumn
-            // 
-            this.startMarginDataGridViewTextBoxColumn.DataPropertyName = "StartMargin";
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle5.Format = "N4";
-            this.startMarginDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle5;
-            resources.ApplyResources(this.startMarginDataGridViewTextBoxColumn, "startMarginDataGridViewTextBoxColumn");
-            this.startMarginDataGridViewTextBoxColumn.Name = "startMarginDataGridViewTextBoxColumn";
-            // 
-            // endMarginDataGridViewTextBoxColumn
-            // 
-            this.endMarginDataGridViewTextBoxColumn.DataPropertyName = "EndMargin";
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle6.Format = "N4";
-            this.endMarginDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle6;
-            resources.ApplyResources(this.endMarginDataGridViewTextBoxColumn, "endMarginDataGridViewTextBoxColumn");
-            this.endMarginDataGridViewTextBoxColumn.Name = "endMarginDataGridViewTextBoxColumn";
+            this.gridIsolationWindows.RowHeadersVisible = false;
             // 
             // labelDeconvPre
             // 
@@ -289,6 +245,52 @@
             this.comboDeconvPre.FormattingEnabled = true;
             this.comboDeconvPre.Name = "comboDeconvPre";
             this.comboDeconvPre.SelectedIndexChanged += new System.EventHandler(this.comboDeconv_SelectedIndexChanged);
+            // 
+            // colStart
+            // 
+            this.colStart.DataPropertyName = "Start";
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle2.Format = "N4";
+            dataGridViewCellStyle2.NullValue = null;
+            this.colStart.DefaultCellStyle = dataGridViewCellStyle2;
+            resources.ApplyResources(this.colStart, "colStart");
+            this.colStart.Name = "colStart";
+            // 
+            // colEnd
+            // 
+            this.colEnd.DataPropertyName = "End";
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle3.Format = "N4";
+            this.colEnd.DefaultCellStyle = dataGridViewCellStyle3;
+            resources.ApplyResources(this.colEnd, "colEnd");
+            this.colEnd.Name = "colEnd";
+            // 
+            // colTarget
+            // 
+            this.colTarget.DataPropertyName = "Target";
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle4.Format = "N4";
+            this.colTarget.DefaultCellStyle = dataGridViewCellStyle4;
+            resources.ApplyResources(this.colTarget, "colTarget");
+            this.colTarget.Name = "colTarget";
+            // 
+            // colStartMargin
+            // 
+            this.colStartMargin.DataPropertyName = "StartMargin";
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle5.Format = "N4";
+            this.colStartMargin.DefaultCellStyle = dataGridViewCellStyle5;
+            resources.ApplyResources(this.colStartMargin, "colStartMargin");
+            this.colStartMargin.Name = "colStartMargin";
+            // 
+            // colEndMargin
+            // 
+            this.colEndMargin.DataPropertyName = "EndMargin";
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle6.Format = "N4";
+            this.colEndMargin.DefaultCellStyle = dataGridViewCellStyle6;
+            resources.ApplyResources(this.colEndMargin, "colEndMargin");
+            this.colEndMargin.Name = "colEndMargin";
             // 
             // EditIsolationSchemeDlg
             // 
@@ -361,5 +363,10 @@
         private System.Windows.Forms.Label labelDeconvolution;
         private System.Windows.Forms.Label labelDeconvPre;
         private System.Windows.Forms.ComboBox comboDeconvPre;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStart;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colEnd;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTarget;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStartMargin;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colEndMargin;
     }
 }

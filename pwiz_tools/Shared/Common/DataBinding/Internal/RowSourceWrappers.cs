@@ -52,7 +52,9 @@ namespace pwiz.Common.DataBinding.Internal
 
                 var contructor = wrapperType.GetConstructor(new[] { cloneableListType });
                 Debug.Assert(contructor != null);
+// ReSharper disable PossibleNullReferenceException
                 return (IRowSourceWrapper)contructor.Invoke(new object[] { items });
+// ReSharper restore PossibleNullReferenceException
             }
             return new RowSourceWrapper(items);
         }

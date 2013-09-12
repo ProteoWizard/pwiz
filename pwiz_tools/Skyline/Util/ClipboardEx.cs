@@ -113,6 +113,12 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static void Release()
+        {
+            Clear();
+            _dataObject = null;
+        }
+
         public static void SetText(string text)
         {
             if (_useSystemClipboard)

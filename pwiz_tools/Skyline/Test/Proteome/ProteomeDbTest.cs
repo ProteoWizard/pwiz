@@ -40,23 +40,24 @@ namespace pwiz.SkylineTest.Proteome
         [TestMethod]
         public void TestProteomeDb()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-
-            string fastaPath = testFilesDir.GetTestPath("high_ipi.Human.20060111.fasta");
-            string protDbPath = testFilesDir.GetTestPath("test.protdb");
-
-            ProteomeDb proteomeDb = ProteomeDb.CreateProteomeDb(protDbPath);
-            Enzyme trypsin = EnzymeList.GetDefault();
-            using (var reader = new StreamReader(fastaPath))
+            using (var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE))
             {
-                proteomeDb.AddFastaFile(reader, (msg, progress) => true);
-            }
-            proteomeDb.Digest(new ProteaseImpl(trypsin), (msg, progress) => true);
-            Digestion digestion = proteomeDb.GetDigestion(trypsin.Name);
-            var digestedProteins0 = digestion.GetProteinsWithSequencePrefix("EDGWVK", 100);
-            Assert.IsTrue(digestedProteins0.Count >= 1);
+                string fastaPath = testFilesDir.GetTestPath("high_ipi.Human.20060111.fasta");
+                string protDbPath = testFilesDir.GetTestPath("test.protdb");
 
-            testFilesDir.Dispose();
+                using (ProteomeDb proteomeDb = ProteomeDb.CreateProteomeDb(protDbPath))
+                {
+                    Enzyme trypsin = EnzymeList.GetDefault();
+                    using (var reader = new StreamReader(fastaPath))
+                    {
+                        proteomeDb.AddFastaFile(reader, (msg, progress) => true);
+                    }
+                    proteomeDb.Digest(new ProteaseImpl(trypsin), (msg, progress) => true);
+                    Digestion digestion = proteomeDb.GetDigestion(trypsin.Name);
+                    var digestedProteins0 = digestion.GetProteinsWithSequencePrefix("EDGWVK", 100);
+                    Assert.IsTrue(digestedProteins0.Count >= 1);
+                }
+            }
         }
     }
 }

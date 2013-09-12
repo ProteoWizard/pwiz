@@ -107,7 +107,7 @@ namespace pwiz.Skyline.FileUI
                                             broker => WriteChromatograms(filePath,
                                                                          broker,
                                                                          fileNames,
-                                                                         CultureInfo.CurrentCulture,
+                                                                         LocalizationHelper.CurrentCulture,
                                                                          _chromExtractors,
                                                                          _chromSources));
                     if (longWaitDlg.IsCanceled)

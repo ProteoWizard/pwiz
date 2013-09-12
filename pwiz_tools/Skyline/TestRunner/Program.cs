@@ -20,63 +20,174 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using log4net;
+using pwiz.Common.SystemUtil;
 using pwiz.Crawdad;
+using pwiz.SkylineTestUtil;
 
 namespace TestRunner
 {
     internal static class Program
     {
-        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll" };
+        private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
+        private static int _failureCount;
 
         [STAThread]
         static void Main(string[] args)
         {
+            SystemSleep.Disable();
+
             CrtDebugHeap.Init();
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
+            // Get current SVN revision info.
+            var startDate = DateTime.Now.ToShortDateString();
+            int revision = 0;
             try
             {
-                // Parse command line args and initialize default values.
-                const string commandLineOptions =
-                    "?;/?;-?;help;" +
-                    "test;skip;filter;" +
-                    "loop=0;repeat=1;random=on;offscreen=on;multi=1;" +
-                    "clipboardcheck=off;profile=off;vendors=on;" +
-                    "log=TestRunner.log;report=TestRunner.log";
-                var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
-
-                switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
+                string skylinePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
+                while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
+                    skylineDirectory = skylineDirectory.Parent;
+                if (skylineDirectory != null)
                 {
-                    case "?":
-                    case "/?":
-                    case "-?":
-                    case "help":
-                        Help();
-                        return;
+                    Process svn = new Process
+                        {
+                            StartInfo =
+                                {
+                                    UseShellExecute = false,
+                                    RedirectStandardOutput = true,
+                                    FileName = @"c:\Program Files (x86)\VisualSVN\bin\svn.exe",
+                                    Arguments = @"info -r HEAD " + skylineDirectory.FullName
+                                }
+                        };
+                    svn.Start();
+                    string svnOutput = svn.StandardOutput.ReadToEnd();
+                    svn.WaitForExit();
+                    var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
+                    revision = int.Parse(revisionString);
+                }
+            }
+// ReSharper disable EmptyGeneralCatchClause
+            catch
+// ReSharper restore EmptyGeneralCatchClause
+            {
+            }
 
-                    case "report":
-                        Report(commandLineArgs.ArgAsString("report"));
-                        return;
+
+            // Parse command line args and initialize default values.
+            const string commandLineOptions =
+                "?;/?;-?;help;" +
+                "test;skip;filter;" +
+                "loop=0;repeat=1;random=on;offscreen=on;multi=1;" +
+                "clipboardcheck=off;profile=off;vendors=on;culture=fr-FR,en-US;" +
+                "log=TestRunner.log;report=TestRunner.log;summary";
+            var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
+
+            switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
+            {
+                case "?":
+                case "/?":
+                case "-?":
+                case "help":
+                    Help();
+                    return;
+
+                case "report":
+                    Report(commandLineArgs.ArgAsString("report"));
+                    return;
+            }
+
+            Console.WriteLine("\n" + commandLineArgs.CommandLine);
+            Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
+
+            // Create log file.
+            var log = new StreamWriter(commandLineArgs.ArgAsString("log"));
+
+            int elapsedMinutes = 0;
+            int testCount = 0;
+            try
+            {
+                // Load list of tests.
+                var unfilteredTestList = LoadTestList(commandLineArgs);
+
+                // Filter test list.
+                var testList = unfilteredTestList;
+                if (commandLineArgs.HasArg("filter"))
+                {
+                    testList = new List<TestInfo>();
+                    var filterRanges = commandLineArgs.ArgAsString("filter").Split(',');
+                    foreach (var range in filterRanges)
+                    {
+                        var bounds = range.Split('-');
+                        if (bounds.Length < 1 || bounds.Length > 2)
+                        {
+                            throw new ArgumentException("Unrecognized filter parameter: {0}", range);
+                        }
+                        int low;
+                        if (!int.TryParse(bounds[0], out low))
+                        {
+                            throw new ArgumentException("Unrecognized filter parameter: {0}", range);
+                        }
+                        int high = low;
+                        if (bounds.Length == 2 && !int.TryParse(bounds[1], out high))
+                        {
+                            throw new ArgumentException("Unrecognized filter parameter: {0}", range);
+                        }
+                        for (var i = low-1; i <= high-1; i++)
+                        {
+                            testList.Add(unfilteredTestList[i]);
+                        }
+                    }
                 }
 
-                // Load list of tests.
-                var testList = LoadTestList(commandLineArgs);
-                if (testList.Count == 0)
+                testCount = testList.Count;
+                if (testCount == 0)
                 {
                     Console.WriteLine("No tests found");
                     return;
                 }
 
-                RunTests(testList, commandLineArgs);
+                var passes = commandLineArgs.ArgAsLong("loop");
+                var repeat = commandLineArgs.ArgAsLong("repeat");
+
+                // Pause before first test for profiling.
+                bool profiling = commandLineArgs.ArgAsBool("profile");
+                if (profiling)
+                {
+                    Console.WriteLine("\nRunning each test once to warm up memory...\n");
+                    RunTests(testList, unfilteredTestList, commandLineArgs, log, 1, 1);
+                    Console.WriteLine("\nTaking memory snapshot...\n");
+                    MemoryProfiler.Snapshot();
+                    if (passes == 0)
+                        passes = 1;
+                }
+
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+                RunTests(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
+
+                stopwatch.Stop();
+                elapsedMinutes = (int) (stopwatch.ElapsedMilliseconds/1000/60);
+
+                // Pause for profiling
+                if (profiling)
+                {
+                    Console.WriteLine("\nTaking second memory snapshot...\n");
+                    MemoryProfiler.Snapshot();
+                }
             }
             catch (Exception e)
             {
@@ -90,41 +201,79 @@ namespace TestRunner
                 }
             }
 
-//            Console.WriteLine("Press enter to continue...");
-//            Console.ReadLine();
+            // Display report.
+            log.Close();
+            Console.WriteLine("\n");
+            Report(commandLineArgs.ArgAsString("log"));
+
+            if (commandLineArgs.HasArg("summary"))
+            {
+                var summaryFile = commandLineArgs.ArgAsString("summary");
+                var sb = new StringBuilder();
+                if (!File.Exists(summaryFile))
+                    sb.AppendLine("Date,Revision,Run time (minutes),Number of tests,Number of failures,Managed memory,Unmanaged memory");
+
+                const double mb = 1024 * 1024;
+                var managedMemory = (int) Math.Round(GC.GetTotalMemory(true) / mb);
+                var totalMemory = (int) Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / mb);
+
+                sb.Append(startDate);
+                sb.Append(",");
+                sb.Append(revision);
+                sb.Append(",");
+                sb.Append(elapsedMinutes);
+                sb.Append(",");
+                sb.Append(testCount);
+                sb.Append(",");
+                sb.Append(_failureCount);
+                sb.Append(",");
+                sb.Append(managedMemory);
+                sb.Append(",");
+                sb.Append(totalMemory);
+                sb.AppendLine();
+
+                var originalSummaryFile = summaryFile;
+                for (int i = 1; i < 1000; i++)
+                {
+                    try
+                    {
+                        File.AppendAllText(summaryFile, sb.ToString());
+                        break;
+                    }
+// ReSharper disable EmptyGeneralCatchClause
+                    catch
+// ReSharper restore EmptyGeneralCatchClause
+                    {
+                    }
+                    summaryFile = Path.GetFileNameWithoutExtension(originalSummaryFile) + "-" + i + Path.GetExtension(originalSummaryFile);
+                }
+            }
+
+            SystemSleep.Enable();
+
+            // Ungraceful exit to avoid unwinding errors
+            Process.GetCurrentProcess().Kill();
+        }
+
+        private static Assembly SkylineAssembly
+        {
+            get
+            {
+                var skylinePath = GetAssemblyPath("Skyline-daily.exe");
+                if (!File.Exists(skylinePath))
+                    skylinePath = GetAssemblyPath("Skyline.exe");
+                var skyline = Assembly.LoadFrom(skylinePath);
+                return skyline;
+            }
         }
 
         // Run all test passes.
-        private static void RunTests(List<TestInfo> testList, CommandLineArgs commandLineArgs)
+        private static void RunTests(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
         {
-            var passes = commandLineArgs.ArgAsLong("loop");
             var randomOrder = commandLineArgs.ArgAsBool("random");
-            var repeat = commandLineArgs.ArgAsLong("repeat");
             var process = Process.GetCurrentProcess();
             
-            Console.WriteLine("\n" + commandLineArgs.CommandLine);
-            Console.WriteLine("Process: {0}\n", process.Id);
-
-            if (commandLineArgs.ArgAsBool("clipboardcheck"))
-            {
-                Console.WriteLine("Checking clipboard use for {0} tests...\n", testList.Count);
-                passes = 1;
-                randomOrder = false;
-            }
-            else if (passes == 0)
-            {
-                Console.WriteLine("Running {0} tests forever...\n", testList.Count);
-            }
-            else
-            {
-                Console.WriteLine("Running {0} tests {1} times each...\n", testList.Count, passes);
-            }
-
-            var skylinePath = GetAssemblyPath("Skyline-daily.exe");
-            if (!File.Exists(skylinePath))
-                skylinePath = GetAssemblyPath("Skyline.exe");
-            var skyline = Assembly.LoadFrom(skylinePath);
-            var program = skyline.GetType("pwiz.Skyline.Program");
+            var program = SkylineAssembly.GetType("pwiz.Skyline.Program");
             program.GetMethod("set_StressTest").Invoke(null, new object[] { true });
             program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { commandLineArgs.ArgAsBool("offscreen") });
             program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !commandLineArgs.ArgAsBool("vendors") });
@@ -132,9 +281,6 @@ namespace TestRunner
             program.GetMethod("set_UnitTestTimeoutMultiplier").Invoke(null, new object[] { (int)commandLineArgs.ArgAsLong("multi") });
             program.GetMethod("get_Name").Invoke(null, null);
             program.GetMethod("Init").Invoke(null, null);
-
-            // Create log file.
-            var log = new StreamWriter(commandLineArgs.ArgAsString("log"));
 
             // Get test results directory and provide it to tests via TestContext.
             var testDirectoryCount = 1;
@@ -146,38 +292,23 @@ namespace TestRunner
             }
             var context = new object[] { testContext };
 
-            // Filter test list.
-            if (commandLineArgs.HasArg("filter"))
+            if (commandLineArgs.ArgAsBool("clipboardcheck"))
             {
-                var filterList = new List<TestInfo>();
-                var filterRanges = commandLineArgs.ArgAsString("filter").Split(',');
-                foreach (var range in filterRanges)
-                {
-                    var bounds = range.Split('-');
-                    if (bounds.Length < 1 || bounds.Length > 2)
-                    {
-                        throw new ArgumentException("Unrecognized filter parameter: {0}", range);
-                    }
-                    int low;
-                    if (!int.TryParse(bounds[0], out low))
-                    {
-                        throw new ArgumentException("Unrecognized filter parameter: {0}", range);
-                    }
-                    int high = low;
-                    if (bounds.Length == 2 && !int.TryParse(bounds[1], out high))
-                    {
-                        throw new ArgumentException("Unrecognized filter parameter: {0}", range);
-                    }
-                    for (var i = low; i <= high; i++)
-                    {
-                        filterList.Add(testList[i]);
-                    }
-                }
-                testList = filterList;
+                Console.WriteLine("Checking clipboard use for {0} tests...\n", testList.Count);
+                loopCount = 1;
+                randomOrder = false;
+            }
+            else
+            {
+                Console.WriteLine("Running {0}{1} tests{2}{3}...\n",
+                    testList.Count,
+                    testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
+                    (loopCount == 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
+                    (repeat <= 1) ? "" : ", repeated " + repeat + " times each");
             }
 
             // Initialize variables for all test passes.
-            var failureCount = 0;
+            _failureCount = 0;
             var errorList = new Dictionary<string, int>();
             var failureList = new Dictionary<string, int>();
             var random = new Random();
@@ -187,33 +318,21 @@ namespace TestRunner
 
             foreach (var testInfo in testList)
             {
-                failureList[testInfo._testMethod.Name] = 0;
+                failureList[testInfo.TestMethod.Name] = 0;
             }
 
-            // Run all test passes.
-            for (var pass = 1; pass <= passes || passes == 0; pass++)
-            {
-                // Pause before first test for profiling.
-                if (pass == 2 || pass % 5 == 0)
-                {
-                    bool profiling = commandLineArgs.ArgAsBool("profile");
-                    if (profiling)
-                    {
-                        Console.WriteLine("\nPausing for 10 seconds to allow memory snapshot...\n");
-                        Thread.Sleep(10 * 1000);
-                    }
-                }
+            // Disable logging.
+            LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
 
-                if (pass == passes)
-                {
-                    // Pause for profiling
-                    if (commandLineArgs.ArgAsBool("profile"))
-                    {
-                        GC.Collect();
-                        Console.WriteLine("\nSleeping to allow memory profiling...\n");
-                        Thread.Sleep(24 * 60 * 60 * 1000);    // 24 hours
-                    }                    
-                }
+            // Get list of cultures
+            var cultures = commandLineArgs.ArgAsString("culture").Split(',');
+            var saveCulture = Thread.CurrentThread.CurrentCulture;
+            var saveUICulture = Thread.CurrentThread.CurrentUICulture;
+
+            // Run all test passes.
+            for (var pass = 1; pass <= loopCount || loopCount == 0; pass++)
+            {
+                var culture = new CultureInfo(cultures[(pass-1) % cultures.Length]);
 
                 // Create test order for this pass.
                 testOrder.AddRange(testList.Select((t, i) => i));
@@ -237,11 +356,16 @@ namespace TestRunner
                     for (int repeatCounter = 0; repeatCounter < repeat; repeatCounter++)
                     {
                         // Record information for this test.
-                        var testName = test._testMethod.Name;
+                        var testName = test.TestMethod.Name;
                         var time = DateTime.Now;
-                        var info = string.Format("[{0}:{1}] {2,3}.{3,-3} {4,-40}  ",
-                                                 time.Hour.ToString("D2"), time.Minute.ToString("D2"), pass, testNumber,
-                                                 testName);
+                        var info = string.Format(
+                            "[{0}:{1}] {2,3}.{3,-3} {4,-46} ({5}) ",
+                            time.Hour.ToString("D2"),
+                            time.Minute.ToString("D2"),
+                            pass,
+                            testNumber,
+                            testName,
+                            culture);
                         Console.Write(info);
                         log.Write(info);
                         log.Flush();
@@ -264,13 +388,17 @@ namespace TestRunner
                         }
 
                         // Create test class.
-                        var testObject = Activator.CreateInstance(test._testClass);
+                        var testObject = Activator.CreateInstance(test.TestClassType);
 
                         // Set the TestContext.
-                        if (test._setTestContext != null)
+                        if (test.SetTestContext != null)
                         {
-                            test._setTestContext.Invoke(testObject, context);
+                            test.SetTestContext.Invoke(testObject, context);
                         }
+
+                        // Switch to selected culture.
+                        LocalizationHelper.CurrentCulture = culture;
+                        LocalizationHelper.InitThread();
 
                         // Run the test and time it.
                         Exception exception = null;
@@ -278,7 +406,13 @@ namespace TestRunner
                         stopwatch.Start();
                         try
                         {
-                            test._testMethod.Invoke(testObject, null);
+                            if (test.TestInitialize != null)
+                                test.TestInitialize.Invoke(testObject, null);
+
+                            test.TestMethod.Invoke(testObject, null);
+
+                            if (test.TestCleanup != null)
+                                test.TestCleanup.Invoke(testObject, null);
                         }
                         catch (Exception e)
                         {
@@ -286,22 +420,30 @@ namespace TestRunner
                         }
                         stopwatch.Stop();
 
-                        var managedMemory = GC.GetTotalMemory(true)/mb;
+                        // Restore culture.
+                        Thread.CurrentThread.CurrentCulture = saveCulture;
+                        Thread.CurrentThread.CurrentUICulture = saveUICulture;
+
+                        var managedMemory = GC.GetTotalMemory(true) / mb;
                         process.Refresh();
                         var totalMemory = process.PrivateMemorySize64 / mb;
 
                         if (exception == null)
                         {
                             // Test succeeded.
-                            info = string.Format("{0,3} failures, {1:0.0}/{2:0.0} MB, {3} sec.", failureCount, managedMemory, totalMemory,
-                                                 stopwatch.ElapsedMilliseconds/1000);
+                            info = string.Format(
+                                "{0,3} failures, {1:0.0}/{2:0.0} MB, {3} sec.", 
+                                _failureCount, 
+                                managedMemory, 
+                                totalMemory,
+                                stopwatch.ElapsedMilliseconds/1000);
                             Console.WriteLine(info);
                             log.WriteLine(info);
                         }
                         else
                         {
                             // Save failure information.
-                            failureCount++;
+                            _failureCount++;
                             failureList[testName]++;
                             info = testName + " {0} failures ({1:0.##}%)\n" +
                                    exception.InnerException.Message + "\n" +
@@ -316,18 +458,13 @@ namespace TestRunner
                             }
                             Console.WriteLine("*** FAILED {0:0.#}% ***", 100.0*failureList[testName]/pass);
                             log.WriteLine("{0,3} failures, {1:0.0}/{2:0.0} MB\n*** failure {3}\n{4}\n{5}\n***",
-                                          failureCount, managedMemory, totalMemory, errorList[info], exception.InnerException.Message,
+                                          _failureCount, managedMemory, totalMemory, errorList[info], exception.InnerException.Message,
                                           exception.InnerException.StackTrace);
                         }
                         log.Flush();
                     }
                 }
             }
-
-            // Display report.
-            log.Close();
-            Console.WriteLine("\n");
-            Report(commandLineArgs.ArgAsString("log"));
         }
 
         private static string SetTestDir(TestContext testContext, int testDirectoryCount, Process process)
@@ -358,31 +495,19 @@ namespace TestRunner
             // Find tests in the test dlls.
             foreach (var testDll in TEST_DLLS)
             {
-                var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
-                var types = assembly.GetTypes();
-
-                foreach (var type in types)
+                foreach (var testInfo in GetTestInfos(testDll))
                 {
-                    if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
+                    var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
+                    if (testNames.Count == 0 || testNames.Contains(testName) || testNames.Contains(testInfo.TestMethod.Name))
                     {
-                        var methods = type.GetMethods();
-                        foreach (var method in methods)
+                        if (!skipList.Contains(testName) && !skipList.Contains(testInfo.TestMethod.Name))
                         {
-                            var testName = type.Name + "." + method.Name;
-                            if (testNames.Contains(testName) || testNames.Contains(method.Name) ||
-                                (testNames.Count == 0 && HasAttribute(method, "TestMethodAttribute")))
+                            if (testNames.Count == 0)
+                                testList.Add(testInfo);
+                            else
                             {
-                                if (!skipList.Contains(testName) && !skipList.Contains(method.Name))
-                                {
-                                    var testInfo = new TestInfo(type, method);
-                                    if (testNames.Count == 0)
-                                        testList.Add(testInfo);
-                                    else
-                                    {
-                                        string lookup = testNames.Contains(testName) ? testName : method.Name;
-                                        testArray[testDict[lookup]] = testInfo;
-                                    }
-                                }
+                                string lookup = testNames.Contains(testName) ? testName : testInfo.TestMethod.Name;
+                                testArray[testDict[lookup]] = testInfo;
                             }
                         }
                     }
@@ -390,13 +515,39 @@ namespace TestRunner
             }
             if (testNames.Count > 0)
                 testList.AddRange(testArray.Where(testInfo => testInfo != null));
-            else
-            {
-                // Sort tests alphabetically.
-                testList.Sort((x, y) => String.CompareOrdinal(x._testMethod.Name, y._testMethod.Name));
-            }
+                
+            // Sort tests alphabetically.
+            testList.Sort((x, y) => String.CompareOrdinal(x.TestMethod.Name, y.TestMethod.Name));
 
             return testList;
+        }
+
+        private static IEnumerable<TestInfo> GetTestInfos(string testDll)
+        {
+            var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
+            var types = assembly.GetTypes();
+
+            foreach (var type in types)
+            {
+                if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
+                {
+                    MethodInfo testInitializeMethod = null;
+                    MethodInfo testCleanupMethod = null;
+                    var methods = type.GetMethods();
+                    foreach (var method in methods)
+                    {
+                        if (HasAttribute(method, "TestInitializeAttribute"))
+                            testInitializeMethod = method;
+                        if (HasAttribute(method, "TestCleanupAttribute"))
+                            testCleanupMethod = method;
+                    }
+                    foreach (var method in methods)
+                    {
+                        if (HasAttribute(method, "TestMethodAttribute"))
+                            yield return new TestInfo(type, method, testInitializeMethod, testCleanupMethod);
+                    }
+                }
+            }
         }
 
         private static string GetAssemblyPath(string assembly)
@@ -406,7 +557,7 @@ namespace TestRunner
             return Path.Combine(runnerExeDirectory, assembly);
         }
 
-        public static string GetProjectPath(string relativePath)
+        private static string GetProjectPath(string relativePath)
         {
             for (string directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                  directory != null && directory.Length > 10;
@@ -455,6 +606,11 @@ namespace TestRunner
                         }
                     }
                 }
+                else if (name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    foreach (var testInfo in GetTestInfos(name))
+                        outputList.Add(testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name);
+                }
                 else
                 {
                     outputList.Add(name);
@@ -475,7 +631,7 @@ namespace TestRunner
             var test = "";
             var managedMemory = 0.0;
             var totalMemory = 0.0;
-            var pass = 0.0;
+            int pass = 1;
 
             while (true)
             {
@@ -513,14 +669,14 @@ namespace TestRunner
                     var lastManagedMemory = managedMemory;
                     var lastTotalMemory = totalMemory;
 
-                    pass = Math.Truncate(Double.Parse(parts[1]));
+                    pass = int.Parse(parts[1].Split('.')[0]);
                     var testParts = parts[2].Split('.');
                     test = testParts[testParts.Length - 1];
-                    managedMemory = Double.Parse(parts[5].Split('/')[0]);
-                    totalMemory = Double.Parse(parts[5].Split('/')[1]);
+                    managedMemory = Double.Parse(parts[6].Split('/')[0]);
+                    totalMemory = Double.Parse(parts[6].Split('/')[1]);
 
                     // Only collect memory leak information starting on pass 2.
-                    if (pass < 2.0)
+                    if (pass < 2)
                     {
                         managedMemoryUse[test] = new List<double>();
                         totalMemoryUse[test] = new List<double>();
@@ -621,6 +777,11 @@ Here is a list of recognized arguments:
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
                                     from flashing on the desktop during a test run.
 
+    culture=[culture1,culture2,...] Choose a random culture from this list before executing
+                                    each test.  Default value is ""en-US,fr-FR"".  You can
+                                    specify just one culture if you want all tests to run
+                                    in that culture.
+
     multi=[n]                       Multiply timeouts in unit tests by a factor of ""n"".
                                     This is necessary when running multiple instances of 
                                     TestRunner simultaneously.
@@ -658,15 +819,19 @@ Here is a list of recognized arguments:
 
         private class TestInfo
         {
-            public readonly Type _testClass;
-            public readonly MethodInfo _testMethod;
-            public readonly MethodInfo _setTestContext;
+            public readonly Type TestClassType;
+            public readonly MethodInfo TestMethod;
+            public readonly MethodInfo SetTestContext;
+            public readonly MethodInfo TestInitialize;
+            public readonly MethodInfo TestCleanup;
 
-            public TestInfo(Type testClass, MethodInfo testMethod)
+            public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
             {
-                _testClass = testClass;
-                _testMethod = testMethod;
-                _setTestContext = testClass.GetMethod("set_TestContext");
+                TestClassType = testClass;
+                TestMethod = testMethod;
+                SetTestContext = testClass.GetMethod("set_TestContext");
+                TestInitialize = testInitializeMethod;
+                TestCleanup = testCleanupMethod;
             }
         }
 

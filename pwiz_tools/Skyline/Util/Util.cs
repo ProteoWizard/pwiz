@@ -29,6 +29,7 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -1526,7 +1527,7 @@ namespace pwiz.Skyline.Util
 
         public static string NullableDoubleToString(double? d)
         {
-            return d.HasValue ? d.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
+            return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
         }
 
         /// <summary>

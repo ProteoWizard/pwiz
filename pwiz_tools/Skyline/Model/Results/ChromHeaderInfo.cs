@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.SystemUtil;
 using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -574,7 +575,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Product.ToString(CultureInfo.CurrentCulture);
+            return Product.ToString(LocalizationHelper.CurrentCulture);
         }
 
         #endregion

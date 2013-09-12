@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 using System;
-using System.Globalization;
 using System.IO;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 
 namespace pwiz.SkylineTestUtil
@@ -64,8 +64,8 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 return !Program.NoVendorReaders &&
-                    Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator) &&
-                    Equals(",", CultureInfo.CurrentCulture.TextInfo.ListSeparator);
+                    Equals(".", LocalizationHelper.OriginalCulture.NumberFormat.NumberDecimalSeparator) &&
+                    Equals(",", LocalizationHelper.OriginalCulture.TextInfo.ListSeparator);
             }
         }
 

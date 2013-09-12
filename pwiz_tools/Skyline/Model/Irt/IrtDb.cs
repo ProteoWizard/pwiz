@@ -278,35 +278,13 @@ namespace pwiz.Skyline.Model.Irt
             return GetIrtDb(path, null);
         }
 
-        private static readonly Dictionary<string, ISessionFactory> DICT_PATH_SESSION_FACTORY =
-            new Dictionary<string, ISessionFactory>();
-
         /// <summary>
         /// Maintains a single string globally for each path, in order to keep from
         /// having two threads accessing the same database at the same time.
         /// </summary>
         private static ISessionFactory GetSessionFactory(string path)
         {
-            lock (DICT_PATH_SESSION_FACTORY)
-            {
-                ISessionFactory sessionFactory;
-                if (!DICT_PATH_SESSION_FACTORY.TryGetValue(path, out sessionFactory))
-                {
-                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, typeof(IrtDb), false);
-                    DICT_PATH_SESSION_FACTORY.Add(path, sessionFactory);
-                }
-                return sessionFactory;
-            }
-        }
-
-        public static void ClearCache()
-        {
-            lock (DICT_PATH_SESSION_FACTORY)
-            {
-                foreach (var sessionFactory in DICT_PATH_SESSION_FACTORY.Values)
-                    sessionFactory.Dispose();
-                DICT_PATH_SESSION_FACTORY.Clear();
-            }
+            return SessionFactoryFactory.CreateSessionFactory(path, typeof(IrtDb), false);
         }
 
         //Throws DatabaseOpeningException
@@ -329,10 +307,12 @@ namespace pwiz.Skyline.Model.Irt
                 {
                     //Check for a valid SQLite file and that it has our schema
                     //Allow only one thread at a time to read from the same path
-                    var sessionFactory = GetSessionFactory(path);
-                    lock (sessionFactory)
+                    using (var sessionFactory = GetSessionFactory(path))
                     {
-                        return new IrtDb(path, sessionFactory).Load(loadMonitor, status);
+                        lock (sessionFactory)
+                        {
+                            return new IrtDb(path, sessionFactory).Load(loadMonitor, status);
+                        }
                     }
                 }
                 catch (UnauthorizedAccessException)

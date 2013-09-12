@@ -124,6 +124,7 @@
     </Compile>
     <Compile Include="SystemUtil\Immutable.cs" />
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
+    <Compile Include="SystemUtil\LocalizationHelper.cs" />
     <Compile Include="SystemUtil\MustDispose.cs" />
     <Compile Include="SystemUtil\PathEx.cs" />
     <Compile Include="SystemUtil\ProcessStreamReader.cs" />

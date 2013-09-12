@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -246,13 +246,13 @@ namespace pwiz.SkylineTestTutorial
             {
                 double dotpExpect = Math.Round(Statistics.AngleToNormalizedContrastAngle(0.78), 2);  // 0.57
                 AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
-                    dotpExpect.ToString(CultureInfo.CurrentCulture));
+                    dotpExpect.ToString(LocalizationHelper.CurrentCulture));
                 SkylineWindow.EditDelete();
 
                 dotpExpect = 0.34; // Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
-                    dotpExpect.ToString(CultureInfo.CurrentCulture));
+                    dotpExpect.ToString(LocalizationHelper.CurrentCulture));
                 SkylineWindow.EditDelete();
 
                 PeptideTreeNode nodePep;

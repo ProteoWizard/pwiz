@@ -18,8 +18,8 @@
  */
 using System;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
@@ -33,8 +33,8 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            textLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString(CultureInfo.CurrentCulture);
-            textFontSize.Text = Settings.Default.ChromatogramFontSize.ToString(CultureInfo.CurrentCulture);
+            textLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString(LocalizationHelper.CurrentCulture);
+            textFontSize.Text = Settings.Default.ChromatogramFontSize.ToString(LocalizationHelper.CurrentCulture);
 
             if (Settings.Default.ChromatogramTimeRange == 0)
             {
@@ -43,10 +43,10 @@ namespace pwiz.Skyline.EditUI
             }
 
             cbRelative.Checked = Settings.Default.ChromatogramTimeRangeRelative;
-            textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString(CultureInfo.CurrentCulture);
+            textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString(LocalizationHelper.CurrentCulture);
 
             if (Settings.Default.ChromatogramMaxIntensity != 0)
-                textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(CultureInfo.CurrentCulture);
+                textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(LocalizationHelper.CurrentCulture);
             cbHideOverlappingLabels.Checked = !Settings.Default.AllowLabelOverlap;
         }
 

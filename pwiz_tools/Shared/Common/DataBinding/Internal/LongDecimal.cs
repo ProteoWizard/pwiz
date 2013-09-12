@@ -18,7 +18,7 @@
  */
 
 using System;
-using System.Globalization;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -50,7 +50,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
         public override string ToString()
         {
-            return _doubleValue.ToString(CultureInfo.CurrentCulture);
+            return _doubleValue.ToString(LocalizationHelper.CurrentCulture);
         }
         public override int GetHashCode()
         {

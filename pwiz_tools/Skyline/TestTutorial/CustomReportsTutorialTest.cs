@@ -18,9 +18,9 @@
  */
 
 using System.Collections.Generic;
-using System.Globalization;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -374,7 +374,7 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 
-            FindNode((564.7746).ToString(CultureInfo.CurrentCulture) + "++");
+            FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
             RunUI(() =>
                       {

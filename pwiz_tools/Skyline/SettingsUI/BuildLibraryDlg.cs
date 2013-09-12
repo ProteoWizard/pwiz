@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -78,7 +77,7 @@ namespace pwiz.Skyline.SettingsUI
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
             comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
-            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(CultureInfo.CurrentCulture);
+            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(LocalizationHelper.CurrentCulture);
             textAuthority.Text = Settings.Default.LibraryAuthority;
 
             cbFilter.Checked = Settings.Default.LibraryFilterDocumentPeptides;
@@ -363,8 +362,8 @@ namespace pwiz.Skyline.SettingsUI
 
                     return dlg.FileNames;
                 }
+                return null;
             }
-            return null;
         }
 
         private void btnAddDirectory_Click(object sender, EventArgs e)
@@ -620,7 +619,7 @@ namespace pwiz.Skyline.SettingsUI
                 return (double.TryParse(textCutoff.Text, out cutoff) ? cutoff : 0);
             }
 
-            set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public string LibraryAuthority

@@ -708,19 +708,34 @@
   <data name="gridIsolationWindows.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="startDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
+  <metadata name="colStart.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colStart.HeaderText" xml:space="preserve">
     <value>Start</value>
   </data>
-  <data name="endDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
+  <metadata name="colEnd.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colEnd.HeaderText" xml:space="preserve">
     <value>End</value>
   </data>
-  <data name="targetDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
+  <metadata name="colTarget.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colTarget.HeaderText" xml:space="preserve">
     <value>Target</value>
   </data>
-  <data name="startMarginDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
+  <metadata name="colStartMargin.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colStartMargin.HeaderText" xml:space="preserve">
     <value>Start margin</value>
   </data>
-  <data name="endMarginDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
+  <metadata name="colEndMargin.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colEndMargin.HeaderText" xml:space="preserve">
     <value>End margin</value>
   </data>
   <metadata name="editIsolationWindowBindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -1261,6 +1276,36 @@
   </data>
   <data name="&gt;&gt;editIsolationWindowBindingSource.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colStart.Name" xml:space="preserve">
+    <value>colStart</value>
+  </data>
+  <data name="&gt;&gt;colStart.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colEnd.Name" xml:space="preserve">
+    <value>colEnd</value>
+  </data>
+  <data name="&gt;&gt;colEnd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colTarget.Name" xml:space="preserve">
+    <value>colTarget</value>
+  </data>
+  <data name="&gt;&gt;colTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colStartMargin.Name" xml:space="preserve">
+    <value>colStartMargin</value>
+  </data>
+  <data name="&gt;&gt;colStartMargin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colEndMargin.Name" xml:space="preserve">
+    <value>colEndMargin</value>
+  </data>
+  <data name="&gt;&gt;colEndMargin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditIsolationSchemeDlg</value>

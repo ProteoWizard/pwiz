@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -157,7 +158,7 @@ namespace pwiz.Skyline.Model
             const string pluses = "++++"; // Not L10N
             return charge < 5
                 ? pluses.Substring(0, Math.Min(charge, pluses.Length))
-                : string.Format("{0} +{1}", CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
+                : string.Format("{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
         }
 
         public static string GetMassIndexText(int massIndex)
@@ -230,7 +231,7 @@ namespace pwiz.Skyline.Model
 
         public string FragmentIonName
         {
-            get { return GetFragmentIonName(CultureInfo.CurrentCulture); }
+            get { return GetFragmentIonName(LocalizationHelper.CurrentCulture); }
         }
 
         public string GetFragmentIonName(CultureInfo cultureInfo)

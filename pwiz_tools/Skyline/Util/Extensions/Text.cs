@@ -21,6 +21,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util.Extensions
@@ -57,7 +58,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static char CsvSeparator
         {
-            get { return GetCsvSeparator(CultureInfo.CurrentCulture); }
+            get { return GetCsvSeparator(LocalizationHelper.CurrentCulture); }
         }
 
         /// <summary>

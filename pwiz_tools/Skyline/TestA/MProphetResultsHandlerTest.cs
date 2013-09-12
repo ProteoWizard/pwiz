@@ -112,13 +112,13 @@ namespace pwiz.SkylineTestA
             AssertEx.FileEquals(mProphetActual, mProphetExpected);
 
             // 4. Export mProphet -> Import Peak Boundaries leads to same result as reintegrate
-            var peakBoundaryImporter = new PeakBoundaryImporter(docNew);
-            long lineCount = Helpers.CountLinesInFile(mProphetActual);
-            using (var reader = new StreamReader(mProphetActual))
+            //var peakBoundaryImporter = new PeakBoundaryImporter(docNew);
+            Helpers.CountLinesInFile(mProphetActual);
+            using (new StreamReader(mProphetActual))
             {
                 //peakBoundaryImporter.Import(reader, null, lineCount);
             }
-            var docImport = peakBoundaryImporter.Document;
+            //var docImport = peakBoundaryImporter.Document;
             //Assert.AreSame(docNew, docImport);
             // TODO: import peak boundaries needs to accept mProphet output before this can be activated
 

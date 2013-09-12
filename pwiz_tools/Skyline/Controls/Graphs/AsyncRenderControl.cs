@@ -20,6 +20,7 @@ using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using Timer = System.Windows.Forms.Timer;
 
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly Thread _backgroundRenderThread;
         private readonly AutoResetEvent _startBackgroundRender = new AutoResetEvent(false);
 
-        private static readonly Log LOG = new Log<AsyncRenderControl>();
+        //private static readonly Log LOG = new Log<AsyncRenderControl>();
 
         public AsyncRenderControl()
         {
@@ -135,12 +136,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Call derived class to render the bitmap.
                     Render(_lastWidth, _lastHeight, forceRender && IsVisible, ref _renderedBitmap);
                 }
-                catch (Exception exception)
+// ReSharper disable EmptyGeneralCatchClause
+                catch (Exception)
+// ReSharper restore EmptyGeneralCatchClause
                 {
                     // If we don't catch the exception in this background thread, Visual Studio
                     // kills a unit test without any explanation.  Resharper and TestRunner just
                     // ignore the problem.
-                    LOG.Error("Exception in async renderer", exception);    // Not L10N
+                    //LOG.Error("Exception in async renderer", exception);    // Not L10N
                 }
             }
         }

@@ -63,7 +63,9 @@ namespace pwiz.Common.DataBinding.RowSources
                 }
                 else
                 {
+// ReSharper disable SuspiciousTypeConversion.Global
                     var bindingList = SourceList as IBindingList;
+// ReSharper restore SuspiciousTypeConversion.Global
                     if (bindingList != null)
                     {
                         bindingList.ListChanged += WrapListChangedEventHandler(value);

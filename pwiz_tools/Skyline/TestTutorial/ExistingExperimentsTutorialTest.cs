@@ -17,12 +17,11 @@
  * limitations under the License.
  */
 
-using System.Globalization;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -189,7 +188,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.RemovePeak(SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int)SrmDocument.Level.TransitionGroups),
                 ((TransitionGroupTreeNode)selNode.Parent).DocNode, selNode.DocNode);
                 Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.StateImageIndex,
-                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains((0.24).ToString(CultureInfo.CurrentCulture)));
+                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains((0.24).ToString(LocalizationHelper.CurrentCulture)));
             });
 
             // Adjusting Peak Boundaries to Exclude Interference, p. 14.
@@ -394,11 +393,11 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p28.view"));
             PauseForScreenShot();
 
-            FindNode((564.7746).ToString(CultureInfo.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
+            FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             PauseForScreenShot();
 
             RunUI(SkylineWindow.ExpandPeptides);
-            string hgflprLight = (363.7059).ToString(CultureInfo.CurrentCulture) + "++";  // HGFLPR - Not L10N
+            string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
             PauseForScreenShot();
 
@@ -560,8 +559,8 @@ namespace pwiz.SkylineTestTutorial
                 PeptideTreeNode selNode = ((PeptideTreeNode)SkylineWindow.SequenceTree.SelectedNode);
                 DocNode[] choices = selNode.GetChoices(true).ToArray();
                 Assert.IsTrue(choices.Contains(node =>
-                    ((TransitionGroupDocNode)node).PrecursorMz.ToString(CultureInfo.CurrentCulture)
-                        .Contains(expectedPrecursorMz.ToString(CultureInfo.CurrentCulture))));
+                    ((TransitionGroupDocNode)node).PrecursorMz.ToString(LocalizationHelper.CurrentCulture)
+                        .Contains(expectedPrecursorMz.ToString(LocalizationHelper.CurrentCulture))));
                 selNode.Pick(choices, false, false);
             });
         }

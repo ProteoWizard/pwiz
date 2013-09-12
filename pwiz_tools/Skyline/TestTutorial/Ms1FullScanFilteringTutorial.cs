@@ -18,9 +18,9 @@
  */
 
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -394,7 +394,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 dlg.MinPeptides = "1"; // Not L10N
                 const double minPeakFoundRatio = 0.1;
-                dlg.MinPeakFoundRatio = minPeakFoundRatio.ToString(CultureInfo.CurrentCulture);
+                dlg.MinPeakFoundRatio = minPeakFoundRatio.ToString(LocalizationHelper.CurrentCulture);
                 dlg.OkDialog();
             });
 
