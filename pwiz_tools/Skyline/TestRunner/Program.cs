@@ -33,7 +33,7 @@ namespace TestRunner
 {
     internal static class Program
     {
-        private static readonly string[] TEST_DLLS = {"TestTutorial.dll"};
+        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll" };
 
         [STAThread]
         static void Main(string[] args)
