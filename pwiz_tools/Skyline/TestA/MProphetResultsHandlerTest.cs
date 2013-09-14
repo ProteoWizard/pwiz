@@ -112,15 +112,17 @@ namespace pwiz.SkylineTestA
             AssertEx.FileEquals(mProphetActual, mProphetExpected);
 
             // 4. Export mProphet -> Import Peak Boundaries leads to same result as reintegrate
-            //var peakBoundaryImporter = new PeakBoundaryImporter(docNew);
-            Helpers.CountLinesInFile(mProphetActual);
-            using (new StreamReader(mProphetActual))
+            var resultsHandlerQAll = new MProphetResultsHandler(docOriginal, peakScoringModel);
+            resultsHandlerQAll.ScoreFeatures();
+            var docNewQAll = resultsHandlerRepeat.ChangePeaks(1.0);
+            var peakBoundaryImporter = new PeakBoundaryImporter(docNewQAll);
+            long lineCount = Helpers.CountLinesInFile(mProphetActual);
+            using (var reader = new StreamReader(mProphetActual))
             {
-                //peakBoundaryImporter.Import(reader, null, lineCount);
+                peakBoundaryImporter.Import(reader, null, lineCount);
             }
-            //var docImport = peakBoundaryImporter.Document;
-            //Assert.AreSame(docNew, docImport);
-            // TODO: import peak boundaries needs to accept mProphet output before this can be activated
+            var docImport = peakBoundaryImporter.Document;
+            Assert.AreSame(docNewQAll, docImport);
 
             // 5. Reintegration with q value cutoff of <0 causes all peaks set to null
             var handlerAllNull = new MProphetResultsHandler(docOriginal, peakScoringModel);

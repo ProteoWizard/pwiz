@@ -156,11 +156,11 @@ namespace pwiz.SkylineTestA
             ImportThrowsException(docResults, string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(3).ToArray()),
                 Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line);
 
-            string headerRow = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES);
-            string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.FIELD_NAMES);
+            string headerRow = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(6));
+            string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.FIELD_NAMES.Take(6));
             string[] values = new[]
                 {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 3.ToString(cult)
+                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
                 };
             
             // 4. Mismatched field count
@@ -226,6 +226,34 @@ namespace pwiz.SkylineTestA
             valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "PEPTIDER";
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)),
                 Resources.PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_);
+
+            // 11. Bad value in decoy field
+            string[] valuesBadDecoys = new List<string>(values).ToArray();
+            valuesBadDecoys[(int)PeakBoundaryImporter.Field.is_decoy] = 3.ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadDecoys)),
+                Resources.PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_);
+
+            // 12. Import with bad sample throws exception
+            string[] valuesSample = new[]
+                {
+                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
+                };
+            string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSample, string.Join(csvSep, valuesSample)),
+                Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__);
+
+            // 13. Decoys, charge state, and sample missing ok
+            var valuesFourFields = valuesSample.Take(4);
+            string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(4));
+            ImportNoException(docResults, TextUtil.LineSeparate(headerFourFields, string.Join(csvSep, valuesFourFields)));
+
+            // 14. Valid (charge state, fileName, peptide) combo that is not in document leads to error
+            string[] valuesBadCombo = new List<string>(values).ToArray();
+            valuesBadCombo[(int) PeakBoundaryImporter.Field.charge] = (5).ToString(cult);
+            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCombo)),
+                Resources.PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__);
+
+            // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
 
             // Release open streams
             docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docResults, false);

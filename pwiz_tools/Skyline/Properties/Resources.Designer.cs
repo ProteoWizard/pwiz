@@ -9616,11 +9616,30 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sample {0} on line {1} does not match the file {2}..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to semicolon.
         /// </summary>
         public static string PeakBoundaryImporter_Import_semicolon {
             get {
                 return ResourceManager.GetString("PeakBoundaryImporter_Import_semicolon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The decoy value {0} on line {1} is invalid: must be 0 or 1..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0" +
+                        "_or_1_", resourceCulture);
             }
         }
         
@@ -9651,6 +9670,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any" +
                         "_modified_state_in_the_document_for_the_peptide__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The peptide {0} was not present in the file {1} on line {2}..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_li" +
+                        "ne__2__", resourceCulture);
             }
         }
         
