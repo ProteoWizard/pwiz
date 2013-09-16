@@ -604,6 +604,11 @@ namespace pwiz.Skyline.Model.Tools
         
         #region object overrides
 
+        public override string ToString()
+        {
+            return Title;
+        }
+
         public bool Equals(ToolDescription tool)
         {
             return (Equals(Title, tool.Title) &&

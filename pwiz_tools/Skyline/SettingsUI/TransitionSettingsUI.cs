@@ -19,9 +19,9 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.SettingsUI
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.Label;
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.Label;
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
-                                           ? Filter.PrecursorMzWindow.ToString(CultureInfo.CurrentCulture)
+                                           ? Filter.PrecursorMzWindow.ToString(LocalizationHelper.CurrentCulture)
                                            : string.Empty;
             cbAutoSelect.Checked = Filter.AutoSelect;
 
@@ -97,26 +97,26 @@ namespace pwiz.Skyline.SettingsUI
             // Initialize library settings
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
             panelPick.Visible = cbLibraryPick.Checked;
-            textTolerance.Text = Libraries.IonMatchTolerance.ToString(CultureInfo.CurrentCulture);
-            textIonCount.Text = Libraries.IonCount.ToString(CultureInfo.CurrentCulture);
+            textTolerance.Text = Libraries.IonMatchTolerance.ToString(LocalizationHelper.CurrentCulture);
+            textIonCount.Text = Libraries.IonCount.ToString(LocalizationHelper.CurrentCulture);
             if (Libraries.Pick == TransitionLibraryPick.filter)
                 radioFiltered.Checked = true;
             else if (Libraries.Pick == TransitionLibraryPick.all_plus)
                 radioAllAndFiltered.Checked = true;
 
             // Initialize instrument settings
-            textMinMz.Text = Instrument.MinMz.ToString(CultureInfo.CurrentCulture);
-            textMaxMz.Text = Instrument.MaxMz.ToString(CultureInfo.CurrentCulture);
+            textMinMz.Text = Instrument.MinMz.ToString(LocalizationHelper.CurrentCulture);
+            textMaxMz.Text = Instrument.MaxMz.ToString(LocalizationHelper.CurrentCulture);
             cbDynamicMinimum.Checked = Instrument.IsDynamicMin;
-            textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString(CultureInfo.CurrentCulture);
+            textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString(LocalizationHelper.CurrentCulture);
             if (Instrument.MaxTransitions.HasValue)
-                textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString(CultureInfo.CurrentCulture);
+                textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString(LocalizationHelper.CurrentCulture);
             if (Instrument.MaxInclusions.HasValue)
-                textMaxInclusions.Text = Instrument.MaxInclusions.Value.ToString(CultureInfo.CurrentCulture);
+                textMaxInclusions.Text = Instrument.MaxInclusions.Value.ToString(LocalizationHelper.CurrentCulture);
             if (Instrument.MinTime.HasValue)
-                textMinTime.Text = Instrument.MinTime.Value.ToString(CultureInfo.CurrentCulture);
+                textMinTime.Text = Instrument.MinTime.Value.ToString(LocalizationHelper.CurrentCulture);
             if (Instrument.MaxTime.HasValue)
-                textMaxTime.Text = Instrument.MaxTime.Value.ToString(CultureInfo.CurrentCulture);
+                textMaxTime.Text = Instrument.MaxTime.Value.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize full-scan settings
             FullScanSettingsControl = new FullScanSettingsControl(_parent)
@@ -240,7 +240,7 @@ namespace pwiz.Skyline.SettingsUI
 
             double exclusionWindow = 0;
             if (!string.IsNullOrEmpty(textExclusionWindow.Text) &&
-                !Equals(textExclusionWindow.Text, exclusionWindow.ToString(CultureInfo.CurrentCulture)))
+                !Equals(textExclusionWindow.Text, exclusionWindow.ToString(LocalizationHelper.CurrentCulture)))
             {
                 if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Filter, textExclusionWindow,
                         TransitionFilter.MIN_EXCLUSION_WINDOW, TransitionFilter.MAX_EXCLUSION_WINDOW, out exclusionWindow))
@@ -459,14 +459,14 @@ namespace pwiz.Skyline.SettingsUI
             var countFinder = TransitionFilter.GetEndFragmentFinder(fragmentRangeLastName) as IEndCountFragmentFinder;
             if (countFinder != null)
             {
-                textIonCount.Text = countFinder.Count.ToString(CultureInfo.CurrentCulture);
+                textIonCount.Text = countFinder.Count.ToString(LocalizationHelper.CurrentCulture);
                 if (!radioAllAndFiltered.Checked)
                     radioAll.Checked = true;
                 radioFiltered.Enabled = false;
             }
             else
             {
-                textIonCount.Text = Libraries.IonCount.ToString(CultureInfo.CurrentCulture);
+                textIonCount.Text = Libraries.IonCount.ToString(LocalizationHelper.CurrentCulture);
                 radioFiltered.Enabled = true;
             }
         }
@@ -572,7 +572,7 @@ namespace pwiz.Skyline.SettingsUI
         public int InstrumentMaxMz
         {
             get { return Int32.Parse(textMaxMz.Text); }
-            set { textMaxMz.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textMaxMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public void SetRetentionTimeFilter(RetentionTimeFilterType retentionTimeFilterType, double length)
@@ -583,7 +583,7 @@ namespace pwiz.Skyline.SettingsUI
         public double MZMatchTolerance
         {
             get { return Double.Parse(textMzMatchTolerance.Text); }
-            set { textMzMatchTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textMzMatchTolerance.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public CollisionEnergyRegression RegressionCE
@@ -663,7 +663,7 @@ namespace pwiz.Skyline.SettingsUI
         public int IonCount
         {
             get { return Convert.ToInt32(textIonCount.Text); }
-            set { textIonCount.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public bool UseLibraryPick
@@ -698,7 +698,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public int MaxInclusions
         {
-            set { textMaxInclusions.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textMaxInclusions.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public void AddIsolationScheme()

@@ -19,6 +19,7 @@
 
 using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 // Once-per-application setup information to perform logging with log4net.
@@ -53,6 +54,8 @@ namespace pwiz.SkylineTestUtil
 
             var log = new Log<AbstractUnitTest>();
             log.Info(TestContext.TestName + " started");
+
+            Settings.Default.Reset();
 
             STOPWATCH.Restart();
         }
