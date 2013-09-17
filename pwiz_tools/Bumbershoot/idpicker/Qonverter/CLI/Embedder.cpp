@@ -33,6 +33,7 @@ namespace IDPicker {
 
 using namespace pwiz::CLI::util;
 using namespace pwiz::CLI::chemistry;
+using namespace System::IO;
 namespace NativeEmbedder = NativeIDPicker::Embedder;
 
 
@@ -151,8 +152,11 @@ void Embedder::EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::Iterati
 {
     try
     {
+        String^ currentDirectory = Directory::GetCurrentDirectory();
+        Directory::SetCurrentDirectory(Path::GetDirectoryName(Environment::GetCommandLineArgs()[0]));
         NativeEmbedder::embedGeneMetadata(ToStdString(idpDbFilepath),
                                           ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
+        Directory::SetCurrentDirectory(currentDirectory);
     }
     CATCH_AND_FORWARD
 }
