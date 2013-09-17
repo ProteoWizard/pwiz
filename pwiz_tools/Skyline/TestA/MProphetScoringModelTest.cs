@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestA
 
                 // Calculate weights for peak features.
                 var scoringModel = new MProphetPeakScoringModel("mProphet", fileWeights._weights);    // Not L10N
-                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList());
+                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(), fileWeights._weights);
                 Assert.AreEqual(scoringModel.Weights.Count, fileWeights._weights.Length);
                 for (int i = 0; i < scoringModel.Weights.Count; i++)
                     Assert.AreEqual(fileWeights._weights[i], scoringModel.Weights[i], 1e-7);

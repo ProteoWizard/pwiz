@@ -19,7 +19,6 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Properties;
@@ -32,12 +31,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel__defaultName_Skyline_Legacy;
 
+        // Weighting coefficients.
+        private const double W0 = 1.0;  // Log unforced area
+        private const double W1 = 1.0;  // Unforced count score
+        private const double W2 = LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER;    // Unforced count score standard
+        private const double W3 = 20.0; // Identified count
+
         public static double Score(double logUnforcedArea,
                                    double unforcedCountScore,
                                    double unforcedCountScoreStandard,
                                    double identifiedCount)
         {
-            return logUnforcedArea + unforcedCountScore + LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER*unforcedCountScoreStandard + 20*identifiedCount;
+            return 
+                W0*logUnforcedArea + 
+                W1*unforcedCountScore + 
+                W2*unforcedCountScoreStandard + 
+                W3*identifiedCount;
         }
 
         private readonly ReadOnlyCollection<IPeakFeatureCalculator> _calculators;
@@ -47,7 +56,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
         }
 
-        public LegacyScoringModel(string name, double decoyMean, double decoyStdev) : base(name)
+        public LegacyScoringModel(string name, double decoyMean, double decoyStdev, bool usesDecoys = true, bool usesSecondBest = false) : base(name)
         {
             _calculators = new ReadOnlyCollection<IPeakFeatureCalculator>(new List<IPeakFeatureCalculator>
                 {
@@ -57,15 +66,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     new LegacyIdentifiedCountCalc()
                 });
 
-            Weights = new[]
-                {
-                    1.0, 
-                    1.0, 
-                    LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER, 
-                    20
-                };
             DecoyMean = decoyMean;
             DecoyStdev = decoyStdev;
+            UsesDecoys = usesDecoys;
+            UsesSecondBest = usesSecondBest;
         }
 
         private enum FeatureOrder
@@ -81,25 +85,25 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return _calculators; }
         }
 
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, double[] weights, bool includeSecondBest = false)
         {
             return ChangeProp(ImClone(this), im =>
                 {
-                    ScoredGroupPeaksSet decoyTransitionGroups;
-                    if (decoys.FirstOrDefault() == null)
+                    ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
+                    ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets);
+                    if (includeSecondBest)
                     {
-                        var allTransitionGroups = new ScoredGroupPeaksSet(targets);
-                        ScoredGroupPeaksSet targetTransitionGroups;
-                        allTransitionGroups.SelectTargetsAndDecoys(out targetTransitionGroups, out decoyTransitionGroups);
-                    }
-                    else
-                    {
-                        decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
+                        ScoredGroupPeaksSet secondBestTransitionGroups;
+                        targetTransitionGroups.SelectTargetsAndDecoys(out targetTransitionGroups, out secondBestTransitionGroups);
+                        foreach (var secondBestGroup in secondBestTransitionGroups.ScoredGroupPeaksList)
+                        {
+                            decoyTransitionGroups.Add(secondBestGroup);
+                        }
                     }
 
-                    decoyTransitionGroups.ScorePeaks(Weights);
+                    im.Weights = new[] {W0, W1, W2, W3};
+                    decoyTransitionGroups.ScorePeaks(im.Weights);
 
-                    im.Weights = Weights;
                     im.DecoyMean = decoyTransitionGroups.Mean;
                     im.DecoyStdev = decoyTransitionGroups.Stdev;
                 });

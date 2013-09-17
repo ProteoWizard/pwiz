@@ -58,8 +58,8 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, string.Empty);
-                    Assert.AreEqual(1.376, editDlg.Mean);
-                    Assert.AreEqual(0.088, editDlg.Stdev);
+                    Assert.AreEqual(null, editDlg.Mean);
+                    Assert.AreEqual(null, editDlg.Stdev);
                     var rows = editDlg.PeakCalculatorsGrid.RowCount;
                     Assert.AreEqual(calculators.Length, rows, "Unexpected count of peak calculators");  // Not L10N
                 });

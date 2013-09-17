@@ -52,6 +52,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             get
             {
+                if (ScoredPeaks.Count == 0)
+                    return null;
                 var maxPeak = ScoredPeaks[0];
                 var maxScore = maxPeak.Score;
                 for (int i = 1; i < ScoredPeaks.Count; i++)
@@ -71,6 +73,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             get
             {
+                if (ScoredPeaks.Count == 0)
+                    return null;
                 var maxPeak = ScoredPeaks[0];
                 double maxScore = maxPeak.Score;
                 ScoredPeak max2Peak = null;

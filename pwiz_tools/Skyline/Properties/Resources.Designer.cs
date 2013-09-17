@@ -4168,6 +4168,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot train model without either decoys or second best peaks included..
+        /// </summary>
+        public static string EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_ {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_dec" +
+                        "oys_or_second_best_peaks_included_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak count.
         /// </summary>
         public static string EditPeakScoringModelDlg_InitGraphPane_Peak_count {
@@ -4195,11 +4205,29 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Second Best Peaks.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to unknown.
         /// </summary>
         public static string EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown {
             get {
                 return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Combined Norm.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Combined_Norm {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Combined_Norm", resourceCulture);
             }
         }
         
@@ -4218,6 +4246,24 @@ namespace pwiz.Skyline.Properties {
         public static string EditPeakScoringModelDlg_UpdateModelGraph_Decoys {
             get {
                 return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Second Best Peaks.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Second Best Peaks Norm.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks_Norm {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks_Norm", resourceCulture);
             }
         }
         

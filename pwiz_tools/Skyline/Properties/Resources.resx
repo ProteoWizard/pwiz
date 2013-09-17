@@ -5953,6 +5953,21 @@ Are you sure you want to continue?</value>
     <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
     <value>Reinstall</value>
   </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks" xml:space="preserve">
+    <value>Second Best Peaks</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_Norm" xml:space="preserve">
+    <value>Combined Norm</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks_Norm" xml:space="preserve">
+    <value>Second Best Peaks Norm</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks" xml:space="preserve">
+    <value>Second Best Peaks</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
+    <value>Cannot train model without either decoys or second best peaks included.</value>
+  </data>
   <data name="PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_" xml:space="preserve">
     <value>The decoy value {0} on line {1} is invalid: must be 0 or 1.</value>
   </data>

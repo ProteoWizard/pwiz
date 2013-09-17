@@ -45,6 +45,9 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.lblColinearWarning = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.decoyCheckBox = new System.Windows.Forms.CheckBox();
+            this.secondBestCheckBox = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.comboModel = new System.Windows.Forms.ComboBox();
             this.zedGraphMProphet = new ZedGraph.ZedGraphControl();
@@ -64,6 +67,7 @@
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -175,6 +179,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.groupBox2);
             this.splitContainer1.Panel1.Controls.Add(this.label6);
             this.splitContainer1.Panel1.Controls.Add(this.comboModel);
             this.splitContainer1.Panel1.Controls.Add(this.zedGraphMProphet);
@@ -182,7 +187,6 @@
             this.splitContainer1.Panel1.Controls.Add(this.groupBox1);
             this.splitContainer1.Panel1.Controls.Add(this.label5);
             this.splitContainer1.Panel1.Controls.Add(this.textName);
-            this.splitContainer1.Panel1.Controls.Add(this.btnTrainModel);
             // 
             // splitContainer1.Panel2
             // 
@@ -191,6 +195,29 @@
             this.splitContainer1.Panel2.Controls.Add(this.lblSelectedGraph);
             this.splitContainer1.Panel2.Controls.Add(this.gridPeakCalculators);
             this.splitContainer1.TabStop = false;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.decoyCheckBox);
+            this.groupBox2.Controls.Add(this.secondBestCheckBox);
+            this.groupBox2.Controls.Add(this.btnTrainModel);
+            resources.ApplyResources(this.groupBox2, "groupBox2");
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.TabStop = false;
+            // 
+            // decoyCheckBox
+            // 
+            resources.ApplyResources(this.decoyCheckBox, "decoyCheckBox");
+            this.decoyCheckBox.Name = "decoyCheckBox";
+            this.decoyCheckBox.UseVisualStyleBackColor = true;
+            this.decoyCheckBox.CheckedChanged += new System.EventHandler(this.decoyCheckBox_CheckedChanged);
+            // 
+            // secondBestCheckBox
+            // 
+            resources.ApplyResources(this.secondBestCheckBox, "secondBestCheckBox");
+            this.secondBestCheckBox.Name = "secondBestCheckBox";
+            this.secondBestCheckBox.UseVisualStyleBackColor = true;
+            this.secondBestCheckBox.CheckedChanged += new System.EventHandler(this.falseTargetCheckBox_CheckedChanged);
             // 
             // label6
             // 
@@ -319,6 +346,8 @@
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -352,5 +381,8 @@
         private System.Windows.Forms.Label lblColinearWarning;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox comboModel;
+        private System.Windows.Forms.CheckBox secondBestCheckBox;
+        private System.Windows.Forms.CheckBox decoyCheckBox;
+        private System.Windows.Forms.GroupBox groupBox2;
     }
 }

@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class ScoredGroupPeaksSet
     {
-        private List<ScoredGroupPeaks> _transitionGroups = new List<ScoredGroupPeaks>();
+        private List<ScoredGroupPeaks> _scoredGroupPeaksList = new List<ScoredGroupPeaks>();
 
         public ScoredGroupPeaksSet()
         {
@@ -39,24 +39,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             foreach (var group in groupList)
             {
-                var transitionGroup = new ScoredGroupPeaks();
+                var scoredGroupPeaks = new ScoredGroupPeaks();
                 foreach (var features in group)
-                    transitionGroup.Add(new ScoredPeak(features));
-                _transitionGroups.Add(transitionGroup);
+                    scoredGroupPeaks.Add(new ScoredPeak(features));
+                _scoredGroupPeaksList.Add(scoredGroupPeaks);
             }
         }
 
         public double Mean { get; private set; }
         public double Stdev { get; private set; }
 
-        public int Count
+        public List<ScoredGroupPeaks> ScoredGroupPeaksList
         {
-            get { return _transitionGroups.Count; }
+            get { return _scoredGroupPeaksList; }
         }
 
-        public void Add(ScoredGroupPeaks transitionGroup)
+        public int Count
         {
-            _transitionGroups.Add(transitionGroup);
+            get { return _scoredGroupPeaksList.Count; }
+        }
+
+        public void Add(ScoredGroupPeaks scoredGroupPeaks)
+        {
+            _scoredGroupPeaksList.Add(scoredGroupPeaks);
         }
 
         /// <summary>
@@ -72,19 +77,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (random == null)
             {
                 // Sort by transition group name, then discard upper half of list.
-                _transitionGroups = new List<ScoredGroupPeaks>(_transitionGroups.OrderBy(key => key.Id));
-                _transitionGroups.RemoveRange(newCount, Count - newCount);
+                _scoredGroupPeaksList = new List<ScoredGroupPeaks>(_scoredGroupPeaksList.OrderBy(key => key.Id));
+                _scoredGroupPeaksList.RemoveRange(newCount, Count - newCount);
             }
             else
             {
                 // Randomly select half the transition groups to keep.
-                var oldTransitionGroups = _transitionGroups;
-                _transitionGroups = new List<ScoredGroupPeaks>(newCount);
+                var oldScoredGroupPeaks = _scoredGroupPeaksList;
+                _scoredGroupPeaksList = new List<ScoredGroupPeaks>(newCount);
                 for (int i = 0; i < newCount; i++)
                 {
-                    var randomIndex = random.Next(oldTransitionGroups.Count);
-                    _transitionGroups.Add(oldTransitionGroups[randomIndex]);
-                    oldTransitionGroups.RemoveAt(randomIndex);
+                    var randomIndex = random.Next(oldScoredGroupPeaks.Count);
+                    _scoredGroupPeaksList.Add(oldScoredGroupPeaks[randomIndex]);
+                    oldScoredGroupPeaks.RemoveAt(randomIndex);
                 }
             }
         }
@@ -95,13 +100,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         /// <param name="qValueCutoff">Cutoff q-value.</param>
         /// <param name="lambda">Optional p-value cutoff for calculating Pi-zero.</param>
-        /// <param name="decoyTransitionGroups">Decoy transition groups.</param>
+        /// <param name="decoyScoredGroupPeaks">Decoy transition groups.</param>
         /// <returns>List of peaks the meet the criteria.</returns>
-        public List<ScoredPeak> SelectTruePeaks(double qValueCutoff, double? lambda, ScoredGroupPeaksSet decoyTransitionGroups)
+        public List<ScoredPeak> SelectTruePeaks(double qValueCutoff, double? lambda, ScoredGroupPeaksSet decoyScoredGroupPeaks)
         {
             // Get max peak score for each transition group.
             var targetScores = GetMaxScores();
-            var decoyScores = decoyTransitionGroups.GetMaxScores();
+            var decoyScores = decoyScoredGroupPeaks.GetMaxScores();
 
             // Calculate statistics for each set of scores.
             var statDecoys = new Statistics(decoyScores);
@@ -112,11 +117,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var qvalues = new Statistics(pvalues).Qvalues(lambda);
 
             // Select max peak with q value less than the cutoff from each target group.
-            var truePeaks = new List<ScoredPeak>(_transitionGroups.Count);
-            for (int i = 0; i < _transitionGroups.Count; i++)
+            var truePeaks = new List<ScoredPeak>(_scoredGroupPeaksList.Count);
+            for (int i = 0; i < _scoredGroupPeaksList.Count; i++)
             {
                 if (qvalues[i] <= qValueCutoff)
-                    truePeaks.Add(_transitionGroups[i].MaxPeak);
+                    truePeaks.Add(_scoredGroupPeaksList[i].MaxPeak);
             }
             return truePeaks;
         }
@@ -127,44 +132,44 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns>List of highest scoring peaks.</returns>
         public List<ScoredPeak> SelectMaxPeaks()
         {
-            return _transitionGroups.Select(t => t.MaxPeak).ToList();
+            return _scoredGroupPeaksList.Select(t => t.MaxPeak).ToList();
         }
 
-        public void SelectTargetsAndDecoys(out ScoredGroupPeaksSet targetTransitionGroups, out ScoredGroupPeaksSet decoyTransitionGroups)
+        public void SelectTargetsAndDecoys(out ScoredGroupPeaksSet targetScoredGroupPeaksSet, out ScoredGroupPeaksSet decoyScoredGroupPeaksSet)
         {
-            targetTransitionGroups = new ScoredGroupPeaksSet();
-            decoyTransitionGroups = new ScoredGroupPeaksSet();
-            foreach (var transitionGroup in _transitionGroups)
+            targetScoredGroupPeaksSet = new ScoredGroupPeaksSet();
+            decoyScoredGroupPeaksSet = new ScoredGroupPeaksSet();
+            foreach (var scoredGroupPeaks in _scoredGroupPeaksList)
             {
-                var secondHighestPeak = transitionGroup.SecondHighestPeak;
+                var secondHighestPeak = scoredGroupPeaks.SecondHighestPeak;
                 if (secondHighestPeak != null)
                 {
-                    var decoyTransitionGroup = new ScoredGroupPeaks();
-                    decoyTransitionGroup.Add(secondHighestPeak);
-                    decoyTransitionGroups.Add(decoyTransitionGroup);
+                    var decoyScoredGroupPeaks = new ScoredGroupPeaks();
+                    decoyScoredGroupPeaks.Add(secondHighestPeak);
+                    decoyScoredGroupPeaksSet.Add(decoyScoredGroupPeaks);
                 }
 
                 // Copy all other peaks to target.
-                var targetTransitionGroup = new ScoredGroupPeaks();
-                foreach (var peak in transitionGroup.ScoredPeaks)
+                var targetScoredGroupPeaks = new ScoredGroupPeaks();
+                foreach (var peak in scoredGroupPeaks.ScoredPeaks)
                 {
                     if (peak != secondHighestPeak)
-                        targetTransitionGroup.Add(peak);
+                        targetScoredGroupPeaks.Add(peak);
                 }
-                targetTransitionGroups.Add(targetTransitionGroup);
+                targetScoredGroupPeaksSet.Add(targetScoredGroupPeaks);
             }
         }
 
         public ScoredPeak FirstPeak
         {
-            get { return _transitionGroups[0].ScoredPeaks[0]; }
+            get { return _scoredGroupPeaksList[0].ScoredPeaks[0]; }
         }
 
         private double[] GetMaxScores()
         {
-            var maxScores = new double[_transitionGroups.Count];
+            var maxScores = new double[_scoredGroupPeaksList.Count];
             for (int i = 0; i < maxScores.Length; i++)
-                maxScores[i] = _transitionGroups[i].MaxPeak.Score;
+                maxScores[i] = _scoredGroupPeaksList[i].MaxPeak.Score;
             return maxScores;
         }
 
@@ -175,7 +180,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns>Mean peak score.</returns>
         public void ScorePeaks(IList<double> weights)
         {
-            foreach (var peak in _transitionGroups.SelectMany(transitionGroup => transitionGroup.ScoredPeaks))
+            foreach (var peak in _scoredGroupPeaksList.SelectMany(scoredGroupPeaks => scoredGroupPeaks.ScoredPeaks))
             {
                 peak.Score = 0;
                 for (int i = 0; i < weights.Count; i++)
@@ -199,9 +204,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns></returns>
         public List<IList<double[]>> ToList()
         {
-            var list = new List<IList<double[]>>(_transitionGroups.Count);
-            foreach (var transitionGroup in _transitionGroups)
-                list.Add(transitionGroup.ToList());
+            var list = new List<IList<double[]>>(_scoredGroupPeaksList.Count);
+            foreach (var scoredGroupPeaks in _scoredGroupPeaksList)
+                list.Add(scoredGroupPeaks.ToList());
             return list;
         }
         #endregion

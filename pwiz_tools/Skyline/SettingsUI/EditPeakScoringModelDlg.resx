@@ -144,20 +144,20 @@
     <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnTrainModel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnTrainModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>190, 76</value>
+    <value>208, 25</value>
   </data>
   <data name="btnTrainModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>78, 23</value>
   </data>
   <data name="btnTrainModel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="btnTrainModel.Text" xml:space="preserve">
     <value>&amp;Train Model</value>
@@ -173,10 +173,10 @@ document to calculate the equation with linear regression</value>
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnTrainModel.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
+    <value>groupBox2</value>
   </data>
   <data name="&gt;&gt;btnTrainModel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>2</value>
   </data>
   <data name="gridPeakCalculators.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left</value>
@@ -221,7 +221,7 @@ document to calculate the equation with linear regression</value>
     <value>gridPeakCalculators</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -289,6 +289,9 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="lblColinearWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="lblColinearWarning.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -328,6 +331,84 @@ document to calculate the equation with linear regression</value>
   <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
+  <data name="decoyCheckBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="decoyCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 18</value>
+  </data>
+  <data name="decoyCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>82, 17</value>
+  </data>
+  <data name="decoyCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="decoyCheckBox.Text" xml:space="preserve">
+    <value>Use &amp;decoys</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.Name" xml:space="preserve">
+    <value>decoyCheckBox</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="secondBestCheckBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="secondBestCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 41</value>
+  </data>
+  <data name="secondBestCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 17</value>
+  </data>
+  <data name="secondBestCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="secondBestCheckBox.Text" xml:space="preserve">
+    <value>Use &amp;second best peaks</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.Name" xml:space="preserve">
+    <value>secondBestCheckBox</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 113</value>
+  </data>
+  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>304, 67</value>
+  </data>
+  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="groupBox2.Text" xml:space="preserve">
+    <value>Training</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel1</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -356,7 +437,7 @@ document to calculate the equation with linear regression</value>
     <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="comboModel.Items" xml:space="preserve">
     <value>mProphet</value>
@@ -383,7 +464,7 @@ document to calculate the equation with linear regression</value>
     <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;comboModel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -407,7 +488,7 @@ document to calculate the equation with linear regression</value>
     <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -437,10 +518,10 @@ document to calculate the equation with linear regression</value>
     <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textStdev.Location" type="System.Drawing.Point, System.Drawing">
-    <value>127, 37</value>
+    <value>135, 37</value>
   </data>
   <data name="textStdev.Size" type="System.Drawing.Size, System.Drawing">
     <value>78, 20</value>
@@ -467,7 +548,7 @@ document to calculate the equation with linear regression</value>
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>124, 20</value>
+    <value>132, 20</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>74, 13</value>
@@ -542,10 +623,10 @@ document to calculate the equation with linear regression</value>
     <value>3</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 123</value>
+    <value>13, 192</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>307, 67</value>
+    <value>304, 67</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -563,7 +644,7 @@ document to calculate the equation with linear regression</value>
     <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -593,7 +674,7 @@ document to calculate the equation with linear regression</value>
     <value>splitContainer1.Panel1</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -770,6 +851,6 @@ document to calculate the equation with linear regression</value>
     <value>EditPeakScoringModelDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

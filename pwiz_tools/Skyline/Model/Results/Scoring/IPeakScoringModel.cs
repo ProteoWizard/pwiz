@@ -47,7 +47,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         /// <param name="targets">Scores for positive targets</param>
         /// <param name="decoys">Scores for null distribution</param>
-        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys);
+        /// <param name="weights">Initial weights.</param>
+        /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
+        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, double[] weights, bool includeSecondBest = false);
 
         /// <summary>
         /// Mean of score values for decoy data.
@@ -60,7 +62,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
         double DecoyStdev { get; }
 
         /// <summary>
+        /// Was the model trained with a decoy set?
+        /// </summary>
+        bool UsesDecoys { get; }
+
+        /// <summary>
+        /// Was the model trained with false targets (second best peaks) from the target set
+        /// </summary>
+        bool UsesSecondBest { get; }
+
+        /// <summary>
         /// Weighting coefficients for each calculator in the PeakFeatureCalculators list.
+        /// Null if not trained yet.
         /// </summary>
         IList<double> Weights { get; }
     }
@@ -71,10 +84,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected PeakScoringModelSpec()
         {
+            UsesDecoys = true;
+            UsesSecondBest = false;
         }
 
         protected PeakScoringModelSpec(string name) : base(name)
         {
+            UsesDecoys = true;
+            UsesSecondBest = false;
         }
 
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
@@ -83,10 +100,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return _weights; }
             protected set { _weights = MakeReadOnly(value); }
         }
-        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys);
+        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, double[] weights, bool includeSecondBest = false);
         public abstract double Score(double[] features);
         public double DecoyMean { get; protected set; }
         public double DecoyStdev { get; protected set; }
+        public bool UsesDecoys { get; protected set; }
+        public bool UsesSecondBest { get; protected set; }
 
         public virtual void Validate()
         {

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -47,6 +48,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IList<IPeakFeatureCalculator> peakFeatureCalculators = null,
             double decoyMean = 0, 
             double decoyStdev = 0,
+            bool usesDecoys = false,
+            bool usesSecondBest = false,
             bool colinearWarning = false)
             : base(name)
         {
@@ -54,6 +57,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             Weights = weights;
             DecoyMean = decoyMean;
             DecoyStdev = decoyStdev;
+            UsesDecoys = usesDecoys;
+            UsesSecondBest = usesSecondBest;
             ColinearWarning = colinearWarning;
             Lambda = 0.4;   // Default from R
             DoValidate();
@@ -63,7 +68,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             : base(name)
         {
             SetPeakFeatureCalculators(DEFAULT_CALCULATORS);
-            Weights = new double[_peakFeatureCalculators.Count];
             DecoyMean = double.NaN;
             DecoyStdev = double.NaN;
             Lambda = 0.4;   // Default from R
@@ -112,30 +116,34 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         /// <param name="targets">Target transition groups.</param>
         /// <param name="decoys">Decoy transition groups.</param>
+        /// <param name="weights">Initial weights.</param>
+        /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
         /// <returns>Immutable model with new weights.</returns>
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, double[] weights, bool includeSecondBest = false)
         {
             return ChangeProp(ImClone(this), im =>
                 {
                     var targetTransitionGroups = new ScoredGroupPeaksSet(targets);
                     var decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
-                    var allTransitionGroups = decoyTransitionGroups.Count == 0 ? targetTransitionGroups : null;
 
                     // Iteratively refine the weights through multiple iterations.
-                    var weights = im.Weights.ToArray();
+                    var calcWeights = new double[weights.Length];
+                    Array.Copy(weights, calcWeights, weights.Length);
                     double decoyMean = 0;
                     double decoyStdev = 0;
                     bool colinearWarning = false;
                     for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++)
                     {
                         im.CalculateWeights(iteration, targetTransitionGroups, decoyTransitionGroups,
-                                            allTransitionGroups, weights, out decoyMean, out decoyStdev, ref colinearWarning);
+                                            includeSecondBest, calcWeights, out decoyMean, out decoyStdev, ref colinearWarning);
                     }
 
-                    im.Weights = weights;
+                    im.Weights = calcWeights;
                     im.DecoyMean = decoyMean;
                     im.DecoyStdev = decoyStdev;
                     im.ColinearWarning = colinearWarning;
+                    im.UsesSecondBest = includeSecondBest;
+                    im.UsesDecoys = decoys.Count > 0;
                 });
         }
 
@@ -166,7 +174,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="iteration">Iteration number (special processing happens for iteration 0).</param>
         /// <param name="targetTransitionGroups">Target transition groups.</param>
         /// <param name="decoyTransitionGroups">Decoy transition groups.</param>
-        /// <param name="allTransitionGroups">All transition groups if no decoys are present, otherwise null.</param>
+        /// <param name="includeSecondBest">Include the second best peaks in the targets as additional decoys?</param>
         /// <param name="weights">Array of weights per calculator.</param>
         /// <param name="decoyMean">Output mean of decoy transition groups.</param>
         /// <param name="decoyStdev">Output standard deviation of decoy transition groups.</param>
@@ -175,14 +183,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
             int iteration,
             ScoredGroupPeaksSet targetTransitionGroups,
             ScoredGroupPeaksSet decoyTransitionGroups,
-            ScoredGroupPeaksSet allTransitionGroups,
+            bool includeSecondBest,
             double[] weights,
             out double decoyMean,
             out double decoyStdev,
             ref bool colinearWarning)
         {
-            if (allTransitionGroups != null)
-                allTransitionGroups.SelectTargetsAndDecoys(out targetTransitionGroups, out decoyTransitionGroups);
+            if (includeSecondBest)
+            {
+                ScoredGroupPeaksSet secondBestTransitionGroups;
+                targetTransitionGroups.SelectTargetsAndDecoys(out targetTransitionGroups, out secondBestTransitionGroups);
+                foreach (var secondBestGroup in secondBestTransitionGroups.ScoredGroupPeaksList)
+                {
+                    decoyTransitionGroups.Add(secondBestGroup);
+                }
+                
+            }
 
             // Select true target peaks using a q-value cutoff filter.
             var qValueCutoff = (iteration == 0 ? 0.15 : 0.02);
@@ -268,6 +284,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 DecoyStdev.Equals(other.DecoyStdev) &&
                 ColinearWarning.Equals(other.ColinearWarning) &&
                 Lambda.Equals(other.Lambda) &&
+                UsesDecoys.Equals(other.UsesDecoys) &&
+                UsesSecondBest.Equals(other.UsesSecondBest) &&
                 PeakFeatureCalculators.Count == other.PeakFeatureCalculators.Count)
             {
                 for (int i = 0; i < PeakFeatureCalculators.Count; i++)
@@ -296,6 +314,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 hashCode = (hashCode * 397) ^ (Weights != null ? Weights.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ DecoyMean.GetHashCode();
                 hashCode = (hashCode * 397) ^ DecoyStdev.GetHashCode();
+                hashCode = (hashCode * 397) ^ UsesDecoys.GetHashCode();
+                hashCode = (hashCode * 397) ^ UsesSecondBest.GetHashCode();
                 hashCode = (hashCode * 397) ^ ColinearWarning.GetHashCode();
                 hashCode = (hashCode * 397) ^ Lambda.GetHashCode();
                 hashCode = (hashCode * 397) ^ (PeakFeatureCalculators != null ? PeakFeatureCalculators.GetHashCode() : 0);
@@ -308,7 +328,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // Model
             decoy_mean,
             decoy_stdev,
-            colinear_warning
+            colinear_warning,
+            uses_decoys,
+            uses_false_targets
         }
 
         public static MProphetPeakScoringModel Deserialize(XmlReader reader)
@@ -323,6 +345,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
             DecoyMean = reader.GetDoubleAttribute(ATTR.decoy_mean);
             DecoyStdev = reader.GetDoubleAttribute(ATTR.decoy_stdev);
             ColinearWarning = reader.GetBoolAttribute(ATTR.colinear_warning);
+            // Earlier versions always used decoys only
+            UsesDecoys = reader.GetBoolAttribute(ATTR.uses_decoys, true);
+            UsesSecondBest = reader.GetBoolAttribute(ATTR.uses_false_targets, false);
 
             // Consume tag
             reader.Read();
@@ -352,6 +377,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             writer.WriteAttribute(ATTR.decoy_mean, DecoyMean);
             writer.WriteAttribute(ATTR.decoy_stdev, DecoyStdev);
             writer.WriteAttribute(ATTR.colinear_warning, ColinearWarning);
+            writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys);
+            writer.WriteAttribute(ATTR.uses_false_targets, UsesSecondBest);
 
             // Write calculators
             var calculators = new List<FeatureCalculator>(PeakFeatureCalculators.Count);
@@ -367,7 +394,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         private void DoValidate()
         {
-            if (Weights.Count < 1 || PeakFeatureCalculators.Count < 1)
+            if (Weights != null && Weights.Count < 1 || PeakFeatureCalculators.Count < 1)
                 throw new InvalidDataException(Resources.MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value);
         }
     }
