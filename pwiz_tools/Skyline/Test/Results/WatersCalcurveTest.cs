@@ -273,6 +273,34 @@ namespace pwiz.SkylineTest.Results
         }
 
         [TestMethod]
+        public void WatersLeakTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+
+            string docPath;
+            SrmDocument doc = InitWatersDocument(testFilesDir, out docPath);
+            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+            string extRaw = ExtensionTestContext.ExtWatersRaw;
+
+            var listChromatograms = new List<ChromatogramSet>
+                {
+                    new ChromatogramSet("double", new[]
+                        {
+                            testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
+                            testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")
+                        }),
+                    new ChromatogramSet("trouble", new[]
+                        {
+                            testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
+                            testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
+                        })
+                };
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            testFilesDir.Dispose();
+        }
+
+        [TestMethod]
         public void WatersMultiFileTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
