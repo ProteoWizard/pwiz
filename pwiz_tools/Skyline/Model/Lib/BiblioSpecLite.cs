@@ -1030,7 +1030,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             // First look for an exact path match
             int i = _librarySourceFiles.IndexOf(info => Equals(filePath, info.FilePath));
-            if (i == -1)
+            // NOTE: We don't expect multi-part wiff files to appear in a library
+            if (i == -1 && !filePath.Contains('|'))
             {
                 try
                 {
