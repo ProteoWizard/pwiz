@@ -527,8 +527,10 @@ namespace BiblioSpec
             "LIMIT 1");
         if (!hasNext(statement))
         {
-            // no q-value fields in this database, use all peptides
-            Verbosity::warn("No q-values in database.");
+            // no q-value fields in this database, error unless user wants everything
+            if (getScoreThreshold(SQT) < 1)
+                throw BlibException(false, "This file does not contain q-values. You cannot "
+                                    "use a cut-off score in building a library for it.");
             statement = getStmt("SELECT PeptideID FROM Peptides");
         }
         else
