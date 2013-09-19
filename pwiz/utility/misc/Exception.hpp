@@ -70,12 +70,16 @@ inline std::string narrow(const std::wstring& str)
 
 inline int CrtReportHook(int reportType, char *message, int *returnValue)
 {
-    throw std::runtime_error(message);
+    if (reportType == _CRT_ERROR || reportType == _CRT_ASSERT)
+        throw std::runtime_error(message);
+    return 0;
 }
 
 inline int CrtReportHookW(int reportType, wchar_t *message, int *returnValue)
 {
-    throw std::runtime_error(narrow(message));
+    if (reportType == _CRT_ERROR || reportType == _CRT_ASSERT)
+        throw std::runtime_error(narrow(message));
+    return 0;
 }
 
 } // namespace

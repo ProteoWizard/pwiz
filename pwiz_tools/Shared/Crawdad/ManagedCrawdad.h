@@ -166,7 +166,8 @@ namespace Crawdad {
     public ref class CrtDebugHeap
     {
     public:
-        static void Init();
+        static void Checkpoint();
+        static int DumpLeaks();
     };
 }
 }

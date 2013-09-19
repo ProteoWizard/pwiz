@@ -46,8 +46,6 @@ namespace TestRunner
         {
             SystemSleep.Disable();
 
-            CrtDebugHeap.Init();
-
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
@@ -404,12 +402,17 @@ namespace TestRunner
                         Exception exception = null;
                         stopwatch.Reset();
                         stopwatch.Start();
+                        int leakedBytes = 0;
                         try
                         {
                             if (test.TestInitialize != null)
                                 test.TestInitialize.Invoke(testObject, null);
 
+                            if (pass > 1 || repeatCounter > 1)
+                                CrtDebugHeap.Checkpoint();
                             test.TestMethod.Invoke(testObject, null);
+                            if (pass > 1 || repeatCounter > 1)
+                                leakedBytes = CrtDebugHeap.DumpLeaks();
 
                             if (test.TestCleanup != null)
                                 test.TestCleanup.Invoke(testObject, null);
@@ -432,10 +435,11 @@ namespace TestRunner
                         {
                             // Test succeeded.
                             info = string.Format(
-                                "{0,3} failures, {1:0.0}/{2:0.0} MB, {3} sec.", 
+                                "{0,3} failures, {1:0.0}/{2:0.0} MB{3}, {4} sec.", 
                                 _failureCount, 
                                 managedMemory, 
                                 totalMemory,
+                                leakedBytes > 0 ? string.Format("  *** LEAKED {0} bytes ***", leakedBytes) : "",
                                 stopwatch.ElapsedMilliseconds/1000);
                             Console.WriteLine(info);
                             log.WriteLine(info);
@@ -462,6 +466,9 @@ namespace TestRunner
                                           exception.InnerException.StackTrace);
                         }
                         log.Flush();
+
+                        if (leakedBytes > 0)
+                            Trace.WriteLine(string.Format("\n*** {0} leaked ***\n", testName));
                     }
                 }
             }

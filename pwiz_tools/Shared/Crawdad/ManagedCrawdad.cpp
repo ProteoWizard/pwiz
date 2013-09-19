@@ -21,16 +21,36 @@
 namespace pwiz {
 namespace Crawdad {
 
+    static _CrtMemState _checkPointState;
+
     // Yes, this is a strange place to have this class, but it is very useful
     // for debugging ProteoWizard .NET applications while working in Visual Studio.
-    void CrtDebugHeap::Init()
+    void CrtDebugHeap::Checkpoint()
     {
 #ifdef _DEBUG
-        // Add memory dump on exit
-        _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
-//        _crtBreakAlloc = 139502;
+        // Check point heap state
+        _CrtMemCheckpoint(&_checkPointState);
+        //_CrtSetBreakAlloc(237487);
 #endif
     }
+
+    int CrtDebugHeap::DumpLeaks()
+    {
+#ifdef _DEBUG
+        _CrtMemState memState, diffState;
+        _CrtMemCheckpoint(&memState);
+        int different = _CrtMemDifference(&diffState, &_checkPointState, &memState);
+        if (different)
+        {
+            // Dump memory leaks since checkpoint
+            _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+            _CrtMemDumpAllObjectsSince(&_checkPointState);
+            return diffState.lSizes[_NORMAL_BLOCK];
+        }
+#endif
+        return 0;
+    }
+
 
     void CrawdadPeakFinder::SetChromatogram(IList<double>^ times, IList<double>^ intensities)
     {
