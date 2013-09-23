@@ -527,8 +527,10 @@ namespace BiblioSpec
             "LIMIT 1");
         if (!hasNext(statement))
         {
-            // no q-value fields in this database, use all peptides
-            Verbosity::warn("No q-values in database.");
+            // no q-value fields in this database, error unless user wants everything
+            if (getScoreThreshold(SQT) < 1)
+                throw BlibException(false, "This file does not contain q-values. You cannot "
+                                    "use a cut-off score in building a library for it.");
             statement = getStmt("SELECT PeptideID FROM Peptides");
         }
         else
@@ -583,6 +585,50 @@ namespace BiblioSpec
                 modMap[peptideId].push_back(mod);
             }
             ++modCount;
+        }
+
+        // get terminal mods if PeptidesTerminalModifications table exists
+        statement = getStmt(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'PeptidesTerminalModifications'");
+        if (hasNext(statement) && sqlite3_column_int(statement, 0) == 1) {
+            sqlite3_finalize(statement);
+            statement = getStmt(
+                "SELECT PeptidesTerminalModifications.PeptideID, PositionType, DeltaMass, Sequence "
+                "FROM PeptidesTerminalModifications "
+                "JOIN Peptides ON PeptidesTerminalModifications.PeptideID = Peptides.PeptideID "
+                "JOIN AminoAcidModifications ON TerminalModificationID = AminoAcidModificationID");
+
+            // turn each row of returned table into a seqmod to be added to the map
+            while (hasNext(statement))
+            {
+                int peptideId = sqlite3_column_int(statement, 0);
+                int positionType = sqlite3_column_int(statement, 1);
+                int position;
+                switch (positionType) {
+                case 1:
+                case 3:
+                    position = 1;
+                    break;
+                case 2:
+                case 4:
+                    position = strlen((const char*)sqlite3_column_text(statement, 3));
+                    break;
+                default:
+                    throw BlibException(false, "Unknown position type in PeptideAminoAcidModifications "
+                                        "for PeptideID %d", peptideId);
+                }
+                SeqMod mod(position, sqlite3_column_double(statement, 2));
+                found = modMap.find(peptideId);
+                if (found == modMap.end())
+                {
+                    modMap[peptideId] = vector<SeqMod>(1, mod);
+                }
+                else
+                {
+                    modMap[peptideId].push_back(mod);
+                }
+                ++modCount;
+            }
         }
 
         Verbosity::debug("%d mods found for %d peptides", modCount, modMap.size());
