@@ -243,6 +243,13 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
 
     // get the file ID to save with each spectrum
     sqlite3_int64 fileId = sqlite3_last_insert_rowid(blibMaker_.getDb());
+
+    const int MAX_SPECTRUM_FILES = 500;
+
+    if (fileId > MAX_SPECTRUM_FILES)
+        throw BlibException(false, "Maximum limit of %d spectrum source files was exceeded. There "
+                            "was most likely a problem reading the filenames.", MAX_SPECTRUM_FILES);
+
     return fileId;
 }
 
@@ -832,24 +839,22 @@ string BuildParser::getFilenameFromID(const string& idStr){
             filename = idStr.substr(start, end - start);
         }
     }
-    if (filename.empty()){
-        // check for TPP/SEQUEST format <basename>.<start scan>.<end scan>.<charge>[.dta]
-        vector<string> parts;
-        boost::split(parts, idStr, boost::is_any_of("."));
+    // check for TPP/SEQUEST format <basename>.<start scan>.<end scan>.<charge>[.dta]
+    vector<string> parts;
+    boost::split(parts, idStr, boost::is_any_of("."));
 
-        if ((parts.size() == 4 || (parts.size() == 5 && strcmp(parts[4].c_str(), "dta") == 0))){            
-            if (validInts(parts.begin() + 1, parts.begin() + 4)) {
-                filename = parts[0];
+    if ((parts.size() == 4 || (parts.size() == 5 && strcmp(parts[4].c_str(), "dta") == 0))){            
+        if (validInts(parts.begin() + 1, parts.begin() + 4)) {
+            filename = parts[0];
 
-                // check for special ScaffoldIDNumber prefix
-                const char* scaffoldPrefix = "ScaffoldIDNumber_";
-                size_t lenPrefix = strlen(scaffoldPrefix);
-                if (strncmp(filename.c_str(), scaffoldPrefix, lenPrefix) == 0) {
-                    size_t endPrefix = filename.find("_", lenPrefix);
-                    if (endPrefix != string::npos && endPrefix < filename.length() - 1
-                            && atoi(filename.substr(lenPrefix, endPrefix - lenPrefix).c_str()) != 0)
-                        filename = filename.substr(endPrefix + 1, filename.length() - endPrefix - 1);
-                }
+            // check for special ScaffoldIDNumber prefix
+            const char* scaffoldPrefix = "ScaffoldIDNumber_";
+            size_t lenPrefix = strlen(scaffoldPrefix);
+            if (strncmp(filename.c_str(), scaffoldPrefix, lenPrefix) == 0) {
+                size_t endPrefix = filename.find("_", lenPrefix);
+                if (endPrefix != string::npos && endPrefix < filename.length() - 1
+                        && atoi(filename.substr(lenPrefix, endPrefix - lenPrefix).c_str()) != 0)
+                    filename = filename.substr(endPrefix + 1, filename.length() - endPrefix - 1);
             }
         }
     }

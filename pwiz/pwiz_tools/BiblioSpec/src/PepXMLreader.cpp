@@ -182,10 +182,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
        }
        
-       if(strcmp("monoisotopic",getAttrValue("fragment_mass_type",attr)) == 0)
-           massType = 1;
-       else
+       if (boost::iequals("average", getAttrValue("fragment_mass_type", attr)))
            massType = 0;
+       else
+           massType = 1;
        
        AminoAcidMasses::initializeMass(aminoacidmass, massType);
 
@@ -335,7 +335,7 @@ void PepXMLreader::endElement(const XML_Char* name)
         
         // reset values for next
         mzXMLFile[0]='\0';
-        massType = 0;
+        massType = 1;
         for(int i=0; i<128; i++) {
             aminoacidmass[i]=0;
         }

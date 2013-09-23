@@ -1,10 +1,10 @@
 libLSID	numSpecs	majorVersion	minorVersion
 urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:morpheus.blib	2	1	1
 id	RefSpectraID	position	mass
-1	2	2	56.887298
+1	2	2	57.021464
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	ATFVVDPQGIIQAIEVTAEGIGR	1192.651733	2	ATFVVDPQGIIQAIEVTAEGIGR	-	-	1	663	51.616633	1	scanId=3097006	0.0	14
-2	ACIGIITNPVNTTVAIAAEVLK	756.059052	3	AC[+56.9]IGIITNPVNTTVAIAAEVLK	-	-	1	1347	47.9075	1	scanId=2874457	0.0	14
+2	ACIGIITNPVNTTVAIAAEVLK	756.059052	3	AC[+57.0]IGIITNPVNTTVAIAAEVLK	-	-	1	1347	47.9075	1	scanId=2874457	0.0	14
 id	fileName
 1	/BiblioSpec/tests/inputs/test-morpheus.mzML
 id	scoreType

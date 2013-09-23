@@ -103,14 +103,22 @@ int main(int argc, char* argv[])
     BlibFilter filter;
     filter.parseCommandLine(argc, argv, options_table);
 
-    filter.init();
+    try {
+        filter.init();
 
-    filter.beginTransaction();
-    Verbosity::debug("About to begin filtering.");
-    filter.buildNonRedundantLib();
-    Verbosity::debug("Finished filtering.");
-    filter.endTransaction();
-    filter.commit();
+        filter.beginTransaction();
+        Verbosity::debug("About to begin filtering.");
+        filter.buildNonRedundantLib();
+        Verbosity::debug("Finished filtering.");
+        filter.endTransaction();
+        filter.commit();
+    } catch (BlibException& e) {
+        cerr << "ERROR: " << e.what();
+    } catch (exception& e) {
+        cerr << "ERROR: " << e.what();
+    } catch (...) {
+        cerr << "ERROR: Unknown error";
+    }
 }
 
 BlibFilter::BlibFilter()
@@ -230,9 +238,9 @@ string BlibFilter::getLSID()
     size_t idx = libLSID.find(redundant);
     if (idx == string::npos)
     {
-        Verbosity::error("The library %s does not appear to be a redundant library.\n"
-                         "'%s' was not found in LSID '%s'.",
-                         redundantFileName_.c_str(), redundant.c_str(), libLSID.c_str());
+        throw BlibException(false, "The library %s does not appear to be a redundant library.\n"
+                            "'%s' was not found in LSID '%s'.",
+                            redundantFileName_.c_str(), redundant.c_str(), libLSID.c_str());
     }
 
     libLSID.replace(idx, redundant.length(), ":nr:");
