@@ -1945,7 +1945,8 @@ namespace pwiz.Skyline.Model
                                   Transition transition,
                                   double? startTime,
                                   double? endTime,
-                                  PeakIdentification identified)
+                                  PeakIdentification identified,
+                                  bool preserveMissingPeaks)
         {
             // Error if only one of startTime and endTime is null
             if (startTime == null && endTime != null)
@@ -1967,33 +1968,45 @@ namespace pwiz.Skyline.Model
             foreach (TransitionDocNode nodeTran in Children)
             {
                 if (transition != null && !ReferenceEquals(transition, nodeTran.Transition))
+                {
                     listChildrenNew.Add(nodeTran);
+                    continue;
+                }
+                if (preserveMissingPeaks)
+                {
+                    if (null != nodeTran.Results && indexSet < nodeTran.Results.Count)
+                    {
+                        var existingChromInfos = nodeTran.Results[indexSet];
+                        if (existingChromInfos != null && existingChromInfos.All(chromInfo => chromInfo.IsEmpty))
+                        {
+                            listChildrenNew.Add(nodeTran);
+                            continue;
+                        }
+                    }
+                }
+                var chromInfoArray = chromGroupInfo.GetAllTransitionInfo(
+                    (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
+
+                // Shouldn't need to update a transition with no chrom info
+                // Also if startTime is null, remove the peak
+                if (chromInfoArray.Length == 0 || startTime==null)
+                    listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId));
                 else
                 {
-                    var chromInfoArray = chromGroupInfo.GetAllTransitionInfo(
-                        (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
-
-                    // Shouldn't need to update a transition with no chrom info
-                    // Also if startTime is null, remove the peak
-                    if (chromInfoArray.Length == 0 || startTime==null)
-                        listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId));
-                    else
+                    // CONSIDER: Do this more efficiently?  Only when there is opimization
+                    //           data will the loop execute more than once.
+                    int startIndex = chromGroupInfo.IndexOfNearestTime((float)startTime);
+                    int endIndex = chromGroupInfo.IndexOfNearestTime((float)endTime);
+                    int numSteps = chromInfoArray.Length/2;
+                    var nodeTranNew = nodeTran;
+                    for (int i = 0; i < chromInfoArray.Length; i++)
                     {
-                        // CONSIDER: Do this more efficiently?  Only when there is opimization
-                        //           data will the loop execute more than once.
-                        int startIndex = chromGroupInfo.IndexOfNearestTime((float)startTime);
-                        int endIndex = chromGroupInfo.IndexOfNearestTime((float)endTime);
-                        int numSteps = chromInfoArray.Length/2;
-                        var nodeTranNew = nodeTran;
-                        for (int i = 0; i < chromInfoArray.Length; i++)
-                        {
-                            var chromInfo = chromInfoArray[i];
-                            int step = i - numSteps;
-                            nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
-                                                                                     chromInfo.CalcPeak(startIndex, endIndex, flags), ratioCount);
-                        }
-                        listChildrenNew.Add(nodeTranNew);
+                        var chromInfo = chromInfoArray[i];
+                        int step = i - numSteps;
+                        nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
+                                                                                    chromInfo.CalcPeak(startIndex, endIndex, flags), ratioCount);
                     }
+                    listChildrenNew.Add(nodeTranNew);
                 }
             }
             return ChangeChildrenChecked(listChildrenNew);

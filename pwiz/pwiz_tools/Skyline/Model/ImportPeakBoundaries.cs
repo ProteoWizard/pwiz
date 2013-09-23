@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model
                         IdentityPath groupPath = new IdentityPath(pepPath, groupNode.Id);
                         // Change peak boundaries for the transition group
                         docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                                   null, startTime, endTime);
+                                                   null, startTime, endTime, null, false);
                         break;
                     }
                 }

@@ -1592,7 +1592,7 @@ namespace pwiz.Skyline
                 return;
 
             ModifyDocument(message,
-                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, PeakIdentification.FALSE));            
+                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, PeakIdentification.FALSE, false));            
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)
@@ -2039,7 +2039,7 @@ namespace pwiz.Skyline
                     continue;
                 }
                 document = document.ChangePeak(groupPath, e.NameSet, e.FilePath, null, 
-                    activeChromInfo.StartRetentionTime, activeChromInfo.EndRetentionTime, activeChromInfo.Identified);
+                    activeChromInfo.StartRetentionTime, activeChromInfo.EndRetentionTime, activeChromInfo.Identified, true);
             }
             return document;
         }
@@ -2114,7 +2114,7 @@ namespace pwiz.Skyline
             foreach (var change in changes)
             {
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
-                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, change.Identified);
+                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, change.Identified, false);
                 changedGroupIds.Add(change.GroupPath);
                 if (!peptideChanges.ContainsKey(change.GroupPath.Parent)) {
                     var transitionGroup = (TransitionGroupDocNode) document.FindNode(change.GroupPath);
@@ -2146,7 +2146,7 @@ namespace pwiz.Skyline
                         continue;
                     }
                     document = document.ChangePeak(groupId, change.NameSet, change.FilePath, null,
-                        change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, change.Identified);
+                        change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, change.Identified, true);
                 }
             }
             return document;

@@ -889,7 +889,7 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Transition transition, double? startTime, double? endTime, PeakIdentification? identified=null)
+            Transition transition, double? startTime, double? endTime, PeakIdentification? identified, bool preserveMissingPeaks)
         {
             // If start or end time is null, just assign an arbitrary value to identified -- peak will be deleted anyway
             if (!startTime.HasValue || !endTime.HasValue)
@@ -923,7 +923,9 @@ namespace pwiz.Skyline.Model
             }
             return ChangePeak(groupPath, nameSet, filePath, true,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime, identified.Value));
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime,
+                        identified.Value, preserveMissingPeaks)
+                    );
         }
 
         private bool ContainsTime(double[] times, double startTime, double endTime)
