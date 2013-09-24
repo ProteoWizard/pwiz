@@ -40,9 +40,10 @@ namespace pwiz.SkylineTest.Results
             string extRaw = ExtensionTestContext.ExtAgilentRaw;
 
             // Do file type check
-            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw));
-            Assert.IsTrue(msData.IsAgilentFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw)))
+            {
+                Assert.IsTrue(msData.IsAgilentFile);
+            }
         }
 
         [TestMethod]

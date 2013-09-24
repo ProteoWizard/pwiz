@@ -47,17 +47,20 @@ namespace pwiz.SkylineTest.Results
             string extRaw = ExtensionTestContext.ExtThermoRaw;
 
             // Do file type checks
-            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw));
-            Assert.IsTrue(msData.IsThermoFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw)))
+            {
+                Assert.IsTrue(msData.IsThermoFile);
+            }
 
-            msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"));
-            Assert.IsTrue(msData.IsThermoFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML")))
+            {
+                Assert.IsTrue(msData.IsThermoFile);
+            }
 
-            msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_05" + extRaw));
-            Assert.IsTrue(msData.IsThermoFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_05" + extRaw)))
+            {
+                Assert.IsTrue(msData.IsThermoFile);
+            }
         }
 
         /// <summary>

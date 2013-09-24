@@ -62,91 +62,96 @@ namespace pwiz.SkylineTestA.Results
         public void TestOverlap(SrmDocument doc, string dataPath)
         {
             // Load the file and check MsDataFileImpl
-            var file = new MsDataFileImpl(dataPath, 0);
-            var filter = new SpectrumFilter(doc, null);
-            Assert.IsTrue(filter.EnabledMsMs);
-            var demultiplexer = new OverlapDemultiplexer(file, filter);
-            demultiplexer.ForceInitializeFile();
+            using (var file = new MsDataFileImpl(dataPath, 0))
+            {
+                var filter = new SpectrumFilter(doc, null);
+                Assert.IsTrue(filter.EnabledMsMs);
+                var demultiplexer = new OverlapDemultiplexer(file, filter);
+                demultiplexer.ForceInitializeFile();
 
-            // Check that the demultiplexer found the correct multiplexing parameters
-            Assert.AreEqual(1, demultiplexer.IsoWindowsPerScan);
-            Assert.AreEqual(40, demultiplexer.NumIsoWindows);
-            Assert.AreEqual(41, demultiplexer.NumDeconvRegions);
+                // Check that the demultiplexer found the correct multiplexing parameters
+                Assert.AreEqual(1, demultiplexer.IsoWindowsPerScan);
+                Assert.AreEqual(40, demultiplexer.NumIsoWindows);
+                Assert.AreEqual(41, demultiplexer.NumDeconvRegions);
 
-            var isoMapper = demultiplexer.IsoMapperTest;
+                var isoMapper = demultiplexer.IsoMapperTest;
 
-            // Basic checks of IsolationWindowMapper
-            TestIsolationWindowMapper(isoMapper, file, 20.009);
-            // Checks of overlap-specific functionality in IsolationWindowMapper
-            TestOverlapIsolationWindowMapper(isoMapper, file);
-            var transBinner = new TransitionBinner(filter, isoMapper);
+                // Basic checks of IsolationWindowMapper
+                TestIsolationWindowMapper(isoMapper, file, 20.009);
+                // Checks of overlap-specific functionality in IsolationWindowMapper
+                TestOverlapIsolationWindowMapper(isoMapper, file);
+                var transBinner = new TransitionBinner(filter, isoMapper);
 
-            // Test creation of a transition binner from a spectrum filter
-            TestTransitionBinnerFromFilter(transBinner, isoMapper);
-            var testSpectrum = file.GetSpectrum(TEST_SPECTRUM_OVERLAP);
-            // Generate a transition binner containing a lot of tough cases with
-            // overlapping transitions and test
-            double[] binnedExpected = new[] 
-                                        {
-                                            0.0, 0.0, 0.0, 0.0, 0.0,
-                                            0.0, 0.0, 0.0
-                                        };
-            var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
+                // Test creation of a transition binner from a spectrum filter
+                TestTransitionBinnerFromFilter(transBinner, isoMapper);
+                var testSpectrum = file.GetSpectrum(TEST_SPECTRUM_OVERLAP);
+                // Generate a transition binner containing a lot of tough cases with
+                // overlapping transitions and test
+                double[] binnedExpected = new[]
+                    {
+                        0.0, 0.0, 0.0, 0.0, 0.0,
+                        0.0, 0.0, 0.0
+                    };
+                var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
 
-            TestSpectrumProcessor(transBinnerOverlap, isoMapper, file, TEST_SPECTRUM_OVERLAP);
-            int[] intensityIndices = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296};
-            double[] intensityValues = new[]
-                {
-                    0.0, 0.0, 0.0, 0.0, 4545.85, 15660.49, 
-                    35050.01, 56321.66, 62715.75, 43598.31, 23179.42,
-                    1227.37, 1730.05, 1814.80, 1407.17, 740.37,
-                    0.0, 0.0
-                };
-            // Test demultiplexing of a real spectrum
-            TestFullDemultiplex(demultiplexer, TEST_SPECTRUM_OVERLAP, testSpectrum, intensityIndices, intensityValues, 0);
+                TestSpectrumProcessor(transBinnerOverlap, isoMapper, file, TEST_SPECTRUM_OVERLAP);
+                int[] intensityIndices = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296};
+                double[] intensityValues = new[]
+                    {
+                        0.0, 0.0, 0.0, 0.0, 4545.85, 15660.49,
+                        35050.01, 56321.66, 62715.75, 43598.31, 23179.42,
+                        1227.37, 1730.05, 1814.80, 1407.17, 740.37,
+                        0.0, 0.0
+                    };
+                // Test demultiplexing of a real spectrum
+                TestFullDemultiplex(demultiplexer, TEST_SPECTRUM_OVERLAP, testSpectrum, intensityIndices,
+                                    intensityValues, 0);
+            }
         }
 
         public void TestMsx(SrmDocument doc, string dataPath)
         {
             // Load the file and check MsDataFileImpl
-            var file = new MsDataFileImpl(dataPath, 0);
-            Assert.IsTrue(file.IsMsx);
+            using (var file = new MsDataFileImpl(dataPath, 0))
+            {
+                Assert.IsTrue(file.IsMsx);
 
-            var filter = new SpectrumFilter(doc, null);
-            Assert.IsTrue(filter.EnabledMsMs);
-            var demultiplexer = new MsxDemultiplexer(file, filter);
-            demultiplexer.ForceInitializeFile();
+                var filter = new SpectrumFilter(doc, null);
+                Assert.IsTrue(filter.EnabledMsMs);
+                var demultiplexer = new MsxDemultiplexer(file, filter);
+                demultiplexer.ForceInitializeFile();
 
-            // Check that the demultiplexer found the correct multiplexing parameters
-            Assert.AreEqual(5, demultiplexer.IsoWindowsPerScan);
-            Assert.AreEqual(100, demultiplexer.NumIsoWindows);
-            Assert.AreEqual(20, demultiplexer.DutyCycleLength);
+                // Check that the demultiplexer found the correct multiplexing parameters
+                Assert.AreEqual(5, demultiplexer.IsoWindowsPerScan);
+                Assert.AreEqual(100, demultiplexer.NumIsoWindows);
+                Assert.AreEqual(20, demultiplexer.DutyCycleLength);
 
-            var isoMapper = demultiplexer.IsoMapperTest;
-            Assert.AreEqual(100, isoMapper.NumWindows);
+                var isoMapper = demultiplexer.IsoMapperTest;
+                Assert.AreEqual(100, isoMapper.NumWindows);
 
-            // Check the isolation window mapper responsible for mapping each unique isolation
-            // window detected in the file to a unique index
-            TestIsolationWindowMapper(isoMapper, file, 4.00182);
+                // Check the isolation window mapper responsible for mapping each unique isolation
+                // window detected in the file to a unique index
+                TestIsolationWindowMapper(isoMapper, file, 4.00182);
 
-            var transBinner = new TransitionBinner(filter, isoMapper);
+                var transBinner = new TransitionBinner(filter, isoMapper);
 
-            // Test creation of a transition binner from a spectrum filter
-            TestTransitionBinnerFromFilter(transBinner, isoMapper);
-            var testSpectrum = file.GetSpectrum(TEST_SPECTRUM);
-            // Generate a transition binner containing a lot of tough cases with
-            // overlapping transitions and test    
-            double[] binnedExpected = new[] 
-                                        {
-                                            0.0, 25160.11261, 18254.06375, 18254.06375, 18254.06375,
-                                            11090.00577, 19780.18628,  19780.18628
-                                        };
-            var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
+                // Test creation of a transition binner from a spectrum filter
+                TestTransitionBinnerFromFilter(transBinner, isoMapper);
+                var testSpectrum = file.GetSpectrum(TEST_SPECTRUM);
+                // Generate a transition binner containing a lot of tough cases with
+                // overlapping transitions and test    
+                double[] binnedExpected = new[]
+                    {
+                        0.0, 25160.11261, 18254.06375, 18254.06375, 18254.06375,
+                        11090.00577, 19780.18628, 19780.18628
+                    };
+                var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
 
-            TestSpectrumProcessor(transBinnerOverlap, isoMapper, file,TEST_SPECTRUM);
+                TestSpectrumProcessor(transBinnerOverlap, isoMapper, file, TEST_SPECTRUM);
 
-            TestPeakIntensityCorrection(testSpectrum, isoMapper,
-                demultiplexer);
+                TestPeakIntensityCorrection(testSpectrum, isoMapper,
+                                            demultiplexer);
+            }
         }
 
         private static void TestOverlapIsolationWindowMapper(AbstractIsoWindowMapper isoMapper, MsDataFileImpl file)

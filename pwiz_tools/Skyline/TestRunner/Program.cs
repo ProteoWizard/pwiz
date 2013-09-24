@@ -351,7 +351,7 @@ namespace TestRunner
                     testOrder.RemoveAt(testOrderIndex);
                     var test = testList[testIndex];
 
-                    for (int repeatCounter = 0; repeatCounter < repeat; repeatCounter++)
+                    for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                     {
                         // Record information for this test.
                         var testName = test.TestMethod.Name;
@@ -402,7 +402,7 @@ namespace TestRunner
                         Exception exception = null;
                         stopwatch.Reset();
                         stopwatch.Start();
-                        int leakedBytes = 0;
+                        long totalLeakedBytes = 0;
                         try
                         {
                             if (test.TestInitialize != null)
@@ -412,7 +412,10 @@ namespace TestRunner
                                 CrtDebugHeap.Checkpoint();
                             test.TestMethod.Invoke(testObject, null);
                             if (pass > 1 || repeatCounter > 1)
-                                leakedBytes = CrtDebugHeap.DumpLeaks();
+                            {
+                                long leakedBytes = CrtDebugHeap.DumpLeaks(false);
+                                totalLeakedBytes += leakedBytes;
+                            }
 
                             if (test.TestCleanup != null)
                                 test.TestCleanup.Invoke(testObject, null);
@@ -439,7 +442,7 @@ namespace TestRunner
                                 _failureCount, 
                                 managedMemory, 
                                 totalMemory,
-                                leakedBytes > 0 ? string.Format("  *** LEAKED {0} bytes ***", leakedBytes) : "",
+                                totalLeakedBytes > 0 ? string.Format("  *** LEAKED {0} bytes ***", totalLeakedBytes) : "",
                                 stopwatch.ElapsedMilliseconds/1000);
                             Console.WriteLine(info);
                             log.WriteLine(info);
@@ -467,7 +470,7 @@ namespace TestRunner
                         }
                         log.Flush();
 
-                        if (leakedBytes > 0)
+                        if (totalLeakedBytes > 0)
                             Trace.WriteLine(string.Format("\n*** {0} leaked ***\n", testName));
                     }
                 }

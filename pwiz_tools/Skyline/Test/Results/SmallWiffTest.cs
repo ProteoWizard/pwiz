@@ -49,14 +49,16 @@ namespace pwiz.SkylineTest.Results
             string suffix = ExtensionTestContext.CanImportAbWiff ? "" : "-test";
 
             // Do file type checks
-            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion" + suffix + extWiff));
-            Assert.IsTrue(msData.IsABFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion" + suffix + extWiff)))
+            {
+                Assert.IsTrue(msData.IsABFile);
+            }
 
-            msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion-s3.mzXML"));
-            Assert.IsTrue(msData.IsABFile);
-            Assert.IsTrue(msData.IsMzWiffXml);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")))
+            {
+                Assert.IsTrue(msData.IsABFile);
+                Assert.IsTrue(msData.IsMzWiffXml);
+            }
         }
 
         [TestMethod]

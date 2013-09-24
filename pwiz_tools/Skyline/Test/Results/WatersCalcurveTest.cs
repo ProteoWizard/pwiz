@@ -25,6 +25,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -46,30 +47,35 @@ namespace pwiz.SkylineTest.Results
             string extRaw = ExtensionTestContext.ExtWatersRaw;
 
             // Do file type checks
-            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw));
-            Assert.IsTrue(msData.IsWatersFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)))
+            {
+                Assert.IsTrue(msData.IsWatersFile);
+            }
 
-            msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
-            Assert.IsTrue(msData.IsWatersFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML")))
+            {
+                Assert.IsTrue(msData.IsWatersFile);
+            }
 
             // TODO: Fix Proteowizard.
             // This mzXML is from the MassWolf converter.  
             // The source file types are recorded as "RAWData" and the parent file extension is .raw. 
             // This ends up getting interpreted as ""Thermo RAW file" when reading with proteowizard.
-            // msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzXML"));
-            // Assert.IsFalse(msData.IsWatersFile);
-            // Assert.IsTrue(msData.IsThermoFile);
-            // msData.Dispose();
+            // using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzXML")))
+            // {
+            //     Assert.IsFalse(msData.IsWatersFile);
+            //     Assert.IsTrue(msData.IsThermoFile);
+            // }
 
-            msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"));
-            Assert.IsTrue(msData.IsWatersFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")))
+            {
+                Assert.IsTrue(msData.IsWatersFile);
+            }
 
-            msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML"));
-            Assert.IsTrue(msData.IsWatersFile);
-            msData.Dispose();
+            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")))
+            {
+                Assert.IsTrue(msData.IsWatersFile);
+            }
         }
 
         [TestMethod]
@@ -275,29 +281,22 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void WatersLeakTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            // To see the leak, run "TestRunner loop=1 repeat=4 test=WatersLeakTest" on a DEBUG build.
 
-            string docPath;
-            SrmDocument doc = InitWatersDocument(testFilesDir, out docPath);
-            var docContainer = new ResultsTestDocumentContainer(doc, docPath);
-            string extRaw = ExtensionTestContext.ExtWatersRaw;
+            using (var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE))
+            {
+                string docPath;
+                SrmDocument doc = InitWatersDocument(testFilesDir, out docPath);
+                var docContainer = new ResultsTestDocumentContainer(doc, docPath);
 
-            var listChromatograms = new List<ChromatogramSet>
-                {
-                    new ChromatogramSet("double", new[]
-                        {
-                            testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
-                            testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")
-                        }),
-                    new ChromatogramSet("trouble", new[]
-                        {
-                            testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
-                            testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
-                        })
-                };
-            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-            testFilesDir.Dispose();
+                var testPath = testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML");
+                var chromatogramSet = new ChromatogramSet("leak", new[] { testPath });
+                var listChromatograms = new List<ChromatogramSet> { chromatogramSet };
+
+                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+                Assert.IsTrue(docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docContainer.Document, false));
+            }
         }
 
         [TestMethod]

@@ -34,7 +34,7 @@ namespace Crawdad {
 #endif
     }
 
-    int CrtDebugHeap::DumpLeaks()
+    long CrtDebugHeap::DumpLeaks(bool dumpDetails)
     {
 #ifdef _DEBUG
         _CrtMemState memState, diffState;
@@ -43,8 +43,11 @@ namespace Crawdad {
         if (different)
         {
             // Dump memory leaks since checkpoint
-            _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
-            _CrtMemDumpAllObjectsSince(&_checkPointState);
+            if (dumpDetails)
+            {
+                _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+                _CrtMemDumpAllObjectsSince(&_checkPointState);
+            }
             return diffState.lSizes[_NORMAL_BLOCK];
         }
 #endif

@@ -1770,9 +1770,9 @@ namespace pwiz.Skyline
             // Try to read the file
             try
             {
-// ReSharper disable ObjectCreationAsStatement
-                new MsDataFileImpl(replicatePath);  
-// ReSharper restore ObjectCreationAsStatement
+                using (new MsDataFileImpl(replicatePath))
+                {
+                }
             }
             catch(Exception e)
             {

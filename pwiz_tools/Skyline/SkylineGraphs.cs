@@ -1486,7 +1486,9 @@ namespace pwiz.Skyline
             {
                 var nodePepTree = SelectedNode as PeptideTreeNode;
                 Debug.Assert(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (nodePepTree == null || nodePepTree.Nodes.Count != 1)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
                     return;
                 nodeGroup = (TransitionGroupDocNode) nodePepTree.DocNode.Children[0];
                 pathGroup = new IdentityPath(nodePepTree.Path, nodeGroup.Id);

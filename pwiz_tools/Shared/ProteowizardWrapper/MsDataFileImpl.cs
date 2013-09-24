@@ -64,16 +64,6 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
-        public static MsDataFileImpl[] ReadAll(string path)
-        {
-            var listAll = new MSDataList();
-            FULL_READER_LIST.read(path, listAll);
-            var listAllImpl = new List<MsDataFileImpl>();
-            foreach (var msData in listAll)
-                listAllImpl.Add(new MsDataFileImpl(msData));
-            return listAllImpl.ToArray();
-        }
-
         private MsDataFileImpl(MSData msDataFile)
         {
             _msDataFile = msDataFile;

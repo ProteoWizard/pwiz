@@ -167,7 +167,7 @@ namespace Crawdad {
     {
     public:
         static void Checkpoint();
-        static int DumpLeaks();
+        static long DumpLeaks(bool dumpDetails);
     };
 }
 }
