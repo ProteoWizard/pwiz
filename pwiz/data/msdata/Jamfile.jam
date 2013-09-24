@@ -54,6 +54,7 @@ lib pwiz_data_msdata
         MSData.cpp
         MSDataFile.cpp
         MSDataMerger.cpp
+        MSNumpress.cpp
         Serializer_mzML.cpp
         Serializer_mzXML.cpp
         Serializer_MGF.cpp

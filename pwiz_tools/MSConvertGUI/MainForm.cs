@@ -37,6 +37,13 @@ namespace MSConvertGUI
     {
         IList<string> cmdline_args;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
+        string AboutButtonHelpText = "Each control has a \"tooltip\": let your cursor rest atop a control for a moment to see a help message for that control.\r\n\r\n" +
+            "For more in depth help, visit http://proteowizard.sourceforge.net/tools.shtml .  " +
+            "The documentation there describing the command line version of msconvert will be useful for understanding this " +
+            "program, especially filters.  Actually, you will generally find the command line version to be more complete and " +
+            "flexible than this GUI version and may wish to treat this program as a learning tool for using the command line " +
+            "version.\r\n\r\nHere are the various tooltips in a more long lasting form:";
+        System.Collections.SortedList sortedToolTips = new System.Collections.SortedList();
 
         private IList<KeyValuePair<string, string>> thresholdTypes = new KeyValuePair<string, string>[]
         {
@@ -116,6 +123,9 @@ namespace MSConvertGUI
             thresholdTypeComboBox.SelectedIndex = 0;
             thresholdOrientationComboBox.SelectedIndex = 0;
             thresholdValueTextBox.Text = "100";
+
+            ValidateNumpress(); // make sure numpress settings are reasonable
+
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -301,32 +311,32 @@ namespace MSConvertGUI
             switch (FilterBox.Text)
             {
                 case "MS Level":
-                    if (!String.IsNullOrEmpty(MSLevelBox1.Text) ||
-                        !String.IsNullOrEmpty(MSLevelBox2.Text))
+                    if (!String.IsNullOrEmpty(MSLevelLow.Text) ||
+                        !String.IsNullOrEmpty(MSLevelHigh.Text))
                         FilterDGV.Rows.Add(new[]
                                                {
                                                    "msLevel",
-                                                   String.Format("{0}-{1}", MSLevelBox1.Text, MSLevelBox2.Text)
+                                                   String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text)
                                                });
                     break;
                 case "Peak Picking":
-                    if (!String.IsNullOrEmpty(PeakMSLevelBox1.Text) ||
-                        !String.IsNullOrEmpty(PeakMSLevelBox2.Text))
+                    if (!String.IsNullOrEmpty(PeakMSLevelLow.Text) ||
+                        !String.IsNullOrEmpty(PeakMSLevelHigh.Text))
                         FilterDGV.Rows.Add(new[]
                                                {
                                                    "peakPicking",
                                                    String.Format("{0} {1}-{2}",
                                                                  PeakPreferVendorBox.Checked.ToString().ToLower(),
-                                                                 PeakMSLevelBox1.Text, PeakMSLevelBox2.Text)
+                                                                 PeakMSLevelLow.Text, PeakMSLevelHigh.Text)
                                                });
                     break; 
                 case "Zero Samples":
                     String args = ZeroSamplesAddMissing.Checked ? "addMissing" : "removeExtra";
                     if ( ZeroSamplesAddMissing.Checked && (!String.IsNullOrEmpty(ZeroSamplesAddMissingFlankCountBox.Text)))
                         args+=String.Format("={0}",ZeroSamplesAddMissingFlankCountBox.Text);
-                    if (!String.IsNullOrEmpty(ZeroSamplesMSLevelBox1.Text) ||
-                        !String.IsNullOrEmpty(ZeroSamplesMSLevelBox2.Text))
-                        args += String.Format(" {0}-{1}",ZeroSamplesMSLevelBox1.Text,ZeroSamplesMSLevelBox2.Text);
+                    if (!String.IsNullOrEmpty(ZeroSamplesMSLevelLow.Text) ||
+                        !String.IsNullOrEmpty(ZeroSamplesMSLevelHigh.Text))
+                        args += String.Format(" {0}-{1}",ZeroSamplesMSLevelLow.Text,ZeroSamplesMSLevelHigh.Text);
                     else // no mslevels specified means all mslevels
                         args += " 1-";
                     FilterDGV.Rows.Add(new[]
@@ -384,9 +394,21 @@ namespace MSConvertGUI
                 FilterDGV.Rows.Remove(FilterDGV.SelectedRows[0]);
         }
 
+        private void ValidateNumpress()
+        {
+            bool numpressEnable = ("mzML" == OutputFormatBox.Text); // meaningless outside of mzML
+            NumpressToleranceLabel.Enabled = numpressEnable;
+            NumpressToleranceTextbox.Enabled = numpressEnable;
+            NumpressLinearBox.Enabled = numpressEnable;
+            NumpressPicBox.Enabled = numpressEnable;
+            NumpressSlofBox.Enabled = numpressEnable;
+            if (NumpressPicBox.Checked && NumpressSlofBox.Checked)
+                NumpressPicBox.Checked = false; // mutually exclusive
+        }
+
         private void OutputFormatBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            OutputExtensionBox.Text = OutputFormatBox.Text;
+            ValidateNumpress();
         }
 
         private void OutputBrowse_Click(object sender, EventArgs e)
@@ -422,7 +444,7 @@ namespace MSConvertGUI
 
             if (OutputFormatBox.Text != OutputExtensionBox.Text)
                 commandLine.AppendFormat("--ext|{0}|", OutputExtensionBox.Text);
-
+            ValidateNumpress(); // make sure numpress settings are reasonable
             switch (OutputFormatBox.Text)
             {
                 case "mzXML":
@@ -463,6 +485,15 @@ namespace MSConvertGUI
             if (GzipBox.Checked)
                 commandLine.Append("--gzip|");
 
+            if (NumpressLinearBox.Checked)
+                commandLine.AppendFormat("--numpressLinear|{0}|", this.NumpressToleranceTextbox.Text);
+
+            if (NumpressSlofBox.Checked)
+                commandLine.AppendFormat("--numpressSlof|{0}|", this.NumpressToleranceTextbox.Text);
+
+            if (NumpressPicBox.Checked)
+                commandLine.Append("--numpressPic");
+
             var msLevelsTotal = String.Empty;
             var peakPickingTotal = String.Empty;
             var scanNumberTotal = String.Empty;
@@ -498,7 +529,11 @@ namespace MSConvertGUI
                 commandLine.AppendFormat("--filter|scanNumber {0}|", scanNumberTotal.Trim());
 
             if (MakeTPPCompatibleOutputButton.Checked)
-                commandLine.Append("--filter|titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState> File:\"<SourcePath>\", NativeID:\"<Id>\"|");
+            {
+                String tppline = "--filter|titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState> File:\"<SourcePath>\", NativeID:\"<Id>\"|";
+                if (!commandLine.ToString().Contains(tppline))
+                    commandLine.Append(tppline);
+            }
 
             return commandLine.ToString();
         }
@@ -542,6 +577,17 @@ namespace MSConvertGUI
                     case "--zlib":
                     case "--gzip":
                         break; // already handled these booleans above
+                    case "--numpressLinear":
+                        NumpressLinearBox.Checked=true;
+                        NumpressToleranceTextbox.Text = words[++i];
+                        break;
+                    case "--numpressSlof":
+                        NumpressSlofBox.Checked=true;
+                        NumpressToleranceTextbox.Text = words[++i];
+                        break;
+                    case "--numpressPic":
+                        NumpressPicBox.Checked=true;
+                        break;
                     case "":
                         break; // just that trailing "|"
                     default:
@@ -561,6 +607,7 @@ namespace MSConvertGUI
                 {
                     OutputExtensionBox.Text = OutputExtension;
                 }
+                ValidateNumpress(); // make sure numpress settings are reasonable
             }
         }
 
@@ -641,7 +688,7 @@ namespace MSConvertGUI
             SetControlsFromCommandline(cmdline);
         }
 
-        void setToolTip(Control ctl, string text)
+        void setToolTip(Control ctl, string text, string filtername="")
         {
             ctlToolTip.UseFading = true;
             ctlToolTip.UseAnimation = true;
@@ -654,6 +701,32 @@ namespace MSConvertGUI
             ctlToolTip.ReshowDelay = 500;
 
             ctlToolTip.SetToolTip(ctl, text);
+
+            // construct the About box help
+            // sometime we use the same tooltip on a label and a control
+            // just retain the first use
+            for (int i = 0; i < sortedToolTips.Count; i++)
+            {
+                if (text == sortedToolTips.GetByIndex(i).ToString())
+                {
+                    return;
+                }
+            }
+            String key="";
+            if (filtername.Length > 0)
+            {
+                if (!filtername.Contains("Filter"))
+                    key = "Filters: ";
+                key += filtername + ": ";
+            }
+            else if (ctl.Parent.Text.Length > 0)
+                key += ctl.Parent.Text + ": ";
+            if ((!(ctl is TextBox)) && (ctl.Text.Length > 0))
+                key += ctl.Text;
+            else if (! ctl.Name.Contains("Panel"))
+                key += ctl.Name;
+            if (key.Length > 0)
+                sortedToolTips.Add( key, text);
         }
 
         void assignTooltips()
@@ -665,28 +738,28 @@ namespace MSConvertGUI
             setToolTip(this.OptionsGB, "Useful options for controlling output format and file size.");
             setToolTip(this.FileListRadio, "Click this for normal operation.");
             setToolTip(this.TextFileRadio, "Click this if your input file actually contains a list of files to be converted.");
-            setToolTip(this.AddFilterButton, "Add the filter specifed above to the list below.");
-            setToolTip(this.RemoveFilterButton, "Select a filter in the list below then click here to remove it.");
-            setToolTip(this.ZeroSamplesMSLevelBox2, "Lowest MS level for scans to be treated with this filter.");
-            setToolTip(this.ZeroSamplesMSLevelBox2, "Highest MS level for scans to be treated with this filter (may be left blank).");
-            setToolTip(this.ZeroSamplesMSLevelLabel, "Perform this filter only on scans with these MS Levels.");
-            setToolTip(this.ZeroSamplesRemove, "Reduces output file sizes by removing zero values which are not adjacent to nonzero values.");
-            setToolTip(this.ZeroSamplesPanel, "These filters help with missing or unwanted zero value samples.");
-            setToolTip(this.PeakMSLevelBox1, "Lowest MS level on which to perform peak picking.");
-            setToolTip(this.PeakMSLevelBox2, "Highest MS level on which to perform peak picking (may be left blank).");
-            setToolTip(this.PeakMSLevelLabel, "Selects the MS levels for scans on which to perform peak picking.");
-            setToolTip(this.MSLevelBox1, "Lowest MS level for scans to include in the conversion.");
-            setToolTip(this.MSLevelBox2, "Highest MS level to include in the conversion (may be left blank).");
-            setToolTip(this.ScanNumberLow, "Lowest scan number to include in the conversion.");
-            setToolTip(this.ScanNumberLabel, "Use this filter to include only scans with a limited range of scan numbers.");
-            setToolTip(this.mzWinLabel, "Use this filter to include only scans with a limited range of m/z values.");
-            setToolTip(this.ScanTimeLabel, "Use this filter to include only scans with a limited range of scan times.");
-            setToolTip(this.mzWinLow, "Lowest m/z value to include in the conversion");
-            setToolTip(this.ScanTimeHigh, "Highest scan time to include in the conversion.");
-            setToolTip(this.mzWinHigh, "Highest m/z value to include in the conversion.");
-            setToolTip(this.ScanTimeLow, "Lowest scan time to include in the conversion.");
-            setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).");
-            setToolTip(this.SubsetPanel, "Set values for one or more subset filters, then click Add.");
+            setToolTip(this.AddFilterButton, "Add the filter specifed above to the list below.","Filters");
+            setToolTip(this.RemoveFilterButton, "Select a filter in the list below then click here to remove it.", "Filters");
+            setToolTip(this.ZeroSamplesMSLevelLow, "Lowest MS level for scans to be treated with this filter.","Zero Samples");
+            setToolTip(this.ZeroSamplesMSLevelHigh, "Highest MS level for scans to be treated with this filter (may be left blank).", "Zero Samples");
+            setToolTip(this.ZeroSamplesMSLevelLabel, "Perform this filter only on scans with these MS Levels.", "Zero Samples");
+            setToolTip(this.ZeroSamplesRemove, "Reduces output file sizes by removing zero values which are not adjacent to nonzero values.", "Zero Samples");
+            setToolTip(this.ZeroSamplesPanel, "These filters help with missing or unwanted zero value samples.", "Zero Samples");
+            setToolTip(this.PeakMSLevelLow, "Lowest MS level on which to perform peak picking.","Peak Picking");
+            setToolTip(this.PeakMSLevelHigh, "Highest MS level on which to perform peak picking (may be left blank).", "Peak Picking");
+            setToolTip(this.PeakMSLevelLabel, "Selects the MS levels for scans on which to perform peak picking.", "Peak Picking");
+            setToolTip(this.MSLevelLow, "Lowest MS level for scans to include in the conversion.","MS Level");
+            setToolTip(this.MSLevelHigh, "Highest MS level to include in the conversion (may be left blank).", "MS Level");
+            setToolTip(this.ScanNumberLow, "Lowest scan number to include in the conversion.","Subset");
+            setToolTip(this.ScanNumberLabel, "Use this filter to include only scans with a limited range of scan numbers.", "Subset");
+            setToolTip(this.mzWinLabel, "Use this filter to include only scans with a limited range of m/z values.", "Subset");
+            setToolTip(this.ScanTimeLabel, "Use this filter to include only scans with a limited range of scan times.", "Subset");
+            setToolTip(this.mzWinLow, "Lowest m/z value to include in the conversion.", "Subset");
+            setToolTip(this.ScanTimeHigh, "Highest scan time to include in the conversion.", "Subset");
+            setToolTip(this.mzWinHigh, "Highest m/z value to include in the conversion.", "Subset");
+            setToolTip(this.ScanTimeLow, "Lowest scan time to include in the conversion.", "Subset");
+            setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).", "Subset");
+            setToolTip(this.SubsetPanel, "Set values for one or more subset filters, then click Add.", "Subset");
             setToolTip(this.FilterBox, "This chooses the type of filter that you want to add next.");
             setToolTip(this.AboutButton, "Provides information on using MSConvert.");
             setToolTip(this.FilterGB, "Use these controls to add to the conversion filter list.  The order of the filter list is significant.  In particular, vendor-supplied peakPicking must be first since it only works on raw, untransformed data.");
@@ -697,101 +770,159 @@ namespace MSConvertGUI
             setToolTip(this.AddFileButton, "Adds the current file to the conversion list.");
             setToolTip(this.FilterDGV, "Use the controls above to add conversion filters. The order can be significant.");
             setToolTip(this.MakeTPPCompatibleOutputButton, "Check this to use TPP-compatible output settings, e.g. an MGF TITLE format like <basename>.<scan>.<scan>.<charge>.");
+            setToolTip(this.NumpressLinearBox, "Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed given tolerance, unless set to 0).  Note that not all mzML readers recognize this format.");
+            setToolTip(this.NumpressSlofBox, "Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed given tolerance, unless set to 0).  Note that not all mzML readers recognize this format.");
+            setToolTip(this.NumpressPicBox, "Check this to use numpress positive integer lossy compression for binary intensities in mzML output (absolute accuracy loss will not exceed 0.5).  Note that not all mzML readers recognize this format.");
+            string NumpressTolerHelp = "Sets the maximum relative accuracy loss for numpress data compression in mzML output. See https://github.com/fickludd/ms-numpress for more information on the numpress lossy data compression algorithms.";
+            setToolTip(this.NumpressToleranceLabel, NumpressTolerHelp);
+            setToolTip(this.NumpressToleranceTextbox, NumpressTolerHelp);
+            setToolTip(this.ETDFilterPanel, "Use these filter options to remove unreacted and charge-reduced precursor peaks in ETD spectra.","ETD Peak");
+            setToolTip(this.ETDRemovePrecursorBox, "Check this to remove unreacted precursor peaks from ETD spectra.","ETD Peak");
+            setToolTip(this.ETDRemoveChargeReducedBox, "Check this to remove charge-reduced precursor peaks from ETD spectra.","ETD Peak");
+            setToolTip(this.ETDRemoveNeutralLossBox, "Check this to remove prominent neutral losses of the +1 charge-reduced precursor from ETD spectra.","ETD Peak");
+            setToolTip(this.ETDBlanketRemovalBox, "Check this for an alternative way of neutral loss filtering using a charge-scaled 60 Da exclusion window below the charge-reduced precursors.","ETD Peak");
 
-            setToolTip(this.ETDFilterPanel, "Use these filter options to remove unreacted and charge-reduced precursor peaks in ETD spectra.");
-            setToolTip(this.ETDRemovePrecursorBox, "Check this to remove unreacted precursor peaks from ETD spectra.");
-            setToolTip(this.ETDRemoveChargeReducedBox, "Check this to remove charge-reduced precursor peaks from ETD spectra.");
-            setToolTip(this.ETDRemoveNeutralLossBox, "Check this to remove prominent neutral losses of the +1 charge-reduced precursor from ETD spectra.");
-            setToolTip(this.ETDBlanketRemovalBox, "Check this for an alternative way of neutral loss filtering using a charge-scaled 60 Da exclusion window below the charge-reduced precursors.");
-
-            setToolTip(this.ThresholdFilterPanel, "Use this filter to remove small noise peaks or undesirable big peaks. Several different thresholding methods are available.");
+            setToolTip(this.ThresholdFilterPanel, "Use this filter to remove small noise peaks or undesirable big peaks. Several different thresholding methods are available.","Threshold");
 
             string thresholdOrientation = "Controls whether the threshold filter keeps the most intense or the least intense peaks.";
-            setToolTip(this.thresholdOrientationComboBox, thresholdOrientation);
-            setToolTip(this.thresholdOrientationLabel, thresholdOrientation);
+            setToolTip(this.thresholdOrientationLabel, thresholdOrientation, "Threshold");
+            setToolTip(this.thresholdOrientationComboBox, thresholdOrientation, "Threshold");
 
             string thresholdTypeHelp = "The filter can use different thresholding schemes:\r\n" +
                                        "Count types: keeps the most/least intense peaks.\r\n" +
                                        "Absolute: keeps peaks with intensities greater than the threshold.\r\n" +
                                        "Relative types: keeps a peak if its the fraction of BPI/TIC is greater than the threshold.\r\n" +
                                        "Fraction of TIC: keeps as many peaks as needed until the threshold of TIC is accounted for.";
-            setToolTip(this.thresholdTypeComboBox, thresholdTypeHelp);
-            setToolTip(this.thresholdTypeLabel, thresholdTypeHelp);
+            setToolTip(this.thresholdTypeLabel, thresholdTypeHelp, "Threshold");
+            setToolTip(this.thresholdTypeComboBox, thresholdTypeHelp, "Threshold");
 
             string thresholdValueHelp = "The meaning of this threshold value depends on the threshold type:\r\n" +
                                         "Count types: keeps the <value> most/least intense peaks.\r\n" +
                                         "Absolute: keeps peaks with intensities greater/less than <value>.\r\n" +
                                         "Relative types: keeps a peak if its the fraction of BPI/TIC is greater/less than <value>.\r\n" +
                                         "Fraction of TIC: keeps as many peaks as needed until the fraction <value> of the TIC is accounted for.";
-            setToolTip(this.thresholdValueLabel, thresholdValueHelp);
-            setToolTip(this.thresholdValueTextBox, thresholdValueHelp);
+            setToolTip(this.thresholdValueLabel, thresholdValueHelp, "Threshold");
+            setToolTip(this.thresholdValueTextBox, thresholdValueHelp, "Threshold");
 
             setToolTip(this.ChargeStatePredictorPanel, "Use this filter to add missing (and optionally overwrite existing) charge state information to MSn spectra.\r\n" +
                                                        "For CID spectra, the charge state is single/multiple based on %TIC below the precursor m/z.\r\n" +
-                                                       "For ETD spectra, the charge state is predicted using the published ETDz SVM prediction model.");
-            setToolTip(this.ChaOverwriteCharge, "Check this to overwrite spectra's existing charge state(s) with the predicted ones.");
+                                                       "For ETD spectra, the charge state is predicted using the published ETDz SVM prediction model.","Charge State Predictor");
+            setToolTip(this.ChaOverwriteCharge, "Check this to overwrite spectra's existing charge state(s) with the predicted ones.", "Charge State Predictor");
 
             string chaSingleHelp = "When the %TIC below the precursor m/z is less than this value, the spectrum is predicted as singly charged.";
-            setToolTip(this.ChaSingleLabel,chaSingleHelp);
-            setToolTip(this.ChaSingleBox, chaSingleHelp);
+            setToolTip(this.ChaSingleLabel, chaSingleHelp, "Charge State Predictor");
+            setToolTip(this.ChaSingleBox, chaSingleHelp, "Charge State Predictor");
 
             string maxChargeHelp = "Maximum multiple charge state to be predicted.";
-            setToolTip(this.ChaMCMaxBox, maxChargeHelp);
-            setToolTip(this.ChaMCMaxLabel, maxChargeHelp);
+            setToolTip(this.ChaMCMaxLabel, maxChargeHelp, "Charge State Predictor");
+            setToolTip(this.ChaMCMaxBox, maxChargeHelp, "Charge State Predictor");
 
             string minChargeHelp = "Minimum multiple charge state to be predicted.";
-            setToolTip(this.ChaMCMinLabel, minChargeHelp);
-            setToolTip(this.ChaMCMinBox, minChargeHelp);
+            setToolTip(this.ChaMCMinLabel, minChargeHelp, "Charge State Predictor");
+            setToolTip(this.ChaMCMinBox, minChargeHelp, "Charge State Predictor");
 
             string OutputExtensionHelp = "Sets the filename extension for the output file(s)";
             setToolTip(this.OutputExtensionLabel, OutputExtensionHelp);
             setToolTip(this.OutputExtensionBox, OutputExtensionHelp);
 
             string precisionHelp = "Sets output precision for writing binary m/z and intensity information. High resolution instruments should use 64-bit m/z values, but otherwise it just creates unnecessarily large output files.";
+            setToolTip(this.PrecisionLabel, precisionHelp);
             setToolTip(this.Precision64, precisionHelp);
             setToolTip(this.Precision32, precisionHelp);
-            setToolTip(this.PrecisionLabel, precisionHelp);
 
             string activationTypeHelp = "Include only scans with this precursor activation type.";
-            setToolTip(this.ActivationTypeLabel, activationTypeHelp);
-            setToolTip(this.ActivationTypeBox, activationTypeHelp);
+            setToolTip(this.ActivationTypeLabel, activationTypeHelp, "Activation");
+            setToolTip(this.ActivationTypeBox, activationTypeHelp, "Activation");
 
             string msLevelHelp = "Use this filter to include only scans with certain MS levels.";
-            setToolTip(this.MSLevelLabel, msLevelHelp);
-            setToolTip(this.MSLevelPanel, msLevelHelp);
+            setToolTip(this.MSLevelLabel, msLevelHelp,"MS Level");
+            setToolTip(this.MSLevelPanel, msLevelHelp, "MS Level");
 
             string preferVendorHelp = "Uncheck this box if you prefer ProteoWizard's peak picking algorithm to that provided by the vendor (normally the vendor code works better). Not all input formats have vendor peakpicking, but it's OK to leave this checked.";
-            setToolTip(this.PeakPreferVendorBox, preferVendorHelp);
-            setToolTip(this.PeakPickingPanel, "Use this filter to perform peak picking (centroiding) on the input data.");
+            setToolTip(this.PeakPreferVendorBox, preferVendorHelp,"Peak Picking");
+            setToolTip(this.PeakPickingPanel, "Use this filter to perform peak picking (centroiding) on the input data.", "Peak Picking");
 
             string outputHelp = "Choose the directory for writing the converted file(s).";
-            setToolTip(this.OutputBox, outputHelp);
             setToolTip(this.OutputLabel, outputHelp);
+            setToolTip(this.OutputBox, outputHelp);
 
             string outputFormatHelp = "Selects the output format for the conversion";
             setToolTip(this.FormatLabel, outputFormatHelp);
             setToolTip(this.OutputFormatBox, outputFormatHelp);
 
             string addZerosHelp = "Adds flanking zero values next to nonzero values where needed, to help with things like smoothing.";
-            setToolTip(this.ZeroSamplesAddMissingFlankCountBox, addZerosHelp);
-            setToolTip(this.ZeroSamplesAddMissing, addZerosHelp);
+            setToolTip(this.ZeroSamplesAddMissing, addZerosHelp, "Zero Samples");
+            setToolTip(this.ZeroSamplesAddMissingFlankCountBox, addZerosHelp, "Zero Samples");
         }
 
         private void AboutButtonClick(object sender, EventArgs e)
         {
-            MessageBox.Show("Let your cursor rest atop a control for a moment to see a help message for that control.   "+
-            "For more in depth help, the Help button in this window will open the ProteoWizard website in your browser.   "+
-            "The documentation there describing the command line version of msconvert will be useful for understanding this "+
-            "program, especially filters.  Actually, you will generally find the command line version to be more complete and "+
-            "flexible than this GUI version and may wish to treat this program as a learning tool for using the command line "+
-            "version.",
-            this.AboutButton.Text,
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Information,
-            MessageBoxDefaultButton.Button1,
-            0,
-            "http://proteowizard.sourceforge.net/tools.shtml",
-            "");
+            // Create a scrollable form.
+            Form aboutBox = new Form();
+            int w = 700, h = 400;
+            aboutBox.Size = new System.Drawing.Size(w, h);
+            w = aboutBox.ClientRectangle.Width;
+            h = aboutBox.ClientRectangle.Height;
+            // Create the accept button.
+            Button buttonOK = new Button();
+            // Create the scrollable help text area.
+            TextBox helptext = new TextBox();
+            // Set the Multiline property to true.
+            helptext.Multiline = true;
+            // Add vertical scroll bars to the TextBox control.
+            helptext.ScrollBars = ScrollBars.Vertical;
+            // Allow the Return key to be entered in the TextBox control.
+            helptext.AcceptsReturn = true;
+            // Allow the TAB key to be entered in the TextBox control.
+            helptext.AcceptsTab = true;
+            // Set WordWrap to true to allow text to wrap to the next line.
+            helptext.WordWrap = true;
+
+            helptext.Size = new System.Drawing.Size(w, h-(20+buttonOK.Height));
+            helptext.Text = this.AboutButtonHelpText+"\r\n";
+            for (int i = 0; i < this.sortedToolTips.Count; i++)
+            {
+                helptext.Text += ("\r\n" + sortedToolTips.GetKey(i) + ":\r\n" + sortedToolTips.GetByIndex(i)+"\r\n");
+            }
+            buttonOK.Text = "OK";
+            // Set the position of the button on the form.
+            buttonOK.Location = new Point((w-buttonOK.Width)/2, h-(10+buttonOK.Height));
+            // Make button1's dialog result OK.
+            buttonOK.DialogResult = DialogResult.OK;
+
+            // Add OK button to the form.
+            aboutBox.Controls.Add(buttonOK);
+            // Add helptext to the form.
+            aboutBox.Controls.Add(helptext);
+
+            
+            // Set the caption bar text of the form.   
+            aboutBox.Text = this.AboutButton.Text;
+
+            // Define the border style of the form to a dialog box.
+            aboutBox.FormBorderStyle = FormBorderStyle.FixedDialog;
+            // Set the accept button of the form to button1.
+            aboutBox.AcceptButton = buttonOK;
+            // Set the start position of the form to the center of the screen.
+            aboutBox.StartPosition = FormStartPosition.CenterScreen;
+
+
+            // Display the form as a modal dialog box.
+            aboutBox.ShowDialog();
+
+            aboutBox.Dispose();
+        }
+
+        private void NumpressPicBox_CheckedChanged(object sender, EventArgs e)
+        {  // numpress Pic and numpress Slof are mutually exclusive
+            if (NumpressPicBox.Checked && NumpressSlofBox.Checked)
+                NumpressSlofBox.Checked = false;
+        }
+
+        private void NumpressSlofBox_CheckedChanged(object sender, EventArgs e)
+        {  // numpress Pic and numpress Slof are mutually exclusive
+            if (NumpressPicBox.Checked && NumpressSlofBox.Checked)
+                NumpressPicBox.Checked = false;
         }
     }
 }

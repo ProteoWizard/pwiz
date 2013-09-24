@@ -30,9 +30,13 @@
 #include "boost/iostreams/filtering_streambuf.hpp"
 #include "boost/iostreams/filtering_stream.hpp"
 #include "boost/iostreams/copy.hpp"
+#include <boost/math/special_functions/fpclassify.hpp>
+#include "iosfwd"
+#include "boost/iostreams/categories.hpp"
 #include "boost/iostreams/filter/zlib.hpp"
 #include "boost/iostreams/device/array.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/data/msdata/MSNumpress.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -41,7 +45,7 @@ namespace msdata {
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace boost::iostreams;
-
+using namespace ms::numpress;
 
 //
 // BinaryDataEncoder::Impl
@@ -85,18 +89,19 @@ void BinaryDataEncoder::Impl::encode(const vector<double>& data, string& result,
     encode(&data[0], data.size(), result, binaryByteCount);
 }
 
-
+// formerly returned a string, but those are not guaranteed to have
+// contiguous storage space in older C++ standards, so use vector instead
+// thx to Johan Teleman
 template <typename filter_type>
-string filterArray(const void* byteBuffer, size_t byteCount)
+void filterArray(const void* byteBuffer, size_t byteCount, vector<unsigned char> &result)
 {
-    ostringstream result(ios::binary);
+    result.reserve(byteCount); // preallocate (more than we need), for speed
     filtering_ostream fos;
     fos.push(filter_type());
-    fos.push(result);
+    fos.push(back_inserter(result));
     fos.write((const char*)byteBuffer, byteCount);
     fos.pop(); 
     fos.pop(); // forces buffer to flush
-    return result.str();
 
 /* 
     // original implementation, using technique in boost iostreams docs
@@ -114,65 +119,159 @@ string filterArray(const void* byteBuffer, size_t byteCount)
 
 void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount)
 {
-    //
-    // We use buffer abstractions, since we may need to change buffers during
-    // downconversion and compression -- these are eventually passed to
-    // the Base64 encoder.  Note that:
-    //  - byteBuffer and byteCount must remain valid at the end of any block
-    //    in this function
-    //  - by default, no processing is done, resulting in no buffer changes
-    //    and fall through to Base64 encoding
-    //
-
-    const void* byteBuffer = reinterpret_cast<const void*>(data); 
-    size_t byteCount = dataSize * sizeof(double);
-
-    // 64-bit -> 32-bit downconversion
-
+    // using MSNumpress, from johan.teleman@immun.lth.se
+    size_t byteCount;
+    const void* byteBuffer;
+    vector<unsigned char> compressed;
+    vector<unsigned char> numpressed;
     vector<float> data32;
-
-    if (config_.precision == Precision_32)
-    {
-        data32.resize(dataSize);
-        transform(data, data+dataSize, data32.begin(), DoubleToFloat());
-        byteBuffer = reinterpret_cast<void*>(&data32[0]);
-        byteCount = data32.size() * sizeof(float);
-    }
-
-    // byte ordering
-
-    #ifdef PWIZ_LITTLE_ENDIAN
-    bool mustEndianize = (config_.byteOrder == ByteOrder_BigEndian);
-    #elif defined(PWIZ_BIG_ENDIAN)
-    bool mustEndianize = (config_.byteOrder == ByteOrder_LittleEndian);
-    #endif
-
     vector<double> data64endianized;
 
-    if (mustEndianize)
-    {
+    if (Numpress_None != config_.numpress) { // lossy numerical representation
+        try {
+            switch(config_.numpress)
+            {
+            case Numpress_Linear:
+                numpressed.resize(dataSize * sizeof(double) + 8);
+                break;
+
+            case Numpress_Pic:
+                numpressed.resize(dataSize * sizeof(double));
+                break;
+
+            case Numpress_Slof:
+                numpressed.resize(dataSize * 2 + 8);
+                break;
+
+            default: 
+                throw runtime_error("[BinaryDataEncoder::encode()] unknown numpress mode");
+                break;
+            }
+            vector<double> unpressed; // for checking excessive accurary loss
+            switch (config_.numpress) {
+                case Numpress_Linear:
+                    byteCount = MSNumpress::encodeLinear(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
+                    if (config_.numpressErrorTolerance) // decompress to check accuracy loss
+                        MSNumpress::decodeLinear(numpressed,unpressed); 
+                    break;
+
+                case Numpress_Pic:
+                    byteCount = MSNumpress::encodePic(data, dataSize, &numpressed[0]);
+                    if (config_.numpressErrorTolerance) // decompress to check accuracy loss
+                        MSNumpress::decodePic(numpressed,unpressed); 
+                    break;
+
+                case Numpress_Slof:
+                    byteCount = MSNumpress::encodeSlof(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
+                    if (config_.numpressErrorTolerance) // decompress to check accuracy loss
+                        MSNumpress::decodeSlof(numpressed,unpressed); 
+                    break;
+
+                default:
+                    break;
+            }
+            // now check to see if encoding introduces excessive error
+            int n=-1;
+            if (config_.numpressErrorTolerance) 
+            {
+                if (Numpress_Pic == config_.numpress)  // integer rounding, abs accuracy is +- 0.5
+                {
+                    for (n=(int)dataSize;n--;) // check for overflow, strange rounding
+                    {
+                        if ((!boost::math::isfinite(unpressed[n])) || (fabs(data[n]-unpressed[n])>=1.0)) 
+                            break;
+                    }
+                }
+                else // check for tolerance as well as overflow
+                {
+                    for (n=(int)dataSize;n--;)
+                    {
+                        double d,u;
+                        if (!boost::math::isfinite(u = unpressed[n])||!boost::math::isfinite(d = data[n]))
+                            break;
+                        if (!d)
+                        {
+                           if (fabs(u) > config_.numpressErrorTolerance)
+                               break;
+                        }
+                        else if (!u)
+                        {
+                           if (fabs(d) > config_.numpressErrorTolerance)
+                               break;
+                        }
+                        else if (fabs(1.0-(d/u)) > config_.numpressErrorTolerance)
+                            break;
+                    }
+                }
+            }
+            if (n>=0)
+                config_.numpress = Numpress_None; // excessive error, don't numpress
+            else
+                byteBuffer = reinterpret_cast<const void*>(&numpressed[0]);
+        } catch (int e) {
+            cerr << "MZNumpress encoder threw exception: " << e << endl;
+        } catch (...) {
+            cerr << "Unknown exception while encoding " << dataSize << " doubles" << endl;
+        }
+
+    }
+    if (Numpress_None == config_.numpress) { //  may need 64->32bit conversion and byte ordering
+
+        //
+        // We use buffer abstractions, since we may need to change buffers during
+        // downconversion and compression -- these are eventually passed to
+        // the Base64 encoder.  Note that:
+        //  - byteBuffer and byteCount must remain valid at the end of any block
+        //    in this function
+        //  - by default, no processing is done, resulting in no buffer changes
+        //    and fall through to Base64 encoding
+        //
+
+        byteBuffer = reinterpret_cast<const void*>(data); 
+        byteCount = dataSize * sizeof(double);
+
+        // 64-bit -> 32-bit downconversion
+
+
         if (config_.precision == Precision_32)
         {
-            unsigned int* p = reinterpret_cast<unsigned int *>(&data32[0]);
-            transform(p, p+data32.size(), p, endianize32);
+            data32.resize(dataSize);
+            transform(data, data+dataSize, data32.begin(), DoubleToFloat());
+            byteBuffer = reinterpret_cast<void*>(&data32[0]);
+            byteCount = data32.size() * sizeof(float);
         }
-        else // Precision_64 
+
+        // byte ordering
+
+        #ifdef PWIZ_LITTLE_ENDIAN
+        bool mustEndianize = (config_.byteOrder == ByteOrder_BigEndian);
+        #elif defined(PWIZ_BIG_ENDIAN)
+        bool mustEndianize = (config_.byteOrder == ByteOrder_LittleEndian);
+        #endif
+
+        if (mustEndianize)
         {
-            data64endianized.resize(dataSize);
-            const unsigned long long* from = reinterpret_cast<const unsigned long long*>(data);
-            unsigned long long* to = reinterpret_cast<unsigned long long*>(&data64endianized[0]);
-            transform(from, from+dataSize, to, endianize64);
-            byteBuffer = reinterpret_cast<void*>(&data64endianized[0]);
-            byteCount = dataSize * sizeof(double);
+            if (config_.precision == Precision_32)
+            {
+                unsigned int* p = reinterpret_cast<unsigned int *>(&data32[0]);
+                transform(p, p+data32.size(), p, endianize32);
+            }
+            else // Precision_64 
+            {
+                data64endianized.resize(dataSize);
+                const unsigned long long* from = reinterpret_cast<const unsigned long long*>(data);
+                unsigned long long* to = reinterpret_cast<unsigned long long*>(&data64endianized[0]);
+                transform(from, from+dataSize, to, endianize64);
+                byteBuffer = reinterpret_cast<void*>(&data64endianized[0]);
+                byteCount = dataSize * sizeof(double);
+            }
         }
     }
-
     // compression
 
-    string compressed;
     if (config_.compression == Compression_Zlib)
     {
-        compressed = filterArray<zlib_compressor>(byteBuffer, byteCount);
+        filterArray<zlib_compressor>(byteBuffer, byteCount,compressed);
         if (!compressed.empty())
         {
             byteBuffer = reinterpret_cast<void*>(&compressed[0]);
@@ -187,7 +286,23 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
     // Base64 encoding
 
     result.resize(Base64::binaryToTextSize(byteCount));    
-    size_t textSize = Base64::binaryToText(byteBuffer, byteCount, &result[0]);
+
+    // std::string storage is not guaranteed contiguous in older C++ standards,
+    // and on long strings this has caused problems in the wild.  So test for
+    // actual contiguousness, and fall back to std::vector if needed
+    // thx Johan Teleman
+    size_t textSize;
+    char *first = &result[0];
+    char *last = &result[result.size()-1];
+    if (result.size() == 1+(last-first)) // pointer math agrees with [] operator
+        textSize = Base64::binaryToText(byteBuffer, byteCount, &result[0]);
+    else 
+    {
+        std::vector<char> contig;  // work in this contiguous memory then copy to string
+        contig.resize(result.size());
+        textSize = Base64::binaryToText(byteBuffer, byteCount, &contig[0]);
+        copy(contig.begin(), contig.end(), result.begin());
+    }
     result.resize(textSize);
 
     if (binaryByteCount != NULL)
@@ -225,54 +340,106 @@ void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, vec
 
     void* byteBuffer = &binary[0];
     size_t byteCount = binarySize;
+    size_t initialSize;
 
     // decompression
 
-    string decompressed;
-    if (config_.compression == Compression_Zlib)
-    {
-        decompressed = filterArray<zlib_decompressor>(byteBuffer, byteCount);
-        if (!decompressed.empty())
-        {
-            byteBuffer = reinterpret_cast<void*>(&decompressed[0]);
-            byteCount = decompressed.size();
-        }
-        else
-        {
-            throw runtime_error("[BinaryDataEncoder::decode()] Compression error?");
-        }
+    vector<unsigned char> decompressed;
+    switch (config_.compression) {
+        case Compression_Zlib:
+            {
+                filterArray<zlib_decompressor>(byteBuffer, byteCount,decompressed);
+                if (!decompressed.empty())
+                {
+                    byteBuffer = reinterpret_cast<void*>(&decompressed[0]);
+                    byteCount = decompressed.size();
+                }
+                else
+                {
+                    throw runtime_error("[BinaryDataEncoder::decode()] Compression error?");
+                }
+            } 
+            break;
+        case Compression_None:
+            break;
+        default:
+            throw runtime_error("[BinaryDataEncoder::decode()] unknown compression type");
+            break;
     }
-
-    // endianization
-
-    #ifdef PWIZ_LITTLE_ENDIAN
-    bool mustEndianize = (config_.byteOrder == ByteOrder_BigEndian);
-    #elif defined(PWIZ_BIG_ENDIAN)
-    bool mustEndianize = (config_.byteOrder == ByteOrder_LittleEndian);
-    #endif
-
-    if (mustEndianize)
+    // numpress expansion or endian correction
+    switch (config_.numpress) 
     {
-        if (config_.precision == Precision_32)
-        {
-            unsigned int* p = reinterpret_cast<unsigned int*>(byteBuffer);
-            size_t floatCount = byteCount / sizeof(float);
-            transform(p, p+floatCount, p, endianize32);
-        }
-        else // Precision_64
-        {
-            unsigned long long* p = reinterpret_cast<unsigned long long*>(byteBuffer);
-            size_t doubleCount = byteCount / sizeof(double);
-            transform(p, p+doubleCount, p, endianize64);
-        }
-    }
+        case Numpress_Linear:
+            initialSize = byteCount * 2;
+            if (result.size() < initialSize)
+                result.resize(initialSize);
+            try {
+                size_t count = MSNumpress::decodeLinear((const unsigned char *)byteBuffer, byteCount, &result[0]);
+                result.resize(count);
+            } catch (...) {
+                throw runtime_error("BinaryDataEncoder::Impl::decode  error in numpress linear decompression");
+            }
+            break;
+        case Numpress_Pic:
+            initialSize = byteCount * 2;
+            if (result.size() < initialSize)
+                result.resize(initialSize);
+            try {
+                size_t count = MSNumpress::decodePic((const unsigned char *)byteBuffer, byteCount, &result[0]);
+                result.resize(count);
+            } catch (...) {
+                throw runtime_error("BinaryDataEncoder::Impl::decode  error in numpress pic decompression");
+            }
+            break;
+        case Numpress_Slof:
+            initialSize = byteCount / 2;
+            if (result.size() < initialSize)
+                result.resize(initialSize);
+            try {
+                size_t count = MSNumpress::decodeSlof((const unsigned char *)byteBuffer, byteCount, &result[0]);
+                result.resize(count);
+            } catch (...) {
+                throw runtime_error("BinaryDataEncoder::Impl::decode  error in numpress slof decompression");
+            }
+            break;
+        case Numpress_None:
+            {
+            // endianization for non-numpress cases
 
-    // (upconversion and) copy to result buffer
+            #ifdef PWIZ_LITTLE_ENDIAN
+            bool mustEndianize = (config_.byteOrder == ByteOrder_BigEndian);
+            #elif defined(PWIZ_BIG_ENDIAN)
+            bool mustEndianize = (config_.byteOrder == ByteOrder_LittleEndian);
+            #endif
 
-    if (config_.precision == Precision_32)
-        copyBuffer<float>(byteBuffer, byteCount, result);
-    else // Precision_64
-        copyBuffer<double>(byteBuffer, byteCount, result);
+            if (mustEndianize)
+            {
+                if (config_.precision == Precision_32)
+                {
+                    unsigned int* p = reinterpret_cast<unsigned int*>(byteBuffer);
+                    size_t floatCount = byteCount / sizeof(float);
+                    transform(p, p+floatCount, p, endianize32);
+                }
+                else // Precision_64
+                {
+                    unsigned long long* p = reinterpret_cast<unsigned long long*>(byteBuffer);
+                    size_t doubleCount = byteCount / sizeof(double);
+                    transform(p, p+doubleCount, p, endianize64);
+                }
+            }
+
+            // (upconversion and) copy to result buffer
+
+            if (config_.precision == Precision_32)
+                copyBuffer<float>(byteBuffer, byteCount, result);
+            else // Precision_64
+                copyBuffer<double>(byteBuffer, byteCount, result);
+            }
+            break;
+        default: 
+            throw runtime_error("BinaryDataEncoder::Impl::decode  unknown numpress method");
+            break;
+   }
 }
 
 
@@ -284,7 +451,6 @@ void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, vec
 PWIZ_API_DECL BinaryDataEncoder::BinaryDataEncoder(const Config& config)
 :   impl_(new Impl(config))
 {}
-
 
 PWIZ_API_DECL void BinaryDataEncoder::encode(const std::vector<double>& data, std::string& result, size_t* binaryByteCount /*= NULL*/) const
 {
@@ -303,20 +469,78 @@ PWIZ_API_DECL void BinaryDataEncoder::decode(const char * encodedData, size_t le
     impl_->decode(encodedData, len, result);
 }
 
+void writeConfig(ostream& os, const BinaryDataEncoder::Config& config, CVID cvid) 
+{
+
+    BinaryDataEncoder::Precision p;
+    BinaryDataEncoder::Numpress c;
+    map<CVID, BinaryDataEncoder::Precision>::const_iterator pOverrideItr;
+    map<CVID, BinaryDataEncoder::Numpress>::const_iterator cOverrideItr;
+    cOverrideItr = config.numpressOverrides.find(cvid);
+
+    if (cOverrideItr != config.numpressOverrides.end())
+        c = cOverrideItr->second;
+    else 
+        c = config.numpress;
+
+    switch (c) {
+        case BinaryDataEncoder::Numpress_Linear:
+            os << "Compression-Numpress-Linear";
+            break;
+        case BinaryDataEncoder::Numpress_Pic:
+            os << "Compression-Numpress-Pic";
+            break;
+        case BinaryDataEncoder::Numpress_Slof:
+            os << "Compression-Numpress-Slof";
+            break;
+        case BinaryDataEncoder::Numpress_None:
+            break;
+        default:
+            throw runtime_error("[BinaryDataEncoder::writeConfig] Unknown binary numpress mode");
+            break;
+    }
+    switch (config.compression) {
+        case BinaryDataEncoder::Compression_Zlib :
+            os << "Compression-Zlib";
+            break;
+        case BinaryDataEncoder::Compression_None :
+            os << "Compression-None";
+            break;
+        default:
+            throw runtime_error("[BinaryDataEncoder::writeConfig] Unknown binary numeric compression");
+    }
+
+    pOverrideItr = config.precisionOverrides.find(cvid);
+    if (pOverrideItr != config.precisionOverrides.end())
+        p = pOverrideItr->second;
+    else 
+        p = config.precision;
+
+    switch (p) {
+        case BinaryDataEncoder::Precision_64:
+            os << ", 64-bit";
+            break;
+        case BinaryDataEncoder::Precision_32:
+            os << ", 32-bit";
+            break;
+    }
+}
+
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const BinaryDataEncoder::Config& config)
 {
-    os << "(" 
-       << (config.precision==BinaryDataEncoder::Precision_64 ? "Precision_64" : "Precision_32");
-    os << " [";
-    for( map<CVID, BinaryDataEncoder::Precision>::const_iterator itr = config.precisionOverrides.begin();
-        itr != config.precisionOverrides.end();
-        ++itr )
-        os << " " << itr->first << ":" << (itr->second==BinaryDataEncoder::Precision_64 ? "Precision_64" : "Precision_32");
-    os << " ], "
-       << (config.byteOrder==BinaryDataEncoder::ByteOrder_LittleEndian ? "ByteOrder_LittleEndian" : "ByteOrder_BigEndian") << ", "
-       << (config.compression==BinaryDataEncoder::Compression_None ? "Compression_None" : "Compression_Zlib") 
-       << ")";
+    BinaryDataEncoder::Config usedConfig = config;
+
+    os << endl << "    m/z: ";
+    writeConfig(os, config, MS_m_z_array);
+    
+    os << endl << "    intensity: ";
+    writeConfig(os, config, MS_intensity_array);
+
+    os << endl << "    rt: ";
+    writeConfig(os, config, MS_time_array);
+
+    os << endl << (config.byteOrder==BinaryDataEncoder::ByteOrder_LittleEndian ? "ByteOrder_LittleEndian" : "ByteOrder_BigEndian") << endl;
     return os;   
 }
 

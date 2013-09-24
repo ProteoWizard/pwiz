@@ -36,6 +36,7 @@
 namespace pwiz {
 namespace msdata {
 
+const double BinaryDataEncoder_default_numpressErrorTolerance = .0001; // 1/100th of one percent
 
 /// binary-to-text encoding
 class PWIZ_API_DECL BinaryDataEncoder
@@ -45,20 +46,28 @@ class PWIZ_API_DECL BinaryDataEncoder
     enum Precision {Precision_32, Precision_64};
     enum ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};
     enum Compression {Compression_None, Compression_Zlib};
+    enum Numpress {Numpress_None, Numpress_Linear, Numpress_Pic, Numpress_Slof}; // lossy numerical representations
 
     /// encoding/decoding configuration 
     struct PWIZ_API_DECL Config
     {
         Precision precision;
         ByteOrder byteOrder;
-        Compression compression;
+        Compression compression;  // zlib or none
+        Numpress numpress; // lossy numerical compression
+        double numpressFixedPoint;  // for Numpress_* use, 0=derive best value
+        double numpressErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
 
         std::map<cv::CVID, Precision> precisionOverrides;
+        std::map<cv::CVID, Numpress> numpressOverrides; 
 
         Config()
         :   precision(Precision_64),
             byteOrder(ByteOrder_LittleEndian),
-            compression(Compression_None)
+            compression(Compression_None),
+            numpress(Numpress_None),
+            numpressFixedPoint(0.0),
+            numpressErrorTolerance(BinaryDataEncoder_default_numpressErrorTolerance)
         {}
     };
 

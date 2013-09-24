@@ -74,11 +74,31 @@ const char* sampleEncoded32LittleZlib_ = "eJzjYfBwZgACGSitA6VtoLSTtCeYDoLSSVC6CE
 const char* sampleEncoded32BigZlib_ = "eJxz9mDgYQACZw8GGSitA6VtwLSntBOUDoLSSVC6CEo3uSRrXwbSk1zmecwD0otc5jqvAtKbXEKMjgPpQ1B1l6D0I6j5YOA8jYHBvgFIn2BgcFQA0r8YGJyAbBcxIK5iYAAAfLkd6g==";
 const char* sampleEncoded64LittleZlib_ = "eJz7Lz63i5Eh04EBClora9uYkfhLtOOaWJH48Xr2dexI/HXsZqYZygj+6j07zLKQ+HMOW1vkIPGbZPZb5iHxo447WRdA+AlVqT0OqkeO2RRB+AeET052eCrkbVcC4TuUrpjsMGPzefsyCP9BRFuXg/2yEMcKJPNuv7rpVIXEz2yMd6lB4kNFUfkHiqD8D/YQuhLKV4HQDvVQfiSEPtAEFe93AACmsz1+";
 const char* sampleEncoded64BigZlib_ = "eJxzyGRg7Jor/p8BChwyGZjbaitbkfisTXHaS5D47HX2evEIvnKGqRn7OiR+ltmOPauR+DkW1ofnIPHzLPfLNCHxC6ydjkc59KRWJUD4RTbHjqg6TD4pfADCL7HzFnrqMHlFqQOEX2Z/fvMMh662iAcQfoVjyDJ7JPOqnG6+uo3Er3GJb8xEcj8KcCg6AKbtP0D5lVBaBUrXO0DoSCi/CaLeoR8iDgC0Qj1+";
+const char* sampleEncodedNumpressLinear_ =     "QS69PAAAAAAu7AEMAAAAAA9J0wgQ61LPfgY70wgQbTLPfg4d0wgQ7hLPfgMM1BgQwGKtfgvq1SgQ4UKtfgjc1SgQIyKtfgXO1SgQRAKtfgKw5SgQ78OG4QNVqQugf3Tmpg+6yRCARe2G9wiYdBGAecaFZgs+qjKwizv8oQVa5SgQS0GtfgJM5SgQjCGtfgwC5BgQApLPfgicxA4Q5MmQzQzK9+kgoDYaDQAvNdQwS+AZrAhzqAY5hKD/kA==";
+const char* sampleEncodedNumpressLinearZlib_ = "eJxz1NtrwwAEem8YeUA0v+dlDoHXQefr2KyBjFyj83V8skDGO6Hzdcw8VyQEDiStreN+dVVD4KHT2jqOO0CGstLaOtZzQIYL09o6pg1PNQTeH257yBy6kntBfcmzZfy7Tgo0uL5t+84xo0SwofJYaxq33SqjDd3WfxayRgEVezsCdfkAGT2Ka+t4mJ5ICDBNOl/HMecIn8CTkxPO8pz6/lJhgZkUL4O+6RUD7weSaziKV7BZtiz4PwEAkp1KXg==";
+const char* sampleEncodedNumpressSlof_ =     "QMHqAAAAAAACvgAAAr4AAAK+AAACvgAANL4AADS+AAA0vgAANL4AADS+GvQ0vvr/NL6//zS+qfE0vgAANL4AADS+AAACvgAAeszWGMHW6VW73lqlQOWH9w==";
+const char* sampleEncodedNumpressSlofZlib_ = "eJxzOPiKAQSY9qFiEwws9cVk36//Jvv2A/HKj8hyIPVVZ65JHLz2MnT3vailDk/bvwMAn1ogtQ==";
+const char* sampleEncodedNumpressPic_ =     "aMhoyGjIaMhpyGnIachpyGnF2DacUvRpxa5GnFFTachpyGnIaMhcIXFQkXpU8WRlhSWOMA==";
+const char* sampleEncodedNumpressPicZlib_ = "eJzLOJEBhpkwePSG2ZygL5lH17nNCQyGiGWciFEsDJhYFfIxJbVVtc8AAAjsG4c=";
+const char* sampleEncodedModified64BigZlib_ = "eJxzyGRg7Jor/r/+/X8wcMhkYG6rrWz9j+CzNsVpL6m/D+ez19nrxf+H85UzTM3Y1zFAAZCfZbZjz2okfo6F9eE5SPw8y/0yTUj8Amun41EOPalVCRB+kc2xI6oOk08KH4DwS+y8hZ46TF5R6gDhl9mf3zzDoast4gGEX+EYssweybwqp5uvbiPxa1ziGzMRfAYU4FB0AEzbf4DyK6G0CpSud4DQkVB+E0S9Qz9EHACREFv+";
 
-
-
-const char* regressionTest(const BinaryDataEncoder::Config& config)
+const char* regressionTest(const BinaryDataEncoder::Config& config,bool expectNumpressIgnored)
 {
+    if (expectNumpressIgnored)  // when set, expecting numpress not to be used even though it was requested
+    {
+        return sampleEncodedModified64BigZlib_;
+    }
+    else
+    {
+        if (config.numpress == BinaryDataEncoder::Numpress_Linear)
+            return (BinaryDataEncoder::Compression_Zlib==config.compression)?sampleEncodedNumpressLinearZlib_:sampleEncodedNumpressLinear_;
+
+        if (config.numpress == BinaryDataEncoder::Numpress_Pic)
+            return (BinaryDataEncoder::Compression_Zlib==config.compression)?sampleEncodedNumpressPicZlib_:sampleEncodedNumpressPic_;
+
+        if (config.numpress == BinaryDataEncoder::Numpress_Slof)
+            return (BinaryDataEncoder::Compression_Zlib==config.compression)?sampleEncodedNumpressSlofZlib_:sampleEncodedNumpressSlof_;
+    }
     if (config.precision == BinaryDataEncoder::Precision_32 &&
         config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
         config.compression == BinaryDataEncoder::Compression_None)
@@ -123,8 +143,9 @@ const char* regressionTest(const BinaryDataEncoder::Config& config)
 }
 
  
-void testConfiguration(const BinaryDataEncoder::Config& config)
+void testConfiguration(const BinaryDataEncoder::Config& config_in)
 {
+    BinaryDataEncoder::Config config(config_in);
     if (os_)
         *os_ << "testConfiguration: " << config << endl;
 
@@ -132,6 +153,15 @@ void testConfiguration(const BinaryDataEncoder::Config& config)
 
     vector<double> binary(sampleDataSize_);
     copy(sampleData_, sampleData_+sampleDataSize_, binary.begin());
+
+    bool checkNumpressMaxErrorSupression = (BinaryDataEncoder::Numpress_None != config.numpress)&&(config.numpressErrorTolerance>0);
+    if (checkNumpressMaxErrorSupression) 
+    {
+        binary[1] = numeric_limits<double>::max( )-.1; // attempt to blow out the numpress lossiness limiter
+        binary[3] = -binary[1]; // attempt to blow out the numpress lossiness limiter
+        binary[5] = .5*binary[1]; // attempt to blow out the numpress lossiness limiter
+        binary[7] = .5*binary[3]; // attempt to blow out the numpress lossiness limiter
+    }
 
     if (os_)
     {
@@ -154,7 +184,7 @@ void testConfiguration(const BinaryDataEncoder::Config& config)
 
     // regression testing for encoding
 
-    unit_assert(encoded == regressionTest(config));
+    unit_assert(encoded == regressionTest(config,checkNumpressMaxErrorSupression));
 
     // decode
 
@@ -173,12 +203,31 @@ void testConfiguration(const BinaryDataEncoder::Config& config)
 
     const double epsilon = config.precision == BinaryDataEncoder::Precision_64 ? 1e-14 : 1e-5 ;
 
-    for (vector<double>::const_iterator it=binary.begin(), jt=decoded.begin();  
-         it!=binary.end(); ++it, ++jt)
-    {
-        unit_assert_equal(*it, *jt, epsilon);
+    switch (config.numpress) 
+    { 
+    case BinaryDataEncoder::Numpress_Linear: 
+    case BinaryDataEncoder::Numpress_Slof: 
+    case BinaryDataEncoder::Numpress_Pic:
+        // lossy compression
+        for (vector<double>::const_iterator it=binary.begin(), jt=decoded.begin();  
+             it!=binary.end(); ++it, ++jt)
+        {
+            if (0==*it || 0==*jt)
+                unit_assert_equal(*it, *jt, 0.1);
+            else if (*it > *jt)
+                unit_assert((*jt)/(*it) > .999 );
+            else 
+                unit_assert((*it)/(*jt) > .999 );
+        }
+        break;
+    default:
+        for (vector<double>::const_iterator it=binary.begin(), jt=decoded.begin();  
+             it!=binary.end(); ++it, ++jt)
+        {
+            unit_assert_equal(*it, *jt, epsilon);
+        }
+        break;
     }
-
     if (os_) *os_ << "validated with epsilon: " << fixed << setprecision(1) << scientific << epsilon << "\n\n";
 }
 
@@ -190,38 +239,60 @@ void test()
     config.precision = BinaryDataEncoder::Precision_32;
     config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_64;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.compression = BinaryDataEncoder::Compression_Zlib;
+    testConfiguration(config);
     
-    config.precision = BinaryDataEncoder::Precision_32;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
-    testConfiguration(config);
+    // test the numpress stuff with and without zlib, and to see if it honors error limits
+    config.compression = BinaryDataEncoder::Compression_None;
+    config.numpressErrorTolerance = 0; // means don't do tolerance checks
+    for (int zloop=3;zloop--;)
+    {
+        config.numpress = BinaryDataEncoder::Numpress_Linear;
+        testConfiguration(config);
 
-    config.precision = BinaryDataEncoder::Precision_64;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
-    testConfiguration(config);
+        config.numpress = BinaryDataEncoder::Numpress_Slof;
+        testConfiguration(config);
 
-    config.precision = BinaryDataEncoder::Precision_64;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
-    testConfiguration(config);
+        config.numpress = BinaryDataEncoder::Numpress_Pic;
+        testConfiguration(config);
 
-    config.precision = BinaryDataEncoder::Precision_32;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
-    config.compression = BinaryDataEncoder::Compression_Zlib;
-    testConfiguration(config);
+        config.compression = BinaryDataEncoder::Compression_Zlib; // and again with zlib
+        if (1==zloop) // and finally test numpress excessive error avoidance
+        {
+            config.numpressErrorTolerance = .01;
+        }
+    }
 
-    config.precision = BinaryDataEncoder::Precision_32;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
-    config.compression = BinaryDataEncoder::Compression_Zlib;
-    testConfiguration(config);
-
-    config.precision = BinaryDataEncoder::Precision_64;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
-    config.compression = BinaryDataEncoder::Compression_Zlib;
-    testConfiguration(config);
-
-    config.precision = BinaryDataEncoder::Precision_64;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
-    config.compression = BinaryDataEncoder::Compression_Zlib;
-    testConfiguration(config);
 }
 
 

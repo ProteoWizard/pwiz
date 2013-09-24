@@ -1611,6 +1611,9 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
     map<CVID, BinaryDataEncoder::Precision>::const_iterator overrideItr = config.precisionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
     if (overrideItr != config.precisionOverrides.end())
         usedConfig.precision = overrideItr->second;
+    map<CVID, BinaryDataEncoder::Numpress>::const_iterator n_overrideItr = config.numpressOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    if (n_overrideItr != config.numpressOverrides.end())
+        usedConfig.numpress = n_overrideItr->second;
 
     BinaryDataEncoder encoder(usedConfig);
     string encoded;
@@ -1632,22 +1635,46 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
 
     writer.startElement("binaryDataArray", attributes);
 
-    if (usedConfig.precision == BinaryDataEncoder::Precision_32)
-        write(writer, MS_32_bit_float);
-    else
-        write(writer, MS_64_bit_float);
-
+    if (BinaryDataEncoder::Numpress_None == usedConfig.numpress)
+    {
+        if (usedConfig.precision == BinaryDataEncoder::Precision_32)
+            write(writer, MS_32_bit_float);
+        else
+            write(writer, MS_64_bit_float);
+    }
     if (usedConfig.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian)
-        throw runtime_error("[IO::writeConfig()] mzML: must use little endian encoding.");
+        throw runtime_error("[IO::write()] mzML: must use little endian encoding.");
 
-    if (usedConfig.compression == BinaryDataEncoder::Compression_None)
-        write(writer, MS_no_compression);
-    else if (config.compression == BinaryDataEncoder::Compression_Zlib)
-        write(writer, MS_zlib_compression);
-    else
-        throw runtime_error("[IO::writeConfig()] Unsupported compression method.");
+    switch (usedConfig.compression) {
+        case BinaryDataEncoder::Compression_None:
+            if (BinaryDataEncoder::Numpress_None == usedConfig.numpress)
+                write(writer, MS_no_compression);
+            break;
+        case BinaryDataEncoder::Compression_Zlib:
+            write(writer, MS_zlib_compression);
+            break;
+        default:
+            throw runtime_error("[IO::write()] Unsupported compression method.");
+            break;
+    }
+    switch (usedConfig.numpress) {
+        case BinaryDataEncoder::Numpress_Linear:
+            write(writer, MS_MS_Numpress_linear_prediction_compression);
+            break;
+        case BinaryDataEncoder::Numpress_Pic:
+            write(writer, MS_MS_Numpress_positive_integer_compression);
+            break;
+        case BinaryDataEncoder::Numpress_Slof:
+            write(writer, MS_MS_Numpress_short_logged_float_compression);
+            break;
+        case BinaryDataEncoder::Numpress_None:
+            break;
+        default:
+            throw runtime_error("[IO::write()] Unsupported numpress method.");
+            break;
+    }
 
-    writeParamContainer(writer, binaryDataArray);
+    writeParamContainer(writer, binaryDataArray); 
 
     writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("binary");
@@ -1760,6 +1787,23 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         return result;
     }
 
+    void extractCVParams(ParamContainer& container, CVID cvid, vector<CVID> &results)
+    {
+        vector<CVParam>& params = container.cvParams;
+        vector<CVParam>::iterator it;
+        while ((it = find_if(params.begin(), params.end(),CVParamIsChildOf(cvid))) != params.end())
+        {   
+            // found the cvid in container -- erase the CVParam
+            results.push_back(it->cvid);
+            params.erase(it);
+        }
+
+        // also search recursively, but don't erase anything
+        vector<CVParam> CVParams = container.cvParamChildren(cvid);
+        BOOST_FOREACH(const CVParam& cvParam, CVParams)
+            results.push_back(cvParam.cvid);
+    }
+
     BinaryDataEncoder::Config getConfig()
     {
         if (!binaryDataArray)
@@ -1768,13 +1812,42 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         BinaryDataEncoder::Config config;
 
         //
-        // Note: these two CVParams are really info about the encoding, and not 
+        // Note: these CVParams are really info about the encoding, and not 
         // part of the BinaryDataArray.  We look at them to see how to decode the data,
-        // and remove them from the BinaryDataArray struct.
+        // and remove them from the BinaryDataArray struct (extractCVParam does the removal).
         //
 
         CVID cvidBinaryDataType = extractCVParam(*binaryDataArray, MS_binary_data_type);
-        CVID cvidCompressionType = extractCVParam(*binaryDataArray, MS_binary_data_compression_type);
+ 
+        // handle mix of zlib and numpress compression
+        CVID cvidCompressionType;
+        config.compression = BinaryDataEncoder::Compression_None;
+        config.numpress = BinaryDataEncoder::Numpress_None;
+        vector<CVID> children;
+        extractCVParams(*binaryDataArray, MS_binary_data_compression_type, children);
+        BOOST_FOREACH(cvidCompressionType,children)
+        {
+            switch (cvidCompressionType)
+            {
+                case MS_no_compression:
+                    config.compression = BinaryDataEncoder::Compression_None;
+                    break;
+                case MS_zlib_compression:
+                    config.compression = BinaryDataEncoder::Compression_Zlib;
+                    break;
+                case MS_MS_Numpress_linear_prediction_compression:
+                    config.numpress = BinaryDataEncoder::Numpress_Linear;
+                    break;
+                case MS_MS_Numpress_positive_integer_compression:
+                    config.numpress = BinaryDataEncoder::Numpress_Pic;
+                    break;
+                case MS_MS_Numpress_short_logged_float_compression:
+                    config.numpress = BinaryDataEncoder::Numpress_Slof;
+                    break;
+                default:
+                    throw runtime_error("[IO::HandlerBinaryDataArray] Unknown compression type.");
+            }
+        }
 
         switch (cvidBinaryDataType)
         {
@@ -1785,24 +1858,13 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                 config.precision = BinaryDataEncoder::Precision_64;
                 break;
             case CVID_Unknown:
-                throw runtime_error("[IO::HandlerBinaryDataArray] Missing binary data type.");
+                if (BinaryDataEncoder::Numpress_None == config.numpress) // 32 vs 64 bit is meaningless in numpress
+                    throw runtime_error("[IO::HandlerBinaryDataArray] Missing binary data type.");
+                break;
             default:
                 throw runtime_error("[IO::HandlerBinaryDataArray] Unknown binary data type.");
         }
 
-        switch (cvidCompressionType)
-        {
-            case MS_no_compression:
-                config.compression = BinaryDataEncoder::Compression_None;
-                break;
-            case MS_zlib_compression:
-                config.compression = BinaryDataEncoder::Compression_Zlib;
-                break;
-            case CVID_Unknown:
-                throw runtime_error("[IO::HandlerBinaryDataArray] Missing compression type.");
-            default:
-                throw runtime_error("[IO::HandlerBinaryDataArray] Unknown compression.");
-        }
 
         return config;
     }

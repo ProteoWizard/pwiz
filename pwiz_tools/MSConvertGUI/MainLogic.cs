@@ -201,6 +201,19 @@ namespace MSConvertGUI
                         x++;
                         config.Filters.Add(commandList[x]);
                         break;
+                    case "--numpressPic":
+                        config.WriteConfig.numpressPic = true;
+                        break;
+                    case "--numpressLinear":
+                        config.WriteConfig.numpressLinear = true;
+                        x++;
+                        config.WriteConfig.numpressErrorTolerance =  System.Convert.ToDouble(commandList[x]);
+                        break;
+                    case "--numpressSlof":
+                        config.WriteConfig.numpressLinear = true;
+                        x++;
+                        config.WriteConfig.numpressErrorTolerance =  System.Convert.ToDouble(commandList[x]);
+                        break;
                     default:
                         config.Filenames.Add(commandList[x]);
                         break;

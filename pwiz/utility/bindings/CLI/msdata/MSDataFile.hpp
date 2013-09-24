@@ -71,6 +71,7 @@ public ref class MSDataFile : public MSData
     enum class Precision {Precision_32, Precision_64};
     enum class ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};
     enum class Compression {Compression_None, Compression_Zlib};
+    enum class Numpress {Numpress_None, Numpress_Linear, Numpress_Pic, Numpress_Slof}; // lossy numerical representations
 
     /// <summary>
     /// configuration options for write()
@@ -82,12 +83,20 @@ public ref class MSDataFile : public MSData
         property Precision precision;
         property ByteOrder byteOrder;
         property Compression compression;
+        property bool numpressPic;  // lossy numerical representations for intensities
+        property bool numpressSlof; // lossy numerical representations for intensities
+        property bool numpressLinear; // lossy numerical representations for rt and mz
+        property double numpressErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
         property bool indexed;
         property bool gzipped;
 
         WriteConfig()
         {
             format = Format::Format_mzML;
+            numpressPic = false;
+            numpressSlof = false;
+            numpressLinear = false;
+            numpressErrorTolerance = pwiz::msdata::BinaryDataEncoder_default_numpressErrorTolerance;
             indexed = true;
         }
     };

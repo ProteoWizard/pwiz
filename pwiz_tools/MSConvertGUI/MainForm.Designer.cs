@@ -57,8 +57,6 @@ namespace MSConvertGUI
             this.FileLabel = new System.Windows.Forms.Label();
             this.AddFileButton = new System.Windows.Forms.Button();
             this.FilterDGV = new System.Windows.Forms.DataGridView();
-            this.OptionTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ValueTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.FileListBox = new System.Windows.Forms.ListBox();
             this.RemoveFileButton = new System.Windows.Forms.Button();
             this.StartButton = new System.Windows.Forms.Button();
@@ -91,22 +89,22 @@ namespace MSConvertGUI
             this.MSLevelPanel = new System.Windows.Forms.Panel();
             this.MSLevelLabel = new System.Windows.Forms.Label();
             this.MSLabelSeperator = new System.Windows.Forms.Label();
-            this.MSLevelBox2 = new System.Windows.Forms.TextBox();
-            this.MSLevelBox1 = new System.Windows.Forms.TextBox();
+            this.MSLevelHigh = new System.Windows.Forms.TextBox();
+            this.MSLevelLow = new System.Windows.Forms.TextBox();
             this.PeakPickingPanel = new System.Windows.Forms.Panel();
             this.PeakPreferVendorBox = new System.Windows.Forms.CheckBox();
             this.PeakMSLevelLabel = new System.Windows.Forms.Label();
             this.PeakMSLevelSeperator = new System.Windows.Forms.Label();
-            this.PeakMSLevelBox2 = new System.Windows.Forms.TextBox();
-            this.PeakMSLevelBox1 = new System.Windows.Forms.TextBox();
+            this.PeakMSLevelHigh = new System.Windows.Forms.TextBox();
+            this.PeakMSLevelLow = new System.Windows.Forms.TextBox();
             this.ZeroSamplesPanel = new System.Windows.Forms.Panel();
             this.ZeroSamplesAddMissing = new System.Windows.Forms.RadioButton();
             this.ZeroSamplesAddMissingFlankCountBox = new System.Windows.Forms.TextBox();
             this.ZeroSamplesRemove = new System.Windows.Forms.RadioButton();
             this.ZeroSamplesMSLevelLabel = new System.Windows.Forms.Label();
             this.ZeroSamplesMSLevelSeperator = new System.Windows.Forms.Label();
-            this.ZeroSamplesMSLevelBox2 = new System.Windows.Forms.TextBox();
-            this.ZeroSamplesMSLevelBox1 = new System.Windows.Forms.TextBox();
+            this.ZeroSamplesMSLevelHigh = new System.Windows.Forms.TextBox();
+            this.ZeroSamplesMSLevelLow = new System.Windows.Forms.TextBox();
             this.ETDFilterPanel = new System.Windows.Forms.Panel();
             this.ETDBlanketRemovalBox = new System.Windows.Forms.CheckBox();
             this.ETDRemoveChargeReducedBox = new System.Windows.Forms.CheckBox();
@@ -131,6 +129,11 @@ namespace MSConvertGUI
             this.OutputBox = new System.Windows.Forms.TextBox();
             this.PrecisionLabel = new System.Windows.Forms.Label();
             this.OptionsGB = new System.Windows.Forms.GroupBox();
+            this.NumpressToleranceTextbox = new System.Windows.Forms.TextBox();
+            this.NumpressToleranceLabel = new System.Windows.Forms.Label();
+            this.NumpressSlofBox = new System.Windows.Forms.CheckBox();
+            this.NumpressLinearBox = new System.Windows.Forms.CheckBox();
+            this.NumpressPicBox = new System.Windows.Forms.CheckBox();
             this.MakeTPPCompatibleOutputButton = new System.Windows.Forms.CheckBox();
             this.UseZlibBox = new System.Windows.Forms.CheckBox();
             this.GzipBox = new System.Windows.Forms.CheckBox();
@@ -141,9 +144,11 @@ namespace MSConvertGUI
             this.Precision64 = new System.Windows.Forms.RadioButton();
             this.SlidingPanel = new System.Windows.Forms.Panel();
             this.SetDefaultsButton = new System.Windows.Forms.Button();
+            this.AboutButton = new System.Windows.Forms.Button();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AboutButton = new System.Windows.Forms.Button();
+            this.OptionTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ValueTab = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.ChargeStatePredictorPanel.SuspendLayout();
@@ -163,27 +168,30 @@ namespace MSConvertGUI
             // 
             this.FileBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.FileBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
-            this.FileBox.Location = new System.Drawing.Point(43, 35);
+            this.FileBox.Location = new System.Drawing.Point(57, 43);
+            this.FileBox.Margin = new System.Windows.Forms.Padding(4);
             this.FileBox.Name = "FileBox";
-            this.FileBox.Size = new System.Drawing.Size(182, 20);
+            this.FileBox.Size = new System.Drawing.Size(241, 22);
             this.FileBox.TabIndex = 3;
             this.FileBox.TextChanged += new System.EventHandler(this.FileBox_TextChanged);
             // 
             // FileLabel
             // 
             this.FileLabel.AutoSize = true;
-            this.FileLabel.Location = new System.Drawing.Point(12, 38);
+            this.FileLabel.Location = new System.Drawing.Point(16, 47);
+            this.FileLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.FileLabel.Name = "FileLabel";
-            this.FileLabel.Size = new System.Drawing.Size(26, 13);
+            this.FileLabel.Size = new System.Drawing.Size(34, 17);
             this.FileLabel.TabIndex = 1;
             this.FileLabel.Text = "File:";
             // 
             // AddFileButton
             // 
             this.AddFileButton.Enabled = false;
-            this.AddFileButton.Location = new System.Drawing.Point(92, 61);
+            this.AddFileButton.Location = new System.Drawing.Point(123, 75);
+            this.AddFileButton.Margin = new System.Windows.Forms.Padding(4);
             this.AddFileButton.Name = "AddFileButton";
-            this.AddFileButton.Size = new System.Drawing.Size(42, 23);
+            this.AddFileButton.Size = new System.Drawing.Size(56, 28);
             this.AddFileButton.TabIndex = 5;
             this.AddFileButton.Text = "Add";
             this.AddFileButton.UseVisualStyleBackColor = true;
@@ -204,26 +212,15 @@ namespace MSConvertGUI
             this.OptionTab,
             this.ValueTab});
             this.FilterDGV.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.FilterDGV.Location = new System.Drawing.Point(322, 261);
+            this.FilterDGV.Location = new System.Drawing.Point(429, 321);
+            this.FilterDGV.Margin = new System.Windows.Forms.Padding(4);
             this.FilterDGV.MultiSelect = false;
             this.FilterDGV.Name = "FilterDGV";
             this.FilterDGV.RowHeadersVisible = false;
+            this.FilterDGV.RowTemplate.Height = 24;
             this.FilterDGV.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.FilterDGV.Size = new System.Drawing.Size(327, 163);
+            this.FilterDGV.Size = new System.Drawing.Size(436, 308);
             this.FilterDGV.TabIndex = 12;
-            // 
-            // OptionTab
-            // 
-            this.OptionTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.OptionTab.FillWeight = 50F;
-            this.OptionTab.HeaderText = "Filter";
-            this.OptionTab.Name = "OptionTab";
-            // 
-            // ValueTab
-            // 
-            this.ValueTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.ValueTab.HeaderText = "Parameters";
-            this.ValueTab.Name = "ValueTab";
             // 
             // FileListBox
             // 
@@ -231,19 +228,22 @@ namespace MSConvertGUI
             | System.Windows.Forms.AnchorStyles.Left)));
             this.FileListBox.FormattingEnabled = true;
             this.FileListBox.HorizontalScrollbar = true;
-            this.FileListBox.Location = new System.Drawing.Point(17, 90);
+            this.FileListBox.ItemHeight = 16;
+            this.FileListBox.Location = new System.Drawing.Point(23, 111);
+            this.FileListBox.Margin = new System.Windows.Forms.Padding(4);
             this.FileListBox.Name = "FileListBox";
             this.FileListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.FileListBox.Size = new System.Drawing.Size(269, 160);
+            this.FileListBox.Size = new System.Drawing.Size(357, 228);
             this.FileListBox.TabIndex = 7;
             this.FileListBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.FileListBox_KeyUp);
             // 
             // RemoveFileButton
             // 
             this.RemoveFileButton.Enabled = false;
-            this.RemoveFileButton.Location = new System.Drawing.Point(140, 61);
+            this.RemoveFileButton.Location = new System.Drawing.Point(187, 75);
+            this.RemoveFileButton.Margin = new System.Windows.Forms.Padding(4);
             this.RemoveFileButton.Name = "RemoveFileButton";
-            this.RemoveFileButton.Size = new System.Drawing.Size(58, 23);
+            this.RemoveFileButton.Size = new System.Drawing.Size(77, 28);
             this.RemoveFileButton.TabIndex = 6;
             this.RemoveFileButton.Text = "Remove";
             this.RemoveFileButton.UseVisualStyleBackColor = true;
@@ -252,9 +252,10 @@ namespace MSConvertGUI
             // StartButton
             // 
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Location = new System.Drawing.Point(574, 433);
+            this.StartButton.Location = new System.Drawing.Point(765, 640);
+            this.StartButton.Margin = new System.Windows.Forms.Padding(4);
             this.StartButton.Name = "StartButton";
-            this.StartButton.Size = new System.Drawing.Size(75, 23);
+            this.StartButton.Size = new System.Drawing.Size(100, 28);
             this.StartButton.TabIndex = 13;
             this.StartButton.Text = "Start";
             this.StartButton.UseVisualStyleBackColor = true;
@@ -273,9 +274,11 @@ namespace MSConvertGUI
             this.FilterGB.Controls.Add(this.ZeroSamplesPanel);
             this.FilterGB.Controls.Add(this.ETDFilterPanel);
             this.FilterGB.Controls.Add(this.ThresholdFilterPanel);
-            this.FilterGB.Location = new System.Drawing.Point(322, 83);
+            this.FilterGB.Location = new System.Drawing.Point(429, 102);
+            this.FilterGB.Margin = new System.Windows.Forms.Padding(4);
             this.FilterGB.Name = "FilterGB";
-            this.FilterGB.Size = new System.Drawing.Size(327, 143);
+            this.FilterGB.Padding = new System.Windows.Forms.Padding(4);
+            this.FilterGB.Size = new System.Drawing.Size(436, 176);
             this.FilterGB.TabIndex = 9;
             this.FilterGB.TabStop = false;
             this.FilterGB.Text = "Filters";
@@ -293,9 +296,10 @@ namespace MSConvertGUI
             "Charge State Predictor",
             "Activation",
             "Subset"});
-            this.FilterBox.Location = new System.Drawing.Point(97, 19);
+            this.FilterBox.Location = new System.Drawing.Point(129, 23);
+            this.FilterBox.Margin = new System.Windows.Forms.Padding(4);
             this.FilterBox.Name = "FilterBox";
-            this.FilterBox.Size = new System.Drawing.Size(132, 21);
+            this.FilterBox.Size = new System.Drawing.Size(175, 24);
             this.FilterBox.TabIndex = 0;
             this.FilterBox.SelectedIndexChanged += new System.EventHandler(this.FilterBox_SelectedIndexChanged);
             // 
@@ -308,35 +312,39 @@ namespace MSConvertGUI
             this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleBox);
             this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleLabel);
             this.ChargeStatePredictorPanel.Controls.Add(this.ChaOverwriteCharge);
-            this.ChargeStatePredictorPanel.Location = new System.Drawing.Point(22, 46);
+            this.ChargeStatePredictorPanel.Location = new System.Drawing.Point(29, 57);
+            this.ChargeStatePredictorPanel.Margin = new System.Windows.Forms.Padding(4);
             this.ChargeStatePredictorPanel.Name = "ChargeStatePredictorPanel";
-            this.ChargeStatePredictorPanel.Size = new System.Drawing.Size(283, 91);
+            this.ChargeStatePredictorPanel.Size = new System.Drawing.Size(377, 112);
             this.ChargeStatePredictorPanel.TabIndex = 4;
             this.ChargeStatePredictorPanel.Visible = false;
             // 
             // ChaMCMaxLabel
             // 
             this.ChaMCMaxLabel.AutoSize = true;
-            this.ChaMCMaxLabel.Location = new System.Drawing.Point(182, 66);
+            this.ChaMCMaxLabel.Location = new System.Drawing.Point(243, 81);
+            this.ChaMCMaxLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ChaMCMaxLabel.Name = "ChaMCMaxLabel";
-            this.ChaMCMaxLabel.Size = new System.Drawing.Size(30, 13);
+            this.ChaMCMaxLabel.Size = new System.Drawing.Size(37, 17);
             this.ChaMCMaxLabel.TabIndex = 19;
             this.ChaMCMaxLabel.Text = "Max:";
             // 
             // ChaMCMaxBox
             // 
-            this.ChaMCMaxBox.Location = new System.Drawing.Point(215, 62);
+            this.ChaMCMaxBox.Location = new System.Drawing.Point(287, 76);
+            this.ChaMCMaxBox.Margin = new System.Windows.Forms.Padding(4);
             this.ChaMCMaxBox.Name = "ChaMCMaxBox";
-            this.ChaMCMaxBox.Size = new System.Drawing.Size(37, 20);
+            this.ChaMCMaxBox.Size = new System.Drawing.Size(48, 22);
             this.ChaMCMaxBox.TabIndex = 18;
             this.ChaMCMaxBox.Text = "3";
             this.ChaMCMaxBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
             // ChaMCMinBox
             // 
-            this.ChaMCMinBox.Location = new System.Drawing.Point(133, 62);
+            this.ChaMCMinBox.Location = new System.Drawing.Point(177, 76);
+            this.ChaMCMinBox.Margin = new System.Windows.Forms.Padding(4);
             this.ChaMCMinBox.Name = "ChaMCMinBox";
-            this.ChaMCMinBox.Size = new System.Drawing.Size(37, 20);
+            this.ChaMCMinBox.Size = new System.Drawing.Size(48, 22);
             this.ChaMCMinBox.TabIndex = 17;
             this.ChaMCMinBox.Text = "2";
             this.ChaMCMinBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
@@ -344,9 +352,10 @@ namespace MSConvertGUI
             // ChaMCMinLabel
             // 
             this.ChaMCMinLabel.AutoSize = true;
-            this.ChaMCMinLabel.Location = new System.Drawing.Point(30, 66);
+            this.ChaMCMinLabel.Location = new System.Drawing.Point(40, 81);
+            this.ChaMCMinLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ChaMCMinLabel.Name = "ChaMCMinLabel";
-            this.ChaMCMinLabel.Size = new System.Drawing.Size(103, 13);
+            this.ChaMCMinLabel.Size = new System.Drawing.Size(136, 17);
             this.ChaMCMinLabel.TabIndex = 9;
             this.ChaMCMinLabel.Text = "Multiple Charge Min:";
             // 
@@ -358,14 +367,15 @@ namespace MSConvertGUI
             0,
             0,
             65536});
-            this.ChaSingleBox.Location = new System.Drawing.Point(174, 36);
+            this.ChaSingleBox.Location = new System.Drawing.Point(232, 44);
+            this.ChaSingleBox.Margin = new System.Windows.Forms.Padding(4);
             this.ChaSingleBox.Maximum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.ChaSingleBox.Name = "ChaSingleBox";
-            this.ChaSingleBox.Size = new System.Drawing.Size(41, 20);
+            this.ChaSingleBox.Size = new System.Drawing.Size(55, 22);
             this.ChaSingleBox.TabIndex = 8;
             this.ChaSingleBox.Value = new decimal(new int[] {
             9,
@@ -376,9 +386,10 @@ namespace MSConvertGUI
             // ChaSingleLabel
             // 
             this.ChaSingleLabel.AutoSize = true;
-            this.ChaSingleLabel.Location = new System.Drawing.Point(67, 38);
+            this.ChaSingleLabel.Location = new System.Drawing.Point(89, 47);
+            this.ChaSingleLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ChaSingleLabel.Name = "ChaSingleLabel";
-            this.ChaSingleLabel.Size = new System.Drawing.Size(107, 13);
+            this.ChaSingleLabel.Size = new System.Drawing.Size(142, 17);
             this.ChaSingleLabel.TabIndex = 7;
             this.ChaSingleLabel.Text = "Single Charge % TIC:";
             // 
@@ -386,9 +397,10 @@ namespace MSConvertGUI
             // 
             this.ChaOverwriteCharge.AutoSize = true;
             this.ChaOverwriteCharge.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ChaOverwriteCharge.Location = new System.Drawing.Point(86, 12);
+            this.ChaOverwriteCharge.Location = new System.Drawing.Point(115, 15);
+            this.ChaOverwriteCharge.Margin = new System.Windows.Forms.Padding(4);
             this.ChaOverwriteCharge.Name = "ChaOverwriteCharge";
-            this.ChaOverwriteCharge.Size = new System.Drawing.Size(111, 17);
+            this.ChaOverwriteCharge.Size = new System.Drawing.Size(144, 21);
             this.ChaOverwriteCharge.TabIndex = 6;
             this.ChaOverwriteCharge.Text = "Overwrite Charge:";
             this.ChaOverwriteCharge.UseVisualStyleBackColor = true;
@@ -397,9 +409,10 @@ namespace MSConvertGUI
             // 
             this.ActivationPanel.Controls.Add(this.ActivationTypeBox);
             this.ActivationPanel.Controls.Add(this.ActivationTypeLabel);
-            this.ActivationPanel.Location = new System.Drawing.Point(22, 46);
+            this.ActivationPanel.Location = new System.Drawing.Point(29, 57);
+            this.ActivationPanel.Margin = new System.Windows.Forms.Padding(4);
             this.ActivationPanel.Name = "ActivationPanel";
-            this.ActivationPanel.Size = new System.Drawing.Size(283, 91);
+            this.ActivationPanel.Size = new System.Drawing.Size(377, 112);
             this.ActivationPanel.TabIndex = 5;
             this.ActivationPanel.Visible = false;
             // 
@@ -420,19 +433,21 @@ namespace MSConvertGUI
             "PSD",
             "SID",
             "SORI"});
-            this.ActivationTypeBox.Location = new System.Drawing.Point(121, 35);
+            this.ActivationTypeBox.Location = new System.Drawing.Point(161, 43);
+            this.ActivationTypeBox.Margin = new System.Windows.Forms.Padding(4);
             this.ActivationTypeBox.MaxDropDownItems = 16;
             this.ActivationTypeBox.Name = "ActivationTypeBox";
-            this.ActivationTypeBox.Size = new System.Drawing.Size(68, 21);
+            this.ActivationTypeBox.Size = new System.Drawing.Size(89, 24);
             this.ActivationTypeBox.Sorted = true;
             this.ActivationTypeBox.TabIndex = 14;
             // 
             // ActivationTypeLabel
             // 
             this.ActivationTypeLabel.AutoSize = true;
-            this.ActivationTypeLabel.Location = new System.Drawing.Point(81, 37);
+            this.ActivationTypeLabel.Location = new System.Drawing.Point(108, 46);
+            this.ActivationTypeLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ActivationTypeLabel.Name = "ActivationTypeLabel";
-            this.ActivationTypeLabel.Size = new System.Drawing.Size(34, 13);
+            this.ActivationTypeLabel.Size = new System.Drawing.Size(44, 17);
             this.ActivationTypeLabel.TabIndex = 15;
             this.ActivationTypeLabel.Text = "Type:";
             // 
@@ -450,9 +465,10 @@ namespace MSConvertGUI
             this.SubsetPanel.Controls.Add(this.ScanNumberLabel);
             this.SubsetPanel.Controls.Add(this.ScanNumberLow);
             this.SubsetPanel.Controls.Add(this.ScanNumberLabel2);
-            this.SubsetPanel.Location = new System.Drawing.Point(22, 46);
+            this.SubsetPanel.Location = new System.Drawing.Point(29, 57);
+            this.SubsetPanel.Margin = new System.Windows.Forms.Padding(4);
             this.SubsetPanel.Name = "SubsetPanel";
-            this.SubsetPanel.Size = new System.Drawing.Size(283, 91);
+            this.SubsetPanel.Size = new System.Drawing.Size(377, 112);
             this.SubsetPanel.TabIndex = 6;
             this.SubsetPanel.Visible = false;
             // 
@@ -460,98 +476,110 @@ namespace MSConvertGUI
             // 
             this.mzWinLabel2.AutoSize = true;
             this.mzWinLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.mzWinLabel2.Location = new System.Drawing.Point(174, 60);
+            this.mzWinLabel2.Location = new System.Drawing.Point(232, 74);
+            this.mzWinLabel2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.mzWinLabel2.Name = "mzWinLabel2";
-            this.mzWinLabel2.Size = new System.Drawing.Size(15, 20);
+            this.mzWinLabel2.Size = new System.Drawing.Size(20, 25);
             this.mzWinLabel2.TabIndex = 16;
             this.mzWinLabel2.Text = "-";
             // 
             // ScanNumberHigh
             // 
-            this.ScanNumberHigh.Location = new System.Drawing.Point(191, 10);
+            this.ScanNumberHigh.Location = new System.Drawing.Point(255, 12);
+            this.ScanNumberHigh.Margin = new System.Windows.Forms.Padding(4);
             this.ScanNumberHigh.Name = "ScanNumberHigh";
-            this.ScanNumberHigh.Size = new System.Drawing.Size(37, 20);
+            this.ScanNumberHigh.Size = new System.Drawing.Size(48, 22);
             this.ScanNumberHigh.TabIndex = 11;
             // 
             // ScanTimeLow
             // 
-            this.ScanTimeLow.Location = new System.Drawing.Point(135, 36);
+            this.ScanTimeLow.Location = new System.Drawing.Point(180, 44);
+            this.ScanTimeLow.Margin = new System.Windows.Forms.Padding(4);
             this.ScanTimeLow.Name = "ScanTimeLow";
-            this.ScanTimeLow.Size = new System.Drawing.Size(37, 20);
+            this.ScanTimeLow.Size = new System.Drawing.Size(48, 22);
             this.ScanTimeLow.TabIndex = 0;
             // 
             // mzWinHigh
             // 
-            this.mzWinHigh.Location = new System.Drawing.Point(191, 62);
+            this.mzWinHigh.Location = new System.Drawing.Point(255, 76);
+            this.mzWinHigh.Margin = new System.Windows.Forms.Padding(4);
             this.mzWinHigh.Name = "mzWinHigh";
-            this.mzWinHigh.Size = new System.Drawing.Size(37, 20);
+            this.mzWinHigh.Size = new System.Drawing.Size(48, 22);
             this.mzWinHigh.TabIndex = 15;
             // 
             // ScanTimeHigh
             // 
-            this.ScanTimeHigh.Location = new System.Drawing.Point(191, 36);
+            this.ScanTimeHigh.Location = new System.Drawing.Point(255, 44);
+            this.ScanTimeHigh.Margin = new System.Windows.Forms.Padding(4);
             this.ScanTimeHigh.Name = "ScanTimeHigh";
-            this.ScanTimeHigh.Size = new System.Drawing.Size(37, 20);
+            this.ScanTimeHigh.Size = new System.Drawing.Size(48, 22);
             this.ScanTimeHigh.TabIndex = 1;
             // 
             // ScanTimeLabel2
             // 
             this.ScanTimeLabel2.AutoSize = true;
             this.ScanTimeLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ScanTimeLabel2.Location = new System.Drawing.Point(174, 34);
+            this.ScanTimeLabel2.Location = new System.Drawing.Point(232, 42);
+            this.ScanTimeLabel2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ScanTimeLabel2.Name = "ScanTimeLabel2";
-            this.ScanTimeLabel2.Size = new System.Drawing.Size(15, 20);
+            this.ScanTimeLabel2.Size = new System.Drawing.Size(20, 25);
             this.ScanTimeLabel2.TabIndex = 2;
             this.ScanTimeLabel2.Text = "-";
             // 
             // mzWinLow
             // 
-            this.mzWinLow.Location = new System.Drawing.Point(135, 62);
+            this.mzWinLow.Location = new System.Drawing.Point(180, 76);
+            this.mzWinLow.Margin = new System.Windows.Forms.Padding(4);
             this.mzWinLow.Name = "mzWinLow";
-            this.mzWinLow.Size = new System.Drawing.Size(37, 20);
+            this.mzWinLow.Size = new System.Drawing.Size(48, 22);
             this.mzWinLow.TabIndex = 14;
             // 
             // ScanTimeLabel
             // 
             this.ScanTimeLabel.AutoSize = true;
-            this.ScanTimeLabel.Location = new System.Drawing.Point(68, 41);
+            this.ScanTimeLabel.Location = new System.Drawing.Point(91, 50);
+            this.ScanTimeLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ScanTimeLabel.Name = "ScanTimeLabel";
-            this.ScanTimeLabel.Size = new System.Drawing.Size(61, 13);
+            this.ScanTimeLabel.Size = new System.Drawing.Size(79, 17);
             this.ScanTimeLabel.TabIndex = 3;
             this.ScanTimeLabel.Text = "Scan Time:";
             // 
             // mzWinLabel
             // 
             this.mzWinLabel.AutoSize = true;
-            this.mzWinLabel.Location = new System.Drawing.Point(64, 67);
+            this.mzWinLabel.Location = new System.Drawing.Point(85, 82);
+            this.mzWinLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.mzWinLabel.Name = "mzWinLabel";
-            this.mzWinLabel.Size = new System.Drawing.Size(65, 13);
+            this.mzWinLabel.Size = new System.Drawing.Size(83, 17);
             this.mzWinLabel.TabIndex = 6;
             this.mzWinLabel.Text = "mz Window:";
             // 
             // ScanNumberLabel
             // 
             this.ScanNumberLabel.AutoSize = true;
-            this.ScanNumberLabel.Location = new System.Drawing.Point(54, 12);
+            this.ScanNumberLabel.Location = new System.Drawing.Point(72, 15);
+            this.ScanNumberLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ScanNumberLabel.Name = "ScanNumberLabel";
-            this.ScanNumberLabel.Size = new System.Drawing.Size(75, 13);
+            this.ScanNumberLabel.Size = new System.Drawing.Size(98, 17);
             this.ScanNumberLabel.TabIndex = 13;
             this.ScanNumberLabel.Text = "Scan Number:";
             // 
             // ScanNumberLow
             // 
-            this.ScanNumberLow.Location = new System.Drawing.Point(135, 10);
+            this.ScanNumberLow.Location = new System.Drawing.Point(180, 12);
+            this.ScanNumberLow.Margin = new System.Windows.Forms.Padding(4);
             this.ScanNumberLow.Name = "ScanNumberLow";
-            this.ScanNumberLow.Size = new System.Drawing.Size(37, 20);
+            this.ScanNumberLow.Size = new System.Drawing.Size(48, 22);
             this.ScanNumberLow.TabIndex = 10;
             // 
             // ScanNumberLabel2
             // 
             this.ScanNumberLabel2.AutoSize = true;
             this.ScanNumberLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ScanNumberLabel2.Location = new System.Drawing.Point(174, 8);
+            this.ScanNumberLabel2.Location = new System.Drawing.Point(232, 10);
+            this.ScanNumberLabel2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ScanNumberLabel2.Name = "ScanNumberLabel2";
-            this.ScanNumberLabel2.Size = new System.Drawing.Size(15, 20);
+            this.ScanNumberLabel2.Size = new System.Drawing.Size(20, 25);
             this.ScanNumberLabel2.TabIndex = 12;
             this.ScanNumberLabel2.Text = "-";
             // 
@@ -559,20 +587,22 @@ namespace MSConvertGUI
             // 
             this.MSLevelPanel.Controls.Add(this.MSLevelLabel);
             this.MSLevelPanel.Controls.Add(this.MSLabelSeperator);
-            this.MSLevelPanel.Controls.Add(this.MSLevelBox2);
-            this.MSLevelPanel.Controls.Add(this.MSLevelBox1);
-            this.MSLevelPanel.Location = new System.Drawing.Point(22, 46);
+            this.MSLevelPanel.Controls.Add(this.MSLevelHigh);
+            this.MSLevelPanel.Controls.Add(this.MSLevelLow);
+            this.MSLevelPanel.Location = new System.Drawing.Point(29, 57);
+            this.MSLevelPanel.Margin = new System.Windows.Forms.Padding(4);
             this.MSLevelPanel.Name = "MSLevelPanel";
-            this.MSLevelPanel.Size = new System.Drawing.Size(283, 91);
+            this.MSLevelPanel.Size = new System.Drawing.Size(377, 112);
             this.MSLevelPanel.TabIndex = 1;
             this.MSLevelPanel.Visible = false;
             // 
             // MSLevelLabel
             // 
             this.MSLevelLabel.AutoSize = true;
-            this.MSLevelLabel.Location = new System.Drawing.Point(121, 19);
+            this.MSLevelLabel.Location = new System.Drawing.Point(161, 23);
+            this.MSLevelLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.MSLevelLabel.Name = "MSLevelLabel";
-            this.MSLevelLabel.Size = new System.Drawing.Size(41, 13);
+            this.MSLevelLabel.Size = new System.Drawing.Size(53, 17);
             this.MSLevelLabel.TabIndex = 3;
             this.MSLevelLabel.Text = "Levels:";
             // 
@@ -580,39 +610,43 @@ namespace MSConvertGUI
             // 
             this.MSLabelSeperator.AutoSize = true;
             this.MSLabelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MSLabelSeperator.Location = new System.Drawing.Point(134, 34);
+            this.MSLabelSeperator.Location = new System.Drawing.Point(179, 42);
+            this.MSLabelSeperator.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.MSLabelSeperator.Name = "MSLabelSeperator";
-            this.MSLabelSeperator.Size = new System.Drawing.Size(15, 20);
+            this.MSLabelSeperator.Size = new System.Drawing.Size(20, 25);
             this.MSLabelSeperator.TabIndex = 2;
             this.MSLabelSeperator.Text = "-";
             // 
-            // MSLevelBox2
+            // MSLevelHigh
             // 
-            this.MSLevelBox2.Location = new System.Drawing.Point(151, 36);
-            this.MSLevelBox2.Name = "MSLevelBox2";
-            this.MSLevelBox2.Size = new System.Drawing.Size(37, 20);
-            this.MSLevelBox2.TabIndex = 1;
-            this.MSLevelBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            this.MSLevelHigh.Location = new System.Drawing.Point(201, 44);
+            this.MSLevelHigh.Margin = new System.Windows.Forms.Padding(4);
+            this.MSLevelHigh.Name = "MSLevelHigh";
+            this.MSLevelHigh.Size = new System.Drawing.Size(48, 22);
+            this.MSLevelHigh.TabIndex = 1;
+            this.MSLevelHigh.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
-            // MSLevelBox1
+            // MSLevelLow
             // 
-            this.MSLevelBox1.Location = new System.Drawing.Point(95, 36);
-            this.MSLevelBox1.Name = "MSLevelBox1";
-            this.MSLevelBox1.Size = new System.Drawing.Size(37, 20);
-            this.MSLevelBox1.TabIndex = 0;
-            this.MSLevelBox1.Text = "1";
-            this.MSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            this.MSLevelLow.Location = new System.Drawing.Point(127, 44);
+            this.MSLevelLow.Margin = new System.Windows.Forms.Padding(4);
+            this.MSLevelLow.Name = "MSLevelLow";
+            this.MSLevelLow.Size = new System.Drawing.Size(48, 22);
+            this.MSLevelLow.TabIndex = 0;
+            this.MSLevelLow.Text = "1";
+            this.MSLevelLow.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
             // PeakPickingPanel
             // 
             this.PeakPickingPanel.Controls.Add(this.PeakPreferVendorBox);
             this.PeakPickingPanel.Controls.Add(this.PeakMSLevelLabel);
             this.PeakPickingPanel.Controls.Add(this.PeakMSLevelSeperator);
-            this.PeakPickingPanel.Controls.Add(this.PeakMSLevelBox2);
-            this.PeakPickingPanel.Controls.Add(this.PeakMSLevelBox1);
-            this.PeakPickingPanel.Location = new System.Drawing.Point(22, 46);
+            this.PeakPickingPanel.Controls.Add(this.PeakMSLevelHigh);
+            this.PeakPickingPanel.Controls.Add(this.PeakMSLevelLow);
+            this.PeakPickingPanel.Location = new System.Drawing.Point(29, 57);
+            this.PeakPickingPanel.Margin = new System.Windows.Forms.Padding(4);
             this.PeakPickingPanel.Name = "PeakPickingPanel";
-            this.PeakPickingPanel.Size = new System.Drawing.Size(283, 91);
+            this.PeakPickingPanel.Size = new System.Drawing.Size(377, 112);
             this.PeakPickingPanel.TabIndex = 2;
             this.PeakPickingPanel.Visible = false;
             // 
@@ -622,9 +656,10 @@ namespace MSConvertGUI
             this.PeakPreferVendorBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.PeakPreferVendorBox.Checked = true;
             this.PeakPreferVendorBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.PeakPreferVendorBox.Location = new System.Drawing.Point(94, 12);
+            this.PeakPreferVendorBox.Location = new System.Drawing.Point(125, 15);
+            this.PeakPreferVendorBox.Margin = new System.Windows.Forms.Padding(4);
             this.PeakPreferVendorBox.Name = "PeakPreferVendorBox";
-            this.PeakPreferVendorBox.Size = new System.Drawing.Size(94, 17);
+            this.PeakPreferVendorBox.Size = new System.Drawing.Size(123, 21);
             this.PeakPreferVendorBox.TabIndex = 21;
             this.PeakPreferVendorBox.Text = "Prefer Vendor:";
             this.PeakPreferVendorBox.UseVisualStyleBackColor = true;
@@ -632,9 +667,10 @@ namespace MSConvertGUI
             // PeakMSLevelLabel
             // 
             this.PeakMSLevelLabel.AutoSize = true;
-            this.PeakMSLevelLabel.Location = new System.Drawing.Point(113, 41);
+            this.PeakMSLevelLabel.Location = new System.Drawing.Point(151, 50);
+            this.PeakMSLevelLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.PeakMSLevelLabel.Name = "PeakMSLevelLabel";
-            this.PeakMSLevelLabel.Size = new System.Drawing.Size(60, 13);
+            this.PeakMSLevelLabel.Size = new System.Drawing.Size(77, 17);
             this.PeakMSLevelLabel.TabIndex = 20;
             this.PeakMSLevelLabel.Text = "MS Levels:";
             // 
@@ -642,28 +678,31 @@ namespace MSConvertGUI
             // 
             this.PeakMSLevelSeperator.AutoSize = true;
             this.PeakMSLevelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.PeakMSLevelSeperator.Location = new System.Drawing.Point(134, 55);
+            this.PeakMSLevelSeperator.Location = new System.Drawing.Point(179, 68);
+            this.PeakMSLevelSeperator.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.PeakMSLevelSeperator.Name = "PeakMSLevelSeperator";
-            this.PeakMSLevelSeperator.Size = new System.Drawing.Size(15, 20);
+            this.PeakMSLevelSeperator.Size = new System.Drawing.Size(20, 25);
             this.PeakMSLevelSeperator.TabIndex = 19;
             this.PeakMSLevelSeperator.Text = "-";
             // 
-            // PeakMSLevelBox2
+            // PeakMSLevelHigh
             // 
-            this.PeakMSLevelBox2.Location = new System.Drawing.Point(151, 57);
-            this.PeakMSLevelBox2.Name = "PeakMSLevelBox2";
-            this.PeakMSLevelBox2.Size = new System.Drawing.Size(37, 20);
-            this.PeakMSLevelBox2.TabIndex = 18;
-            this.PeakMSLevelBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            this.PeakMSLevelHigh.Location = new System.Drawing.Point(201, 70);
+            this.PeakMSLevelHigh.Margin = new System.Windows.Forms.Padding(4);
+            this.PeakMSLevelHigh.Name = "PeakMSLevelHigh";
+            this.PeakMSLevelHigh.Size = new System.Drawing.Size(48, 22);
+            this.PeakMSLevelHigh.TabIndex = 18;
+            this.PeakMSLevelHigh.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
-            // PeakMSLevelBox1
+            // PeakMSLevelLow
             // 
-            this.PeakMSLevelBox1.Location = new System.Drawing.Point(95, 57);
-            this.PeakMSLevelBox1.Name = "PeakMSLevelBox1";
-            this.PeakMSLevelBox1.Size = new System.Drawing.Size(37, 20);
-            this.PeakMSLevelBox1.TabIndex = 17;
-            this.PeakMSLevelBox1.Text = "1";
-            this.PeakMSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            this.PeakMSLevelLow.Location = new System.Drawing.Point(127, 70);
+            this.PeakMSLevelLow.Margin = new System.Windows.Forms.Padding(4);
+            this.PeakMSLevelLow.Name = "PeakMSLevelLow";
+            this.PeakMSLevelLow.Size = new System.Drawing.Size(48, 22);
+            this.PeakMSLevelLow.TabIndex = 17;
+            this.PeakMSLevelLow.Text = "1";
+            this.PeakMSLevelLow.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
             // ZeroSamplesPanel
             // 
@@ -672,20 +711,22 @@ namespace MSConvertGUI
             this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesRemove);
             this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelLabel);
             this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelSeperator);
-            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelBox2);
-            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelBox1);
-            this.ZeroSamplesPanel.Location = new System.Drawing.Point(22, 46);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelHigh);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelLow);
+            this.ZeroSamplesPanel.Location = new System.Drawing.Point(29, 57);
+            this.ZeroSamplesPanel.Margin = new System.Windows.Forms.Padding(4);
             this.ZeroSamplesPanel.Name = "ZeroSamplesPanel";
-            this.ZeroSamplesPanel.Size = new System.Drawing.Size(283, 91);
+            this.ZeroSamplesPanel.Size = new System.Drawing.Size(377, 112);
             this.ZeroSamplesPanel.TabIndex = 24;
             this.ZeroSamplesPanel.Visible = false;
             // 
             // ZeroSamplesAddMissing
             // 
             this.ZeroSamplesAddMissing.AutoSize = true;
-            this.ZeroSamplesAddMissing.Location = new System.Drawing.Point(93, 12);
+            this.ZeroSamplesAddMissing.Location = new System.Drawing.Point(124, 15);
+            this.ZeroSamplesAddMissing.Margin = new System.Windows.Forms.Padding(4);
             this.ZeroSamplesAddMissing.Name = "ZeroSamplesAddMissing";
-            this.ZeroSamplesAddMissing.Size = new System.Drawing.Size(127, 17);
+            this.ZeroSamplesAddMissing.Size = new System.Drawing.Size(166, 21);
             this.ZeroSamplesAddMissing.TabIndex = 30;
             this.ZeroSamplesAddMissing.TabStop = true;
             this.ZeroSamplesAddMissing.Text = "Add missing, flank by:";
@@ -695,9 +736,10 @@ namespace MSConvertGUI
             // ZeroSamplesAddMissingFlankCountBox
             // 
             this.ZeroSamplesAddMissingFlankCountBox.Enabled = this.ZeroSamplesAddMissing.Checked;
-            this.ZeroSamplesAddMissingFlankCountBox.Location = new System.Drawing.Point(221, 12);
+            this.ZeroSamplesAddMissingFlankCountBox.Location = new System.Drawing.Point(295, 15);
+            this.ZeroSamplesAddMissingFlankCountBox.Margin = new System.Windows.Forms.Padding(4);
             this.ZeroSamplesAddMissingFlankCountBox.Name = "ZeroSamplesAddMissingFlankCountBox";
-            this.ZeroSamplesAddMissingFlankCountBox.Size = new System.Drawing.Size(37, 20);
+            this.ZeroSamplesAddMissingFlankCountBox.Size = new System.Drawing.Size(48, 22);
             this.ZeroSamplesAddMissingFlankCountBox.TabIndex = 31;
             this.ZeroSamplesAddMissingFlankCountBox.Text = "5";
             this.ZeroSamplesAddMissingFlankCountBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
@@ -706,9 +748,10 @@ namespace MSConvertGUI
             // 
             this.ZeroSamplesRemove.AutoSize = true;
             this.ZeroSamplesRemove.Checked = true;
-            this.ZeroSamplesRemove.Location = new System.Drawing.Point(20, 12);
+            this.ZeroSamplesRemove.Location = new System.Drawing.Point(27, 15);
+            this.ZeroSamplesRemove.Margin = new System.Windows.Forms.Padding(4);
             this.ZeroSamplesRemove.Name = "ZeroSamplesRemove";
-            this.ZeroSamplesRemove.Size = new System.Drawing.Size(65, 17);
+            this.ZeroSamplesRemove.Size = new System.Drawing.Size(81, 21);
             this.ZeroSamplesRemove.TabIndex = 29;
             this.ZeroSamplesRemove.TabStop = true;
             this.ZeroSamplesRemove.Text = "Remove";
@@ -718,9 +761,10 @@ namespace MSConvertGUI
             // ZeroSamplesMSLevelLabel
             // 
             this.ZeroSamplesMSLevelLabel.AutoSize = true;
-            this.ZeroSamplesMSLevelLabel.Location = new System.Drawing.Point(113, 41);
+            this.ZeroSamplesMSLevelLabel.Location = new System.Drawing.Point(151, 50);
+            this.ZeroSamplesMSLevelLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ZeroSamplesMSLevelLabel.Name = "ZeroSamplesMSLevelLabel";
-            this.ZeroSamplesMSLevelLabel.Size = new System.Drawing.Size(60, 13);
+            this.ZeroSamplesMSLevelLabel.Size = new System.Drawing.Size(77, 17);
             this.ZeroSamplesMSLevelLabel.TabIndex = 25;
             this.ZeroSamplesMSLevelLabel.Text = "MS Levels:";
             // 
@@ -728,27 +772,30 @@ namespace MSConvertGUI
             // 
             this.ZeroSamplesMSLevelSeperator.AutoSize = true;
             this.ZeroSamplesMSLevelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ZeroSamplesMSLevelSeperator.Location = new System.Drawing.Point(134, 55);
+            this.ZeroSamplesMSLevelSeperator.Location = new System.Drawing.Point(179, 68);
+            this.ZeroSamplesMSLevelSeperator.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ZeroSamplesMSLevelSeperator.Name = "ZeroSamplesMSLevelSeperator";
-            this.ZeroSamplesMSLevelSeperator.Size = new System.Drawing.Size(15, 20);
+            this.ZeroSamplesMSLevelSeperator.Size = new System.Drawing.Size(20, 25);
             this.ZeroSamplesMSLevelSeperator.TabIndex = 26;
             this.ZeroSamplesMSLevelSeperator.Text = "-";
             // 
-            // ZeroSamplesMSLevelBox2
+            // ZeroSamplesMSLevelHigh
             // 
-            this.ZeroSamplesMSLevelBox2.Location = new System.Drawing.Point(151, 57);
-            this.ZeroSamplesMSLevelBox2.Name = "ZeroSamplesMSLevelBox2";
-            this.ZeroSamplesMSLevelBox2.Size = new System.Drawing.Size(37, 20);
-            this.ZeroSamplesMSLevelBox2.TabIndex = 28;
-            this.ZeroSamplesMSLevelBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            this.ZeroSamplesMSLevelHigh.Location = new System.Drawing.Point(201, 70);
+            this.ZeroSamplesMSLevelHigh.Margin = new System.Windows.Forms.Padding(4);
+            this.ZeroSamplesMSLevelHigh.Name = "ZeroSamplesMSLevelHigh";
+            this.ZeroSamplesMSLevelHigh.Size = new System.Drawing.Size(48, 22);
+            this.ZeroSamplesMSLevelHigh.TabIndex = 28;
+            this.ZeroSamplesMSLevelHigh.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
-            // ZeroSamplesMSLevelBox1
+            // ZeroSamplesMSLevelLow
             // 
-            this.ZeroSamplesMSLevelBox1.Location = new System.Drawing.Point(95, 57);
-            this.ZeroSamplesMSLevelBox1.Name = "ZeroSamplesMSLevelBox1";
-            this.ZeroSamplesMSLevelBox1.Size = new System.Drawing.Size(37, 20);
-            this.ZeroSamplesMSLevelBox1.TabIndex = 27;
-            this.ZeroSamplesMSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            this.ZeroSamplesMSLevelLow.Location = new System.Drawing.Point(127, 70);
+            this.ZeroSamplesMSLevelLow.Margin = new System.Windows.Forms.Padding(4);
+            this.ZeroSamplesMSLevelLow.Name = "ZeroSamplesMSLevelLow";
+            this.ZeroSamplesMSLevelLow.Size = new System.Drawing.Size(48, 22);
+            this.ZeroSamplesMSLevelLow.TabIndex = 27;
+            this.ZeroSamplesMSLevelLow.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
             // ETDFilterPanel
             // 
@@ -756,9 +803,10 @@ namespace MSConvertGUI
             this.ETDFilterPanel.Controls.Add(this.ETDRemoveChargeReducedBox);
             this.ETDFilterPanel.Controls.Add(this.ETDRemoveNeutralLossBox);
             this.ETDFilterPanel.Controls.Add(this.ETDRemovePrecursorBox);
-            this.ETDFilterPanel.Location = new System.Drawing.Point(22, 46);
+            this.ETDFilterPanel.Location = new System.Drawing.Point(29, 57);
+            this.ETDFilterPanel.Margin = new System.Windows.Forms.Padding(4);
             this.ETDFilterPanel.Name = "ETDFilterPanel";
-            this.ETDFilterPanel.Size = new System.Drawing.Size(283, 91);
+            this.ETDFilterPanel.Size = new System.Drawing.Size(377, 112);
             this.ETDFilterPanel.TabIndex = 3;
             this.ETDFilterPanel.Visible = false;
             // 
@@ -766,9 +814,10 @@ namespace MSConvertGUI
             // 
             this.ETDBlanketRemovalBox.AutoSize = true;
             this.ETDBlanketRemovalBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ETDBlanketRemovalBox.Location = new System.Drawing.Point(108, 71);
+            this.ETDBlanketRemovalBox.Location = new System.Drawing.Point(144, 87);
+            this.ETDBlanketRemovalBox.Margin = new System.Windows.Forms.Padding(4);
             this.ETDBlanketRemovalBox.Name = "ETDBlanketRemovalBox";
-            this.ETDBlanketRemovalBox.Size = new System.Drawing.Size(110, 17);
+            this.ETDBlanketRemovalBox.Size = new System.Drawing.Size(140, 21);
             this.ETDBlanketRemovalBox.TabIndex = 9;
             this.ETDBlanketRemovalBox.Text = "Blanket Removal:";
             this.ETDBlanketRemovalBox.UseVisualStyleBackColor = true;
@@ -779,9 +828,10 @@ namespace MSConvertGUI
             this.ETDRemoveChargeReducedBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.ETDRemoveChargeReducedBox.Checked = true;
             this.ETDRemoveChargeReducedBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ETDRemoveChargeReducedBox.Location = new System.Drawing.Point(65, 25);
+            this.ETDRemoveChargeReducedBox.Location = new System.Drawing.Point(87, 31);
+            this.ETDRemoveChargeReducedBox.Margin = new System.Windows.Forms.Padding(4);
             this.ETDRemoveChargeReducedBox.Name = "ETDRemoveChargeReducedBox";
-            this.ETDRemoveChargeReducedBox.Size = new System.Drawing.Size(153, 17);
+            this.ETDRemoveChargeReducedBox.Size = new System.Drawing.Size(197, 21);
             this.ETDRemoveChargeReducedBox.TabIndex = 8;
             this.ETDRemoveChargeReducedBox.Text = "Remove Charge Reduced:";
             this.ETDRemoveChargeReducedBox.UseVisualStyleBackColor = true;
@@ -792,9 +842,10 @@ namespace MSConvertGUI
             this.ETDRemoveNeutralLossBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.ETDRemoveNeutralLossBox.Checked = true;
             this.ETDRemoveNeutralLossBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ETDRemoveNeutralLossBox.Location = new System.Drawing.Point(87, 48);
+            this.ETDRemoveNeutralLossBox.Location = new System.Drawing.Point(116, 59);
+            this.ETDRemoveNeutralLossBox.Margin = new System.Windows.Forms.Padding(4);
             this.ETDRemoveNeutralLossBox.Name = "ETDRemoveNeutralLossBox";
-            this.ETDRemoveNeutralLossBox.Size = new System.Drawing.Size(131, 17);
+            this.ETDRemoveNeutralLossBox.Size = new System.Drawing.Size(170, 21);
             this.ETDRemoveNeutralLossBox.TabIndex = 7;
             this.ETDRemoveNeutralLossBox.Text = "Remove Neutral Loss:";
             this.ETDRemoveNeutralLossBox.UseVisualStyleBackColor = true;
@@ -805,9 +856,10 @@ namespace MSConvertGUI
             this.ETDRemovePrecursorBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.ETDRemovePrecursorBox.Checked = true;
             this.ETDRemovePrecursorBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ETDRemovePrecursorBox.Location = new System.Drawing.Point(101, 2);
+            this.ETDRemovePrecursorBox.Location = new System.Drawing.Point(135, 2);
+            this.ETDRemovePrecursorBox.Margin = new System.Windows.Forms.Padding(4);
             this.ETDRemovePrecursorBox.Name = "ETDRemovePrecursorBox";
-            this.ETDRemovePrecursorBox.Size = new System.Drawing.Size(117, 17);
+            this.ETDRemovePrecursorBox.Size = new System.Drawing.Size(152, 21);
             this.ETDRemovePrecursorBox.TabIndex = 6;
             this.ETDRemovePrecursorBox.Text = "Remove Precursor:";
             this.ETDRemovePrecursorBox.UseVisualStyleBackColor = true;
@@ -820,36 +872,40 @@ namespace MSConvertGUI
             this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationComboBox);
             this.ThresholdFilterPanel.Controls.Add(this.thresholdValueTextBox);
             this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeComboBox);
-            this.ThresholdFilterPanel.Location = new System.Drawing.Point(22, 46);
+            this.ThresholdFilterPanel.Location = new System.Drawing.Point(29, 57);
+            this.ThresholdFilterPanel.Margin = new System.Windows.Forms.Padding(4);
             this.ThresholdFilterPanel.Name = "ThresholdFilterPanel";
-            this.ThresholdFilterPanel.Size = new System.Drawing.Size(283, 91);
+            this.ThresholdFilterPanel.Size = new System.Drawing.Size(377, 112);
             this.ThresholdFilterPanel.TabIndex = 20;
             this.ThresholdFilterPanel.Visible = false;
             // 
             // thresholdValueLabel
             // 
             this.thresholdValueLabel.AutoSize = true;
-            this.thresholdValueLabel.Location = new System.Drawing.Point(69, 64);
+            this.thresholdValueLabel.Location = new System.Drawing.Point(92, 79);
+            this.thresholdValueLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.thresholdValueLabel.Name = "thresholdValueLabel";
-            this.thresholdValueLabel.Size = new System.Drawing.Size(37, 13);
+            this.thresholdValueLabel.Size = new System.Drawing.Size(48, 17);
             this.thresholdValueLabel.TabIndex = 16;
             this.thresholdValueLabel.Text = "Value:";
             // 
             // thresholdOrientationLabel
             // 
             this.thresholdOrientationLabel.AutoSize = true;
-            this.thresholdOrientationLabel.Location = new System.Drawing.Point(45, 37);
+            this.thresholdOrientationLabel.Location = new System.Drawing.Point(60, 46);
+            this.thresholdOrientationLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.thresholdOrientationLabel.Name = "thresholdOrientationLabel";
-            this.thresholdOrientationLabel.Size = new System.Drawing.Size(61, 13);
+            this.thresholdOrientationLabel.Size = new System.Drawing.Size(82, 17);
             this.thresholdOrientationLabel.TabIndex = 15;
             this.thresholdOrientationLabel.Text = "Orientation:";
             // 
             // thresholdTypeLabel
             // 
             this.thresholdTypeLabel.AutoSize = true;
-            this.thresholdTypeLabel.Location = new System.Drawing.Point(26, 10);
+            this.thresholdTypeLabel.Location = new System.Drawing.Point(35, 12);
+            this.thresholdTypeLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.thresholdTypeLabel.Name = "thresholdTypeLabel";
-            this.thresholdTypeLabel.Size = new System.Drawing.Size(80, 13);
+            this.thresholdTypeLabel.Size = new System.Drawing.Size(107, 17);
             this.thresholdTypeLabel.TabIndex = 14;
             this.thresholdTypeLabel.Text = "Threshold type:";
             // 
@@ -860,33 +916,37 @@ namespace MSConvertGUI
             this.thresholdOrientationComboBox.Items.AddRange(new object[] {
             "Most intense",
             "Least intense"});
-            this.thresholdOrientationComboBox.Location = new System.Drawing.Point(113, 34);
+            this.thresholdOrientationComboBox.Location = new System.Drawing.Point(151, 42);
+            this.thresholdOrientationComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.thresholdOrientationComboBox.Name = "thresholdOrientationComboBox";
-            this.thresholdOrientationComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdOrientationComboBox.Size = new System.Drawing.Size(160, 24);
             this.thresholdOrientationComboBox.TabIndex = 2;
             // 
             // thresholdValueTextBox
             // 
-            this.thresholdValueTextBox.Location = new System.Drawing.Point(114, 61);
+            this.thresholdValueTextBox.Location = new System.Drawing.Point(152, 75);
+            this.thresholdValueTextBox.Margin = new System.Windows.Forms.Padding(4);
             this.thresholdValueTextBox.Name = "thresholdValueTextBox";
-            this.thresholdValueTextBox.Size = new System.Drawing.Size(120, 20);
+            this.thresholdValueTextBox.Size = new System.Drawing.Size(159, 22);
             this.thresholdValueTextBox.TabIndex = 1;
             // 
             // thresholdTypeComboBox
             // 
             this.thresholdTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.thresholdTypeComboBox.FormattingEnabled = true;
-            this.thresholdTypeComboBox.Location = new System.Drawing.Point(113, 7);
+            this.thresholdTypeComboBox.Location = new System.Drawing.Point(151, 9);
+            this.thresholdTypeComboBox.Margin = new System.Windows.Forms.Padding(4);
             this.thresholdTypeComboBox.Name = "thresholdTypeComboBox";
-            this.thresholdTypeComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdTypeComboBox.Size = new System.Drawing.Size(160, 24);
             this.thresholdTypeComboBox.TabIndex = 0;
             // 
             // RemoveFilterButton
             // 
             this.RemoveFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.RemoveFilterButton.Location = new System.Drawing.Point(477, 232);
+            this.RemoveFilterButton.Location = new System.Drawing.Point(636, 286);
+            this.RemoveFilterButton.Margin = new System.Windows.Forms.Padding(4);
             this.RemoveFilterButton.Name = "RemoveFilterButton";
-            this.RemoveFilterButton.Size = new System.Drawing.Size(58, 23);
+            this.RemoveFilterButton.Size = new System.Drawing.Size(77, 28);
             this.RemoveFilterButton.TabIndex = 11;
             this.RemoveFilterButton.Text = "Remove";
             this.RemoveFilterButton.UseVisualStyleBackColor = true;
@@ -895,9 +955,10 @@ namespace MSConvertGUI
             // AddFilterButton
             // 
             this.AddFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.AddFilterButton.Location = new System.Drawing.Point(429, 232);
+            this.AddFilterButton.Location = new System.Drawing.Point(572, 286);
+            this.AddFilterButton.Margin = new System.Windows.Forms.Padding(4);
             this.AddFilterButton.Name = "AddFilterButton";
-            this.AddFilterButton.Size = new System.Drawing.Size(42, 23);
+            this.AddFilterButton.Size = new System.Drawing.Size(56, 28);
             this.AddFilterButton.TabIndex = 10;
             this.AddFilterButton.Text = "Add";
             this.AddFilterButton.UseVisualStyleBackColor = true;
@@ -906,9 +967,10 @@ namespace MSConvertGUI
             // TextFileRadio
             // 
             this.TextFileRadio.AutoSize = true;
-            this.TextFileRadio.Location = new System.Drawing.Point(147, 12);
+            this.TextFileRadio.Location = new System.Drawing.Point(196, 15);
+            this.TextFileRadio.Margin = new System.Windows.Forms.Padding(4);
             this.TextFileRadio.Name = "TextFileRadio";
-            this.TextFileRadio.Size = new System.Drawing.Size(103, 17);
+            this.TextFileRadio.Size = new System.Drawing.Size(135, 21);
             this.TextFileRadio.TabIndex = 2;
             this.TextFileRadio.Text = "File of file names";
             this.TextFileRadio.UseVisualStyleBackColor = true;
@@ -917,9 +979,10 @@ namespace MSConvertGUI
             // 
             this.FileListRadio.AutoSize = true;
             this.FileListRadio.Checked = true;
-            this.FileListRadio.Location = new System.Drawing.Point(64, 12);
+            this.FileListRadio.Location = new System.Drawing.Point(85, 15);
+            this.FileListRadio.Margin = new System.Windows.Forms.Padding(4);
             this.FileListRadio.Name = "FileListRadio";
-            this.FileListRadio.Size = new System.Drawing.Size(77, 17);
+            this.FileListRadio.Size = new System.Drawing.Size(100, 21);
             this.FileListRadio.TabIndex = 1;
             this.FileListRadio.TabStop = true;
             this.FileListRadio.Text = "List of Files";
@@ -940,26 +1003,29 @@ namespace MSConvertGUI
             "cms1",
             "ms2",
             "cms2"});
-            this.OutputFormatBox.Location = new System.Drawing.Point(89, 16);
+            this.OutputFormatBox.Location = new System.Drawing.Point(119, 20);
+            this.OutputFormatBox.Margin = new System.Windows.Forms.Padding(4);
             this.OutputFormatBox.Name = "OutputFormatBox";
-            this.OutputFormatBox.Size = new System.Drawing.Size(60, 21);
+            this.OutputFormatBox.Size = new System.Drawing.Size(79, 24);
             this.OutputFormatBox.TabIndex = 1;
             this.OutputFormatBox.SelectedIndexChanged += new System.EventHandler(this.OutputFormatBox_SelectedIndexChanged);
             // 
             // FormatLabel
             // 
             this.FormatLabel.AutoSize = true;
-            this.FormatLabel.Location = new System.Drawing.Point(14, 19);
+            this.FormatLabel.Location = new System.Drawing.Point(19, 23);
+            this.FormatLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.FormatLabel.Name = "FormatLabel";
-            this.FormatLabel.Size = new System.Drawing.Size(74, 13);
+            this.FormatLabel.Size = new System.Drawing.Size(99, 17);
             this.FormatLabel.TabIndex = 13;
             this.FormatLabel.Text = "Output format:";
             // 
             // BrowseFileButton
             // 
-            this.BrowseFileButton.Location = new System.Drawing.Point(231, 33);
+            this.BrowseFileButton.Location = new System.Drawing.Point(308, 41);
+            this.BrowseFileButton.Margin = new System.Windows.Forms.Padding(4);
             this.BrowseFileButton.Name = "BrowseFileButton";
-            this.BrowseFileButton.Size = new System.Drawing.Size(50, 23);
+            this.BrowseFileButton.Size = new System.Drawing.Size(67, 28);
             this.BrowseFileButton.TabIndex = 4;
             this.BrowseFileButton.Text = "Browse";
             this.BrowseFileButton.UseVisualStyleBackColor = true;
@@ -967,9 +1033,10 @@ namespace MSConvertGUI
             // 
             // OutputBrowse
             // 
-            this.OutputBrowse.Location = new System.Drawing.Point(221, 16);
+            this.OutputBrowse.Location = new System.Drawing.Point(295, 20);
+            this.OutputBrowse.Margin = new System.Windows.Forms.Padding(4);
             this.OutputBrowse.Name = "OutputBrowse";
-            this.OutputBrowse.Size = new System.Drawing.Size(50, 23);
+            this.OutputBrowse.Size = new System.Drawing.Size(67, 28);
             this.OutputBrowse.TabIndex = 2;
             this.OutputBrowse.Text = "Browse";
             this.OutputBrowse.UseVisualStyleBackColor = true;
@@ -978,9 +1045,10 @@ namespace MSConvertGUI
             // OutputLabel
             // 
             this.OutputLabel.AutoSize = true;
-            this.OutputLabel.Location = new System.Drawing.Point(2, 2);
+            this.OutputLabel.Location = new System.Drawing.Point(3, 2);
+            this.OutputLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.OutputLabel.Name = "OutputLabel";
-            this.OutputLabel.Size = new System.Drawing.Size(87, 13);
+            this.OutputLabel.Size = new System.Drawing.Size(116, 17);
             this.OutputLabel.TabIndex = 16;
             this.OutputLabel.Text = "Output Directory:";
             // 
@@ -988,22 +1056,29 @@ namespace MSConvertGUI
             // 
             this.OutputBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Append;
             this.OutputBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystemDirectories;
-            this.OutputBox.Location = new System.Drawing.Point(5, 18);
+            this.OutputBox.Location = new System.Drawing.Point(7, 22);
+            this.OutputBox.Margin = new System.Windows.Forms.Padding(4);
             this.OutputBox.Name = "OutputBox";
-            this.OutputBox.Size = new System.Drawing.Size(210, 20);
+            this.OutputBox.Size = new System.Drawing.Size(279, 22);
             this.OutputBox.TabIndex = 1;
             // 
             // PrecisionLabel
             // 
             this.PrecisionLabel.AutoSize = true;
-            this.PrecisionLabel.Location = new System.Drawing.Point(13, 45);
+            this.PrecisionLabel.Location = new System.Drawing.Point(17, 55);
+            this.PrecisionLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.PrecisionLabel.Name = "PrecisionLabel";
-            this.PrecisionLabel.Size = new System.Drawing.Size(131, 13);
+            this.PrecisionLabel.Size = new System.Drawing.Size(175, 17);
             this.PrecisionLabel.TabIndex = 18;
             this.PrecisionLabel.Text = "Binary encoding precision:";
             // 
             // OptionsGB
             // 
+            this.OptionsGB.Controls.Add(this.NumpressToleranceTextbox);
+            this.OptionsGB.Controls.Add(this.NumpressToleranceLabel);
+            this.OptionsGB.Controls.Add(this.NumpressSlofBox);
+            this.OptionsGB.Controls.Add(this.NumpressLinearBox);
+            this.OptionsGB.Controls.Add(this.NumpressPicBox);
             this.OptionsGB.Controls.Add(this.MakeTPPCompatibleOutputButton);
             this.OptionsGB.Controls.Add(this.UseZlibBox);
             this.OptionsGB.Controls.Add(this.GzipBox);
@@ -1015,12 +1090,71 @@ namespace MSConvertGUI
             this.OptionsGB.Controls.Add(this.PrecisionLabel);
             this.OptionsGB.Controls.Add(this.OutputFormatBox);
             this.OptionsGB.Controls.Add(this.FormatLabel);
-            this.OptionsGB.Location = new System.Drawing.Point(2, 44);
+            this.OptionsGB.Location = new System.Drawing.Point(3, 54);
+            this.OptionsGB.Margin = new System.Windows.Forms.Padding(4);
             this.OptionsGB.Name = "OptionsGB";
-            this.OptionsGB.Size = new System.Drawing.Size(269, 119);
+            this.OptionsGB.Padding = new System.Windows.Forms.Padding(4);
+            this.OptionsGB.Size = new System.Drawing.Size(359, 227);
             this.OptionsGB.TabIndex = 3;
             this.OptionsGB.TabStop = false;
             this.OptionsGB.Text = "Options";
+            // 
+            // NumpressToleranceTextbox
+            // 
+            this.NumpressToleranceTextbox.Location = new System.Drawing.Point(301, 141);
+            this.NumpressToleranceTextbox.Margin = new System.Windows.Forms.Padding(4);
+            this.NumpressToleranceTextbox.Name = "NumpressToleranceTextbox";
+            this.NumpressToleranceTextbox.Size = new System.Drawing.Size(56, 22);
+            this.NumpressToleranceTextbox.TabIndex = 27;
+            this.NumpressToleranceTextbox.Text = ".0001";
+            // 
+            // NumpressToleranceLabel
+            // 
+            this.NumpressToleranceLabel.AutoSize = true;
+            this.NumpressToleranceLabel.Location = new System.Drawing.Point(260, 143);
+            this.NumpressToleranceLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.NumpressToleranceLabel.Name = "NumpressToleranceLabel";
+            this.NumpressToleranceLabel.Size = new System.Drawing.Size(45, 17);
+            this.NumpressToleranceLabel.TabIndex = 26;
+            this.NumpressToleranceLabel.Text = "Toler:";
+            // 
+            // NumpressSlofBox
+            // 
+            this.NumpressSlofBox.AutoSize = true;
+            this.NumpressSlofBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.NumpressSlofBox.Location = new System.Drawing.Point(4, 169);
+            this.NumpressSlofBox.Margin = new System.Windows.Forms.Padding(4);
+            this.NumpressSlofBox.Name = "NumpressSlofBox";
+            this.NumpressSlofBox.Size = new System.Drawing.Size(323, 21);
+            this.NumpressSlofBox.TabIndex = 25;
+            this.NumpressSlofBox.Text = "Use numpress short logged float compression:";
+            this.NumpressSlofBox.UseVisualStyleBackColor = true;
+            this.NumpressSlofBox.CheckedChanged += new System.EventHandler(this.NumpressSlofBox_CheckedChanged);
+            // 
+            // NumpressLinearBox
+            // 
+            this.NumpressLinearBox.AutoSize = true;
+            this.NumpressLinearBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.NumpressLinearBox.Location = new System.Drawing.Point(4, 142);
+            this.NumpressLinearBox.Margin = new System.Windows.Forms.Padding(4);
+            this.NumpressLinearBox.Name = "NumpressLinearBox";
+            this.NumpressLinearBox.Size = new System.Drawing.Size(248, 21);
+            this.NumpressLinearBox.TabIndex = 24;
+            this.NumpressLinearBox.Text = "Use numpress linear compression:";
+            this.NumpressLinearBox.UseVisualStyleBackColor = true;
+            // 
+            // NumpressPicBox
+            // 
+            this.NumpressPicBox.AutoSize = true;
+            this.NumpressPicBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.NumpressPicBox.Location = new System.Drawing.Point(6, 198);
+            this.NumpressPicBox.Margin = new System.Windows.Forms.Padding(4);
+            this.NumpressPicBox.Name = "NumpressPicBox";
+            this.NumpressPicBox.Size = new System.Drawing.Size(345, 21);
+            this.NumpressPicBox.TabIndex = 26;
+            this.NumpressPicBox.Text = "Use numpress short positive integer compression:";
+            this.NumpressPicBox.UseVisualStyleBackColor = true;
+            this.NumpressPicBox.CheckedChanged += new System.EventHandler(this.NumpressPicBox_CheckedChanged);
             // 
             // MakeTPPCompatibleOutputButton
             // 
@@ -1028,9 +1162,10 @@ namespace MSConvertGUI
             this.MakeTPPCompatibleOutputButton.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.MakeTPPCompatibleOutputButton.Checked = true;
             this.MakeTPPCompatibleOutputButton.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.MakeTPPCompatibleOutputButton.Location = new System.Drawing.Point(2, 92);
+            this.MakeTPPCompatibleOutputButton.Location = new System.Drawing.Point(3, 113);
+            this.MakeTPPCompatibleOutputButton.Margin = new System.Windows.Forms.Padding(4);
             this.MakeTPPCompatibleOutputButton.Name = "MakeTPPCompatibleOutputButton";
-            this.MakeTPPCompatibleOutputButton.Size = new System.Drawing.Size(110, 17);
+            this.MakeTPPCompatibleOutputButton.Size = new System.Drawing.Size(142, 21);
             this.MakeTPPCompatibleOutputButton.TabIndex = 7;
             this.MakeTPPCompatibleOutputButton.Text = "TPP compatibility:";
             this.MakeTPPCompatibleOutputButton.UseVisualStyleBackColor = true;
@@ -1041,9 +1176,10 @@ namespace MSConvertGUI
             this.UseZlibBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.UseZlibBox.Checked = true;
             this.UseZlibBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.UseZlibBox.Location = new System.Drawing.Point(125, 69);
+            this.UseZlibBox.Location = new System.Drawing.Point(167, 85);
+            this.UseZlibBox.Margin = new System.Windows.Forms.Padding(4);
             this.UseZlibBox.Name = "UseZlibBox";
-            this.UseZlibBox.Size = new System.Drawing.Size(128, 17);
+            this.UseZlibBox.Size = new System.Drawing.Size(168, 21);
             this.UseZlibBox.TabIndex = 6;
             this.UseZlibBox.Text = "Use zlib compression:";
             this.UseZlibBox.UseVisualStyleBackColor = true;
@@ -1052,26 +1188,29 @@ namespace MSConvertGUI
             // 
             this.GzipBox.AutoSize = true;
             this.GzipBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.GzipBox.Location = new System.Drawing.Point(148, 92);
+            this.GzipBox.Location = new System.Drawing.Point(197, 113);
+            this.GzipBox.Margin = new System.Windows.Forms.Padding(4);
             this.GzipBox.Name = "GzipBox";
-            this.GzipBox.Size = new System.Drawing.Size(105, 17);
+            this.GzipBox.Size = new System.Drawing.Size(134, 21);
             this.GzipBox.TabIndex = 8;
             this.GzipBox.Text = "Package in gzip:";
             this.GzipBox.UseVisualStyleBackColor = true;
             // 
             // OutputExtensionBox
             // 
-            this.OutputExtensionBox.Location = new System.Drawing.Point(212, 16);
+            this.OutputExtensionBox.Location = new System.Drawing.Point(283, 20);
+            this.OutputExtensionBox.Margin = new System.Windows.Forms.Padding(4);
             this.OutputExtensionBox.Name = "OutputExtensionBox";
-            this.OutputExtensionBox.Size = new System.Drawing.Size(43, 20);
+            this.OutputExtensionBox.Size = new System.Drawing.Size(56, 22);
             this.OutputExtensionBox.TabIndex = 2;
             // 
             // OutputExtensionLabel
             // 
             this.OutputExtensionLabel.AutoSize = true;
-            this.OutputExtensionLabel.Location = new System.Drawing.Point(155, 19);
+            this.OutputExtensionLabel.Location = new System.Drawing.Point(207, 23);
+            this.OutputExtensionLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.OutputExtensionLabel.Name = "OutputExtensionLabel";
-            this.OutputExtensionLabel.Size = new System.Drawing.Size(56, 13);
+            this.OutputExtensionLabel.Size = new System.Drawing.Size(73, 17);
             this.OutputExtensionLabel.TabIndex = 23;
             this.OutputExtensionLabel.Text = "Extension:";
             // 
@@ -1081,9 +1220,10 @@ namespace MSConvertGUI
             this.WriteIndexBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.WriteIndexBox.Checked = true;
             this.WriteIndexBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.WriteIndexBox.Location = new System.Drawing.Point(30, 69);
+            this.WriteIndexBox.Location = new System.Drawing.Point(40, 85);
+            this.WriteIndexBox.Margin = new System.Windows.Forms.Padding(4);
             this.WriteIndexBox.Name = "WriteIndexBox";
-            this.WriteIndexBox.Size = new System.Drawing.Size(82, 17);
+            this.WriteIndexBox.Size = new System.Drawing.Size(104, 21);
             this.WriteIndexBox.TabIndex = 5;
             this.WriteIndexBox.Text = "Write index:";
             this.WriteIndexBox.UseVisualStyleBackColor = true;
@@ -1091,9 +1231,10 @@ namespace MSConvertGUI
             // Precision32
             // 
             this.Precision32.AutoSize = true;
-            this.Precision32.Location = new System.Drawing.Point(204, 43);
+            this.Precision32.Location = new System.Drawing.Point(272, 53);
+            this.Precision32.Margin = new System.Windows.Forms.Padding(4);
             this.Precision32.Name = "Precision32";
-            this.Precision32.Size = new System.Drawing.Size(51, 17);
+            this.Precision32.Size = new System.Drawing.Size(65, 21);
             this.Precision32.TabIndex = 4;
             this.Precision32.Text = "32-bit";
             this.Precision32.UseVisualStyleBackColor = true;
@@ -1102,9 +1243,10 @@ namespace MSConvertGUI
             // 
             this.Precision64.AutoSize = true;
             this.Precision64.Checked = true;
-            this.Precision64.Location = new System.Drawing.Point(147, 43);
+            this.Precision64.Location = new System.Drawing.Point(196, 53);
+            this.Precision64.Margin = new System.Windows.Forms.Padding(4);
             this.Precision64.Name = "Precision64";
-            this.Precision64.Size = new System.Drawing.Size(51, 17);
+            this.Precision64.Size = new System.Drawing.Size(65, 21);
             this.Precision64.TabIndex = 3;
             this.Precision64.TabStop = true;
             this.Precision64.Text = "64-bit";
@@ -1114,24 +1256,37 @@ namespace MSConvertGUI
             // 
             this.SlidingPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.SlidingPanel.Controls.Add(this.OutputBrowse);
-            this.SlidingPanel.Controls.Add(this.OptionsGB);
             this.SlidingPanel.Controls.Add(this.OutputLabel);
             this.SlidingPanel.Controls.Add(this.OutputBox);
-            this.SlidingPanel.Location = new System.Drawing.Point(15, 261);
+            this.SlidingPanel.Controls.Add(this.OptionsGB);
+            this.SlidingPanel.Location = new System.Drawing.Point(20, 347);
+            this.SlidingPanel.Margin = new System.Windows.Forms.Padding(4);
             this.SlidingPanel.Name = "SlidingPanel";
-            this.SlidingPanel.Size = new System.Drawing.Size(275, 163);
+            this.SlidingPanel.Size = new System.Drawing.Size(367, 282);
             this.SlidingPanel.TabIndex = 8;
             // 
             // SetDefaultsButton
             // 
             this.SetDefaultsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SetDefaultsButton.Location = new System.Drawing.Point(15, 433);
+            this.SetDefaultsButton.Location = new System.Drawing.Point(20, 640);
+            this.SetDefaultsButton.Margin = new System.Windows.Forms.Padding(4);
             this.SetDefaultsButton.Name = "SetDefaultsButton";
-            this.SetDefaultsButton.Size = new System.Drawing.Size(305, 23);
+            this.SetDefaultsButton.Size = new System.Drawing.Size(407, 28);
             this.SetDefaultsButton.TabIndex = 32;
             this.SetDefaultsButton.Text = "Use these settings next time I start MSConvert";
             this.SetDefaultsButton.UseVisualStyleBackColor = true;
             this.SetDefaultsButton.Click += new System.EventHandler(this.SetDefaultsButton_Click);
+            // 
+            // AboutButton
+            // 
+            this.AboutButton.Location = new System.Drawing.Point(660, 41);
+            this.AboutButton.Margin = new System.Windows.Forms.Padding(4);
+            this.AboutButton.Name = "AboutButton";
+            this.AboutButton.Size = new System.Drawing.Size(175, 28);
+            this.AboutButton.TabIndex = 33;
+            this.AboutButton.Text = "About MSConvert";
+            this.AboutButton.UseVisualStyleBackColor = true;
+            this.AboutButton.Click += new System.EventHandler(this.AboutButtonClick);
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -1146,21 +1301,24 @@ namespace MSConvertGUI
             this.dataGridViewTextBoxColumn2.HeaderText = "Parameters";
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             // 
-            // AboutButton
+            // OptionTab
             // 
-            this.AboutButton.Location = new System.Drawing.Point(495, 33);
-            this.AboutButton.Name = "AboutButton";
-            this.AboutButton.Size = new System.Drawing.Size(131, 23);
-            this.AboutButton.TabIndex = 33;
-            this.AboutButton.Text = "About MSConvert";
-            this.AboutButton.UseVisualStyleBackColor = true;
-            this.AboutButton.Click += new System.EventHandler(this.AboutButtonClick);
+            this.OptionTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.OptionTab.FillWeight = 50F;
+            this.OptionTab.HeaderText = "Filter";
+            this.OptionTab.Name = "OptionTab";
+            // 
+            // ValueTab
+            // 
+            this.ValueTab.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.ValueTab.HeaderText = "Parameters";
+            this.ValueTab.Name = "ValueTab";
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(661, 464);
+            this.ClientSize = new System.Drawing.Size(881, 678);
             this.Controls.Add(this.AboutButton);
             this.Controls.Add(this.BrowseFileButton);
             this.Controls.Add(this.FileListRadio);
@@ -1177,6 +1335,7 @@ namespace MSConvertGUI
             this.Controls.Add(this.FileLabel);
             this.Controls.Add(this.FileBox);
             this.Controls.Add(this.SlidingPanel);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MainForm";
             this.Text = "MSConvert";
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -1249,20 +1408,20 @@ namespace MSConvertGUI
         private System.Windows.Forms.Panel ETDFilterPanel;
         private System.Windows.Forms.Panel ActivationPanel;
         private System.Windows.Forms.Label MSLabelSeperator;
-        private System.Windows.Forms.TextBox MSLevelBox2;
-        private System.Windows.Forms.TextBox MSLevelBox1;
+        private System.Windows.Forms.TextBox MSLevelHigh;
+        private System.Windows.Forms.TextBox MSLevelLow;
         private System.Windows.Forms.CheckBox PeakPreferVendorBox;
         private System.Windows.Forms.Label PeakMSLevelLabel;
         private System.Windows.Forms.Label PeakMSLevelSeperator;
-        private System.Windows.Forms.TextBox PeakMSLevelBox2;
-        private System.Windows.Forms.TextBox PeakMSLevelBox1;
+        private System.Windows.Forms.TextBox PeakMSLevelHigh;
+        private System.Windows.Forms.TextBox PeakMSLevelLow;
         private System.Windows.Forms.RadioButton ZeroSamplesRemove;
         private System.Windows.Forms.RadioButton ZeroSamplesAddMissing;
         private System.Windows.Forms.TextBox ZeroSamplesAddMissingFlankCountBox;
         private System.Windows.Forms.Label ZeroSamplesMSLevelLabel;
         private System.Windows.Forms.Label ZeroSamplesMSLevelSeperator;
-        private System.Windows.Forms.TextBox ZeroSamplesMSLevelBox2;
-        private System.Windows.Forms.TextBox ZeroSamplesMSLevelBox1;
+        private System.Windows.Forms.TextBox ZeroSamplesMSLevelHigh;
+        private System.Windows.Forms.TextBox ZeroSamplesMSLevelLow;
         private System.Windows.Forms.CheckBox ETDBlanketRemovalBox;
         private System.Windows.Forms.CheckBox ETDRemoveChargeReducedBox;
         private System.Windows.Forms.CheckBox ETDRemoveNeutralLossBox;
@@ -1303,6 +1462,11 @@ namespace MSConvertGUI
         private System.Windows.Forms.ComboBox thresholdTypeComboBox;
         private string lastFileboxText;
         private System.Windows.Forms.Button AboutButton;
+        private System.Windows.Forms.CheckBox NumpressLinearBox;
+        private System.Windows.Forms.CheckBox NumpressSlofBox;
+        private System.Windows.Forms.CheckBox NumpressPicBox;
+        private System.Windows.Forms.TextBox NumpressToleranceTextbox;
+        private System.Windows.Forms.Label NumpressToleranceLabel;
     }
 }
 

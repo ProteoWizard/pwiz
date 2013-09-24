@@ -106,6 +106,27 @@ void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ confi
     write(msd, filename, config, nullptr);
 }
 
+static void translateConfig(MSDataFile::WriteConfig^ config, b::MSDataFile::WriteConfig& config2)
+{
+    config2.gzipped = config->gzipped;
+    config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
+    config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
+    config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
+    if (config->numpressLinear)
+    {
+        config2.binaryDataEncoderConfig.numpressOverrides[b::MS_m_z_array] = b::BinaryDataEncoder::Numpress_Linear;
+        config2.binaryDataEncoderConfig.numpressOverrides[b::MS_time_array] = b::BinaryDataEncoder::Numpress_Linear;
+    }
+    if (config->numpressPic) 
+    {
+        config2.binaryDataEncoderConfig.numpressOverrides[b::MS_intensity_array] = b::BinaryDataEncoder::Numpress_Pic;
+    }    
+    if (config->numpressSlof) 
+    {
+        config2.binaryDataEncoderConfig.numpressOverrides[b::MS_intensity_array] = b::BinaryDataEncoder::Numpress_Slof;
+    }
+    config2.binaryDataEncoderConfig.numpressErrorTolerance = config->numpressErrorTolerance;
+}
 
 void MSDataFile::write(MSData^ msd,
                        System::String^ filename,
@@ -115,10 +136,7 @@ void MSDataFile::write(MSData^ msd,
     try
     {
         b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
-        config2.gzipped = config->gzipped;
-        config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
-        config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
-        config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
+        translateConfig(config,config2);
         b::MSDataFile::write(msd->base(), ToStdString(filename), config2, ilr == nullptr ? 0 : &ilr->base());
     }
     CATCH_AND_FORWARD
@@ -149,10 +167,7 @@ void MSDataFile::write(System::String^ filename,
     try
     {
         b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
-        config2.gzipped = config->gzipped;
-        config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
-        config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
-        config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
+        translateConfig(config,config2);
         base().write(ToStdString(filename), config2, ilr == nullptr ? 0 : &ilr->base());
     }
     CATCH_AND_FORWARD
