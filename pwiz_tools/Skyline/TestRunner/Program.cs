@@ -413,7 +413,7 @@ namespace TestRunner
                             test.TestMethod.Invoke(testObject, null);
                             if (pass > 1 || repeatCounter > 1)
                             {
-                                long leakedBytes = CrtDebugHeap.DumpLeaks(false);
+                                long leakedBytes = CrtDebugHeap.DumpLeaks(true);
                                 totalLeakedBytes += leakedBytes;
                             }
 
@@ -430,7 +430,7 @@ namespace TestRunner
                         Thread.CurrentThread.CurrentCulture = saveCulture;
                         Thread.CurrentThread.CurrentUICulture = saveUICulture;
 
-                        var managedMemory = GC.GetTotalMemory(true) / mb;
+                        var managedMemory = GC.GetTotalMemory(false) / mb;
                         process.Refresh();
                         var totalMemory = process.PrivateMemorySize64 / mb;
 

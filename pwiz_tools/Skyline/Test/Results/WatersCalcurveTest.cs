@@ -279,27 +279,6 @@ namespace pwiz.SkylineTest.Results
         }
 
         [TestMethod]
-        public void WatersLeakTest()
-        {
-            // To see the leak, run "TestRunner loop=1 repeat=4 test=WatersLeakTest" on a DEBUG build.
-
-            using (var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE))
-            {
-                string docPath;
-                SrmDocument doc = InitWatersDocument(testFilesDir, out docPath);
-                var docContainer = new ResultsTestDocumentContainer(doc, docPath);
-
-                var testPath = testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML");
-                var chromatogramSet = new ChromatogramSet("leak", new[] { testPath });
-                var listChromatograms = new List<ChromatogramSet> { chromatogramSet };
-
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-                Assert.IsTrue(docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docContainer.Document, false));
-            }
-        }
-
-        [TestMethod]
         public void WatersMultiFileTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
