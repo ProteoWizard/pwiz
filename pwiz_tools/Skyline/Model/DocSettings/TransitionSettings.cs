@@ -868,6 +868,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     return result;
                 if (_mapLegacyStartNames.TryGetValue(finderName, out name))
                     return FragmentStartFinders[name];
+                // Backward compatibility with when finder index used to get written to XML
+                int index;
+                if (int.TryParse(finderName, out index))
+                    return FragmentStartFinders[index];
             }
             throw new InvalidDataException(string.Format(Resources.TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__, finderName));
         }
@@ -931,6 +935,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     return result;
                 if (_mapLegacyEndNames.TryGetValue(finderName, out name))
                     return FragmentEndFinders[name];
+                // Backward compatibility with when finder index used to get written to XML
+                int index;
+                if (int.TryParse(finderName, out index))
+                    return FragmentEndFinders[index];
             }
             throw new InvalidDataException(string.Format(Resources.TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__, finderName));
         } 
