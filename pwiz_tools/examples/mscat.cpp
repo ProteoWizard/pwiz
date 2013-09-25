@@ -59,8 +59,13 @@ void cat(const char* filename)
 
     // verify that we have a SpectrumList
 
-    if (!msd.run.spectrumListPtr.get())
-        throw runtime_error("[mscat] No spectra found.");
+    if (!msd.run.spectrumListPtr.get() || !msd.run.spectrumListPtr->size())
+    {
+        std::string errmsg("[mscat] No spectra found.");
+        if (msd.run.chromatogramListPtr.get() && msd.run.chromatogramListPtr->size())
+            errmsg+=" Input file contains only chromatogram data.";
+        throw runtime_error(errmsg);
+    }
 
     SpectrumList& spectrumList = *msd.run.spectrumListPtr;
 
