@@ -545,7 +545,7 @@ Config parseCommandLine(int argc, const char* argv[])
     if (zlib)
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
 
-    if (ms_numpress_slof && ms_numpress_pic)
+    if ((ms_numpress_slof>=0) && (ms_numpress_pic>=0))
         throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressSlof'.");
 
     if (ms_numpress_all>=0) {
