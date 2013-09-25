@@ -482,16 +482,16 @@ void writeConfig(ostream& os, const BinaryDataEncoder::Config& config, CVID cvid
         c = cOverrideItr->second;
     else 
         c = config.numpress;
-
+    const char *commaspace =  (BinaryDataEncoder::Compression_Zlib == config.compression)?", ":" ";
     switch (c) {
         case BinaryDataEncoder::Numpress_Linear:
-            os << "Compression-Numpress-Linear";
+            os << "Compression-Numpress-Linear" << commaspace;
             break;
         case BinaryDataEncoder::Numpress_Pic:
-            os << "Compression-Numpress-Pic";
+            os << "Compression-Numpress-Pic" << commaspace;
             break;
         case BinaryDataEncoder::Numpress_Slof:
-            os << "Compression-Numpress-Slof";
+            os << "Compression-Numpress-Slof" << commaspace;
             break;
         case BinaryDataEncoder::Numpress_None:
             break;
