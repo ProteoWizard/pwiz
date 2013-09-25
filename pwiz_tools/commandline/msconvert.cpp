@@ -253,16 +253,16 @@ Config parseCommandLine(int argc, const char* argv[])
             po::value<bool>(&zlib)->zero_tokens(),
             ": use zlib compression for binary data")
         ("numpressLinear",
-            po::value<double>(&ms_numpress_linear)->default_value(BinaryDataEncoder_default_numpressErrorTolerance),
+            po::value<double>(&ms_numpress_linear)->implicit_value(BinaryDataEncoder_default_numpressErrorTolerance),
             ": use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressPic",
-            po::value<double>(&ms_numpress_pic)->default_value(0.5),
+            po::value<double>(&ms_numpress_pic)->implicit_value(0.5),
             ": use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressSlof",
-            po::value<double>(&ms_numpress_slof)->default_value(BinaryDataEncoder_default_numpressErrorTolerance),
+            po::value<double>(&ms_numpress_slof)->implicit_value(BinaryDataEncoder_default_numpressErrorTolerance),
             ": use numpress short logged float compression for binary intensities (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressAll,n",
-            po::value<double>(&ms_numpress_all)->default_value(BinaryDataEncoder_default_numpressErrorTolerance),
+            po::value<double>(&ms_numpress_all)->implicit_value(BinaryDataEncoder_default_numpressErrorTolerance),
             ": same as --numpressLinear --numpressSlof (see https://github.com/fickludd/ms-numpress for more info)")
         ("gzip,g",
             po::value<bool>(&gzip)->zero_tokens(),
@@ -548,18 +548,14 @@ Config parseCommandLine(int argc, const char* argv[])
     if ((ms_numpress_slof>=0) && (ms_numpress_pic>=0))
         throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressSlof'.");
 
+    if ((ms_numpress_all>=0) && (ms_numpress_pic>=0))
+        throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressAll'.");
+
     if (ms_numpress_all>=0) {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Slof;
         config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_all;
-    }
-
-    if (ms_numpress_linear>=0) 
-    {
-        config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
-        config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
-        config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_linear;
     }
     if (ms_numpress_pic>=0) 
     {
@@ -570,6 +566,12 @@ Config parseCommandLine(int argc, const char* argv[])
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Slof;
         config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_slof;
+    }
+    if (ms_numpress_linear>=0) 
+    {
+        config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
+        config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
+        config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_linear;
     }
 
     return config;
