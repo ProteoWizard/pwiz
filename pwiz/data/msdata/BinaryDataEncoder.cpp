@@ -294,7 +294,7 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
     size_t textSize;
     char *first = &result[0];
     char *last = &result[result.size()-1];
-    if (result.size() == 1+(last-first)) // pointer math agrees with [] operator
+    if ((int)result.size() == 1+(last-first)) // pointer math agrees with [] operator
         textSize = Base64::binaryToText(byteBuffer, byteCount, &result[0]);
     else 
     {
