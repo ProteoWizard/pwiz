@@ -98,8 +98,8 @@ namespace pwiz.Skyline.Model.Esp
 
 
         // Not L10N: Appears user does not need this information. GetFeatureName never called.
-        private static readonly char[] ESP_COEFF_AAS = new[] { 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V' };
-        private static readonly KeyValuePair<string, double[]>[] ESP_COEFFS = new[]
+        private static readonly char[] ESP_COEFF_AAS = { 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V' };
+        private static readonly KeyValuePair<string, double[]>[] ESP_COEFFS =
         {
             new KeyValuePair<string, double[]>(@"Average volumes of residues (Pontius et al., 1996)", new[] {91.5, 196.1, 138.3, 135.2, 114.4, 156.4, 154.6, 67.5, 163.2, 162.6, 163.4, 162.5, 165.9, 198.8, 123.4, 102.0, 126.0, 209.8, 237.2, 138.4}),
             new KeyValuePair<string, double[]>(@"Relative preference value at N1 (Richardson-Richardson, 1988)", new[] {1.2, 0.7, 0.7, 0.8, 0.8, 0.7, 2.2, 0.3, 0.7, 0.9, 0.9, 0.6, 0.3, 0.5, 2.6, 0.7, 0.8, 2.1, 1.8, 1.1}),

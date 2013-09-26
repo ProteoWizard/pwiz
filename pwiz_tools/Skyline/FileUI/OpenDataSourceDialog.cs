@@ -42,16 +42,16 @@ namespace pwiz.Skyline.FileUI
 
             DialogResult = DialogResult.Cancel;
 
-            string[] sourceTypes = new[]
+            string[] sourceTypes =
             {
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
-				DataSourceUtil.TYPE_WIFF,
+                DataSourceUtil.TYPE_WIFF,
                 DataSourceUtil.TYPE_AGILENT,
                 DataSourceUtil.TYPE_BRUKER,
-				DataSourceUtil.TYPE_THERMO_RAW,
+                DataSourceUtil.TYPE_THERMO_RAW,
                 DataSourceUtil.TYPE_WATERS_RAW,
-				DataSourceUtil.TYPE_MZML,
-				DataSourceUtil.TYPE_MZXML,
+                DataSourceUtil.TYPE_MZML,
+                DataSourceUtil.TYPE_MZXML,
             };
 
             sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());

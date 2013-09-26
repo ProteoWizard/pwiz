@@ -1338,11 +1338,10 @@ namespace pwiz.Skyline.Properties
     public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
     {
         private static readonly RetentionScoreCalculator[] DEFAULTS =
-            new[]
-                {
-                    new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
-                    new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A)
-                };
+        {
+            new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
+            new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A)
+        };
 
         /// <summary>
         /// <see cref="RetentionTimeRegression"/> objects depend on calculators. If a user deletes or changes a calculator,
@@ -1479,10 +1478,9 @@ namespace pwiz.Skyline.Properties
     public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>
     {
         private static readonly PeakScoringModelSpec[] DEFAULTS =
-            new[]
-                {
-                    (PeakScoringModelSpec) new LegacyScoringModel()
-                };
+        {
+            new LegacyScoringModel()
+        };
 
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, object tag)

@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private static readonly char[] COLUMN_SEPARATORS = new[] {'\t'};
+        private static readonly char[] COLUMN_SEPARATORS = {'\t'};
         private IEnumerable<string> SplitLine(string row)
         {
             return row.Split(COLUMN_SEPARATORS);

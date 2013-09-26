@@ -156,10 +156,8 @@ namespace pwiz.SkylineTestTutorial
                 });
             WaitForCondition(() => resultsGrid != null && colSampleId != null && colConcentration != null && colIsConc != null);
 
-            float[] concentrations =
-                new[] { 0f, .001f, .004f, .018f, .075f, .316f, 1.33f, 5.62f, 23.71f, 100 };
-            string[] sampleIds =
-                new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }; // Not L10N
+            float[] concentrations = { 0f, .001f, .004f, .018f, .075f, .316f, 1.33f, 5.62f, 23.71f, 100 };
+            string[] sampleIds = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" }; // Not L10N
 
             RunUI(() =>
             {

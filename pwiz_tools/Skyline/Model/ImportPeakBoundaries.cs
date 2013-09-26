@@ -52,16 +52,16 @@ namespace pwiz.Skyline.Model
 
         public const string DECOY = "_DECOY";
 
-        public static readonly string[] FIELD_NAMES = new[]
-            {
-                "PeptideModifiedSequence",
-                "FileName",
-                "MinStartTime",
-                "MaxEndTime",
-                "PrecursorCharge",
-                "PrecursorIsDecoy",
-                "SampleName"
-            };
+        public static readonly string[] FIELD_NAMES =
+        {
+            "PeptideModifiedSequence",
+            "FileName",
+            "MinStartTime",
+            "MaxEndTime",
+            "PrecursorCharge",
+            "PrecursorIsDecoy",
+            "SampleName"
+        };
 
         private static string FormatMods(string modifiedPeptideSequence)
         {

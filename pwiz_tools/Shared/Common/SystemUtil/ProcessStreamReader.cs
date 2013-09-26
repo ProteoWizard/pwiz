@@ -37,9 +37,7 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public class ProcessStreamReader
     {
-        private readonly Thread _threadOut;
         private bool _isOutComplete;
-        private readonly Thread _threadErr;
         private bool _isErrComplete;
         private Exception _readException;
 
@@ -47,10 +45,10 @@ namespace pwiz.Common.SystemUtil
 
         public ProcessStreamReader(Process process)
         {
-            _threadOut = new Thread(() => ReadStream(process.StandardOutput, ref _isOutComplete));
-            _threadErr = new Thread(() => ReadStream(process.StandardError, ref _isErrComplete));
-            _threadOut.Start();
-            _threadErr.Start();
+            Thread threadOut = new Thread(() => ReadStream(process.StandardOutput, ref _isOutComplete));
+            Thread threadErr = new Thread(() => ReadStream(process.StandardError, ref _isErrComplete));
+            threadOut.Start();
+            threadErr.Start();
         }
 
         /// <summary>

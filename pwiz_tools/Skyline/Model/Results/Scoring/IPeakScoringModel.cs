@@ -227,10 +227,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public static class PeakScoringModel
     {
-        private static readonly IPeakScoringModel[] MODELS = new IPeakScoringModel[]
-            {
-                new LegacyScoringModel()
-            };
+        private static readonly IPeakScoringModel[] MODELS =
+        {
+            new LegacyScoringModel()
+        };
 
         public static IEnumerable<IPeakScoringModel> Models
         {
@@ -240,29 +240,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public static class PeakFeatureCalculator
     {
-        private static readonly IPeakFeatureCalculator[] CALCULATORS =  new IPeakFeatureCalculator[]
-            {
-                new MQuestIntensityCalc(),
-                new MQuestRetentionTimePredictionCalc(), 
-                new MQuestIntensityCorrelationCalc(), 
-                new MQuestReferenceCorrelationCalc(), 
+        private static readonly IPeakFeatureCalculator[] CALCULATORS =
+        {
+            new MQuestIntensityCalc(),
+            new MQuestRetentionTimePredictionCalc(), 
+            new MQuestIntensityCorrelationCalc(), 
+            new MQuestReferenceCorrelationCalc(), 
 
-                // Detail feature calculators
-                new MQuestWeightedShapeCalc(), 
+            // Detail feature calculators
+            new MQuestWeightedShapeCalc(), 
 //                new MQuestShapeCalc(), 
-                new MQuestWeightedCoElutionCalc(), 
+            new MQuestWeightedCoElutionCalc(), 
 //                new MQuestCoElutionCalc(), 
-                new MQuestWeightedReferenceShapeCalc(), 
+            new MQuestWeightedReferenceShapeCalc(), 
 //                new MQuestReferenceShapeCalc(), 
-                new MQuestWeightedReferenceCoElutionCalc(),
+            new MQuestWeightedReferenceCoElutionCalc(),
 //                new MQuestReferenceCoElutionCalc(), 
 
-                // Legacy calculators
-                //new LegacyLogUnforcedAreaCalc(),  // This one produces scores that are colinear with MQuestIntensityCalc.
-                new LegacyUnforcedCountScoreCalc(),
-                new LegacyUnforcedCountScoreStandardCalc(),
-                new LegacyIdentifiedCountCalc(), 
-            };
+            // Legacy calculators
+            //new LegacyLogUnforcedAreaCalc(),  // This one produces scores that are colinear with MQuestIntensityCalc.
+            new LegacyUnforcedCountScoreCalc(),
+            new LegacyUnforcedCountScoreStandardCalc(),
+            new LegacyIdentifiedCountCalc(), 
+        };
 
         public static IEnumerable<IPeakFeatureCalculator> Calculators
         {

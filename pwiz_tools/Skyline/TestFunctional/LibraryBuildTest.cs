@@ -123,27 +123,27 @@ namespace pwiz.SkylineTestFunctional
             // Test AddPathsDlg (file not found)
             EnsurePeptideSettings();
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(PeptideSettingsUI.ShowBuildLibraryDlg);
-            string[] invalidPaths = new[]
-                {
-                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.xml"),
-                    Path.Combine(TestFilesDir.GetTestPath("library_valid"), "CPTAC_Set4_624_072409.pep.XML")
-                };
+            string[] invalidPaths =
+            {
+                Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.xml"),
+                Path.Combine(TestFilesDir.GetTestPath("library_valid"), "CPTAC_Set4_624_072409.pep.XML")
+            };
             TestAddPaths(buildLibraryDlg, invalidPaths, true);
 
             // Test AddPathsDlg (file invalid type)
-            string[] invalidTypes = new[]
-                {
-                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.txt"),
-                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "mqpar.xml")
-                };
+            string[] invalidTypes =
+            {
+                Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.txt"),
+                Path.Combine(TestFilesDir.GetTestPath("maxquant"), "mqpar.xml")
+            };
             TestAddPaths(buildLibraryDlg, invalidTypes, true);
 
             // Test AddPathsDlg (valid files)
-            string[] goodPaths = new[]
-                {
-                    Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.txt"),
-                    Path.Combine(TestFilesDir.GetTestPath("library_valid"), "CPTAC_Set4_624_072409.pep.XML")
-                };
+            string[] goodPaths =
+            {
+                Path.Combine(TestFilesDir.GetTestPath("maxquant"), "test.msms.txt"),
+                Path.Combine(TestFilesDir.GetTestPath("library_valid"), "CPTAC_Set4_624_072409.pep.XML")
+            };
             TestAddPaths(buildLibraryDlg, goodPaths, false);
             OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
 

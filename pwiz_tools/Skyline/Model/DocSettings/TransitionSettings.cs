@@ -244,12 +244,12 @@ namespace pwiz.Skyline.Model.DocSettings
 // ReSharper restore InconsistentNaming
     public static class OptimizedMethodTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_None,
-                                                                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor,
-                                                                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_None,
+            Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor,
+            Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition
+        };
         public static string GetLocalizedString(this OptimizedMethodType val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -1344,12 +1344,12 @@ namespace pwiz.Skyline.Model.DocSettings
     public enum FullScanAcquisitionMethod { None, Targeted, DIA } // Not L10N: Not used for combo boxes.
     public static class FullScanAcquisitionExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None,
-                                                                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted,
-                                                                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_DIA
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None,
+            Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted,
+            Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_DIA
+        };
         public static string GetLocalizedString(this FullScanAcquisitionMethod val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -1368,12 +1368,12 @@ namespace pwiz.Skyline.Model.DocSettings
     public enum FullScanPrecursorIsotopes { None, Count, Percent }
     public static class FullScanPrecursorIsotopesExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None,
-                                                                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count,
-                                                                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None,
+            Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count,
+            Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent
+        };
         public static string GetLocalizedString(this FullScanPrecursorIsotopes val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -1792,8 +1792,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public const string TOF = "TOF"; //L10N
         public const string FT_ICR = "FT-ICR"; //L10N
 
-        public static readonly string[] MASS_ANALYZERS = new[] {QIT, TOF, ORBITRAP, FT_ICR};
-        public static readonly double[] DEFAULT_RES_VALUES = new[] {0.7, 10*1000, 60*1000, 100*1000};
+        public static readonly string[] MASS_ANALYZERS = {QIT, TOF, ORBITRAP, FT_ICR};
+        public static readonly double[] DEFAULT_RES_VALUES = {0.7, 10*1000, 60*1000, 100*1000};
         public static readonly double DEFAULT_RES_QIT = DEFAULT_RES_VALUES[0];
 
         private double _cachedPrecursorRes;

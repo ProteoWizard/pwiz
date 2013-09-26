@@ -103,24 +103,24 @@ namespace pwiz.SkylineTestA
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("Remove_Test.sky");
             string outPath = testFilesDir.GetTestPath("Remove_Test_Out.sky");
-            string[] allFiles = new[]
-                {
-                    "FT_2012_0311_RJ_01.raw",
-                    "FT_2012_0311_RJ_02.raw",
-                    "FT_2012_0311_RJ_07.raw",
-                    "FT_2012_0316_RJ_01_120316125013.raw",
-                    "FT_2012_0316_RJ_01_120316131853.raw",
-                    "FT_2012_0316_RJ_01_120316132340.raw",
-                    "FT_2012_0316_RJ_02.raw",
-                    "FT_2012_0316_RJ_09.raw",
-                    "FT_2012_0316_RJ_10.raw",
-                };
-            string[] removedFiles = new[]
-                {
-                    "FT_2012_0311_RJ_01.raw",
-                    "FT_2012_0311_RJ_02.raw",
-                    "FT_2012_0311_RJ_07.raw"
-                };
+            string[] allFiles =
+            {
+                "FT_2012_0311_RJ_01.raw",
+                "FT_2012_0311_RJ_02.raw",
+                "FT_2012_0311_RJ_07.raw",
+                "FT_2012_0316_RJ_01_120316125013.raw",
+                "FT_2012_0316_RJ_01_120316131853.raw",
+                "FT_2012_0316_RJ_01_120316132340.raw",
+                "FT_2012_0316_RJ_02.raw",
+                "FT_2012_0316_RJ_09.raw",
+                "FT_2012_0316_RJ_10.raw",
+            };
+            string[] removedFiles =
+            {
+                "FT_2012_0311_RJ_01.raw",
+                "FT_2012_0311_RJ_02.raw",
+                "FT_2012_0311_RJ_07.raw"
+            };
 
             string output = RunCommand("--in=" + docPath,
                                        "--remove-before=" + DateTime.Parse("3/16/2012", CultureInfo.InvariantCulture),
@@ -1612,7 +1612,7 @@ namespace pwiz.SkylineTestA
             // Assert.AreEqual(new[] { "--test=foo bar", "--new" }, CommandLine.ParseArgs("\"--test=foo bar\" --new"));
             // The above line of code would not pass so this other form works better.
             // Test case "--test=foo bar" --new
-            string[] expected1 = new[] { "--test=foo bar", "--new" };
+            string[] expected1 = { "--test=foo bar", "--new" };
             string[] actual1 = CommandLine.ParseArgs("\"--test=foo bar\" --new");
             Assert.AreEqual(expected1[0], actual1[0]);
             Assert.AreEqual(expected1[1], actual1[1]);
@@ -1620,7 +1620,7 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(ParserTestHelper(new[] { "--test=foo bar", "--new" }, CommandLine.ParseArgs("\"--test=foo bar\" --new")));
 
            // Test case --test="foo bar" --new
-            string[] expected2 = new[] {"--test=foo bar", "--new"};
+            string[] expected2 = {"--test=foo bar", "--new"};
             string[] actual2 = CommandLine.ParseArgs("--test=\"foo bar\" --new");
             Assert.AreEqual(expected2[0],actual2[0]);
             Assert.AreEqual(expected2[1],actual2[1]);
@@ -1628,7 +1628,7 @@ namespace pwiz.SkylineTestA
 
 
             // Test case --test="i said ""foo bar""" -new
-            string[] expected3 = new[] { "--test=i said \"foo bar\"", "--new" };
+            string[] expected3 = { "--test=i said \"foo bar\"", "--new" };
             string[] actual3 = CommandLine.ParseArgs("--test=\"i said \"\"foo bar\"\"\" --new");
             Assert.AreEqual(expected3[0], actual3[0]);
             Assert.AreEqual(expected3[1], actual3[1]);

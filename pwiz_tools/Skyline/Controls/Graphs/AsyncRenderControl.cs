@@ -37,7 +37,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _renderHeight;
         private int _lastWidth;
         private int _lastHeight;
-        private readonly Thread _backgroundRenderThread;
         private readonly AutoResetEvent _startBackgroundRender = new AutoResetEvent(false);
 
         //private static readonly Log LOG = new Log<AsyncRenderControl>();
@@ -68,13 +67,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
             _updateTimer.Start();
 
-            _backgroundRenderThread = new Thread(BackgroundRender)
-                {
-                    Name = "AllChromatograms background render",    // Not L10N
-                    IsBackground = true
-                };
-            LocalizationHelper.InitThread(_backgroundRenderThread);
-            _backgroundRenderThread.Start();
+            Thread backgroundRenderThread = new Thread(BackgroundRender)
+            {
+                Name = "AllChromatograms background render",    // Not L10N
+                IsBackground = true
+            };
+            LocalizationHelper.InitThread(backgroundRenderThread);
+            backgroundRenderThread.Start();
         }
 
         protected bool IsVisible

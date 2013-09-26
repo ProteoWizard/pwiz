@@ -249,7 +249,6 @@ namespace pwiz.Skyline.Model.Results
             // Buffer variables
             private float[][] _buffers;
             private readonly int _bufferSize;
-            private readonly int _minBlocksPerBuffer;
             private int _bufferIndex;
             private int _blockSize;
             private bool _subdividingBlocks;
@@ -262,19 +261,20 @@ namespace pwiz.Skyline.Model.Results
                 int bufferParts = BUFFER_PARTS, 
                 int maxBlock = MAX_BLOCK)
             {
+                int minBlocksPerBuffer;
                 _dataFilePath = dataFilePath;
                 _blockSize = maxBlock;
                 
                 while (true)
                 {
-                    _minBlocksPerBuffer = bufferSize / bufferParts / (_blockSize * sizeof(float));
-                    if (_minBlocksPerBuffer > 0)
+                    minBlocksPerBuffer = bufferSize / bufferParts / (_blockSize * sizeof(float));
+                    if (minBlocksPerBuffer > 0)
                         break;
                     _blockSize /= 2;
                     Helpers.Assume(_blockSize >= 2, "ChromCollector.Allocator buffer is not set up correctly"); // Not L10N
                 }
                 
-                _bufferSize = _minBlocksPerBuffer * _blockSize;
+                _bufferSize = minBlocksPerBuffer * _blockSize;
                 _buffers = new float[bufferParts][];
                 _collectors = new List<ChromCollector>[bufferParts];
                 Instance = this;

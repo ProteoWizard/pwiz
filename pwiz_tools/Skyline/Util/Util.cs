@@ -1341,7 +1341,7 @@ namespace pwiz.Skyline.Util
 
         private const char LABEL_SEP_CHAR = '_'; // Not L10N
         private const string ELIPSIS = "..."; // Not L10N
-        private static readonly char[] SPACE_CHARS = new[] { '_', '-', ' ', '.', ',' }; // Not L10N
+        private static readonly char[] SPACE_CHARS = { '_', '-', ' ', '.', ',' }; // Not L10N
 
         /// <summary>
         /// Finds repetitive text in labels and removes the text to save space.
@@ -1539,6 +1539,18 @@ namespace pwiz.Skyline.Util
         {
             if (!condition)
                 throw new AssumptionException(error);
+        }
+
+        public static void AssumeNotNull(object o, string parameterName)
+        {
+            if (o == null)
+                throw new AssumptionException(parameterName + " is null"); // Not L10N
+        }
+
+        public static void AssumeNull(object o, string parameterName)
+        {
+            if (o != null)
+                throw new AssumptionException(parameterName + " is not null"); // Not L10N
         }
 
         /// <summary>

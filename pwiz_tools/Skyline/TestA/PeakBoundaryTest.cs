@@ -158,10 +158,10 @@ namespace pwiz.SkylineTestA
 
             string headerRow = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(6));
             string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.FIELD_NAMES.Take(6));
-            string[] values = new[]
-                {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
-                };
+            string[] values =
+            {
+                "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
+            };
             
             // 4. Mismatched field count
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(spaceSep, values)),
@@ -234,10 +234,10 @@ namespace pwiz.SkylineTestA
                 Resources.PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_);
 
             // 12. Import with bad sample throws exception
-            string[] valuesSample = new[]
-                {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
-                };
+            string[] valuesSample =
+            {
+                "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
+            };
             string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES);
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSample, string.Join(csvSep, valuesSample)),
                 Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__);

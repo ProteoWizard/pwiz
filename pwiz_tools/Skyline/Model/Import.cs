@@ -848,7 +848,7 @@ namespace pwiz.Skyline.Model
                 return seqClean;
             }
 
-            private static readonly string[] EXCLUDE_PROTEIN_VALUES = new[] { "true", "false", "heavy", "light", "unit" }; // Not L10N
+            private static readonly string[] EXCLUDE_PROTEIN_VALUES = { "true", "false", "heavy", "light", "unit" }; // Not L10N
 
             private static int FindProtein(string[] fields, int iSequence,
                 IEnumerable<string> lines, IList<string> headers,

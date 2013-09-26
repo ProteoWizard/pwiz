@@ -631,7 +631,7 @@ namespace pwiz.Skyline
             get { return null == AlignToFile && _alignToPrediction; }
             set
             {
-                if (Equals(value, AlignToRtPrediction))
+                if (value == AlignToRtPrediction)
                 {
                     return;
                 }

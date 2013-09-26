@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         public const string EXT = ".lib";
 
-        private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
+        private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
         public BiblioSpecLibSpec(string name, string path)
             : base(name, path)

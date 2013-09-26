@@ -90,8 +90,7 @@ namespace pwiz.Skyline.Model.Lib
         public static readonly PeptideRankId PEP_RANK_TFRATIO =
             new PeptideRankId("TFRatio", Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio); // Not L10N
 
-        private static readonly PeptideRankId[] RANK_IDS = new[]
-            { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
+        private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
 
         protected NistLibSpecBase(string name, string path)
             : base(name, path)
@@ -509,9 +508,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             FilePath = spec.FilePath;
 
-            string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? ""; // ReSharper
-            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? "", baseName + extCache);
+            CachePath = Path.ChangeExtension(FilePath, extCache);
 
+            string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? ""; // ReSharper
             Match match = REGEX_BASENAME.Match(baseName);
             if (match.Success)
             {
@@ -772,8 +771,8 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ");
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
-        private static readonly char[] MAJOR_SEP = new[] {'/'};
-        private static readonly char[] MINOR_SEP = new[] {','};
+        private static readonly char[] MAJOR_SEP = {'/'};
+        private static readonly char[] MINOR_SEP = {','};
 
         private bool CreateCache(ILoadMonitor loader, ProgressStatus status, int percent)
         {

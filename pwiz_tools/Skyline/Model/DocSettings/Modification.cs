@@ -46,13 +46,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public static class RelativeRTExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Matching,
-                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Overlapping,
-                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Preceding,
-                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Unknown
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.RelativeRTExtension_LOCALIZED_VALUES_Matching,
+            Resources.RelativeRTExtension_LOCALIZED_VALUES_Overlapping,
+            Resources.RelativeRTExtension_LOCALIZED_VALUES_Preceding,
+            Resources.RelativeRTExtension_LOCALIZED_VALUES_Unknown
+        };
 
         public static string GetLocalizedString(this RelativeRT val)
         {

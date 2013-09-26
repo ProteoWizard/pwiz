@@ -450,13 +450,13 @@ namespace pwiz.MSGraph
         {
             PointF[] coords = GetCoords( pane, g, text );
             if( coords.Length != 4 ) throw new InvalidOperationException( "coords length must be 4" );
-            byte[] textBoundsPointTypes = new[]
-                        {
-                            (byte) PathPointType.Start,
-                            (byte) PathPointType.Line,
-                            (byte) PathPointType.Line,
-                            (byte) PathPointType.Line
-                        };
+            byte[] textBoundsPointTypes =
+            {
+                (byte) PathPointType.Start,
+                (byte) PathPointType.Line,
+                (byte) PathPointType.Line,
+                (byte) PathPointType.Line
+            };
             GraphicsPath textBoundsPath = new GraphicsPath( coords, textBoundsPointTypes );
             textBoundsPath.CloseFigure();
             textBoundsRegion = new Region( textBoundsPath );

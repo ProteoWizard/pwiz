@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             DoValidate();
         }
 
-        private static readonly IPeakFeatureCalculator[] DEFAULT_CALCULATORS = new IPeakFeatureCalculator[]
+        private static readonly IPeakFeatureCalculator[] DEFAULT_CALCULATORS =
         {
             new MQuestIntensityCalc(),
             new MQuestRetentionTimePredictionCalc(), 

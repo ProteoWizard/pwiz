@@ -1898,7 +1898,7 @@ namespace pwiz.Skyline
                 return;
             }
             string filename = Path.GetFileName(path);
-            _out.WriteLine(String.Format("Installing tools from {0}",filename));
+            _out.WriteLine("Installing tools from {0}", filename);
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
@@ -1917,13 +1917,13 @@ namespace pwiz.Skyline
                 }
                 foreach (var tool in result.ValidToolsFound)
                 {
-                    _out.WriteLine(string.Format("Installed tool {0}", tool.Title));
+                    _out.WriteLine("Installed tool {0}", tool.Title);
                 }
                 Settings.Default.Save();
             }
             else
             {
-                _out.WriteLine(String.Format("Canceled installing tools from {0}.", filename));
+                _out.WriteLine("Canceled installing tools from {0}.", filename);
             }
         }
 
@@ -2715,17 +2715,17 @@ namespace pwiz.Skyline
                 const string plualReportMessage = "Overwriting reports: {0}";
                 if (reports.Count == 1)
                 {
-                    _out.WriteLine(string.Format(singularReportMessage, reports[0].GetKey()));
+                    _out.WriteLine(singularReportMessage, reports[0].GetKey());
                 }
                 else if (reports.Count > 1)
                 {
                     List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
                     string reportTitlesJoined = string.Join(", ", reportTitles);
-                    _out.WriteLine(string.Format(plualReportMessage, reportTitlesJoined ));
+                    _out.WriteLine(plualReportMessage, reportTitlesJoined);
                 }
                 if (toolCollectionName != null)
                 {
-                    _out.WriteLine(string.Format(singularToolMessage, toolCollectionName));
+                    _out.WriteLine(singularToolMessage, toolCollectionName);
                 }           
                 return true;
             }
@@ -2766,17 +2766,17 @@ namespace pwiz.Skyline
                 const string plualReportMessage = "Conflicting reports: {0}";
                 if (reports.Count == 1)
                 {
-                    _out.WriteLine(string.Format(singularReportMessage, reports[0].GetKey()));
+                    _out.WriteLine(singularReportMessage, reports[0].GetKey());
                 }
                 else if (reports.Count > 1)
                 {
                     List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
                     string reportTitlesJoined = string.Join(", ", reportTitles);
-                    _out.WriteLine(string.Format(plualReportMessage, reportTitlesJoined));
+                    _out.WriteLine(plualReportMessage, reportTitlesJoined);
                 }
                 if (toolCollectionName != null)
                 { 
-                    _out.WriteLine(string.Format(singularToolMessage, toolCollectionName));
+                    _out.WriteLine(singularToolMessage, toolCollectionName);
                 }
                 return null;
             }
@@ -2805,7 +2805,7 @@ namespace pwiz.Skyline
                 _out.WriteLine("There are conflicting annotations. Overwriting.");
                 foreach (var annotationDef in annotations)
                 {
-                    _out.WriteLine(string.Format("    Warning: the annotation {0} is being overwritten", annotationDef.GetKey()));
+                    _out.WriteLine("    Warning: the annotation {0} is being overwritten", annotationDef.GetKey());
                 }
             }
             if (overwriteAnnotations == false)
@@ -2813,7 +2813,7 @@ namespace pwiz.Skyline
                 _out.WriteLine("There are conflicting annotations. Keeping existing.");
                 foreach (var annotationDef in annotations)
                 {
-                    _out.WriteLine(string.Format("    Warning: the annotation {0} may not be what your tool requires", annotationDef.GetKey()));
+                    _out.WriteLine("    Warning: the annotation {0} may not be what your tool requires", annotationDef.GetKey());
                 }
             }
             return overwriteAnnotations;
@@ -2827,7 +2827,7 @@ namespace pwiz.Skyline
                 Settings.Default.ToolFilePaths.Add(programPathContainer,programPath);
                 return programPath;
             }
-            _out.WriteLine(String.Format("A tool requires Program:{0} Version:{1} and it is not specified with the", missingProgramPathContainer.ProgramName, missingProgramPathContainer.ProgramVersion));
+            _out.WriteLine("A tool requires Program:{0} Version:{1} and it is not specified with the", missingProgramPathContainer.ProgramName, missingProgramPathContainer.ProgramVersion);
             _out.WriteLine("--tool-program-macro and --tool-program-path commands. Tool Installation Canceled.");
             return null;
         }

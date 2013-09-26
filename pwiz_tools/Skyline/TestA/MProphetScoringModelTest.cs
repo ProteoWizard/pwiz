@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestA
         }
 
         // Data files and the known-good weight values they produce.
-        private readonly FileWeights[] _fileWeights = new[]
+        private readonly FileWeights[] _fileWeights =
         {
             // This is the MProphet gold standard data file.  See "Supplementary Data 1" from
             // http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html#/supplementary-information

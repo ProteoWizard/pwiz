@@ -47,8 +47,8 @@ namespace pwiz.SkylineTestA.Results
             // If the matrices have less than 5 rows, the conditioner should have
             // no effect.
             DeconvBlock dbSmall = new DeconvBlock(5,5,4);
-            double[] mask = new[]{1.0,1.0,1.0,1.0, 0.0};
-            double[] data = new[]{2.0,2.0,2.0,2.0};
+            double[] mask = {1.0,1.0,1.0,1.0, 0.0};
+            double[] data = {2.0,2.0,2.0,2.0};
             for (int i = 0; i<4; ++i)
             {
                 dbSmall.Add(mask, data);

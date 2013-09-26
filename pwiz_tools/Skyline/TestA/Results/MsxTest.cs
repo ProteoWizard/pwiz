@@ -87,22 +87,22 @@ namespace pwiz.SkylineTestA.Results
                 var testSpectrum = file.GetSpectrum(TEST_SPECTRUM_OVERLAP);
                 // Generate a transition binner containing a lot of tough cases with
                 // overlapping transitions and test
-                double[] binnedExpected = new[]
-                    {
-                        0.0, 0.0, 0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0
-                    };
+                double[] binnedExpected =
+                {
+                    0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0
+                };
                 var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
 
                 TestSpectrumProcessor(transBinnerOverlap, isoMapper, file, TEST_SPECTRUM_OVERLAP);
-                int[] intensityIndices = new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296};
-                double[] intensityValues = new[]
-                    {
-                        0.0, 0.0, 0.0, 0.0, 4545.85, 15660.49,
-                        35050.01, 56321.66, 62715.75, 43598.31, 23179.42,
-                        1227.37, 1730.05, 1814.80, 1407.17, 740.37,
-                        0.0, 0.0
-                    };
+                int[] intensityIndices = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296};
+                double[] intensityValues =
+                {
+                    0.0, 0.0, 0.0, 0.0, 4545.85, 15660.49,
+                    35050.01, 56321.66, 62715.75, 43598.31, 23179.42,
+                    1227.37, 1730.05, 1814.80, 1407.17, 740.37,
+                    0.0, 0.0
+                };
                 // Test demultiplexing of a real spectrum
                 TestFullDemultiplex(demultiplexer, TEST_SPECTRUM_OVERLAP, testSpectrum, intensityIndices,
                                     intensityValues, 0);
@@ -140,11 +140,11 @@ namespace pwiz.SkylineTestA.Results
                 var testSpectrum = file.GetSpectrum(TEST_SPECTRUM);
                 // Generate a transition binner containing a lot of tough cases with
                 // overlapping transitions and test    
-                double[] binnedExpected = new[]
-                    {
-                        0.0, 25160.11261, 18254.06375, 18254.06375, 18254.06375,
-                        11090.00577, 19780.18628, 19780.18628
-                    };
+                double[] binnedExpected =
+                {
+                    0.0, 25160.11261, 18254.06375, 18254.06375, 18254.06375,
+                    11090.00577, 19780.18628, 19780.18628
+                };
                 var transBinnerOverlap = TestTransitionBinnerOverlap(testSpectrum, isoMapper, binnedExpected);
 
                 TestSpectrumProcessor(transBinnerOverlap, isoMapper, file, TEST_SPECTRUM);
@@ -239,20 +239,20 @@ namespace pwiz.SkylineTestA.Results
             // Test that the transition binner interpreted the spectrum filter correctly
             // here are the expected precursor -> transition pairs (precursors[0] has
             // transitions in transitions[0])
-            double[] precursors = new[] {586.8479, 602.6211};
-            double[][] transitions = new[]
+            double[] precursors = {586.8479, 602.6211};
+            double[][] transitions =
+            {
+                new[]
                 {
-                    new[]
-                    {
-                        1002.5830, 889.4989, 790.4305, 733.4090,
-                        676.3876, 589.3556, 488.3079, 375.2238
-                    },
-                    new[]
-                    {
-                        1465.6376, 1305.6070, 1176.5644, 1047.5218, 861.4425, 
-                        748.3584, 633.3315, 520.2474, 433.2154, 346.1833
-                    }
-                };
+                    1002.5830, 889.4989, 790.4305, 733.4090,
+                    676.3876, 589.3556, 488.3079, 375.2238
+                },
+                new[]
+                {
+                    1465.6376, 1305.6070, 1176.5644, 1047.5218, 861.4425, 
+                    748.3584, 633.3315, 520.2474, 433.2154, 346.1833
+                }
+            };
 
             // Test the mapping of precursor -> transitions
             for (int testIndex = 0; testIndex < precursors.Length; ++testIndex)

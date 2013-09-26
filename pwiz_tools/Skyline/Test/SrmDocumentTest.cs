@@ -679,60 +679,60 @@ namespace pwiz.SkylineTest
                 AssertEx.DeserializeError<SrmDocument, XmlException>(xml);
         }
 
-        private readonly string[] _peptideGroupValid = new[]
-            {
-                // Protein name and desc
-                "<srm_settings><selected_proteins>\n" +
-                "  <protein name=\"test\" description=\"desc\"><sequence>ABCDEFG HIJKLMNP QRSTUV WXYZ</sequence></protein>\n" +
-                "</selected_proteins></srm_settings>",
-                // Protein label and label_desc
-                "<srm_settings><selected_proteins>\n" +
-                "  <protein label=\"test\" label_description=\"desc\"><sequence>R</sequence></protein>\n" +
-                "</selected_proteins></srm_settings>",
-                // Protein label and label_desc
-                "<srm_settings><selected_proteins>\n" +
-                "  <protein label=\"test\" label_description=\"desc\"><sequence>R</sequence></protein>\n" +
-                "</selected_proteins></srm_settings>",
-                // Protein with no name or desc
-                "<srm_settings><selected_proteins>\n" +
-                "  <protein><sequence>R</sequence></protein>\n" +
-                "</selected_proteins></srm_settings>",
-                // v0.1-style peptide list with name
-                "<srm_settings><selected_proteins>\n" +
-                "  <protein name=\"test\" peptide_list=\"true\"><sequence>R</sequence></protein>\n" +
-                "</selected_proteins></srm_settings>",
-                // peptide list with label
-                "<srm_settings><selected_proteins>\n" +
-                "  <peptide_list label=\"test\"/>\n" +
-                "</selected_proteins></srm_settings>",
-                // peptide list with label
-                "<srm_settings><selected_proteins>\n" +
-                "  <peptide_list label=\"test\" label_description=\"desc\"/>\n" +
-                "</selected_proteins></srm_settings>",
-                // blank and empty peptide list
-                "<srm_settings><selected_proteins>\n" +
-                "  <peptide_list/>\n" +
-                "</selected_proteins></srm_settings>",
-            };
+        private readonly string[] _peptideGroupValid =
+        {
+            // Protein name and desc
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein name=\"test\" description=\"desc\"><sequence>ABCDEFG HIJKLMNP QRSTUV WXYZ</sequence></protein>\n" +
+            "</selected_proteins></srm_settings>",
+            // Protein label and label_desc
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein label=\"test\" label_description=\"desc\"><sequence>R</sequence></protein>\n" +
+            "</selected_proteins></srm_settings>",
+            // Protein label and label_desc
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein label=\"test\" label_description=\"desc\"><sequence>R</sequence></protein>\n" +
+            "</selected_proteins></srm_settings>",
+            // Protein with no name or desc
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein><sequence>R</sequence></protein>\n" +
+            "</selected_proteins></srm_settings>",
+            // v0.1-style peptide list with name
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein name=\"test\" peptide_list=\"true\"><sequence>R</sequence></protein>\n" +
+            "</selected_proteins></srm_settings>",
+            // peptide list with label
+            "<srm_settings><selected_proteins>\n" +
+            "  <peptide_list label=\"test\"/>\n" +
+            "</selected_proteins></srm_settings>",
+            // peptide list with label
+            "<srm_settings><selected_proteins>\n" +
+            "  <peptide_list label=\"test\" label_description=\"desc\"/>\n" +
+            "</selected_proteins></srm_settings>",
+            // blank and empty peptide list
+            "<srm_settings><selected_proteins>\n" +
+            "  <peptide_list/>\n" +
+            "</selected_proteins></srm_settings>",
+        };
 
-        private readonly string[] _peptideGroupInvalid = new[]
-            {
-                // Protein with invalid sequence
-                "<srm_settings><selected_proteins>\n" +
-                "  <protein name=\"test\"><sequence>jp</sequence></protein>\n" +
-                "</selected_proteins></srm_settings>",
-                "<srm_settings><selected_proteins>\n" +
-                "  <protein name=\"test\"><sequence>abc</sequence></protein>\n" +
-                "</selected_proteins></srm_settings>",
-            };
+        private readonly string[] _peptideGroupInvalid =
+        {
+            // Protein with invalid sequence
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein name=\"test\"><sequence>jp</sequence></protein>\n" +
+            "</selected_proteins></srm_settings>",
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein name=\"test\"><sequence>abc</sequence></protein>\n" +
+            "</selected_proteins></srm_settings>",
+        };
 
-        private readonly string[] _peptideGroupInvalidXml = new[]
-            {
-                // Missing sequence
-                "<srm_settings><protein name=\"test\" description=\"desc\"/></srm_settings>",
-                // Peptide list with sequence
-                "<srm_settings><peptide_list><sequence>R</sequence></peptide_list></srm_settings>"
-            };
+        private readonly string[] _peptideGroupInvalidXml =
+        {
+            // Missing sequence
+            "<srm_settings><protein name=\"test\" description=\"desc\"/></srm_settings>",
+            // Peptide list with sequence
+            "<srm_settings><peptide_list><sequence>R</sequence></peptide_list></srm_settings>"
+        };
 
         /// <summary>
         /// A test for Peptide serialization.
@@ -746,54 +746,54 @@ namespace pwiz.SkylineTest
                 AssertEx.DeserializeError<SrmDocument>(xml);
         }
 
-        private readonly string[] _peptideValid = new[]
-            {
-                // Sequence completely covered
-                "<srm_settings><protein><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
-                "  <peptide start=\"0\" end=\"25\" sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\" calc_neutral_pep_mass=\"1685.86477\" num_missed_cleavages=\"2\"/>\n" +
-                "</protein></srm_settings>",
-                // Single amino acid peptide
-                "<srm_settings><protein><sequence>ABC</sequence>\n" +
-                "  <peptide start=\"1\" end=\"2\" sequence=\"B\" num_missed_cleavages=\"0\"/>\n" +
-                "</protein></srm_settings>",
-                // v0.1-style peptide list with peptide
-                "<srm_settings><protein peptide_list=\"true\"><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
-                "  <peptide sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\"/>\n" +
-                "</protein></srm_settings>",
-                // peptide list with peptide
-                "<srm_settings><peptide_list>\n" +
-                "  <peptide sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\" num_missed_cleavages=\"0\"/>\n" +
-                "</peptide_list></srm_settings>",
-            };
+        private readonly string[] _peptideValid =
+        {
+            // Sequence completely covered
+            "<srm_settings><protein><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
+            "  <peptide start=\"0\" end=\"25\" sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\" calc_neutral_pep_mass=\"1685.86477\" num_missed_cleavages=\"2\"/>\n" +
+            "</protein></srm_settings>",
+            // Single amino acid peptide
+            "<srm_settings><protein><sequence>ABC</sequence>\n" +
+            "  <peptide start=\"1\" end=\"2\" sequence=\"B\" num_missed_cleavages=\"0\"/>\n" +
+            "</protein></srm_settings>",
+            // v0.1-style peptide list with peptide
+            "<srm_settings><protein peptide_list=\"true\"><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
+            "  <peptide sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\"/>\n" +
+            "</protein></srm_settings>",
+            // peptide list with peptide
+            "<srm_settings><peptide_list>\n" +
+            "  <peptide sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\" num_missed_cleavages=\"0\"/>\n" +
+            "</peptide_list></srm_settings>",
+        };
 
-        private readonly string[] _peptideInvalid = new[]
-            {
-                // Peptide outside bounds of sequence
-                "<srm_settings><protein><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
-                "  <peptide start=\"0\" end=\"26\" sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\"/>\n" +
-                "</protein></srm_settings>",
-                "<srm_settings><protein><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
-                "  <peptide start=\"-1\" end=\"24\" sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\"/>\n" +
-                "</protein></srm_settings>",
-                // Missing bounds
-                "<srm_settings><protein><sequence>A</sequence>\n" +
-                "  <peptide start=\"0\" sequence=\"A\" />\n" +
-                "</protein></srm_settings>",
-                "<srm_settings><protein><sequence>AB</sequence>\n" +
-                "  <peptide end=\"1\" sequence=\"A\" />\n" +
-                "</protein></srm_settings>",
-                // Missmatched protein and peptide sequences
-                "<srm_settings><protein><sequence>ABC</sequence>\n" +
-                "  <peptide start=\"1\" end=\"2\" sequence=\"C\"/>\n" +
-                "</protein></srm_settings>",
-                // v0.1-style peptide list with bad sequence peptide
-                "<srm_settings><protein peptide_list=\"true\"><sequence>ABCDEFGHIJ</sequence>\n" +
-                "  <peptide sequence=\"jp\"/>\n" +
-                "</protein></srm_settings>",
-                // peptide with no sequence
-                "<srm_settings><peptide_list>\n" +
-                "    <peptide/>\n" +
-                "</peptide_list></srm_settings>",
-            };
+        private readonly string[] _peptideInvalid =
+        {
+            // Peptide outside bounds of sequence
+            "<srm_settings><protein><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
+            "  <peptide start=\"0\" end=\"26\" sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\"/>\n" +
+            "</protein></srm_settings>",
+            "<srm_settings><protein><sequence>ABCDEFGHIJKLMNPQRSTUVWXYZ</sequence>\n" +
+            "  <peptide start=\"-1\" end=\"24\" sequence=\"ABCDEFGHIJKLMNPQRSTUVWXYZ\"/>\n" +
+            "</protein></srm_settings>",
+            // Missing bounds
+            "<srm_settings><protein><sequence>A</sequence>\n" +
+            "  <peptide start=\"0\" sequence=\"A\" />\n" +
+            "</protein></srm_settings>",
+            "<srm_settings><protein><sequence>AB</sequence>\n" +
+            "  <peptide end=\"1\" sequence=\"A\" />\n" +
+            "</protein></srm_settings>",
+            // Missmatched protein and peptide sequences
+            "<srm_settings><protein><sequence>ABC</sequence>\n" +
+            "  <peptide start=\"1\" end=\"2\" sequence=\"C\"/>\n" +
+            "</protein></srm_settings>",
+            // v0.1-style peptide list with bad sequence peptide
+            "<srm_settings><protein peptide_list=\"true\"><sequence>ABCDEFGHIJ</sequence>\n" +
+            "  <peptide sequence=\"jp\"/>\n" +
+            "</protein></srm_settings>",
+            // peptide with no sequence
+            "<srm_settings><peptide_list>\n" +
+            "    <peptide/>\n" +
+            "</peptide_list></srm_settings>",
+        };
     }
 }

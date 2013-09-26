@@ -27,7 +27,6 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private readonly double _startValue;
         private readonly double _endValue;
-        private readonly double _acceleration;
         private readonly int _updateMsec;
         private readonly DateTime _startTime;
         private double[] _scaleFactors;
@@ -45,7 +44,6 @@ namespace pwiz.Skyline.Controls.Graphs
             _startValue = startValue;
             _endValue = endValue;
             _updateMsec = updateMsec;
-            _acceleration = acceleration;
             _startTime = DateTime.Now;
 
             // Calculate smoothly accelerating and decelerating scale factors.
@@ -53,14 +51,14 @@ namespace pwiz.Skyline.Controls.Graphs
             _scaleFactors = new double[steps];
             var sum = 0.0;
             for (int i = 0; i < steps / 2; i++)
-                sum += Math.Pow(_acceleration, i);
+                sum += Math.Pow(acceleration, i);
             sum *= 2;
             _scaleFactors[0] = 0.0;
             _scaleFactors[steps - 1] = 1.0;
             _scaleFactors[steps / 2] = 0.5;
             for (int i = 1; i < steps / 2; i++)
             {
-                _scaleFactors[i] = _scaleFactors[i - 1] + Math.Pow(_acceleration, i - 1) / sum;
+                _scaleFactors[i] = _scaleFactors[i - 1] + Math.Pow(acceleration, i - 1) / sum;
                 _scaleFactors[steps - 1 - i] = 1.0 - _scaleFactors[i];
             }
 

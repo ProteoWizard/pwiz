@@ -116,11 +116,11 @@ namespace pwiz.Skyline.EditUI
     public enum GroupGraphsType { separated, distributed }
     public static class GroupGraphsTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new []
-                                                                {
-                                                                    Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_separated,
-                                                                    Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_distributed
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_separated,
+            Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_distributed
+        };
         public static string GetLocalizedString(this GroupGraphsType val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -141,11 +141,11 @@ namespace pwiz.Skyline.EditUI
 
     public static class GroupGraphsOrderExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
-                                                                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
+            Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document
+        };
         public static string GetLocalizedString(this GroupGraphsOrder val)
         {
             return LOCALIZED_VALUES[(int) val];

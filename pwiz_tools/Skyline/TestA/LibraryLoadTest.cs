@@ -171,13 +171,13 @@ namespace pwiz.SkylineTestA
             public bool HasUI { get { return false; } }
         }
 
-        public static readonly LibKey[] KEYS_LIB_YEAST_NIST = new[]
-            {
-                new LibKey("QQGPLEPTVGNSTAITEER", 2),
-                new LibKey("IPSAIHLQISNK", 2),
-                new LibKey("NSTDIPLQDATETYR", 2),
-                new LibKey("VLHNFLTTPSK", 2),
-            };
+        public static readonly LibKey[] KEYS_LIB_YEAST_NIST =
+        {
+            new LibKey("QQGPLEPTVGNSTAITEER", 2),
+            new LibKey("IPSAIHLQISNK", 2),
+            new LibKey("NSTDIPLQDATETYR", 2),
+            new LibKey("VLHNFLTTPSK", 2),
+        };
 
         public const string TEXT_LIB_YEAST_NIST =
             TEXT_LIB_YEAST_NIST1 +

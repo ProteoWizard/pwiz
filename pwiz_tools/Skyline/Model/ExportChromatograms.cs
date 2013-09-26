@@ -52,19 +52,19 @@ namespace pwiz.Skyline.Model
         private readonly float _matchTolerance;
         private readonly IList<ChromatogramSet> _chromatogramSets;
 
-        public static readonly string[] FIELD_NAMES = new[]
-            {
-                "FileName",
-                "PeptideModifiedSequence",
-                "PrecursorCharge",
-                "ProductMz",
-                "FragmentIon",
-                "ProductCharge",
-                "IsotopeLabelType",
-                "TotalArea",
-                "Times",
-                "Intensities"
-            };
+        public static readonly string[] FIELD_NAMES =
+        {
+            "FileName",
+            "PeptideModifiedSequence",
+            "PrecursorCharge",
+            "ProductMz",
+            "FragmentIon",
+            "ProductCharge",
+            "IsotopeLabelType",
+            "TotalArea",
+            "Times",
+            "Intensities"
+        };
 
         /// <summary>
         /// Executes an export for all chromatograms in the document
@@ -116,17 +116,17 @@ namespace pwiz.Skyline.Model
                         IList<float> intensities = chromInfo.IntensityArray[0];
                         float tic = CalculateTic(times, intensities);
                         string extractorName = GetExtractorName(extractor);
-                        string[] fieldArray = new[]
-                            {
-                                fileName,
-                                TextUtil.EXCEL_NA,
-                                TextUtil.EXCEL_NA,
-                                TextUtil.EXCEL_NA,
-                                extractorName,
-                                TextUtil.EXCEL_NA,
-                                TextUtil.EXCEL_NA,
-                                System.Convert.ToString(tic, cultureInfo)
-                            };
+                        string[] fieldArray =
+                        {
+                            fileName,
+                            TextUtil.EXCEL_NA,
+                            TextUtil.EXCEL_NA,
+                            TextUtil.EXCEL_NA,
+                            extractorName,
+                            TextUtil.EXCEL_NA,
+                            TextUtil.EXCEL_NA,
+                            System.Convert.ToString(tic, cultureInfo)
+                        };
                         FormatChromLine(writer, fieldArray, times, intensities, cultureInfo);
 
                     }
@@ -196,17 +196,17 @@ namespace pwiz.Skyline.Model
                                                        precursorCharge, peptideModifiedSequence));
                     }
                     float tic = CalculateTic(times, intensities);
-                    string[] fieldArray = new[]
-                                    {
-                                        fileName,
-                                        peptideModifiedSequence,
-                                        System.Convert.ToString(precursorCharge, cultureInfo),
-                                        System.Convert.ToString(productMz, cultureInfo),
-                                        nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture),
-                                        System.Convert.ToString(productCharge, cultureInfo),
-                                        labelType,
-                                        System.Convert.ToString(tic, cultureInfo)
-                                    };
+                    string[] fieldArray =
+                    {
+                        fileName,
+                        peptideModifiedSequence,
+                        System.Convert.ToString(precursorCharge, cultureInfo),
+                        System.Convert.ToString(productMz, cultureInfo),
+                        nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture),
+                        System.Convert.ToString(productCharge, cultureInfo),
+                        labelType,
+                        System.Convert.ToString(tic, cultureInfo)
+                    };
                     FormatChromLine(writer, fieldArray, times, intensities, cultureInfo);
                 }
             }

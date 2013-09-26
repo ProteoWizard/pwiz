@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model
 
     public static class IonTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[] { Resources.IonTypeExtension_LOCALIZED_VALUES_precursor, "a", "b", "c", "x", "y", "z"}; // Not L10N
+        private static readonly string[] LOCALIZED_VALUES = { Resources.IonTypeExtension_LOCALIZED_VALUES_precursor, "a", "b", "c", "x", "y", "z"}; // Not L10N
         public static string GetLocalizedString(this IonType val)
         {
             return LOCALIZED_VALUES[(int) val + 1]; // To include precursor
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model
         /// MProphet reverse decoy algorithm requires these mass shifts for
         /// singly charged product ions
         /// </summary>
-        private static readonly int[] MPROPHET_REVERSED_MASS_SHIFTS = new[] {8, -8, 10, -10};
+        private static readonly int[] MPROPHET_REVERSED_MASS_SHIFTS = {8, -8, 10, -10};
 
         public static ICollection<int> MassShifts { get { return MASS_SHIFTS; } }
 

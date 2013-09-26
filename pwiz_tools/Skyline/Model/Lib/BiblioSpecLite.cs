@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Lib
             return Path.ChangeExtension(libraryPath, EXT_REDUNDANT);
         }
 
-        private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
+        private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
         public BiblioSpecLiteSpec(string name, string path)
             : base(name, path)

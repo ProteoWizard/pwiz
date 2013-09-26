@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Add new label types
             peptideSettingsUI = ShowPeptideSettings();
-            string[] heavyLabelNames = new[] { "heavy AA", "heavy All" };
+            string[] heavyLabelNames = { "heavy AA", "heavy All" };
             SetHeavyLabelNames(peptideSettingsUI, heavyLabelNames);
 
             // Make sure label type list edit worked

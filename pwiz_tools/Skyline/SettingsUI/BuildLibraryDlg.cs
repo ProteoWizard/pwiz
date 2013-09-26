@@ -36,25 +36,25 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class BuildLibraryDlg : FormEx
     {
-        public static readonly string[] RESULTS_EXTS = new[]
-            {
-                BiblioSpecLiteBuilder.EXT_DAT,
-                BiblioSpecLiteBuilder.EXT_PEP_XML,
-                BiblioSpecLiteBuilder.EXT_PEP_XML_ONE_DOT,
-                BiblioSpecLiteBuilder.EXI_MZID,
-                BiblioSpecLiteBuilder.EXT_XTAN_XML,
-                BiblioSpecLiteBuilder.EXT_PROTEOME_DISC,
-                BiblioSpecLiteBuilder.EXT_PILOT,
-                BiblioSpecLiteBuilder.EXT_PILOT_XML,
-                BiblioSpecLiteBuilder.EXT_PRIDE_XML,
-                BiblioSpecLiteBuilder.EXT_IDP_XML,
-                BiblioSpecLiteBuilder.EXT_SQT,
-                BiblioSpecLiteBuilder.EXT_SSL,
-                BiblioSpecLiteBuilder.EXT_PERCOLATOR,
-                BiblioSpecLiteBuilder.EXT_PERCOLATOR_XML,
-                BiblioSpecLiteBuilder.EXT_MAX_QUANT,
-                BiblioSpecLiteBuilder.EXT_WATERS_MSE,
-            };
+        public static readonly string[] RESULTS_EXTS =
+        {
+            BiblioSpecLiteBuilder.EXT_DAT,
+            BiblioSpecLiteBuilder.EXT_PEP_XML,
+            BiblioSpecLiteBuilder.EXT_PEP_XML_ONE_DOT,
+            BiblioSpecLiteBuilder.EXI_MZID,
+            BiblioSpecLiteBuilder.EXT_XTAN_XML,
+            BiblioSpecLiteBuilder.EXT_PROTEOME_DISC,
+            BiblioSpecLiteBuilder.EXT_PILOT,
+            BiblioSpecLiteBuilder.EXT_PILOT_XML,
+            BiblioSpecLiteBuilder.EXT_PRIDE_XML,
+            BiblioSpecLiteBuilder.EXT_IDP_XML,
+            BiblioSpecLiteBuilder.EXT_SQT,
+            BiblioSpecLiteBuilder.EXT_SSL,
+            BiblioSpecLiteBuilder.EXT_PERCOLATOR,
+            BiblioSpecLiteBuilder.EXT_PERCOLATOR_XML,
+            BiblioSpecLiteBuilder.EXT_MAX_QUANT,
+            BiblioSpecLiteBuilder.EXT_WATERS_MSE,
+        };
 
         private BiblioSpecLiteBuilder _builder;
 

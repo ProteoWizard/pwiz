@@ -20,7 +20,7 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public static class UniModData
     {
-        public static readonly UniModModificationData[] UNI_MOD_DATA = new[]
+        public static readonly UniModModificationData[] UNI_MOD_DATA =
         {
             new UniModModificationData
             {

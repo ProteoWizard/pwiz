@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Model.Results
         public OverlapLsSolver(int numIsos, int maxRow, int maxTransitions, bool useFirstGuess = false):
             base(numIsos,maxRow,maxTransitions, useFirstGuess)
         {
-            double[] smoothCoefs = new[] { 1.0, 1.0, 1.0, 1.0, 1.0 };
+            double[] smoothCoefs = { 1.0, 1.0, 1.0, 1.0, 1.0 };
             _conditioner = new WeightedConditioner(smoothCoefs);
             _decompCache = new Dictionary<Matrix<double>, DenseQR>();
         }

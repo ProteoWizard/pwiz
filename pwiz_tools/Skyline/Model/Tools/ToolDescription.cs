@@ -444,8 +444,7 @@ namespace pwiz.Skyline.Model.Tools
             }
 
 
-            object[] collectorArgs = new object[]
-                {parent, csvToParse, (oldArgs != null) ? CommandLine.ParseArgs(oldArgs) : null};
+            object[] collectorArgs = {parent, csvToParse, (oldArgs != null) ? CommandLine.ParseArgs(oldArgs) : null};
             object answer = null;
 
             try

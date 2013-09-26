@@ -247,7 +247,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Supported extensions
         /// <para>Changes to this array require corresponding changes to the FileDialogFiltersAll call below</para>
         /// </summary>
-        public static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat", ".py", ".pl"};
+        public static readonly string[] EXTENSIONS = {".exe", ".com", ".pif", ".cmd", ".bat", ".py", ".pl"};
 
         public static bool CheckExtension(string path)
         {

@@ -195,7 +195,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         private IList<ToolStoreItem> ToolStoreItems { get; set; }
-        private static readonly string[] IMAGE_EXTENSIONS = new [] {".jpg", ".png", ".bmp"};    // Not L10N
+        private static readonly string[] IMAGE_EXTENSIONS = {".jpg", ".png", ".bmp"};    // Not L10N
 
         public IList<ToolStoreItem> GetToolStoreItems()
         {
@@ -214,9 +214,6 @@ namespace pwiz.Skyline.ToolsUI
                     continue;
 
                 string fileName = Path.GetFileNameWithoutExtension(toolDir.Name);
-                if (fileName == null)
-                    continue;
-
                 string path = Path.Combine(toolDir.DirectoryName, fileName);
                 using (new TemporaryDirectory(path))
                 {

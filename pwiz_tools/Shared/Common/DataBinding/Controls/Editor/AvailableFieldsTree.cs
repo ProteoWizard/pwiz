@@ -35,16 +35,16 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private bool _showAdvancedFields;
         private PropertyPath _sublistId = PropertyPath.Root;
         private ICollection<PropertyPath> _checkedColumns = new PropertyPath[0];
-        private static readonly Image[] ImagelistImages = new Image[]
-            {
-                Resources.DataColumn,
-                Resources.TextColumn,
-                Resources.NumberColumn,
-                Resources.BoolColumn,
-                Resources.LinkColumn,
-                Resources.SublistColumn,
-                Resources.PivotColumn,
-            };
+        private static readonly Image[] ImagelistImages =
+        {
+            Resources.DataColumn,
+            Resources.TextColumn,
+            Resources.NumberColumn,
+            Resources.BoolColumn,
+            Resources.LinkColumn,
+            Resources.SublistColumn,
+            Resources.PivotColumn,
+        };
         private enum ImageIndexes
         {
             Unknown,

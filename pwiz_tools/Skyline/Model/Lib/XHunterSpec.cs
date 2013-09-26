@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Lib
         public static readonly PeptideRankId PEP_RANK_PROCESSED_INTENSITY =
             new PeptideRankId("Processed intensity", Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity); // Not L10N
 
-        private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_EXPECT, PEP_RANK_PROCESSED_INTENSITY };
+        private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_EXPECT, PEP_RANK_PROCESSED_INTENSITY };
 
         public XHunterLibSpec(string name, string path)
             : base(name, path)

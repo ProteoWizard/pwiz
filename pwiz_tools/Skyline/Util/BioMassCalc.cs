@@ -37,11 +37,11 @@ namespace pwiz.Skyline.Util
     }
     public static class MassTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Monoisotopic,
-                                                                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Average
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.ExportStrategyExtension_LOCALIZED_VALUES_Monoisotopic,
+            Resources.ExportStrategyExtension_LOCALIZED_VALUES_Average
+        };
         public static string GetLocalizedString(this MassType val)
         {
             return LOCALIZED_VALUES[(int)val];

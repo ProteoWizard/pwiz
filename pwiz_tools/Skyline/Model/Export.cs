@@ -41,12 +41,12 @@ namespace pwiz.Skyline.Model
     public enum ExportStrategy { Single, Protein, Buckets }
     public static class ExportStrategyExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Single,
-                                                                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Protein,
-                                                                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.ExportStrategyExtension_LOCALIZED_VALUES_Single,
+            Resources.ExportStrategyExtension_LOCALIZED_VALUES_Protein,
+            Resources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets
+        };
         public static string GetLocalizedString(this ExportStrategy val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -66,12 +66,12 @@ namespace pwiz.Skyline.Model
     public enum ExportMethodType { Standard, Scheduled, Triggered }
     public static class ExportMethodTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Standard,
-                                                                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled,
-                                                                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Standard,
+            Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled,
+            Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered
+        };
         public static string GetLocalizedString(this ExportMethodType val)
         {
             return LOCALIZED_VALUES[(int) val];
@@ -86,12 +86,12 @@ namespace pwiz.Skyline.Model
     public enum ExportSchedulingAlgorithm { Average, Trends, Single }
     public static class ExportSchedulingAlgorithmExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average,
-                                                                    Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends,
-                                                                    Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Single
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average,
+            Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends,
+            Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Single
+        };
         public static string GetLocalizedString(this ExportSchedulingAlgorithm val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -106,12 +106,12 @@ namespace pwiz.Skyline.Model
     public enum ExportFileType { List, Method, IsolationList }
     public static class ExportFileTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = new[]
-                                                                {
-                                                                    Resources.ExportFileTypeExtension_LOCALIZED_VALUES_List,
-                                                                    Resources.ExportFileTypeExtension_LOCALIZED_VALUES_Method,
-                                                                    Resources.ExportFileTypeExtension_LOCALIZED_VALUES_IsolationList
-                                                                };
+        private static readonly string[] LOCALIZED_VALUES =
+        {
+            Resources.ExportFileTypeExtension_LOCALIZED_VALUES_List,
+            Resources.ExportFileTypeExtension_LOCALIZED_VALUES_Method,
+            Resources.ExportFileTypeExtension_LOCALIZED_VALUES_IsolationList
+        };
         public static string GetLocalizedString(this ExportFileType val)
         {
             return LOCALIZED_VALUES[(int)val];

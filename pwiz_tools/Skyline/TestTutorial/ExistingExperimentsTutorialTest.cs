@@ -453,8 +453,7 @@ namespace pwiz.SkylineTestTutorial
 // ReSharper restore LocalizableElement
                 if (IsFullData)
                 {
-                    float[] concentrations =
-                        new[] { 0f, 60, 175, 513, 1500, 2760, 4980, 9060, 16500, 30000 };
+                    float[] concentrations = { 0f, 60, 175, 513, 1500, 2760, 4980, 9060, 16500, 30000 };
                     for (int i = 0; i < concentrations.Length; i++)
                     {
                         for (int j = i * 4; j < (i + 1) * 4; j++)

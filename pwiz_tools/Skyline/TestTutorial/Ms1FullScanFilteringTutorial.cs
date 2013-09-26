@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestTutorial
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
-            string[] searchFiles = new[] { GetTestPath("100803_0005b_MCF7_TiTip3.group.xml") }; // Not L10N
+            string[] searchFiles = { GetTestPath("100803_0005b_MCF7_TiTip3.group.xml") }; // Not L10N
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==

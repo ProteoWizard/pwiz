@@ -204,7 +204,7 @@ namespace pwiz.Skyline
                 string toolDirPath = tool.ToolDirPath;
                 if (!string.IsNullOrEmpty(toolDirPath) && Directory.Exists(toolDirPath))
                 {
-                    string foldername = Path.GetFileName(toolDirPath) ?? string.Empty;
+                    string foldername = Path.GetFileName(toolDirPath);
                     string newDir = Path.Combine(outerToolsFolderPath, foldername);
                     string tempNewDir = Path.Combine(tempOutterToolsFolderPath, foldername);
                     if (!Directory.Exists(tempNewDir))

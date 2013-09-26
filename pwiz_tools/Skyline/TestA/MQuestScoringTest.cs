@@ -35,8 +35,8 @@ namespace pwiz.SkylineTestA
     [TestClass]
     public class MQuestScoringTest : AbstractUnitTest
     {
-        private static readonly double[] DATA1 = new double[] {0, 1, 3, 5, 2, 0};
-        private static readonly double[] DATA2 = new double[] {1, 3, 5, 2, 0, 0};
+        private static readonly double[] DATA1 = {0, 1, 3, 5, 2, 0};
+        private static readonly double[] DATA2 = {1, 3, 5, 2, 0, 0};
 
         private static void AreCloseEnough(double v1, double v2)
         {

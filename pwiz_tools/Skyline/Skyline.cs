@@ -84,13 +84,9 @@ namespace pwiz.Skyline
         private int _savedVersion;
         private bool _closing;
         private readonly UndoManager _undoManager;
-        private readonly UndoRedoButtons _undoRedoButtons;
         private readonly LibraryManager _libraryManager;
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
-        private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ChromatogramManager _chromatogramManager;
-        private readonly IrtDbManager _irtDbManager;
-        private readonly RetentionTimeManager _retentionTimeManager;
         private AllChromatogramsGraph _allChromatogramsGraph;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
@@ -113,10 +109,10 @@ namespace pwiz.Skyline
             InitializeComponent();
 
             _undoManager = new UndoManager(this);
-            _undoRedoButtons = new UndoRedoButtons(_undoManager,
+            UndoRedoButtons undoRedoButtons = new UndoRedoButtons(_undoManager,
                 undoMenuItem, undoToolBarButton,
                 redoMenuItem, redoToolBarButton);
-            _undoRedoButtons.AttachEventHandlers();
+            undoRedoButtons.AttachEventHandlers();
 
             _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
 
@@ -130,18 +126,18 @@ namespace pwiz.Skyline
             _libraryManager.ProgressUpdateEvent += UpdateProgress;
             _libraryManager.Register(this);
             _libraryBuildNotificationHandler = new LibraryBuildNotificationHandler(this);
-            _backgroundProteomeManager = new BackgroundProteomeManager();
-            _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
-            _backgroundProteomeManager.Register(this);
+            BackgroundProteomeManager backgroundProteomeManager = new BackgroundProteomeManager();
+            backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
+            backgroundProteomeManager.Register(this);
             _chromatogramManager = new ChromatogramManager { SupportAllGraphs = SHOW_LOADING_CHROMATOGRAMS };
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
-            _irtDbManager = new IrtDbManager();
-            _irtDbManager.ProgressUpdateEvent += UpdateProgress;
-            _irtDbManager.Register(this);
-            _retentionTimeManager = new RetentionTimeManager();
-            _retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
-            _retentionTimeManager.Register(this);
+            IrtDbManager irtDbManager = new IrtDbManager();
+            irtDbManager.ProgressUpdateEvent += UpdateProgress;
+            irtDbManager.Register(this);
+            RetentionTimeManager retentionTimeManager = new RetentionTimeManager();
+            retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
+            retentionTimeManager.Register(this);
 
             // Begin ToolStore check for updates to currently installed tools
             ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()));

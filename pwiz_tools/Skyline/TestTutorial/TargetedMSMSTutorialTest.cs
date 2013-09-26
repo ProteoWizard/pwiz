@@ -509,15 +509,15 @@ namespace pwiz.SkylineTestTutorial
 
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg2 =>
             {
-                string[] filePaths = new[]
-                    {
-                        GetTestPath(@"TOF\1-BSA-50amol"  + ExtAgilentRaw),
-                        GetTestPath(@"TOF\2-BSA-100amol" + ExtAgilentRaw),
-                        GetTestPath(@"TOF\3-BSA-1fmol"   + ExtAgilentRaw),
-                        GetTestPath(@"TOF\4-BSA-10fmol"  + ExtAgilentRaw),
-                        GetTestPath(@"TOF\5-BSA-100fmol" + ExtAgilentRaw),
-                        GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)
-                    };
+                string[] filePaths =
+                {
+                    GetTestPath(@"TOF\1-BSA-50amol"  + ExtAgilentRaw),
+                    GetTestPath(@"TOF\2-BSA-100amol" + ExtAgilentRaw),
+                    GetTestPath(@"TOF\3-BSA-1fmol"   + ExtAgilentRaw),
+                    GetTestPath(@"TOF\4-BSA-10fmol"  + ExtAgilentRaw),
+                    GetTestPath(@"TOF\5-BSA-100fmol" + ExtAgilentRaw),
+                    GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)
+                };
                 importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths);
                 importResultsDlg2.OkDialog();
             });

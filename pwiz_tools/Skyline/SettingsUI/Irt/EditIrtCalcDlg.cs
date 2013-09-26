@@ -53,8 +53,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
-        private readonly string _databaseStartPath = string.Empty;
-        
         //Used to determine whether we are creating a new calculator, trying to overwrite
         //an old one, or editing an old one
         private readonly string _editingName = string.Empty;
@@ -78,9 +76,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (calc != null)
             {
                 textCalculatorName.Text = _editingName = calc.Name;
-                _databaseStartPath = calc.DatabasePath;
+                string databaseStartPath = calc.DatabasePath;
 
-                OpenDatabase(_databaseStartPath);
+                OpenDatabase(databaseStartPath);
             }
         }
 

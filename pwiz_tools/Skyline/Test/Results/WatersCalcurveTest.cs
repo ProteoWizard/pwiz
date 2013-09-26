@@ -88,13 +88,13 @@ namespace pwiz.SkylineTest.Results
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             string extRaw = ExtensionTestContext.ExtWatersRaw;
 
-            string[] replicatePaths = new[]
-                                          {
-                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
-                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
-                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
-                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
-                                          };
+            string[] replicatePaths =
+            {
+                testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
+                testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
+                testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
+                testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
+            };
             // Count peaks where higher concentration replicates show less area
             int outOfOrder = 0;
             foreach (string path in replicatePaths)
