@@ -425,6 +425,8 @@ ScanFilter::initialize()
 	scanRangeMax_.clear();
     compensationVoltage_ = 0.;
     multiplePrecursorMode_ = false;
+    constantNeutralLoss_ = false;
+    analyzer_scan_offset_ = 0;
 }
 
 
@@ -737,10 +739,23 @@ ScanFilter::parse(const string& filterLine)
 
             s >> w;
         }
+        else if (bal::starts_with(w, "CNL"))
+        {
+            msLevel_ = 2; 
+            constantNeutralLoss_ = true;
+            if (s.eof())
+                return;
+            s >> w;
+        }
 
-
+        // for CNL expect to find MS_analyzer_scan_offset
+        if (constantNeutralLoss_)
+        {
+            analyzer_scan_offset_ = lexical_cast<double>(w);
+            s >> w;
+        }
 	    // for MS level > 1, expect one or more <isolation m/z>@<activation><energy> tuples
-	    if (msLevel_ == -1 || msLevel_ > 1)
+	    else if (msLevel_ == -1 || msLevel_ > 1)
         {
             // if the marker is found, expect a <isolation m/z>@<activation><energy> tuple
 		    size_t markerPos = w.find('@');

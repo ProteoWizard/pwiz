@@ -229,6 +229,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
     try
     {
+        if (scanInfo->isConstantNeutralLoss())
+        {
+            result->set(MS_analyzer_scan_offset,scanInfo->analyzerScanOffset());
+        }
+
         // special handling for non-MS scans
         if (ie.controllerType != Controller_MS)
         {            

@@ -299,6 +299,9 @@ class PWIZ_API_DECL ScanInfo
     virtual bool FAIMSOn() const = 0;
     virtual double CompensationVoltage() const = 0;
 
+    virtual bool isConstantNeutralLoss() const = 0;
+    virtual double analyzerScanOffset() const = 0;
+
     virtual long statusLogSize() const = 0;
     virtual double statusLogRT() const = 0;
     virtual std::string statusLogLabel(long index) const = 0;

@@ -82,6 +82,8 @@ class PWIZ_API_DECL ScanFilter
 	ActivationType activationType_;
     double compensationVoltage_;
     bool multiplePrecursorMode_; // true for "MSX"
+    bool constantNeutralLoss_; // true for "CNL"
+    double analyzer_scan_offset_; // found with CNL
 
 	std::vector<double> precursorMZs_; // one entry per ms level for level >= 2
 	std::vector<double> precursorEnergies_; // relative units; one entry per ms level for level >= 2

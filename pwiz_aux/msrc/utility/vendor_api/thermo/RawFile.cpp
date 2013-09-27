@@ -802,6 +802,10 @@ class ScanInfoImpl : public ScanInfo
 	virtual bool FAIMSOn() const {return faimsOn_;}
 	virtual double CompensationVoltage() const {return compensationVoltage_;}
 
+    virtual bool isConstantNeutralLoss() const { return constantNeutralLoss_;};
+    virtual double analyzerScanOffset() const { return analyzerScanOffset_;};
+
+
     virtual long statusLogSize() const {initStatusLog(); return statusLogSize_;}
     virtual double statusLogRT() const {initStatusLog(); return statusLogRT_;}
     virtual std::string statusLogLabel(long index) const {initStatusLog(); return statusLogLabels_->item(index);}
@@ -845,6 +849,9 @@ class ScanInfoImpl : public ScanInfo
     double frequency_;
 	bool faimsOn_;
 	double compensationVoltage_;
+
+    bool constantNeutralLoss_;
+    double analyzerScanOffset_;
 
     mutable once_flag_proxy statusLogInitialized_;
     mutable long statusLogSize_;
@@ -1007,6 +1014,9 @@ void ScanInfoImpl::parseFilterString()
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
 	faimsOn_ = filterParser.faimsOn_ == TriBool_True;
 	compensationVoltage_ = filterParser.compensationVoltage_;
+    constantNeutralLoss_ = filterParser.constantNeutralLoss_;
+    analyzerScanOffset_ = filterParser.analyzer_scan_offset_;
+
 
     for (size_t i=0; i < filterParser.scanRangeMin_.size(); ++i)
         scanRanges_.push_back(make_pair(filterParser.scanRangeMin_[i], filterParser.scanRangeMax_[i]));
