@@ -18,7 +18,6 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdexcept>
 #include <vector>
 #include <iostream>
