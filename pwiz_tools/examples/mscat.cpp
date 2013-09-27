@@ -31,8 +31,8 @@ using namespace pwiz::msdata;
 
 /*
 
-This example program iterates through the spectra in a data file,
-writing out the m/z-intensity pairs in a text column format.
+This example program iterates through the spectra and chromatograms in a data file,
+writing out the m/z-intensity and time-intensity pairs in a text column format.
 
 # scanNumber     msLevel         m/z   intensity
            1         ms1    204.7591        0.00
@@ -44,6 +44,16 @@ writing out the m/z-intensity pairs in a text column format.
            1         ms1    204.7606      582.91
            1         ms1    204.7609        0.00
            1         ms1    204.7611        0.00
+
+#  index                          id          time     intensity
+       0                         TIC       30.9310         37.21
+       0                         TIC       30.9392         95.23
+       0                         TIC       30.9477         37.20
+       0                         TIC       30.9558         99.50
+       1     SRM SIC 484.944,500.319       30.9310         34.29
+       1     SRM SIC 484.944,500.319       30.9477         33.29
+       1     SRM SIC 484.944,500.319       30.9643         29.88
+       1     SRM SIC 484.944,500.319       30.9809         24.00
 
 [...]
 
@@ -61,43 +71,80 @@ void cat(const char* filename)
 
     if (!msd.run.spectrumListPtr.get() || !msd.run.spectrumListPtr->size())
     {
-        std::string errmsg("[mscat] No spectra found.");
-        if (msd.run.chromatogramListPtr.get() && msd.run.chromatogramListPtr->size())
-            errmsg+=" Input file contains only chromatogram data.";
-        throw runtime_error(errmsg);
+        if (!msd.run.chromatogramListPtr.get() || !msd.run.chromatogramListPtr->size())
+            throw runtime_error("[mscat] No spectra or chromatograms found.");
     }
-
-    SpectrumList& spectrumList = *msd.run.spectrumListPtr;
-
-    // write header
-
-    const size_t columnWidth = 14;
-
-    cout << "#"
-         << setw(columnWidth) << "scanNumber"
-         << setw(columnWidth) << "msLevel"
-         << setw(columnWidth) << "m/z"
-         << setw(columnWidth) << "intensity" << endl;
-
-    // iterate through the spectra in the SpectrumList
-    for (size_t i=0, size=spectrumList.size(); i!=size; i++)
+    else
     {
-        // retrieve the spectrum, with binary data
-        const bool getBinaryData = true;
-        SpectrumPtr spectrum = spectrumList.spectrum(i, getBinaryData);
 
-        // fill in MZIntensityPair vector for convenient access to binary data
-        vector<MZIntensityPair> pairs;
-        spectrum->getMZIntensityPairs(pairs);
+        SpectrumList& spectrumList = *msd.run.spectrumListPtr;
 
-        // iterate through the m/z-intensity pairs
-        for (vector<MZIntensityPair>::const_iterator it=pairs.begin(), end=pairs.end(); it!=end; ++it)
+        // write header
+
+        const size_t columnWidth = 14;
+
+        cout << "#"
+             << setw(columnWidth) << "scanNumber"
+             << setw(columnWidth) << "msLevel"
+             << setw(columnWidth) << "m/z"
+             << setw(columnWidth) << "intensity" << endl;
+
+        // iterate through the spectra in the SpectrumList
+        for (size_t i=0, size=spectrumList.size(); i!=size; i++)
         {
-            cout << " "
-                 << setw(columnWidth) << id::value(spectrum->id, "scan")
-                 << setw(columnWidth) << "ms" + spectrum->cvParam(MS_ms_level).value
-                 << setw(columnWidth) << fixed << setprecision(4) << it->mz
-                 << setw(columnWidth) << fixed << setprecision(2) << it->intensity << endl;
+            // retrieve the spectrum, with binary data
+            const bool getBinaryData = true;
+            SpectrumPtr spectrum = spectrumList.spectrum(i, getBinaryData);
+
+            // fill in MZIntensityPair vector for convenient access to binary data
+            vector<MZIntensityPair> pairs;
+            spectrum->getMZIntensityPairs(pairs);
+
+            // iterate through the m/z-intensity pairs
+            for (vector<MZIntensityPair>::const_iterator it=pairs.begin(), end=pairs.end(); it!=end; ++it)
+            {
+                cout << " "
+                     << setw(columnWidth) << id::value(spectrum->id, "scan")
+                     << setw(columnWidth) << "ms" + spectrum->cvParam(MS_ms_level).value
+                     << setw(columnWidth) << fixed << setprecision(4) << it->mz
+                     << setw(columnWidth) << fixed << setprecision(2) << it->intensity << endl;
+            }
+        }
+    }
+    if (msd.run.chromatogramListPtr.get() && msd.run.chromatogramListPtr->size())
+    {
+        ChromatogramList& chromatogramList = *msd.run.chromatogramListPtr;
+
+        // write header
+
+        const size_t columnWidth = 14;
+
+        cout << "#"
+             << setw(columnWidth/2) << "index"
+             << setw(columnWidth*2) << "id"
+             << setw(columnWidth) << "time"
+             << setw(columnWidth) << "intensity" << endl;
+
+        // iterate through the spectra in the chromatogramList
+        for (size_t i=0, size=chromatogramList.size(); i!=size; i++)
+        {
+            // retrieve the chromatogram, with binary data
+            const bool getBinaryData = true;
+            ChromatogramPtr chromatogram = chromatogramList.chromatogram(i, getBinaryData);
+
+            // fill in TimeIntensityPair vector for convenient access to binary data
+            vector<TimeIntensityPair> pairs;
+            chromatogram->getTimeIntensityPairs(pairs);
+
+            // iterate through the m/z-intensity pairs
+            for (vector<TimeIntensityPair>::const_iterator it=pairs.begin(), end=pairs.end(); it!=end; ++it)
+            {
+                cout << " "
+                    << setw(columnWidth/2) << chromatogram->index
+                     << setw(columnWidth*2) << chromatogram->id
+                     << setw(columnWidth) << fixed << setprecision(4) << it->time
+                     << setw(columnWidth) << fixed << setprecision(2) << it->intensity << endl;
+            }
         }
     }
 }
@@ -110,7 +157,7 @@ int main(int argc, char* argv[])
         if (argc != 2)
         {
             cout << "Usage: mscat filename\n"
-                 << "Write spectrum data as text to console.\n\n"
+                 << "Write spectrum and chromatogram data as text to console.\n\n"
                  << "http://proteowizard.sourceforge.net\n"
                  << "support@proteowizard.org\n";
             return 1;
