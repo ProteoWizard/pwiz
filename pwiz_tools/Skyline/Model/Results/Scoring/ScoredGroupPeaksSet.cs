@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             var maxScores = new double[_scoredGroupPeaksList.Count];
             for (int i = 0; i < maxScores.Length; i++)
-                maxScores[i] = _scoredGroupPeaksList[i].MaxPeak.Score;
+                maxScores[i] = _scoredGroupPeaksList[i].MaxPeak == null ? double.NaN : _scoredGroupPeaksList[i].MaxPeak.Score;
             return maxScores;
         }
 

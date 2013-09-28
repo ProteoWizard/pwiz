@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 var groupPeakData = TransitionGroupPeakData.FirstOrDefault() as SummaryTransitionGroupPeakData;
                 if (groupPeakData != null)
                     return groupPeakData.GetScore(calc.GetType());
-                return 0;
+                return float.NaN;
             }
         }
 

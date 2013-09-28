@@ -54,6 +54,8 @@ namespace pwiz.Skyline.SettingsUI
         private int _selectedIndex = -1;
         private SortableBindingList<PeakCalculatorWeight> PeakCalculatorWeights { get { return _gridViewDriver.Items; } }
         
+        private enum ColumnNames { enabled, calculator_name, weight, percent_contribution }
+
         /// <summary>
         /// Create a new scoring model, or edit an existing model.
         /// </summary>
@@ -132,13 +134,23 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Get the number format used for displaying weights in calculator grid.
         /// </summary>
-        public string PeakCalculatorWeightFormat { get { return gridPeakCalculators.Columns[1].DefaultCellStyle.Format; } }
+        public string PeakCalculatorWeightFormat { get { return gridPeakCalculators.Columns[(int) ColumnNames.weight].DefaultCellStyle.Format; } }
+
+        public string PeakCalculatorPercentContributionFormat 
+        { 
+            get
+            {
+                return gridPeakCalculators.Columns[(int) ColumnNames.percent_contribution].DefaultCellStyle.Format;
+            } 
+        }
 
         /// <summary>
-        /// Train mProphet scoring model.
+        /// Train mProphet scoring model. If suppressWeights is true, disable the weights unchecked by the user
         /// </summary>
-        public void TrainModel()
+        public void TrainModel(bool suppressWeights = false)
         {
+            var weightSuppressors = suppressWeights ? _gridViewDriver.Items.Select(item => !item.Enabled).ToArray() :
+                                                      _gridViewDriver.Items.Select(item => false).ToArray();
             // Get scores for target and decoy groups.
             List<IList<double[]>> targetTransitionGroups;
             List<IList<double[]>> decoyTransitionGroups;
@@ -147,22 +159,35 @@ namespace pwiz.Skyline.SettingsUI
             if (!decoyCheckBox.Checked)
                 decoyTransitionGroups = new List<IList<double[]>>();
 
+            // Set intial weights based on target decoy generator, but set weights specified in suppressWeigths to NaN
+            // and re-add weights that were previously suppressed
+            var activeWeights = _targetDecoyGenerator.Weights;
+            for (int i = 0; i < activeWeights.Length; ++i)
+            {
+                activeWeights[i] = !_targetDecoyGenerator.EligibleScores[i] || weightSuppressors[i]
+                                       ? double.NaN
+                                       : double.IsNaN(activeWeights[i])
+                                             ? 0.0
+                                             : activeWeights[i];
+            }
+
             // Create new scoring model using the active calculators.
             switch (comboModel.SelectedIndex)
             {
                 case MPROPHET_MODEL_INDEX:
-                    _peakScoringModel = new MProphetPeakScoringModel(_peakScoringModel.Name, _targetDecoyGenerator.Weights, _peakScoringModel.PeakFeatureCalculators);  
+                    _peakScoringModel = new MProphetPeakScoringModel(_peakScoringModel.Name, activeWeights, _peakScoringModel.PeakFeatureCalculators);  
                     break;
             }
 
             // Train the model.
-            _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, _targetDecoyGenerator.Weights, secondBestCheckBox.Checked);
+            _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, activeWeights, secondBestCheckBox.Checked);
 
             // Copy weights to grid.
             for (int i = 0; i < _gridViewDriver.Items.Count; i++)
             {
                 double weight = _peakScoringModel.Weights[i];
                 _gridViewDriver.Items[i].Weight = double.IsNaN(weight) ? null : (double?) weight;
+                _gridViewDriver.Items[i].PercentContribution = double.IsNaN(weight) ? null : (double?)GetPercentContribution(i);
                 _targetDecoyGenerator.Weights[i] = weight;
             }
             gridPeakCalculators.Invalidate();
@@ -522,21 +547,17 @@ namespace pwiz.Skyline.SettingsUI
             out double max,
             out bool hasUnknownScores)
         {
-            double[] scoringWeights;
-            double[] calculatorWeights;
-            if (selectedCalculator == -1)
-            {
-                scoringWeights = calculatorWeights = _targetDecoyGenerator.Weights;
-            }
-            else
-            {
-                scoringWeights = CreateWeightsSelect(0);
-                calculatorWeights = CreateWeightsSelect(selectedCalculator);
-            }
+            double[] calculatorWeights = selectedCalculator == -1 ? _targetDecoyGenerator.Weights : CreateWeightsSelect(selectedCalculator);
+            // Almost always set the scoring weights equal to the calculatorWeights, but if only one calculator is being used and it is NaN,
+            // use the full set of composite weights for evaluation, so that "unknown" scores get populated properly in the graph
+            double[] scoringWeights = (selectedCalculator != -1 && double.IsNaN(_targetDecoyGenerator.Weights[selectedCalculator]))
+                                      ? _targetDecoyGenerator.Weights
+                                      : calculatorWeights;
 
             List<double> targetScores;
             List<double> decoyScores;
             List<double> secondBestScores;
+            // Evaluate each score on the best peak according to that score (either individual calculator or composite)
             _targetDecoyGenerator.GetScores(scoringWeights, calculatorWeights, out targetScores, out decoyScores, out secondBestScores);
             
             // Find score range for targets and decoys
@@ -629,13 +650,24 @@ namespace pwiz.Skyline.SettingsUI
                     ForeColor = Color.FromArgb(100, 100, 100),
                     Font = new Font(gridPeakCalculators.Font, FontStyle.Italic)
                 };
+
+            // The score used for bootstrap cannot be disabled
+            if (gridPeakCalculators.RowCount > 0)
+            {
+                var bootstrapCell = gridPeakCalculators.Rows[0].Cells[(int) ColumnNames.enabled];
+                bootstrapCell.ReadOnly = true;
+                bootstrapCell.Style = inactiveStyle;
+            }
             for (int row = 0; row < gridPeakCalculators.RowCount; row++)
             {
                 // Show row in disabled style if it contains a weight value of NaN.
                 if (double.IsNaN(_targetDecoyGenerator.Weights[row]))
                 {
-                    for (int i = 0; i < 2; i++)
+                    for (int i = 0; i < 4; i++)
                     {
+                        // Don't blank out user-disabled calculators
+                        if (_targetDecoyGenerator.EligibleScores[row])
+                            continue;
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = inactiveStyle;
                         cell.ReadOnly = true;
@@ -659,8 +691,48 @@ namespace pwiz.Skyline.SettingsUI
                 double? weight = (PeakScoringModel.Weights == null || double.IsNaN(_peakScoringModel.Weights[i]))
                     ? (double?)null
                     : _peakScoringModel.Weights[i];
-                PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight));
+
+                double? normalWeight = weight.HasValue ? GetPercentContribution(i) : (double?)null;
+                bool enabled = !double.IsNaN( _targetDecoyGenerator.Weights[i]);
+                PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight, normalWeight, enabled));
             }
+        }
+
+        private double GetPercentContribution(int index)
+        {
+            if (double.IsNaN(_peakScoringModel.Weights[index]))
+                return 0;
+            List<double> targetScores;
+            List<double> activeDecoyScores;
+            List<double> targetScoresAll;
+            List<double> activeDecoyScoresAll;
+            var scoringWeights = _peakScoringModel.Weights.ToArray();
+            var calculatorWeights = CreateWeightsSelect(index);
+            GetActiveScoredValues(scoringWeights, calculatorWeights, out targetScores, out activeDecoyScores);
+            GetActiveScoredValues(scoringWeights, scoringWeights, out targetScoresAll, out activeDecoyScoresAll);
+            double meanDiffAll = targetScoresAll.Average() - activeDecoyScoresAll.Average();
+            double meanDiff = targetScores.Average() - activeDecoyScores.Average();
+            double meanWeightedDiff = meanDiff * _peakScoringModel.Weights[index];
+            return meanWeightedDiff / meanDiffAll;
+        }
+
+        private void GetActiveScoredValues(double[] scoringWeights, 
+                                                    double[] calculatorWeights,
+                                                    out List<double> targetScores,
+                                                    out List<double> activeDecoyScores)
+        {
+            List<double> decoyScores;
+            List<double> secondBestScores;
+            activeDecoyScores = new List<double>();
+            _targetDecoyGenerator.GetScores(scoringWeights,
+                                calculatorWeights,
+                                out targetScores,
+                                out decoyScores,
+                                out secondBestScores);
+            if (_peakScoringModel.UsesDecoys)
+                activeDecoyScores.AddRange(decoyScores);
+            if (_peakScoringModel.UsesSecondBest)
+                activeDecoyScores.AddRange(secondBestScores);
         }
 
         private void gridPeakCalculators_SelectionChanged(object sender, EventArgs e)
@@ -668,7 +740,7 @@ namespace pwiz.Skyline.SettingsUI
             if (gridPeakCalculators.Rows.Count == 0)
                 return;
             var row = gridPeakCalculators.SelectedCells.Count > 0 ? gridPeakCalculators.SelectedCells[0].RowIndex : 0;
-            lblSelectedGraph.Text = gridPeakCalculators.Rows[row].Cells[0].Value.ToString();
+            lblSelectedGraph.Text = gridPeakCalculators.Rows[row].Cells[(int) ColumnNames.calculator_name].Value.ToString();
             UpdateCalculatorGraph(row);
         }
 
@@ -693,8 +765,7 @@ namespace pwiz.Skyline.SettingsUI
                 ? (IPeakScoringModel) new MProphetPeakScoringModel(ModelName)
                 : new LegacyScoringModel(ModelName, double.NaN, double.NaN, decoyCheckBox.Checked, secondBestCheckBox.Checked);
 
-            TrainModel();
-
+            TrainModel(true);
             SetScoringModel(_peakScoringModel);   // update graphs and grid
 
             // We replace the original model when we retrain the mProphet model, because the list of
@@ -767,6 +838,12 @@ namespace pwiz.Skyline.SettingsUI
             get { return _gridViewDriver; }
         }
 
+
+        public void SetChecked(int row, bool value)
+        {
+            _gridViewDriver.Items[row].Enabled = value;
+        }
+
         #endregion
 
         /// <summary>
@@ -774,6 +851,8 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private class TargetDecoyGenerator
         {
+            public bool[] EligibleScores { get; private set; }
+
             private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
 
             public double[] Weights { get; private set; }
@@ -787,10 +866,13 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Eliminate calculators/features that have no data for at least one of the transitions.
                 Weights = new double[calculators.Length];
+                EligibleScores = new bool[calculators.Length];
                 for (int i = 0; i < Weights.Length; i++)
                 {
                     // Disable calculators that have only a single score value or any unknown scores.
-                    Weights[i] = GetInitialWeight(i, scoringModel.Weights != null ? scoringModel.Weights[i] : 0.0);
+                    double modelWeight = scoringModel.Weights != null ? scoringModel.Weights[i] : 0.0;
+                    EligibleScores[i] = IsValidCalculator(i);
+                    Weights[i] = EligibleScores[i] ? modelWeight : double.NaN;
                 }
             }
 
@@ -885,10 +967,9 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             /// <summary>
-            /// Calculate scores for targets and decoys.  A transition is selected from each transition group using the
-            /// scoring weights, and then its score is calculated using the calculator weights applied to each feature.
+            ///  Is the specified calculator valid for this dataset (has no unknown values and not all the same value)?
             /// </summary>
-            private double GetInitialWeight(int calculatorIndex, double weightFromModel)
+            private bool IsValidCalculator(int calculatorIndex)
             {
                 double maxValue = double.MinValue;
                 double minValue = double.MaxValue;
@@ -900,13 +981,12 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         double value = peakGroupFeatures.Features[calculatorIndex];
                         if (IsUnknown(value))
-                            return double.NaN;
+                            return false;
                         maxValue = Math.Max(value, maxValue);
                         minValue = Math.Min(value, minValue);
                     }
                 }
-
-                return (maxValue > minValue) ? weightFromModel : double.NaN;
+                return maxValue > minValue;
             }
 
             /// <summary>
@@ -933,7 +1013,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var calculators = PeakFeatureCalculator.Calculators.ToArray();
                 for (int i = 0; i < calculators.Length; i++) 
-                    Items.Add(new PeakCalculatorWeight(calculators[i].Name, null));
+                    Items.Add(new PeakCalculatorWeight(calculators[i].Name, null, null, true));
             }
 
             protected override void DoPaste()
@@ -978,11 +1058,15 @@ namespace pwiz.Skyline.SettingsUI
     {
         public string Name { get; private set; }
         public double? Weight { get; set; }
+        public double? PercentContribution { get; set; }
+        public bool Enabled { get; set; }
 
-        public PeakCalculatorWeight(string name, double? weight)
+        public PeakCalculatorWeight(string name, double? weight, double? percentContribution, bool enabled)
         {
             Name = name;
             Weight = weight;
+            PercentContribution = percentContribution;
+            Enabled = enabled;
         }
     }
 }

@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var lightTransitionPeakData = MQuestHelpers.GetAnalyteGroups(summaryPeakData)
                                                        .SelectMany(pd => pd.TranstionPeakData).ToArray();
             if (lightTransitionPeakData.Length == 0)
-                return 0;
+                return float.NaN;
 
             MQuestAnalyteCrossCorrelations crossCorrMatrix;
             if (!context.TryGetInfo(out crossCorrMatrix))
@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths);
             if (double.IsNaN(result))
-                return 0;
+                return float.NaN;
             return (float) result;
         }
 
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
             if (double.IsNaN(result))
-                return 0;
+                return float.NaN;
             return (float) result;
         }
 
@@ -442,7 +442,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths);
             if (double.IsNaN(result))
-                return 0;
+                return float.NaN;
             return (float) result;
         }
 
@@ -478,7 +478,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
             if (double.IsNaN(result))
-                return 0;
+                return float.NaN;
             return (float) result;
         }
 

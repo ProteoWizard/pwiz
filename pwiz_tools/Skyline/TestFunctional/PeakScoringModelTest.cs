@@ -120,28 +120,57 @@ namespace pwiz.SkylineTestFunctional
 
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
-
+                var format = editDlg.PeakCalculatorWeightFormat;
+                var percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
+                var cellValuesOriginal = new[]
+                    {
+                        new[] {"True", calculators[0].Name, (0.0428).ToString(format), (0.1710).ToString(percentFormat)},
+                        new[] {"False", calculators[1].Name, string.Empty, string.Empty},
+                        new[] {"True", calculators[2].Name, (0.2340).ToString(format), (0.0408).ToString(percentFormat)},
+                        new[] {"True", calculators[3].Name, (0.3759).ToString(format), (0.1145).ToString(percentFormat)},
+                        new[] {"True", calculators[4].Name, (0.1320).ToString(format), (0.0795).ToString(percentFormat)},
+                        new[] {"True", calculators[5].Name, (-0.0256).ToString(format), (0.1850).ToString(percentFormat)},
+                        new[] {"True", calculators[6].Name, (0.8841).ToString(format), (0.5022).ToString(percentFormat)},
+                        new[] {"True", calculators[7].Name, (0.0234).ToString(format), (-0.2189).ToString(percentFormat)},
+                        new[] {"True", calculators[8].Name, (0.0397).ToString(format), (0.0791).ToString(percentFormat)},
+                        new[] {"True", calculators[9].Name, (0.0169).ToString(format), (0.0467).ToString(percentFormat)},
+                        new[] {"False", calculators[10].Name, string.Empty, string.Empty},
+                    };
+                var cellValuesNew = new[]
+                    {
+                        new[] {"True", calculators[0].Name, (0.0517).ToString(format), (0.2111).ToString(percentFormat)},
+                        new[] {"False", calculators[1].Name, string.Empty, string.Empty},
+                        new[] {"False", calculators[2].Name, string.Empty, string.Empty},
+                        new[] {"True", calculators[3].Name, (0.4644).ToString(format), (0.1395).ToString(percentFormat)},
+                        new[] {"True", calculators[4].Name, (0.2601).ToString(format), (0.1416).ToString(percentFormat)},
+                        new[] {"True", calculators[5].Name, (-0.0487).ToString(format), (0.2518).ToString(percentFormat)},
+                        new[] {"True", calculators[6].Name, (0.8425).ToString(format), (0.4515).ToString(percentFormat)},
+                        new[] {"True", calculators[7].Name, (0.0344).ToString(format), (-0.2679).ToString(percentFormat)},
+                        new[] {"False", calculators[8].Name, string.Empty, string.Empty},
+                        new[] {"True", calculators[9].Name, (0.0273).ToString(format), (0.0723).ToString(percentFormat)},
+                        new[] {"False", calculators[10].Name, string.Empty, string.Empty},
+                    };
                 // Verify weights, change name.
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
                     Assert.AreEqual(1.376, editDlg.Mean);
                     Assert.AreEqual(0.088, editDlg.Stdev);
-                    var format = editDlg.PeakCalculatorWeightFormat;
-                    VerifyCellValues(editDlg, new[]
-                        {
-                            new[] {calculators[0].Name, (0.0428).ToString(format)},
-                            new[] {calculators[1].Name, string.Empty},
-                            new[] {calculators[2].Name, (0.2340).ToString(format)},
-                            new[] {calculators[3].Name, (0.3759).ToString(format)},
-                            new[] {calculators[4].Name, (0.1320).ToString(format)},
-                            new[] {calculators[5].Name, (-0.0256).ToString(format)},
-                            new[] {calculators[6].Name, (0.8841).ToString(format)},
-                            new[] {calculators[7].Name, (0.0234).ToString(format)},
-                            new[] {calculators[8].Name, (0.0397).ToString(format)},
-                            new[] {calculators[9].Name, (0.0169).ToString(format)},
-                            new[] {calculators[10].Name, string.Empty},
-                        });
+                    VerifyCellValues(editDlg, cellValuesOriginal);
+                    // Manually uncheck two of the scores
+                    editDlg.SetChecked(2, false);
+                    editDlg.SetChecked(8, false);
+                    editDlg.TrainModel(true);
+                    Assert.AreEqual(1.275, editDlg.Mean);
+                    Assert.AreEqual(0.093, editDlg.Stdev);
+                    VerifyCellValues(editDlg, cellValuesNew);
+                    // Re-check the scores, show that model goes back to normal
+                    editDlg.SetChecked(2, true);
+                    editDlg.SetChecked(8, true);
+                    editDlg.TrainModel(true);
+                    Assert.AreEqual(1.376, editDlg.Mean);
+                    Assert.AreEqual(0.088, editDlg.Stdev);
+                    VerifyCellValues(editDlg, cellValuesOriginal);
                     editDlg.PeakScoringModelName = "test2"; // Not L10N
                     editDlg.OkDialog();
                 });
@@ -173,11 +202,12 @@ namespace pwiz.SkylineTestFunctional
         {
             // Verify expected number of rows.
             Assert.AreEqual(editDlg.PeakCalculatorsGrid.RowCount, expectedValues.Length);
-
+            // Verify normalized weights add to 1
+            double sumNormWeights = 0;
             for (int row = 0; row < expectedValues.Length; row++)
             {
                 // Verify expected number of columns.
-                Assert.AreEqual(2, expectedValues[row].Length);
+                Assert.AreEqual(4, expectedValues[row].Length);
 
                 for (int col = 0; col < expectedValues[row].Length; col++)
                 {
@@ -187,11 +217,17 @@ namespace pwiz.SkylineTestFunctional
 
                     // Verify cell value.
                     var actualValue = editDlg.PeakCalculatorsGrid.GetCellValue(col, row);
-                    if (col == 1 && !string.IsNullOrEmpty(actualValue))
+                    if (col == 2  && !string.IsNullOrEmpty(actualValue))
                         actualValue = double.Parse(actualValue).ToString(editDlg.PeakCalculatorWeightFormat);
+                    if (col == 3 && !string.IsNullOrEmpty(actualValue))
+                    {
+                        sumNormWeights += double.Parse(actualValue);
+                        actualValue = double.Parse(actualValue).ToString(editDlg.PeakCalculatorPercentContributionFormat);
+                    }
                     Assert.AreEqual(expectedValue, actualValue);
                 }
             }
+            Assert.AreEqual(sumNormWeights, 1.0, 0.005);
         }
     }
 }
