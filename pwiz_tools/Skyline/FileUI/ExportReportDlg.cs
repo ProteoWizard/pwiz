@@ -318,7 +318,7 @@ namespace pwiz.Skyline.FileUI
                     string columnName = match.Groups[1].ToString();
                     if (AnnotationDef.IsAnnotationProperty(columnName))
                         columnName = AnnotationDef.GetColumnDisplayName(columnName);
-                    else if (RatioPropertyAccessor.IsRatioProperty(columnName))
+                    else if (RatioPropertyAccessor.IsRatioOrRdotpProperty(columnName))
                         columnName = RatioPropertyAccessor.GetDisplayName(columnName);
                     return string.Format(Resources.ExportReportDlg_GetExceptionDisplayMessage_The_field__0__does_not_exist_in_this_document, columnName);
                 }

@@ -1005,7 +1005,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (chromInfo == null)
                     return null;
-                return (_ratioIndex == -1 ? chromInfo.Area : chromInfo.Ratios[_ratioIndex]);
+                if (_ratioIndex == -1)
+                {
+                    return chromInfo.Area;
+                }
+                var ratioValue = chromInfo.Ratios[_ratioIndex];
+                return ratioValue == null ? (float?) null : ratioValue.Ratio;
             }
 
             private float? GetValue(TransitionChromInfo chromInfo)

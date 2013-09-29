@@ -1685,19 +1685,8 @@ Are you sure you want to continue?</value>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
   </data>
-  <data name="RatioPropertyAccessor_GetPeptideResultsHeader_Ratio__0__To__1_" xml:space="preserve">
+  <data name="RatioPropertyAccessor_PeptideProperty_Ratio__0__To__1_" xml:space="preserve">
     <value>Ratio {0} To {1}</value>
-  </data>
-  <data name="RatioPropertyAccessor_GetPeptideKey_Ratio_0_To_1_" xml:space="preserve">
-    <value>Ratio{0}To{1}</value>
-  </data>
-  <data name="RatioPropertyAccessor_GetPrecursorKey_Total" xml:space="preserve">
-    <value>Total</value>
-    <comment>Total Transition value</comment>
-  </data>
-  <data name="RatioPropertyAccessor_GetTransitionKey_AreaRatioTo" xml:space="preserve">
-    <value>AreaRatioTo</value>
-    <comment>Area Ratio to an isotope label</comment>
   </data>
   <data name="IrtDb_GetIrtDb_Loading_iRT_database__0_" xml:space="preserve">
     <value>Loading iRT database {0}</value>
@@ -4105,7 +4094,7 @@ Are you sure you want to continue?</value>
   <data name="GridViewDriver_GetValue_on_line__0__" xml:space="preserve">
     <value>on line {0}</value>
   </data>
-  <data name="RatioPropertyAccessor_GetPrecursorResultsHeader_Total" xml:space="preserve">
+  <data name="RatioPropertyAccessor_PrecursorProperty_Total" xml:space="preserve">
     <value>Total</value>
   </data>
   <data name="RatioPropertyAccessor_GetTransitionResultsHeader_Area_Ratio_To" xml:space="preserve">
@@ -5836,6 +5825,12 @@ Are you sure you want to continue?</value>
   <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
     <value>Installing Pip</value>
   </data>
+  <data name="ResultsGrid_ResultsGrid_Ratio_To_Standard_Dot_Product" xml:space="preserve">
+    <value>Ratio To Standard Dot Product</value>
+  </data>
+  <data name="ResultsGrid_ResultsGrid_Ratio_Dot_Product" xml:space="preserve">
+    <value>Ratio Dot Product</value>
+  </data>
   <data name="TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_" xml:space="preserve">
     <value>The label {0} is not a valid start fragment filter.</value>
   </data>
@@ -5952,6 +5947,12 @@ Are you sure you want to continue?</value>
   </data>
     <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
     <value>Reinstall</value>
+  </data>
+  <data name="RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_" xml:space="preserve">
+    <value>Dot Product {0} To {1}</value>
+  </data>
+  <data name="RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_" xml:space="preserve">
+    <value>Dot Product To {0}</value>
   </data>
   <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks" xml:space="preserve">
     <value>Second Best Peaks</value>

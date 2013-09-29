@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -173,9 +174,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             float? libraryProduct = nodeGroup.GetLibraryDotProduct(indexResult);
             float? isotopeProduct = nodeGroup.GetIsotopeDotProduct(indexResult);
-            float? stdev;
-            float? ratio = nodeGroup.GetPeakAreaRatio(indexResult, indexRatio, out stdev);
-            if (!ratio.HasValue && !isotopeProduct.HasValue && !libraryProduct.HasValue)
+            RatioValue ratio = nodeGroup.GetPeakAreaRatio(indexResult, indexRatio);
+            if (null == ratio && !isotopeProduct.HasValue && !libraryProduct.HasValue)
                 return string.Empty;
             StringBuilder sb = new StringBuilder(" ("); // Not L10N
             int len = sb.Length;
@@ -187,19 +187,11 @@ namespace pwiz.Skyline.Controls.SeqNode
                     sb.Append(", "); // Not L10N
                 sb.Append(string.Format("dotp {0:F02}", libraryProduct.Value)); // Not L10N
             }
-            if (ratio.HasValue)
+            if (ratio != null)
             {
                 if (sb.Length > len)
                     sb.Append(", "); // Not L10N
-                double ratioRounded = MathEx.RoundAboveZero(ratio.Value, 2, 4);
-                sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__, ratioRounded));
-
-//                if (stdev.HasValue)
-//                {
-//                    double stdevRounded = RoundAboveZero(stdev.Value, 2, 4);
-//                    if (stdevRounded > 0)
-//                        sb.Append(string.Format(" ± {0}", stdevRounded));
-//                }
+                sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__, ratio.FormatForDisplay()));
             }
             sb.Append(")"); // Not L10N
             return sb.ToString();

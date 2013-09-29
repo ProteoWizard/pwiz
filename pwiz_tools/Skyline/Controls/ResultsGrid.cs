@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using Array = System.Array;
 
 namespace pwiz.Skyline.Controls
 {
@@ -137,7 +138,6 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
-
             // Precursor
             Columns.Add(PrecursorNoteColumn
                 = new DataGridViewTextBoxColumn
@@ -209,6 +209,14 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
+            Columns.Add(RatioDotProductColumn
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "RatioDotProduct",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Ratio_Dot_Product,
+                        ReadOnly = true,
+                        DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                    });
             Columns.Add(MaxHeightColumn
                 = new DataGridViewTextBoxColumn
                 {
@@ -810,6 +818,7 @@ namespace pwiz.Skyline.Controls
                                TotalAreaColumn,
                                TotalBackgroundColumn,
                                TotalAreaRatioColumn,
+                               RatioDotProductColumn,
                                MaxHeightColumn,
                                AverageMassErrorColumn,
                                CountTruncatedColumn,
@@ -1150,31 +1159,31 @@ namespace pwiz.Skyline.Controls
                         if (ReferenceEquals(standardType, labelType))
                             continue;
 
-                        EnsureRatioColumn(RatioPropertyAccessor.GetPeptideColumnName(labelType, standardType),
-                                          RatioPropertyAccessor.GetPeptideResultsHeader(labelType, standardType),
+                        indexInsert = EnsureRatioColumn(RatioPropertyAccessor.PeptideRatioProperty(labelType, standardType),
                                           new RatioColumnTag(RatioPropertyAccessor.RatioTarget.peptide_result, indexPeptideRatio++),
-                                          indexInsert++,
+                                          indexInsert,
+                                          RatioPropertyAccessor.PeptideRdotpProperty(labelType, standardType),
                                           newRatioColumns);
                     }
                 }                
                 if (standardTypes.Count > 1)
                 {
-                    indexInsert = Columns.IndexOf(TotalAreaRatioColumn) + 1;
+                    indexInsert = Columns.IndexOf(RatioDotProductColumn) + 1;
                     for (int i = 0; i < standardTypes.Count; i++)
                     {
-                        EnsureRatioColumn(RatioPropertyAccessor.GetPrecursorColumnName(standardTypes[i]),
-                                          RatioPropertyAccessor.GetPrecursorResultsHeader(standardTypes[i]),
+                        indexInsert = EnsureRatioColumn(RatioPropertyAccessor.PrecursorRatioProperty(standardTypes[i]),
                                           new RatioColumnTag(RatioPropertyAccessor.RatioTarget.precursor_result, i),
-                                          indexInsert++,
+                                          indexInsert,
+                                          RatioPropertyAccessor.PrecursorRdotpProperty(standardTypes[i]),
                                           newRatioColumns);
                     }
                     indexInsert = Columns.IndexOf(AreaRatioColumn) + 1;
                     for (int i = 0; i < standardTypes.Count; i++)
                     {
-                        EnsureRatioColumn(RatioPropertyAccessor.GetTransitionColumnName(standardTypes[i]),
-                                          RatioPropertyAccessor.GetTransitionResultsHeader(standardTypes[i]),
+                        indexInsert = EnsureRatioColumn(RatioPropertyAccessor.TransitionRatioProperty(standardTypes[i]),
                                           new RatioColumnTag(RatioPropertyAccessor.RatioTarget.transition_result, i),
-                                          indexInsert++,
+                                          indexInsert,
+                                          null,
                                           newRatioColumns);                        
                     }
                 }
@@ -1207,22 +1216,39 @@ namespace pwiz.Skyline.Controls
             public int IndexRatio { get; private set; }
         }
 
-        private void EnsureRatioColumn(string name, string header, RatioColumnTag tag,
-            int indexInsert, IDictionary<string, DataGridViewColumn> newRatioColumns)
+        private int EnsureRatioColumn(RatioPropertyAccessor.RatioPropertyName propertyName, RatioColumnTag tag,
+            int indexInsert, RatioPropertyAccessor.RatioPropertyName rdotpPropertyName, IDictionary<string, DataGridViewColumn> newRatioColumns)
         {
-            DataGridViewColumn column;
-            if (!_ratioColumns.TryGetValue(name, out column))
+            DataGridViewColumn ratioColumn;
+            if (!_ratioColumns.TryGetValue(propertyName.ColumnName, out ratioColumn))
             {
-                column = new DataGridViewTextBoxColumn
+                ratioColumn = new DataGridViewTextBoxColumn
                 {
-                    Name = name,
-                    HeaderText = header,
+                    Name = propertyName.ColumnName,
+                    HeaderText = propertyName.HeaderText,
                     DefaultCellStyle = { Format = Formats.STANDARD_RATIO }
                 };
-                Columns.Insert(indexInsert, column);
+                Columns.Insert(indexInsert++, ratioColumn);
             }
-            column.Tag = tag;
-            newRatioColumns[name] = column;
+            ratioColumn.Tag = tag;
+            newRatioColumns[ratioColumn.Name] = ratioColumn;
+            if (null != rdotpPropertyName)
+            {
+                DataGridViewColumn dotProductColumn;
+                if (!_ratioColumns.TryGetValue(rdotpPropertyName.ColumnName, out dotProductColumn))
+                {
+                    dotProductColumn = new DataGridViewTextBoxColumn
+                    {
+                        Name = rdotpPropertyName.ColumnName,
+                        HeaderText = rdotpPropertyName.HeaderText,
+                        DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                    };
+                    Columns.Insert(indexInsert++, dotProductColumn);
+                }
+                dotProductColumn.Tag = tag;
+                newRatioColumns[dotProductColumn.Name] = dotProductColumn;
+            }
+            return indexInsert;
         }
 
         /// <summary>
@@ -1497,16 +1523,26 @@ namespace pwiz.Skyline.Controls
             {
                 row.Cells[PeptidePeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
                 row.Cells[PeptideRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
-                row.Cells[RatioToStandardColumn.Index].Value = chromInfo.LabelRatios[0].Ratio;
+                row.Cells[RatioToStandardColumn.Index].Value = RatioValue.GetRatio(chromInfo.LabelRatios[0].Ratio);
             }
             foreach (var column in _ratioColumns.Values)
             {
                 var ratioTag = (RatioColumnTag)column.Tag;
                 if (ratioTag.Target == RatioPropertyAccessor.RatioTarget.peptide_result)
                 {
-                    row.Cells[column.Index].Value =
-                        chromInfo == null ? null :
-                        chromInfo.LabelRatios[ratioTag.IndexRatio].Ratio;
+                    RatioValue ratioValue = null;
+                    if (chromInfo != null)
+                    {
+                        ratioValue = chromInfo.LabelRatios[ratioTag.IndexRatio].Ratio;
+                    }
+                    if (RatioPropertyAccessor.IsRatioProperty(column.Name))
+                    {
+                        row.Cells[column.Index].Value = RatioValue.GetRatio(ratioValue);
+                    }
+                    else if (RatioPropertyAccessor.IsRdotpProperty(column.Name))
+                    {
+                        row.Cells[column.Index].Value = RatioValue.GetDotProduct(ratioValue);
+                    }
                 }
             }
         }
@@ -1524,6 +1560,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[TotalAreaColumn.Index].Value =
                     row.Cells[TotalBackgroundColumn.Index].Value =
                     row.Cells[TotalAreaRatioColumn.Index].Value =
+                    row.Cells[RatioDotProductColumn.Index].Value = 
                     row.Cells[LibraryDotProductColumn.Index].Value =
                     row.Cells[IsotopeDotProductColumn.Index].Value =
                     row.Cells[MassErrorColumn.Index].Value =
@@ -1543,7 +1580,8 @@ namespace pwiz.Skyline.Controls
                 row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
-                row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratios[0];
+                row.Cells[TotalAreaRatioColumn.Index].Value = RatioValue.GetRatio(chromInfo.Ratios[0]);
+                row.Cells[RatioDotProductColumn.Index].Value = RatioValue.GetDotProduct(chromInfo.Ratios[0]);
                 row.Cells[MaxHeightColumn.Index].Value = chromInfo.Height;
                 row.Cells[AverageMassErrorColumn.Index].Value = chromInfo.MassError;
                 row.Cells[CountTruncatedColumn.Index].Value = chromInfo.Truncated;
@@ -1581,9 +1619,15 @@ namespace pwiz.Skyline.Controls
                 var ratioTag = (RatioColumnTag)column.Tag;
                 if (ratioTag.Target == RatioPropertyAccessor.RatioTarget.precursor_result)
                 {
-                    row.Cells[column.Index].Value =
-                        chromInfo == null ? null :
-                        chromInfo.Ratios[ratioTag.IndexRatio];
+                    RatioValue ratioValue = chromInfo == null ? null : chromInfo.Ratios[ratioTag.IndexRatio];
+                    if (RatioPropertyAccessor.IsRatioProperty(column.Name))
+                    {
+                        row.Cells[column.Index].Value = RatioValue.GetRatio(ratioValue);
+                    }
+                    else if (RatioPropertyAccessor.IsRdotpProperty(column.Name))
+                    {
+                        row.Cells[column.Index].Value = RatioValue.GetDotProduct(ratioValue);
+                    }
                 }
             }
             foreach (var column in _annotationColumns.Values)
@@ -2146,6 +2190,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn TotalAreaColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalBackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaRatioColumn { get; private set; }
+        public DataGridViewTextBoxColumn RatioDotProductColumn { get; private set; }
         public DataGridViewTextBoxColumn MaxHeightColumn { get; private set; }
         public DataGridViewTextBoxColumn AverageMassErrorColumn { get; private set; }
         public DataGridViewTextBoxColumn CountTruncatedColumn { get; private set; }

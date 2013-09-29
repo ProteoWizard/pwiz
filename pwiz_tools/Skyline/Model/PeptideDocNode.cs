@@ -1085,18 +1085,13 @@ namespace pwiz.Skyline.Model
                         var infoNew = info;
                         var labelType = nodeGroup.TransitionGroup.LabelType;
 
-                        var ratios = new float?[standardTypes.Count];
-                        var ratioStdevs = new float?[standardTypes.Count];
+                        var ratios = new RatioValue[standardTypes.Count];
                         for (int i = 0; i < ratios.Length; i++)
                         {
-                            float? stdev;
-                            ratios[i] = calc.CalcTransitionGroupRatio(nodeGroup,
-                                                                      labelType, standardTypes[i], out stdev);
-                            ratioStdevs[i] = stdev;
+                            ratios[i] = calc.CalcTransitionGroupRatio(nodeGroup, labelType, standardTypes[i]);
                         }
-                        if (!ArrayUtil.EqualsDeep(ratios, info.Ratios) ||
-                            !ArrayUtil.EqualsDeep(ratioStdevs, info.RatioStdevs))
-                            infoNew = infoNew.ChangeRatios(ratios, ratioStdevs);
+                        if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
+                            infoNew = infoNew.ChangeRatios(ratios);
 
                         listInfoNew.Add(infoNew);
                     }
@@ -1179,9 +1174,8 @@ namespace pwiz.Skyline.Model
                         if (ReferenceEquals(standardType, labelType))
                             continue;
 
-                        float? stdev;
-                        float? ratio = CalcTransitionGroupRatio(-1, labelType, standardType, out stdev);
-                        listRatios.Add(new PeptideLabelRatio(labelType, standardType, ratio, stdev));
+                        RatioValue ratio = CalcTransitionGroupRatio(-1, labelType, standardType);
+                        listRatios.Add(new PeptideLabelRatio(labelType, standardType, ratio));
                     }                    
                 }
 
@@ -1204,32 +1198,26 @@ namespace pwiz.Skyline.Model
                 return areaNum/areaDenom;
             }
 
-            public float? CalcTransitionGroupRatio(TransitionGroupDocNode nodeGroup,
+            public RatioValue CalcTransitionGroupRatio(TransitionGroupDocNode nodeGroup,
                                                    IsotopeLabelType labelTypeNum,
-                                                   IsotopeLabelType labelTypeDenom,
-                                                   out float? stdev)
+                                                   IsotopeLabelType labelTypeDenom)
             {
                 return CalcTransitionGroupRatio(nodeGroup.TransitionGroup.PrecursorCharge,
-                                                labelTypeNum, labelTypeDenom, out stdev);
+                                                labelTypeNum, labelTypeDenom);
             }
 
-            private float? CalcTransitionGroupRatio(int precursorCharge,
+            private RatioValue CalcTransitionGroupRatio(int precursorCharge,
                                                     IsotopeLabelType labelTypeNum,
-                                                    IsotopeLabelType labelTypeDenom,
-                                                    out float? stdev)
+                                                    IsotopeLabelType labelTypeDenom)
             {
                 // Avoid 1.0 ratios for self-to-self
                 if (ReferenceEquals(labelTypeNum, labelTypeDenom))
                 {
-                    stdev = null;
                     return null;
                 }
 
-                double areaTotalNum = 0;
-                double areaTotalDenom = 0;
-
-                List<double> ratios = new List<double>();
-                List<double> weights = new List<double>();
+                List<double> numerators = new List<double>();
+                List<double> denominators = new List<double>();
 
                 foreach (var pair in GetAreaPairs(labelTypeNum))
                 {
@@ -1242,30 +1230,11 @@ namespace pwiz.Skyline.Model
                     if (!TranAreas.TryGetValue(new TransitionKey(key, labelTypeDenom), out areaDenom))
                         continue;
 
-                    areaTotalNum += areaNum;
-                    areaTotalDenom += areaDenom;
-
-                    ratios.Add(areaNum/areaDenom);
-                    weights.Add(areaDenom);
+                    numerators.Add(areaNum);
+                    denominators.Add(areaDenom);
                 }
 
-                switch (ratios.Count)
-                {
-                    case 0:
-                        stdev = null;
-                        return null;
-                    case 1:
-                        stdev = 0;
-                        return (float)ratios[0];
-                }
-
-                var stats = new Statistics(ratios);
-                var statsW = new Statistics(weights);
-                stdev = (float)stats.StdDev(statsW);
-                double mean = areaTotalNum/areaTotalDenom;
-                // Helpers.Assume(Math.Abs(mean - stats.Mean(statsW)) < 0.0001);
-                // Make sure the value does not exceed the bounds of a float.
-                return (float) Math.Min(float.MaxValue, Math.Max(float.MinValue, mean));
+                return RatioValue.Calculate(numerators, denominators);
             }
 
             private IEnumerable<KeyValuePair<TransitionKey, float>> GetAreaPairs(IsotopeLabelType labelType)

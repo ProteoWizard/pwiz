@@ -91,18 +91,16 @@ namespace pwiz.Skyline.Model.Results
     public struct PeptideLabelRatio
     {
         public PeptideLabelRatio(IsotopeLabelType labelType, IsotopeLabelType standardType,
-            float? ratio, float? ratioStdev) : this()
+            RatioValue ratio) : this()
         {
             LabelType = labelType;
             StandardType = standardType;
             Ratio = ratio;
-            RatioStdev = ratioStdev;
         }
 
         public IsotopeLabelType LabelType { get; private set; }
         public IsotopeLabelType StandardType { get; private set; }
-        public float? Ratio { get; private set; }
-        public float? RatioStdev { get; private set; }
+        public RatioValue Ratio { get; private set; }
 
         #region object overrides
 
@@ -110,8 +108,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return Equals(other.LabelType, LabelType) &&
                 Equals(other.StandardType, StandardType) &&
-                other.Ratio == Ratio &&
-                other.RatioStdev == RatioStdev;
+                Equals(other.Ratio, Ratio);
         }
 
         public override bool Equals(object obj)
@@ -127,8 +124,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 int result = LabelType.GetHashCode();
                 result = (result*397) ^ StandardType.GetHashCode();
-                result = (result*397) ^ Ratio.GetHashCode();
-                result = (result*397) ^ RatioStdev.GetHashCode();
+                result = (result*397) ^ (Ratio == null ? 0 : Ratio.GetHashCode());
                 return result;
             }
         }
@@ -142,8 +138,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionGroupChromInfo : ChromInfo
     {
-        private ReadOnlyCollection<float?> _ratios;
-        private ReadOnlyCollection<float?> _ratioStdevs;
+        private ReadOnlyCollection<RatioValue> _ratios;
 
         public TransitionGroupChromInfo(ChromFileInfoId fileId,
                                         int optimizationStep,
@@ -155,8 +150,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? area,
                                         float? backgroundArea,
                                         float? height,
-                                        IList<float?> ratios,
-                                        IList<float?> stdevs,
+                                        IList<RatioValue> ratios,
                                         float? massError,
                                         int? truncated,
                                         PeakIdentification identified,
@@ -176,7 +170,6 @@ namespace pwiz.Skyline.Model.Results
             BackgroundArea = backgroundArea;
             Height = height;
             Ratios = ratios;
-            RatioStdevs = stdevs;
             MassError = massError;
             Truncated = truncated;
             Identified = identified;
@@ -196,17 +189,11 @@ namespace pwiz.Skyline.Model.Results
         public float? Area { get; private set; }
         public float? BackgroundArea { get; private set; }
         public float? Height { get; private set; }
-        public float? Ratio { get { return _ratios[0]; } }
-        public IList<float?> Ratios
+        public float? Ratio { get { return _ratios[0] == null ? (float?) null : _ratios[0].Ratio; } }
+        public IList<RatioValue> Ratios
         {
             get { return _ratios; }
             private set { _ratios = MakeReadOnly(value); }
-        }
-        public float? RatioStdev { get { return _ratioStdevs[0]; } }
-        public IList<float?> RatioStdevs
-        {
-            get { return _ratioStdevs; }
-            private set { _ratioStdevs = MakeReadOnly(value); }
         }
         public float? MassError { get; private set; }
         public int? Truncated { get; private set; }
@@ -225,12 +212,11 @@ namespace pwiz.Skyline.Model.Results
 
         #region Property change methods
 
-        public TransitionGroupChromInfo ChangeRatios(IList<float?> prop, IList<float?> stdev)
+        public TransitionGroupChromInfo ChangeRatios(IList<RatioValue> prop)
         {
             return ChangeProp(ImClone(this), im =>
                                                  {
                                                      im.Ratios = prop;
-                                                     im.RatioStdevs = stdev;
                                                  });
         }
 
@@ -261,7 +247,6 @@ namespace pwiz.Skyline.Model.Results
                    other.BackgroundArea.Equals(BackgroundArea) &&
                    other.Height.Equals(Height) &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
-                   ArrayUtil.EqualsDeep(other.RatioStdevs, RatioStdevs) &&
                    other.Truncated.Equals(Truncated) &&
                    other.Identified.Equals(Identified) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
@@ -293,7 +278,6 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (BackgroundArea.HasValue ? BackgroundArea.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Height.HasValue ? Height.Value.GetHashCode() : 0);
                 result = (result*397) ^ Ratios.GetHashCodeDeep();
-                result = (result*397) ^ RatioStdevs.GetHashCodeDeep();
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);

@@ -62,12 +62,19 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 columnInfo.IsHidden = !_annotationDefNames.Contains(
                     AnnotationDef.GetColumnKey(column));
             }
-            else if (RatioPropertyAccessor.IsRatioProperty(column))
+            else if (RatioPropertyAccessor.IsRatioOrRdotpProperty(column))
             {
                 var classMetadata = GetClassMetadata(table);
                 columnInfo.Caption = RatioPropertyAccessor.GetDisplayName(column);
                 columnInfo.ColumnType = classMetadata.GetPropertyType(column).ReturnedClass;
-                columnInfo.Format = Formats.STANDARD_RATIO;
+                if (RatioPropertyAccessor.IsRatioProperty(column))
+                {
+                    columnInfo.Format = Formats.STANDARD_RATIO;
+                }
+                else if (RatioPropertyAccessor.IsRdotpProperty(column))
+                {
+                    columnInfo.Format = Formats.STANDARD_RATIO;
+                }
             }
             else
             {

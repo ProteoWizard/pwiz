@@ -325,22 +325,20 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public float? GetPeakAreaRatio(int i, out float? stdev)
+        public RatioValue GetPeakAreaRatio(int i)
         {
-            return GetPeakAreaRatio(i, 0, out stdev);
+            return GetPeakAreaRatio(i, 0);
         }
 
-        public float? GetPeakAreaRatio(int i, int indexIS, out float? stdev)
+        public RatioValue GetPeakAreaRatio(int i, int indexIS)
         {
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
             {
-                stdev = null;
                 return null;
             }
 
-            stdev = chromInfo.RatioStdevs[indexIS];
             return chromInfo.Ratios[indexIS];
         }
 
@@ -1669,13 +1667,11 @@ namespace pwiz.Skyline.Model
                 if (chromInfo != null)
                 {
                     Ratios = chromInfo.Ratios;
-                    RatioStdevs = chromInfo.RatioStdevs;
                     Annotations = chromInfo.Annotations;
                 }
                 else
                 {
-                    Ratios = new float?[ratioCount];
-                    RatioStdevs = new float?[ratioCount];
+                    Ratios = new RatioValue[ratioCount];
                     Annotations = Annotations.EMPTY;
                 }
             }
@@ -1700,8 +1696,7 @@ namespace pwiz.Skyline.Model
             private PeakIdentification Identified { get; set; }
             private float? LibraryDotProduct { get; set; }
             private float? IsotopeDotProduct { get; set; }
-            private IList<float?> Ratios { get; set; }
-            private IList<float?> RatioStdevs { get; set; }
+            private IList<RatioValue> Ratios { get; set; }
             private Annotations Annotations { get; set; }
             private bool UserSet { get; set; }
 
@@ -1801,7 +1796,6 @@ namespace pwiz.Skyline.Model
                                                     BackgroundArea,
                                                     MaxHeight,
                                                     Ratios,
-                                                    RatioStdevs,
                                                     MassError,
                                                     Truncated,
                                                     Identified,

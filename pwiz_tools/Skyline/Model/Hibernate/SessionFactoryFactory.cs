@@ -97,8 +97,8 @@ namespace pwiz.Skyline.Model.Hibernate
                     if (ReferenceEquals(labelType, standardType))
                         continue;
 
-                    string namePep = RatioPropertyAccessor.GetPeptideColumnName(labelType, standardType);
-                    AddColumn(mappingPeptide, namePep, typeof(RatioPropertyAccessor));
+                    AddColumn(mappingPeptide, RatioPropertyAccessor.PeptideRatioProperty(labelType, standardType).ColumnName, typeof(RatioPropertyAccessor));
+                    AddColumn(mappingPeptide, RatioPropertyAccessor.PeptideRdotpProperty(labelType, standardType).ColumnName, typeof(RatioPropertyAccessor));
                 }
 
                 // Only add TotalAreaRatioTo<label type> and AreaRatioTo<label type> columns
@@ -106,10 +106,9 @@ namespace pwiz.Skyline.Model.Hibernate
                 // is the only time that data is added to these columns in the database.
                 if (standardTypes.Count > 1)
                 {
-                    string namePrec = RatioPropertyAccessor.GetPrecursorColumnName(standardType);
-                    AddColumn(mappingPrec, namePrec, typeof(RatioPropertyAccessor));
-                    string nameTran = RatioPropertyAccessor.GetTransitionColumnName(standardType);
-                    AddColumn(mappingTran, nameTran, typeof(RatioPropertyAccessor));
+                    AddColumn(mappingPrec, RatioPropertyAccessor.PrecursorRatioProperty(standardType).ColumnName, typeof(RatioPropertyAccessor));
+                    AddColumn(mappingPrec, RatioPropertyAccessor.PrecursorRdotpProperty(standardType).ColumnName, typeof(RatioPropertyAccessor));
+                    AddColumn(mappingTran, RatioPropertyAccessor.TransitionRatioProperty(standardType).ColumnName, typeof(RatioPropertyAccessor));
                 }
             }
         }

@@ -109,6 +109,7 @@
     <property name="TotalArea"/>
     <property name="TotalBackground"/>
     <property name="TotalAreaRatio" />
+    <property name="RatioDotProduct" />
     <!-- <property name="StdevAreaRatio" /> -->
     <property name="TotalAreaNormalized" />
     <property name="MaxHeight" />

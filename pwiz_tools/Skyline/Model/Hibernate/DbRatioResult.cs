@@ -27,9 +27,9 @@ namespace pwiz.Skyline.Model.Hibernate
     {
         protected DbRatioResult()
         {
-            LabelRatios = new Dictionary<string, double?>();
+            LabelRatios = new Dictionary<string, double>();
         }
 
-        public virtual IDictionary<string, double?> LabelRatios { get; private set; }
+        public virtual IDictionary<string, double> LabelRatios { get; private set; }
     }
 }

@@ -789,6 +789,7 @@
     </Compile>
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\PrecursorModSeq.cs" />
+    <Compile Include="Model\Results\RatioValue.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
     <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />

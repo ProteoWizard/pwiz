@@ -17,57 +17,62 @@ namespace pwiz.Skyline.Model.Hibernate
         }
 
         private const string RATIO_PREFIX = "ratio_"; // Not L10N
+        private const string RDOTP_PREFIX = "rdotp_";
 
-        public static string GetPeptideResultsHeader(IsotopeLabelType labelType, IsotopeLabelType standardType)
+        public static RatioPropertyName PeptideRatioProperty(IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
-            return string.Format(Resources.RatioPropertyAccessor_GetPeptideResultsHeader_Ratio__0__To__1_, labelType.Title, standardType.Title);
+            string propertyKey = string.Format("Ratio{0}To{1}",
+                Helpers.MakeId(labelType.Name, true),
+                Helpers.MakeId(standardType.Name, true));
+            string headerText = string.Format(
+                Resources.RatioPropertyAccessor_PeptideProperty_Ratio__0__To__1_,
+                labelType.Title, standardType.Title);
+
+            return new RatioPropertyName(RATIO_PREFIX, propertyKey, headerText);
         }
 
-        public static string GetPeptideKey(IsotopeLabelType labelType, IsotopeLabelType standardType)
+        public static RatioPropertyName PrecursorRatioProperty(IsotopeLabelType standardType)
         {
-            return string.Format(Resources.RatioPropertyAccessor_GetPeptideKey_Ratio_0_To_1_,
-                Helpers.MakeId(labelType.ToString(), true),
-                Helpers.MakeId(standardType.ToString(), true));
+            string key = "TotalAreaRatioTo" + Helpers.MakeId(standardType.Name, true);
+            string header = TextUtil.SpaceSeparate(Resources.RatioPropertyAccessor_PrecursorProperty_Total,
+                TextUtil.SpaceSeparate(Resources.RatioPropertyAccessor_GetTransitionResultsHeader_Area_Ratio_To, standardType.Title));
+            return new RatioPropertyName(RATIO_PREFIX, key, header);
         }
 
-        public static string GetPeptideColumnName(IsotopeLabelType labelType, IsotopeLabelType standardType)
+        public static RatioPropertyName TransitionRatioProperty(IsotopeLabelType standardType)
         {
-            return RATIO_PREFIX + GetPeptideKey(labelType, standardType);
+            string key = "AreaRatioTo" + Helpers.MakeId(standardType.Name, true);
+            string header = TextUtil.SpaceSeparate(Resources.RatioPropertyAccessor_GetTransitionResultsHeader_Area_Ratio_To,
+                    standardType.Title);
+            return new RatioPropertyName(RATIO_PREFIX, key, header);
         }
 
-        public static string GetPrecursorResultsHeader(IsotopeLabelType standardType)
+        public static RatioPropertyName PeptideRdotpProperty(IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
-            return TextUtil.SpaceSeparate(Resources.RatioPropertyAccessor_GetPrecursorResultsHeader_Total,GetTransitionResultsHeader(standardType));
+            string key = string.Format("DotProduct{0}To{1}",
+                Helpers.MakeId(labelType.Name, true),
+                Helpers.MakeId(standardType.Name, true));
+            string headerText = string.Format(Resources.RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_,
+                labelType.Title, standardType.Title);
+            return new RatioPropertyName(RDOTP_PREFIX, key, headerText);
         }
 
-        public static string GetPrecursorKey(IsotopeLabelType standardType)
+        public static RatioPropertyName PrecursorRdotpProperty(IsotopeLabelType standardType)
         {
-            return Resources.RatioPropertyAccessor_GetPrecursorKey_Total + GetTransitionKey(standardType);
+            string key = string.Format("DotProductTo{0}", Helpers.MakeId(standardType.Name, true));
+            string headerText = string.Format(Resources.RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_, standardType.Title);
+            return new RatioPropertyName(RDOTP_PREFIX, key, headerText);
         }
 
-        public static string GetPrecursorColumnName(IsotopeLabelType standardType)
+        public static string KeyFromPropertyName(string propertyName)
         {
-            return RATIO_PREFIX + GetPrecursorKey(standardType);
-        }
-
-        public static string GetTransitionResultsHeader(IsotopeLabelType standardType)
-        {
-            return TextUtil.SpaceSeparate(Resources.RatioPropertyAccessor_GetTransitionResultsHeader_Area_Ratio_To, standardType.Title);
-        }
-
-        public static string GetTransitionKey(IsotopeLabelType standardType)
-        {
-            return Resources.RatioPropertyAccessor_GetTransitionKey_AreaRatioTo + Helpers.MakeId(standardType.Name, true);
-        }
-
-        public static string GetTransitionColumnName(IsotopeLabelType standardType)
-        {
-            return RATIO_PREFIX + GetTransitionKey(standardType);
-        }
-
-        public static string GetDisplayName(string propertyName)
-        {
+            Helpers.Assume(IsRatioOrRdotpProperty(propertyName));
             return propertyName.Substring(RATIO_PREFIX.Length);
+        }
+
+        public static bool IsRatioOrRdotpProperty(string propertyName)
+        {
+            return IsRatioProperty(propertyName) || IsRdotpProperty(propertyName);
         }
 
         public static bool IsRatioProperty(string propertyName)
@@ -75,19 +80,62 @@ namespace pwiz.Skyline.Model.Hibernate
             return propertyName.StartsWith(RATIO_PREFIX);
         }
 
+        public static bool IsRdotpProperty(string propertyName)
+        {
+            return propertyName.StartsWith(RDOTP_PREFIX);
+        }
+
+        public static string GetDisplayName(string propertyName)
+        {
+            if (propertyName.StartsWith(RATIO_PREFIX))
+            {
+                return propertyName.Substring(RATIO_PREFIX.Length);
+            }
+            if (propertyName.StartsWith(RDOTP_PREFIX))
+            {
+                return propertyName.Substring(RDOTP_PREFIX.Length);
+            }
+            throw new ArgumentException(string.Format("Invalid ratio column '{0}'", propertyName));
+        }
+
         public IGetter GetGetter(Type theClass, string propertyName)
         {
-            return new Getter(GetDisplayName(propertyName));
+            return new Getter(propertyName);
         }
 
         public ISetter GetSetter(Type theClass, string propertyName)
         {
-            return new Setter(GetDisplayName(propertyName));
+            return new Setter(propertyName);
         }
 
         public bool CanAccessThroughReflectionOptimizer
         {
             get { return false; }
+        }
+
+        public class RatioPropertyName
+        {
+            public RatioPropertyName(string prefix, string displayName, string headerText)
+            {
+                Prefix = prefix;
+                DisplayName = displayName;
+                HeaderText = headerText;
+            }
+
+            public string Prefix { get; private set; }
+            /// <summary>
+            /// Unique name of the column.  Used as the key in <see cref="DbRatioResult.LabelRatios"/>, 
+            /// and as the NHibernate column/property name.
+            /// </summary>
+            public string ColumnName { get { return Prefix + DisplayName; } }
+            /// <summary>
+            /// Title of the column as displayed in custom reports.
+            /// </summary>
+            public string DisplayName { get; private set; }
+            /// <summary>
+            /// Title of the column in the results grid.
+            /// </summary>
+            public string HeaderText { get; private set; }
         }
 
         private class Getter : IGetter
@@ -101,9 +149,12 @@ namespace pwiz.Skyline.Model.Hibernate
 
             public object Get(object target)
             {
-                double? value;
-                ((DbRatioResult)target).LabelRatios.TryGetValue(_name, out value);
-                return value;
+                double value;
+                if (((DbRatioResult) target).LabelRatios.TryGetValue(_name, out value))
+                {
+                    return value;
+                }
+                return null;
             }
 
             public object GetForInsert(object owner, IDictionary mergeMap, ISessionImplementor session)
@@ -113,7 +164,7 @@ namespace pwiz.Skyline.Model.Hibernate
 
             public Type ReturnType
             {
-                get { return typeof(bool); }
+                get { return typeof(double?); }
             }
 
             public string PropertyName
@@ -138,7 +189,15 @@ namespace pwiz.Skyline.Model.Hibernate
 
             public void Set(object target, object value)
             {
-                ((DbRatioResult)target).LabelRatios[_name] = (double?) value;
+                double? doubleValue = value as double?;
+                if (doubleValue.HasValue)
+                {
+                    ((DbRatioResult)target).LabelRatios[_name] = doubleValue.Value;
+                }
+                else
+                {
+                    ((DbRatioResult)target).LabelRatios.Remove(_name);
+                }
             }
 
             public string PropertyName

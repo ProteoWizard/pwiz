@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     continue;
                 }
                 var label = propertyName;
-                bool isRatio = RatioPropertyAccessor.IsRatioProperty(label);
+                bool isRatio = RatioPropertyAccessor.IsRatioOrRdotpProperty(label);
                 if (isRatio)
                     label = RatioPropertyAccessor.GetDisplayName(label);
                 else if (AnnotationDef.IsAnnotationProperty(label))

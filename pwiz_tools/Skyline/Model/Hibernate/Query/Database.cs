@@ -416,22 +416,27 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         continue;
                     if (firstRatio)
                     {
-                        peptideResult.RatioToStandard = GetPeptideRatio(chromInfo, labelType, standardType);
+                        peptideResult.RatioToStandard = RatioValue.GetRatio(GetPeptideRatio(chromInfo, labelType, standardType));
                         firstRatio = false;
                     }
                     // If there are more than two label types, add all the possible
                     // ratio combinations as custom columns
                     if (labelTypes.Length > 2)
                     {
-                        string keyRatio = RatioPropertyAccessor.GetPeptideKey(labelType, standardType);
-                        peptideResult.LabelRatios[keyRatio] =
-                            GetPeptideRatio(chromInfo, labelType, standardType);
+                        var ratioValue = GetPeptideRatio(chromInfo, labelType, standardType);
+                        if (null != ratioValue)
+                        {
+                            peptideResult.LabelRatios[RatioPropertyAccessor.PeptideRatioProperty(labelType, standardType).ColumnName]
+                                = ratioValue.Ratio;
+                            peptideResult.LabelRatios[RatioPropertyAccessor.PeptideRdotpProperty(labelType, standardType).ColumnName]
+                                = ratioValue.DotProduct;
+                        }
                     }
                 }
             }
         }
 
-        private static double? GetPeptideRatio(PeptideChromInfo chromInfo,
+        private static RatioValue GetPeptideRatio(PeptideChromInfo chromInfo,
             IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
             foreach (var labelRatio in chromInfo.LabelRatios)
@@ -546,7 +551,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             MaxFwhm = chromInfo.Fwhm,
                             TotalArea = chromInfo.Area,
                             TotalBackground = chromInfo.BackgroundArea,
-                            TotalAreaRatio = chromInfo.Ratios[0],
+                            TotalAreaRatio = RatioValue.GetRatio(chromInfo.Ratios[0]),
+                            RatioDotProduct = RatioValue.GetDotProduct(chromInfo.Ratios[0]),
                             // StdevAreaRatio = chromInfo.RatioStdevs[0],
                             MaxHeight = chromInfo.Height,
                             AverageMassErrorPPM = chromInfo.MassError,
@@ -567,8 +573,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         {
                             for (int j = 0; j < standardTypes.Count; j++)
                             {
-                                string columnName = RatioPropertyAccessor.GetPrecursorKey(standardTypes[j]);
-                                precursorResult.LabelRatios[columnName] = chromInfo.Ratios[j];
+                                var ratioValue = chromInfo.Ratios[j];
+                                if (null != ratioValue)
+                                {
+                                    precursorResult.LabelRatios[RatioPropertyAccessor.PrecursorRatioProperty(standardTypes[j]).ColumnName]
+                                        = ratioValue.Ratio;
+                                    precursorResult.LabelRatios[
+                                        RatioPropertyAccessor.PrecursorRdotpProperty(standardTypes[j]).ColumnName]
+                                        = ratioValue.DotProduct;
+                                }
                             }
                         }
                         // Area values get normalized to the total for the precursors of the same isotope
@@ -714,8 +727,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         {
                             for (int j = 0; j < standardTypes.Count; j++)
                             {
-                                string columnName = RatioPropertyAccessor.GetTransitionKey(standardTypes[j]);
-                                transitionResult.LabelRatios[columnName] = chromInfo.Ratios[j];
+                                if (chromInfo.Ratios[j].HasValue)
+                                {
+                                    transitionResult.LabelRatios[RatioPropertyAccessor.TransitionRatioProperty(standardTypes[j]).ColumnName]
+                                        = chromInfo.Ratios[j].Value;
+                                }
                             }
                         }
                         AddAnnotations(docInfo, transitionResult, chromInfo.Annotations);
