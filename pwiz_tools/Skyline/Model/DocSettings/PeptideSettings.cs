@@ -948,7 +948,7 @@ namespace pwiz.Skyline.Model.DocSettings
             modifications.AddRange(heavyMods);
             _modifications = MakeReadOnly(modifications.ToArray());
 
-            Helpers.Assume(internalStandardTypes.Count > 0);
+            Assume.IsTrue(internalStandardTypes.Count > 0);
             InternalStandardTypes = internalStandardTypes;
 
             DoValidate();
@@ -1527,7 +1527,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool Contains(LibKey key)
         {
-            Helpers.Assume(IsLoaded);
+            Assume.IsTrue(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
@@ -1539,7 +1539,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool ContainsAny(LibSeqKey key)
         {
-            Helpers.Assume(IsLoaded);
+            Assume.IsTrue(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
@@ -1551,7 +1551,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
-            Helpers.Assume(IsLoaded);
+            Assume.IsTrue(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
@@ -1564,7 +1564,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool TryLoadSpectrum(LibKey key, out SpectrumPeaksInfo spectrum)
         {
-            Helpers.Assume(IsLoaded);
+            Assume.IsTrue(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
@@ -1577,7 +1577,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
         {
-            Helpers.Assume(IsLoaded);
+            Assume.IsTrue(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
@@ -1590,7 +1590,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
         {
-            Helpers.Assume(IsLoaded);
+            Assume.IsTrue(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
@@ -1612,7 +1612,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="bestMatch">True if only best-match spectra are included</param>
         public IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
-            Helpers.Assume(IsLoaded);
+            Assume.IsTrue(IsLoaded);
 
             var redundancy = bestMatch ? LibraryRedundancy.best : LibraryRedundancy.all;
             return _libraries.Where(lib => lib != null).SelectMany(lib => lib.GetSpectra(key, labelType, redundancy));
@@ -1883,7 +1883,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Libraries and library specs must match.  If they do not, then
             // there was a coding error.
-            Helpers.Assume(LibrariesMatch(), Resources.PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_);
+            Assume.IsTrue(LibrariesMatch(), Resources.PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_);
 
             // Leave connecting the libraries to the LibrarySpecs in the
             // SpectralLibraryList until the root settings object is validated.

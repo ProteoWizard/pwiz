@@ -1529,28 +1529,40 @@ namespace pwiz.Skyline.Util
         {
             return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
         }
+    }
 
-        /// <summary>
-        /// This is a replacement for Debug.Assert, having the advantage that it is not omitted in a retail build.
-        /// </summary>
-        /// <param name="condition">condition to check</param>
-        /// <param name="error">optional error message</param>
-        public static void Assume(bool condition, string error = "") // Not L10N
+    /// <summary>
+    /// This is a replacement for Debug.Assert, having the advantage that it is not omitted in a retail build.
+    /// </summary>
+    public static class Assume
+    {
+        public static void IsTrue(bool condition, string error = "") // Not L10N
         {
             if (!condition)
-                throw new AssumptionException(error);
+                Fail(error);
         }
 
-        public static void AssumeNotNull(object o, string parameterName)
+        public static void IsFalse(bool condition, string error = "") // Not L10N
+        {
+            if (condition)
+                Fail(error);
+        }
+
+        public static void IsNotNull(object o, string parameterName = "")
         {
             if (o == null)
-                throw new AssumptionException(parameterName + " is null"); // Not L10N
+                Fail(string.IsNullOrEmpty(parameterName) ? "null object" : parameterName + " is null"); // Not L10N
         }
 
-        public static void AssumeNull(object o, string parameterName)
+        public static void IsNull(object o, string parameterName = "")
         {
             if (o != null)
-                throw new AssumptionException(parameterName + " is not null"); // Not L10N
+                Fail(string.IsNullOrEmpty(parameterName) ? "non-null object" : parameterName + " is not null"); // Not L10N
+        }
+
+        public static void Fail(string error = "")
+        {
+            throw new AssumptionException(error);
         }
 
         /// <summary>
@@ -1559,10 +1571,10 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="value">a nullable int that is expected to have a value</param>
         /// <returns>the value of the nullable int</returns>
-        public static T AssumeValue<T>(T? value) where T : struct
+        public static T Value<T>(T? value) where T : struct
         {
             if (!value.HasValue)
-                throw new AssumptionException(Resources.Helpers_AssumeValue_Nullable_was_expected_to_have_a_value);
+                Fail("Nullable_was_expected_to_have_a_value");  // Not L10N
             return value.Value;
         }
     }

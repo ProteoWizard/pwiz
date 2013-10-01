@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Results
             // If not cancelled, update progress.
             string dataFilePath = MSDataFilePaths[_currentFileIndex];
             ChromFileInfo fileInfo = _document.Settings.MeasuredResults.GetChromFileInfo(dataFilePath);
-            Helpers.Assume(fileInfo != null);
+            Assume.IsNotNull(fileInfo);
             string dataFilePathPart;
             string dataFilePathRecalc = GetRecalcDataFilePath(dataFilePath, out dataFilePathPart);
 

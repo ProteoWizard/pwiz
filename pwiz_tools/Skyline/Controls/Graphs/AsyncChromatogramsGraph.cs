@@ -373,7 +373,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (remaining == peak.Intensities.Count)
                 return;
 
-            Helpers.Assume(remaining > 0);
+            Assume.IsTrue(remaining > 0);
 
             // Compact list, omitting low intensity points.
             var times = new List<float>(remaining);

@@ -326,7 +326,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             string standardType = null;
             if (docInfo.RetentionTimeStandards.Contains(seqModKey))
                 standardType = "iRT";   // Not L10N
-            Helpers.Assume(seqModified != null);
+            Assume.IsNotNull(seqModified);
             DbPeptide dbPeptide = new DbPeptide
             {
                 Protein = dbProtein,

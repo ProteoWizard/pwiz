@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Results
                     long bytesData = ChromatogramCache.LoadStructs(_inStream, out rawData);
 
                     // If joining, then format version should have already been checked.
-                    Helpers.Assume(ChromatogramCache.IsVersionCurrent(rawData.FormatVersion) ||
+                    Assume.IsTrue(ChromatogramCache.IsVersionCurrent(rawData.FormatVersion) ||
                         // WatersCacheTest uses older format partial caches
                         rawData.FormatVersion == ChromatogramCache.FORMAT_VERSION_CACHE_2);
 

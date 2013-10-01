@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Hibernate
 
         public static string KeyFromPropertyName(string propertyName)
         {
-            Helpers.Assume(IsRatioOrRdotpProperty(propertyName));
+            Assume.IsTrue(IsRatioOrRdotpProperty(propertyName));
             return propertyName.Substring(RATIO_PREFIX.Length);
         }
 

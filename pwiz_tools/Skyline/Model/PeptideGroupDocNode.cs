@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode ChangeDescription(string desc)
         {
             // Only allow set, if the id object has no description
-            Helpers.Assume(PeptideGroup.Description == null);
+            Assume.IsNull(PeptideGroup.Description);
             return ChangeProp(ImClone(this), (im, v) => im._description = v, desc);
         }
 

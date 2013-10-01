@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             var chromatograms = chromatogramGroupInfo.TransitionPointSets.ToArray();
-            Helpers.Assume(Equals(chromatogramGroupInfo.NumTransitions, chromatograms.Length));
+            Assume.IsTrue(Equals(chromatogramGroupInfo.NumTransitions, chromatograms.Length));
             var keptTransitionIndexes = new List<int>();
             double minRetentionTime = Double.MaxValue;
             double maxRetentionTime = -Double.MaxValue;
@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Model.Results
 
             internal void ProcessChromGroup(MinimizedChromGroup minimizedChromGroup)
             {
-                Helpers.Assume(Equals(minimizedChromGroup.ChromGroupHeaderInfo, ChromCacheMinimizer.ChromGroupHeaderInfos[_processedGroupCount]));
+                Assume.IsTrue(Equals(minimizedChromGroup.ChromGroupHeaderInfo, ChromCacheMinimizer.ChromGroupHeaderInfos[_processedGroupCount]));
                 var headerInfo = minimizedChromGroup.ChromGroupHeaderInfo;
                 int replicateIndex = _fileIndexToReplicateIndex[headerInfo.FileIndex];
                 long originalFileSize = GetFileSize(headerInfo);

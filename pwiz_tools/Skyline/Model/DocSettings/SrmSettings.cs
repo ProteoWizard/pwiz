@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string GetModifiedSequence(PeptideDocNode nodePep)
         {
-            Helpers.Assume(nodePep.ModifiedSequence != null);
+            Assume.IsNotNull(nodePep.ModifiedSequence);
             return nodePep.ModifiedSequence;
         }
 

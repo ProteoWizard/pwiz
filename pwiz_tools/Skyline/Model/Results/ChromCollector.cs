@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Model.Results
                     if (minBlocksPerBuffer > 0)
                         break;
                     _blockSize /= 2;
-                    Helpers.Assume(_blockSize >= 2, "ChromCollector.Allocator buffer is not set up correctly"); // Not L10N
+                    Assume.IsTrue(_blockSize >= 2, "ChromCollector.Allocator buffer is not set up correctly"); // Not L10N
                 }
                 
                 _bufferSize = minBlocksPerBuffer * _blockSize;

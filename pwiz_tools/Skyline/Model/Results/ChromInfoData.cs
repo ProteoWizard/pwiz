@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return list;
             }
-            Helpers.Assume(transitionResults.Count == measuredResults.Chromatograms.Count,
+           Assume.IsTrue(transitionResults.Count == measuredResults.Chromatograms.Count,
                 string.Format("Unexpected mismatch between transition results {0} and chromatogram sets {1}", transitionResults.Count, measuredResults.Chromatograms.Count));
             for (int replicateIndex = 0; replicateIndex < transitionResults.Count; replicateIndex++)
             {
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return list;
             }
-            Helpers.Assume(transitionGroupResults.Count == measuredResults.Chromatograms.Count,
+            Assume.IsTrue(transitionGroupResults.Count == measuredResults.Chromatograms.Count,
                 string.Format("Unexpected mismatch between precursor results {0} and chromatogram sets {1}", transitionGroupResults.Count, measuredResults.Chromatograms.Count));
             for (int replicateIndex = 0; replicateIndex < transitionGroupResults.Count; replicateIndex++)
             {

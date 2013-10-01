@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model
         /// <param name="progressMonitor">progress monitor</param>
         private void WriteMultiplexedWindows(TextWriter writer, int windowsPerScan, IProgressMonitor progressMonitor)
         {
-            int maxInstrumentWindows = Helpers.AssumeValue(_maxInstrumentWindows);
+            int maxInstrumentWindows = Assume.Value(_maxInstrumentWindows);
             int windowCount = IsolationScheme.PrespecifiedIsolationWindows.Count;
             int cycleCount = maxInstrumentWindows / windowCount;
             double totalScore = 0.0;

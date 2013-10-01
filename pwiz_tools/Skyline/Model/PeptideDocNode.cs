@@ -515,7 +515,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
         {
-            Helpers.Assume(!diff.DiffPeptideProps); // No settings dependent properties yet.
+            Assume.IsFalse(diff.DiffPeptideProps); // No settings dependent properties yet.
 
             // If the peptide has explicit modifications, and the modifications have
             // changed, see if any of the explicit modifications have changed
@@ -1047,7 +1047,7 @@ namespace pwiz.Skyline.Model
                 {
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
-                        Helpers.Assume(false);    // Should never happen
+                        Assume.Fail();    // Should never happen
                     else
                     {
                         var infoNew = info;
@@ -1079,7 +1079,7 @@ namespace pwiz.Skyline.Model
                 {
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
-                        Helpers.Assume(false);    // Should never happen
+                        Assume.Fail();    // Should never happen
                     else
                     {
                         var infoNew = info;
@@ -1130,7 +1130,7 @@ namespace pwiz.Skyline.Model
                 if (info == null)
                     return;
 
-                Helpers.Assume(FileId == null || ReferenceEquals(info.FileId, FileId));
+                Assume.IsTrue(FileId == null || ReferenceEquals(info.FileId, FileId));
                 FileId = info.FileId;
                 FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
 

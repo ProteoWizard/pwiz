@@ -1452,7 +1452,7 @@ namespace pwiz.Skyline.Controls
             }
 
             // There should only ever be rows in one of the unassigned rows collections at this point
-            Helpers.Assume(_unassignedRowsDict.Count == 0 || _unassignedRowsStack.Count == 0);
+            Assume.IsTrue(_unassignedRowsDict.Count == 0 || _unassignedRowsStack.Count == 0);
             try
             {
                 foreach (var row in _unassignedRowsDict.Values)

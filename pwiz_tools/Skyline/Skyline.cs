@@ -524,7 +524,7 @@ namespace pwiz.Skyline
                 // revert to the previous path.
                 if (!ReferenceEquals(Document.Id, document.Id))
                 {
-                    Helpers.Assume(ReferenceEquals(Document.Id, documentPrevious.Id));
+                    Assume.IsTrue(ReferenceEquals(Document.Id, documentPrevious.Id));
                     DocumentFilePath = pathPrevious;
                 }
                 // Otherwise, try to update the UI to show the new active

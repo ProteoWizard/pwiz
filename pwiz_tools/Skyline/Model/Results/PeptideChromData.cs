@@ -594,7 +594,7 @@ namespace pwiz.Skyline.Model.Results
                 var maxData = listUnmerged[iMaxEnumerator];
                 var maxEnumerator = listEnumerators[iMaxEnumerator];
                 var maxPeak = maxEnumerator.Current;
-                Helpers.Assume(maxPeak != null);
+                Assume.IsNotNull(maxPeak);
 
                 allPeaks.Add(new PeptideChromDataPeak(maxData, maxPeak));
                 if (!maxEnumerator.MoveNext())
