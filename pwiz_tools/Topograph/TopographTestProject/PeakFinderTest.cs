@@ -104,13 +104,11 @@ namespace pwiz.Topograph.Test
             {
                 AddPeptide(workspace, peakFinderPeptide);
             }
-            var chromatogramGenerator = new ChromatogramGenerator(workspace);
-            chromatogramGenerator.Start();
             while (true)
             {
                 string statusMessage;
                 int progress;
-                chromatogramGenerator.GetProgress(out statusMessage, out progress);
+                workspace.ChromatogramGenerator.GetProgress(out statusMessage, out progress);
                 if ("Idle" == statusMessage)
                 {
                     break;
