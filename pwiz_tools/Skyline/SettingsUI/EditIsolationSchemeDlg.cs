@@ -102,6 +102,13 @@ namespace pwiz.Skyline.SettingsUI
             btnGraph.Hide();
         }
 
+        private void OnLoad(object sender, EventArgs e)
+        {
+            // If you set this in the Designer, DataGridView has a defect that causes it to throw an
+            // exception if the the cursor is positioned over the record selector column during loading.
+            gridIsolationWindows.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
         public IsolationScheme IsolationScheme
         {
             get { return _isolationScheme; }

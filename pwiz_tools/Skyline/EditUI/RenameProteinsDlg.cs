@@ -54,6 +54,13 @@ namespace pwiz.Skyline.EditUI
             get { return _gridViewDriver.RowCount - 1; } // Extra row is for adding more proteins
         }
 
+        private void OnLoad(object sender, EventArgs e)
+        {
+            // If you set this in the Designer, DataGridView has a defect that causes it to throw an
+            // exception if the the cursor is positioned over the record selector column during loading.
+            dataGridViewRename.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();

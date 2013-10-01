@@ -298,9 +298,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 DocumentRetentionTimes = settings.DocumentRetentionTimes;
                 Target = target;
                 Source = timesToAlign;
+                Assume.IsNotNull(target, "target");
+                Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, "DocumentRetentionTimes.FileAlignments");
                 var fileAlignment = DocumentRetentionTimes.FileAlignments.Find(target.Name);
                 if (fileAlignment != null)
                 {
+                    Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, "fileAlignment.RetentionTimeAlignments");
+                    Assume.IsNotNull(Source, "Source");
                     Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
                 }
                 TargetTimes = settings.GetRetentionTimes(target.Name).GetFirstRetentionTimes();

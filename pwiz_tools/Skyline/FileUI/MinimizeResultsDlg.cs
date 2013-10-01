@@ -76,6 +76,13 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private void OnLoad(object sender, EventArgs e)
+        {
+            // If you set this in the Designer, DataGridView has a defect that causes it to throw an
+            // exception if the the cursor is positioned over the record selector column during loading.
+            dataGridViewSizes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
             SetDocument(DocumentUIContainer.DocumentUI);

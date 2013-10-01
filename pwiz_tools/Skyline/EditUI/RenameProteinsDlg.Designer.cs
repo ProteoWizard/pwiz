@@ -74,7 +74,6 @@
             // 
             resources.ApplyResources(this.dataGridViewRename, "dataGridViewRename");
             this.dataGridViewRename.AutoGenerateColumns = false;
-            this.dataGridViewRename.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridViewRename.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewRename.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.currentNameDataGridViewTextBoxColumn,
@@ -113,6 +112,7 @@
             this.MinimizeBox = false;
             this.Name = "RenameProteinsDlg";
             this.ShowInTaskbar = false;
+            this.Load += new System.EventHandler(this.OnLoad);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewRename)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.renameProteinsWindowBindingSource)).EndInit();
             this.ResumeLayout(false);

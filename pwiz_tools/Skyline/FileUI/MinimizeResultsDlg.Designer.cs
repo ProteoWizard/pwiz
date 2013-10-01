@@ -62,7 +62,6 @@ namespace pwiz.Skyline.FileUI
             this.dataGridViewSizes.AllowUserToDeleteRows = false;
             resources.ApplyResources(this.dataGridViewSizes, "dataGridViewSizes");
             this.dataGridViewSizes.AutoGenerateColumns = false;
-            this.dataGridViewSizes.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -211,6 +210,7 @@ namespace pwiz.Skyline.FileUI
             this.MinimizeBox = false;
             this.Name = "MinimizeResultsDlg";
             this.ShowInTaskbar = false;
+            this.Load += new System.EventHandler(this.OnLoad);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSizes)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);

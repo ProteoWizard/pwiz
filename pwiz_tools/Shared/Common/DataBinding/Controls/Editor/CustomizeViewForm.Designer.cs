@@ -235,7 +235,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             this.dataGridViewFilter.AllowUserToAddRows = false;
             this.dataGridViewFilter.AllowUserToDeleteRows = false;
-            this.dataGridViewFilter.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -604,7 +603,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             this.dataGridViewSort.AllowUserToAddRows = false;
             this.dataGridViewSort.AllowUserToDeleteRows = false;
-            this.dataGridViewSort.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridViewSort.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewSort.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colSortColumn,
@@ -687,6 +685,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.Controls.Add(this.tabControl1);
             this.Name = "CustomizeViewForm";
             this.Text = "Customize View";
+            this.Load += new System.EventHandler(this.OnLoad);
             this.tabPageFilter.ResumeLayout(false);
             this.splitContainerFilter.Panel1.ResumeLayout(false);
             this.splitContainerFilter.Panel2.ResumeLayout(false);

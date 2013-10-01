@@ -110,6 +110,14 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        private void OnLoad(object sender, EventArgs e)
+        {
+            // If you set this in the Designer, DataGridView has a defect that causes it to throw an
+            // exception if the the cursor is positioned over the record selector column during loading.
+            dataGridViewFilter.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewSort.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
         /// <summary>
         /// Returns the set of columns that should be checked in the Available Fields Tree.
         /// </summary>
