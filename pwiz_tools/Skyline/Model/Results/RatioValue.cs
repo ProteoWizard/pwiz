@@ -78,13 +78,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Ratio + (double.IsNaN(StdDev) ? "" : (" rdotp " + DotProduct));
-        }
-
-        public string FormatForDisplay()
-        {
-            string format = double.IsNaN(StdDev) ? "{0}" : "{0} rdotp {1}";
-            return string.Format(format, MathEx.RoundAboveZero(Ratio, 2, 4), DotProduct.ToString("0.##"));
+            return Ratio + (double.IsNaN(StdDev) ? "" : (" rdotp " + DotProduct));  // Not L10N
         }
 
         public int CompareTo(object obj)

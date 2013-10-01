@@ -168,7 +168,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             return GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
                 GetResultsText(nodeGroup, settings.NodePep, settings.Index, settings.RatioIndex));
         }
-        
+
+        private const string DOTP_FORMAT = "0.##"; // Not L10N
+        private const string CS_SEPARATOR = ", "; // Not L10N
+
         public static string GetResultsText(TransitionGroupDocNode nodeGroup,
             PeptideDocNode nodePep, int indexResult, int indexRatio)
         {
@@ -180,18 +183,25 @@ namespace pwiz.Skyline.Controls.SeqNode
             StringBuilder sb = new StringBuilder(" ("); // Not L10N
             int len = sb.Length;
             if (isotopeProduct.HasValue)
-                sb.Append(string.Format("idotp {0:F02}", isotopeProduct.Value)); // Not L10N
+                sb.Append(string.Format("idotp {0}", isotopeProduct.Value.ToString(DOTP_FORMAT))); // Not L10N
             if (libraryProduct.HasValue)
             {
                 if (sb.Length > len)
-                    sb.Append(", "); // Not L10N
-                sb.Append(string.Format("dotp {0:F02}", libraryProduct.Value)); // Not L10N
+                    sb.Append(CS_SEPARATOR);
+                sb.Append(string.Format("dotp {0}", libraryProduct.Value.ToString(DOTP_FORMAT))); // Not L10N
             }
             if (ratio != null)
             {
                 if (sb.Length > len)
-                    sb.Append(", "); // Not L10N
-                sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__, ratio.FormatForDisplay()));
+                    sb.Append(CS_SEPARATOR);
+                if (!double.IsNaN(ratio.StdDev))
+                {
+                    sb.Append(string.Format("rdotp {0}", ratio.DotProduct.ToString(DOTP_FORMAT))); // Not L10N
+                    sb.Append(CS_SEPARATOR);
+                }
+
+                sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__,
+                                        MathEx.RoundAboveZero(ratio.Ratio, 2, 4)));
             }
             sb.Append(")"); // Not L10N
             return sb.ToString();
