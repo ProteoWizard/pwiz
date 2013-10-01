@@ -326,5 +326,20 @@ namespace Test
             downgradeToRevision(filename, 0);
             testFilterFile(filename);
         }
+
+        [TestMethod]
+        public void TestIsPathOnFixedDrive()
+        {
+            var drives = DriveInfo.GetDrives();
+            foreach (var drive in drives.Where(o => o.DriveType == DriveType.Fixed))
+                Assert.IsTrue(Util.IsPathOnFixedDrive(drive.RootDirectory.Name));
+            foreach (var drive in drives.Where(o => o.DriveType != DriveType.Fixed))
+                Assert.IsFalse(Util.IsPathOnFixedDrive(drive.RootDirectory.Name));
+            Assert.IsFalse(Util.IsPathOnFixedDrive(@"\\this\is\not\a\real\path\but\it\is\UNC\so\it\doesn't\matter"));
+            Assert.IsFalse(Util.IsPathOnFixedDrive(@"http://this/is/not/a/real/path/but/it/is/URI/so/it/doesn't/matter"));
+
+            Assert.AreEqual(Util.IsPathOnFixedDrive(Directory.GetCurrentDirectory()),
+                            Util.IsPathOnFixedDrive(@"this/path/is/assumed/to/in/the/working/directory"));
+        }
     }
 }

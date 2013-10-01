@@ -140,8 +140,7 @@ namespace IDPicker
             {
                 // if the file is on a hard drive and can fit in the available RAM, populate the disk cache
                 long ramBytesAvailable = (long)new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
-                if (ramBytesAvailable > new FileInfo(filepath).Length &&
-                    DriveType.Fixed == new DriveInfo(Path.GetPathRoot(filepath)).DriveType)
+                if (ramBytesAvailable > new FileInfo(filepath).Length && IsPathOnFixedDrive(filepath))
                 {
                     using (var fs = new FileStream(filepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
                     {
@@ -179,6 +178,36 @@ namespace IDPicker
                 // ignore precaching errors; could be due to user privileges and it's an optional step
             }
             return false;
+        }
+
+        /// <summary>
+        /// Tests whether a path is on a "fixed" drive (e.g. not a network, optical, tape, or flash drive).
+        /// UNC and URI paths always count as network drives. The path does not actually need to exist.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown when an invalid path is passed.</exception>
+        public static bool IsPathOnFixedDrive(string path)
+        {
+            try
+            {
+                if (path.TrimStart().StartsWith(@"\\"))
+                    return false;
+                if (Uri.IsWellFormedUriString(path.TrimStart(), UriKind.Absolute))
+                    return false;
+                return DriveType.Fixed == new DriveInfo(GetPathRoot(path)).DriveType;
+            }
+            catch(Exception e)
+            {
+                throw new ArgumentException("[IsPathOnFixedDrive] error checking filepath \"" + path + "\"", e);
+            }
+        }
+
+        /// <summary>
+        /// If necessary, adds a third backslash to UNC paths to work around a "working as designed" issue in System.Data.SQLite:
+        /// http://system.data.sqlite.org/index.html/tktview/01a6c83d51a203ff?plaintext
+        /// </summary>
+        public static string GetSQLiteUncCompatiblePath(string path)
+        {
+            return path.TrimStart().StartsWith(@"\\") ? @"\" + path : path;
         }
     }
 }

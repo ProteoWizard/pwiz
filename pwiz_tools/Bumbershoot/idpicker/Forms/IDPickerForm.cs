@@ -1163,8 +1163,7 @@ namespace IDPicker
                 if (!IsHandleCreated)
                     return;
 
-                if (Properties.GUI.Settings.Default.WarnAboutNonFixedDrive &&
-                    DriveType.Fixed != new DriveInfo(Path.GetPathRoot(mergeTargetFilepath)).DriveType)
+                if (Properties.GUI.Settings.Default.WarnAboutNonFixedDrive && !Util.IsPathOnFixedDrive(mergeTargetFilepath))
                 {
                     string oldFilename = mergeTargetFilepath;
                     bool copyLocal = true;

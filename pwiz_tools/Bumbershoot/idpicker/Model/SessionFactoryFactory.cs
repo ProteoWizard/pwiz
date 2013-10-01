@@ -255,13 +255,15 @@ namespace IDPicker.DataModel
         static object mutex = new object();
         public static ISessionFactory CreateSessionFactory (string path, SessionFactoryConfig config)
         {
+            string uncCompatiblePath = Util.GetSQLiteUncCompatiblePath(path);
 
             // update the existing database's schema if necessary, and if updated, recreate the indexes
-            if (File.Exists(path) &&
+            if (path != ":memory:" &&
+                File.Exists(path) &&
                 IsValidFile(path) &&
                 SchemaUpdater.Update(path, null))
             {
-                using (var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3", path)))
+                using (var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3", uncCompatiblePath)))
                 {
                     conn.Open();
                     conn.ExecuteNonQuery(@"PRAGMA journal_mode=DELETE;
@@ -284,7 +286,7 @@ namespace IDPicker.DataModel
                 .SetProperty("hibernate.cache.use_query_cache", "true")
                 .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 //.SetProperty("adonet.batch_size", batchSize.ToString())
-                .SetProperty("connection.connection_string", String.Format("Data Source={0};Version=3;{1}", path, (pooling ? "Pooling=True;Max Pool Size=1;" : "")))
+                .SetProperty("connection.connection_string", String.Format("Data Source={0};Version=3;{1}", uncCompatiblePath, (pooling ? "Pooling=True;Max Pool Size=1;" : "")))
                 .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
                 .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
                 .SetProperty("connection.release_mode", "on_close")
@@ -344,8 +346,9 @@ namespace IDPicker.DataModel
                     createSql = configuration.GenerateSchemaCreationScript(Dialect.GetDialect(configuration.Properties));
                 }
 
+            string uncCompatiblePath = Util.GetSQLiteUncCompatiblePath(path);
             bool pooling = false;// path == ":memory:";
-            var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3;{1}", path, (pooling ? "Pooling=True;Max Pool Size=1;" : "")));
+            var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3;{1}", uncCompatiblePath, (pooling ? "Pooling=True;Max Pool Size=1;" : "")));
             conn.Open();
 
             var journal_mode = conn.ExecuteQuery("PRAGMA journal_mode").Single()[0];
@@ -382,7 +385,8 @@ namespace IDPicker.DataModel
         {
             try
             {
-                using (var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3", path)))
+                string uncCompatiblePath = Util.GetSQLiteUncCompatiblePath(path);
+                using (var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3", uncCompatiblePath)))
                 {
                     conn.Open();
 

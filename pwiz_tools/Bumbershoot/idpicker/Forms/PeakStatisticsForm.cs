@@ -289,8 +289,8 @@ namespace IDPicker.Forms
                         {
                             if (plotMatchedPeaks)
                             {
-                                precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, (int)series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[(int)series - 1], length)));
-                                chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, (int)series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[(int)series - 1], length)));
+                                precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, (int)series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[(int)series], length)));
+                                chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, (int)series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[(int)series], length)));
                             }
 
                             if (removeMatchedPeaks)

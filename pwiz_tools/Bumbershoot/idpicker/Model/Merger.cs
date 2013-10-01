@@ -90,7 +90,7 @@ namespace IDPicker.DataModel
         {
             tempMergeTargetFilepath = mergeTargetFilepath;
             // for non-fixed drives, merge to a temporary file
-            if (DriveType.Fixed != new DriveInfo(Util.GetPathRoot(mergeTargetFilepath)).DriveType)
+            if (!Util.IsPathOnFixedDrive(mergeTargetFilepath))
                 tempMergeTargetFilepath = Path.GetTempFileName();
             else
                 tempMergeTargetFilepath = mergeTargetFilepath;
@@ -199,7 +199,7 @@ namespace IDPicker.DataModel
 
                     // for non-fixed drives, copy source to a temporary file
                     string tempMergeSourceFilepath;
-                    if (DriveType.Fixed != new DriveInfo(Util.GetPathRoot(mergeSourceFilepath)).DriveType)
+                    if (!Util.IsPathOnFixedDrive(mergeSourceFilepath))
                     {
                         tempMergeSourceFilepath = Path.GetTempFileName();
                         File.Delete(tempMergeSourceFilepath);
