@@ -143,6 +143,7 @@ class Spectrum
     const vector<int>& getPossibleCharges() const;
     const vector<PEAK_T>& getRawPeaks() const;
     const vector<PEAK_T>& getProcessedPeaks() const;
+	double getSignalToNoise();
     // get rid of these?
     int  getPeaks(PEAK_T* parray, int maxNumPeaks) const;
     void putPeaksHere( vector<PEAK_T>* peakVectorp );
@@ -198,6 +199,16 @@ struct compSpecScanNum : public binary_function<Spectrum, Spectrum, bool>
 struct compSpecPtrScanNum : public binary_function<Spectrum*, Spectrum*, bool>
 {
     bool operator()(Spectrum* s1, Spectrum* s2) {return s1->getScanNumber() <  s2->getScanNumber();}
+};
+
+struct compSpecPtrRetentionTime : public binary_function<Spectrum*, Spectrum*, bool>
+{
+    bool operator()(Spectrum* s1, Spectrum* s2) {return s1->getRetentionTime() < s2->getRetentionTime();}
+};
+
+struct compSpecPtrSignalToNoise : public binary_function<Spectrum*, Spectrum*, bool>
+{
+    bool operator()(Spectrum* s1, Spectrum* s2) {return s1->getSignalToNoise() > s2->getSignalToNoise();}
 };
 
 } // namespace

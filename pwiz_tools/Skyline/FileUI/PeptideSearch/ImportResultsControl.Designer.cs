@@ -59,7 +59,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.resultsSplitContainer.Panel2.Controls.Add(this.label3);
             this.resultsSplitContainer.Panel2.Controls.Add(this.findResultsFilesButton);
             this.resultsSplitContainer.Panel2.Controls.Add(this.listResultsFilesMissing);
-            this.resultsSplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.resultsSplitContainer_SplitterMoved);
             // 
             // label2
             // 

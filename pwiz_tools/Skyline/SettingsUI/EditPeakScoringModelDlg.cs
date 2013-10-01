@@ -149,7 +149,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public void TrainModel(bool suppressWeights = false)
         {
-            var weightSuppressors = suppressWeights ? _gridViewDriver.Items.Select(item => !item.Enabled).ToArray() :
+            var weightSuppressors = suppressWeights ? _gridViewDriver.Items.Select(item => !item.IsEnabled).ToArray() :
                                                       _gridViewDriver.Items.Select(item => false).ToArray();
             // Get scores for target and decoy groups.
             List<IList<double[]>> targetTransitionGroups;
@@ -841,7 +841,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetChecked(int row, bool value)
         {
-            _gridViewDriver.Items[row].Enabled = value;
+            _gridViewDriver.Items[row].IsEnabled = value;
         }
 
         #endregion
@@ -1059,14 +1059,14 @@ namespace pwiz.Skyline.SettingsUI
         public string Name { get; private set; }
         public double? Weight { get; set; }
         public double? PercentContribution { get; set; }
-        public bool Enabled { get; set; }
+        public bool IsEnabled { get; set; }
 
         public PeakCalculatorWeight(string name, double? weight, double? percentContribution, bool enabled)
         {
             Name = name;
             Weight = weight;
             PercentContribution = percentContribution;
-            Enabled = enabled;
+            IsEnabled = enabled;
         }
     }
 }

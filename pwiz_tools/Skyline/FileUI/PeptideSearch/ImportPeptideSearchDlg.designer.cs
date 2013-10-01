@@ -61,7 +61,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label19 = new System.Windows.Forms.Label();
             this.importFastaPage = new System.Windows.Forms.TabPage();
             this.importFASTATitlePanel = new System.Windows.Forms.Panel();
-            this.label18 = new System.Windows.Forms.Label();
+            this.lblFasta = new System.Windows.Forms.Label();
             this.wizardPagesImportPeptideSearch.SuspendLayout();
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
@@ -311,15 +311,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             this.importFASTATitlePanel.BackColor = System.Drawing.Color.GhostWhite;
             this.importFASTATitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.importFASTATitlePanel.Controls.Add(this.label18);
+            this.importFASTATitlePanel.Controls.Add(this.lblFasta);
             resources.ApplyResources(this.importFASTATitlePanel, "importFASTATitlePanel");
             this.importFASTATitlePanel.Name = "importFASTATitlePanel";
             // 
-            // label18
+            // lblFasta
             // 
-            resources.ApplyResources(this.label18, "label18");
-            this.label18.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label18.Name = "label18";
+            resources.ApplyResources(this.lblFasta, "lblFasta");
+            this.lblFasta.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.lblFasta.Name = "lblFasta";
             // 
             // ImportPeptideSearchDlg
             // 
@@ -380,7 +380,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Panel addModsTitlePanel;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Panel importFASTATitlePanel;
-        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label lblFasta;
         private System.Windows.Forms.Panel ms1FullScanSettingsTitlePanel;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Panel panel1;

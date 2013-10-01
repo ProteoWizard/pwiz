@@ -30,11 +30,11 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditPeakScoringModelDlg));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.textName = new System.Windows.Forms.TextBox();
             this.btnTrainModel = new System.Windows.Forms.Button();
@@ -60,7 +60,7 @@
             this.zedGraphSelectedCalculator = new ZedGraph.ZedGraphControl();
             this.label3 = new System.Windows.Forms.Label();
             this.lblSelectedGraph = new System.Windows.Forms.Label();
-            this.Enabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.IsEnabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.PeakCalculatorName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakCalculatorWeight = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakCalculatorPercentContribution = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -101,38 +101,38 @@
             resources.ApplyResources(this.gridPeakCalculators, "gridPeakCalculators");
             this.gridPeakCalculators.AutoGenerateColumns = false;
             this.gridPeakCalculators.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridPeakCalculators.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridPeakCalculators.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridPeakCalculators.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridPeakCalculators.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Enabled,
+            this.IsEnabled,
             this.PeakCalculatorName,
             this.PeakCalculatorWeight,
             this.PeakCalculatorPercentContribution});
             this.gridPeakCalculators.DataSource = this.bindingPeakCalculators;
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridPeakCalculators.DefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridPeakCalculators.DefaultCellStyle = dataGridViewCellStyle4;
             this.gridPeakCalculators.Name = "gridPeakCalculators";
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle10.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle10.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle10.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle10.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridPeakCalculators.RowHeadersDefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridPeakCalculators.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.gridPeakCalculators.RowHeadersVisible = false;
             this.gridPeakCalculators.ShowEditingIcon = false;
             this.helpTip.SetToolTip(this.gridPeakCalculators, resources.GetString("gridPeakCalculators.ToolTip"));
@@ -310,13 +310,13 @@
             resources.ApplyResources(this.lblSelectedGraph, "lblSelectedGraph");
             this.lblSelectedGraph.Name = "lblSelectedGraph";
             // 
-            // Enabled
+            // IsEnabled
             // 
-            this.Enabled.DataPropertyName = "Enabled";
-            this.Enabled.FalseValue = "False";
-            resources.ApplyResources(this.Enabled, "Enabled");
-            this.Enabled.Name = "Enabled";
-            this.Enabled.TrueValue = "True";
+            this.IsEnabled.DataPropertyName = "IsEnabled";
+            this.IsEnabled.FalseValue = "False";
+            resources.ApplyResources(this.IsEnabled, "IsEnabled");
+            this.IsEnabled.Name = "IsEnabled";
+            this.IsEnabled.TrueValue = "True";
             // 
             // PeakCalculatorName
             // 
@@ -331,8 +331,8 @@
             // 
             this.PeakCalculatorWeight.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             this.PeakCalculatorWeight.DataPropertyName = "Weight";
-            dataGridViewCellStyle7.Format = "N4";
-            this.PeakCalculatorWeight.DefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle2.Format = "N4";
+            this.PeakCalculatorWeight.DefaultCellStyle = dataGridViewCellStyle2;
             this.PeakCalculatorWeight.FillWeight = 80F;
             resources.ApplyResources(this.PeakCalculatorWeight, "PeakCalculatorWeight");
             this.PeakCalculatorWeight.Name = "PeakCalculatorWeight";
@@ -342,9 +342,9 @@
             // 
             this.PeakCalculatorPercentContribution.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             this.PeakCalculatorPercentContribution.DataPropertyName = "PercentContribution";
-            dataGridViewCellStyle8.Format = "0.0%";
-            dataGridViewCellStyle8.NullValue = null;
-            this.PeakCalculatorPercentContribution.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle3.Format = "0.0%";
+            dataGridViewCellStyle3.NullValue = null;
+            this.PeakCalculatorPercentContribution.DefaultCellStyle = dataGridViewCellStyle3;
             resources.ApplyResources(this.PeakCalculatorPercentContribution, "PeakCalculatorPercentContribution");
             this.PeakCalculatorPercentContribution.Name = "PeakCalculatorPercentContribution";
             this.PeakCalculatorPercentContribution.ReadOnly = true;
@@ -407,7 +407,7 @@
         private System.Windows.Forms.CheckBox secondBestCheckBox;
         private System.Windows.Forms.CheckBox decoyCheckBox;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn Enabled;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn IsEnabled;
         private System.Windows.Forms.DataGridViewTextBoxColumn PeakCalculatorName;
         private System.Windows.Forms.DataGridViewTextBoxColumn PeakCalculatorWeight;
         private System.Windows.Forms.DataGridViewTextBoxColumn PeakCalculatorPercentContribution;

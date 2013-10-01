@@ -181,6 +181,11 @@ namespace pwiz.Skyline.Model.Results
             extracted_base_peak = 0x04,
         }
 
+        /// <summary>
+        /// Allow a little fewer points than the data structure can actually hold.
+        /// </summary>
+        public const int MAX_POINTS = ushort.MaxValue - 1000;
+
         private const byte NO_MAX_PEAK = 0xFF;
 
         /// <summary>

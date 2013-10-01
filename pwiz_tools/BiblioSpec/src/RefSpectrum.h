@@ -68,6 +68,8 @@ class RefSpectrum : public Spectrum
   string nextAA;
   double circShift_; // amount by which peaks have been circularly shifted
                      // 0 if observed spectrum
+  double score_;
+  int scoreType_;
   
 
  public:
@@ -93,6 +95,8 @@ class RefSpectrum : public Spectrum
   void setCopies(int dups);
   void setPrevAA(string pAA);
   void setNextAA(string nAA);
+  void setScore(double score);
+  void setScoreType(int scoreType);
 
   //getters
   int getCharge() const;
@@ -104,6 +108,8 @@ class RefSpectrum : public Spectrum
   string getPrevAA() const;
   string getNextAA() const;
   double getCircShift() const;
+  double getScore() const;
+  int getScoreType() const;
   
   // make this private and only allow decoys as copy of refs?
   // create null spectrum by doing a circular shift of peaks

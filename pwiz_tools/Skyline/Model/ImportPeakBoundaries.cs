@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model
                             {
                                 string filePath = chromSet.GetFileInfo(fileId).FilePath;
                                 docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                                           null, startTime, endTime);
+                                                           null, startTime, endTime, null, false);
                                 foundSample = true;
                             }
                         }

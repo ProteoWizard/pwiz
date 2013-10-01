@@ -56,24 +56,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private SkylineWindow SkylineWindow { get; set; }
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
-
-        public List<string> FoundResultsFiles { get; set; }
+        public List<KeyValuePair<string, string[]>> FoundResultsFiles { get; set; }
         public List<string> MissingResultsFiles { get; set; }
+
+        public List<string> FoundResultsFilesNames { get { return (from pair in FoundResultsFiles select pair.Key).ToList(); } }
+        public List<string> FoundResultsFilesPaths { get { return (from pair in FoundResultsFiles select pair.Value.First()).ToList(); } }
 
         public void InitializeChromatogramsPage(Library docLib)
         {
-            FoundResultsFiles = new List<string>();
+            FoundResultsFiles = new List<KeyValuePair<string, string[]>>();
             MissingResultsFiles = new List<string>();
             if (null != docLib)
             {
+                var measuredResults = SkylineWindow.DocumentUI.Settings.MeasuredResults;
+
                 foreach (var dataFile in docLib.LibraryDetails.DataFiles)
                 {
+                    // If a matching file is already in the document, then don't include
+                    // this library spectrum source in the set of files to find.
+                    if (measuredResults != null && measuredResults.FindMatchingMSDataFile(dataFile) != null)
+                        continue;
+
                     if (File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
                     {
                         // We've found the dataFile in the exact location
                         // specified in the document library, so just add it
                         // to the "FOUND" list.
-                        FoundResultsFiles.Add(dataFile);
+                        AddFoundResultsFile(dataFile);
                     }
                     else
                     {
@@ -89,15 +98,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void GetPeptideSearchChromatograms()
         {
-            List<KeyValuePair<string, string[]>> namedResults = new List<KeyValuePair<string, string[]>>();
-            foreach (string resultsFile in FoundResultsFiles)
-            {
-                namedResults.Add(new KeyValuePair<string, string[]>(
-                                       Path.GetFileNameWithoutExtension(resultsFile), new[] { resultsFile }));
-            }
-
             SkylineWindow.ModifyDocument(Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-               doc => SkylineWindow.ImportResults(doc, namedResults.ToArray(), ExportOptimize.NONE));
+               doc => SkylineWindow.ImportResults(doc, FoundResultsFiles.ToArray(), ExportOptimize.NONE));
         }
 
         private void browseToResultsFileButton_Click(object sender, EventArgs e)
@@ -141,7 +143,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(item),
                                                             Path.GetFileNameWithoutExtension(dataSourceFileName)))
                         {
-                            FoundResultsFiles.Add(dataSource);
+                            AddFoundResultsFile(dataSource);
                             MissingResultsFiles.Remove(item);
                             break;
                         }
@@ -195,7 +197,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             bool allFilesFound = FindResultsFiles(dirPath, missingFiles);
             foreach (var item in missingFiles.Keys.Where(item => missingFiles[item].Found))
             {
-                FoundResultsFiles.Add(missingFiles[item].Path);
+                AddFoundResultsFile(missingFiles[item].Path);
                 MissingResultsFiles.Remove(item);
             }
 
@@ -301,7 +303,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void UpdateResultsFilesUI(bool allFilesFound)
         {
             // Update the results files list boxes
-            UpdateResultsFilesList(FoundResultsFiles, listResultsFilesFound);
+            UpdateResultsFilesList(FoundResultsFilesPaths, listResultsFilesFound);
             UpdateResultsFilesList(MissingResultsFiles, listResultsFilesMissing);
 
             if (allFilesFound)
@@ -325,6 +327,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        private void AddFoundResultsFile(string path)
+        {
+            FoundResultsFiles.Add(new KeyValuePair<string, string[]>(
+                Path.GetFileNameWithoutExtension(path), new[] { path }));
+        }
+
         public class ResultsFileFindInfo
         {
             public string Path { get; set; }
@@ -346,11 +354,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             public int NumFoundFiles { get; private set; }
-        }
-
-        private void resultsSplitContainer_SplitterMoved(object sender, SplitterEventArgs e)
-        {
-
         }
     }
 }

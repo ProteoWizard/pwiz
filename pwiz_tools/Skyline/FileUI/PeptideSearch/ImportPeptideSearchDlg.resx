@@ -841,34 +841,34 @@ injected into the mass spectrometer.</value>
   <data name="&gt;&gt;ms1FullScanSettingsPage.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="label18.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblFasta.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label18.Font" type="System.Drawing.Font, System.Drawing">
+  <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
     <value>Arial Rounded MT Bold, 12pt</value>
   </data>
-  <data name="label18.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
-  <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
     <value>119, 18</value>
   </data>
-  <data name="label18.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblFasta.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="label18.Text" xml:space="preserve">
+  <data name="lblFasta.Text" xml:space="preserve">
     <value>Import FASTA</value>
   </data>
-  <data name="&gt;&gt;label18.Name" xml:space="preserve">
-    <value>label18</value>
+  <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
+    <value>lblFasta</value>
   </data>
-  <data name="&gt;&gt;label18.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblFasta.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label18.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
     <value>importFASTATitlePanel</value>
   </data>
-  <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblFasta.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="importFASTATitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -935,7 +935,7 @@ injected into the mass spectrometer.</value>
     <value>wizardPagesImportPeptideSearch</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
@@ -974,6 +974,6 @@ injected into the mass spectrometer.</value>
     <value>ImportPeptideSearchDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

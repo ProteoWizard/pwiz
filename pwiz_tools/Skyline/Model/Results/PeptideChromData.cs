@@ -31,6 +31,8 @@ namespace pwiz.Skyline.Model.Results
     internal sealed class PeptideChromDataSets
     {
         private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
+        private const double TIME_MIN_DELTA = 0.2/60;
+
         // No longer necessary, since mzWiff mzXML is the only thing marked
         // as IsProcessedScans
 //        private const double TIME_DELTA_MAX_RATIO_THRESHOLD = 25;
@@ -313,11 +315,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private static double EnsureMinDelta(double intervalDelta)
+        private double EnsureMinDelta(double intervalDelta)
         {
             // Never go smaller than 1/5 a second.
-            if (intervalDelta < 0.2 / 60)
-                intervalDelta = 0.2 / 60;  // For breakpoint setting
+            if (intervalDelta < TIME_MIN_DELTA)
+                intervalDelta = TIME_MIN_DELTA;  // For breakpoint setting
+            double start, end;
+            GetExtents(_isProcessedScans, intervalDelta, out start, out end);
+            double pointsMinDelta = (end - start)/ChromGroupHeaderInfo5.MAX_POINTS;
+            if (intervalDelta < pointsMinDelta)
+                intervalDelta = pointsMinDelta;  // For breakpoint setting
             return intervalDelta;
         }
 

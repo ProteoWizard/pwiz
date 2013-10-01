@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model
                         var pepPath = new IdentityPath(pepGroupPath, nodePep.Id);
                         var groupPath = new IdentityPath(pepPath, groupNode.Id);
                         docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                                   null, startTime, endTime);
+                                                   null, startTime, endTime, null, false);
                     }
                 }
                 ++i;

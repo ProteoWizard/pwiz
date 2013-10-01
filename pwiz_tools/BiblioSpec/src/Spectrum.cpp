@@ -186,6 +186,25 @@ const vector<PEAK_T>& Spectrum::getProcessedPeaks() const
 {
     return (const vector<PEAK_T>&)processedPeaks_;
 }
+
+double Spectrum::getSignalToNoise() {
+	size_t size = rawPeaks_.size();
+
+	sort(rawPeaks_.begin(), rawPeaks_.end(), compPeakInt());
+
+	double signal = 0.0;
+	int signalPeaks = 0;
+	for (size_t i = 1; i != size && i < 6; ++i) {
+		signal += rawPeaks_[i].intensity;
+		++signalPeaks;
+	}
+	signal /= signalPeaks;
+
+	double noise = (size % 2 == 0) ? (rawPeaks_[size / 2 - 1].intensity + rawPeaks_[size / 2].intensity) / 2 : rawPeaks_[size/2].intensity;
+
+	return signal / noise;
+}
+
 // deletes existing peaks
 void Spectrum::setRawPeaks(const vector<PEAK_T>& newpeaks) {
     rawPeaks_.assign(newpeaks.begin(), newpeaks.end()); 
