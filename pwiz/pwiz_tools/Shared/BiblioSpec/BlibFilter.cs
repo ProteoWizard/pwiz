@@ -30,6 +30,7 @@ namespace pwiz.BiblioSpec
         {
             var argv = new List<string>
                            {
+                               "-b true",
                                "\"" + sourceFile + "\"",
                                "\"" + destinationFile + "\""
                            };

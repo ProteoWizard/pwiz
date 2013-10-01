@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -96,6 +97,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                         };
             ImportResultsControl.ResultsFilesChanged += ImportResultsControl_OnResultsFilesChanged;
             getChromatogramsPage.Controls.Add(ImportResultsControl);
+
+            _pagesToSkip = new HashSet<Pages>();
+            if (SkylineWindow.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled)
+                _pagesToSkip.Add(Pages.ms1_full_scan_settings_page);
         }
 
         private SkylineWindow SkylineWindow { get; set; }
@@ -109,6 +114,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public MatchModificationsControl MatchModificationsControl { get; private set; }
 
         private Library DocLib { get { return BuildPepSearchLibControl.DocLib; } }
+
+        private bool FastaOptional { get { return !BuildPepSearchLibControl.FilterForDocumentPeptides && SkylineWindow.Document.PeptideCount > 0; } }
+        private Pages LastPage
+        {
+            get
+            {
+                int lastPage = wizardPagesImportPeptideSearch.TabCount - 1;
+                for (; lastPage >= (int) Pages.match_modifications_page; lastPage--)
+                {
+                    if (!_pagesToSkip.Contains((Pages) lastPage))
+                        break;
+                }
+                return (Pages) lastPage;
+            }
+        }
+
+        private readonly HashSet<Pages> _pagesToSkip;
 
         public Pages CurrentPage
         {
@@ -142,14 +164,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // the rest of the wizard pages.
                         ShowEarlyFinish(false);
 
+                        if (FastaOptional)
+                            lblImportFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_;
+
                         // The next page is going to be the chromatograms page.
                         ImportResultsControl.InitializeChromatogramsPage(DocLib);
+
+                        if (!MatchModificationsControl.Initialize(DocLib))
+                            _pagesToSkip.Add(Pages.match_modifications_page);
+                        if (BuildPepSearchLibControl.FilterForDocumentPeptides)
+                            _pagesToSkip.Add(Pages.import_fasta_page);
                     }
                     break;
 
                 case Pages.chromatograms_page:
                     {
-                        if (!BuildPepSearchLibControl.VerifyRetentionTimes(ImportResultsControl.FoundResultsFiles))
+                        if (!BuildPepSearchLibControl.VerifyRetentionTimes(ImportResultsControl.FoundResultsFilesPaths))
                         {
                             MessageDlg.Show(this, TextUtil.LineSeparate(Resources.ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_,
                                 Resources.ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_));
@@ -162,6 +192,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                             {
                                 return;
+                            }
+                        }
+
+                        if (ImportResultsControl.FoundResultsFiles.Count > 1)
+                        {
+                            string prefix = ImportResultsDlg.GetCommonPrefix(ImportResultsControl.FoundResultsFilesNames);
+                            if (prefix.Length > 2)
+                            {
+                                using (var dlgName = new ImportResultsNameDlg(prefix))
+                                {
+                                    var result = dlgName.ShowDialog(this);
+                                    if (result == DialogResult.Cancel)
+                                    {
+                                        return;
+                                    }
+                                    else if (result == DialogResult.Yes)
+                                    {
+                                        // Rename all the replicates to remove the specified prefix.
+                                        for (int i = 0; i < ImportResultsControl.FoundResultsFiles.Count; ++i)
+                                        {
+                                            var namedSet = ImportResultsControl.FoundResultsFiles[i];
+                                            ImportResultsControl.FoundResultsFiles[i] = new KeyValuePair<string, string[]>(
+                                                namedSet.Key.Substring(prefix.Length), namedSet.Value);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -188,34 +244,37 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.import_fasta_page: // This is the last page
-                    if (!ImportFastaControl.ImportFasta())
+                    if ((FastaOptional && !ImportFastaControl.ContainsFastaContent) ||
+                        ImportFastaControl.ImportFasta())
                     {
-                        return;
+                        WizardFinish();
                     }
 
-                    // This is the last page, so go ahead and finish
-                    WizardFinish();
                     return;
             }
 
-            CurrentPage++;
+            Pages newPage = CurrentPage + 1;
 
             // Initialize modifications page or skip if no modifications.
-            if (CurrentPage == Pages.match_modifications_page &&
-                !MatchModificationsControl.Initialize(DocLib))
+            if (newPage == Pages.match_modifications_page && _pagesToSkip.Contains(Pages.match_modifications_page))
             {
-                CurrentPage++;
+                ++newPage;
             }
-            if (CurrentPage == Pages.ms1_full_scan_settings_page &&
-                SkylineWindow.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled)
+            if (newPage == Pages.ms1_full_scan_settings_page && _pagesToSkip.Contains(Pages.ms1_full_scan_settings_page))
             {
                 // If the user has already set up full-scan settings, then just continue, since
                 // they may have any kind of settings, like PRM or DIA
-                CurrentPage++;
+                ++newPage;
+            }
+            // Skip import FASTA if user filters for document peptides
+            if (newPage == Pages.import_fasta_page && _pagesToSkip.Contains(Pages.import_fasta_page))
+            {
+                WizardFinish();
+                return;
             }
 
-            int lastPageIndex = wizardPagesImportPeptideSearch.TabCount - 1;
-            if (CurrentPage == (Pages)lastPageIndex)
+            CurrentPage = newPage;
+            if (CurrentPage == LastPage)
             {
                 btnNext.Text = Resources.ImportPeptideSearchDlg_NextPage_Finish;
             }

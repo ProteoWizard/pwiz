@@ -60,7 +60,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label19 = new System.Windows.Forms.Label();
             this.importFastaPage = new System.Windows.Forms.TabPage();
             this.importFASTATitlePanel = new System.Windows.Forms.Panel();
-            this.label18 = new System.Windows.Forms.Label();
+            this.lblImportFasta = new System.Windows.Forms.Label();
             this.wizardPagesImportPeptideSearch.SuspendLayout();
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
@@ -423,23 +423,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             this.importFASTATitlePanel.BackColor = System.Drawing.Color.GhostWhite;
             this.importFASTATitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.importFASTATitlePanel.Controls.Add(this.label18);
+            this.importFASTATitlePanel.Controls.Add(this.lblImportFasta);
             this.importFASTATitlePanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.importFASTATitlePanel.Location = new System.Drawing.Point(3, 3);
             this.importFASTATitlePanel.Name = "importFASTATitlePanel";
             this.importFASTATitlePanel.Size = new System.Drawing.Size(388, 43);
             this.importFASTATitlePanel.TabIndex = 15;
             // 
-            // label18
+            // lblImportFasta
             // 
-            this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Arial Rounded MT Bold", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label18.Location = new System.Drawing.Point(12, 9);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(119, 18);
-            this.label18.TabIndex = 0;
-            this.label18.Text = "Import FASTA";
+            this.lblImportFasta.AutoSize = true;
+            this.lblImportFasta.Font = new System.Drawing.Font("Arial Rounded MT Bold", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblImportFasta.Location = new System.Drawing.Point(12, 9);
+            this.lblImportFasta.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.lblImportFasta.Name = "lblImportFasta";
+            this.lblImportFasta.Size = new System.Drawing.Size(119, 18);
+            this.lblImportFasta.TabIndex = 0;
+            this.lblImportFasta.Text = "Import FASTA";
             // 
             // ImportPeptideSearchDlg
             // 
@@ -504,7 +504,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Panel addModsTitlePanel;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Panel importFASTATitlePanel;
-        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label lblImportFasta;
         private System.Windows.Forms.Panel ms1FullScanSettingsTitlePanel;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Panel panel1;

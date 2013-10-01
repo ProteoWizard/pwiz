@@ -74,6 +74,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
         private readonly int tbxFastaHeightDifference;
 
+        public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
+
         public Enzyme Enzyme
         {
             get { return Settings.Default.GetEnzymeByName(comboEnzyme.SelectedItem.ToString()); }
@@ -197,7 +199,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
             }
 
-            if (string.IsNullOrWhiteSpace(tbxFasta.Text)) // The user didn't specify any FASTA content
+            if (!ContainsFastaContent) // The user didn't specify any FASTA content
             {
                 var docCurrent = SkylineWindow.DocumentUI;
                 // If the document has precursor transitions already, then just trust the user

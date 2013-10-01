@@ -934,21 +934,22 @@ namespace pwiz.Skyline.Model.DocSettings
             int len = libraries.Libraries.Count;
             int docLibShift = hasDocLib ? 1 : 0;
             LibrarySpec[] librarySpecs = new LibrarySpec[len + docLibShift];
-            for (int i = docLibShift; i < len + docLibShift; i++)
+            for (int i = 0; i < len; i++)
             {
+                int iSpec = i + docLibShift;
                 var library = libraries.Libraries[i];
                 if (library == null)
                 {
-                    librarySpecs[i] = libraries.LibrarySpecs[i];
-                    if (librarySpecs[i] == null)
+                    librarySpecs[iSpec] = libraries.LibrarySpecs[i];
+                    if (librarySpecs[iSpec] == null)
                         throw new InvalidDataException(Resources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
                     continue;
                 }
 
-                librarySpecs[i] = findLibrarySpec(library);
-                if (librarySpecs[i] == null)
+                librarySpecs[iSpec] = findLibrarySpec(library);
+                if (librarySpecs[iSpec] == null)
                     return null;    // Canceled
-                if (librarySpecs[i].FilePath == null)
+                if (librarySpecs[iSpec].FilePath == null)
                 {
                     // Disconnect the libraries, if not canceled, but no path
                     // specified.

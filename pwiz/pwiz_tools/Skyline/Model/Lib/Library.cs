@@ -181,7 +181,9 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public delegate bool BuildFunction(IDocumentContainer documentContainer, ILibraryBuilder libraryBuilder);
+        public delegate bool BuildFunction(IDocumentContainer documentContainer,
+                                           ILibraryBuilder libraryBuilder,
+                                           IProgressMonitor monitor);
 
         public sealed class BuildState
         {
@@ -198,17 +200,18 @@ namespace pwiz.Skyline.Model.Lib
         public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
         {
             BuildFunction buildFunc = BuildLibraryBackground;
-            buildFunc.BeginInvoke(container, builder, callback, new BuildState(builder.LibrarySpec, buildFunc));
+            var monitor = new LibraryBuildMonitor(this, container);
+            buildFunc.BeginInvoke(container, builder, monitor, callback, new BuildState(builder.LibrarySpec, buildFunc));
         }
 
-        private bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder)
+        public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor)
         {
             Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
             // This blocks all library loading, while a library is being built
             // TODO: Something better than locking for the entire build
             lock (_loadedLibraries)
             {
-                bool success = builder.BuildLibrary(new LibraryBuildMonitor(this, container));
+                bool success = builder.BuildLibrary(monitor);
 
                 if (success)
                 {

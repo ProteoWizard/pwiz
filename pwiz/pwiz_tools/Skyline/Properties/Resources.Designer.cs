@@ -6704,6 +6704,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import FASTA (optional).
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please check your peptide search pipeline or contact Skyline support to ensure retention times appear in your spectral libraries..
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_ {

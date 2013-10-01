@@ -50,6 +50,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
 
             textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(CultureInfo.CurrentCulture);
+
+            if (SkylineWindow.Document.PeptideCount == 0)
+                cbFilterForDocumentPeptides.Hide();
         }
 
         public event EventHandler<InputFilesChangedEventArgs> InputFilesChanged;
@@ -68,6 +71,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public Library DocLib { get; private set; }
         private LibrarySpec DocLibrarySpec { get; set; }
+
+        public bool FilterForDocumentPeptides { get { return cbFilterForDocumentPeptides.Checked; } }
 
         private string[] _searchFileNames = new string[0];
         private string[] SearchFileNames
@@ -148,7 +153,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Check to see if the library is already there, and if it is, 
             // "Append" instead of "Create"
-            var libraryBuildAction = File.Exists(outputPath) ? LibraryBuildAction.Append : LibraryBuildAction.Create;
+            bool libraryExists = File.Exists(outputPath);
+            var libraryBuildAction = LibraryBuildAction.Create;
+            if (libraryExists)
+            {
+                if (SkylineWindow.Document.Settings.HasDocumentLibrary)
+                    libraryBuildAction = LibraryBuildAction.Append;
+                else
+                {
+                    // If the document does not have a document library, then delete the one that we have found
+                    FileEx.SafeDelete(outputPath);
+                    FileEx.SafeDelete(Path.ChangeExtension(outputPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
+                }
+            }
 
             string name = Path.GetFileNameWithoutExtension(SkylineWindow.DocumentFilePath);
             var builder = new BiblioSpecLiteBuilder(name, outputPath, SearchFileNames)
@@ -167,11 +184,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 })
             {
                 // Disable the wizard, because the LongWaitDlg does not
-                WizardForm.Enabled = false;
                 try
                 {
-                    var status = longWaitDlg.PerformWork(WizardForm, 800, monitor => builder.BuildLibrary(monitor));
-                    WizardForm.Enabled = true;
+                    ClosePeptideSearchLibraryStreams();
+                    var status = longWaitDlg.PerformWork(WizardForm, 800,
+                        monitor => LibraryManager.BuildLibraryBackground(SkylineWindow, builder, monitor));
                     if (status.IsError)
                     {
                         MessageDlg.Show(WizardForm, status.ErrorException.Message);
@@ -200,10 +217,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SkylineWindow.ModifyDocument(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library, doc =>
                         doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib =>
             {
+                int skipCount = lib.HasDocumentLibrary ? 1 : 0;
                 var libSpecs = new List<LibrarySpec> {DocLibrarySpec};
-                libSpecs.AddRange(lib.LibrarySpecs);
+                libSpecs.AddRange(lib.LibrarySpecs.Skip(skipCount));
                 var libs = new List<Library> {DocLib};
-                libs.AddRange(lib.Libraries);
+                libs.AddRange(lib.Libraries.Skip(skipCount));
                 return lib.ChangeDocumentLibrary(true).ChangeLibraries(libSpecs, libs);
             })));
 
@@ -250,10 +268,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void ClosePeptideSearchLibraryStreams()
         {
-            if (null == DocLib)
+            BiblioSpecLiteLibrary docLib;
+            if (!SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.TryGetDocumentLibrary(out docLib))
                 return;
 
-            foreach (var stream in DocLib.ReadStreams)
+            foreach (var stream in docLib.ReadStreams)
                 stream.CloseStream();
         }
 

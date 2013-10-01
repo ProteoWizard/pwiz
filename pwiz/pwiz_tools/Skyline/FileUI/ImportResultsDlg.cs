@@ -397,7 +397,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private static string GetCommonPrefix(IEnumerable<string> values)
+        public static string GetCommonPrefix(IEnumerable<string> values)
         {
             string prefix = null;
             foreach (string value in values)

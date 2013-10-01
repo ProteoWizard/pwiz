@@ -66,7 +66,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.resultsSplitContainer.Size = new System.Drawing.Size(381, 272);
             this.resultsSplitContainer.SplitterDistance = 111;
             this.resultsSplitContainer.TabIndex = 0;
-            this.resultsSplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.resultsSplitContainer_SplitterMoved);
             // 
             // label2
             // 

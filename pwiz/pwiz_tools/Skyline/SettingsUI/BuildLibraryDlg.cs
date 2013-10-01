@@ -81,7 +81,11 @@ namespace pwiz.Skyline.SettingsUI
             textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(CultureInfo.CurrentCulture);
             textAuthority.Text = Settings.Default.LibraryAuthority;
 
-            cbFilter.Checked = Settings.Default.LibraryFilterDocumentPeptides;
+            if (documentContainer.Document.PeptideCount == 0)
+                cbFilter.Hide();
+            else
+                cbFilter.Checked = Settings.Default.LibraryFilterDocumentPeptides;
+
             cbKeepRedundant.Checked = Settings.Default.LibraryKeepRedundant;
 
             _helper = new MessageBoxHelper(this);

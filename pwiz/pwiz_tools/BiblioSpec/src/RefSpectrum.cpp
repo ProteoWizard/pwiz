@@ -33,7 +33,9 @@ RefSpectrum::RefSpectrum() :
   copies(0),
   libID(-1), // 0 means decoy spec
   libSpecID(-1),
-  circShift_(0)
+  circShift_(0),
+  score_(0),
+  scoreType_(-1)
 { 
     type_ = REFERENCE;
 }
@@ -189,6 +191,16 @@ void RefSpectrum::setNextAA(string nAA)
     nextAA = nAA;
 }
 
+void RefSpectrum::setScore(double score)
+{
+    score_ = score;
+}
+
+void RefSpectrum::setScoreType(int scoreType)
+{
+    scoreType_ = scoreType;
+}
+
 
 //getters
 int RefSpectrum::getCharge() const
@@ -234,6 +246,16 @@ string RefSpectrum::getNextAA() const
 double RefSpectrum::getCircShift() const
 {
     return circShift_;
+}
+
+double RefSpectrum::getScore() const
+{
+    return score_;
+}
+
+int RefSpectrum::getScoreType() const
+{
+    return scoreType_;
 }
 
 void printFirstLastPeaks(vector<PEAK_T>* peaks, int num){

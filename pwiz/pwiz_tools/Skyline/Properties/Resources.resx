@@ -5839,4 +5839,7 @@ Are you sure you want to continue?</value>
     <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
     <value>Installing Pip</value>
   </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_" xml:space="preserve">
+    <value>Import FASTA (optional)</value>
+  </data>
 </root>
