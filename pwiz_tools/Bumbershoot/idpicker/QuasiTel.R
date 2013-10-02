@@ -157,7 +157,7 @@ datafile.readSpectraPerProteinGroupBySourceGroup <- function(filepath)
     proteinGroupSourceGroupCounts <- fetch(res, n=-1)
     dbClearResult(res)
 
-    res <- dbSendQuery(con, "SELECT GROUP_CONCAT(DISTINCT Accession) as Proteins, pro.Cluster, IFNULL(pmd.Description, '') as Description FROM Protein pro LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id GROUP BY pro.ProteinGroup ORDER BY ProteinGroup")
+    res <- dbSendQuery(con, "SELECT GROUP_CONCAT(DISTINCT Accession) as Proteins, GeneId, pro.Cluster, IFNULL(pmd.Description, '') as Description FROM Protein pro LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id GROUP BY pro.ProteinGroup ORDER BY ProteinGroup")
     proteinGroupMetadata <- fetch(res, n=-1)
     dbClearResult(res)
 
@@ -166,6 +166,82 @@ datafile.readSpectraPerProteinGroupBySourceGroup <- function(filepath)
     proteinGroupSourceGroupCounts <- cast(proteinGroupSourceGroupCounts, ProteinGroup ~ SourceGroup, value="Spectra")
     proteinGroupSourceGroupCounts[is.na(proteinGroupSourceGroupCounts)] <- 0
     return(cbind(proteinGroupMetadata, proteinGroupSourceGroupCounts))
+}
+
+# read spectra per protein by source group from the given idpDB file
+datafile.readSpectraPerProteinBySourceGroup <- function(filepath)
+{
+  drv <- dbDriver("SQLite")
+  con <- dbConnect(drv, filepath)
+  
+  res <- dbSendQuery(con, "SELECT pro.Id, ssg.Name AS SourceGroup, COUNT(DISTINCT Spectrum) AS Spectra FROM PeptideSpectrumMatch psm JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide JOIN Protein pro ON pi.Protein=pro.Id LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id JOIN Spectrum s ON psm.Spectrum=s.Id JOIN SpectrumSource ss ON s.Source=ss.Id JOIN SpectrumSourceGroupLink ssgl ON ss.Id=ssgl.Source JOIN SpectrumSourceGroup ssg ON ssgl.Group_=ssg.Id GROUP BY pro.Id, ssgl.Group_ ORDER BY Accession")
+  proteinGroupSourceGroupCounts <- fetch(res, n=-1)
+  dbClearResult(res)
+  
+  res <- dbSendQuery(con, "SELECT Accession, ProteinGroup, GeneId, pro.Cluster, IFNULL(pmd.Description, '') as Description FROM Protein pro LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id GROUP BY pro.Id ORDER BY pro.Accession")
+  proteinGroupMetadata <- fetch(res, n=-1)
+  dbClearResult(res)
+  
+  dbDisconnect(con)
+  
+  proteinGroupSourceGroupCounts <- cast(proteinGroupSourceGroupCounts, Id ~ SourceGroup, value="Spectra")
+  proteinGroupSourceGroupCounts[is.na(proteinGroupSourceGroupCounts)] <- 0
+  return(cbind(proteinGroupMetadata, proteinGroupSourceGroupCounts))
+}
+
+# read spectra per gene group by source group from the given idpDB file
+datafile.readSpectraPerGeneGroupBySourceGroup <- function(filepath)
+{
+    drv <- dbDriver("SQLite")
+    con <- dbConnect(drv, filepath)
+
+    res <- dbSendQuery(con, "SELECT GeneGroup, ssg.Name AS SourceGroup, COUNT(DISTINCT Spectrum) AS Spectra FROM PeptideSpectrumMatch psm JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide JOIN Protein pro ON pi.Protein=pro.Id LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id JOIN Spectrum s ON psm.Spectrum=s.Id JOIN SpectrumSource ss ON s.Source=ss.Id JOIN SpectrumSourceGroupLink ssgl ON ss.Id=ssgl.Source JOIN SpectrumSourceGroup ssg ON ssgl.Group_=ssg.Id GROUP BY pro.GeneGroup, ssgl.Group_ ORDER BY GeneGroup")
+    GeneGroupSourceGroupCounts <- fetch(res, n=-1)
+    dbClearResult(res)
+
+    res <- dbSendQuery(con, "SELECT GROUP_CONCAT(DISTINCT GeneId) as Genes, GeneId, pro.Cluster, IFNULL(pmd.Description, '') as Description FROM Protein pro LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id GROUP BY pro.GeneGroup ORDER BY GeneGroup")
+    GeneGroupMetadata <- fetch(res, n=-1)
+    dbClearResult(res)
+
+    dbDisconnect(con)
+
+    GeneGroupSourceGroupCounts <- cast(GeneGroupSourceGroupCounts, GeneGroup ~ SourceGroup, value="Spectra")
+    GeneGroupSourceGroupCounts[is.na(GeneGroupSourceGroupCounts)] <- 0
+    return(cbind(GeneGroupMetadata, GeneGroupSourceGroupCounts))
+}
+
+# read spectra per gene by source group from the given idpDB file
+datafile.readSpectraPerGeneBySourceGroup <- function(filepath)
+{
+  drv <- dbDriver("SQLite")
+  con <- dbConnect(drv, filepath)
+  
+  res <- dbSendQuery(con, "SELECT GeneId, ssg.Name AS SourceGroup, COUNT(DISTINCT Spectrum) AS Spectra FROM PeptideSpectrumMatch psm JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide JOIN Protein pro ON pi.Protein=pro.Id LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id JOIN Spectrum s ON psm.Spectrum=s.Id JOIN SpectrumSource ss ON s.Source=ss.Id JOIN SpectrumSourceGroupLink ssgl ON ss.Id=ssgl.Source JOIN SpectrumSourceGroup ssg ON ssgl.Group_=ssg.Id GROUP BY pro.GeneId, ssgl.Group_ ORDER BY pro.GeneId")
+  GeneGroupSourceGroupCounts <- fetch(res, n=-1)
+  dbClearResult(res)
+  
+  res <- dbSendQuery(con, "SELECT GeneId, GeneGroup, pro.Cluster, IFNULL(pmd.Description, '') as Description FROM Protein pro LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id GROUP BY pro.GeneId ORDER BY pro.GeneId")
+  GeneGroupMetadata <- fetch(res, n=-1)
+  dbClearResult(res)
+  
+  dbDisconnect(con)
+  
+  GeneGroupSourceGroupCounts <- cast(GeneGroupSourceGroupCounts, GeneId ~ SourceGroup, value="Spectra")
+  GeneGroupSourceGroupCounts[is.na(GeneGroupSourceGroupCounts)] <- 0
+  return(cbind(GeneGroupMetadata, GeneGroupSourceGroupCounts))
+}
+
+datafile.hasGeneMetadata <- function(filepath)
+{
+  drv <- dbDriver("SQLite")
+  con <- dbConnect(drv, filepath)
+  
+  # if there is at least 1 non-null GeneId, there is embedded gene metadata
+  hasGeneMetadata = as.logical(dbGetQuery(con, "SELECT COUNT(*) FROM Protein WHERE GeneId IS NOT NULL") > 0)
+  
+  dbDisconnect(con)
+  
+  return(hasGeneMetadata)
 }
 
 base <- NULL
@@ -198,11 +274,12 @@ quasitelgui <- function(inputfile = NULL) {
             { {Tab-separated}   {.tsv} }
             { {Comma-separated} {.csv} }
             { {Tab-delimited}   {.txt} }
+            { {NetGestalt SCT}   {.sct} }
         "
         tkgetSaveFile(parent=parent,
             title="Save Output",
             filetypes=filters,
-            defaultextension=".tsv",
+            defaultextension=".sct",
             initialdir=dir,
             initialfile=file)
     }
@@ -219,6 +296,7 @@ quasitelgui <- function(inputfile = NULL) {
             csv=function(x){write.csv(x, filename, row.names=row.names, ...)},
             tsv=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
             txt=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
+            sct=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
             function(x){write.csv(x, filename, row.names=row.names, ...)})(data.frame(x))
     }
 
@@ -239,15 +317,53 @@ quasitelgui <- function(inputfile = NULL) {
 
     datafile.open <- function(filepath)
     {
-        tclObj(datafilename) <- filepath
-        dirname <<- tclvalue(tclfile.dir(tclObj(datafilename)))
+        hasGeneMetadata <<- datafile.hasGeneMetadata(filepath)
+        
+        readFunction = 0
+        if (tclvalue(groupMode) == "Protein Group")
+          readFunction = datafile.readSpectraPerProteinGroupBySourceGroup
+        else if (tclvalue(groupMode) == "Protein")
+          readFunction = datafile.readSpectraPerProteinBySourceGroup
+        else if (hasGeneMetadata && tclvalue(groupMode) == "Gene Group")
+          readFunction = datafile.readSpectraPerGeneGroupBySourceGroup
+        else if (hasGeneMetadata && tclvalue(groupMode) == "Gene")
+          readFunction = datafile.readSpectraPerGeneBySourceGroup
 
-        groupFilteredSpectra <- datafile.readFilteredSpectraByGroup(filepath)
-        dataset <<- datafile.readSpectraPerProteinGroupBySourceGroup(filepath)
-        tclObj(namelist) <- groupFilteredSpectra[,1]
-        tmp <- groupFilteredSpectra$COUNT
-        names(tmp) <- groupFilteredSpectra$Name
-        offset <<- tmp
+        if (!is.function(readFunction))
+        {
+            tkmessageBox(parent=base,
+                         title="No embedded gene metadata",
+                         message="Grouping by gene or gene group requires embedded gene metadata. Use the IDPicker GUI or idpQonvert command-line interface to do the embedding.",
+                         type="ok",
+                         icon="error")
+            tkset(groupMode.cb, "Protein Group")
+            oldGroupMode <<- "Protein Group"
+            tcl("update", "idletasks")
+        }
+        else
+        {
+            tclObj(datafilename) <- filepath
+            dirname <<- tclvalue(tclfile.dir(tclObj(datafilename)))
+            
+            tkconfigure(ok.btn, state="disabled")
+            tkconfigure(q.btn, state="disabled")
+            tkconfigure(datafile.btn, state="disabled")
+            tkconfigure(ok.btn, text="Loading data...")
+            tcl("update", "idletasks")
+            groupFilteredSpectra <- datafile.readFilteredSpectraByGroup(filepath)
+            
+            dataset <<- readFunction(filepath)
+            tclObj(namelist) <- groupFilteredSpectra[,1]
+            tmp <- groupFilteredSpectra$COUNT
+            names(tmp) <- groupFilteredSpectra$Name
+            offset <<- tmp
+            
+            tkconfigure(ok.btn, state="normal")
+            tkconfigure(q.btn, state="normal")
+            tkconfigure(datafile.btn, state="normal")
+            tkconfigure(ok.btn, text="Compute")
+            tcl("update", "idletasks")
+        }
     }
 
     # command to run when open dataset file button is clicked
@@ -258,7 +374,8 @@ quasitelgui <- function(inputfile = NULL) {
     }
 
     # command to run when ok button is clicked
-    ok.cmd <- function() {
+    ok.cmd <- function()
+    {
         i1 <- as.integer(tkcurselection(g1.list)) + 1
         i2 <- as.integer(tkcurselection(g2.list)) + 1
         #Set filter i1, i2 to include all items if a group is selected
@@ -282,35 +399,54 @@ quasitelgui <- function(inputfile = NULL) {
                   type="ok",
                   icon="error")
             } else {
-                outputfile <- sub('.idpDB', '-quasitel.tsv', tclvalue(tclfile.tail(tclObj(datafilename))))
+                outputfile <- sub('.idpDB', '-quasitel.sct', tclvalue(tclfile.tail(tclObj(datafilename))))
                 outputfile <- tclvalue(savefile(base, outputfile, dirname))
-                if (nchar(outputfile)) {
+                if (nchar(outputfile))
+                {
                     result <- quasitel(dataset, i1, i2, weight=offset, minavgcount=as.numeric(tclvalue(minavgcount)))
                     datatmp <- dataset[rownames(result),]
                     dataused1 <- subset(datatmp, select=i1)
                     dataused2 <- subset(datatmp, select=i2)
-                    result <- cbind(subset(datatmp, select=c("Proteins", "ProteinGroup", "Cluster")), result, TotalCounts=rowSums(subset(result, select=c("count1","count2"))), dataused1, dataused2, subset(datatmp, select="Description"))
+
+                    if (tclvalue(groupMode) == "Protein Group")
+                      selectValues = c("Proteins", "ProteinGroup", "Cluster")
+                    else if (tclvalue(groupMode) == "Protein")
+                      selectValues = c("Accession", "ProteinGroup", "Cluster")
+                    else if (tclvalue(groupMode) == "Gene Group")
+                      selectValues = c("Genes", "GeneGroup", "Cluster")
+                    else if (tclvalue(groupMode) == "Gene")
+                      selectValues = c("GeneId", "GeneGroup", "Cluster")
+
+                    if (grepl(".sct", outputfile))
+                    {
+                        result <- cbind(subset(datatmp, select="GeneId"), subset(result, select=c("poisson.fdr", "quasi.fdr", "2log(rate1/rate2)")))
+                        colnames(result) <- c("GeneSymbol", "PoissonFDR", "QuasiFDR", "LogOfRateRatio")
+                    }
+                    else
+                    {
+                        result <- cbind(subset(datatmp, select=selectValues), result, TotalCounts=rowSums(subset(result, select=c("count1","count2"))), dataused1, dataused2, subset(datatmp, select="Description"))
+                    }
+
                     writeDelim(result, outputfile)
-                    tkmessageBox(parent=base,
-                        title="Done",
-                        message="Work complete",
-                        type="ok")
+                    tkmessageBox(parent=base, title="Done", message="Work complete", type="ok")
                 }
             }
         } else {
             msg = paste("The following were selected in both 'Group 1' and 'Group 2':",
                         paste(as.character(tclObj(namelist))[bth], collapse="\n"), sep="\n\n")
             tkmessageBox(parent=base,
-                title="ERROR: Duplicate selection",
-                message=msg,
-                type="ok",
-                icon="error")
+                         title="ERROR: Duplicate selection",
+                         message=msg,
+                         type="ok",
+                         icon="error")
         }
     }
 
     about.cmd <- function()
     {
+        tkconfigure(about.btn, state="disabled")
         about.frm <- tktoplevel(width=800, height=200)
+        tkbind(about.frm, "<Destroy>", function() tkconfigure(about.btn, state="normal"))
         tkwm.title(about.frm, "About QuasiTel")
         tkgrid.columnconfigure(about.frm, 0, weight=1)
         tkgrid.rowconfigure(about.frm, 0, weight=1)
@@ -324,19 +460,41 @@ quasitelgui <- function(inputfile = NULL) {
         tkconfigure(about.text, state="disabled")
     }
 
+    groupMode.cmd <- function()
+    {
+        # do nothing if the mode didn't actually change 
+        if (oldGroupMode != tclvalue(groupMode))
+        {
+          oldGroupMode <<- tclvalue(groupMode)
+
+          # if a database is open, reopen it with the new mode
+          if (file.exists(tclvalue(datafilename)))
+          {
+            try(datafile.open(tclvalue(datafilename)))
+          }
+        }
+    }
+
     base <- tktoplevel()
     tkwm.title(base, "QuasiTel")
-
-    # Files
     file.frm <- tkframe(base, borderwidth=2)
+    
+    groupMode <- tclVar()
+    groupMode.lbl <- tklabel(file.frm, text="Group Mode")
+    groupMode.cb <- ttkcombobox(file.frm,
+                                values=c("Protein Group", "Protein", "Gene Group", "Gene"),
+                                textvariable=groupMode,
+                                state="readonly")
+    tkset(groupMode.cb, "Protein Group")
+    oldGroupMode = tclvalue(groupMode)
+    tkbind(groupMode.cb, "<<ComboboxSelected>>", groupMode.cmd)
+
     datafile.lbl <- tklabel(file.frm, text="Data")
-    datafile.entry <- tkentry(file.frm,
-        textvariable=datafilename,
-        state="readonly")
-    datafile.btn <- tkbutton(file.frm,
-        text="Browse...",
-        command=datafile.cmd)
-    tkgrid(datafile.lbl, datafile.entry, datafile.btn)
+    datafile.entry <- tkentry(file.frm, textvariable=datafilename, state="readonly")
+    datafile.btn <- tkbutton(file.frm, text="Browse...", command=datafile.cmd)
+
+    tkgrid(datafile.lbl, datafile.entry, datafile.btn, groupMode.lbl, groupMode.cb, pady=5, padx=2)
+    tkgrid.configure(groupMode.lbl, padx=c(10, 2))
     tkgrid.configure(datafile.lbl, sticky="e")
     tkgrid.configure(datafile.entry, sticky="ew", padx=1)
     tkgrid.columnconfigure(file.frm, 1, weight=1)
@@ -351,13 +509,12 @@ quasitelgui <- function(inputfile = NULL) {
 
     ## group 1 selection
     g1.frm <- tkframe(main.frm, borderwidth=1)
-    g1.scroll <- tkscrollbar(g1.frm,
-        command=function(...) tkyview(g1.list, ...))
+    g1.scroll <- tkscrollbar(g1.frm, command=function(...) tkyview(g1.list, ...))
     g1.list <- tklistbox(g1.frm,
-        listvariable=namelist,
-        selectmode="extended",
-        exportselection=0,
-        yscrollcommand=function(...) tkset(g1.scroll, ...))
+                         listvariable=namelist,
+                         selectmode="extended",
+                         exportselection=0,
+                         yscrollcommand=function(...) tkset(g1.scroll, ...))
     tkgrid(g1.list, g1.scroll)
     tkgrid.configure(g1.list, sticky="news")
     tkgrid.configure(g1.scroll, sticky="ns")
@@ -366,13 +523,12 @@ quasitelgui <- function(inputfile = NULL) {
 
     ## group 2 selection
     g2.frm <- tkframe(main.frm, borderwidth=1)
-    g2.scroll <- tkscrollbar(g2.frm,
-        command=function(...) tkyview(g2.list, ...))
+    g2.scroll <- tkscrollbar(g2.frm, command=function(...) tkyview(g2.list, ...))
     g2.list <- tklistbox(g2.frm,
-        listvariable=namelist,
-        selectmode="extended",
-        exportselection=0,
-        yscrollcommand=function(...) tkset(g2.scroll, ...))
+                         listvariable=namelist,
+                         selectmode="extended",
+                         exportselection=0,
+                         yscrollcommand=function(...) tkset(g2.scroll, ...))
     tkgrid(g2.list, g2.scroll)
     tkgrid.configure(g2.list, sticky="news")
     tkgrid.configure(g2.scroll, sticky="ns")
@@ -393,22 +549,27 @@ quasitelgui <- function(inputfile = NULL) {
     filter.lbl <- tklabel(bott.frm, text="Minimum Average Count Across Groups")
     filter.entry <- tkwidget(bott.frm, "spinbox", values=c(seq(from=1, to=5, by=0.25), seq(from=0, to=0.75, by=0.25)), textvariable=minavgcount, wrap=TRUE)
     ok.btn <- tkbutton(bott.frm, text="Compute",
-        command=function() {
-            tkconfigure(ok.btn, state="disabled")
-            tkconfigure(q.btn, state="disabled")
-            tkconfigure(datafile.btn, state="disabled")
-            try(ok.cmd())
-            tkconfigure(ok.btn, state="normal")
-            tkconfigure(q.btn, state="normal")
-            tkconfigure(datafile.btn, state="normal")
-        })
+                       command=function()
+                       {
+                          tkconfigure(ok.btn, state="disabled")
+                          tkconfigure(q.btn, state="disabled")
+                          tkconfigure(datafile.btn, state="disabled")
+                          tkconfigure(ok.btn, text="Working...")
+                          tcl("update", "idletasks")
+                          try(ok.cmd())
+                          tkconfigure(ok.btn, text="Compute")
+                          tkconfigure(ok.btn, state="normal")
+                          tkconfigure(q.btn, state="normal")
+                          tkconfigure(datafile.btn, state="normal")
+                          tcl("update", "idletasks")
+                       })
     q.btn <- tkbutton(bott.frm, text="Quit", command=function() tclvalue(done) <- 1)
     about.btn <- tkbutton(bott.frm, text="About", command=about.cmd)
     tkbind(base,"<Destroy>", function() tclvalue(done) <- 2)
     tkgrid(filter.lbl, columnspan=3)
     tkgrid(filter.entry, columnspan=3)
     tkgrid(ok.btn, q.btn, about.btn)
-    tkgrid.configure(ok.btn, q.btn, about.btn, pady=5, padx=1)
+    tkgrid.configure(ok.btn, q.btn, about.btn, pady=5, padx=15)
     tkgrid(bott.frm)
     tkgrid.columnconfigure(base, 0, weight=1)
 

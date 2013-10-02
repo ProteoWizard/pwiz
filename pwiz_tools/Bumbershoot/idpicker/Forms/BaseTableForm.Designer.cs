@@ -267,7 +267,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        private System.Windows.Forms.ContextMenuStrip exportMenu;
+        protected System.Windows.Forms.ContextMenuStrip exportMenu;
         private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;

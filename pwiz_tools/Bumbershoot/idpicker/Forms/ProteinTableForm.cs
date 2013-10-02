@@ -471,7 +471,7 @@ namespace IDPicker.Forms
                                          GROUP BY {0}, {1}
                                          ORDER BY {0}
                                         ";
-        Map<long, Map<long, PivotData>> getPivotData (Grouping<GroupBy> group, Pivot<PivotBy> pivot, DataFilter parentFilter)
+        Map<long, Map<long, PivotData>> getPivotData (Grouping<GroupBy> group, Pivot<PivotBy> pivot, DataFilter parentFilter, bool rowMajorOrder)
         {
             // ProteinGroup and Cluster are consecutive, 1-based series
             string groupColumn = "pro.ProteinGroup";
@@ -501,12 +501,24 @@ namespace IDPicker.Forms
             var pivotData = new Map<long, Map<long, PivotData>>();
 
             IList<object[]> pivotRows; lock (session) pivotRows = query.List<object[]>();
-            if (group != null && group.Mode == GroupBy.Gene)
-                foreach (var queryRow in pivotRows)
-                    pivotData[Convert.ToInt64(queryRow[1])][Convert.ToInt64(queryRow[0].ToString().GetHashCode())] = new PivotData(queryRow);
+            if (rowMajorOrder)
+            {
+                if (group != null && group.Mode == GroupBy.Gene)
+                    foreach (var queryRow in pivotRows)
+                        pivotData[Convert.ToInt64(Util.Crc32.ComputeChecksum(Encoding.ASCII.GetBytes(queryRow[0].ToString())))][Convert.ToInt64(queryRow[1])] = new PivotData(queryRow);
+                else
+                    foreach (var queryRow in pivotRows)
+                        pivotData[Convert.ToInt64(queryRow[0])][Convert.ToInt64(queryRow[1])] = new PivotData(queryRow);
+            }
             else
-                foreach (var queryRow in pivotRows)
-                    pivotData[Convert.ToInt64(queryRow[1])][Convert.ToInt64(queryRow[0])] = new PivotData(queryRow);
+            {
+                if (group != null && group.Mode == GroupBy.Gene)
+                    foreach (var queryRow in pivotRows)
+                        pivotData[Convert.ToInt64(queryRow[1])][Convert.ToInt64(Util.Crc32.ComputeChecksum(Encoding.ASCII.GetBytes(queryRow[0].ToString())))] = new PivotData(queryRow);
+                else
+                    foreach (var queryRow in pivotRows)
+                        pivotData[Convert.ToInt64(queryRow[1])][Convert.ToInt64(queryRow[0])] = new PivotData(queryRow);
+            }
             return pivotData;
         }
 
@@ -574,6 +586,145 @@ namespace IDPicker.Forms
             treeDataGridView.CellIconNeeded += treeDataGridView_CellIconNeeded;
             treeDataGridView.CellPainting += treeDataGridView_CellPainting;
             treeDataGridView.CellMouseMove += treeDataGridView_CellMouseMove;
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            exportMenu.Items.Add(new ToolStripSeparator());
+            exportMenu.Items.Add(new ToolStripMenuItem("Export NetGestalt Composite Continuous Track (CCT)", null));
+            foreach (var pivotMode in pivotSetupControl.Pivots)
+                (exportMenu.Items[exportMenu.Items.Count-1] as ToolStripMenuItem).DropDownItems.Add(new ToolStripMenuItem(pivotMode.Text, null, exportNetGestaltCCT) { Tag = pivotMode });
+        }
+
+        void exportNetGestaltCCT(object sender, EventArgs e)
+        {
+            string outputFilename = null;
+
+            using (var sfd = new SaveFileDialog()
+                                 {
+                                     OverwritePrompt = true,
+                                     FileName = Path.GetFileNameWithoutExtension(session.Connection.GetDataSource()),
+                                     DefaultExt = ".cct",
+                                     Filter = "NetGestalt CCT|*.cct|All files|*.*"
+                                 })
+            {
+                if (sfd.ShowDialog(Program.MainWindow) == DialogResult.Cancel)
+                    return;
+
+                outputFilename = sfd.FileName;
+            }
+
+            if (outputFilename == null)
+                return;
+
+            var groupMode = new Grouping<GroupBy> { Mode = GroupBy.Gene };
+            var pivotMode = (sender as ToolStripMenuItem).Tag as Pivot<PivotBy>;
+            var pivotData = getPivotData(groupMode, pivotMode, dataFilter, true);
+
+            bool pivotIsOnSourceGroup = pivotMode.Text.Contains("Group");
+            bool pivotIsITRAQ = pivotMode.Text.Contains("iTRAQ");
+            bool pivotIsTMT = pivotMode.Text.Contains("TMT");
+
+            List<DataGridViewTextBoxColumn> reporterIonColumns = null;
+            if (pivotIsITRAQ)
+                reporterIonColumns = iTRAQ_ReporterIonColumns;
+            else if (pivotIsTMT)
+                reporterIonColumns = TMT_ReporterIonColumns;
+
+            // getPivotData must return GeneIds in hashed form because the container type is Map<long, Map<long, PivotData>>
+            Dictionary<long, string> geneIdByHash;
+            Dictionary<long, long> spectraByPivotGroup;
+            lock (session)
+            {
+                var geneIds = session.CreateQuery("SELECT pro.GeneId " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein) + "GROUP BY pro.GeneId").List<string>();
+                geneIdByHash = geneIds.ToDictionary(o => (long) Util.Crc32.ComputeChecksum(Encoding.ASCII.GetBytes(o)));
+
+                if (pivotIsOnSourceGroup)
+                {
+                    var spectraBySourceGroupQuery = session.CreateSQLQuery("SELECT ssg.Id, COUNT(DISTINCT Spectrum) FROM PeptideSpectrumMatch psm JOIN Spectrum s ON psm.Spectrum=s.Id JOIN SpectrumSource ss ON s.Source=ss.Id JOIN SpectrumSourceGroupLink ssgl ON ss.Id=ssgl.Source JOIN SpectrumSourceGroup ssg ON ssgl.Group_=ssg.Id GROUP BY ssg.Id").List<object[]>();
+                    spectraByPivotGroup = spectraBySourceGroupQuery.ToDictionary(o => Convert.ToInt64(o[0]), o => Convert.ToInt64(o[1]));
+                }
+                else
+                {
+                    var spectraBySourceQuery = session.CreateSQLQuery("SELECT s.Source, COUNT(DISTINCT Spectrum) FROM PeptideSpectrumMatch psm JOIN Spectrum s ON psm.Spectrum=s.Id GROUP BY s.Source").List<object[]>();
+                    spectraByPivotGroup = spectraBySourceQuery.ToDictionary(o => Convert.ToInt64(o[0]), o => Convert.ToInt64(o[1]));
+                }
+            }
+
+            var columnIds = new List<long>();
+            using (var fileStream = new StreamWriter(outputFilename))
+            {
+                fileStream.Write("GeneSymbol");
+                if (pivotIsOnSourceGroup)
+                    foreach (var group in groupById.OrderBy(o => o.Value.Name))
+                    {
+                        if (group.Value.Name == "/")
+                            continue;
+
+                        if (reporterIonColumns != null)
+                            foreach (var column in reporterIonColumns)
+                                fileStream.Write("\t{0} ({1})", group.Value.Name, column.HeaderText);
+                        else
+                            fileStream.Write("\t{0}", group.Value.Name);
+                        columnIds.Add(group.Key);
+                    }
+                else
+                    foreach (var source in sourceById.OrderBy(o => o.Value.Name))
+                    {
+                        if (reporterIonColumns != null)
+                            foreach (var column in reporterIonColumns)
+                                fileStream.Write("\t{0} ({1})", source.Value.Name, column.HeaderText);
+                        else
+                            fileStream.Write("\t{0}", source.Value.Name);
+                        columnIds.Add(source.Key);
+                    }
+                fileStream.WriteLine();
+
+                foreach (var kvp in pivotData)
+                {
+                    string geneId = geneIdByHash[kvp.Key];
+                    if (geneId.StartsWith("Unmapped"))
+                        continue;
+
+                    // calculate mean value across all columns, but skip the root group if pivoting on source group
+                    /*double meanValue = kvp.Value.Values.Skip(pivotIsOnSourceGroup ? 1 : 0)
+                                                       .Sum(o => o.Convert.ToDouble(o.Value)) /
+                                                       (pivotIsOnSourceGroup ? kvp.Value.Values.Count-1 : kvp.Value.Values.Count);
+                    */
+                    fileStream.Write(geneId);
+                    foreach (var column in columnIds)
+                    {
+                        var findItr = kvp.Value.Find(column);
+
+                        if (reporterIonColumns != null)
+                        {
+                            double[] array = findItr.IsValid ? (double[]) findItr.Current.Value.Value : null;
+
+                            if (array == null)
+                                foreach (var c in reporterIonColumns)
+                                    fileStream.Write("\t0");
+                            else
+                            {
+                                int i = 0;
+                                foreach (var c in reporterIonColumns)
+                                    fileStream.Write("\t{0}", array[i++].ToString("f2"));
+                            }
+                        }
+                        else
+                        {
+                            string value;
+                            if (!findItr.IsValid)
+                                value = "0";
+                            else
+                                value = (Convert.ToDouble(findItr.Current.Value.Value) / spectraByPivotGroup[column]).ToString();
+                            fileStream.Write("\t{0}", value);
+                        }
+                    }
+                    fileStream.WriteLine();
+                }
+            }
         }
 
         void treeDataGridView_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
@@ -1198,12 +1349,12 @@ namespace IDPicker.Forms
                         basicStatsBySpectrumSource = null;
                         Pivot<PivotBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
                         if (pivotBySource != null)
-                            basicStatsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter);
+                            basicStatsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter, false);
 
                         basicStatsBySpectrumSourceGroup = null;
                         Pivot<PivotBy> pivotByGroup = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Group"));
                         if (pivotByGroup != null)
-                            basicStatsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter);
+                            basicStatsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter, false);
 
                         lock (session)
                         {
@@ -1230,12 +1381,12 @@ namespace IDPicker.Forms
                     statsBySpectrumSource = null;
                     Pivot<PivotBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
                     if (pivotBySource != null)
-                        statsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter);
+                        statsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter, false);
 
                     statsBySpectrumSourceGroup = null;
                     Pivot<PivotBy> pivotByGroup = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Group"));
                     if (pivotByGroup != null)
-                        statsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter);
+                        statsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter, false);
                 }
 
                 createPivotColumns();
@@ -1444,6 +1595,7 @@ namespace IDPicker.Forms
                           new Pivot<PivotBy>() {Mode = PivotBy.iTRAQBySource, Text = "iTRAQ by Source"},
                           new Pivot<PivotBy>() {Mode = PivotBy.TMTByGroup, Text = "TMT by Group"},
                           new Pivot<PivotBy>() {Mode = PivotBy.TMTBySource, Text = "TMT by Source"});
+
                 pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
                 return false;
             }
