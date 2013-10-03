@@ -591,6 +591,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         case MS_SIM_spectrum: scanType = "SIM"; break;
         case MS_SRM_spectrum: scanType = "SRM"; break;
         case MS_precursor_ion_spectrum: scanType = "Q1"; break;
+        case MS_constant_neutral_gain_spectrum: case MS_constant_neutral_loss_spectrum: scanType = "Q3"; break;
         default: break;
     }
 
@@ -603,6 +604,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     string basePeakMz = spectrum.cvParam(MS_base_peak_m_z).value;
     string basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).value;
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
+    string filterLine = spectrum.cvParam(MS_filter_string).value;
 	string compensationVoltage;
 	if (spectrum.hasCVParam(MS_FAIMS))
         compensationVoltage = spectrum.cvParam(MS_FAIMS_compensation_voltage).value;
@@ -621,6 +623,9 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     //    attributes.add("scanEvent", scanEvent);
     if (!scanType.empty())
         attributes.add("scanType", scanType);
+
+    if (!filterLine.empty())
+        attributes.add("filterLine", filterLine);
 
     // TODO: write this attribute only when SpectrumList_PeakPicker has processed the spectrum
     attributes.add("centroided", isCentroided ? "1" : "0");
