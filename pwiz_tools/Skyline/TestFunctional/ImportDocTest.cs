@@ -496,7 +496,7 @@ namespace pwiz.SkylineTestFunctional
                                     NoteCount++;
                                 if (chromInfo.Annotations.ListAnnotations().Length > 0)
                                     AnnotationCount++;
-                                if (chromInfo.UserSet)
+                                if (chromInfo.IsUserSetManual)
                                     UserSetCount++;
                             }
                         }

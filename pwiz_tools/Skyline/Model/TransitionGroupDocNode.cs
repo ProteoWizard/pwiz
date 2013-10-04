@@ -1041,9 +1041,9 @@ namespace pwiz.Skyline.Model
 
                                     // Check for existing info that was set by the user.
                                     int step = i - numSteps;
-                                    bool userSet = false;
+                                    UserSet userSet = UserSet.FALSE;
                                     var chromInfo = FindChromInfo(results, fileId, step);
-                                    if (chromInfo == null || !chromInfo.UserSet)
+                                    if (chromInfo == null || chromInfo.UserSet == UserSet.FALSE)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
                                         if (info != null)
@@ -1059,7 +1059,7 @@ namespace pwiz.Skyline.Model
                                                 if (settingsNew.MeasuredResults.IsTimeNormalArea)
                                                     flags = ChromPeak.FlagValues.time_normalized;
                                                 peak = info.CalcPeak(startIndex, endIndex, flags);
-                                                userSet = true;
+                                                userSet = UserSet.TRUE;
                                             }
                                             // Otherwize use the best peak chosen at import time
                                             else
@@ -1101,7 +1101,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static TransitionChromInfo CreateTransionChromInfo(TransitionChromInfo chromInfo, ChromFileInfoId fileId,
-                                                            int step, ChromPeak peak, int ratioCount, bool userSet)
+                                                            int step, ChromPeak peak, int ratioCount, UserSet userSet)
         {
             // Use the old ratio for now, and it will be corrected by the peptide,
             // if it is incorrect.
@@ -1130,7 +1130,7 @@ namespace pwiz.Skyline.Model
 
                 foreach (var chromInfo in chromInfoList)
                 {
-                    if (chromInfo == null || !chromInfo.UserSet || chromInfo.OptimizationStep != 0)
+                    if (chromInfo == null || chromInfo.UserSet == UserSet.FALSE || chromInfo.OptimizationStep != 0)
                         continue;
 
                     if (dictInfo == null)
@@ -1161,19 +1161,6 @@ namespace pwiz.Skyline.Model
             }
             return null;
         }
-
-// ReSharper disable UnusedMember.Local
-        /// <summary>
-        /// Determine if all <see cref="TransitionGroupChromInfo"/> elements in a list
-        /// were set by the user.  Usually there will only be one to check.
-        /// </summary>
-        /// <param name="results">The list to check</param>
-        /// <returns>True if all were set</returns>
-        private static bool UserSetResults(IList<TransitionGroupChromInfo> results)
-        {
-            return results.IndexOf(info => info != null && !info.UserSet) == -1;
-        }
-// ReSharper restore UnusedMember.Local
 
         private bool ChangedResults(DocNodeParent nodeGroup)
         {
@@ -1662,6 +1649,7 @@ namespace pwiz.Skyline.Model
                 FileId = fileId;
                 OptimizationStep = optimizationStep;
                 TransitionCount = transitionCount;
+                UserSet = UserSet.FALSE;
 
                 // Use existing ratio until it can be recalculated
                 if (chromInfo != null)
@@ -1698,9 +1686,12 @@ namespace pwiz.Skyline.Model
             private float? IsotopeDotProduct { get; set; }
             private IList<RatioValue> Ratios { get; set; }
             private Annotations Annotations { get; set; }
-            private bool UserSet { get; set; }
+            private UserSet UserSet { get; set; }
 
-            private float PeakCountRatio { get { return ((float) PeakCount)/TransitionCount; } }
+            private float PeakCountRatio
+            {
+                get { return ((float) PeakCount)/TransitionCount; }
+            }
 
             public void AddChromInfo(TransitionChromInfo info)
             {
@@ -1710,8 +1701,10 @@ namespace pwiz.Skyline.Model
                 ResultsCount++;
 
                 Debug.Assert(ReferenceEquals(info.FileId, FileId),
-                             string.Format(Resources.TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__,
-                                           info.FileIndex, FileId.GlobalIndex));
+                             string.Format(
+                                 Resources
+                                     .TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__,
+                                 info.FileIndex, FileId.GlobalIndex));
                 FileId = info.FileId;
                 FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
 
@@ -1755,8 +1748,30 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                if (info.UserSet)
-                    UserSet = true;
+                UserSet = AddUserSetInfo(UserSet, info.UserSet);
+            }
+
+            private static readonly UserSet[] USER_SET_PRIORITY_LIST = new[] 
+            {
+                UserSet.TRUE,
+                UserSet.IMPORTED,
+                UserSet.REINTEGRATED
+            };
+
+            /// <summary>
+            /// Rules for changing the group UserSet based on adding a new transition.  TRUE overrides IMPORTED 
+            /// overrides REINTEGRATED overrides FALSE
+            /// </summary>
+            /// <param name="groupUserSet"></param> Current UserSet status of the chromatograms for this transition group
+            /// <param name="tranUserSet"></param> Current UserSet status of the chromatogram for the transition to be added
+            private static UserSet AddUserSetInfo(UserSet groupUserSet, UserSet tranUserSet)
+            {
+                foreach (var status in USER_SET_PRIORITY_LIST)
+                {
+                    if (tranUserSet == status || groupUserSet == status)
+                        return status;
+                }
+                return UserSet.FALSE;
             }
 
             public void SetLibInfo(double[] peakAreas, double[] libIntensities)
@@ -1824,7 +1839,33 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
         {
-            return ChangeProp(ImClone(this), im => im.Results = prop);
+            return Results<TransitionGroupChromInfo>.EqualsDeep(Results, prop) ? 
+                   this : 
+                   ChangeProp(ImClone(this), im => im.Results = prop);
+        }
+
+        public TransitionGroupDocNode ChangePrecursorAnnotations(ChromFileInfoId fileId, Annotations annotations)
+        {
+            var groupChromInfo = ChromInfos.FirstOrDefault(info => ReferenceEquals(info.FileId, fileId));
+            if (groupChromInfo == null)
+                throw new InvalidDataException(string.Format(Resources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_,
+                                               fileId.GlobalIndex));
+            groupChromInfo = groupChromInfo.ChangeAnnotations(annotations);
+            return ChangeResults(Results<TransitionGroupChromInfo>.ChangeChromInfo(Results,
+                                                                                   fileId,
+                                                                                   groupChromInfo));
+        }
+
+        public TransitionGroupDocNode AddPrecursorAnnotations(ChromFileInfoId fileId, Dictionary<string, string> annotations)
+        {
+            var groupChromInfo = ChromInfos.FirstOrDefault(info => ReferenceEquals(info.FileId, fileId));
+            if (groupChromInfo == null)
+                throw new InvalidDataException(string.Format(Resources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_, 
+                                               fileId.GlobalIndex));
+            var groupAnnotations = groupChromInfo.Annotations;
+            foreach (var annotation in annotations)
+                groupAnnotations = groupAnnotations.ChangeAnnotation(annotation.Key, annotation.Value);
+            return ChangePrecursorAnnotations(fileId, groupAnnotations);
         }
 
         public DocNode ChangePeak(SrmSettings settings,
@@ -1834,7 +1875,8 @@ namespace pwiz.Skyline.Model
                                   ChromFileInfoId fileId,
                                   OptimizableRegression regression,
                                   Identity tranId,
-                                  double retentionTime)
+                                  double retentionTime,
+                                  UserSet userSet)
         {
             int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
             
@@ -1888,7 +1930,7 @@ namespace pwiz.Skyline.Model
                     (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
                 // Shouldn't need to update a transition with no chrom info
                 if (chromInfoArray.Length == 0)
-                    listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId));
+                    listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
                 else
                 {
                     // CONSIDER: Do this more efficiently?  Only when there is opimization
@@ -1922,7 +1964,7 @@ namespace pwiz.Skyline.Model
                             }
                         }
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
-                                                              indexSet, fileId, step, peakNew, ratioCount);
+                                                              indexSet, fileId, step, peakNew, ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }
@@ -1940,6 +1982,7 @@ namespace pwiz.Skyline.Model
                                   double? startTime,
                                   double? endTime,
                                   PeakIdentification identified,
+                                  UserSet userSet,
                                   bool preserveMissingPeaks)
         {
             // Error if only one of startTime and endTime is null
@@ -1984,7 +2027,7 @@ namespace pwiz.Skyline.Model
                 // Shouldn't need to update a transition with no chrom info
                 // Also if startTime is null, remove the peak
                 if (chromInfoArray.Length == 0 || startTime==null)
-                    listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId));
+                    listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
                 else
                 {
                     // CONSIDER: Do this more efficiently?  Only when there is opimization
@@ -1998,7 +2041,7 @@ namespace pwiz.Skyline.Model
                         var chromInfo = chromInfoArray[i];
                         int step = i - numSteps;
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
-                                                                                    chromInfo.CalcPeak(startIndex, endIndex, flags), ratioCount);
+                                                                                    chromInfo.CalcPeak(startIndex, endIndex, flags), ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }

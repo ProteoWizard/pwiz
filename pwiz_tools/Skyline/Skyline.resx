@@ -1701,9 +1701,6 @@
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
     <value>Reintegrate</value>
   </data>
-  <data name="reintegrateToolStripMenuItem.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
   </data>

@@ -880,16 +880,26 @@ namespace pwiz.Skyline.Model
             throw new InvalidOperationException(Resources.SrmDocument_MoveNode_Invalid_move_source);
         }
 
-        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Identity tranId, double retentionTime)
+        public SrmDocument AddPrecursorResultsAnnotations(IdentityPath groupPath, ChromFileInfoId fileId,
+                                                          Dictionary<string, string> annotations)
         {
-            return ChangePeak(groupPath, nameSet, filePath, false,
-                (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, tranId, retentionTime));
+            var groupNode = (TransitionGroupDocNode) FindNode(groupPath);
+            var groupNodeNew = groupNode.AddPrecursorAnnotations(fileId, annotations);
+            if (ReferenceEquals(groupNode, groupNodeNew))
+                return this;
+            return (SrmDocument) ReplaceChild(groupPath.Parent, groupNodeNew);
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Transition transition, double? startTime, double? endTime, PeakIdentification? identified, bool preserveMissingPeaks)
+            Identity tranId, double retentionTime, UserSet userSet)
+        {
+            return ChangePeak(groupPath, nameSet, filePath, false,
+                (node, info, tol, iSet, fileId, reg) =>
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, tranId, retentionTime, userSet));
+        }
+
+        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
+            Transition transition, double? startTime, double? endTime, UserSet userSet, PeakIdentification? identified, bool preserveMissingPeaks)
         {
             // If start or end time is null, just assign an arbitrary value to identified -- peak will be deleted anyway
             if (!startTime.HasValue || !endTime.HasValue)
@@ -923,9 +933,8 @@ namespace pwiz.Skyline.Model
             }
             return ChangePeak(groupPath, nameSet, filePath, true,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime,
-                        identified.Value, preserveMissingPeaks)
-                    );
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, 
+                                    endTime, identified.Value, userSet, preserveMissingPeaks));
         }
 
         private bool ContainsTime(double[] times, double startTime, double endTime)
@@ -1797,7 +1806,7 @@ namespace pwiz.Skyline.Model
             // Ignore userSet during load, since all values are still calculated
             // from the child transitions.  Otherwise inconsistency is possible.
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
-            const bool userSet = false;
+            const UserSet userSet = UserSet.FALSE;
             int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
             return new TransitionGroupChromInfo(fileId,
                                                 optimizationStep,
@@ -2107,7 +2116,7 @@ namespace pwiz.Skyline.Model
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
                 var identified = reader.GetEnumAttribute(ATTR.identified,
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
-                bool userSet = reader.GetBoolAttribute(ATTR.user_set);
+                UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSet.FALSE, XmlUtil.EnumCase.upper);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
                 {

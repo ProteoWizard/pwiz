@@ -40,14 +40,14 @@ namespace pwiz.Skyline.Model.Find
 
         protected override FindMatch MatchTransition(TransitionChromInfo transitionChromInfo)
         {
-            return transitionChromInfo.UserSet
+            return transitionChromInfo.IsUserSetManual
                        ? new FindMatch(Resources.ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak)
                        : null;
         }
 
         protected override FindMatch MatchTransitionGroup(TransitionGroupChromInfo transitionGroupChromInfo)
         {
-            return transitionGroupChromInfo.UserSet
+            return transitionGroupChromInfo.IsUserSetManual
                        ? new FindMatch(Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks)
                        : null;
         }

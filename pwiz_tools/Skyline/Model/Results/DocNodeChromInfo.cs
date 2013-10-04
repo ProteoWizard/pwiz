@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? libraryDotProduct,
                                         float? isotopeDotProduct,
                                         Annotations annotations,
-                                        bool userSet)
+                                        UserSet userSet)
             : base(fileId)
         {
             OptimizationStep = optimizationStep;
@@ -206,9 +206,13 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Set if user action has explicitly set these values
         /// </summary>
-        public bool UserSet { get; private set; }
+        public UserSet UserSet { get; private set; }
 
-        public bool IsUserModified { get { return UserSet || !Annotations.IsEmpty; } }
+        public bool IsUserSetManual { get { return UserSet == UserSet.TRUE; } }
+
+        public bool IsUserSetAuto { get { return UserSet == UserSet.IMPORTED || UserSet == UserSet.REINTEGRATED; } }
+
+        public bool IsUserModified { get { return IsUserSetManual || !Annotations.IsEmpty; } }
 
         #region Property change methods
 
@@ -222,11 +226,9 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionGroupChromInfo ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     im.Annotations = annotations;
-                                                     im.UserSet = im.UserSet || !annotations.IsEmpty;
-                                                 });
+            if (Equals(annotations, Annotations))
+                return this;
+            return ChangeProp(ImClone(this), im => im.Annotations = annotations);
         }
 
         #endregion
@@ -301,7 +303,7 @@ namespace pwiz.Skyline.Model.Results
         private ReadOnlyCollection<float?> _ratios;
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
-            IList<float?> ratios, Annotations annotations, bool userSet)
+            IList<float?> ratios, Annotations annotations, UserSet userSet)
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
                    peak.IsFwhmDegenerate, peak.IsTruncated, peak.Identified,
@@ -314,7 +316,7 @@ namespace pwiz.Skyline.Model.Results
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated,
                                    PeakIdentification identified, IList<float?> ratios,
-                                   Annotations annotations, bool userSet)
+                                   Annotations annotations, UserSet userSet)
             : base(fileId)
         {
             OptimizationStep = optimizationStep;
@@ -370,9 +372,13 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Set if user action has explicitly set these values
         /// </summary>
-        public bool UserSet { get; private set; }
+        public UserSet UserSet { get; private set; }
 
-        public bool IsUserModified { get { return UserSet || !Annotations.IsEmpty; } }
+        public bool IsUserSetManual { get { return UserSet == UserSet.TRUE; } }
+
+        public bool IsUserSetAuto { get { return UserSet == UserSet.IMPORTED || UserSet == UserSet.REINTEGRATED; } }
+
+        public bool IsUserModified { get { return !Equals(UserSet, UserSet.FALSE) || !Annotations.IsEmpty; } }
 
         public bool IsEmpty { get { return EndRetentionTime == 0; } }
 
@@ -418,7 +424,7 @@ namespace pwiz.Skyline.Model.Results
 
         #region Property change methods
 
-        public TransitionChromInfo ChangePeak(ChromPeak peak, bool userSet)
+        public TransitionChromInfo ChangePeak(ChromPeak peak, UserSet userSet)
         {
             var chromInfo = ImClone(this);
             chromInfo.MassError = peak.MassError;
@@ -448,11 +454,9 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionChromInfo ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     im.Annotations = annotations;
-                                                     im.UserSet = im.UserSet || !annotations.IsEmpty;
-                                                 });
+            if (Equals(annotations, Annotations))
+                return this;
+            return ChangeProp(ImClone(this), im => im.Annotations = annotations);
         }
 
         #endregion
@@ -561,6 +565,30 @@ namespace pwiz.Skyline.Model.Results
                 return resultsOld;
 
             return new Results<TItem>(listInfo);
+        }
+
+        public static Results<TItem> ChangeChromInfo(Results<TItem> results, ChromFileInfoId id, TItem newChromInfo)
+        {
+            var elements = new List<ChromInfoList<TItem>>();
+            bool found = false;
+            foreach (var replicate in results)
+            {
+                var chromInfoList = new List<TItem>();
+                foreach (var chromInfo in replicate)
+                {
+                    if (!ReferenceEquals(chromInfo.FileId, id))
+                        chromInfoList.Add(chromInfo);
+                    else
+                    {
+                        found = true;
+                        chromInfoList.Add(newChromInfo);
+                    }
+                }
+                elements.Add(new ChromInfoList<TItem>(chromInfoList));
+            }
+            if (!found)
+                throw new InvalidOperationException(Resources.ResultsGrid_ChangeChromInfo_Element_not_found);
+            return new Results<TItem>(elements);
         }
 
         public static bool EqualsDeep(Results<TItem> resultsOld, Results<TItem> results)
@@ -730,6 +758,8 @@ namespace pwiz.Skyline.Model.Results
             return (float)(valTotal / valCount);
         }
     }
+
+    public enum UserSet { TRUE, FALSE, IMPORTED, REINTEGRATED }
 
     /// <summary>
     /// Base class for a single measured result for a single <see cref="DocNode"/>

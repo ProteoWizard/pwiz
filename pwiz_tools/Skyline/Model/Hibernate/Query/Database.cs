@@ -562,7 +562,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             IsotopeDotProduct = chromInfo.IsotopeDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),
                             Note = chromInfo.Annotations.Note,
-                            UserSetTotal = chromInfo.UserSet,
+                            UserSetPrecursor = chromInfo.UserSet,
+                            UserSetTotal = !Equals(chromInfo.UserSet, UserSet.FALSE),
                             PeptideResult = peptideResults[resultFile],
                             // Set the optimization step no matter what, so that replicates without
                             // optimization data will join with those with it.

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -73,18 +74,17 @@ namespace pwiz.Skyline.Model
             long linesRead = 0;
             int progressPercent = 0;
             var docNew = Document;
-            var sequenceToNode = new Dictionary<string, KeyValuePair<IdentityPath, PeptideDocNode>>();
+            var sequenceToNode = new Dictionary<string, IdentityPath>();
             var fileNameToFileMatch = new Dictionary<string, ChromSetFileMatch>();
             // Make the dictionary of modified peptide strings to doc nodes and paths
             for (int i = 0; i < Document.PeptideCount; ++i)
             {
                 IdentityPath peptidePath = Document.GetPathTo((int) SrmDocument.Level.Peptides, i);
                 PeptideDocNode peptideNode = (PeptideDocNode) Document.FindNode(peptidePath);
-                var peptidePair = new KeyValuePair<IdentityPath, PeptideDocNode>(peptidePath, peptideNode);
                 string formattedModifiedSeq = FormatMods(Document.Settings.GetModifiedSequence(peptideNode));
                 if (peptideNode.IsDecoy)
                     formattedModifiedSeq += DECOY;
-                sequenceToNode.Add(formattedModifiedSeq, peptidePair);
+                sequenceToNode.Add(formattedModifiedSeq, peptidePath);
             }
             string line = reader.ReadLine();
             if (line == null)
@@ -92,6 +92,12 @@ namespace pwiz.Skyline.Model
                 throw new IOException(Resources.PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file);
             }
             linesRead++;
+
+            // Add annotations as possible columns
+            var allFieldNames = new List<string>(FIELD_NAMES);
+            allFieldNames.AddRange(from def in Document.Settings.DataSettings.AnnotationDefs
+                                   where def.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.precursor_result)
+                                   select def.Name);
 
             // Try TSV,CSV,and SPACE as possible delimiters for the file
             var separators = new[]
@@ -114,10 +120,10 @@ namespace pwiz.Skyline.Model
             {
                 string[] headerFields = line.ParseDsvFields(separator);
                 fieldsTotal = headerFields.Length;
-                var fieldsForSeparator = new int[FIELD_NAMES.Length];
-                for (int i = 0; i < FIELD_NAMES.Length; i++)
+                var fieldsForSeparator = new int[allFieldNames.Count];
+                for (int i = 0; i < allFieldNames.Count; i++)
                 {
-                    fieldsForSeparator[i] = Array.IndexOf(headerFields, FIELD_NAMES[i]);
+                    fieldsForSeparator[i] = Array.IndexOf(headerFields, allFieldNames[i]);
                 }
                 int requiredFieldsFound = fieldsForSeparator.Where((index, i) => index != -1 && REQUIRED_FIELDS.Contains(i)).Count();
 
@@ -142,7 +148,7 @@ namespace pwiz.Skyline.Model
                 if (fieldIndices != null)
                 {
                     string[] missingFields = fieldIndices.Where((index, i) => index == -1 && REQUIRED_FIELDS.Contains(i))
-                                                         .Select((index, i) => FIELD_NAMES[i]).ToArray();
+                                                         .Select((index, i) => allFieldNames[i]).ToArray();
                     fieldNames = string.Join(", ", missingFields); // Not L10N
                 }
                 throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line, fieldNames));
@@ -160,7 +166,7 @@ namespace pwiz.Skyline.Model
                     if (progressPercent != progressNew)
                         longWaitBroker.ProgressValue = progressPercent = progressNew;
                 }
-                var dataFields = new DataFields(fieldIndices, line.ParseDsvFields((char) correctSeparator));
+                var dataFields = new DataFields(fieldIndices, line.ParseDsvFields((char) correctSeparator), allFieldNames);
                 if (dataFields.Length != fieldsTotal)
                 {
                     throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_,
@@ -213,8 +219,8 @@ namespace pwiz.Skyline.Model
                     fileIds = new[] {sampleFile.FileId};
                 }
                 // Look up the IdentityPath of peptide in first dictionary
-                KeyValuePair<IdentityPath, PeptideDocNode> nodePair;
-                if (!sequenceToNode.TryGetValue(modifiedPeptideString, out nodePair))
+                IdentityPath pepPath;
+                if (!sequenceToNode.TryGetValue(modifiedPeptideString, out pepPath))
                 {
                     string sequence = FastaSequence.StripModifications(modifiedPeptideString);
                     if (Document.Peptides.Any(pep => Equals(sequence, pep.Peptide.Sequence)))
@@ -226,8 +232,11 @@ namespace pwiz.Skyline.Model
                         throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_, sequence, linesRead));
                     }
                 }
-                var pepPath = nodePair.Key;
-                var nodePep = nodePair.Value;
+                var nodePep = (PeptideDocNode) docNew.FindNode(pepPath);
+
+                // Define the annotations to be added
+                var annotations = dataFields.GetAnnotations();
+
                 // Loop over all the transition groups in that peptide to find matching charge,
                 // or use all transition groups if charge not specified
                 bool foundSample = false;
@@ -237,17 +246,20 @@ namespace pwiz.Skyline.Model
                     var groupNode = (TransitionGroupDocNode) nodePep.FindNode(groupRelPath);
                     if (!chargeSpecified || charge == groupNode.TransitionGroup.PrecursorCharge)
                     {
-                        var groupPath = new IdentityPath(pepPath, groupNode.Id);
-                        var groupFileIndices = groupNode.ChromInfos.Select(x => x.FileId.GlobalIndex).ToList();
+                        var groupFileIndices = new HashSet<int>(groupNode.ChromInfos.Select(x => x.FileId.GlobalIndex));
                         // Loop over the files in this groupNode to find the correct sample
                         // Change peak boundaries for the transition group
                         foreach(var fileId in fileIds)
                         {
                             if (groupFileIndices.Contains(fileId.GlobalIndex))
                             {
+                                var groupPath = new IdentityPath(pepPath, groupNode.Id);
+                                // Attach annotations
+                                docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
+                                // Change peak
                                 string filePath = chromSet.GetFileInfo(fileId).FilePath;
                                 docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                                           null, startTime, endTime, null, false);
+                                                           null, startTime, endTime, UserSet.IMPORTED, null, false);
                                 foundSample = true;
                             }
                         }
@@ -270,19 +282,38 @@ namespace pwiz.Skyline.Model
         {
             private readonly int[] _fieldIndices;
             private readonly string[] _dataFields;
+            private readonly IList<string> _fieldNames;
 
-            public DataFields(int[] fieldIndices, string[] dataFields)
+            public DataFields(int[] fieldIndices, string[] dataFields, IList<string> fieldNames)
             {
                 _fieldIndices = fieldIndices;
                 _dataFields = dataFields;
+                _fieldNames = fieldNames;
             }
 
             public int Length { get { return _dataFields.Length; } }
 
+            private string GetField(int i)
+            {
+                int fieldIndex = _fieldIndices[i];
+                return fieldIndex != -1 ? _dataFields[fieldIndex] : null;
+            }
+
             public string GetField(Field field)
             {
-                int fieldIndex = _fieldIndices[(int)field];
-                return fieldIndex != -1 ? _dataFields[fieldIndex] : null;
+                return GetField((int) field);
+            }
+
+            public Dictionary<string, string> GetAnnotations()
+            {
+                var annotations = new Dictionary<string, string>();
+                for (int i = FIELD_NAMES.Length; i < _fieldNames.Count; ++i)
+                {
+                    string value = GetField(i);
+                    if (value != null)
+                        annotations.Add(_fieldNames[i], value);
+                }
+                return annotations;
             }
 
             public double? GetTime(Field field, string message, long linesRead)

@@ -846,6 +846,14 @@
             <xs:enumeration value="Transition"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="user_set">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="TRUE"/>
+        <xs:enumeration value="FALSE"/>
+        <xs:enumeration value="IMPORTED"/>
+        <xs:enumeration value="REINTEGRATE"/>
+      </xs:restriction>
+    </xs:simpleType>
     <xs:simpleType name="mass_type_type">
         <xs:restriction base="xs:string">
             <xs:enumeration value="Monoisotopic"/>
@@ -1130,8 +1138,9 @@
                 <xs:attribute name="mass_error_ppm" type="xs:double"/>
                 <xs:attribute name="truncated" type="xs:integer"/>
                 <xs:attribute name="identified" type="xs:boolean"/>
-                <xs:attribute name="library_dtop" type="xs:float"/>
-                <xs:attribute name="isotope_dtop" type="xs:float"/>
+                <xs:attribute name="library_dotp" type="xs:float"/>
+                <xs:attribute name="isotope_dotp" type="xs:float"/>
+                <xs:attribute name="user_set" type="user_set" use="optional"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -1156,7 +1165,7 @@
                 <xs:attribute name="truncated" type="xs:boolean"/>
                 <xs:attribute name="identified" type="xs:boolean"/>
                 <xs:attribute name="rank" type="xs:positiveInteger"/>
-                <xs:attribute name="user_set" type="xs:boolean" use="optional"/>
+                <xs:attribute name="user_set" type="user_set" use="optional"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

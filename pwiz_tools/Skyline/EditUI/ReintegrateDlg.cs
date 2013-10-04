@@ -54,8 +54,13 @@ namespace pwiz.Skyline.EditUI
             var helper = new MessageBoxHelper(this);
 
             double qCutoff;
-            if (!helper.ValidateDecimalTextBox(e, textBoxCutoff, 0.0, 1.0, out qCutoff))
-                return;
+            if (reintegrateQCutoff.Checked)
+            {
+                if (!helper.ValidateDecimalTextBox(e, textBoxCutoff, 0.0, 1.0, out qCutoff))
+                    return;
+            }
+            else
+                qCutoff = double.MaxValue;
 
             using (var longWaitDlg = new LongWaitDlg
                 {
@@ -92,6 +97,28 @@ namespace pwiz.Skyline.EditUI
             set { textBoxCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public bool ReintegrateAll
+        {
+            get { return reintegrateAllPeaks.Checked; }
+            set 
+            { 
+                reintegrateAllPeaks.Checked = value;
+                reintegrateQCutoff.Checked = !value;
+            }
+        }
+
         #endregion
+
+        private void reintegrateAllPeaks_CheckedChanged(object sender, EventArgs e)
+        {
+            textBoxCutoff.Enabled = !reintegrateAllPeaks.Checked;
+        }
+
+        private void reintegrateQCutoff_CheckedChanged(object sender, EventArgs e)
+        {
+            textBoxCutoff.Enabled = reintegrateQCutoff.Checked;
+        }
+
+
     }
 }

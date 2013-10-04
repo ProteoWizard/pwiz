@@ -38,6 +38,7 @@ namespace pwiz.SkylineTestFunctional
     public class ReintegrateDlgTest : AbstractFunctionalTest
     {
         private const string REPORT_EXPECTED = "ReportExpected.csv";
+        private const string REPORT_EXPECTED_ALL = "ReportExpectedAll.csv";
         private const string REPORT_ACTUAL = "ReportActual.csv";
 
         [TestMethod]
@@ -61,6 +62,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(document));
             WaitForDocumentLoaded();
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            RunUI(() => reintegrateDlg.ReintegrateAll = false);
             RunDlg<MessageDlg>(reintegrateDlg.OkDialog, messageBox =>
             {
                 AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, messageBox.Message);
@@ -75,21 +77,49 @@ namespace pwiz.SkylineTestFunctional
                 messageBox.OkDialog();
             });
 
+            string docNewExpected = TestFilesDir.GetTestPathLocale(REPORT_EXPECTED);
+            string docNewActual = TestFilesDir.GetTestPath(REPORT_ACTUAL);
+            string docNewExpectedAll = TestFilesDir.GetTestPathLocale(REPORT_EXPECTED_ALL);
+            var reportSpec = MakeReportSpec();
             // Test export gives same result as through non-UI
             RunUI(() =>
                 {
+                    reintegrateDlg.ReintegrateAll = false;
                     reintegrateDlg.Cutoff = 0.01;
                     reintegrateDlg.OkDialog();
                 });
             WaitForClosedForm(reintegrateDlg);
             RunUI(() =>
                 {
-                    var reportSpec = MakeReportSpec();
-                    string docNewActual = TestFilesDir.GetTestPath(REPORT_ACTUAL);
-                    string docNewExpected = TestFilesDir.GetTestPathLocale(REPORT_EXPECTED);
                     ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);
                     AssertEx.FileEquals(docNewActual, docNewExpected);
                 });
+            var reintegrateDlgAll = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            // Checking "Reintegrate All" radio button has same effect as choosing q=1.1
+            RunUI(() =>
+            {
+                reintegrateDlgAll.ReintegrateAll = true;
+                reintegrateDlgAll.OkDialog();
+            });
+            WaitForClosedForm(reintegrateDlgAll);
+            RunUI(() =>
+            {
+                ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);
+                AssertEx.FileEquals(docNewActual, docNewExpectedAll);
+            });
+            var reintegrateDlgCutoff = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            RunUI(() =>
+            {
+                reintegrateDlgCutoff.ReintegrateAll = false;
+                reintegrateDlgCutoff.Cutoff = 1.0;
+                reintegrateDlgCutoff.OkDialog();
+            });
+            WaitForClosedForm(reintegrateDlgCutoff);
+            RunUI(() =>
+            {
+                ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);
+                AssertEx.FileEquals(docNewActual, docNewExpectedAll);
+            });
 
         }
 

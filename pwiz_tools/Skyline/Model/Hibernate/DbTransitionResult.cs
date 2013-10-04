@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
@@ -55,7 +56,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? MassErrorPPM { get; set; }
         public virtual bool? Truncated { get; set; }
         public virtual int? PeakRank { get; set; }
-        public virtual bool UserSetPeak { get; set; }
+        public virtual UserSet UserSetPeak { get; set; }
         public virtual int OptStep { get; set; }
         [QueryColumn(FullName = "TransitionReplicateNote")] // Not L10N
         public virtual string Note { get; set; }

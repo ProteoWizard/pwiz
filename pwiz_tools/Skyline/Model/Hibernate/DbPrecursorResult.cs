@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Hibernate
@@ -66,6 +67,7 @@ namespace pwiz.Skyline.Model.Hibernate
         //        [QueryColumn(Format = Formats.PEAK_AREA)]
 //        public virtual double TotalSignalToNoise { get; set; }
         public virtual bool UserSetTotal { get; set; }
+        public virtual UserSet UserSetPrecursor { get; set; }
         public virtual int OptStep { get; set; }
         [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double? OptCollisionEnergy { get; set; }

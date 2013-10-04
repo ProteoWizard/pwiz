@@ -5981,4 +5981,7 @@ Are you sure you want to continue?</value>
   <data name="PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__" xml:space="preserve">
     <value>The peptide {0} was not present in the file {1} on line {2}.</value>
   </data>
+  <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
+    <value>File Id {0} does not match any file in document.</value>
+  </data>
 </root>

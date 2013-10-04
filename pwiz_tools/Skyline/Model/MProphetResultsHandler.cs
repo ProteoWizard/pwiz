@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
@@ -42,6 +43,8 @@ namespace pwiz.Skyline.Model
         private IList<double> _qValues;
         private readonly IList<IPeakFeatureCalculator> _calcs;
         private IEnumerable<PeakTransitionGroupFeatures> _features;
+
+        private const string Q_VALUE_ANNOTATION = "Q Value";
 
         public MProphetResultsHandler(SrmDocument document, PeakScoringModelSpec scoringModel)
         {
@@ -88,6 +91,10 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeaks(double qValueCutoff)
         {
             SrmDocument docNew = Document;
+            var annotationNames = from def in Document.Settings.DataSettings.AnnotationDefs
+                                  where def.AnnotationTargets.Contains( AnnotationDef.AnnotationTarget.precursor_result)
+                                  select def.Name;
+            var containsQAnnotation = annotationNames.Contains(Q_VALUE_ANNOTATION);
             int i = 0;
             foreach (var transitionGroupFeatures in _features)
             {
@@ -118,8 +125,16 @@ namespace pwiz.Skyline.Model
                         var pepGroupPath = new IdentityPath(IdentityPath.ROOT, nodePepGroup.Id);
                         var pepPath = new IdentityPath(pepGroupPath, nodePep.Id);
                         var groupPath = new IdentityPath(pepPath, groupNode.Id);
+                        // TODO: HACK To annotate peaks with q values.  This is crappy and should be removed in the long run.
+                        if (containsQAnnotation)
+                        {
+                            var annotations = new Dictionary<string, string> { { Q_VALUE_ANNOTATION, _qValues[i].ToString(CultureInfo.CurrentCulture) } };
+                            var fileId = transitionGroupFeatures.Id.ChromatogramSet.FindFile(transitionGroupFeatures.Id.FilePath);
+                            docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
+                        }
+                        // end HACK
                         docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                                   null, startTime, endTime, null, false);
+                                                   null, startTime, endTime, UserSet.REINTEGRATED, null, false);
                     }
                 }
                 ++i;

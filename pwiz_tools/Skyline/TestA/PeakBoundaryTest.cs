@@ -66,6 +66,10 @@ namespace pwiz.SkylineTestA
         private readonly PeakIdentification[] _csvIdentified2 = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
         private readonly double?[] _csvAreas2 = { 1.586e9, 6.603e8, null, 9.978e8, null, 1.853e10 };
 
+        private readonly string[] _precursorMzs = { "533.294964", "623.29589", "415.866352", "692.868631",
+                                                  "462.248179", "634.355888"};
+        private const string annote = "PrecursorMz";
+
         private readonly double?[] _idMinTime1 = { 32.25,33.02,37.68,21.19,35.93, 33.85,29.29,31.55,37.21,27.02, 25.41,29.55,29.60,25.07,23.14, 29.11 };
         private readonly double?[] _idMaxTime1 = { 33.53,33.90,38.90,22.23,37.43, 35.35,30.86,31.66,37.81,28.68, 26.20,31.13,30.32,26.08,24.92, 29.58 };
         private readonly PeakIdentification[] _idIdentified1 = {
@@ -115,16 +119,16 @@ namespace pwiz.SkylineTestA
             SrmDocument docResults = docContainer.Document;
             // Test Tsv import, looking at first .raw file
             DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
-                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0);
+                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0, _precursorMzs, annote);
             // Test Tsv import, looking at second .raw file
             DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
-                _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1);
+                _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1, _precursorMzs, annote);
 
             // Test Csv import for local format
             DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
-                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0);
+                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0, _precursorMzs, annote);
             DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
-                _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1);
+                _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, _precursorMzs, annote);
 
             // Test that importing same file twice leads to no change to document the second time
             var docNew = ImportFileToDoc(docResults, peakBoundaryFileTsv);
@@ -358,7 +362,9 @@ namespace pwiz.SkylineTestA
                                        PeakIdentification[] identified,
                                        double?[] peakAreas,
                                        string[] peptides,
-                                       int fileId)
+                                       int fileId,
+                                       string[] precursorMzs = null,
+                                       string annotationName = null)
         {
             SrmDocument docNew = ImportFileToDoc(docResults, importFile);
             int i = 0;
@@ -371,17 +377,26 @@ namespace pwiz.SkylineTestA
             int j = 0;
             foreach (TransitionGroupDocNode groupNode in docNew.TransitionGroups)
             {
+                var groupChromInfo = groupNode.ChromInfos.ToList()[fileId];
                 // Make sure charge on each transition group is correct
                 Assert.AreEqual(groupNode.TransitionGroup.PrecursorCharge, chargeList[j]);
                 // Make sure imported retention time boundaries, including nulls, are correct
-                Assert.IsTrue(ApproxEqualNullable(groupNode.ChromInfos.ToList()[fileId].StartRetentionTime, minTime[j], RT_TOLERANCE));
-                Assert.IsTrue(ApproxEqualNullable(groupNode.ChromInfos.ToList()[fileId].EndRetentionTime, maxTime[j], RT_TOLERANCE));
+                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE));
+                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE));
                 // Check that peak areas are updated correctly
                 double peakArea = peakAreas[j] ?? 0;
-                Assert.IsTrue(ApproxEqualNullable(groupNode.ChromInfos.ToList()[fileId].Area, peakAreas[j], RT_TOLERANCE * peakArea));
+                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE*peakArea));
                 // Check that identified values are preserved/updated appropriately
-                Assert.IsTrue(groupNode.ChromInfos.ToList()[fileId].Identified == identified[j],
+                Assert.IsTrue(groupChromInfo.Identified == identified[j],
                     string.Format("No identification match for {0}  ({1})", groupNode.TransitionGroup.Peptide, j));
+                var annotations = groupChromInfo.Annotations;
+                if (precursorMzs != null)
+                {
+                    Assert.AreEqual(annotations.ListAnnotations().Length, 1);
+                    Assert.AreEqual(annotations.GetAnnotation(annote), _precursorMzs[j]);
+                }
+                else
+                    Assert.AreEqual(annotations.ListAnnotations().Length, 0); 
                 ++j;
             }
         }

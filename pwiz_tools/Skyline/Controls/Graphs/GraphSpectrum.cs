@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
             var chromPeak = new ChromPeak(crawdadPeak, 0, chromGroup.Times, chromData.Intensities, null);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak, new float?[0], Annotations.EMPTY,
-                                                            false);
+                                                            UserSet.FALSE);
             var peaks = new BlockedArray<ChromPeak>(new[] {chromPeak}, 1, 4096);
             var header = new ChromGroupHeaderInfo5(new ChromGroupHeaderInfo(
               (float)precursorMz, 0, 1, 0, peaks.Length, 0, 0,
