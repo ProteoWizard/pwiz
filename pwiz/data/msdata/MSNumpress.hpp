@@ -1,6 +1,7 @@
 /*
-	MSNumpress.hpp
-	johan.teleman@immun.lth.se
+	$Id: MSNumpress.hpp 5009 2013-10-03 22:33:08Z pcbrefugee $
+
+	Author: johan.teleman@immun.lth.se
  
 	Copyright 2013 Johan Teleman
 

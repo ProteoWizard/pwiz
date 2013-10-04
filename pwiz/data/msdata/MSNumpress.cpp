@@ -1,6 +1,7 @@
 /*
-    MSNumpress.cpp
-    johan.teleman@immun.lth.se
+    $Id: MSNumpress.cpp 5009 2013-10-03 22:33:08Z pcbrefugee $
+
+    Author: johan.teleman@immun.lth.se
  
     Copyright 2013 Johan Teleman
 
@@ -86,7 +87,7 @@ void encodeInt(
         size_t *res_length    
 ) {
     int i, l, m;
-    int mask = 0xf0000000;
+    unsigned int mask = 0xf0000000;
     int init = x & mask;
 
     if (init == 0) {
@@ -142,7 +143,7 @@ void decodeInt(
 ) {
     size_t n;
     size_t i;
-    int mask, m;
+    unsigned int mask, m;
     unsigned char head;
     unsigned char hb;
 
