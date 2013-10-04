@@ -450,8 +450,9 @@ namespace MSConvertGUI
             // read in data file
             using (var msdList = new MSDataList())
             {
-                if (LogUpdate != null) LogUpdate("Opening file...", _info);
-                if (StatusUpdate != null) StatusUpdate("Opening file...", ProgressBarStyle.Marquee, _info);
+                string msg = String.Format("Opening file \"{0}\" for read...",filename);
+                if (LogUpdate != null) LogUpdate(msg, _info);
+                if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Marquee, _info);
                 readers.read(filename, msdList);
 
                 foreach (var msd in msdList)
@@ -484,6 +485,9 @@ namespace MSConvertGUI
                     // write out the new data file
                     var ilr = new IterationListenerRegistry();
                     ilr.addListener(this, 100);
+                    msg = String.Format("Writing \"{0}\"...", outputFilename);
+                    if (LogUpdate != null) LogUpdate(msg, _info);
+                    if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Marquee, _info);
                     MSDataFile.write(msd, outputFilename, config.WriteConfig, ilr);
                     ilr.removeListener(this);
                 }
