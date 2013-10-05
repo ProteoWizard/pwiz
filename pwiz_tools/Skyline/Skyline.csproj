@@ -791,6 +791,7 @@
     <Compile Include="Model\Results\PrecursorModSeq.cs" />
     <Compile Include="Model\Results\RatioValue.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
+    <Compile Include="Model\Results\Scoring\NextGenFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\LegacyFeatureCalc.cs" />

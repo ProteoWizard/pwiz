@@ -4205,6 +4205,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unexpected Coefficient Sign.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Second Best Peaks.
         /// </summary>
         public static string EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks {
@@ -8524,6 +8533,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attempted to score a peak with {0} features using a model with {1} trained scores..
+        /// </summary>
+        public static string MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_ {
+            get {
+                return ResourceManager.GetString("MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__featu" +
+                        "res_using_a_model_with__1__trained_scores_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MProphetScoringModel was given a peak with {0} features, but it has {1} peak feature calculators.
         /// </summary>
         public static string MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators {
@@ -8773,6 +8792,52 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("NewDocument", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor-product shape score..
+        /// </summary>
+        public static string NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score_ {
+            get {
+                return ResourceManager.GetString("NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_sha" +
+                        "pe_score_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Isotope Dot Product.
+        /// </summary>
+        public static string NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Isotope_Dot_Product {
+            get {
+                return ResourceManager.GetString("NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Isotope_Dot_Product", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Mass Error.
+        /// </summary>
+        public static string NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_Mass_Error {
+            get {
+                return ResourceManager.GetString("NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_Mass_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product Mass Error.
+        /// </summary>
+        public static string NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_Mass_Error {
+            get {
+                return ResourceManager.GetString("NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_Mass_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Signal to Noise.
+        /// </summary>
+        public static string NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_Noise {
+            get {
+                return ResourceManager.GetString("NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_Noise", resourceCulture);
             }
         }
         

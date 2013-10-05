@@ -64,6 +64,7 @@ namespace pwiz.Skyline.Model
         public void ScoreFeatures(IProgressMonitor progressMonitor = null)
         {
             _features = Document.GetPeakFeatures(_calcs, progressMonitor);
+            _features = _features.Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any());
             double mean = ScoringModel.DecoyMean;
             double stddev = ScoringModel.DecoyStdev;
             var bestPvalues = new List<double>();
@@ -157,7 +158,10 @@ namespace pwiz.Skyline.Model
                 features = _features;
             }
             else
+            {
                 features = Document.GetPeakFeatures(calcs, progressMonitor);
+                features = features.Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any());
+            }
             WriteHeaderRow(writer, calcs, cultureInfo);
             int i = 0;
             foreach (var peakTransitionGroupFeatures in features)

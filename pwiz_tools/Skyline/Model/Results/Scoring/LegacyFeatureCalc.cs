@@ -45,6 +45,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return Score(SummedArea(summaryPeakData, false), SummedArea(summaryPeakData, true));
         }
 
+        public override bool IsReversedScore { get { return false; } }
+
         private double SummedArea(IPeptidePeakData<ISummaryPeakData> summaryPeakData, bool isStandard)
         {
             // Slightly verbose implementation, because simpler implementation using
@@ -87,6 +89,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                        ? 4.0 * peakCount / totalCount
                        : peakCount;
         }
+
+        public override bool IsReversedScore { get { return false; } }
     }
 
     class LegacyUnforcedCountScoreCalc : LegacyCountScoreCalc
@@ -118,5 +122,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return summaryPeakData.TransitionGroupPeakData.Count(
                 pd => pd.TranstionPeakData.Any(p => p.PeakData.Identified != PeakIdentification.FALSE));
         }
+
+        public override bool IsReversedScore { get { return false; } }
     }
 }

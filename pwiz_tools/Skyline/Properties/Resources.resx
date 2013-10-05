@@ -5984,4 +5984,25 @@ Are you sure you want to continue?</value>
   <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
     <value>File Id {0} does not match any file in document.</value>
   </data>
+  <data name="EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign" xml:space="preserve">
+    <value>Unexpected Coefficient Sign</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
+    <value>Attempted to score a peak with {0} features using a model with {1} trained scores.</value>
+  </data>
+  <data name="NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_Mass_Error" xml:space="preserve">
+    <value>Product Mass Error</value>
+  </data>
+  <data name="NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_Mass_Error" xml:space="preserve">
+    <value>Precursor Mass Error</value>
+  </data>
+  <data name="NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Isotope_Dot_Product" xml:space="preserve">
+    <value>Isotope Dot Product</value>
+  </data>
+  <data name="NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score_" xml:space="preserve">
+    <value>Precursor-product shape score.</value>
+  </data>
+  <data name="NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_Noise" xml:space="preserve">
+    <value>Signal to Noise</value>
+  </data>
 </root>

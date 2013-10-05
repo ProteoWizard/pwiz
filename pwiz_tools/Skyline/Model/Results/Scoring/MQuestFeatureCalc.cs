@@ -28,9 +28,9 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    public class MQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
+    abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
     {
-        public MQuestRetentionTimePredictionCalc() : base(Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference) { }
+        protected AbstractMQuestRetentionTimePredictionCalc(string name) : base(name) {}
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -40,10 +40,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (predictor == null)
                 return float.NaN;
 
-            float maxHeight = 0;
+            float maxHeight = float.MinValue;
             double? measuredRT = null;
             foreach (var tranPeakData in summaryPeakData.TransitionGroupPeakData.SelectMany(pd => pd.TranstionPeakData))
             {
+                if (!IsIonType(tranPeakData.NodeTran))
+                    continue;
                 if (tranPeakData.PeakData.Height > maxHeight)
                 {
                     maxHeight = tranPeakData.PeakData.Height;
@@ -59,6 +61,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (!predictedRT.HasValue)
                 return float.NaN;
             return (float) Math.Abs(measuredRT.Value - predictedRT.Value);
+        }
+
+        public override bool IsReversedScore { get { return true; } }
+
+        protected abstract bool IsIonType(TransitionDocNode nodeTran);
+    }
+
+    class MQuestRetentionTimePredictionCalc : AbstractMQuestRetentionTimePredictionCalc
+    {
+        public MQuestRetentionTimePredictionCalc() : base(Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference) { }
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return !nodeTran.IsMs1;
         }
     }
 
@@ -110,18 +126,32 @@ namespace pwiz.Skyline.Model.Results.Scoring
     }
 
     /// <summary>
-    /// Calculates summed areas of light transitions
+    /// Calculates summed areas of light transitions, for specified ions
     /// </summary>
-    class MQuestIntensityCalc : SummaryPeakFeatureCalculator
+    public abstract class AbstractMQuestIntensityCalc : SummaryPeakFeatureCalculator
     {
-        public MQuestIntensityCalc() : base(Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity) { }
+        protected AbstractMQuestIntensityCalc(string name) : base(name) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             double lightArea = MQuestHelpers.GetAnalyteGroups(summaryPeakData)
-                                .SelectMany(pd => pd.TranstionPeakData)
+                                .SelectMany(pd => pd.TranstionPeakData).Where(tranPeakData => IsIonType(tranPeakData.NodeTran))
                                 .Sum(p => p.PeakData.Area);
             return (float)Math.Max(0, Math.Log10(lightArea));
+        }
+
+        public override bool IsReversedScore { get { return false; } }
+
+        protected abstract bool IsIonType(TransitionDocNode nodeTran);
+    }
+
+    public class MQuestIntensityCalc : AbstractMQuestIntensityCalc
+    {
+        public MQuestIntensityCalc() : base(Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity) {}
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return !nodeTran.IsMs1;
         }
     }
 
@@ -129,10 +159,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// Calculates Normalized Contrast Angle between experimental intensity
     /// (i.e. peak areas) and spectral library intensity.
     /// </summary>
-    class MQuestIntensityCorrelationCalc : SummaryPeakFeatureCalculator
+    public abstract class AbstractMQuestIntensityCorrelationCalc : SummaryPeakFeatureCalculator
     {
-        public MQuestIntensityCorrelationCalc() : base(Resources.MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation) { }
-
+        protected AbstractMQuestIntensityCorrelationCalc(string name) : base(name) { }
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             var tranGroupPeakDatas = MQuestHelpers.GetAnalyteGroups(summaryPeakData).ToArray();
@@ -149,7 +178,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 foreach (var pd in pdGroup.TranstionPeakData)
                 {
-                    if (pd.NodeTran.IsMs1)
+                    if (!IsIonType(pd.NodeTran))
                         continue;
                     experimentAreas.Add(pd.PeakData.Area);
                     libAreas.Add(pd.NodeTran.LibInfo != null
@@ -161,16 +190,31 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var statExperiment = new Statistics(experimentAreas);
             var statLib = new Statistics(libAreas);
             return (float) statExperiment.NormalizedContrastAngleSqrt(statLib);
-        }        
+        }
+
+        public override bool IsReversedScore { get { return false; } }
+
+        protected abstract bool IsIonType(TransitionDocNode nodeTran);
+    }
+
+    public class MQuestIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
+    {
+        public MQuestIntensityCorrelationCalc() : base(Resources.MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation) { }
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return !nodeTran.IsMs1;
+        }
+
     }
 
     /// <summary>
     /// Calculates Normalize Contrast Angle between experimental light intensity
     /// and reference intensity.
     /// </summary>
-    class MQuestReferenceCorrelationCalc : SummaryPeakFeatureCalculator
+    public abstract class AbstractMQuestReferenceCorrelationCalc : SummaryPeakFeatureCalculator
     {
-        public MQuestReferenceCorrelationCalc() : base(Resources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation) { }
+        protected AbstractMQuestReferenceCorrelationCalc(string name) : base(name) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -201,6 +245,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     {
                         var analyteTran = tranPeakDataPair.First;
                         var referenceTran = tranPeakDataPair.Second;
+                        if (!IsIonType(analyteTran.NodeTran))
+                            continue;
                         analyteAreas.Add(analyteTran.PeakData.Area);
                         referenceAreas.Add(referenceTran.PeakData.Area);
                     }                    
@@ -210,6 +256,21 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var statReference = new Statistics(referenceAreas.ToArray());
             return (float) statAnalyte.NormalizedContrastAngleSqrt(statReference);
         }
+
+        public override bool IsReversedScore { get { return false; } }
+
+        protected abstract bool IsIonType(TransitionDocNode nodeTran);
+    }
+
+    public class MQuestReferenceCorrelationCalc : AbstractMQuestReferenceCorrelationCalc
+    {
+        public MQuestReferenceCorrelationCalc()  : base(Resources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation) {}
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return !nodeTran.IsMs1;
+        }
+
     }
 
     /// <summary>
@@ -234,8 +295,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 context.AddInfo(crossCorrMatrix);
             }
 
-            var statValues = crossCorrMatrix.GetStats(GetValue);
-            var statWeights = crossCorrMatrix.GetStats(GetWeight);
+            var statValues = crossCorrMatrix.GetStats(GetValue, FilterIons);
+            var statWeights = crossCorrMatrix.GetStats(GetWeight, FilterIons);
             return Calculate(statValues, statWeights);
         }
 
@@ -246,6 +307,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected virtual double GetWeight(MQuestCrossCorrelation xcorr)
         {
             return xcorr.AreaSum;
+        }
+
+        protected virtual IEnumerable<MQuestCrossCorrelation> FilterIons(IEnumerable<MQuestCrossCorrelation> crossCorrMatrix)
+        {
+            return crossCorrMatrix.Where(xcorr => xcorr.TranPeakData1.NodeTran != null && xcorr.TranPeakData2.NodeTran != null)
+                                  .Where(xcorr => !xcorr.TranPeakData1.NodeTran.IsMs1 && !xcorr.TranPeakData2.NodeTran.IsMs1);
         }
     }
 
@@ -264,6 +331,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 return float.NaN;
             return (float) result;
         }
+
+        public override bool IsReversedScore { get { return false; } }
 
         protected override double GetValue(MQuestCrossCorrelation xcorr)
         {
@@ -302,6 +371,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 return float.NaN;
             return (float) result;
         }
+
+        public override bool IsReversedScore { get { return true; } }
 
         protected override double GetValue(MQuestCrossCorrelation xcorr)
         {
@@ -348,9 +419,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public IEnumerable<MQuestCrossCorrelation> CrossCorrelations { get { return _xcorrMatrix; } }
 
-        public Statistics GetStats(Func<MQuestCrossCorrelation, double> getValue)
+        public Statistics GetStats(Func<MQuestCrossCorrelation, double> getValue,
+                                   Func<IEnumerable<MQuestCrossCorrelation>, IEnumerable<MQuestCrossCorrelation>> ionFilter = null)
         {
-            return new Statistics(CrossCorrelations.Select(getValue));
+            var selectedCorrelations = ionFilter == null ? CrossCorrelations : ionFilter(CrossCorrelations);
+            return new Statistics(selectedCorrelations.Select(getValue));
         }
 
         /// <summary>
@@ -401,7 +474,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// Calculates a MQuest cross-correlation based score on the correlation between analyte and standard
     /// transitions.
     /// </summary>
-    abstract class MQuestWeightedReferenceCalc : DetailedPeakFeatureCalculator
+    public abstract class MQuestWeightedReferenceCalc : DetailedPeakFeatureCalculator
     {
         protected MQuestWeightedReferenceCalc(string name) : base(name) { }
 
@@ -415,8 +488,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 context.AddInfo(crossCorrMatrix);
             }
 
-            var statValues = crossCorrMatrix.GetStats(GetValue);
-            var statWeights = crossCorrMatrix.GetStats(GetWeight);
+            var statValues = crossCorrMatrix.GetStats(GetValue, FilterIons);
+            var statWeights = crossCorrMatrix.GetStats(GetWeight, FilterIons);
             return Calculate(statValues, statWeights);
         }
 
@@ -428,12 +501,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return xcorr.AreaSum;
         }
+
+        protected virtual IEnumerable<MQuestCrossCorrelation> FilterIons(IEnumerable<MQuestCrossCorrelation> crossCorrMatrix)
+        {
+            return crossCorrMatrix.Where(xcorr => xcorr.TranPeakData1.NodeTran != null && xcorr.TranPeakData2.NodeTran != null)
+                                  .Where(xcorr => !xcorr.TranPeakData1.NodeTran.IsMs1 && !xcorr.TranPeakData2.NodeTran.IsMs1);
+        }
     }
 
     /// <summary>
     /// Calculates the MQuest shape score, weighted by the sum of the transition peak areas.
     /// </summary>
-    class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
+    public class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
     {
         public MQuestWeightedReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape) {}
         public MQuestWeightedReferenceShapeCalc(string name) : base(name) {}
@@ -446,6 +525,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return (float) result;
         }
 
+        public override bool IsReversedScore { get { return false; } }
+
         protected override double GetValue(MQuestCrossCorrelation xcorr)
         {
             return xcorr.MaxCorr;
@@ -455,7 +536,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates the MQuest shape score.
     /// </summary>
-    class MQuestReferenceShapeCalc : MQuestWeightedReferenceShapeCalc
+    public class MQuestReferenceShapeCalc : MQuestWeightedReferenceShapeCalc
     {
         public MQuestReferenceShapeCalc() : base(Resources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape) {}
 
@@ -469,7 +550,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates the MQuest co elution score, weighted by the sum of the transition peak areas.
     /// </summary>
-    class MQuestWeightedReferenceCoElutionCalc : MQuestWeightedReferenceCalc
+    public class MQuestWeightedReferenceCoElutionCalc : MQuestWeightedReferenceCalc
     {
         public MQuestWeightedReferenceCoElutionCalc() : base(Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution) { }
         public MQuestWeightedReferenceCoElutionCalc(string name) : base(name) { }
@@ -482,6 +563,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return (float) result;
         }
 
+        public override bool IsReversedScore { get { return true; } }
+
         protected override double GetValue(MQuestCrossCorrelation xcorr)
         {
             return Math.Abs(xcorr.MaxShift);
@@ -491,7 +574,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// <summary>
     /// Calculates the MQuest co elution score.
     /// </summary>
-    class MQuestReferenceCoElutionCalc : MQuestWeightedReferenceCoElutionCalc
+    public class MQuestReferenceCoElutionCalc : MQuestWeightedReferenceCoElutionCalc
     {
         public MQuestReferenceCoElutionCalc() : base(Resources.MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution)
         {
@@ -547,9 +630,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public IEnumerable<MQuestCrossCorrelation> CrossCorrelations { get { return _xcorrMatrix; } }
 
-        public Statistics GetStats(Func<MQuestCrossCorrelation, double> getValue)
+        public Statistics GetStats(Func<MQuestCrossCorrelation, double> getValue,
+                                   Func<IEnumerable<MQuestCrossCorrelation>, IEnumerable<MQuestCrossCorrelation>> ionFilter = null)
         {
-            return new Statistics(CrossCorrelations.Select(getValue));
+            var selectedCorrelations = ionFilter == null ? CrossCorrelations : ionFilter(CrossCorrelations);
+            return new Statistics(selectedCorrelations.Select(getValue));
         }
     }
 

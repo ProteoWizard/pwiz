@@ -451,6 +451,11 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return Data.Intensities; }
         }
+
+        public float? MassError
+        {
+            get { return _chromPeak.MassError; }
+        }
     }
 
     /// <summary>
@@ -508,7 +513,8 @@ namespace pwiz.Skyline.Model.Results
         /// in unrefined data
         /// </summary>
         public double PeakCountScore { get { return LegacyCountScoreCalc.GetPeakCountScore(PeakCount, Count); } }
-        public double TotalArea { get; private set; }
+        public double MS1Area { get; private set; }
+        public double MS2Area { get; private set; }
         public double CombinedScore { get; private set; }
         public double MaxHeight { get; private set; }
 
@@ -517,6 +523,10 @@ namespace pwiz.Skyline.Model.Results
         private const float FRACTION_FWHM_LEN = 0.5F;
         private const float DESCENT_TOL = 0.005f;
         private const float ASCENT_TOL = 0.50f;
+
+        public bool IsAllMS1 { get { return Items.All(peak => peak.Data.Key.Source == ChromSource.ms1); } }
+
+        public double TotalArea { get { return IsAllMS1 ? MS1Area : MS2Area; } }
 
         public void SetIdentified(double[] retentionTimes, bool isAlignedTimes)
         {
@@ -666,10 +676,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
                 double area = dataPeak.Peak.Area;
-                if (PeakCount == 0)
-                    TotalArea = area;
+                if (dataPeak.Data.Key.Source == ChromSource.ms1)
+                    MS1Area += area;
                 else
-                    TotalArea += area;
+                    MS2Area += area;
                 PeakCount++;
             }
             UpdateCombinedScore();
@@ -678,14 +688,15 @@ namespace pwiz.Skyline.Model.Results
         private void SubtractPeak(ChromDataPeak dataPeak)
         {
             // Avoid using optimization data in scoring
-            if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData)
+            // Don't count MS1 ions in area
+            if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData && dataPeak.Data.DocNode != null && !dataPeak.Data.DocNode.IsMs1)
             {
                 double area = dataPeak.Peak.Area;
                 PeakCount--;
-                if (PeakCount == 0)
-                    TotalArea = 0;
+                if (dataPeak.Data.Key.Source == ChromSource.ms1)
+                    MS1Area = (PeakCount == 0) ? 0 : MS1Area - area;
                 else
-                    TotalArea -= area;
+                    MS2Area = (PeakCount == 0) ? 0 : MS2Area - area;
             }
             UpdateCombinedScore();
         }
@@ -704,7 +715,8 @@ namespace pwiz.Skyline.Model.Results
         protected override void ClearItems()
         {
             PeakCount = 0;
-            TotalArea = 0;
+            MS1Area = 0;
+            MS2Area = 0;
             CombinedScore = 0;
             MaxHeight = 0;
 

@@ -380,6 +380,8 @@ namespace pwiz.Skyline.Model.Results
 
             // Merge sort all peaks into a single list
             IList<ChromDataPeak> allPeaks = MergePeaks();
+            // Move all the MS1 peaks to the end, they should only be used to form peak groups if all others have been exhausted
+            allPeaks = allPeaks.OrderByDescending(IsMs2).ThenByDescending(peak => peak.Peak.Area).ToList();
 
             // Inspect 20 most intense peak regions
             var listRank = new List<double>();
@@ -496,6 +498,11 @@ namespace pwiz.Skyline.Model.Results
 
 //            if (retentionTimes.Length > 0 && !_listPeakSets[0].Identified)
 //                Console.WriteLine("Idenifications outside peaks.");
+        }
+
+        public int IsMs2(ChromDataPeak peak)
+        {
+            return peak.Data.Key.Source == ChromSource.ms1 ? 0 : 1;
         }
 
         public int ComparePeakLists(ChromDataPeakList p1, ChromDataPeakList p2)

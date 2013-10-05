@@ -261,6 +261,21 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
+        /// Has this weight been assigned a score opposite to that expected in its definition?
+        /// </summary>
+        /// <param name="index"> Index of the weight </param>
+        /// <returns></returns>
+        private bool IsWrongSignWeight(int index)
+        {
+            if (_peakScoringModel.Weights == null)
+                return false;
+            double weight = _peakScoringModel.Weights[index];
+            if (double.IsNaN(weight))
+                return false;
+            return _peakScoringModel.PeakFeatureCalculators[index].IsReversedScore ^ (weight < 0);
+        }
+
+        /// <summary>
         /// Create weights array.  The given index will have a value of 1, all the others
         /// will have a value of NaN.
         /// </summary>
@@ -557,8 +572,10 @@ namespace pwiz.Skyline.SettingsUI
             List<double> targetScores;
             List<double> decoyScores;
             List<double> secondBestScores;
+            // Invert the score if its "natural" sign as specified in the calculator's definition is negative
+            bool invert = selectedCalculator != -1 && _peakScoringModel.PeakFeatureCalculators[selectedCalculator].IsReversedScore;
             // Evaluate each score on the best peak according to that score (either individual calculator or composite)
-            _targetDecoyGenerator.GetScores(scoringWeights, calculatorWeights, out targetScores, out decoyScores, out secondBestScores);
+            _targetDecoyGenerator.GetScores(scoringWeights, calculatorWeights, out targetScores, out decoyScores, out secondBestScores, invert);
             
             // Find score range for targets and decoys
             min = float.MaxValue;
@@ -650,6 +667,10 @@ namespace pwiz.Skyline.SettingsUI
                     ForeColor = Color.FromArgb(100, 100, 100),
                     Font = new Font(gridPeakCalculators.Font, FontStyle.Italic)
                 };
+            var warningStyle = new DataGridViewCellStyle
+                {
+                    ForeColor = Color.Red
+                };
 
             // The score used for bootstrap cannot be disabled
             if (gridPeakCalculators.RowCount > 0)
@@ -671,6 +692,16 @@ namespace pwiz.Skyline.SettingsUI
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = inactiveStyle;
                         cell.ReadOnly = true;
+                    }
+                }
+                // Show row in red if weight is the wrong sign
+                if (IsWrongSignWeight(row))
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var cell = gridPeakCalculators.Rows[row].Cells[i];
+                        cell.Style = warningStyle;
+                        cell.ToolTipText = Resources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
                     }
                 }
             }
@@ -888,6 +919,8 @@ namespace pwiz.Skyline.SettingsUI
                     foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                         transitionGroup.Add(ToDoubles(peakGroupFeatures.Features));
 
+                    if (!transitionGroup.Any())
+                        continue;
                     if (peakTransitionGroupFeatures.Id.NodePep.IsDecoy)
                         decoyGroups.Add(transitionGroup);
                     else
@@ -914,13 +947,15 @@ namespace pwiz.Skyline.SettingsUI
             /// <param name="calculatorWeights">Weighting coefficients for each feature.</param>
             /// <param name="targetScores">Output list of target scores.</param>
             /// <param name="decoyScores">Output list of decoy scores.</param>
-            /// /// <param name="secondBestScores">Output list of false target scores.</param>
+            /// <param name="secondBestScores">Output list of false target scores.</param>
+            /// <param name="invert">If true, select minimum rather than maximum scores</param>
             public void GetScores(double[] scoringWeights, double[] calculatorWeights, out List<double> targetScores, out List<double> decoyScores,
-                                  out List<double> secondBestScores)
+                                  out List<double> secondBestScores, bool invert = false)
             {
                 targetScores = new List<double>();
                 decoyScores = new List<double>();
                 secondBestScores = new List<double>();
+                int invertSign = invert ? -1 : 1;
 
                 foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
                 {
@@ -932,7 +967,7 @@ namespace pwiz.Skyline.SettingsUI
                     // Find the highest and second highest scores among the transitions in this group.
                     foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                     {
-                        double score = GetScore(scoringWeights, peakGroupFeatures);
+                        double score = invertSign * GetScore(scoringWeights, peakGroupFeatures);
                         if (nextScore < score)
                         {
                             if (maxScore < score)
@@ -992,15 +1027,11 @@ namespace pwiz.Skyline.SettingsUI
             /// <summary>
             /// Calculate the score of a set of features given an array of weighting coefficients.
             /// </summary>
-            private static double GetScore(double[] weights, PeakGroupFeatures peakGroupFeatures)
+            private static double GetScore(IList<double> weights, PeakGroupFeatures peakGroupFeatures)
             {
-                double score = 0;
-                for (int i = 0; i < weights.Length; i++)
-                {
-                    if (!double.IsNaN(weights[i]))
-                        score += weights[i] * peakGroupFeatures.Features[i];
-                }
-                return score;
+                // TODO: Can we avoid this allocation?  Why are features floats sometimes and doubles at other times?
+                return MProphetPeakScoringModel.CalcLinearScore(ToDoubles(peakGroupFeatures.Features),
+                                                                weights, 0);
             }
         }
 

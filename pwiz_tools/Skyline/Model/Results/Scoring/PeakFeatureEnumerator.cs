@@ -369,9 +369,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                     if (_chromGroupInfo != null)
                     {
-                        TranstionPeakData = nodeGroup.Transitions.Select(nodeTran =>
-                            new SummaryTransitionPeakData(document, nodeTran, chromatogramSet,
-                                _chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance))).ToArray();
+                        var pd = from nodeTran in nodeGroup.Transitions
+                                 let tranInfo = _chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance)
+                                 where tranInfo != null
+                                 select new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);
+                        TranstionPeakData = pd.ToArray();
                     }
                 }
             }

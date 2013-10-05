@@ -80,12 +80,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestRetentionTimePredictionCalc(), 
             new MQuestIntensityCorrelationCalc(), 
             new MQuestReferenceCorrelationCalc(), 
+            new NextGenIsotopeDotProductCalc(), 
+            new NextGenProductMassErrorCalc(),
+            new NextGenPrecursorMassErrorCalc(),
 
             // Detail feature calculators
             new MQuestWeightedShapeCalc(), 
             new MQuestWeightedCoElutionCalc(), 
             new MQuestWeightedReferenceShapeCalc(), 
             new MQuestWeightedReferenceCoElutionCalc(),
+            new NextGenCrossWeightedShapeCalc(),
+            new NextGenSignalNoiseCalc(),
 
             // Legacy calculators
             new LegacyUnforcedCountScoreCalc(),
@@ -123,6 +128,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return ChangeProp(ImClone(this), im =>
                 {
+                    targets = targets.Where(list => list.Count > 0).ToList();
+                    decoys = decoys.Where(list => list.Count > 0).ToList();
                     var targetTransitionGroups = new ScoredGroupPeaksSet(targets);
                     var decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
 
@@ -158,11 +165,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 throw new InvalidDataException(
                     string.Format(Resources.MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators,
                     features.Length, PeakFeatureCalculators.Count));
-            double score = 0;
-            for (int i = 0; i < features.Length; ++i)
+            return CalcLinearScore(features, Weights, 0);
+        }
+
+        /// <summary>
+        /// Compute a score given a new set of features, weights, and a bias
+        /// </summary>
+        /// <param name="features">Array of feature values.</param>
+        /// <param name="weights"> Array of weights for linear score.</param>
+        /// <param name="bias">Constant bias term for linear score.</param>
+        /// <returns>A score computed from the feature values.</returns>
+        public static double CalcLinearScore(IList<double> features, IList<double> weights, double bias)
+        {
+            if (features.Count != weights.Count)
             {
-                if (!double.IsNaN(Weights[i]))
-                    score += Weights[i] * features[i];
+                throw new InvalidDataException(string.Format(Resources.MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_, 
+                                               features.Count, weights.Count));
+            }
+            double score = bias;
+            for (int i = 0; i < features.Count; ++i)
+            {
+                if (!double.IsNaN(weights[i]))
+                    score += weights[i] * features[i];
             }
             return score;
         }

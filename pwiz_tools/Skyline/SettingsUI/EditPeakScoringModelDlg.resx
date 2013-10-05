@@ -230,7 +230,7 @@ document to calculate the equation with linear regression</value>
     <value>13, 24</value>
   </data>
   <data name="gridPeakCalculators.Size" type="System.Drawing.Size, System.Drawing">
-    <value>348, 405</value>
+    <value>348, 292</value>
   </data>
   <data name="gridPeakCalculators.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -850,12 +850,6 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingPeakCalculators.Name" xml:space="preserve">
-    <value>bindingPeakCalculators</value>
-  </data>
-  <data name="&gt;&gt;bindingPeakCalculators.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;IsEnabled.Name" xml:space="preserve">
     <value>IsEnabled</value>
   </data>
@@ -879,6 +873,12 @@ document to calculate the equation with linear regression</value>
   </data>
   <data name="&gt;&gt;PeakCalculatorPercentContribution.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bindingPeakCalculators.Name" xml:space="preserve">
+    <value>bindingPeakCalculators</value>
+  </data>
+  <data name="&gt;&gt;bindingPeakCalculators.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditPeakScoringModelDlg</value>

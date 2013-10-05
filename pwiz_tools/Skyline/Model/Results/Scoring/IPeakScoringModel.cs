@@ -116,6 +116,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData);
         string Name { get; }
+        
+        /// <summary>
+        /// True if low scores are better for this calculator, false if high scores are better
+        /// </summary>
+        bool IsReversedScore { get; }
     }
 
     /// <summary>
@@ -129,6 +134,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public string Name { get; private set; }
+
+        public abstract bool IsReversedScore { get; }
 
         public float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData)
         {
@@ -149,6 +156,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public string Name { get; private set; }
+
+        public abstract bool IsReversedScore { get; }
 
         public float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData)
         {
@@ -218,6 +227,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         float BackgroundArea { get; }
         float Height { get; }
         float Fwhm { get; }
+        float? MassError { get; }
         bool IsEmpty { get; }
         bool IsFwhmDegenerate { get; }
         bool IsForcedIntegration { get; }
@@ -240,22 +250,23 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public static class PeakFeatureCalculator
     {
-        private static readonly IPeakFeatureCalculator[] CALCULATORS =
+        private static readonly IPeakFeatureCalculator[] CALCULATORS =  new IPeakFeatureCalculator[]
         {
             new MQuestIntensityCalc(),
             new MQuestRetentionTimePredictionCalc(), 
             new MQuestIntensityCorrelationCalc(), 
-            new MQuestReferenceCorrelationCalc(), 
+            new MQuestReferenceCorrelationCalc(),
+            new NextGenIsotopeDotProductCalc(), 
+            new NextGenProductMassErrorCalc(),
+            new NextGenPrecursorMassErrorCalc(),
 
             // Detail feature calculators
             new MQuestWeightedShapeCalc(), 
-//                new MQuestShapeCalc(), 
-            new MQuestWeightedCoElutionCalc(), 
-//                new MQuestCoElutionCalc(), 
+            new MQuestWeightedCoElutionCalc(),  
             new MQuestWeightedReferenceShapeCalc(), 
-//                new MQuestReferenceShapeCalc(), 
-            new MQuestWeightedReferenceCoElutionCalc(),
-//                new MQuestReferenceCoElutionCalc(), 
+            new MQuestWeightedReferenceCoElutionCalc(), 
+            new NextGenCrossWeightedShapeCalc(), 
+            new NextGenSignalNoiseCalc(),
 
             // Legacy calculators
             //new LegacyLogUnforcedAreaCalc(),  // This one produces scores that are colinear with MQuestIntensityCalc.

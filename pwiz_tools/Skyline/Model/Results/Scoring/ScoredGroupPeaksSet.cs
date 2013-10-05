@@ -182,12 +182,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             foreach (var peak in _scoredGroupPeaksList.SelectMany(scoredGroupPeaks => scoredGroupPeaks.ScoredPeaks))
             {
-                peak.Score = 0;
-                for (int i = 0; i < weights.Count; i++)
-                {
-                    if (!Double.IsNaN(weights[i]))
-                        peak.Score += weights[i] * peak.Features[i];
-                }
+                peak.Score = MProphetPeakScoringModel.CalcLinearScore(peak.Features, weights, 0);
             }
 
             // Calculate mean and stdev for top-scoring peaks in each transition group.

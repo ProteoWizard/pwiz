@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string ToString()
         {
-            return String.Format("{0}: {1:0.00}", Id, MaxPeak.Score);
+            return MaxPeak == null ? String.Format("{0}: null", Id) : String.Format("{0}: {1:0.00}", Id, MaxPeak.Score);
         }
         #endregion
     }

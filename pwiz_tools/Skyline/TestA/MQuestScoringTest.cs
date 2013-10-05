@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
@@ -40,8 +42,15 @@ namespace pwiz.SkylineTestA
 
         private static void AreCloseEnough(double v1, double v2)
         {
-            Assert.IsFalse(double.IsNaN(v1));
-            Assert.AreEqual(v2, v1, 1E-5);
+            if (double.IsNaN(v1) || double.IsNaN(v2))
+            {
+                Assert.IsTrue(double.IsNaN(v1));
+                Assert.IsTrue(double.IsNaN(v2));
+            }
+            else
+            {
+                Assert.AreEqual(v2, v1, 1E-5);
+            }
         }
 
         [TestMethod]
@@ -118,14 +127,19 @@ namespace pwiz.SkylineTestA
                 44.6150207519531, 21.4926776885986, 7.93575811386108
             };
 
+        private static readonly double[] INTENS3 =
+            {
+                10, 20, 50, 100, 150, 150, 100, 50, 20, 10, 5
+            };
+
         /// <summary>
         /// A test for MQuest cross-correlation matrix
         /// </summary>
         [TestMethod]
         public void MQuestCrossCorrelationTest()
         {
-            var peakData1 = new MockTranPeakData(INTENS1);
-            var peakData2 = new MockTranPeakData(INTENS2);
+            var peakData1 = new MockTranPeakData<IDetailedPeakData>(INTENS1);
+            var peakData2 = new MockTranPeakData<IDetailedPeakData>(INTENS2);
             var xcorrMatrix = new MQuestCrossCorrelation(peakData1, peakData2, true);
 
             Assert.AreEqual(xcorrMatrix.XcorrDict.Count, 23);
@@ -139,7 +153,7 @@ namespace pwiz.SkylineTestA
             AreCloseEnough(xcorrDict[-3], 0.39698322);
             AreCloseEnough(xcorrDict[-4], 0.16608774);
 
-            var xcorrMatrixAuto = new MQuestCrossCorrelation(peakData1, new MockTranPeakData(INTENS1), true);
+            var xcorrMatrixAuto = new MQuestCrossCorrelation(peakData1, new MockTranPeakData<IDetailedPeakData>(INTENS1), true);
             var xcorrDictAuto = xcorrMatrixAuto.XcorrDict;
             AreCloseEnough(xcorrDictAuto[0], 1);
             AreCloseEnough(xcorrDictAuto[1], -0.227352707759245);
@@ -149,84 +163,219 @@ namespace pwiz.SkylineTestA
         }
 
         /// <summary>
-        /// A test for MQuest co-elution score calculator
+        /// A test for MQuest and next-generation summary scores
         /// </summary>
+        /// 
         [TestMethod]
-        public void MQuestCoelutionScoreTest()
+        public void MQuestSummaryScoreTest()
         {
-            var peakData1 = new MockTranPeakData(INTENS1);
-            var peakData2 = new MockTranPeakData(INTENS2);
-            var peptidePeakData = new MockPeptidePeakData(new[] {peakData1, peakData2});
-            var calc = new MQuestCoElutionCalc();
-            AreCloseEnough(calc.Calculate(new PeakScoringContext(null), peptidePeakData), 3.0);
-//            AreCloseEnough(calc.Calculate(new PeakScoringContext(), peptidePeakData), 1 + Math.Sqrt(3.0));
+            var peakData1 = new MockTranPeakData<ISummaryPeakData>(INTENS1, IonType.a, null, 2, 0.5, 20);
+            var peakData2 = new MockTranPeakData<ISummaryPeakData>(INTENS2, IonType.a, null, 2, -1.0, 300);
+            var peakData3 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.precursor, null, 2, 5.0, 1000000, 0.8);
+            var peakData4 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.precursor, null, 2, 5.0, 1000000, 0.2);
+            var peptidePeakData = new MockPeptidePeakData<ISummaryPeakData>(new[] { peakData1, peakData2 });
+            var peptidePeakDataMs1 = new MockPeptidePeakData<ISummaryPeakData>(new[] { peakData1, peakData2, peakData3, peakData4 });
+            var calcPrecursorMassError = new NextGenPrecursorMassErrorCalc();
+            var calcProductMassError = new NextGenProductMassErrorCalc();
+            var calcIntensity = new MQuestIntensityCalc();
+            var calcCrossCorr = new MQuestIntensityCorrelationCalc();
+            var calcIdotp = new NextGenIsotopeDotProductCalc();
+
+            var peptidePeakDatas = new List<MockPeptidePeakData<ISummaryPeakData>> { peptidePeakData, peptidePeakDataMs1 };
+            // These scores are the same with or without an extra MS1 transition
+            foreach (var peptideData in peptidePeakDatas)
+            {
+                MQuestScoreEquals(calcProductMassError, 0.99112, peptideData);
+                MQuestScoreEquals(calcIntensity, 2.84732, peptideData);
+                MQuestScoreEquals(calcCrossCorr, 0.924226, peptideData);
+            }
+            // The precursor mass error score differs when an MS1 transition is added
+            MQuestScoreEquals(calcPrecursorMassError, double.NaN, peptidePeakData);
+            MQuestScoreEquals(calcPrecursorMassError, 5.0, peptidePeakDataMs1);
+            MQuestScoreEquals(calcIdotp, double.NaN, peptidePeakData);
+            MQuestScoreEquals(calcIdotp, 0.795167, peptidePeakDataMs1);
 
             // TODO: Figure out OpenSWATH weights
-//            var calcWeighted = new MQuestWeightedCoElutionCalc();
-//            AreCloseEnough(calcWeighted.Calculate(new PeakScoringContext(), peptidePeakData), 1.5);
+            // var calcWeighted = new MQuestWeightedShapeCalc();
+            // AreCloseEnough(calcWeighted.Calculate(new PeakScoringContext(), peptidePeakData), 0.6984916);
         }
 
         /// <summary>
-        /// A test for MQuest co-elution score calculator
+        /// A test for MQuest and next-generation non-reference-based detail scores
         /// </summary>
         [TestMethod]
-        public void MQuestShapeScoreTest()
+        public void MQuestDetailScoreTest()
         {
-            var peakData1 = new MockTranPeakData(INTENS1);
-            var peakData2 = new MockTranPeakData(INTENS2);
-            var peptidePeakData = new MockPeptidePeakData(new[] { peakData1, peakData2 });
-            var calc = new MQuestShapeCalc();
-            AreCloseEnough(calc.Calculate(new PeakScoringContext(null), peptidePeakData), 0.3969832);
-//            AreCloseEnough(calc.Calculate(new PeakScoringContext(), peptidePeakData), (1 + 0.3969832 + 1) / 3.0);
+            var peakData1 = new MockTranPeakData<IDetailedPeakData>(INTENS1, IonType.a, null, 2, 0.5);
+            var peakData2 = new MockTranPeakData<IDetailedPeakData>(INTENS2, IonType.a, null, 2, -1.0);
+            var peakData3 = new MockTranPeakData<IDetailedPeakData>(INTENS3, IonType.precursor, null, 2, 5.0);
+            var peptidePeakData = new MockPeptidePeakData<IDetailedPeakData>(new[] { peakData1, peakData2 });
+            var peptidePeakDataMs1 = new MockPeptidePeakData<IDetailedPeakData>(new[] { peakData1, peakData2, peakData3 });
+            var calcShape = new MQuestShapeCalc();
+            var calcCoelution = new MQuestCoElutionCalc();
+            var calcWeightedShape = new MQuestWeightedShapeCalc();
+            var calcWeightedCoelution = new MQuestWeightedCoElutionCalc();
+            var calcWeightedCrossShape = new NextGenCrossWeightedShapeCalc();
+            var calcSignalNoise = new NextGenSignalNoiseCalc();
+
+            var peptidePeakDatas = new List<MockPeptidePeakData<IDetailedPeakData>> { peptidePeakData, peptidePeakDataMs1 };
+            // These scores are the same with or without an extra MS1 transition
+            foreach (var peptideData in peptidePeakDatas)
+            {
+                MQuestScoreEquals(calcShape, 0.3969832, peptideData);
+                MQuestScoreEquals(calcCoelution, 3.0, peptideData);
+                MQuestScoreEquals(calcWeightedShape, 0.3969832, peptideData);
+                MQuestScoreEquals(calcWeightedCoelution, 3.0, peptideData);
+                MQuestScoreEquals(calcSignalNoise, double.NaN, peptideData);
+            }
+            // The MS1-MS2 cross score differs when an MS1 transition is added
+            MQuestScoreEquals(calcWeightedCrossShape, 0.94669, peptidePeakDataMs1);
 
             // TODO: Figure out OpenSWATH weights
-//            var calcWeighted = new MQuestWeightedShapeCalc();
-//            AreCloseEnough(calcWeighted.Calculate(new PeakScoringContext(), peptidePeakData), 0.6984916);
+            // var calcWeighted = new MQuestWeightedShapeCalc();
+            // AreCloseEnough(calcWeighted.Calculate(new PeakScoringContext(), peptidePeakData), 0.6984916);
         }
 
-        private class MockPeptidePeakData : IPeptidePeakData<IDetailedPeakData>
+        /// <summary>
+        /// A test for MQuest reference-based detail scores
+        /// </summary>
+        [TestMethod]
+        public void MQuestReferenceSummaryScoreTest()
         {
-            public MockPeptidePeakData(IList<ITransitionPeakData<IDetailedPeakData>> transitionPeakData)
+            var peakData1 = new MockTranPeakData<ISummaryPeakData>(INTENS1, IonType.a, IsotopeLabelType.light);
+            var peakData2 = new MockTranPeakData<ISummaryPeakData>(INTENS2, IonType.a, IsotopeLabelType.heavy);
+            var peakData3 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.a, IsotopeLabelType.light);
+            var peakData4 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.a, IsotopeLabelType.heavy);
+            var peakData5 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.precursor, IsotopeLabelType.light);
+            var peakData6 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.precursor, IsotopeLabelType.heavy);
+            var tranGroupData1 = new MockTranGroupPeakData<ISummaryPeakData>(new[] { peakData1, peakData3 });
+            var tranGroupData2 = new MockTranGroupPeakData<ISummaryPeakData>(new[] { peakData2, peakData4 }, true);
+            var tranGroupData3 = new MockTranGroupPeakData<ISummaryPeakData>(new[] { peakData1, peakData3, peakData5 });
+            var tranGroupData4 = new MockTranGroupPeakData<ISummaryPeakData>(new[] { peakData2, peakData4, peakData6 }, true);
+            var peptidePeakData = new MockPeptidePeakData<ISummaryPeakData>(new[] { tranGroupData1, tranGroupData2 });
+            var peptidePeakDataMs1 = new MockPeptidePeakData<ISummaryPeakData>(new[] { tranGroupData3, tranGroupData4 });
+            var peptidePeakDatas = new List<MockPeptidePeakData<ISummaryPeakData>> { peptidePeakData, peptidePeakDataMs1 };
+            var calcReferenceCorr = new MQuestReferenceCorrelationCalc();
+            // These scores are the same with or without an extra MS1 transition
+            foreach (var peptideData in peptidePeakDatas)
             {
-                TransitionGroupPeakData = new[] { new MockTranGroupPeakData(transitionPeakData), };
+                MQuestScoreEquals(calcReferenceCorr, 0.570172, peptideData);
+            }
+            // TODO: Figure out OpenSWATH weights
+            // var calcWeighted = new MQuestWeightedShapeCalc();
+            // AreCloseEnough(calcWeighted.Calculate(new PeakScoringContext(), peptidePeakData), 0.6984916);
+        }
+
+        /// <summary>
+        /// A test for MQuest reference-based detail scores
+        /// </summary>
+        [TestMethod]
+        public void MQuestReferenceDetailScoreTest()
+        {
+            var peakData1 = new MockTranPeakData<IDetailedPeakData>(INTENS1, IonType.a, IsotopeLabelType.light);
+            var peakData2 = new MockTranPeakData<IDetailedPeakData>(INTENS2, IonType.a, IsotopeLabelType.heavy);
+            var peakData3 = new MockTranPeakData<IDetailedPeakData>(INTENS3, IonType.precursor, IsotopeLabelType.light);
+            var peakData4 = new MockTranPeakData<IDetailedPeakData>(INTENS3, IonType.precursor, IsotopeLabelType.heavy);
+            var tranGroupData1 = new MockTranGroupPeakData<IDetailedPeakData>(new[] { peakData1 });
+            var tranGroupData2 = new MockTranGroupPeakData<IDetailedPeakData>(new[] { peakData2 }, true);
+            var tranGroupData3 = new MockTranGroupPeakData<IDetailedPeakData>(new[] { peakData1, peakData3 });
+            var tranGroupData4 = new MockTranGroupPeakData<IDetailedPeakData>(new[] { peakData2, peakData4 }, true);
+            var peptidePeakData = new MockPeptidePeakData<IDetailedPeakData>(new[] { tranGroupData1, tranGroupData2 });
+            var peptidePeakDataMs1 = new MockPeptidePeakData<IDetailedPeakData>(new[] { tranGroupData3, tranGroupData4 });
+            var peptidePeakDatas = new List<MockPeptidePeakData<IDetailedPeakData>> { peptidePeakData, peptidePeakDataMs1 };
+            var calcShape = new MQuestReferenceShapeCalc();
+            var calcCoelution = new MQuestReferenceCoElutionCalc();
+            var calcWeightedShape = new MQuestWeightedReferenceShapeCalc();
+            var calcWeightedCoelution = new MQuestWeightedCoElutionCalc();
+            // These scores are the same with or without an extra MS1 transition
+            foreach (var peptideData in peptidePeakDatas)
+            {
+                MQuestScoreEquals(calcShape, 0.3969832, peptideData);
+                MQuestScoreEquals(calcCoelution, 3.0, peptideData);
+                MQuestScoreEquals(calcWeightedShape, 0.3969832, peptideData);
+                MQuestScoreEquals(calcWeightedCoelution, 3.0, peptideData);
+            }
+            // TODO: Figure out OpenSWATH weights
+            // var calcWeighted = new MQuestWeightedShapeCalc();
+            // AreCloseEnough(calcWeighted.Calculate(new PeakScoringContext(), peptidePeakData), 0.6984916);
+        }
+
+        public void MQuestScoreEquals(IPeakFeatureCalculator calc, double score, IPeptidePeakData peptidePeakData)
+        {
+            AreCloseEnough(calc.Calculate(new PeakScoringContext(null), peptidePeakData), score);
+        }
+
+        private class MockPeptidePeakData<TPeak> : IPeptidePeakData<TPeak> where TPeak : class
+        {
+            public MockPeptidePeakData(IList<ITransitionPeakData<TPeak>> transitionPeakData)
+            {
+                TransitionGroupPeakData = new[] { new MockTranGroupPeakData<TPeak>(transitionPeakData), };
+            }
+
+            public MockPeptidePeakData(IList<ITransitionGroupPeakData<TPeak>> transitionGroupPeakData)
+            {
+                TransitionGroupPeakData = transitionGroupPeakData;
             }
 
             public PeptideDocNode NodePep { get { return null; } }
 
             public ChromFileInfo FileInfo { get { return null; } }
 
-            public IList<ITransitionGroupPeakData<IDetailedPeakData>> TransitionGroupPeakData { get; private set; }
+            public IList<ITransitionGroupPeakData<TPeak>> TransitionGroupPeakData { get; private set; }
         }
 
-        private class MockTranGroupPeakData : ITransitionGroupPeakData<IDetailedPeakData>
+        private class MockTranGroupPeakData<TPeak> : ITransitionGroupPeakData<TPeak> where TPeak : class
         {
-            public MockTranGroupPeakData(IList<ITransitionPeakData<IDetailedPeakData>> transtionPeakData)
+            public MockTranGroupPeakData(IList<ITransitionPeakData<TPeak>> transtionPeakData,
+                                         bool isStandard = false,
+                                         int charge = 2,
+                                         IsotopeLabelType labelType = null)
             {
                 TranstionPeakData = transtionPeakData;
+                IsStandard = isStandard;
+                var libInfo = new ChromLibSpectrumHeaderInfo("", 0);
+                var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
+                NodeGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, charge, labelType), null, null,
+                   null, libInfo, null, new TransitionDocNode[0], true);
             }
 
-            public TransitionGroupDocNode NodeGroup { get { return null; } }
-            public bool IsStandard { get { return false; } }
-            public IList<ITransitionPeakData<IDetailedPeakData>> TranstionPeakData { get; private set; }
+            public TransitionGroupDocNode NodeGroup { get; private set; }
+            public bool IsStandard { get; private set; }
+            public IList<ITransitionPeakData<TPeak>> TranstionPeakData { get; private set; }
         }
 
-        private class MockTranPeakData : ITransitionPeakData<IDetailedPeakData>
+        private class MockTranPeakData<TPeak> : ITransitionPeakData<TPeak> where TPeak : class
         {
-            public MockTranPeakData(double[] data)
+            public MockTranPeakData(double[] data, 
+                                    IonType ionType = IonType.a,
+                                    IsotopeLabelType labelType = null,
+                                    int charge = 2,
+                                    double? massError = null,
+                                    double libIntensity = 0,
+                                    double? isotopeProportion = null)
             {
-                PeakData = new MockPeakData(data);
+                if (labelType == null)
+                    labelType = IsotopeLabelType.light;
+                PeakData = new MockPeakData(data, massError) as TPeak;
+                var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
+                var tranGroup = new TransitionGroup(peptide, charge, labelType);
+                int offset = ionType == IonType.precursor ? 6 : 0;
+                var isotopeInfo = isotopeProportion == null ? null : new TransitionIsotopeDistInfo(1, (float)isotopeProportion);
+                NodeTran = new TransitionDocNode(new Transition(tranGroup, ionType, offset, 0, charge, null),
+                                                 null, 0, isotopeInfo, new TransitionLibInfo(1, (float)libIntensity));
             }
 
-            public TransitionDocNode NodeTran { get { return null; } }
+            public TransitionDocNode NodeTran { get; private set; }
 
-            public IDetailedPeakData PeakData { get; private set; }
+            public TPeak PeakData { get; private set; }
 
             private class MockPeakData : IDetailedPeakData
             {
                 private readonly float[] _data;
 
-                public MockPeakData(double[] data)
+                public MockPeakData(double[] data, double? massError = null)
                 {
+                    MassError = (float?)massError;
                     StartTime = 5;
                     EndTime = StartTime + data.Length;
 
@@ -238,22 +387,22 @@ namespace pwiz.SkylineTestA
                         double intensity = data[i];
                         if (intensity > Height)
                         {
-                            Height = (float) intensity;
+                            Height = (float)intensity;
                             RetentionTime = StartTime + i;
                         }
                         if (lastIntensity.HasValue)
                         {
                             // Calculate trapezoidal area with time units equal to 1
                             area += Math.Min(intensity, lastIntensity.Value) +
-                                    Math.Abs(intensity - lastIntensity.Value)/2;
+                                    Math.Abs(intensity - lastIntensity.Value) / 2;
                         }
                         lastIntensity = intensity;
                         _data[i] = (float)data[i];
                     }
                     int last = data.Length - 1;
                     // Background is simple rectangular area with minimum edge
-                    BackgroundArea = (float) Math.Min(data[0], data[last])*(last);
-                    Area = (float) (area - BackgroundArea);
+                    BackgroundArea = (float)Math.Min(data[0], data[last]) * (last);
+                    Area = (float)(area - BackgroundArea);
                 }
 
                 public float RetentionTime { get; private set; }
@@ -268,12 +417,13 @@ namespace pwiz.SkylineTestA
                 public bool IsForcedIntegration { get { return false; } }
                 public PeakIdentification Identified { get { return PeakIdentification.FALSE; } }
                 public bool? IsTruncated { get { return null; } }
-                public int TimeIndex { get { return _data.Length/2; } }
+                public int TimeIndex { get { return _data.Length / 2; } }
                 public int EndIndex { get { return _data.Length - 1; } }
                 public int StartIndex { get { return 0; } }
                 public int Length { get { return _data.Length; } }
                 public float[] Times { get { throw new InvalidOperationException(); } }
                 public float[] Intensities { get { return _data; } }
+                public float? MassError { get; private set; }
             }
         }
     }
