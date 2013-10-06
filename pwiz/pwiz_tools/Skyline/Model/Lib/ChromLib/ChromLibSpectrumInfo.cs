@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             Key = key;
             Id = id;
             PeakArea = peakArea;
-            TransitionAreas = ImmutableList.ValueOf(transitionAreas);
+            TransitionAreas = ImmutableList.ValueOf(transitionAreas) ?? ImmutableList.Empty<SpectrumPeaksInfo.MI>();
         }
         public LibKey Key { get; private set; }
         public int Id { get; private set; }
