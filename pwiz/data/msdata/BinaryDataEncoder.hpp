@@ -73,6 +73,8 @@ class PWIZ_API_DECL BinaryDataEncoder
 
     BinaryDataEncoder(const Config& config = Config());
 
+    const Config& getConfig() const; // get the config actually used - may differ from input for numpress use
+
     /// encode binary data as a text string
     void encode(const std::vector<double>& data, std::string& result, size_t* binaryByteCount = NULL) const;
 

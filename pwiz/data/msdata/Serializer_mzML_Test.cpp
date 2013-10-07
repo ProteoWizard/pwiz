@@ -94,7 +94,12 @@ void testWriteRead()
         config.binaryDataEncoderConfig.numpress = BinaryDataEncoder::Numpress_None;
         config.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Slof;
         testWriteRead(msd, config, diffcfg);
-
+        
+        if (!zloop) // provoke numpress temp. disable
+        {
+            config.binaryDataEncoderConfig.numpressErrorTolerance = .000000001; 
+            testWriteRead(msd, config, diffcfg);
+        }
     }
 
 }

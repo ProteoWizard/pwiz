@@ -1618,6 +1618,7 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
     BinaryDataEncoder encoder(usedConfig);
     string encoded;
     encoder.encode(binaryDataArray.data, encoded);
+    usedConfig = encoder.getConfig(); // config may have changed if numpress error was excessive
 
     XMLWriter::Attributes attributes;
 

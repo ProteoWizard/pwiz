@@ -67,7 +67,10 @@ class BinaryDataEncoder::Impl
     {
         decode(encodedData.c_str(),encodedData.length(),result);
     }
-
+    const Config & getConfig() const
+    {
+        return config_;
+    }
     private:
     Config config_;
 };
@@ -469,6 +472,11 @@ PWIZ_API_DECL void BinaryDataEncoder::decode(const char * encodedData, size_t le
     impl_->decode(encodedData, len, result);
 }
 
+PWIZ_API_DECL const BinaryDataEncoder::Config& BinaryDataEncoder::getConfig() const // get the config actually used - may differ from input for numpress use
+{
+    return impl_->getConfig();
+}
+
 void writeConfig(ostream& os, const BinaryDataEncoder::Config& config, CVID cvid) 
 {
 
@@ -504,7 +512,8 @@ void writeConfig(ostream& os, const BinaryDataEncoder::Config& config, CVID cvid
             os << "Compression-Zlib";
             break;
         case BinaryDataEncoder::Compression_None :
-            os << "Compression-None";
+            if (BinaryDataEncoder::Numpress_None == c)
+                os << "Compression-None";
             break;
         default:
             throw runtime_error("[BinaryDataEncoder::writeConfig] Unknown binary numeric compression");
