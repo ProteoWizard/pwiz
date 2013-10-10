@@ -793,26 +793,23 @@ namespace pwiz.Skyline.SettingsUI
             lblPrecursorCharges.Visible = true;
 
             // Reduce and reposition MS1 filtering groupbox.
-            const int precursorChargesShift = 50;
-            const int newMS1Height = 150;
-            int ms1HeightDifference = groupBoxMS1.Height - newMS1Height;
+            int precursorChargesShift = groupBoxMS2.Top - groupBoxMS1.Bottom;
             labelEnrichments.Hide();
             comboEnrichments.Hide();
-            groupBoxMS1.Height = newMS1Height;
-            groupBoxMS1.Top += precursorChargesShift;
+            groupBoxMS1.Height = textPrecursorIsotopeFilter.Bottom + groupBoxMS1.Height - comboEnrichments.Bottom;
+            groupBoxMS1.Top = textPrecursorCharges.Bottom + precursorChargesShift;
 
             // Hide MS/MS filtering groupbox entirely.
             groupBoxMS2.Hide();
 
             // Reduce and reposition Retention time filtering groupbox.
-            const int newRetentionTimeHeight = 70;
             int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
             int radioTimeAroundTopDifference = radioTimeAroundMs2Ids.Top - newRadioTimeAroundTop;
-            groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Top - ms1HeightDifference + precursorChargesShift;
+            groupBoxRetentionTimeToKeep.Top = groupBoxMS1.Bottom + precursorChargesShift;
             radioUseSchedulingWindow.Hide();
             radioTimeAroundMs2Ids.Top = newRadioTimeAroundTop;
             flowLayoutPanelTimeAroundMs2Ids.Top -= radioTimeAroundTopDifference;
-            groupBoxRetentionTimeToKeep.Height = newRetentionTimeHeight;
+            groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
 
             // Select defaults
             PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;

@@ -629,6 +629,9 @@ For SEQUEST SQT this is 1 - the maximum FDR.</value>
   <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="btnAddPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
     <value>288, 96</value>
   </data>
