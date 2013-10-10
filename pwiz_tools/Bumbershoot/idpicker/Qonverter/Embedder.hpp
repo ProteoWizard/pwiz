@@ -78,7 +78,7 @@ using pwiz::chemistry::MZTolerance;
 struct QuantitationConfiguration
 {
     QuantitationConfiguration(QuantitationMethod quantitationMethod = QuantitationMethod::None,
-                              MZTolerance reporterIonMzTolerance = MZTolerance(10, MZTolerance::PPM));
+                              MZTolerance reporterIonMzTolerance = MZTolerance(0.015, MZTolerance::MZ));
 
     QuantitationMethod quantitationMethod;
     MZTolerance reporterIonMzTolerance;

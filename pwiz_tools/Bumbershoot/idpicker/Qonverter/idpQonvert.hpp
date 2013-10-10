@@ -63,7 +63,7 @@
     RTCONFIG_VARIABLE( Qonverter::MissedCleavagesHandling, MissedCleavagesHandling, "Ignore" ) \
     RTCONFIG_VARIABLE( Qonverter::MassErrorHandling, MassErrorHandling, "Ignore" ) \
     RTCONFIG_VARIABLE( IDPICKER_NAMESPACE::QuantitationMethod, QuantitationMethod, "None" ) \
-    RTCONFIG_VARIABLE( MZTolerance, ReporterIonMzTolerance, string("10 ppm") )
+    RTCONFIG_VARIABLE( MZTolerance, ReporterIonMzTolerance, string("0.015mz") )
 
 
 BEGIN_IDPICKER_NAMESPACE
