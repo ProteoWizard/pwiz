@@ -131,7 +131,8 @@ void MaxQuantModReader::startElement(const XML_Char* name,
         {
             ++groupParams_;
         }
-        else if (groupParams_ > 0 && isIElement("labels", name))
+        else if (groupParams_ > 0 && 
+                 (isIElement("labels", name) || isIElement("labelMods", name)))
         {
             ++rawIndex_;
             state_ = LABELS_TAG;
@@ -235,7 +236,8 @@ void MaxQuantModReader::endElement(const XML_Char* name)
                                            "number of label sets (%d).", labelBank_->size(), rawIndex_ + 1);
             }
         }
-        else if (isIElement("labels", name))
+        else if (state_ == LABELS_TAG &&
+                 (isIElement("labels", name) || isIElement("labelMods", name)))
         {
             state_ = ROOT_STATE;
         }
