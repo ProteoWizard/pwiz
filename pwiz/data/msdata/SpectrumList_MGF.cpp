@@ -157,6 +157,23 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         vector<double>& intensityArray = spectrum.getIntensityArray()->data;
 	    while (getline(*is_, lineStr))
 	    {
+            size_t lineBegin = lineStr.find_first_not_of(" \t");
+            if (lineBegin == string::npos)
+            {
+                // Skip blank lines
+                continue;
+            }
+            else if (lineBegin > 0)
+            {
+                // Trim leading whitespace
+                lineStr.erase(0, lineBegin);
+            }
+
+            if (!inBeginIons && (lineStr[0] == '#' || lineStr[0] == ';' || lineStr[0] == '!' || lineStr[0] == '/'))
+            {
+                // Skip comment lines (lines beginning with #;!/ outside of BEGIN IONS)
+                continue;
+            }
 		    if (lineStr.find("BEGIN IONS") == 0)
 		    {
 			    if (inBeginIons)
