@@ -383,7 +383,6 @@ namespace pwiz.Topograph.ui.Forms
                     InitWorkspace(sessionFactory);
                 }
                 Workspace = new Workspace(filename);
-                EditIsotopeLabels();
             }
         }
 

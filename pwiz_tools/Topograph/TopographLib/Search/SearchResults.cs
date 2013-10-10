@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.IO;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
@@ -58,9 +59,16 @@ namespace pwiz.Topograph.Search
             }
             finally
             {
-                if (tempFile != null)
+                try
                 {
-                    File.Delete(tempFile);
+                    if (tempFile != null)
+                    {
+                        File.Delete(tempFile);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Trace.TraceWarning("Exception deleting temp file {0}", exception);
                 }
             }
         }
