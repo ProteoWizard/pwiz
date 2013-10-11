@@ -174,7 +174,7 @@ namespace BuildQTRAPMethod
             ApplicationClass analyst = new ApplicationClass();
 
             // Make sure that Analyst is fully started
-            IAcqMethodDirConfig acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
+            IAcqMethodDirConfig acqMethodDir =  (IAcqMethodDirConfig)analyst.Acquire();
             if (acqMethodDir == null)
                 throw new IOException("Failed to initialize.  Analyst may need to be started.");
 
@@ -310,13 +310,17 @@ namespace BuildQTRAPMethod
                 if (analystSupportsEnhancedScheduledMrm)
                 {
                     var msMassRange4 = (IMassRange4)msMassRange;
-                    msMassRange4.GroupID = transition.Group;
+                    var groupId = transition.Group;
+                    msMassRange4.GroupID = groupId;
                     msMassRange4.IsPrimary = transition.Primary.HasValue && transition.Primary.Value == 2 ? 0 : 1;
                     msMassRange4.TriggerThreshold = triggerThreshold.HasValue ? triggerThreshold.Value : Properties.Settings.Default.MinTriggerThreshold;
-                    msMassRange4.DetectionWindow = transition.VariableRtWindow.HasValue ? transition.VariableRtWindow.Value * 60 : msMassRange4.DetectionWindow;
+
+                    double? detectionWindow = transitions.Transitions.Where(t => t.Group == groupId).Max(t => t.VariableRtWindow);
+                    msMassRange4.DetectionWindow = detectionWindow.HasValue ? detectionWindow.Value * 60 : msMassRange4.DetectionWindow;
+
                     if (medianArea.HasValue && minArea.HasValue && minArea != medianArea && transition.AveragePeakArea.HasValue && transition.AveragePeakArea < medianArea)
                     {
-                        double averageArea = transition.AveragePeakArea.HasValue && transition.AveragePeakArea >= 1 ? (double)transition.AveragePeakArea : 1.0;
+                        double averageArea = transition.AveragePeakArea >= 1 ? (double)transition.AveragePeakArea : 1.0;
                         double scaledArea = (Math.Log(averageArea - minArea.Value + 1) / Math.Log((double)medianArea)) 
                             * (Properties.Settings.Default.MaxDwellWeightingForTargets - Properties.Settings.Default.MinDwellWeightingForTargets);
                         msMassRange4.DwellWeighting = Properties.Settings.Default.MaxDwellWeightingForTargets - scaledArea;

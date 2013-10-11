@@ -31,6 +31,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -884,8 +885,9 @@ namespace pwiz.Skyline.Model
             var sortedByPrimaryTransitions = new SortedDictionary<TransitionOrdered, TransitionDocNode>(comparer);
             foreach (TransitionDocNode transition in nodeGroup.Children)
             {
-                int? rank = GetRank(nodeGroup, nodeGroupPrimary, transition);
-                sortedByPrimaryTransitions.Add(new TransitionOrdered { Mz = transition.Mz, Rank = rank }, transition);
+                int? calculatedRank = GetRank(nodeGroup, nodeGroupPrimary, transition);
+                int? useableRank = (calculatedRank.HasValue && calculatedRank == 0) ? 10000 : calculatedRank; // red integrations appear to give a rank of 0, making them better rank than the best transition
+                sortedByPrimaryTransitions.Add(new TransitionOrdered { Mz = transition.Mz, Rank = useableRank }, transition);
             }
             return sortedByPrimaryTransitions.Values;
         }
@@ -928,10 +930,14 @@ namespace pwiz.Skyline.Model
         {
             if (OptimizeType == null || OptimizeType == ExportOptimize.NONE)
             {
-                return base.IsPrimary(nodeGroup, nodeGroupPrimary, nodeTran);
+                IEnumerable<DocNode> transitionsInBestOrder = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
+                int i = transitionsInBestOrder.TakeWhile(node => node != nodeTran).Count();
+                return i < PrimaryTransitionCount;
             }
-
-            return ((OptimizeStepIndex + OptimizeStepCount) < PrimaryTransitionCount);
+            else
+            {
+                return ((OptimizeStepIndex + OptimizeStepCount) < PrimaryTransitionCount);
+            }
         }
 
 
@@ -948,13 +954,15 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
+
+            double? predictedRT = null;
             if (MethodType == ExportMethodType.Standard)
                 writer.Write(Math.Round(DwellTime, 2).ToString(CultureInfo));
             else
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
                 double windowRT;
-                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     SchedulingReplicateIndex, SchedulingAlgorithm, HasResults, out windowRT);
                 if (predictedRT.HasValue)
                 {
@@ -1003,6 +1011,10 @@ namespace pwiz.Skyline.Model
                                                     nodeTranGroup.TransitionGroup.LabelType);
             }
 
+            // remove commas to prevent addition of extra columns that will be misinterpretted in method builder exe 
+            extPeptideId = extPeptideId.Replace(',', '_');
+            extGroupId = extGroupId.Replace(',', '_');
+
             int existCharge;
             if (!_groupNamesToCharge.TryGetValue(extGroupId, out existCharge))
             {
@@ -1037,39 +1049,18 @@ namespace pwiz.Skyline.Model
 
             writer.Write(FieldSeparator);
             writer.Write(extGroupId);
-
-            writer.Write(FieldSeparator);
-            var averagePeakArea = nodeTran.AveragePeakArea;
-            if (averagePeakArea.HasValue)
-                writer.Write(averagePeakArea.Value.ToString(CultureInfo));
+           
 
             double maxRtDiff = 0;
-            if (nodeTran.Results != null)
+            float? averagePeakArea = null;
+            if (nodeTran.Results != null && predictedRT.HasValue)
             {
-                double? averageRT = null;
-                if (nodePep != null)
-                    averageRT = nodePep.AverageMeasuredRetentionTime;
-
-                for (int resultIdx = 0; resultIdx < nodeTran.Results.Count; resultIdx++)
-                {
-                    if (SchedulingAlgorithm == ExportSchedulingAlgorithm.Single && SchedulingReplicateIndex != resultIdx)
-                        continue;
-
-                    var result = nodeTran.Results[resultIdx];
-                    if (result == null) 
-                        continue;
-
-                    foreach (var chromInfo in result)
-                    {
-                        if (averageRT.HasValue)
-                        {
-                            double rtDiff = averageRT.Value - chromInfo.StartRetentionTime;
-                            if (rtDiff > maxRtDiff)
-                                maxRtDiff = rtDiff;
-                        }
-                    }
-                }
+                GetValuesFromResults(nodeTran, predictedRT, out averagePeakArea, out maxRtDiff);
             }
+
+            writer.Write(FieldSeparator);
+            if (averagePeakArea.HasValue)
+                writer.Write(averagePeakArea.Value.ToString(CultureInfo));
 
             // increase window size if observed data goes close to window edge
             double maxWindowObservedInData = (maxRtDiff * 2);
@@ -1104,6 +1095,42 @@ namespace pwiz.Skyline.Model
             }
 
             writer.WriteLine();
+        }
+
+        private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,
+                                     out double maxRtDiff)
+        {
+            maxRtDiff = 0;
+            averagePeakArea = null;
+            if (!predictedRT.HasValue)
+                return;
+
+            float sumPeakArea = 0;
+            int resultsUsedCount = 0;
+            for (int resultIdx = 0; resultIdx < nodeTran.Results.Count; resultIdx++)
+            {
+                if (SchedulingReplicateIndex.HasValue && SchedulingReplicateIndex != resultIdx)
+                    continue;
+
+                var result = nodeTran.Results[resultIdx];
+                if (result == null)
+                    continue;
+
+                foreach (TransitionChromInfo chromInfo in result)
+                {
+                    if (chromInfo.IsEmpty)
+                        continue;
+
+                    double rtDiff = predictedRT.Value - chromInfo.StartRetentionTime;
+                    if (rtDiff > maxRtDiff)
+                        maxRtDiff = rtDiff;
+
+                    sumPeakArea += chromInfo.Area;
+                    resultsUsedCount++;
+                }
+            }
+            if (resultsUsedCount > 0)
+                averagePeakArea = sumPeakArea/(float) resultsUsedCount;
         }
 
         static internal string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)
