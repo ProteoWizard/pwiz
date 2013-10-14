@@ -160,99 +160,33 @@ namespace freicore
 			}
 		}
 
+		bool preplib = false;
+		bool iTraqMode = false;
+		bool hcdMode = false;
 		for( size_t i=1; i < args.size(); ++i )
 		{
 			if( args[i][0] == '-' )
 			{
 				if( args[i] == "-preplib")
+					preplib = true;				
+				else if( args[i] == "-prephcd")
 				{
-					cout << "!!! Warning: Pepitome library preparation is currently in beta mode. For critical data please use SpectraST to decoy libraries." << endl;
-					if (!bfs::exists(g_rtConfig->ProteinDatabase))
-					{
-						cerr << "Specified FASTA protein database not found or cannot be read.\n\n" << endl;
-						continue;
-					}
-					if (!bfs::exists(g_rtConfig->SpectralLibrary))
-					{
-						cerr << "Specified spectral library not found or cannot be read.\n\n" << endl;
-						continue;			
-					}
-					if (!bfs::exists(g_rtConfig->ContamDatabase))
-					{
-						string temp = g_rtConfig->ContamDatabase;
-						//if (std::string::npos != temp.find("default"))
-						if (boost::iequals(temp, "default"))
-							g_rtConfig->ContamDatabase = "default";
-						else
-						{
-							cerr << "Specified contaminant FASTA protein database not found or cannot be read." << endl << g_rtConfig->ContamDatabase << endl << endl;
-							continue;
-						}
-					}
-					if (!bfs::exists(g_rtConfig->ContamLibrary))
-					{
-						string temp = g_rtConfig->ContamLibrary;
-						//if (std::string::npos != temp.find("default"))
-						if (boost::iequals(temp, "default"))
-							g_rtConfig->ContamLibrary = "default";
-						else
-						{
-							cerr << "Specified contaminant spectral library not found or cannot be read.\n\n" << endl;
-							continue;			
-						}
-					}
-
-
-					//Create merged database and library
-					string newDatabase = LibraryBabelFish::mergeDatabaseWithContam(g_rtConfig->ProteinDatabase, g_rtConfig->ContamDatabase);
-					string newLibrary = LibraryBabelFish::mergeLibraryWithContam(g_rtConfig->SpectralLibrary, g_rtConfig->ContamLibrary);
-
-					// Read the protein database
-					cout << "Reading \"" << newDatabase << "\"" << endl;
-					Timer readTime(true);
-					try
-					{
-						originalProteins = proteinStore( g_rtConfig->DecoyPrefix );
-						originalProteins.readFASTA( newDatabase );
-					}
-					catch (std::exception& e)
-					{
-						cout << "Error loading protein database: " << e.what() << endl;
-						return 1;
-					}
-					cout << "Read " << originalProteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl << endl;
-
-
-
-					//refresh library against database
-					{
-						//LibraryBabelFish converter(newLibrary);
-						LibraryBabelFish::refreshLibrary(newLibrary, originalProteins,g_rtConfig->DecoyPrefix);
-					}
-
-					cout << endl << "Library refreshed and decoys created..." << endl;
-
-					//Set merged database as new g_rtConfig->ProteinDatabase
-					//Set decoyed library as new g_rtConfig->SpectralLibrary
-					g_rtConfig->SpectralLibrary = newLibrary;
-					g_rtConfig->ProteinDatabase = newDatabase;
-
-					cout << "New Database: " + g_rtConfig->ProteinDatabase << endl;
-					cout << "New Library: " + g_rtConfig->SpectralLibrary << endl << endl;
-
-					cout << "Library preparation complete." << endl << endl;
-					return 1;
-					//Note: currently exit program after library prep is complete. Errors sometimes occur in searching when
-					//preparation and searching is done in the same run of Pepitome. Best guess at the moment is memory allocation issue
-					
+					preplib = true;
+					hcdMode = true;
+				}
+				else if( args[i] == "-prepitraq")
+				{
+					preplib = true;
+					hcdMode = true;
+					iTraqMode = true;
 				}
                 else if (!ignoreConfigErrors)
                 {
                     cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
                     return 1;
                 }
-
-				cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+				else
+					cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
 				args.erase( args.begin() + i );
 				--i;
 			}
@@ -269,6 +203,77 @@ namespace freicore
             cerr << "No spectral library specified.\n\n" << usage << endl;
             return 1;
         }		
+		if (preplib)
+		{
+			cout << "!!! Warning: Pepitome library preparation is currently in beta mode. For critical data please use SpectraST to decoy libraries." << endl;
+			if (!bfs::exists(g_rtConfig->ContamDatabase) && g_rtConfig->ContamDatabase != "")
+			{
+				string temp = g_rtConfig->ContamDatabase;
+				//if (std::string::npos != temp.find("default"))
+				if (boost::iequals(temp, "default"))
+					g_rtConfig->ContamDatabase = "default";
+				else
+				{
+					cerr << "Specified contaminant FASTA protein database not found or cannot be read." << endl << g_rtConfig->ContamDatabase << endl << endl;
+					return 1;
+				}
+			}
+			if (!bfs::exists(g_rtConfig->ContamLibrary) && g_rtConfig->ContamLibrary != "")
+			{
+				string temp = g_rtConfig->ContamLibrary;
+				//if (std::string::npos != temp.find("default"))
+				if (boost::iequals(temp, "default"))
+					g_rtConfig->ContamLibrary = "default";
+				else
+				{
+					cerr << "Specified contaminant spectral library not found or cannot be read.\n\n" << endl;
+					return 1;			
+				}
+			}
+
+
+			//Create merged database and library
+			string newDatabase = LibraryBabelFish::mergeDatabaseWithContam(g_rtConfig->ProteinDatabase, g_rtConfig->ContamDatabase);
+			string newLibrary = LibraryBabelFish::mergeLibraryWithContam(g_rtConfig->SpectralLibrary, g_rtConfig->ContamLibrary);
+
+			// Read the protein database
+			cout << "Reading \"" << newDatabase << "\"" << endl;
+			Timer readTime(true);
+			try
+			{
+				originalProteins = proteinStore( g_rtConfig->DecoyPrefix );
+				originalProteins.readFASTA( newDatabase );
+			}
+			catch (std::exception& e)
+			{
+				cout << "Error loading protein database: " << e.what() << endl;
+				return 1;
+			}
+			cout << "Read " << originalProteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl << endl;
+
+
+
+			//refresh library against database
+			{
+				//LibraryBabelFish converter(newLibrary);
+				LibraryBabelFish::refreshLibrary(newLibrary, originalProteins, hcdMode, iTraqMode,g_rtConfig->DecoyPrefix);
+			}
+
+			cout << endl << "Library refreshed and decoys created..." << endl;
+
+			//Set merged database as new g_rtConfig->ProteinDatabase
+			//Set decoyed library as new g_rtConfig->SpectralLibrary
+			g_rtConfig->SpectralLibrary = newLibrary;
+			g_rtConfig->ProteinDatabase = newDatabase;
+
+			cout << "New Database: " + g_rtConfig->ProteinDatabase << endl;
+			cout << "New Library: " + g_rtConfig->SpectralLibrary << endl << endl;
+
+			cout << "Library preparation complete." << endl << endl;
+			return 1;
+			//Note: currently exit program after library prep is complete. Errors sometimes occur in searching when
+			//preparation and searching is done in the same run of Pepitome. Best guess at the moment is memory allocation issue
+		}
 
         if (args.size() == 1)
         {

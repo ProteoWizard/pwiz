@@ -44,7 +44,7 @@ struct LibraryBabelFish
     void initializeDatabase();
 	static std::string mergeDatabaseWithContam(std::string database, std::string contam);
 	static std::string mergeLibraryWithContam(std::string library, std::string contam);
-	static void refreshLibrary(string library, proteinStore database, string decoy);
+	static void refreshLibrary(string library, proteinStore database, bool hcdMode, bool iTraqMode, string decoy);
     void indexLibrary();
     void appendContaminants();
 };

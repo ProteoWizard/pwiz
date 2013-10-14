@@ -53,6 +53,9 @@ namespace freicore
             if (error)
                 bfs::remove(libraryIndexName);
         }
+		
+		bool _hcdMode = false;
+		bool _iTraqMode = false;
 
         void LibraryBabelFish::initializeDatabase()
         {
@@ -78,6 +81,74 @@ namespace freicore
                 throw;
             }
         }
+		
+		inline map<string,double> findIonWeights(string sequence)
+		{
+			boost::regex aminoAcidRegex ("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]",boost::regex_constants::icase|boost::regex_constants::perl);
+			vector<string> aminoAcidList;
+			map<string,double> ionMap;
+			boost::sregex_token_iterator aminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
+			boost::sregex_token_iterator end;
+
+			double b = 1;
+			double y = 19;
+			double nTermMod = 0;
+			
+			if (_iTraqMode)
+			{
+				b += 144.1021;
+				nTermMod += 144.1021;
+			}
+						
+			for( ; aminoAcidLetter != end; ++aminoAcidLetter )
+			{
+				string tempString = *aminoAcidLetter;
+				if (tempString[0] == 'n') //consider n-term mods
+				{
+					tempString = tempString.substr(2,tempString.length()-3);
+					b += lexical_cast<double>(tempString);
+					nTermMod += lexical_cast<double>(tempString);
+				}
+				else if (tempString[0] == 'c') //consider c-term mods
+				{
+					tempString = tempString.substr(2,tempString.length()-3);
+					y += lexical_cast<double>(tempString);
+				}
+				else
+					aminoAcidList.push_back(tempString);
+			}
+			
+			for (int x=0; x < aminoAcidList.size(); x++)
+			{
+				//calculate b
+				double mass = AminoAcid::Info::record(aminoAcidList[x][0]).residueFormula.monoisotopicMass();
+				if (_iTraqMode && aminoAcidList[x][0] == 'K')
+					mass += 144.1021;
+				if (aminoAcidList[x].length() > 1)
+				{
+					string tempString = aminoAcidList[x].substr(2,aminoAcidList[x].length()-3);
+					mass += lexical_cast<double>(tempString);
+				}
+				b += mass;
+				ionMap.insert(pair<string,double>("b"+lexical_cast<string>(x+1),b));
+				ionMap.insert(pair<string,double>("a"+lexical_cast<string>(x+1),b-28));
+
+				//calculate y
+				mass = AminoAcid::Info::record(aminoAcidList[aminoAcidList.size()-1-x][0]).residueFormula.monoisotopicMass();
+				if (_iTraqMode && aminoAcidList[aminoAcidList.size()-1-x][0] == 'K')
+					mass += 144.1021;
+				if (aminoAcidList[aminoAcidList.size()-1-x].length() > 1)
+				{
+					string tempString = aminoAcidList[aminoAcidList.size()-1-x].substr(2,aminoAcidList[aminoAcidList.size()-1-x].length()-3);
+					mass += lexical_cast<double>(tempString);
+				}
+				y += mass;
+				ionMap.insert(pair<string,double>("y"+lexical_cast<string>(x+1),y));
+			}
+			ionMap.insert(pair<string,double>("p",y+nTermMod));
+			
+			return ionMap;
+		}
 
         inline bool checkForHomology(const string& firstPeptide, const string& secondPeptide, double threshold)
         {
@@ -154,10 +225,9 @@ namespace freicore
 
             return (result);
         }
-
-        inline string shufflePeptideSequence(const vector<string>& peptide)
+		
+		inline string reversePeptideSequence(const vector<string>& peptide)
         {
-            // Amino acids containing modifications and also proline are not movable.
 			stringstream peptideSequence; 
             int peptideLength = (int) peptide.size();
             int firstMovableAAIndex = 200;
@@ -166,8 +236,75 @@ namespace freicore
             vector<string> movableAAs;
             for(int position = 0; position < peptideLength; ++position)
             {
-                if(position == peptideLength-1 || peptide[position].find("[") != string::npos)
+                if(position == peptideLength-1 || peptide[position].find("n") != string::npos)
 					immutable[position] = true;
+                else
+                {
+                    movableAAs.push_back(peptide[position]);
+                    firstMovableAAIndex = firstMovableAAIndex > position ? position : firstMovableAAIndex;
+                    lastMovableAAIndex = lastMovableAAIndex < position ? position : lastMovableAAIndex;
+                }
+				peptideSequence << peptide[position][0];
+            }
+            string reversedSequence;
+			stringstream reversedPeptide;
+			vector<string> reversedAAs;
+			for (int x = (int)movableAAs.size()-1; x >=0; x--)
+				reversedAAs.push_back(movableAAs[x]);
+			size_t randomAAIndex = 0;
+			size_t repeat = 0;
+			size_t nonRepeat = 0;
+			for(int position = 0; position < peptideLength; ++position)
+			{
+				if(!immutable[position])
+				{
+					reversedPeptide << reversedAAs[randomAAIndex];
+					if (peptide[position] == reversedAAs[randomAAIndex] ||
+						((peptide[position] == "L" || peptide[position] == "I") &&
+						(reversedAAs[randomAAIndex] == "L" || reversedAAs[randomAAIndex] == "I")) || // we consider I and L the same, K and Q the same
+						((peptide[position] == "K" || peptide[position] == "Q") &&
+						(reversedAAs[randomAAIndex] == "K" || reversedAAs[randomAAIndex] == "Q"))
+					)
+						++repeat;
+					else
+						++nonRepeat;
+					++randomAAIndex;
+				}
+				else
+				{
+					reversedPeptide << peptide[position];
+					++repeat;
+				}
+
+			}
+			double currentOverlap = repeat / (nonRepeat + repeat);
+			reversedSequence = reversedPeptide.str();
+			currentOverlap = repeat / (nonRepeat + repeat);
+
+			return reversedSequence;
+        }
+
+		//old-style decoy creation
+        inline string shufflePeptideSequence(const vector<string>& peptide, map<string,double> theoreticalIons, vector<string> ionDescriptions, bool calledOnce = false)
+        {
+		
+            // Amino acids containing modifications and also proline are not movable.
+			stringstream peptideSequence; 
+            int peptideLength = (int) peptide.size();
+            int firstMovableAAIndex = 200;
+            int lastMovableAAIndex = -1;
+			double overlap = 1;
+            vector<bool> immutable(peptideLength,false);
+            vector<string> movableAAs;
+            for(int position = 0; position < peptideLength; ++position)
+            {
+                if(peptide[position].find("[") != string::npos || peptide[position].find("K") != string::npos
+					|| peptide[position].find("R") != string::npos || peptide[position].find("P") != string::npos)
+				{
+					immutable[position] = true;
+					if(peptide[position].find("n") != string::npos)
+						immutable[position+1] = true;
+				}
                 else
                 {
                     movableAAs.push_back(peptide[position]);
@@ -184,54 +321,62 @@ namespace freicore
 			size_t bestTryNumber = 0;
             while(numAttempts < 100 && !foundDecoy)
             {
-                stringstream shuffledPeptide;    
-				stringstream shuffledPeptideNoMods;
+                stringstream shuffledPeptide;
                 std::random_shuffle(movableAAs.begin(),movableAAs.end());
-                size_t randomAAIndex = 0;
 				size_t repeat = 0;
 				size_t nonRepeat = 0;
-                for(int position = 0; position < peptideLength; ++position)
+				size_t randomAAIndex = 0;
+				
+				for(int position = 0; position < peptideLength; ++position)
                 {
-                    if(!immutable[position])
+                    if(!immutable[position])                    
                     {
-                        shuffledPeptide << movableAAs[randomAAIndex];
-						shuffledPeptideNoMods << movableAAs[randomAAIndex][0];
-						if (peptide[position] == movableAAs[randomAAIndex] ||
-							((peptide[position] == "L" || peptide[position] == "I") &&
-							(movableAAs[randomAAIndex] == "L" || movableAAs[randomAAIndex] == "I")) || // we consider I and L the same, K and Q the same
-							((peptide[position] == "K" || peptide[position] == "Q") &&
-							(movableAAs[randomAAIndex] == "K" || movableAAs[randomAAIndex] == "Q"))
-						)
-							++repeat;
-						else
-							++nonRepeat;
-						++randomAAIndex;
-                    }
-					else
-					{
-						shuffledPeptide << peptide[position];
-						shuffledPeptideNoMods << peptide[position][0];
-						++repeat;
+						shuffledPeptide << movableAAs[randomAAIndex];
+						randomAAIndex++;
 					}
-
+					else					
+						shuffledPeptide << peptide[position];		
                 }
-                bool wellScrambled = nonRepeat >= 1.5*repeat ? true : false;
-                //bool isHomolog = checkForHomology(peptideSequence.str(), shuffledPeptideNoMods.str(), 0.6);
-                foundDecoy = wellScrambled;
-                if(foundDecoy)
-                    shuffledSequence = shuffledPeptide.str();
-				else if (nonRepeat > bestTryNumber)
+				
+				map<string,double> shuffledIons;
 				{
-					bestTry = shuffledPeptide.str();
-					bestTryNumber = nonRepeat;
+					map<string,double> tempMap = findIonWeights(shuffledPeptide.str());
+					shuffledIons.insert(tempMap.begin(), tempMap.end());
+				}
+				BOOST_FOREACH(const string ion, ionDescriptions)
+                {
+					if (theoreticalIons[ion] == shuffledIons[ion])
+						repeat++;
+					else
+						nonRepeat++;
+				}
+				
+				double currentOverlap = repeat / (nonRepeat + repeat);
+                //bool isHomolog = checkForHomology(peptideSequence.str(), shuffledPeptideNoMods.str(), 0.6);
+                if(currentOverlap < overlap)
+                {
+					shuffledSequence = shuffledPeptide.str();
+					overlap = repeat / (nonRepeat + repeat);
 				}
                 ++numAttempts;
             }
-            if(shuffledSequence.length() > 0)
+			
+            if(overlap <= 0.7 || calledOnce)
                 return shuffledSequence;
-			else if(bestTry.length() > 0)
-                return bestTry;
-            return string();
+			else
+			{
+				vector<string> aminoAcids = boost::assign::list_of("A")("R")("N")("D")("C")("E")("Q")("G")("H")("I")("L")("K")("M")("F")("P")("S")("T")("U")("W")("Y")("V");
+				//{"A","R","N","D","E","Q","G","H","I","L","M","F","P","S","T","U","W","Y","V"};
+				std::random_shuffle(aminoAcids.begin(),aminoAcids.end());
+				vector<string> saltedPeptide;
+				saltedPeptide.push_back(peptide[0]);
+				saltedPeptide.push_back(aminoAcids[0]);
+				saltedPeptide.push_back(aminoAcids[1]);
+				for (int x = 1; x < peptideLength ; x++)
+					saltedPeptide.push_back(peptide[x]);
+				string saltedDecoy = shufflePeptideSequence(saltedPeptide,theoreticalIons,ionDescriptions, true);
+				return saltedDecoy;
+			}
         }
 
 		std::string LibraryBabelFish::mergeDatabaseWithContam(std::string database, std::string contam)
@@ -366,14 +511,16 @@ namespace freicore
 			return newLibraryPath.string();
 		}
 
-		void LibraryBabelFish::refreshLibrary(string libraryPath, proteinStore proteins, string decoy = "rev_")
+		void LibraryBabelFish::refreshLibrary(string libraryPath, proteinStore proteins, bool hcdMode, bool iTraqMode, string decoy = "rev_")
 		{
 			cout << "Synchronizing spectral library with database..." << endl;
+			_hcdMode = hcdMode;
+			_iTraqMode = iTraqMode;
 
 			PeptideTrie peptideTrie;
 			SpectraStore tempLibrary;
 
-			boost::regex removeModRegex ("\\[\\d+\\]",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex removeModRegex ("n?\\[\\d+\\]",boost::regex_constants::icase|boost::regex_constants::perl);
 
 			//get all peptides from library and construct trie
 			{
@@ -387,8 +534,6 @@ namespace freicore
 				{
 					if (x%1000 == 0)
 						cout << "Gathering sequences: " << x << " of " << lexical_cast<string>(totalSpectra) << '\r' << flush;
-					//if (x > 50460)
-					//	cout << "Gathering sequences: " << x << " of " << lexical_cast<string>(totalSpectra) << '\r' << flush;
 
 					tempLibrary[x]->readHeader(nativeReader);
                     tempLibrary[x]->readPeaks(nativeReader);
@@ -427,8 +572,8 @@ namespace freicore
 			boost::regex findPeptideRegex ("^Name: ([^/]+)/",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex findCommentRegex ("(Comment: .*)(Protein=\\d/)([^ ]*)(.*Spec=)([^ ]*)(.*)",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex aminoAcidRegex ("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]",boost::regex_constants::icase|boost::regex_constants::perl);
-			boost::regex spectraRegex ("([\\d.]+)(\\t[\\d.]+)\\t([?a-zA-Z]\\d*)([+-]\\d+)?\\^?(\\d+)?i?\\/?([^,\\t]+)?[^\\t]*(.+)",boost::regex_constants::icase|boost::regex_constants::perl);
-			boost::regex fullNameRegex ("(FullName: (?:\\w\\.)?)[\\w\\[\\]]+(\\.?\\w?\\/\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex spectraRegex ("([\\d.]+)(\\t[\\d.]+)\\t\\[?([?a-zA-Z]\\d*)(i|[+-]\\d+i?)?\\^?(\\d+i?)?\\/?([^\\],\\t]+)?[^\\t]*(.+)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex fullNameRegex ("(FullName: (?:[\\w\\-]\\.)?)[\\w\\[\\]]+(\\.?[\\w\\-]?\\/\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
 
 			ofstream outFile((libraryPath + ".tmp").c_str());
 			ifstream inFile(libraryPath.c_str());
@@ -439,8 +584,12 @@ namespace freicore
 			stringstream decoyStream;
 			bool isDecoy = false;
 			string newLine;
+			vector<string> ionDescriptions;
+			map<string,double> unlabeledIons;
+			map<string,double> theoreticalIons;
 			map<string,double> decoyIons;
 			map<double,string> decoySpectra;
+			bool report = false;
 
 			getline(inFile,newLine);
 			int writeIndex = 0;
@@ -462,53 +611,47 @@ namespace freicore
 					map<string,string>::iterator it = peptideMap.find(noModSequence);
 					if (it != peptideMap.end())
 					{
-						//create decoy peptide					
-						boost::sregex_token_iterator originalAminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
-					    boost::sregex_token_iterator end;
-
+						//calculate theoretical ions
+						vector<string> fullAminoAcidList;
 						vector<string> originalAminoAcidList;
-						vector<string> aminoAcidList;
-						for( ; originalAminoAcidLetter != end; ++originalAminoAcidLetter )
-							originalAminoAcidList.push_back(*originalAminoAcidLetter);
-						decoyPeptide = shufflePeptideSequence(originalAminoAcidList);
+						boost::sregex_token_iterator aminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
+						boost::sregex_token_iterator end;
+						for( ; aminoAcidLetter != end; ++aminoAcidLetter )
+							fullAminoAcidList.push_back(*aminoAcidLetter);						
+						
+						for (int x=0; x < originalAminoAcidList.size(); x++)
+						{
+							ionDescriptions.push_back("b"+lexical_cast<string>(x+1));
+							ionDescriptions.push_back("a"+lexical_cast<string>(x+1));
+							ionDescriptions.push_back("y"+lexical_cast<string>(x+1));
+						}
+						ionDescriptions.push_back("p");	
+						{
+							map<string,double> tempMap = findIonWeights(sequence);
+							theoreticalIons.insert(tempMap.begin(), tempMap.end());
+						}
+						if (_iTraqMode)
+						{
+							_iTraqMode = false;
+							map<string,double> tempMap = findIonWeights(sequence);
+							unlabeledIons.insert(tempMap.begin(), tempMap.end());
+							_iTraqMode = true;
+						}
+					
+						//create decoy peptide
+						decoyPeptide = reversePeptideSequence(fullAminoAcidList); //shufflePeptideSequence(fullAminoAcidList, theoreticalIons, ionDescriptions);
 						if (decoyPeptide.length()<sequence.length())
 							decoyPeptide = "";
-						boost::sregex_token_iterator aminoAcidLetter(decoyPeptide.begin(), decoyPeptide.end(), aminoAcidRegex, 0);
-						for( ; aminoAcidLetter != end; ++aminoAcidLetter )
-							aminoAcidList.push_back(*aminoAcidLetter);
-						
-
-						//calculate decoy ions
-						double b = 1;
-						double y = 19;
-						for (int x=0; x < aminoAcidList.size(); x++)
 						{
-							//calculate b
-							double mass = AminoAcid::Info::record(aminoAcidList[x][0]).residueFormula.monoisotopicMass();
-							if (aminoAcidList[x].length() > 1)
-							{
-								string tempString = aminoAcidList[x].substr(2,aminoAcidList[x].length()-3);
-								mass += lexical_cast<double>(tempString);
-							}
-							b += mass;
-							decoyIons.insert(pair<string,double>("b"+lexical_cast<string>(x+1),b));
-							decoyIons.insert(pair<string,double>("a"+lexical_cast<string>(x+1),b-28));
-
-							//calculate y
-							mass = AminoAcid::Info::record(aminoAcidList[aminoAcidList.size()-1-x][0]).residueFormula.monoisotopicMass();
-							if (aminoAcidList[aminoAcidList.size()-1-x].length() > 1)
-							{
-								string tempString = aminoAcidList[aminoAcidList.size()-1-x].substr(2,aminoAcidList[aminoAcidList.size()-1-x].length()-3);
-								mass += lexical_cast<double>(tempString);
-							}
-							y += mass;
-							decoyIons.insert(pair<string,double>("y"+lexical_cast<string>(x+1),y));
+							map<string,double> tempMap = findIonWeights(decoyPeptide);
+							decoyIons.insert(tempMap.begin(), tempMap.end());
 						}
-						decoyIons.insert(pair<string,double>("p",y));
+						
 						decoyStream << "Name: " << decoyPeptide << "/" << newLine[newLine.length()-1] << endl;
 					
 						activeProtein = it->second;
 						outputStream << newLine << endl;
+						
 					}
 					else
 						activeProtein = "";
@@ -565,20 +708,123 @@ namespace freicore
 							map<string,double>::iterator it = decoyIons.find(regex_matches[3]);
 							if (it != decoyIons.end())
 							{
+								//calculate theoretical mass 
+								double theoreticalMass = theoreticalIons[regex_matches[3]];
+								if (regex_matches[4].length() > 0)							
+								{
+									int offset = 0;
+									if (regex_matches[4].str().find("i") != string::npos)
+									{
+										theoreticalMass += 1;
+										offset = 1;
+									}
+									if (regex_matches[4].length() > offset)
+										theoreticalMass += lexical_cast<double>(regex_matches[4].str().substr(0,regex_matches[4].str().length()-offset));
+								}
+								if (regex_matches[5].length() > 0)
+								{
+									int offset = 0;
+									if (regex_matches[5].str().find("i") != string::npos)
+									{
+										theoreticalMass += 1;
+										offset = 1;
+									}
+									if (regex_matches[5].length() > offset)
+										theoreticalMass /= lexical_cast<double>(regex_matches[5].str().substr(0,regex_matches[5].str().length()-offset));
+								}
+								
+								//calculate unlabeled mass if iTRAQ mode
+								double unlabeledMass = theoreticalMass;
+								if (_iTraqMode)
+								{
+									unlabeledMass = unlabeledIons[regex_matches[3]];
+									if (regex_matches[4].length() > 0)							
+									{
+										int offset = 0;
+										if (regex_matches[4].str().find("i") != string::npos)
+										{
+											unlabeledMass += 1;
+											offset = 1;
+										}
+										if (regex_matches[4].length() > offset)
+											unlabeledMass += lexical_cast<double>(regex_matches[4].str().substr(0,regex_matches[4].str().length()-offset));
+									}
+									if (regex_matches[5].length() > 0)
+									{
+										int offset = 0;
+										if (regex_matches[5].str().find("i") != string::npos)
+										{
+											unlabeledMass += 1;
+											offset = 1;
+										}
+										if (regex_matches[5].length() > offset)
+											unlabeledMass /= lexical_cast<double>(regex_matches[5].str().substr(0,regex_matches[5].str().length()-offset));
+									}
+								}
+								
+								//calculate decoy mass 
 								double mass = decoyIons[regex_matches[3]];
 								if (regex_matches[4].length() > 0)							
-									mass += lexical_cast<double>(regex_matches[4]);
+								{
+									int offset = 0;
+									if (regex_matches[4].str().find("i") != string::npos)
+									{
+										mass += 1;
+										offset = 1;
+									}
+									if (regex_matches[4].length() > offset)
+										mass += lexical_cast<double>(regex_matches[4].str().substr(0,regex_matches[4].str().length()-offset));
+								}
 								if (regex_matches[5].length() > 0)							
-									mass /= lexical_cast<double>(regex_matches[5]);
+								{
+									int offset = 0;
+									if (regex_matches[5].str().find("i") != string::npos)
+									{
+										mass += 1;
+										offset = 1;
+									}
+									if (regex_matches[5].length() > offset)
+										mass /= lexical_cast<double>(regex_matches[5].str().substr(0,regex_matches[5].str().length()-offset));
+								}
+								double massCorrection = (lexical_cast<double>(regex_matches[1]) - unlabeledMass );
+								/*if (massCorrection > 5)
+								{
+									if (report)
+										cout << newLine << endl << "| " << regex_matches[1] << " | " << theoreticalMass << " | " << unlabeledMass << " | " << massCorrection << " |" << endl;
+									else
+									{
+										cout << peptideFullName << endl;
+										cout << newLine << endl << "| " << regex_matches[1] << " | " << theoreticalMass << " | " << massCorrection << " |" << endl;
+										report = true;
+									}
+								}*/
+								//cout << std::fixed << std::setprecision(4) << theoreticalMass << "\t" << mass << "\t" << massCorrection << endl << endl;
+								if (!_hcdMode)
+									mass += massCorrection;
 								stringstream temp;
 								temp << std::fixed << std::setprecision(4) << mass;
-								decoySpectra.insert(pair<double, string>(mass, temp.str() + "\t" + contents));
+								decoySpectra.insert(pair<double, string>(mass, temp.str() + "\t" + contents)); //+ "\t| " + lexical_cast<string>(massCorrection) + " |"
+								
+								if (_hcdMode || _iTraqMode)
+								{
+									stringstream temp;
+									if (_hcdMode)
+										temp << std::fixed << std::setprecision(4) << theoreticalMass;
+									else
+										temp << std::fixed << std::setprecision(4) << theoreticalMass + massCorrection;
+									outputStream << temp.str() << "\t" << contents << endl;// << "\t" << theoreticalMass << "| " << regex_matches[1] << " | " << unlabeledMass << " | " << massCorrection << " |" << endl; // << "\t" << theoreticalMass << "| " << regex_matches[1] << " | " << unlabeledMass << " | " << massCorrection << " |" 
+								}
+								else
+									outputStream << newLine << endl;
 							}
 							else
+							{
 								decoySpectra.insert(pair<double, string>(lexical_cast<double>(regex_matches[1]), regex_matches[1] + "\t" + contents));
+								outputStream << newLine << endl;
+							}
 							
 						}
-						outputStream << newLine << endl;
+						
 					}
 					//end of spectra
 					else if (newLine.length() == 0)
@@ -597,12 +843,22 @@ namespace freicore
 							if (writeIndex%1000 == 0)
 								cout << "Refreshing spectra: " << writeIndex << '\r' << flush;
 						}
+							
 						decoyPeptide = "";
 						decoySpectra.clear();
 						outputStream.str("");
 						decoyStream.str("");
 						decoyIons.clear();
+						unlabeledIons.clear();
+						theoreticalIons.clear();
+						ionDescriptions.clear();
 						isDecoy = false;
+						
+						if (report)
+						{
+							cout << endl;
+							report = false;
+						}
 					}
 					//any other line
 					else
