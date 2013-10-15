@@ -55,6 +55,7 @@
             this.modificationsListBox.Location = new System.Drawing.Point(19, 42);
             this.modificationsListBox.Name = "modificationsListBox";
             this.modificationsListBox.Size = new System.Drawing.Size(340, 109);
+            this.modificationsListBox.Sorted = true;
             this.modificationsListBox.TabIndex = 4;
             // 
             // labelModifications
@@ -77,6 +78,7 @@
             this.unmatchedListBox.Location = new System.Drawing.Point(19, 24);
             this.unmatchedListBox.Name = "unmatchedListBox";
             this.unmatchedListBox.Size = new System.Drawing.Size(340, 56);
+            this.unmatchedListBox.Sorted = true;
             this.unmatchedListBox.TabIndex = 6;
             // 
             // splitContainer
