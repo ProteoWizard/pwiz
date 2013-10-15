@@ -32,16 +32,16 @@
             this.modificationsListBox = new System.Windows.Forms.CheckedListBox();
             this.labelModifications = new System.Windows.Forms.Label();
             this.unmatchedListBox = new System.Windows.Forms.ListBox();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.btnAddModification = new System.Windows.Forms.Button();
             this.menuAddModification = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuItemAddStructuralModification = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemAddHeavyModification = new System.Windows.Forms.ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
+            this.splitContainer.Panel1.SuspendLayout();
+            this.splitContainer.Panel2.SuspendLayout();
+            this.splitContainer.SuspendLayout();
             this.menuAddModification.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -54,7 +54,7 @@
             this.modificationsListBox.FormattingEnabled = true;
             this.modificationsListBox.Location = new System.Drawing.Point(19, 42);
             this.modificationsListBox.Name = "modificationsListBox";
-            this.modificationsListBox.Size = new System.Drawing.Size(340, 79);
+            this.modificationsListBox.Size = new System.Drawing.Size(340, 109);
             this.modificationsListBox.TabIndex = 4;
             // 
             // labelModifications
@@ -74,40 +74,40 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.unmatchedListBox.FormattingEnabled = true;
-            this.unmatchedListBox.Location = new System.Drawing.Point(18, 25);
+            this.unmatchedListBox.Location = new System.Drawing.Point(19, 24);
             this.unmatchedListBox.Name = "unmatchedListBox";
-            this.unmatchedListBox.Size = new System.Drawing.Size(340, 82);
+            this.unmatchedListBox.Size = new System.Drawing.Size(340, 56);
             this.unmatchedListBox.TabIndex = 6;
             // 
-            // splitContainer1
+            // splitContainer
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.splitContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.IsSplitterFixed = true;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.splitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer.IsSplitterFixed = true;
+            this.splitContainer.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer.Name = "splitContainer";
+            this.splitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
-            // splitContainer1.Panel1
+            // splitContainer.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.modificationsListBox);
-            this.splitContainer1.Panel1.Controls.Add(this.labelModifications);
+            this.splitContainer.Panel1.Controls.Add(this.modificationsListBox);
+            this.splitContainer.Panel1.Controls.Add(this.labelModifications);
             // 
-            // splitContainer1.Panel2
+            // splitContainer.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.label1);
-            this.splitContainer1.Panel2.Controls.Add(this.btnAddModification);
-            this.splitContainer1.Panel2.Controls.Add(this.unmatchedListBox);
-            this.splitContainer1.Size = new System.Drawing.Size(381, 312);
-            this.splitContainer1.SplitterDistance = 123;
-            this.splitContainer1.TabIndex = 7;
-            this.splitContainer1.TabStop = false;
+            this.splitContainer.Panel2.Controls.Add(this.label1);
+            this.splitContainer.Panel2.Controls.Add(this.unmatchedListBox);
+            this.splitContainer.Size = new System.Drawing.Size(381, 259);
+            this.splitContainer.SplitterDistance = 160;
+            this.splitContainer.TabIndex = 7;
+            this.splitContainer.TabStop = false;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(18, 5);
+            this.label1.Location = new System.Drawing.Point(19, 8);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(252, 13);
             this.label1.TabIndex = 7;
@@ -116,7 +116,7 @@
             // btnAddModification
             // 
             this.btnAddModification.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnAddModification.Location = new System.Drawing.Point(18, 137);
+            this.btnAddModification.Location = new System.Drawing.Point(21, 265);
             this.btnAddModification.Name = "btnAddModification";
             this.btnAddModification.Size = new System.Drawing.Size(140, 23);
             this.btnAddModification.TabIndex = 8;
@@ -130,7 +130,7 @@
             this.menuItemAddStructuralModification,
             this.menuItemAddHeavyModification});
             this.menuAddModification.Name = "menuAddModification";
-            this.menuAddModification.Size = new System.Drawing.Size(230, 70);
+            this.menuAddModification.Size = new System.Drawing.Size(230, 48);
             // 
             // menuItemAddStructuralModification
             // 
@@ -151,14 +151,15 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.splitContainer);
+            this.Controls.Add(this.btnAddModification);
             this.Name = "MatchModificationsControl";
             this.Size = new System.Drawing.Size(381, 315);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.splitContainer.Panel1.ResumeLayout(false);
+            this.splitContainer.Panel2.ResumeLayout(false);
+            this.splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
+            this.splitContainer.ResumeLayout(false);
             this.menuAddModification.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -169,7 +170,7 @@
         private System.Windows.Forms.CheckedListBox modificationsListBox;
         private System.Windows.Forms.Label labelModifications;
         private System.Windows.Forms.ListBox unmatchedListBox;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnAddModification;
         private System.Windows.Forms.ContextMenuStrip menuAddModification;

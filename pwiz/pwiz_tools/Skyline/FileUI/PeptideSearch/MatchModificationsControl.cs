@@ -207,8 +207,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 modificationsListBox.Items.Add(new ListBoxModification(mod), CheckState.Checked);
             }
 
-            foreach (var uninterpretedMod in _matcher.UnmatchedSequences)
-                unmatchedListBox.Items.Add(uninterpretedMod);
+            if (_matcher.UnmatchedSequences.Any())
+            {
+                splitContainer.Panel2Collapsed = false;
+                foreach (var uninterpretedMod in _matcher.UnmatchedSequences)
+                    unmatchedListBox.Items.Add(uninterpretedMod);
+            }
+            else
+            {
+                splitContainer.Panel2Collapsed = true;
+            }
         }
 
         private void btnAddModification_Click(object sender, EventArgs e)
