@@ -613,7 +613,8 @@ namespace IDPicker.Forms
                 var rowText = new List<string>();
                 foreach (var columnIndex in exportedColumns)
                 {
-                    object value = treeDataGridView[columnIndex, rowIndex].Value ?? String.Empty;
+                    // empty cells are exported as blank except for pivot columns which are exported as zeros
+                    object value = treeDataGridView[columnIndex, rowIndex].Value ?? (treeDataGridView.Columns[columnIndex].Name.StartsWith("pivot") ? "0" : String.Empty);
                     rowText.Add(value.ToString());
 
                     if (columnIndex == 0 && rowIndexHierarchy.Count > 1)

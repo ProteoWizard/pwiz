@@ -833,6 +833,7 @@ namespace IDPicker.Forms
                         newColumn.HeaderText = String.Format("{0} ({1})", uniqueSubstring, newColumn.HeaderText);
                         newColumn.Tag = new Pair<bool, Map<long, PivotData>>(false, statsBySpectrumSource[sourceId]);
                         newColumn.DataPropertyName = i.ToString();
+                        newColumn.Name = "pivotQuantColumn" + i.ToString();
                         // preserve the visibility of the cloned column
                         pivotColumns.Add(newColumn);
                     }
@@ -844,6 +845,7 @@ namespace IDPicker.Forms
 
                 var column = new DataGridViewTextBoxColumn() { HeaderText = uniqueSubstring, FillWeight = 1 };
                 column.Tag = new Pair<bool, Map<long, PivotData>>(false, statsBySpectrumSource[sourceId]);
+                column.Name = "pivotColumn" + column.DisplayIndex.ToString();
 
                 var newProperties = new ColumnProperty()
                 {
@@ -890,6 +892,7 @@ namespace IDPicker.Forms
                         newColumn.HeaderText = String.Format("{0} ({1})", groupName, newColumn.HeaderText);
                         newColumn.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
                         newColumn.DataPropertyName = i.ToString();
+                        newColumn.Name = "pivotQuantColumn" + i.ToString();
                         // preserve the visibility of the cloned column
                         pivotColumns.Add(newColumn);
                     }
@@ -900,6 +903,7 @@ namespace IDPicker.Forms
                 // otherwise add a single column for each group
                 var column = new DataGridViewTextBoxColumn() { HeaderText = groupById[groupId].Name.TrimEnd('/') + '/', FillWeight = 1 };
                 column.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
+                column.Name = "pivotColumn" + column.DisplayIndex.ToString();
 
                 var newProperties = new ColumnProperty()
                 {
