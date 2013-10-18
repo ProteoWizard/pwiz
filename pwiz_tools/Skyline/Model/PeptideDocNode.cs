@@ -538,7 +538,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            TransitionInstrument instrument = settingsNew.TransitionSettings.Instrument;
+            TransitionSettings transitionSettings = settingsNew.TransitionSettings;
             PeptideDocNode nodeResult = this;
             if (!ReferenceEquals(explicitMods, ExplicitMods))
                 nodeResult = nodeResult.ChangeExplicitMods(explicitMods);
@@ -584,7 +584,7 @@ namespace pwiz.Skyline.Model
                         TransitionGroupDocNode nodeChanged = recurse
                             ? nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)
                             : nodeGroup;
-                        if (instrument.IsMeasurable(nodeChanged.PrecursorMz))
+                        if (transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz))
                             childrenNew.Add(nodeChanged);
                     }
                 }
@@ -638,7 +638,7 @@ namespace pwiz.Skyline.Model
                     {
                         TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
                         // Skip if the node can no longer be measured on the target instrument
-                        if (!instrument.IsMeasurable(nodeChanged.PrecursorMz))
+                        if (!transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz))
                             continue;
                         // Skip this node, if it is heavy and the update caused it to have the
                         // same m/z value as the light value.

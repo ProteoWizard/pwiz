@@ -55,6 +55,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 foreach (var nodePep in nodePepGroup.Peptides)
                 {
+                    if (nodePep.TransitionGroupCount == 0)
+                        continue;
+
                     if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
                         continue;
 

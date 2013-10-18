@@ -109,8 +109,6 @@ namespace pwiz.Skyline.Model
                     precursorCharges.Add(i);
             }
 
-            TransitionInstrument instrument = settings.TransitionSettings.Instrument;
-
             var modSettings = settings.PeptideSettings.Modifications;
 
             double precursorMassLight = settings.GetPrecursorMass(IsotopeLabelType.light, Sequence, mods);
@@ -141,7 +139,7 @@ namespace pwiz.Skyline.Model
                     // between the light and heavy calculators
                     if (i == 0 || precursorMass != precursorMassLight)
                     {
-                        if (instrument.IsMeasurable(SequenceMassCalc.GetMZ(precursorMass, charge)))
+                        if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass, charge)))
                             yield return new TransitionGroup(this, charge, labelType);
                     }
                 }

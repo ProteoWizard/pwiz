@@ -71,7 +71,7 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewDriver = new PeakCalculatorGridViewDriver(gridPeakCalculators, bindingPeakCalculators,
                                                             new SortableBindingList<PeakCalculatorWeight>());
 
-            InitGraphPane(zedGraphMProphet.GraphPane);
+            InitGraphPane(zedGraphMProphet.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_);
             InitGraphPane(zedGraphSelectedCalculator.GraphPane);
 
             lblColinearWarning.Visible = false;
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Set intial weights based on target decoy generator, but set weights specified in suppressWeigths to NaN
             // and re-add weights that were previously suppressed
-            var activeWeights = _targetDecoyGenerator.Weights;
+            var activeWeights = _targetDecoyGenerator.Parameters.Weights.ToArray();
             for (int i = 0; i < activeWeights.Length; ++i)
             {
                 activeWeights[i] = !_targetDecoyGenerator.EligibleScores[i] || weightSuppressors[i]
@@ -170,25 +170,26 @@ namespace pwiz.Skyline.SettingsUI
                                              ? 0.0
                                              : activeWeights[i];
             }
+            var initialParams = new LinearModelParams(activeWeights);
 
             // Create new scoring model using the active calculators.
             switch (comboModel.SelectedIndex)
             {
                 case MPROPHET_MODEL_INDEX:
-                    _peakScoringModel = new MProphetPeakScoringModel(_peakScoringModel.Name, activeWeights, _peakScoringModel.PeakFeatureCalculators);  
+                    _peakScoringModel = new MProphetPeakScoringModel(_peakScoringModel.Name, initialParams, _peakScoringModel.PeakFeatureCalculators);  
                     break;
             }
 
             // Train the model.
-            _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, activeWeights, secondBestCheckBox.Checked);
+            _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, initialParams, secondBestCheckBox.Checked);
+            _targetDecoyGenerator.Parameters = _peakScoringModel.Parameters;
 
             // Copy weights to grid.
             for (int i = 0; i < _gridViewDriver.Items.Count; i++)
             {
-                double weight = _peakScoringModel.Weights[i];
+                double weight = _peakScoringModel.Parameters.Weights[i];
                 _gridViewDriver.Items[i].Weight = double.IsNaN(weight) ? null : (double?) weight;
                 _gridViewDriver.Items[i].PercentContribution = double.IsNaN(weight) ? null : (double?)GetPercentContribution(i);
-                _targetDecoyGenerator.Weights[i] = weight;
             }
             gridPeakCalculators.Invalidate();
 
@@ -238,7 +239,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 _peakScoringModel = new MProphetPeakScoringModel(
                     name,
-                    mProphetModel.Weights,
+                    mProphetModel.Parameters,
                     mProphetModel.PeakFeatureCalculators,
                     decoyMean,
                     decoyStdev,
@@ -267,25 +268,25 @@ namespace pwiz.Skyline.SettingsUI
         /// <returns></returns>
         private bool IsWrongSignWeight(int index)
         {
-            if (_peakScoringModel.Weights == null)
+            if (_peakScoringModel.Parameters == null || _peakScoringModel.Parameters.Weights == null)
                 return false;
-            double weight = _peakScoringModel.Weights[index];
+            double weight = _peakScoringModel.Parameters.Weights[index];
             if (double.IsNaN(weight))
                 return false;
             return _peakScoringModel.PeakFeatureCalculators[index].IsReversedScore ^ (weight < 0);
         }
 
         /// <summary>
-        /// Create weights array.  The given index will have a value of 1, all the others
-        /// will have a value of NaN.
+        /// Create parameter object in which the given index will have a value of 1, all the others
+        /// will have a value of NaN, and the bias is zero.
         /// </summary>
-        private double[] CreateWeightsSelect(int index)
+        private LinearModelParams CreateParametersSelect(int index)
         {
             var weights = new double[_peakScoringModel.PeakFeatureCalculators.Count];
             for (int i = 0; i < weights.Length; i++)
                 weights[i] = double.NaN;
             weights[index] = 1;
-            return weights;
+            return new LinearModelParams(weights);
         }
 
         private static void ProcessScores(double score, ref double min, ref double max, ref int countUnknownScores)
@@ -304,9 +305,9 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Initialize the given Zedgraph pane.
         /// </summary>
-        private static void InitGraphPane(GraphPane graphPane)
+        private static void InitGraphPane(GraphPane graphPane, string titleName = null)
         {
-            graphPane.Title.IsVisible = false;
+            graphPane.Title.Text = titleName ?? "";
             graphPane.XAxis.Title.Text = Resources.EditPeakScoringModelDlg_InitGraphPane_Score;
             graphPane.YAxis.Title.Text = Resources.EditPeakScoringModelDlg_InitGraphPane_Peak_count;
             graphPane.XAxis.MinSpace = 50;
@@ -331,7 +332,7 @@ namespace pwiz.Skyline.SettingsUI
             graphPane.GraphObjList.Clear();
 
             // Nothing to draw if we don't have a trained model yet.
-            if (PeakScoringModel.Weights == null)
+            if (PeakScoringModel.Parameters == null || PeakScoringModel.Parameters.Weights == null)
             {
                 zedGraphMProphet.Refresh();
                 return;
@@ -538,6 +539,11 @@ namespace pwiz.Skyline.SettingsUI
                 graphPane.GraphObjList.Add(xAxisGap);
             }
 
+
+            // Change the graph title
+            if(_selectedCalculator >= 0)
+                graphPane.Title.Text = gridPeakCalculators.Rows[_selectedCalculator].Cells[(int)ColumnNames.calculator_name].Value.ToString();
+
             // Calculate the Axis Scale Ranges
             graphPane.AxisChange();
             zedGraphSelectedCalculator.Refresh();
@@ -562,12 +568,12 @@ namespace pwiz.Skyline.SettingsUI
             out double max,
             out bool hasUnknownScores)
         {
-            double[] calculatorWeights = selectedCalculator == -1 ? _targetDecoyGenerator.Weights : CreateWeightsSelect(selectedCalculator);
+            LinearModelParams calculatorParameters = selectedCalculator == -1 ? _targetDecoyGenerator.Parameters : CreateParametersSelect(selectedCalculator);
             // Almost always set the scoring weights equal to the calculatorWeights, but if only one calculator is being used and it is NaN,
             // use the full set of composite weights for evaluation, so that "unknown" scores get populated properly in the graph
-            double[] scoringWeights = (selectedCalculator != -1 && double.IsNaN(_targetDecoyGenerator.Weights[selectedCalculator]))
-                                      ? _targetDecoyGenerator.Weights
-                                      : calculatorWeights;
+            LinearModelParams scoringParameters = (selectedCalculator != -1 && double.IsNaN(_targetDecoyGenerator.Parameters.Weights[selectedCalculator]))
+                                      ? _targetDecoyGenerator.Parameters
+                                      : calculatorParameters;
 
             List<double> targetScores;
             List<double> decoyScores;
@@ -575,7 +581,7 @@ namespace pwiz.Skyline.SettingsUI
             // Invert the score if its "natural" sign as specified in the calculator's definition is negative
             bool invert = selectedCalculator != -1 && _peakScoringModel.PeakFeatureCalculators[selectedCalculator].IsReversedScore;
             // Evaluate each score on the best peak according to that score (either individual calculator or composite)
-            _targetDecoyGenerator.GetScores(scoringWeights, calculatorWeights, out targetScores, out decoyScores, out secondBestScores, invert);
+            _targetDecoyGenerator.GetScores(scoringParameters, calculatorParameters, out targetScores, out decoyScores, out secondBestScores, invert);
             
             // Find score range for targets and decoys
             min = float.MaxValue;
@@ -682,7 +688,7 @@ namespace pwiz.Skyline.SettingsUI
             for (int row = 0; row < gridPeakCalculators.RowCount; row++)
             {
                 // Show row in disabled style if it contains a weight value of NaN.
-                if (double.IsNaN(_targetDecoyGenerator.Weights[row]))
+                if (double.IsNaN(_targetDecoyGenerator.Parameters.Weights[row]))
                 {
                     for (int i = 0; i < 4; i++)
                     {
@@ -719,44 +725,46 @@ namespace pwiz.Skyline.SettingsUI
             for (int i = 0; i < _peakScoringModel.PeakFeatureCalculators.Count; i++)
             {
                 var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
-                double? weight = (PeakScoringModel.Weights == null || double.IsNaN(_peakScoringModel.Weights[i]))
-                    ? (double?)null
-                    : _peakScoringModel.Weights[i];
+                double? weight = (PeakScoringModel.Parameters == null || 
+                                  PeakScoringModel.Parameters.Weights == null || 
+                                  double.IsNaN(_peakScoringModel.Parameters.Weights[i]))
+                    ? null
+                    : (double?)_peakScoringModel.Parameters.Weights[i];
 
                 double? normalWeight = weight.HasValue ? GetPercentContribution(i) : (double?)null;
-                bool enabled = !double.IsNaN( _targetDecoyGenerator.Weights[i]);
+                bool enabled = !double.IsNaN( _targetDecoyGenerator.Parameters.Weights[i]);
                 PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight, normalWeight, enabled));
             }
         }
 
         private double GetPercentContribution(int index)
         {
-            if (double.IsNaN(_peakScoringModel.Weights[index]))
+            if (double.IsNaN(_peakScoringModel.Parameters.Weights[index]))
                 return 0;
             List<double> targetScores;
             List<double> activeDecoyScores;
             List<double> targetScoresAll;
             List<double> activeDecoyScoresAll;
-            var scoringWeights = _peakScoringModel.Weights.ToArray();
-            var calculatorWeights = CreateWeightsSelect(index);
-            GetActiveScoredValues(scoringWeights, calculatorWeights, out targetScores, out activeDecoyScores);
-            GetActiveScoredValues(scoringWeights, scoringWeights, out targetScoresAll, out activeDecoyScoresAll);
+            var scoringParameters = _peakScoringModel.Parameters;
+            var calculatorParameters = CreateParametersSelect(index);
+            GetActiveScoredValues(scoringParameters, calculatorParameters, out targetScores, out activeDecoyScores);
+            GetActiveScoredValues(scoringParameters, scoringParameters, out targetScoresAll, out activeDecoyScoresAll);
             double meanDiffAll = targetScoresAll.Average() - activeDecoyScoresAll.Average();
             double meanDiff = targetScores.Average() - activeDecoyScores.Average();
-            double meanWeightedDiff = meanDiff * _peakScoringModel.Weights[index];
+            double meanWeightedDiff = meanDiff * _peakScoringModel.Parameters.Weights[index];
             return meanWeightedDiff / meanDiffAll;
         }
 
-        private void GetActiveScoredValues(double[] scoringWeights, 
-                                                    double[] calculatorWeights,
+        private void GetActiveScoredValues(LinearModelParams scoringParams, 
+                                                    LinearModelParams calculatorParams,
                                                     out List<double> targetScores,
                                                     out List<double> activeDecoyScores)
         {
             List<double> decoyScores;
             List<double> secondBestScores;
             activeDecoyScores = new List<double>();
-            _targetDecoyGenerator.GetScores(scoringWeights,
-                                calculatorWeights,
+            _targetDecoyGenerator.GetScores(scoringParams,
+                                calculatorParams,
                                 out targetScores,
                                 out decoyScores,
                                 out secondBestScores);
@@ -768,10 +776,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private void gridPeakCalculators_SelectionChanged(object sender, EventArgs e)
         {
-            if (gridPeakCalculators.Rows.Count == 0)
+            if (gridPeakCalculators.Rows.Count == 0 || _peakScoringModel == null)
                 return;
             var row = gridPeakCalculators.SelectedCells.Count > 0 ? gridPeakCalculators.SelectedCells[0].RowIndex : 0;
-            lblSelectedGraph.Text = gridPeakCalculators.Rows[row].Cells[(int) ColumnNames.calculator_name].Value.ToString();
             UpdateCalculatorGraph(row);
         }
 
@@ -886,7 +893,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
 
-            public double[] Weights { get; private set; }
+            public LinearModelParams Parameters { get; set; }
 
             public TargetDecoyGenerator(IPeakScoringModel scoringModel)
             {
@@ -896,15 +903,17 @@ namespace pwiz.Skyline.SettingsUI
                 _peakTransitionGroupFeaturesList = document.GetPeakFeatures(calculators).ToArray();
 
                 // Eliminate calculators/features that have no data for at least one of the transitions.
-                Weights = new double[calculators.Length];
+                var weights = new double[calculators.Length];
                 EligibleScores = new bool[calculators.Length];
-                for (int i = 0; i < Weights.Length; i++)
+                for (int i = 0; i < weights.Length; i++)
                 {
                     // Disable calculators that have only a single score value or any unknown scores.
-                    double modelWeight = scoringModel.Weights != null ? scoringModel.Weights[i] : 0.0;
+                    double modelWeight = scoringModel.Parameters != null ? scoringModel.Parameters.Weights[i] : 0.0;
                     EligibleScores[i] = IsValidCalculator(i);
-                    Weights[i] = EligibleScores[i] ? modelWeight : double.NaN;
+                    weights[i] = EligibleScores[i] ? modelWeight : double.NaN;
                 }
+                double bias = scoringModel.Parameters != null ? scoringModel.Parameters.Bias : 0;
+                Parameters = new LinearModelParams(weights, bias);
             }
 
             public void GetTransitionGroups(out List<IList<double[]>> targetGroups,
@@ -943,13 +952,13 @@ namespace pwiz.Skyline.SettingsUI
             /// Calculate scores for targets and decoys.  A transition is selected from each transition group using the
             /// scoring weights, and then its score is calculated using the calculator weights applied to each feature.
             /// </summary>
-            /// <param name="scoringWeights">Scoring coefficients for each feature.</param>
-            /// <param name="calculatorWeights">Weighting coefficients for each feature.</param>
+            /// <param name="scoringParams">Parameters to choose the best peak</param>
+            /// <param name="calculatorParams">Parameters to calculate the score of the best peak.</param>
             /// <param name="targetScores">Output list of target scores.</param>
             /// <param name="decoyScores">Output list of decoy scores.</param>
             /// <param name="secondBestScores">Output list of false target scores.</param>
             /// <param name="invert">If true, select minimum rather than maximum scores</param>
-            public void GetScores(double[] scoringWeights, double[] calculatorWeights, out List<double> targetScores, out List<double> decoyScores,
+            public void GetScores(LinearModelParams scoringParams, LinearModelParams calculatorParams, out List<double> targetScores, out List<double> decoyScores,
                                   out List<double> secondBestScores, bool invert = false)
             {
                 targetScores = new List<double>();
@@ -967,7 +976,7 @@ namespace pwiz.Skyline.SettingsUI
                     // Find the highest and second highest scores among the transitions in this group.
                     foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                     {
-                        double score = invertSign * GetScore(scoringWeights, peakGroupFeatures);
+                        double score = invertSign * GetScore(scoringParams, peakGroupFeatures);
                         if (nextScore < score)
                         {
                             if (maxScore < score)
@@ -989,14 +998,14 @@ namespace pwiz.Skyline.SettingsUI
                         continue;   // No data
 
                     // If we have decoys, calculate a score and assign to the target or decoy list.
-                    double currentScore = GetScore(calculatorWeights, maxFeatures);
+                    double currentScore = GetScore(calculatorParams, maxFeatures);
                     if (peakTransitionGroupFeatures.Id.NodePep.IsDecoy)
                         decoyScores.Add(currentScore);
                     else
                     {
                         targetScores.Add(currentScore);
                         if (nextFeatures != null)
-                            secondBestScores.Add(GetScore(calculatorWeights, nextFeatures));
+                            secondBestScores.Add(GetScore(calculatorParams, nextFeatures));
                     }
                 }
             }
@@ -1027,11 +1036,15 @@ namespace pwiz.Skyline.SettingsUI
             /// <summary>
             /// Calculate the score of a set of features given an array of weighting coefficients.
             /// </summary>
-            private static double GetScore(IList<double> weights, PeakGroupFeatures peakGroupFeatures)
+            private static double GetScore(IList<double> weights, PeakGroupFeatures peakGroupFeatures, double bias)
             {
                 // TODO: Can we avoid this allocation?  Why are features floats sometimes and doubles at other times?
-                return MProphetPeakScoringModel.CalcLinearScore(ToDoubles(peakGroupFeatures.Features),
-                                                                weights, 0);
+                return LinearModelParams.Score(ToDoubles(peakGroupFeatures.Features), weights, bias);
+            }
+
+            private static double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures)
+            {
+                return GetScore(parameters.Weights, peakGroupFeatures, parameters.Bias);
             }
         }
 

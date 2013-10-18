@@ -21,9 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -47,9 +49,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         /// <param name="targets">Scores for positive targets</param>
         /// <param name="decoys">Scores for null distribution</param>
-        /// <param name="weights">Initial weights.</param>
+        /// <param name="initParameters">Initial model parameters</param>
         /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
-        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, double[] weights, bool includeSecondBest = false);
+        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false);
+
+        /// <summary>
+        /// Scoring function for the model
+        /// </summary>
+        double Score(IList<double> features);
 
         /// <summary>
         /// Mean of score values for decoy data.
@@ -72,16 +79,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         bool UsesSecondBest { get; }
 
         /// <summary>
-        /// Weighting coefficients for each calculator in the PeakFeatureCalculators list.
-        /// Null if not trained yet.
+        /// Parameter structure for the model, including weights and bias
         /// </summary>
-        IList<double> Weights { get; }
+        LinearModelParams Parameters { get;  }
     }
 
     public abstract class PeakScoringModelSpec : XmlNamedElement, IPeakScoringModel, IValidating
     {
-        private ReadOnlyCollection<double> _weights;
-
         protected PeakScoringModelSpec()
         {
             UsesDecoys = true;
@@ -95,21 +99,130 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
+        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false);
+        public double Score(IList<double> features)
+        {
+            return Parameters.Score(features);
+        }
+        public double DecoyMean { get; protected set; }
+        public double DecoyStdev { get; protected set; }
+        public bool UsesDecoys { get; protected set; }
+        public bool UsesSecondBest { get; protected set; }
+        public LinearModelParams Parameters { get; protected set; }
+
+        public virtual void Validate()
+        {
+        }
+    }
+
+    public interface IModelParams
+    {
+        double Score(IList<double> features);
+    }
+
+    public class LinearModelParams : Immutable, IModelParams
+    {
+        private ReadOnlyCollection<double> _weights;
+
+        public LinearModelParams(int numWeights)
+        {
+            Weights = new List<double>(numWeights);
+            Bias = 0;
+        }
+
+        public LinearModelParams(IList<double> weights, double bias = 0)
+        {
+            Weights = weights;
+            Bias = bias;
+        }
+
         public IList<double> Weights
         {
             get { return _weights; }
             protected set { _weights = MakeReadOnly(value); }
         }
-        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, double[] weights, bool includeSecondBest = false);
-        public abstract double Score(double[] features);
-        public double DecoyMean { get; protected set; }
-        public double DecoyStdev { get; protected set; }
-        public bool UsesDecoys { get; protected set; }
-        public bool UsesSecondBest { get; protected set; }
 
-        public virtual void Validate()
+        public double Bias { get; set; }
+
+        public static double Score(IList<double> features, IList<double> weights, double bias)
         {
+            if (features.Count != weights.Count)
+            {
+                throw new InvalidDataException(string.Format(Resources.LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_,
+                                               features.Count, weights.Count));
+            }
+            double score = bias;
+            for (int i = 0; i < features.Count; ++i)
+            {
+                if (!double.IsNaN(weights[i]))
+                    score += weights[i] * features[i];
+            }
+            return score;
         }
+
+        public static double Score(IList<double> features, LinearModelParams parameters)
+        {
+            return parameters.Score(features);
+        }
+
+        public double Score(IList<double> features)
+        {
+            return Score(features, Weights, Bias);
+        }
+
+        /// <summary>
+        /// Return a parameter set rescaled so that the null distribution has mean zero and standard deviation 1.
+        /// </summary>
+        /// <param name="mean"> The current null distribution mean.</param>
+        /// <param name="standardDev"> The current null distribution standard deviation.</param>
+        /// <returns></returns>
+        public LinearModelParams RescaleParameters(double mean, double standardDev)
+        {
+            if (double.IsNaN(mean) || double.IsNaN(standardDev) || standardDev == 0)
+            {
+                throw new InvalidDataException(string.Format(Resources.LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_));
+            }
+            return ChangeProp(ImClone(this), im =>
+                {
+                    var weights = Weights.Select(t => t/standardDev).ToList();
+                    double bias = (Bias - mean) / standardDev;
+                    im.Weights = weights;
+                    im.Bias = bias;
+                });
+
+        }
+
+        #region object overrides
+
+        protected bool Equals(LinearModelParams other)
+        {
+            if (Weights.Count != other.Weights.Count)
+                return false;
+            for (int i = 0; i < Weights.Count; ++i)
+            {
+                if (Weights[i] != other.Weights[i])
+                    return false;
+            }
+            return Bias == other.Bias;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((LinearModelParams) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (_weights.GetHashCode()*397) ^ Bias.GetHashCode();
+            }
+        }
+
+        #endregion
     }
 
     public interface IPeakFeatureCalculator
@@ -252,27 +365,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         private static readonly IPeakFeatureCalculator[] CALCULATORS =  new IPeakFeatureCalculator[]
         {
+            // Intensity, retention time, library dotp
             new MQuestIntensityCalc(),
             new MQuestRetentionTimePredictionCalc(), 
             new MQuestIntensityCorrelationCalc(), 
-            new MQuestReferenceCorrelationCalc(),
-            new NextGenIsotopeDotProductCalc(), 
-            new NextGenProductMassErrorCalc(),
-            new NextGenPrecursorMassErrorCalc(),
 
-            // Detail feature calculators
-            new MQuestWeightedShapeCalc(), 
-            new MQuestWeightedCoElutionCalc(),  
-            new MQuestWeightedReferenceShapeCalc(), 
-            new MQuestWeightedReferenceCoElutionCalc(), 
-            new NextGenCrossWeightedShapeCalc(), 
-            new NextGenSignalNoiseCalc(),
-
-            // Legacy calculators
-            //new LegacyLogUnforcedAreaCalc(),  // This one produces scores that are colinear with MQuestIntensityCalc.
+            // Shape-based and related calculators
             new LegacyUnforcedCountScoreCalc(),
+            new MQuestWeightedShapeCalc(), 
+            new MQuestWeightedCoElutionCalc(), 
+            new NextGenSignalNoiseCalc(),
+            new NextGenProductMassErrorCalc(),
+            new LegacyIdentifiedCountCalc(),
+
+            // Reference standard calculators
+            new MQuestReferenceCorrelationCalc(),
+            new MQuestWeightedReferenceShapeCalc(), 
+            new MQuestWeightedReferenceCoElutionCalc(),
             new LegacyUnforcedCountScoreStandardCalc(),
-            new LegacyIdentifiedCountCalc(), 
+
+            // Precursor calculators
+            new NextGenCrossWeightedShapeCalc(),
+            new NextGenPrecursorMassErrorCalc(),
+            new NextGenIsotopeDotProductCalc() 
         };
 
         public static IEnumerable<IPeakFeatureCalculator> Calculators

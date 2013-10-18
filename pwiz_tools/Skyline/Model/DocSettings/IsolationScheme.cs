@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -96,7 +97,12 @@ namespace pwiz.Skyline.Model.DocSettings
             WindowsPerScan = windowsPerScan;
             DoValidate();
         }
-        
+
+        public bool IsInRangeMz(double mz)
+        {
+            return FromResults || PrespecifiedIsolationWindows.Select(window => window.Contains(mz)).Any();
+        }
+
         /// <summary>
         /// Returns true if target is determined from results.
         /// </summary>

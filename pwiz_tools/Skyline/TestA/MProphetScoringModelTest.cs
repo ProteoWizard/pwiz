@@ -45,43 +45,44 @@ namespace pwiz.SkylineTestA
         {
             // This is the MProphet gold standard data file.  See "Supplementary Data 1" from
             // http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html#/supplementary-information
+            // Weights have been normalized (x 13.30133906)
             new FileWeights
             {
                 _fileName = "nmeth.1584-S2.csv",         // Not L10N
                 _weights = new[]
                 {
-                    0.0573577,
-                    0.0186701,
-                    0.7560886,
-                    0.6442409,
-                    -0.0082169,
-                    -0.0279835,
-                    0.0937792,
-                    -0.0004191 
+                    0.7629338,
+                    0.2483368,
+                    10.05699083,
+                    8.5692666,
+                    -0.1092953,
+                    -0.3722180,
+                    1.2473886,
+                    -0.0055748 
                 }
             },
-
+            // Weights have been normalized (x 15.87149397)
             new FileWeights
             {
                 _fileName = "testfile-no-yseries.csv",   // Not L10N 
                 _weights = new[]
                 {
-                    0.0931534,
-                    -0.0092253,
-                    -0.3525613,
-                    0.0767871,
-                    0.1174948,
-                    -0.102001,
-                    -0.04873,
-                    -0.6520907,
-                    -0.0504803,
-                    0.0072104,
-                    -0.0006159,
-                    -0.3478945,
-                    0.0303048,
-                    -0.0272685,
-                    0.1760182,
-                    0.5029511
+                    1.4784183,
+                    -0.1464128,
+                    -5.5954260,
+                    1.2186721,
+                    1.8647355,
+                    -1.6188369,
+                    -0.7733836,
+                    -10.3491945,
+                    -0.8011623,
+                    0.1144341,
+                    -0.0097754,
+                    -5.5213603,
+                    0.4809613,
+                    -0.4327720,
+                    2.7935483,
+                    7.9822315
                 }
             }
         };
@@ -106,10 +107,10 @@ namespace pwiz.SkylineTestA
 
                 // Calculate weights for peak features.
                 var scoringModel = new MProphetPeakScoringModel("mProphet", fileWeights._weights);    // Not L10N
-                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(), fileWeights._weights);
-                Assert.AreEqual(scoringModel.Weights.Count, fileWeights._weights.Length);
-                for (int i = 0; i < scoringModel.Weights.Count; i++)
-                    Assert.AreEqual(fileWeights._weights[i], scoringModel.Weights[i], 1e-7);
+                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(), new LinearModelParams(fileWeights._weights));
+                Assert.AreEqual(scoringModel.Parameters.Weights.Count, fileWeights._weights.Length);
+                for (int i = 0; i < scoringModel.Parameters.Weights.Count; i++)
+                    Assert.AreEqual(fileWeights._weights[i], scoringModel.Parameters.Weights[i], 1e-7);
             }
         }
 

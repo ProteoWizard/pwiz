@@ -5990,19 +5990,31 @@ Are you sure you want to continue?</value>
   <data name="MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
     <value>Attempted to score a peak with {0} features using a model with {1} trained scores.</value>
   </data>
-  <data name="NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_Mass_Error" xml:space="preserve">
-    <value>Product Mass Error</value>
-  </data>
-  <data name="NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_Mass_Error" xml:space="preserve">
-    <value>Precursor Mass Error</value>
-  </data>
-  <data name="NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Isotope_Dot_Product" xml:space="preserve">
-    <value>Isotope Dot Product</value>
-  </data>
   <data name="NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score_" xml:space="preserve">
     <value>Precursor-product shape score.</value>
   </data>
-  <data name="NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_Noise" xml:space="preserve">
-    <value>Signal to Noise</value>
+  <data name="NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product" xml:space="preserve">
+    <value>Precursor isotope dot product</value>
+  </data>
+  <data name="NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise" xml:space="preserve">
+    <value>Signal to noise</value>
+  </data>
+  <data name="NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error" xml:space="preserve">
+    <value>Precursor mass error</value>
+  </data>
+  <data name="NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error" xml:space="preserve">
+    <value>Product mass error</value>
+  </data>
+  <data name="PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_" xml:space="preserve">
+    <value>The document must have imported results in order to train a model.</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
+    <value>Composite Score (Normalized)</value>
+  </data>
+  <data name="LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_" xml:space="preserve">
+    <value>Every calculator in the model either has an unknown value, or takes on only one value.</value>
+  </data>
+  <data name="LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
+    <value>Attempted to score a peak with {0} features using a model with {1} trained scores.</value>
   </data>
 </root>

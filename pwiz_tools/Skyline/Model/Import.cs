@@ -512,7 +512,7 @@ namespace pwiz.Skyline.Model
                         string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__,
                                       precursorMz, nearestMz, deltaMz), lineNum, PrecursorColumn);
                 }
-                else if (!Settings.TransitionSettings.Instrument.IsMeasurable(precursorMz))
+                else if (!Settings.TransitionSettings.IsMeasurablePrecursor(precursorMz))
                 {
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), 4);
                     throw new LineColNumberedIoException(

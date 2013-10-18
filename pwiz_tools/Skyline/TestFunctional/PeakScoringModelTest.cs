@@ -101,8 +101,8 @@ namespace pwiz.SkylineTestFunctional
                     editDlg.Mean = 1;
                     editDlg.Stdev = 2;
                     editDlg.TrainModel();
-                    Assert.AreEqual(1.376, editDlg.Mean);
-                    Assert.AreEqual(0.088, editDlg.Stdev);
+                    Assert.AreEqual(0, editDlg.Mean);
+                    Assert.AreEqual(1, editDlg.Stdev);
                     for (int i = 0; i < editDlg.PeakCalculatorsGrid.RowCount; i++)
                     {
                         editDlg.PeakCalculatorsGrid.SelectRow(i);
@@ -124,62 +124,62 @@ namespace pwiz.SkylineTestFunctional
                 var percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
                 var cellValuesOriginal = new[]
                     {
-                        new[] {"True", calculators[0].Name, (0.0428).ToString(format), (0.1710).ToString(percentFormat)},
+                        new[] {"True", calculators[0].Name, (0.4886).ToString(format), (0.1710).ToString(percentFormat)},
                         new[] {"False", calculators[1].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[2].Name, (0.2340).ToString(format), (0.0408).ToString(percentFormat)},
-                        new[] {"True", calculators[3].Name, (0.3759).ToString(format), (0.1145).ToString(percentFormat)},
-                        new[] {"False", calculators[4].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[5].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[6].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[7].Name, (0.1320).ToString(format), (0.0795).ToString(percentFormat)},
-                        new[] {"True", calculators[8].Name, (-0.0256).ToString(format), (0.1850).ToString(percentFormat)},
-                        new[] {"True", calculators[9].Name, (0.8841).ToString(format), (0.5022).ToString(percentFormat)},
-                        new[] {"True", calculators[10].Name, (0.0234).ToString(format), (-0.2189).ToString(percentFormat)},
-                        new[] {"False", calculators[11].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[12].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[13].Name, (0.0397).ToString(format), (0.0791).ToString(percentFormat)},
-                        new[] {"True", calculators[14].Name, (0.0169).ToString(format), (0.0467).ToString(percentFormat)},
+                        new[] {"True", calculators[2].Name, (2.6711).ToString(format), (0.0408).ToString(percentFormat)},
+                        new[] {"True", calculators[3].Name, (0.4533).ToString(format), (0.0791).ToString(percentFormat)},
+                        new[] {"True", calculators[4].Name, (1.5071).ToString(format), (0.0795).ToString(percentFormat)},
+                        new[] {"True", calculators[5].Name, (-0.2925).ToString(format), (0.1850).ToString(percentFormat)},
+                        new[] {"False", calculators[6].Name, string.Empty, string.Empty},  
+                        new[] {"False", calculators[7].Name, string.Empty, string.Empty},
+                        new[] {"False", calculators[8].Name, string.Empty, string.Empty},                      
+                        new[] {"True", calculators[9].Name, (4.2907).ToString(format), (0.1145).ToString(percentFormat)},
+                        new[] {"True", calculators[10].Name, (10.0902).ToString(format), (0.5022).ToString(percentFormat)},
+                        new[] {"True", calculators[11].Name, (0.2666).ToString(format), (-0.2189).ToString(percentFormat)},
+                        new[] {"True", calculators[12].Name, (0.1933).ToString(format), (0.0467).ToString(percentFormat)},
+                        new[] {"False", calculators[13].Name, string.Empty, string.Empty},
+                        new[] {"False", calculators[14].Name, string.Empty, string.Empty},
                         new[] {"False", calculators[15].Name, string.Empty, string.Empty},
                     };
                 var cellValuesNew = new[]
                     {
-                        new[] {"True", calculators[0].Name, (0.0517).ToString(format), (0.2111).ToString(percentFormat)},
+                        new[] {"True", calculators[0].Name, (0.5569).ToString(format), (0.2111).ToString(percentFormat)},
                         new[] {"False", calculators[1].Name, string.Empty, string.Empty},
                         new[] {"False", calculators[2].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[3].Name, (0.4644).ToString(format), (0.1395).ToString(percentFormat)},
-                        new[] {"False", calculators[4].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[5].Name, string.Empty, string.Empty},
+                        new[] {"False", calculators[3].Name, string.Empty, string.Empty},
+                        new[] {"True", calculators[4].Name, (2.7995).ToString(format), (0.1416).ToString(percentFormat)},
+                        new[] {"True", calculators[5].Name, (-0.5237).ToString(format), (0.2518).ToString(percentFormat)},
                         new[] {"False", calculators[6].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[7].Name, (0.2601).ToString(format), (0.1416).ToString(percentFormat)},
-                        new[] {"True", calculators[8].Name, (-0.0487).ToString(format), (0.2518).ToString(percentFormat)},
-                        new[] {"True", calculators[9].Name, (0.8425).ToString(format), (0.4515).ToString(percentFormat)},
-                        new[] {"True", calculators[10].Name, (0.0344).ToString(format), (-0.2679).ToString(percentFormat)},
-                        new[] {"False", calculators[11].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[12].Name, string.Empty, string.Empty},
+                        new[] {"False", calculators[7].Name, string.Empty, string.Empty},
+                        new[] {"False", calculators[8].Name, string.Empty, string.Empty},
+                        new[] {"True", calculators[9].Name, (4.9975).ToString(format), (0.1395).ToString(percentFormat)},
+                        new[] {"True", calculators[10].Name, (9.0669).ToString(format), (0.4515).ToString(percentFormat)},
+                        new[] {"True", calculators[11].Name, (0.3698).ToString(format), (-0.2679).ToString(percentFormat)},
+                        new[] {"True", calculators[12].Name, (0.2942).ToString(format), (0.0723).ToString(percentFormat)},
                         new[] {"False", calculators[13].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[14].Name, (0.0273).ToString(format), (0.0723).ToString(percentFormat)},
+                        new[] {"False", calculators[14].Name, string.Empty, string.Empty},
                         new[] {"False", calculators[15].Name, string.Empty, string.Empty},
                     };
                 // Verify weights, change name.
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
-                    Assert.AreEqual(1.376, editDlg.Mean);
-                    Assert.AreEqual(0.088, editDlg.Stdev);
+                    Assert.AreEqual(0, editDlg.Mean);
+                    Assert.AreEqual(1, editDlg.Stdev);
                     VerifyCellValues(editDlg, cellValuesOriginal);
                     // Manually uncheck two of the scores
                     editDlg.SetChecked(2, false);
-                    editDlg.SetChecked(13, false);
+                    editDlg.SetChecked(3, false);
                     editDlg.TrainModel(true);
-                    Assert.AreEqual(1.275, editDlg.Mean);
-                    Assert.AreEqual(0.093, editDlg.Stdev);
+                    Assert.AreEqual(0, editDlg.Mean);
+                    Assert.AreEqual(1, editDlg.Stdev);
                     VerifyCellValues(editDlg, cellValuesNew);
                     // Re-check the scores, show that model goes back to normal
                     editDlg.SetChecked(2, true);
-                    editDlg.SetChecked(13, true);
+                    editDlg.SetChecked(3, true);
                     editDlg.TrainModel(true);
-                    Assert.AreEqual(1.376, editDlg.Mean);
-                    Assert.AreEqual(0.088, editDlg.Stdev);
+                    Assert.AreEqual(0, editDlg.Mean);
+                    Assert.AreEqual(1, editDlg.Stdev);
                     VerifyCellValues(editDlg, cellValuesOriginal);
                     editDlg.PeakScoringModelName = "test2"; // Not L10N
                     editDlg.OkDialog();

@@ -67,6 +67,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionFullScan FullScan { get; private set; }
 
+        public bool IsMeasurablePrecursor(double mz)
+        {
+            if (!Instrument.IsMeasurable(mz))
+                return false;
+            return FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz);
+        }
+
         #region Property change methods
 
         public TransitionSettings ChangePrediction(TransitionPrediction prop)

@@ -4178,6 +4178,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Composite Score (Normalized).
+        /// </summary>
+        public static string EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_ {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak count.
         /// </summary>
         public static string EditPeakScoringModelDlg_InitGraphPane_Peak_count {
@@ -7817,6 +7826,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Every calculator in the model either has an unknown value, or takes on only one value..
+        /// </summary>
+        public static string LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_ {
+            get {
+                return ResourceManager.GetString("LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_u" +
+                        "nknown_value__or_takes_on_only_one_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempted to score a peak with {0} features using a model with {1} trained scores..
+        /// </summary>
+        public static string LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_ {
+            get {
+                return ResourceManager.GetString("LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model" +
+                        "_with__1__trained_scores_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}, line {1}..
         /// </summary>
         public static string LineColNumberedIoException_FormatMessage__0___line__1__ {
@@ -8806,38 +8835,39 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Isotope Dot Product.
+        ///   Looks up a localized string similar to Precursor isotope dot product.
         /// </summary>
-        public static string NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Isotope_Dot_Product {
+        public static string NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product {
             get {
-                return ResourceManager.GetString("NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Isotope_Dot_Product", resourceCulture);
+                return ResourceManager.GetString("NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_p" +
+                        "roduct", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor Mass Error.
+        ///   Looks up a localized string similar to Precursor mass error.
         /// </summary>
-        public static string NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_Mass_Error {
+        public static string NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error {
             get {
-                return ResourceManager.GetString("NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_Mass_Error", resourceCulture);
+                return ResourceManager.GetString("NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Product Mass Error.
+        ///   Looks up a localized string similar to Product mass error.
         /// </summary>
-        public static string NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_Mass_Error {
+        public static string NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error {
             get {
-                return ResourceManager.GetString("NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_Mass_Error", resourceCulture);
+                return ResourceManager.GetString("NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Signal to Noise.
+        ///   Looks up a localized string similar to Signal to noise.
         /// </summary>
-        public static string NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_Noise {
+        public static string NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise {
             get {
-                return ResourceManager.GetString("NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_Noise", resourceCulture);
+                return ResourceManager.GetString("NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise", resourceCulture);
             }
         }
         
@@ -10422,6 +10452,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeptidePrediction_DoValidate_The_retention_time_window__0__for_a_scheduled_method" +
                         "_based_on_measured_results_must_be_between__1__and__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must have imported results in order to train a model..
+        /// </summary>
+        public static string PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_ha" +
+                        "ve_imported_results_in_order_to_train_a_model_", resourceCulture);
             }
         }
         

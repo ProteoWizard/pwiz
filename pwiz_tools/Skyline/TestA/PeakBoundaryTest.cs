@@ -66,8 +66,10 @@ namespace pwiz.SkylineTestA
         private readonly PeakIdentification[] _csvIdentified2 = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
         private readonly double?[] _csvAreas2 = { 1.586e9, 6.603e8, null, 9.978e8, null, 1.853e10 };
 
-        private readonly string[] _precursorMzs = { "533.294964", "623.29589", "415.866352", "692.868631",
+        private readonly string[] _precursorMzsUs = { "533.294964", "623.29589", "415.866352", "692.868631",
                                                   "462.248179", "634.355888"};
+        private readonly string[] _precursorMzsIntl = { "533,294964", "623,29589", "415,866352", "692,868631",
+                                                  "462,248179", "634,355888"};
         private const string annote = "PrecursorMz";
 
         private readonly double?[] _idMinTime1 = { 32.25,33.02,37.68,21.19,35.93, 33.85,29.29,31.55,37.21,27.02, 25.41,29.55,29.60,25.07,23.14, 29.11 };
@@ -102,6 +104,7 @@ namespace pwiz.SkylineTestA
             // Load the SRM document and relevant files            
             var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             bool isIntl = (TextUtil.CsvSeparator != TextUtil.SEPARATOR_CSV);
+            var precursorMzs = isIntl ? _precursorMzsIntl : _precursorMzsUs;
             var peakBoundaryFileTsv = testFilesDir.GetTestPath(isIntl
                                                                    ? "PeakBoundaryTsvIntl.tsv"
                                                                    : "PeakBoundaryTsv.tsv");
@@ -119,16 +122,16 @@ namespace pwiz.SkylineTestA
             SrmDocument docResults = docContainer.Document;
             // Test Tsv import, looking at first .raw file
             DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
-                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0, _precursorMzs, annote);
+                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0, precursorMzs, annote);
             // Test Tsv import, looking at second .raw file
             DoFileImportTests(docResults, peakBoundaryFileTsv, _precursorCharge,
-                _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1, _precursorMzs, annote);
+                _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1, precursorMzs, annote);
 
             // Test Csv import for local format
             DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
-                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0, _precursorMzs, annote);
+                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0, precursorMzs, annote);
             DoFileImportTests(docResults, peakBoundaryFileCsv, _precursorCharge,
-                _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, _precursorMzs, annote);
+                _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, precursorMzs, annote);
 
             // Test that importing same file twice leads to no change to document the second time
             var docNew = ImportFileToDoc(docResults, peakBoundaryFileTsv);
@@ -393,7 +396,7 @@ namespace pwiz.SkylineTestA
                 if (precursorMzs != null)
                 {
                     Assert.AreEqual(annotations.ListAnnotations().Length, 1);
-                    Assert.AreEqual(annotations.GetAnnotation(annote), _precursorMzs[j]);
+                    Assert.AreEqual(annotations.GetAnnotation(annote), precursorMzs[j]);
                 }
                 else
                     Assert.AreEqual(annotations.ListAnnotations().Length, 0); 

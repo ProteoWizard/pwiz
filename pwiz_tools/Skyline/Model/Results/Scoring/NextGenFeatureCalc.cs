@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenProductMassErrorCalc : MassErrorCalc
     {
-        public NextGenProductMassErrorCalc() : base(Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_Mass_Error) {}
+        public NextGenProductMassErrorCalc() : base(Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error) {}
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenPrecursorMassErrorCalc : MassErrorCalc
     {
-        public NextGenPrecursorMassErrorCalc() : base(Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_Mass_Error) { }
+        public NextGenPrecursorMassErrorCalc() : base(Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error) { }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenIsotopeDotProductCalc : SummaryPeakFeatureCalculator
     {
-        public NextGenIsotopeDotProductCalc() : base(Resources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Isotope_Dot_Product) { }
+        public NextGenIsotopeDotProductCalc() : base(Resources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class NextGenSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
     {
         public NextGenSignalNoiseCalc(string name) : base(name) { }
-        public NextGenSignalNoiseCalc() : base(Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_Noise) { }
+        public NextGenSignalNoiseCalc() : base(Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise) { }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {

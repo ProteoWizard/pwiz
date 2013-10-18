@@ -72,20 +72,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             UsesSecondBest = usesSecondBest;
         }
 
-        private enum FeatureOrder
-        {
-            log_unforced_area,
-            unforced_count_score,
-            unforced_count_score_standard,
-            identified_count
-        };
-
         public override IList<IPeakFeatureCalculator> PeakFeatureCalculators
         {
             get { return _calculators; }
         }
 
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, double[] weights, bool includeSecondBest = false)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false)
         {
             return ChangeProp(ImClone(this), im =>
                 {
@@ -101,20 +93,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         }
                     }
 
-                    im.Weights = new[] {W0, W1, W2, W3};
-                    decoyTransitionGroups.ScorePeaks(im.Weights);
-
-                    im.DecoyMean = decoyTransitionGroups.Mean;
-                    im.DecoyStdev = decoyTransitionGroups.Stdev;
+                    var parameters = new LinearModelParams(new[] {W0, W1, W2, W3});
+                    decoyTransitionGroups.ScorePeaks(parameters.Weights);
+                    parameters.RescaleParameters(decoyTransitionGroups.Mean, decoyTransitionGroups.Stdev);
+                    im.DecoyMean = 0;
+                    im.DecoyStdev = 1;
                 });
-        }
-
-        public override double Score(double[] features)
-        {
-            return Score(features[(int) FeatureOrder.log_unforced_area],
-                         features[(int) FeatureOrder.unforced_count_score],
-                         features[(int) FeatureOrder.unforced_count_score_standard],
-                         features[(int) FeatureOrder.identified_count]);
         }
 
         public static LegacyScoringModel Deserialize(XmlReader reader)

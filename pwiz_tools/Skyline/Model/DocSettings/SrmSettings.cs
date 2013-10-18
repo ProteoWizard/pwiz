@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private bool IsMeasurable(double precursorMass, int charge)
         {
             double precursorMz = SequenceMassCalc.GetMZ(precursorMass, charge);
-            return TransitionSettings.Instrument.IsMeasurable(precursorMz);
+            return TransitionSettings.IsMeasurablePrecursor(precursorMz);
         }
 
         public bool LibrariesContain(string sequenceMod, int charge)
@@ -1511,9 +1511,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 DiffExplicit = true;
 
             // Change transition groups if precursor charges or heavy group
-            // existence changed
+            // existence changed, or if the IsolationScheme range changed
+            var isolationRangesNew = newTran.FullScan.IsolationScheme == null ? null : newTran.FullScan.IsolationScheme.PrespecifiedIsolationWindows;
+            var isolationRangesOld = oldTran.FullScan.IsolationScheme == null ? null : oldTran.FullScan.IsolationScheme.PrespecifiedIsolationWindows;
             bool diffInstrumentRange = newTran.Instrument.MinMz != oldTran.Instrument.MinMz ||
-                                       newTran.Instrument.MaxMz != oldTran.Instrument.MaxMz;
+                                       newTran.Instrument.MaxMz != oldTran.Instrument.MaxMz ||
+                                       !Equals(isolationRangesNew, isolationRangesOld);
             DiffTransitionGroups = precursorsDiff || diffHeavyMods || diffInstrumentRange;                
 
             // If libraries changed, then transition groups should change whenever

@@ -375,7 +375,7 @@ namespace pwiz.Skyline.Model
                     nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, nodePep, explicitMods, SrmSettingsDiff.ALL);
 
                     // Make sure it is measurable before adding it
-                    if (settings.TransitionSettings.Instrument.IsMeasurable(nodeGroupMatch.PrecursorMz))
+                    if (settings.TransitionSettings.IsMeasurablePrecursor(nodeGroupMatch.PrecursorMz))
                     {
                         listGroups.Add(nodeGroupMatch);
                         addedGroups = true;

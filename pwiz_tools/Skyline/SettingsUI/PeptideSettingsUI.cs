@@ -744,6 +744,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboPeakScoringModel_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if ((_driverPeakScoringModel.EditCurrentSelected() || _driverPeakScoringModel.AddItemSelected()) &&
+                _parent.DocumentUI.Settings.MeasuredResults == null)
+            {
+                MessageDlg.Show(this, Resources.PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_);
+                return;
+            }
             _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
         }
 
