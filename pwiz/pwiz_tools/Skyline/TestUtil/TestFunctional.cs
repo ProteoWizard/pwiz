@@ -429,10 +429,26 @@ namespace pwiz.SkylineTestUtil
                       {
                           var dlg = new PauseAndContinueForm(description) {Left = SkylineWindow.Left};
                           const int spacing = 15;
-                          if (SkylineWindow.Top > dlg.Height + spacing)
+                          var screen = Screen.FromControl(SkylineWindow);
+                          if (SkylineWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
                               dlg.Top = SkylineWindow.Top - dlg.Height - spacing;
-                          else
+                          else if (SkylineWindow.Bottom + dlg.Height + spacing < screen.WorkingArea.Bottom)
                               dlg.Top = SkylineWindow.Bottom + spacing;
+                          else
+                          {
+                              dlg.Top = SkylineWindow.Top;
+                              if (SkylineWindow.Left > screen.WorkingArea.Top + dlg.Width + spacing)
+                                  dlg.Left = SkylineWindow.Left - dlg.Width - spacing;
+                              else if (SkylineWindow.Right + dlg.Width + spacing < screen.WorkingArea.Right)
+                                  dlg.Left = SkylineWindow.Right + spacing;
+                              else
+                              {
+                                  // Can't fit on screen without overlap, so put in upper left of screen
+                                  // despite overlap
+                                  dlg.Top = screen.WorkingArea.Top;
+                                  dlg.Left = screen.WorkingArea.Left;
+                              }
+                          }
                           dlg.FormClosed += PauseAndContinue_Closed;
                           dlg.Show(SkylineWindow);
                       });

@@ -47,7 +47,6 @@
             // btnOk
             // 
             resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Name = "btnOk";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);

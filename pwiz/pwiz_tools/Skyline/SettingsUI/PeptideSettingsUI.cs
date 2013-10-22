@@ -762,6 +762,12 @@ namespace pwiz.Skyline.SettingsUI
             cbUseMeasuredRT.Checked = use;
         }
 
+        public bool IsUseMeasuredRT
+        {
+            get { return cbUseMeasuredRT.Checked; }
+            set { cbUseMeasuredRT.Checked = value; }
+        }
+
         public void ShowBuildBackgroundProteomeDlg()
         {
             CheckDisposed();

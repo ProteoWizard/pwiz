@@ -278,24 +278,26 @@ namespace pwiz.Skyline.EditUI
                 cbPreferLarger.Checked = false;
         }
 
+        #region Functional Test Support
+
         public int MinTransitions
         {
             get { return Convert.ToInt32(textMinTransitions.Text); }
             set { textMinTransitions.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        #region Functional Test Support
-        public string MinPeptides
+        public int MinPeptides
         {
-            get { return textMinPeptides.Text; }
-            set { textMinPeptides.Text = value; }
+            get { return int.Parse(textMinPeptides.Text); }
+            set { textMinPeptides.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        public string MinPeakFoundRatio
+        public double MinPeakFoundRatio
         {
-            get { return textMinPeakFoundRatio.Text; }
-            set { textMinPeakFoundRatio.Text = value; }
+            get { return double.Parse(textMinPeakFoundRatio.Text); }
+            set { textMinPeakFoundRatio.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
+
         #endregion
     }
 }

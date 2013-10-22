@@ -49,7 +49,7 @@ namespace TestRunner
                 const string commandLineOptions =
                     "?;/?;-?;help;" +
                     "test;skip;filter;" +
-                    "loop=0;repeat=1;random=on;offscreen=on;multi=1;" +
+                    "loop=0;repeat=1;random=on;offscreen=on;demo=off;multi=1;" +
                     "clipboardcheck=off;profile=off;vendors=on;" +
                     "log=TestRunner.log;report=TestRunner.log";
                 var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -140,6 +140,7 @@ namespace TestRunner
             var program = skyline.GetType("pwiz.Skyline.Program");
             program.GetMethod("set_StressTest").Invoke(null, new object[] { true });
             program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { commandLineArgs.ArgAsBool("offscreen") });
+            program.GetMethod("set_DemoMode").Invoke(null, new object[] { commandLineArgs.ArgAsBool("demo") });
             program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !commandLineArgs.ArgAsBool("vendors") });
             program.GetMethod("set_NoSaveSettings").Invoke(null, new object[] { true });
             program.GetMethod("set_UnitTestTimeoutMultiplier").Invoke(null, new object[] { (int)commandLineArgs.ArgAsLong("multi") });
@@ -611,6 +612,10 @@ Here is a list of recognized arguments:
                                     
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
                                     from flashing on the desktop during a test run.
+
+    demo=[on|off]                   Set demo=on to pause slightly at PauseForScreenshot() calls
+                                    maximize the main window and show all-chromatograms graph
+                                    in lower-right corner
 
     multi=[n]                       Multiply timeouts in unit tests by a factor of ""n"".
                                     This is necessary when running multiple instances of 

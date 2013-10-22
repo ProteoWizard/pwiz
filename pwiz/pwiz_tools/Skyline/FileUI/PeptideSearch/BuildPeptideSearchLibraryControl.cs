@@ -72,7 +72,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public Library DocLib { get; private set; }
         private LibrarySpec DocLibrarySpec { get; set; }
 
-        public bool FilterForDocumentPeptides { get { return cbFilterForDocumentPeptides.Checked; } }
+        public bool FilterForDocumentPeptides
+        {
+            get { return cbFilterForDocumentPeptides.Checked; }
+            set { cbFilterForDocumentPeptides.Checked = value; }
+        }
 
         private string[] _searchFileNames = new string[0];
         private string[] SearchFileNames
@@ -140,6 +144,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void AddSearchFiles(IEnumerable<string> fileNames)
         {
             SearchFileNames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFileNames, fileNames);
+        }
+
+        public double CutOffScore
+        {
+            get { return double.Parse(textCutoff.Text); }
+            set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public bool BuildPeptideSearchLibrary(CancelEventArgs e)

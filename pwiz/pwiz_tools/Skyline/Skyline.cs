@@ -1968,36 +1968,35 @@ namespace pwiz.Skyline
 
         private void defaultToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            defaultTextToolStripMenuItem.Checked = true;
-            largeToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
-            ChangeTextSize();
+            ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
         }
 
         private void largeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            largeToolStripMenuItem.Checked = true;
-            defaultTextToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
-            ChangeTextSize();
+            ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
         }
 
         private void extraLargeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            extraLargeToolStripMenuItem.Checked = true;
-            defaultTextToolStripMenuItem.Checked = largeToolStripMenuItem.Checked = false;
-            ChangeTextSize();
+            ChangeTextSize(TreeViewMS.XLRG_TEXT_FACTOR);
         }
 
-        private void ChangeTextSize()
+        public double TargetsTextFactor
         {
-            if (largeToolStripMenuItem.Checked)
-                Settings.Default.TextZoom = TreeViewMS.LRG_TEXT_FACTOR;
-            else if (extraLargeToolStripMenuItem.Checked)
-                Settings.Default.TextZoom = TreeViewMS.XLRG_TEXT_FACTOR;
-            else
+            get { return Settings.Default.TextZoom; }
+            set
             {
-                defaultTextToolStripMenuItem.Checked = true;
-                Settings.Default.TextZoom = TreeViewMS.DEFAULT_TEXT_FACTOR;
+                Settings.Default.TextZoom = value;
+                largeToolStripMenuItem.Checked = (value == TreeViewMS.LRG_TEXT_FACTOR);
+                extraLargeToolStripMenuItem.Checked = (value == TreeViewMS.XLRG_TEXT_FACTOR);
+                defaultTextToolStripMenuItem.Checked = (!largeToolStripMenuItem.Checked &&
+                                                        !extraLargeToolStripMenuItem.Checked);
             }
+        }
+
+        public void ChangeTextSize(double textFactor)
+        {
+            TargetsTextFactor = textFactor;
             SequenceTree.OnTextZoomChanged();
         }
 

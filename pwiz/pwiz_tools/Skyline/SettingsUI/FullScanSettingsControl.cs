@@ -115,10 +115,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public string Peaks
+        public int Peaks
         {
-            get { return textPrecursorIsotopeFilter.Text; }
-            set { textPrecursorIsotopeFilter.Text = value; }
+            get { return int.Parse(textPrecursorIsotopeFilter.Text); }
+            set { textPrecursorIsotopeFilter.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public RetentionTimeFilterType RetentionTimeFilterType
@@ -722,6 +722,11 @@ namespace pwiz.Skyline.SettingsUI
                     throw new ArgumentException(Resources.FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType, "retentionTimeFilterType"); // Not L10N
             }
             tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentUICulture);
+        }
+
+        public double TimeAroundMs2Ids
+        {
+            get { return double.Parse(tbxTimeAroundMs2Ids.Text); }
         }
 
         public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,

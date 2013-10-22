@@ -867,6 +867,11 @@ namespace pwiz.Skyline
 
         private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
         {
+            ShowSpectrumProperties();
+        }
+
+        public void ShowSpectrumProperties()
+        {
             using (var dlg = new SpectrumChartPropertyDlg())
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -1301,19 +1306,34 @@ namespace pwiz.Skyline
 
         private void legendChromContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowChromatogramLegend = legendChromContextMenuItem.Checked;
+            ShowChromatogramLegends(legendChromContextMenuItem.Checked);
+        }
+
+        public void ShowChromatogramLegends(bool show)
+        {
+            Settings.Default.ShowChromatogramLegend = show;
             UpdateChromGraphs();
         }
 
         private void massErrorContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowMassError = massErrorContextMenuItem.Checked;
+            ShowMassErrors(massErrorContextMenuItem.Checked);
+        }
+
+        public void ShowMassErrors(bool show)
+        {
+            Settings.Default.ShowMassError = show;
             UpdateChromGraphs();
         }
 
         private void peakBoundariesContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowPeakBoundaries = peakBoundariesContextMenuItem.Checked;
+            ShowPeakBoundaries(peakBoundariesContextMenuItem.Checked);
+        }
+
+        public void ShowPeakBoundaries(bool show)
+        {
+            Settings.Default.ShowPeakBoundaries = show;
             UpdateChromGraphs();
         }
 
@@ -1375,19 +1395,34 @@ namespace pwiz.Skyline
 
         private void peptideIDTimesContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowPeptideIdTimes = idTimesMatchingContextMenuItem.Checked;
+            ShowPeptideIDTimes(idTimesMatchingContextMenuItem.Checked);
+        }
+
+        public void ShowPeptideIDTimes(bool show)
+        {
+            Settings.Default.ShowPeptideIdTimes = show;
             UpdateChromGraphs();
         }
 
         private void alignedPeptideIDTimesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowAlignedPeptideIdTimes = idTimesAlignedContextMenuItem.Checked;
+            ShowAlignedPeptideIDTimes(idTimesAlignedContextMenuItem.Checked);
+        }
+
+        public void ShowAlignedPeptideIDTimes(bool show)
+        {
+            Settings.Default.ShowAlignedPeptideIdTimes = show;
             UpdateChromGraphs();
         }
 
         private void peptideIDTimesFromOtherRunsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowUnalignedPeptideIdTimes = idTimesOtherContextMenuItem.Checked;
+            ShowOtherRunPeptideIDTimes(idTimesOtherContextMenuItem.Checked);
+        }
+
+        public void ShowOtherRunPeptideIDTimes(bool show)
+        {
+            Settings.Default.ShowUnalignedPeptideIdTimes = show;
             UpdateChromGraphs();
         }
 
@@ -1834,6 +1869,11 @@ namespace pwiz.Skyline
         }
 
         private void chromPropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowChromatogramProperties();
+        }
+
+        public void ShowChromatogramProperties()
         {
             using (var dlg = new ChromChartPropertyDlg())
             {

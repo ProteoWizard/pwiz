@@ -19,6 +19,7 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -27,44 +28,52 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class SpectrumChartPropertyDlg : FormEx
     {
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
-
         public SpectrumChartPropertyDlg()
         {
             InitializeComponent();
-
-            _helper = new MessageBoxHelper(this);
 
             textLineWidth.Text = Settings.Default.SpectrumLineWidth.ToString(CultureInfo.CurrentCulture);
             textFontSize.Text = Settings.Default.SpectrumFontSize.ToString(CultureInfo.CurrentCulture);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
-            {
-                _clickedOk = false; // Reset in case of failure.
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
 
-                int lineWidth;
-                if (!_helper.ValidateNumberTextBox(e, textLineWidth, 1, 5, out lineWidth))
-                    return;
+            int lineWidth;
+            if (!helper.ValidateNumberTextBox(e, textLineWidth, 1, 5, out lineWidth))
+                return;
 
-                int fontSize;
-                if (!_helper.ValidateNumberTextBox(e, textFontSize, 6, 128, out fontSize))
-                    return;
+            int fontSize;
+            if (!helper.ValidateNumberTextBox(e, textFontSize, 6, 128, out fontSize))
+                return;
 
-                Settings.Default.SpectrumLineWidth = lineWidth;
-                Settings.Default.SpectrumFontSize = fontSize;
-            }
-
-            base.OnClosing(e);
+            Settings.Default.SpectrumLineWidth = lineWidth;
+            Settings.Default.SpectrumFontSize = fontSize;
+            DialogResult = DialogResult.OK;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
+
+        #region Functional test support
+
+        public int LineWidth
+        {
+            get { return int.Parse(textLineWidth.Text); }
+            set { textLineWidth.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int FontSize
+        {
+            get { return int.Parse(textFontSize.Text); }
+            set { textFontSize.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        #endregion
     }
 }

@@ -335,17 +335,19 @@ namespace pwiz.Skyline.FileUI
         }
 
         #region Functional Test Support
+
         public bool LimitNoiseTime
         {
             get { return cbxLimitNoiseTime.Checked; }
             set { cbxLimitNoiseTime.Checked = value; }
         }
 
-        public string NoiseTimeRange
+        public double NoiseTimeRange
         {
-            get { return tbxNoiseTimeRange.Text; }
-            set { tbxNoiseTimeRange.Text = value; }
+            get { return double.Parse(tbxNoiseTimeRange.Text); }
+            set { tbxNoiseTimeRange.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
+
         #endregion
 
         /// <summary>

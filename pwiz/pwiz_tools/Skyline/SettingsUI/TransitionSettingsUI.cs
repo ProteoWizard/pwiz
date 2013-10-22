@@ -139,42 +139,32 @@ namespace pwiz.Skyline.SettingsUI
 
         public FullScanAcquisitionMethod AcquisitionMethod
         {
-            get
-            {
-                return FullScanSettingsControl.AcquisitionMethod;
-            }
-
+            get { return FullScanSettingsControl.AcquisitionMethod; }
             set { FullScanSettingsControl.AcquisitionMethod = value; }
         }
 
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
-            get
-            {
-                return FullScanSettingsControl.ProductMassAnalyzer;
-            }
-
+            get { return FullScanSettingsControl.ProductMassAnalyzer; }
             set { FullScanSettingsControl.ProductMassAnalyzer = value; }
         }
 
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
-            get
-            {
-                return FullScanSettingsControl.PrecursorIsotopesCurrent;
-            }
-
+            get { return FullScanSettingsControl.PrecursorIsotopesCurrent; }
             set { FullScanSettingsControl.PrecursorIsotopesCurrent = value; }
         }
 
         public FullScanMassAnalyzerType PrecursorMassAnalyzer
         {
-            get
-            {
-                return FullScanSettingsControl.PrecursorMassAnalyzer;
-            }
-
+            get { return FullScanSettingsControl.PrecursorMassAnalyzer; }
             set { FullScanSettingsControl.PrecursorMassAnalyzer = value; }
+        }
+
+        public RetentionTimeFilterType RetentionTimeFilterType
+        {
+            get { return FullScanSettingsControl.RetentionTimeFilterType; }
+            set { FullScanSettingsControl.RetentionTimeFilterType = value; }
         }
 
         protected override void OnShown(EventArgs e)
@@ -682,22 +672,28 @@ namespace pwiz.Skyline.SettingsUI
             set { cbAutoSelect.Checked = value; }
         }
 
-        public string Peaks
+        public double IonMatchTolerance
+        {
+            get { return double.Parse(textTolerance.Text); }
+            set { textTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int Peaks
         {
             get { return FullScanSettingsControl.Peaks; }
             set { FullScanSettingsControl.Peaks = value; }
         }
 
-        public string MinTime
+        public double MinTime
         {
-            get { return textMinTime.Text; }
-            set { textMinTime.Text = value; }
+            get { return double.Parse(textMinTime.Text); }
+            set { textMinTime.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        public string MaxTime
+        public double MaxTime
         {
-            get { return textMaxTime.Text; }
-            set { textMaxTime.Text = value; }
+            get { return double.Parse(textMaxTime.Text); }
+            set { textMaxTime.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public int MaxInclusions
