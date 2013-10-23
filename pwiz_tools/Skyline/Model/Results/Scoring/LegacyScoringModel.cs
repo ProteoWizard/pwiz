@@ -52,11 +52,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private readonly ReadOnlyCollection<IPeakFeatureCalculator> _calculators;
 
         public LegacyScoringModel()
-            : this(DEFAULT_NAME, double.NaN, double.NaN)
+            : this(DEFAULT_NAME)
         {
         }
 
-        public LegacyScoringModel(string name, double decoyMean, double decoyStdev, bool usesDecoys = true, bool usesSecondBest = false) : base(name)
+        public LegacyScoringModel(string name, bool usesDecoys = true, bool usesSecondBest = false) : base(name)
         {
             _calculators = new ReadOnlyCollection<IPeakFeatureCalculator>(new List<IPeakFeatureCalculator>
                 {
@@ -66,8 +66,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     new LegacyIdentifiedCountCalc()
                 });
 
-            DecoyMean = decoyMean;
-            DecoyStdev = decoyStdev;
             UsesDecoys = usesDecoys;
             UsesSecondBest = usesSecondBest;
         }
@@ -96,8 +94,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var parameters = new LinearModelParams(new[] {W0, W1, W2, W3});
                     decoyTransitionGroups.ScorePeaks(parameters.Weights);
                     parameters.RescaleParameters(decoyTransitionGroups.Mean, decoyTransitionGroups.Stdev);
-                    im.DecoyMean = 0;
-                    im.DecoyStdev = 1;
                 });
         }
 

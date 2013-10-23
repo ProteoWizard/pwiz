@@ -71,7 +71,7 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewDriver = new PeakCalculatorGridViewDriver(gridPeakCalculators, bindingPeakCalculators,
                                                             new SortableBindingList<PeakCalculatorWeight>());
 
-            InitGraphPane(zedGraphMProphet.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_);
+            InitGraphPane(zedGraphMProphet.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score);
             InitGraphPane(zedGraphSelectedCalculator.GraphPane);
 
             lblColinearWarning.Visible = false;
@@ -116,9 +116,6 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_originalPeakScoringModel == null)
                 _originalPeakScoringModel = _peakScoringModel;
-
-            textMean.Text = DoubleToString(_peakScoringModel.DecoyMean);
-            textStdev.Text = DoubleToString(_peakScoringModel.DecoyStdev);
 
             decoyCheckBox.Checked = _peakScoringModel.UsesDecoys;
             secondBestCheckBox.Checked = _peakScoringModel.UsesSecondBest;
@@ -193,9 +190,6 @@ namespace pwiz.Skyline.SettingsUI
             }
             gridPeakCalculators.Invalidate();
 
-            // Copy mean and stdev to text boxes.
-            textMean.Text = DoubleToString(_peakScoringModel.DecoyMean);
-            textStdev.Text = DoubleToString(_peakScoringModel.DecoyStdev);
             lblColinearWarning.Visible = _peakScoringModel is MProphetPeakScoringModel && ((MProphetPeakScoringModel)_peakScoringModel).ColinearWarning;
 
             UpdateCalculatorGraph();
@@ -224,14 +218,6 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            double decoyMean;
-            if (!helper.ValidateDecimalTextBox(e, textMean, out decoyMean))
-                return;
-
-            double decoyStdev;
-            if (!helper.ValidateDecimalTextBox(e, textStdev, out decoyStdev))
-                return;
-
             DialogResult = DialogResult.OK;
 
             var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
@@ -241,8 +227,6 @@ namespace pwiz.Skyline.SettingsUI
                     name,
                     mProphetModel.Parameters,
                     mProphetModel.PeakFeatureCalculators,
-                    decoyMean,
-                    decoyStdev,
                     decoyCheckBox.Checked,
                     secondBestCheckBox.Checked,
                     mProphetModel.ColinearWarning);
@@ -252,7 +236,7 @@ namespace pwiz.Skyline.SettingsUI
             var legacyModel = _peakScoringModel as LegacyScoringModel;
             if (legacyModel != null)
             {
-                _peakScoringModel = new LegacyScoringModel(name, decoyMean, decoyStdev);
+                _peakScoringModel = new LegacyScoringModel(name);
             }
         }
 
@@ -337,6 +321,7 @@ namespace pwiz.Skyline.SettingsUI
                 zedGraphMProphet.Refresh();
                 return;
             }
+            zedGraphMProphet.GraphPane.Title.Text = Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_;
 
             // Get binned scores for targets and decoys.
             PointPairList targetPoints;
@@ -361,11 +346,8 @@ namespace pwiz.Skyline.SettingsUI
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, secondBestPoints, _secondBestColor);
             graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
 
-            // Graph normal curve if we have values for the decoy mean and stdev.
-            double decoyMean;
-            double decoyStdev;
-            if (double.TryParse(textMean.Text, out decoyMean) &&
-                double.TryParse(textStdev.Text, out decoyStdev))
+            // Graph normal curve if the model is trained
+            if (_peakScoringModel.Parameters != null)
             {
                 // Calculate scale value for normal curve by calculating area of decoy histogram.
                 double yScaleDecoy = 0;
@@ -395,15 +377,15 @@ namespace pwiz.Skyline.SettingsUI
                 yScale *= binWidth;
 
                 // Expand graph range to accomodate the norm curve.
-                min = Math.Min(min, decoyMean - 4*decoyStdev);
-                max = Math.Max(max, decoyMean + 4*decoyStdev);
+                min = Math.Min(min, -4);
+                max = Math.Max(max, 4);
 
                 // Calculate points on the normal curve.
                 PointPairList normalCurve = new PointPairList();
                 double xStep = binWidth/8;
                 for (double x = min; x < max; x += xStep)
                 {
-                    double norm = Statistics.DNorm(x, decoyMean, decoyStdev);
+                    double norm = Statistics.DNorm(x);
                     double y = norm*yScale;
                     normalCurve.Add(x, y);
                 }
@@ -801,7 +783,7 @@ namespace pwiz.Skyline.SettingsUI
             
             _peakScoringModel = (comboModel.SelectedIndex == MPROPHET_MODEL_INDEX)
                 ? (IPeakScoringModel) new MProphetPeakScoringModel(ModelName)
-                : new LegacyScoringModel(ModelName, double.NaN, double.NaN, decoyCheckBox.Checked, secondBestCheckBox.Checked);
+                : new LegacyScoringModel(ModelName, decoyCheckBox.Checked, secondBestCheckBox.Checked);
 
             TrainModel(true);
             SetScoringModel(_peakScoringModel);   // update graphs and grid
@@ -834,7 +816,7 @@ namespace pwiz.Skyline.SettingsUI
                         break;
 
                     case SKYLINE_LEGACY_MODEL_INDEX:
-                        SetScoringModel(new LegacyScoringModel(ModelName, double.NaN, double.NaN));
+                        SetScoringModel(new LegacyScoringModel(ModelName));
                         break;
                 }
             }
@@ -857,18 +839,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return textName.Text; }
             set { textName.Text = value; }
-        }
-
-        public double? Mean
-        {
-            get { return string.IsNullOrEmpty(textMean.Text) ? (double?) null : double.Parse(textMean.Text); }
-            set { textMean.Text = value.ToString(); }
-        }
-
-        public double? Stdev
-        {
-            get { return string.IsNullOrEmpty(textStdev.Text) ? (double?) null : double.Parse(textStdev.Text); }
-            set { textStdev.Text = value.ToString(); }
         }
 
         public SimpleGridViewDriver<PeakCalculatorWeight> PeakCalculatorsGrid

@@ -4187,6 +4187,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Train a model to see composite score.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_sc" +
+                        "ore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak count.
         /// </summary>
         public static string EditPeakScoringModelDlg_InitGraphPane_Peak_count {

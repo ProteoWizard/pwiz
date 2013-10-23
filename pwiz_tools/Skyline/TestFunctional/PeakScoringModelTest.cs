@@ -58,8 +58,6 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, string.Empty);
-                    Assert.AreEqual(null, editDlg.Mean);
-                    Assert.AreEqual(null, editDlg.Stdev);
                     var rows = editDlg.PeakCalculatorsGrid.RowCount;
                     Assert.AreEqual(calculators.Length, rows, "Unexpected count of peak calculators");  // Not L10N
                 });
@@ -71,42 +69,17 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.OkDialog();
                 });
 
-                // Test empty mean.
-                RunUI(() =>
-                {
-                    editDlg.PeakScoringModelName = "test1"; // Not L10N
-                    editDlg.Mean = null;
-                });
-                RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
-                {
-                    AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, messageDlg.Message, 1);
-                    messageDlg.OkDialog();
-                });
-
-                // Test empty stdev.
-                RunUI(() =>
-                {
-                    editDlg.Mean = 1;
-                    editDlg.Stdev = null;
-                });
-                RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
-                {
-                    AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, messageDlg.Message, 1);
-                    messageDlg.OkDialog();
-                });
+                RunUI(() => editDlg.PeakScoringModelName = "test1"); // Not L10N
 
                 // Create a model with default values.
                 RunUI(() =>
                 {
-                    editDlg.Mean = 1;
-                    editDlg.Stdev = 2;
                     editDlg.TrainModel();
-                    Assert.AreEqual(0, editDlg.Mean);
-                    Assert.AreEqual(1, editDlg.Stdev);
                     for (int i = 0; i < editDlg.PeakCalculatorsGrid.RowCount; i++)
                     {
                         editDlg.PeakCalculatorsGrid.SelectRow(i);
                     }
+                    Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
                     editDlg.OkDialog();
                 });
                 WaitForClosedForm(editDlg);
@@ -164,23 +137,20 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
-                    Assert.AreEqual(0, editDlg.Mean);
-                    Assert.AreEqual(1, editDlg.Stdev);
                     VerifyCellValues(editDlg, cellValuesOriginal);
+                    Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
                     // Manually uncheck two of the scores
                     editDlg.SetChecked(2, false);
                     editDlg.SetChecked(3, false);
                     editDlg.TrainModel(true);
-                    Assert.AreEqual(0, editDlg.Mean);
-                    Assert.AreEqual(1, editDlg.Stdev);
                     VerifyCellValues(editDlg, cellValuesNew);
+                    Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -13.727219, 1e-5);
                     // Re-check the scores, show that model goes back to normal
                     editDlg.SetChecked(2, true);
                     editDlg.SetChecked(3, true);
                     editDlg.TrainModel(true);
-                    Assert.AreEqual(0, editDlg.Mean);
-                    Assert.AreEqual(1, editDlg.Stdev);
                     VerifyCellValues(editDlg, cellValuesOriginal);
+                    Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
                     editDlg.PeakScoringModelName = "test2"; // Not L10N
                     editDlg.OkDialog();
                 });

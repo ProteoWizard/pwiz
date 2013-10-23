@@ -41,6 +41,11 @@ namespace pwiz.SkylineTestFunctional
         private const string REPORT_EXPECTED_ALL = "ReportExpectedAll.csv";
         private const string REPORT_ACTUAL = "ReportActual.csv";
 
+        /// <summary>
+        /// Set to true to regenerate the comparison files
+        /// </summary>
+        private bool IsSaveAll { get { return false; } }
+
         [TestMethod]
         public void TestReintegrateDlg()
         {
@@ -92,6 +97,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 {
                     ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);
+                    if (IsSaveAll)
+                    {
+                        // For regenerating expected files if things change
+                        ReportToCsv(reportSpec, SkylineWindow.DocumentUI, TestFilesDir.GetTestPath(REPORT_EXPECTED), CultureInfo.GetCultureInfo("en-US"));
+                        ReportToCsv(reportSpec, SkylineWindow.DocumentUI, TestFilesDir.GetTestPathIntl(REPORT_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"));
+                    }
                     AssertEx.FileEquals(docNewActual, docNewExpected);
                 });
             var reintegrateDlgAll = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -105,6 +116,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);
+                if (IsSaveAll)
+                {
+                    // For regenerating expected files if things change
+                    ReportToCsv(reportSpec, SkylineWindow.DocumentUI, TestFilesDir.GetTestPath(REPORT_EXPECTED_ALL), CultureInfo.GetCultureInfo("en-US"));
+                    ReportToCsv(reportSpec, SkylineWindow.DocumentUI, TestFilesDir.GetTestPathIntl(REPORT_EXPECTED_ALL), CultureInfo.GetCultureInfo("fr-FR"));
+                }
                 AssertEx.FileEquals(docNewActual, docNewExpectedAll);
             });
             var reintegrateDlgCutoff = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);

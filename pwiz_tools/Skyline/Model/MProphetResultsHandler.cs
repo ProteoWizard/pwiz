@@ -37,7 +37,6 @@ namespace pwiz.Skyline.Model
     public class MProphetResultsHandler
     {
         private readonly IList<List<double>> _mProphetScores;
-        private readonly IList<List<double>> _zScores;
         private readonly IList<List<double>> _pValues;
         private readonly IList<int> _bestIndices;
         private IList<double> _qValues;
@@ -51,7 +50,6 @@ namespace pwiz.Skyline.Model
             Document = document;
             ScoringModel = scoringModel;
             _mProphetScores = new List<List<double>>();
-            _zScores = new List<List<double>>();
             _pValues = new List<List<double>>();
             _bestIndices = new List<int>();
             _calcs = ScoringModel.PeakFeatureCalculators;
@@ -65,8 +63,6 @@ namespace pwiz.Skyline.Model
         {
             _features = Document.GetPeakFeatures(_calcs, progressMonitor);
             _features = _features.Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any());
-            double mean = ScoringModel.DecoyMean;
-            double stddev = ScoringModel.DecoyStdev;
             var bestPvalues = new List<double>();
             foreach (var transitionGroupFeatures in _features)
             {
@@ -77,9 +73,7 @@ namespace pwiz.Skyline.Model
                     mProphetScoresGroup.Add(ScoringModel.Score(featureValues));
                 }
                 _mProphetScores.Add(mProphetScoresGroup);
-                var zScoresGroup = mProphetScoresGroup.Select(score => (score - mean) / stddev).ToList();
-                var pValuesGroup = zScoresGroup.Select(zscore => 1 - Statistics.PNorm(zscore)).ToList();
-                _zScores.Add(zScoresGroup);
+                var pValuesGroup = mProphetScoresGroup.Select(score => 1 - Statistics.PNorm(score)).ToList();
                 _pValues.Add(pValuesGroup);
                 int bestIndex = mProphetScoresGroup.IndexOf(mProphetScoresGroup.Max());
                 double bestPvalue = pValuesGroup[bestIndex];
@@ -192,7 +186,6 @@ namespace pwiz.Skyline.Model
                     "ProteinName",
                     "PrecursorIsDecoy",
                     "mProphetScore",
-                    "zScore",
                     "pValue",
                     "qValue"
                 };
@@ -220,7 +213,6 @@ namespace pwiz.Skyline.Model
                                           bool includeDecoys)
         {
             var mProphetScores = _mProphetScores[groupNumber];
-            var zScores = _zScores[groupNumber];
             var pValues = _pValues[groupNumber];
             double qValue = _qValues[groupNumber];
             int bestScoresIndex = _bestIndices[groupNumber];
@@ -231,7 +223,7 @@ namespace pwiz.Skyline.Model
             {
                 if (!bestOnly || j == bestScoresIndex)
                     WriteRow(writer, features, peakGroupFeatures, cultureInfo, mProphetScores[j],
-                             zScores[j], pValues[j], qValue);
+                             pValues[j], qValue);
                 ++j;
             }
         }
@@ -241,7 +233,6 @@ namespace pwiz.Skyline.Model
                                      PeakGroupFeatures peakGroupFeatures,
                                      CultureInfo cultureInfo,
                                      double mProphetScore,
-                                     double zScore,
                                      double pValue,
                                      double qValue)
         {
@@ -260,7 +251,6 @@ namespace pwiz.Skyline.Model
                     features.Id.NodePepGroup.Name,
                     Convert.ToString(features.Id.NodePep.IsDecoy ? 1 : 0, cultureInfo),
                     Convert.ToString((float) mProphetScore, cultureInfo),
-                    Convert.ToString((float) zScore, cultureInfo),
                     Convert.ToString((float) pValue, cultureInfo),
                     Convert.ToString((float) qValue, cultureInfo),
                 };

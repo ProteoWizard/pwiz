@@ -59,16 +59,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         double Score(IList<double> features);
 
         /// <summary>
-        /// Mean of score values for decoy data.
-        /// </summary>
-        double DecoyMean { get; }
-
-        /// <summary>
-        /// Standard deviation of score values for decoy data.
-        /// </summary>
-        double DecoyStdev { get; }
-
-        /// <summary>
         /// Was the model trained with a decoy set?
         /// </summary>
         bool UsesDecoys { get; }
@@ -104,8 +94,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return Parameters.Score(features);
         }
-        public double DecoyMean { get; protected set; }
-        public double DecoyStdev { get; protected set; }
         public bool UsesDecoys { get; protected set; }
         public bool UsesSecondBest { get; protected set; }
         public LinearModelParams Parameters { get; protected set; }

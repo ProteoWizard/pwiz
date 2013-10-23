@@ -46,8 +46,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             string name, 
             LinearModelParams parameters,
             IList<IPeakFeatureCalculator> peakFeatureCalculators = null,
-            double decoyMean = 0, 
-            double decoyStdev = 0,
             bool usesDecoys = false,
             bool usesSecondBest = false,
             bool colinearWarning = false)
@@ -55,8 +53,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             SetPeakFeatureCalculators(peakFeatureCalculators ?? DEFAULT_CALCULATORS);
             Parameters = parameters;
-            DecoyMean = decoyMean;
-            DecoyStdev = decoyStdev;
             UsesDecoys = usesDecoys;
             UsesSecondBest = usesSecondBest;
             ColinearWarning = colinearWarning;
@@ -77,8 +73,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             : this(name,
                    new LinearModelParams(weights, bias),
                    peakFeatureCalculators,
-                   decoyMean,
-                   decoyStdev,
                    usesDecoys,
                    usesSecondBest,
                    colinearWarning)
@@ -89,8 +83,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             : base(name)
         {
             SetPeakFeatureCalculators(DEFAULT_CALCULATORS);
-            DecoyMean = double.NaN;
-            DecoyStdev = double.NaN;
             Lambda = 0.4;   // Default from R
             DoValidate();
         }
@@ -174,8 +166,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var parameters = new LinearModelParams(calcWeights);
                     parameters = parameters.RescaleParameters(decoyMean, decoyStdev);
                     im.Parameters = parameters;
-                    im.DecoyMean = 0;
-                    im.DecoyStdev = 1;
                     im.ColinearWarning = colinearWarning;
                     im.UsesSecondBest = includeSecondBest;
                     im.UsesDecoys = decoys.Count > 0;
@@ -295,8 +285,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             if (base.Equals(other) &&
                 Equals(Parameters, other.Parameters) &&
-                DecoyMean.Equals(other.DecoyMean) &&
-                DecoyStdev.Equals(other.DecoyStdev) &&
                 ColinearWarning.Equals(other.ColinearWarning) &&
                 Lambda.Equals(other.Lambda) &&
                 UsesDecoys.Equals(other.UsesDecoys) &&
@@ -327,8 +315,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 int hashCode = base.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Parameters != null ? Parameters.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ DecoyMean.GetHashCode();
-                hashCode = (hashCode * 397) ^ DecoyStdev.GetHashCode();
                 hashCode = (hashCode * 397) ^ UsesDecoys.GetHashCode();
                 hashCode = (hashCode * 397) ^ UsesSecondBest.GetHashCode();
                 hashCode = (hashCode * 397) ^ ColinearWarning.GetHashCode();
@@ -341,8 +327,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private enum ATTR
         {
             // Model
-            decoy_mean,
-            decoy_stdev,
             colinear_warning,
             uses_decoys,
             uses_false_targets,
@@ -358,8 +342,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             // Read tag attributes
             base.ReadXml(reader);
-            DecoyMean = reader.GetDoubleAttribute(ATTR.decoy_mean);
-            DecoyStdev = reader.GetDoubleAttribute(ATTR.decoy_stdev);
             ColinearWarning = reader.GetBoolAttribute(ATTR.colinear_warning);
             // Earlier versions always used decoys only
             UsesDecoys = reader.GetBoolAttribute(ATTR.uses_decoys, true);
@@ -391,8 +373,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             // Write tag attributes
             base.WriteXml(writer);
-            writer.WriteAttribute(ATTR.decoy_mean, DecoyMean);
-            writer.WriteAttribute(ATTR.decoy_stdev, DecoyStdev);
             writer.WriteAttribute(ATTR.colinear_warning, ColinearWarning);
             writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys);
             writer.WriteAttribute(ATTR.uses_false_targets, UsesSecondBest);
