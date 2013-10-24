@@ -253,6 +253,14 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 double scanTime = lexical_cast<double>(value);
                                 scan.set(MS_scan_start_time, scanTime, UO_second);
                             }
+                            else if (name == "SCANS")
+                            {
+                                spectrum.set(MS_peak_list_scans, value);
+                            }
+                            else if (name == "RAWSCANS")
+                            {
+                                spectrum.set(MS_peak_list_raw_scans, value);
+                            }
                             else
 				            {
 					            continue; // ignored attribute
