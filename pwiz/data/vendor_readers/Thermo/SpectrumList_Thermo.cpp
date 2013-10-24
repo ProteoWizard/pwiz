@@ -231,7 +231,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
     {
         if (scanInfo->isConstantNeutralLoss())
         {
-            result->set(MS_analyzer_scan_offset, scanInfo->analyzerScanOffset(), MS_m_z);
+            scan.set(MS_analyzer_scan_offset, scanInfo->analyzerScanOffset(), MS_m_z);
         }
 
         // special handling for non-MS scans
@@ -437,6 +437,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             // isolationWindow
 
             double isolationWidth = 0;
+            const double defaultIsolationWindowLowerOffset = 1.5;
+            const double defaultIsolationWindowUpperOffset = 2.5;
 
             try
             {
@@ -459,14 +461,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             if (msLevel == -1) // precursor ion scan
             {
                 product.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
-                product.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
-                product.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
+                if (isolationWidth != 0)
+                {
+                    product.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
+                    product.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
+                }
             }
             else
             {
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
+                if (isolationWidth != 0)
+                {
+                    precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
+                    precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
+                }
             }
 
             double selectedIonMz = scanInfo->precursorMZ(i); // monoisotopic m/z is preferred
@@ -502,7 +510,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 }
 
                 // if the monoisotopic m/z is outside the isolation window (due to Thermo firmware bug), reset it to isolation m/z
-                if ((selectedIonMz < (isolationMz - isolationWidth)) || (selectedIonMz > (isolationMz + isolationWidth)))
+                if (isolationWidth == 0 && (selectedIonMz < (isolationMz-defaultIsolationWindowLowerOffset)) || (selectedIonMz > (isolationMz+defaultIsolationWindowUpperOffset)))
+                    selectedIonMz = isolationMz;
+                else if ((selectedIonMz < (isolationMz-isolationWidth)) || (selectedIonMz > (isolationMz+isolationWidth)))
                     selectedIonMz = isolationMz;
 
                 // add selected ion m/z (even if it's still equal to isolation m/z)
@@ -522,35 +532,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 {
                     precursor.spectrumID = index_[precursorScanIndex].id;
 
-                    // retrieve the points within the isolation window
-                    /* TODO: figure out why this fails with HRESULT=6 on some files
-                    MassRangePtr massRange = MassRangePtr(new MassRange());
-                    if (isolationWidth == 0)
-                        massRange->low = isolationMz-1.5; massRange->high = isolationMz+2.5;
-                    else
-                    {
-                        massRange->low = isolationMz-isolationWidth;
-                        massRange->high = isolationMz+isolationWidth;
-                    }	
-                    MassListPtr massList = rawfile_->getMassList(precursorScanIndex, "", Cutoff_None, 0, 0, true, MassList_Current, massRange);
-                    double peakIntensity = 0;
-                    if (massList->size() > 0)
-                    {
-                        for (int i=0; i < massList->size(); ++i)
-                            peakIntensity = max(peakIntensity, massList->data()[i].intensity);
-                    }
-                    if (peakIntensity > 0)
-                        selectedIon.set(MS_peak_intensity, peakIntensity, MS_number_of_detector_counts);
-                    */
-
                     if (detailLevel >= DetailLevel_FullMetadata)
                     {
                         // add precursor intensity
                         // retrieve the intensity of the base peak within the isolation window
-                        // TODO: determine correct window around precursor m/z
                         ostringstream massRangeStream;
                         if (isolationWidth == 0)
-                            massRangeStream << setprecision(7) << (isolationMz-1.5) << '-' << (isolationMz+2.5);
+                            massRangeStream << setprecision(7) << (isolationMz-defaultIsolationWindowLowerOffset) << '-' << (isolationMz+defaultIsolationWindowUpperOffset);
                         else
                             massRangeStream << setprecision(7) << (isolationMz-isolationWidth) << '-' << (isolationMz+isolationWidth);
                         double precursorScanTime = rawfile_->rt(index_[precursorScanIndex].scan);
