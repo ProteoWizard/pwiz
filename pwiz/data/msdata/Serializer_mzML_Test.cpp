@@ -97,7 +97,8 @@ void testWriteRead()
         
         if (!zloop) // provoke numpress temp. disable
         {
-            config.binaryDataEncoderConfig.numpressErrorTolerance = .000000001; 
+            config.binaryDataEncoderConfig.numpressLinearErrorTolerance = .000000001; 
+            config.binaryDataEncoderConfig.numpressSlofErrorTolerance = .000000001; 
             testWriteRead(msd, config, diffcfg);
         }
     }

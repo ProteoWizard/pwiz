@@ -151,22 +151,23 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                 break;
             }
             vector<double> unpressed; // for checking excessive accurary loss
+			double numpressErrorTolerance = 0.0;
             switch (config_.numpress) {
                 case Numpress_Linear:
                     byteCount = MSNumpress::encodeLinear(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
-                    if (config_.numpressErrorTolerance) // decompress to check accuracy loss
+                    if ((numpressErrorTolerance=config_.numpressLinearErrorTolerance) > 0) // decompress to check accuracy loss
                         MSNumpress::decodeLinear(numpressed,unpressed); 
                     break;
 
                 case Numpress_Pic:
                     byteCount = MSNumpress::encodePic(data, dataSize, &numpressed[0]);
-                    if (config_.numpressErrorTolerance) // decompress to check accuracy loss
-                        MSNumpress::decodePic(numpressed,unpressed); 
-                    break;
+					numpressErrorTolerance = 0.5; // it's an integer rounding, so always +- 0.5
+					MSNumpress::decodePic(numpressed,unpressed); // but susceptable to overflow, so always check
+                    break; 
 
                 case Numpress_Slof:
                     byteCount = MSNumpress::encodeSlof(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
-                    if (config_.numpressErrorTolerance) // decompress to check accuracy loss
+                    if ((numpressErrorTolerance=config_.numpressSlofErrorTolerance) > 0) // decompress to check accuracy loss
                         MSNumpress::decodeSlof(numpressed,unpressed); 
                     break;
 
@@ -175,7 +176,7 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
             }
             // now check to see if encoding introduces excessive error
             int n=-1;
-            if (config_.numpressErrorTolerance) 
+            if (numpressErrorTolerance) 
             {
                 if (Numpress_Pic == config_.numpress)  // integer rounding, abs accuracy is +- 0.5
                 {
@@ -194,15 +195,15 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                             break;
                         if (!d)
                         {
-                           if (fabs(u) > config_.numpressErrorTolerance)
+                           if (fabs(u) > numpressErrorTolerance)
                                break;
                         }
                         else if (!u)
                         {
-                           if (fabs(d) > config_.numpressErrorTolerance)
+                           if (fabs(d) > numpressErrorTolerance)
                                break;
                         }
-                        else if (fabs(1.0-(d/u)) > config_.numpressErrorTolerance)
+                        else if (fabs(1.0-(d/u)) > numpressErrorTolerance)
                             break;
                     }
                 }

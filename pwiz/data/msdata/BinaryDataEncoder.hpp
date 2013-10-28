@@ -36,7 +36,9 @@
 namespace pwiz {
 namespace msdata {
 
-const double BinaryDataEncoder_default_numpressErrorTolerance = .0001; // 1/100th of one percent
+const double BinaryDataEncoder_default_numpressSlofErrorTolerance = 0.0002; // 2/100th of one percent
+const double BinaryDataEncoder_default_numpressLinearErrorTolerance = 2e-9; 
+const double BinaryDataEncoder_default_numpressPicErrorTolerance = 0.5; // rounds to nearest integer
 
 /// binary-to-text encoding
 class PWIZ_API_DECL BinaryDataEncoder
@@ -56,7 +58,8 @@ class PWIZ_API_DECL BinaryDataEncoder
         Compression compression;  // zlib or none
         Numpress numpress; // lossy numerical compression
         double numpressFixedPoint;  // for Numpress_* use, 0=derive best value
-        double numpressErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
+        double numpressLinearErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
+        double numpressSlofErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
 
         std::map<cv::CVID, Precision> precisionOverrides;
         std::map<cv::CVID, Numpress> numpressOverrides; 
@@ -67,7 +70,8 @@ class PWIZ_API_DECL BinaryDataEncoder
             compression(Compression_None),
             numpress(Numpress_None),
             numpressFixedPoint(0.0),
-            numpressErrorTolerance(BinaryDataEncoder_default_numpressErrorTolerance)
+            numpressLinearErrorTolerance(BinaryDataEncoder_default_numpressLinearErrorTolerance),
+            numpressSlofErrorTolerance(BinaryDataEncoder_default_numpressSlofErrorTolerance)
         {}
     };
 

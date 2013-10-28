@@ -206,13 +206,9 @@ namespace MSConvertGUI
                         break;
                     case "--numpressLinear":
                         config.WriteConfig.numpressLinear = true;
-                        x++;
-                        config.WriteConfig.numpressErrorTolerance =  System.Convert.ToDouble(commandList[x]);
                         break;
                     case "--numpressSlof":
                         config.WriteConfig.numpressLinear = true;
-                        x++;
-                        config.WriteConfig.numpressErrorTolerance =  System.Convert.ToDouble(commandList[x]);
                         break;
                     default:
                         config.Filenames.Add(commandList[x]);
@@ -476,6 +472,28 @@ namespace MSConvertGUI
                     if (StatusUpdate != null) StatusUpdate("Processing...", ProgressBarStyle.Marquee, _info);
 
                     SpectrumListFactory.wrap(msd, config.Filters);
+
+                    if ((msd.run.spectrumList == null) || msd.run.spectrumList.empty())
+                    {
+                        if ((msd.run.chromatogramList != null) && !msd.run.chromatogramList.empty())
+                        {
+                            msg = "Note: input contains only chromatogram data.";
+                            switch (config.WriteConfig.format)
+                            {
+                                case MSDataFile.Format.Format_MZ5:
+                                case MSDataFile.Format.Format_mzML:
+                                    break;
+                                default:
+                                    msg += "  The selected output format can only represent spectra.  Consider using mzML instead.";
+                                    break;
+                            }
+                        }
+                        else
+                            msg = "Note: input contains no spectra or chromatogram data.";
+                        if (LogUpdate != null) LogUpdate(msg, _info);
+                        if (StatusUpdate != null) StatusUpdate(msg, ProgressBarStyle.Marquee, _info);
+                    }
+
                     if (StatusUpdate != null && msd.run.spectrumList != null)
                         StatusUpdate(String.Format("Processing ({0} of {1})", 
                                                    DataGridViewProgressCell.MessageSpecialValue.CurrentValue,

@@ -154,7 +154,7 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     vector<double> binary(sampleDataSize_);
     copy(sampleData_, sampleData_+sampleDataSize_, binary.begin());
 
-    bool checkNumpressMaxErrorSupression = (BinaryDataEncoder::Numpress_None != config.numpress)&&(config.numpressErrorTolerance>0);
+    bool checkNumpressMaxErrorSupression = (BinaryDataEncoder::Numpress_None != config.numpress)&&(config.numpressLinearErrorTolerance>0);
     if (checkNumpressMaxErrorSupression) 
     {
         binary[1] = numeric_limits<double>::max( )-.1; // attempt to blow out the numpress lossiness limiter
@@ -274,7 +274,8 @@ void test()
     
     // test the numpress stuff with and without zlib, and to see if it honors error limits
     config.compression = BinaryDataEncoder::Compression_None;
-    config.numpressErrorTolerance = 0; // means don't do tolerance checks
+    config.numpressLinearErrorTolerance = 0; // means don't do tolerance checks
+    config.numpressSlofErrorTolerance = 0; // means don't do tolerance checks
     for (int zloop=3;zloop--;)
     {
         config.numpress = BinaryDataEncoder::Numpress_Linear;
@@ -289,7 +290,8 @@ void test()
         config.compression = BinaryDataEncoder::Compression_Zlib; // and again with zlib
         if (1==zloop) // and finally test numpress excessive error avoidance
         {
-            config.numpressErrorTolerance = .01;
+            config.numpressLinearErrorTolerance = .01;
+            config.numpressSlofErrorTolerance = .01;
         }
     }
 

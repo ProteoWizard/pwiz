@@ -88,7 +88,7 @@ void encodeInt(
 ) {
     int i, l, m;
     unsigned int mask = 0xf0000000;
-    int init = x & mask;
+    unsigned int init = x & mask;
 
     if (init == 0) {
         l = 8;

@@ -86,7 +86,8 @@ public ref class MSDataFile : public MSData
         property bool numpressPic;  // lossy numerical representations for intensities
         property bool numpressSlof; // lossy numerical representations for intensities
         property bool numpressLinear; // lossy numerical representations for rt and mz
-        property double numpressErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
+        property double numpressLinearErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
+        property double numpressSlofErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
         property bool indexed;
         property bool gzipped;
 
@@ -96,7 +97,8 @@ public ref class MSDataFile : public MSData
             numpressPic = false;
             numpressSlof = false;
             numpressLinear = false;
-            numpressErrorTolerance = pwiz::msdata::BinaryDataEncoder_default_numpressErrorTolerance;
+            numpressLinearErrorTolerance = pwiz::msdata::BinaryDataEncoder_default_numpressLinearErrorTolerance;
+            numpressSlofErrorTolerance = pwiz::msdata::BinaryDataEncoder_default_numpressSlofErrorTolerance;
             indexed = true;
         }
     };

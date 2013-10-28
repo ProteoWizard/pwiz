@@ -397,8 +397,6 @@ namespace MSConvertGUI
         private void ValidateNumpress()
         {
             bool numpressEnable = ("mzML" == OutputFormatBox.Text); // meaningless outside of mzML
-            NumpressToleranceLabel.Enabled = numpressEnable;
-            NumpressToleranceTextbox.Enabled = numpressEnable;
             NumpressLinearBox.Enabled = numpressEnable;
             NumpressPicBox.Enabled = numpressEnable;
             NumpressSlofBox.Enabled = numpressEnable;
@@ -486,13 +484,13 @@ namespace MSConvertGUI
                 commandLine.Append("--gzip|");
 
             if (NumpressLinearBox.Checked)
-                commandLine.AppendFormat("--numpressLinear|{0}|", this.NumpressToleranceTextbox.Text);
+                commandLine.AppendFormat("--numpressLinear|");
 
             if (NumpressSlofBox.Checked)
-                commandLine.AppendFormat("--numpressSlof|{0}|", this.NumpressToleranceTextbox.Text);
+                commandLine.AppendFormat("--numpressSlof|");
 
             if (NumpressPicBox.Checked)
-                commandLine.Append("--numpressPic");
+                commandLine.Append("--numpressPic|");
 
             var msLevelsTotal = String.Empty;
             var peakPickingTotal = String.Empty;
@@ -579,11 +577,9 @@ namespace MSConvertGUI
                         break; // already handled these booleans above
                     case "--numpressLinear":
                         NumpressLinearBox.Checked=true;
-                        NumpressToleranceTextbox.Text = words[++i];
                         break;
                     case "--numpressSlof":
                         NumpressSlofBox.Checked=true;
-                        NumpressToleranceTextbox.Text = words[++i];
                         break;
                     case "--numpressPic":
                         NumpressPicBox.Checked=true;
@@ -770,12 +766,10 @@ namespace MSConvertGUI
             setToolTip(this.AddFileButton, "Adds the current file to the conversion list.");
             setToolTip(this.FilterDGV, "Use the controls above to add conversion filters. The order can be significant.");
             setToolTip(this.MakeTPPCompatibleOutputButton, "Check this to use TPP-compatible output settings, e.g. an MGF TITLE format like <basename>.<scan>.<scan>.<charge>.");
-            setToolTip(this.NumpressLinearBox, "Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed given tolerance, unless set to 0).  Note that not all mzML readers recognize this format.");
-            setToolTip(this.NumpressSlofBox, "Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed given tolerance, unless set to 0).  Note that not all mzML readers recognize this format.");
+            MSDataFile.WriteConfig mwc = new MSDataFile.WriteConfig(); // for obtaining default numpress tolerance
+            setToolTip(this.NumpressLinearBox, String.Format("Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed {0}).  Note that not all mzML readers recognize this format.", mwc.numpressLinearErrorTolerance));
+            setToolTip(this.NumpressSlofBox, String.Format("Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed  {0}).  Note that not all mzML readers recognize this format.", mwc.numpressSlofErrorTolerance));
             setToolTip(this.NumpressPicBox, "Check this to use numpress positive integer lossy compression for binary intensities in mzML output (absolute accuracy loss will not exceed 0.5).  Note that not all mzML readers recognize this format.");
-            string NumpressTolerHelp = "Sets the maximum relative accuracy loss for numpress data compression in mzML output. See https://github.com/fickludd/ms-numpress for more information on the numpress lossy data compression algorithms.";
-            setToolTip(this.NumpressToleranceLabel, NumpressTolerHelp);
-            setToolTip(this.NumpressToleranceTextbox, NumpressTolerHelp);
             setToolTip(this.ETDFilterPanel, "Use these filter options to remove unreacted and charge-reduced precursor peaks in ETD spectra.","ETD Peak");
             setToolTip(this.ETDRemovePrecursorBox, "Check this to remove unreacted precursor peaks from ETD spectra.","ETD Peak");
             setToolTip(this.ETDRemoveChargeReducedBox, "Check this to remove charge-reduced precursor peaks from ETD spectra.","ETD Peak");

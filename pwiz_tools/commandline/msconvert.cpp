@@ -32,6 +32,7 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/analysis/Version.hpp"
 #include "boost/program_options.hpp"
+#include "boost/format.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
@@ -124,6 +125,18 @@ ostream& operator<<(ostream& os, const Config& config)
     return os;
 }
 
+static double string_to_double( const std::string& str )
+{
+	errno = 0;
+	const char* stringToConvert = str.c_str();
+	const char* endOfConversion = stringToConvert;
+	double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
+	if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
+		throw bad_lexical_cast(); // not a double
+	if (*endOfConversion)
+		throw bad_lexical_cast(); // started out as a double but became something else - like "10foo.raw"
+	return value;
+}
 
 /// Parses command line arguments to setup execution parameters, and
 /// contructs help text. Inputs are the arguments to main. A filled
@@ -166,10 +179,18 @@ Config parseCommandLine(int argc, const char* argv[])
     bool noindex = false;
     bool zlib = false;
     bool gzip = false;
-    double ms_numpress_all = -1; // if >= 0, use this numpress compression with this tolerance
-    double ms_numpress_linear = -1; // if >= 0, use this numpress compression with this tolerance
-    double ms_numpress_pic = -1; // if >= 0, use this numpress compression with this tolerance
-    double ms_numpress_slof = -1; // if >= 0, use this numpress compression with this tolerance
+    bool ms_numpress_all = false; // if true, use this numpress compression with default tolerance
+    double ms_numpress_linear = -1; // if >= 0, use this numpress linear compression with this tolerance
+	std::string ms_numpress_linear_str; // input as text, to help with the "msconvert --numpresslinear foo.raw" case
+    stringstream ss;
+    ss << boost::format("%4.2g") % BinaryDataEncoder_default_numpressLinearErrorTolerance;
+    std::string ms_numpress_linear_default = ss.str();
+    bool ms_numpress_pic = false; // if true, use this numpress Pic compression
+    double ms_numpress_slof = -1; // if >= 0, use this numpress slof compression with this tolerance
+	std::string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
+    stringstream ss2;
+    ss2 << boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance;
+    std::string ms_numpress_slof_default = ss2.str();
     bool detailedHelp = false;
 
     po::options_description od_config("Options");
@@ -253,16 +274,16 @@ Config parseCommandLine(int argc, const char* argv[])
             po::value<bool>(&zlib)->zero_tokens(),
             ": use zlib compression for binary data")
         ("numpressLinear",
-            po::value<double>(&ms_numpress_linear)->implicit_value(BinaryDataEncoder_default_numpressErrorTolerance),
+            po::value<std::string>(&ms_numpress_linear_str)->implicit_value(ms_numpress_linear_default),
             ": use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressPic",
-            po::value<double>(&ms_numpress_pic)->implicit_value(0.5),
-            ": use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed given tolerance arg, unless set to 0)")
+            po::value<bool>(&ms_numpress_pic)->zero_tokens(),
+            ": use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed 0.5)")
         ("numpressSlof",
-            po::value<double>(&ms_numpress_slof)->implicit_value(BinaryDataEncoder_default_numpressErrorTolerance),
+            po::value<std::string>(&ms_numpress_slof_str)->implicit_value(ms_numpress_slof_default),
             ": use numpress short logged float compression for binary intensities (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressAll,n",
-            po::value<double>(&ms_numpress_all)->implicit_value(BinaryDataEncoder_default_numpressErrorTolerance),
+            po::value<bool>(&ms_numpress_all)->zero_tokens(),
             ": same as --numpressLinear --numpressSlof (see https://github.com/fickludd/ms-numpress for more info)")
         ("gzip,g",
             po::value<bool>(&gzip)->zero_tokens(),
@@ -440,6 +461,29 @@ Config parseCommandLine(int argc, const char* argv[])
 
     // check stuff
 
+	if (ms_numpress_slof_str.length()) // was that a numerical arg to --numpressSlof, or a filename?
+	{
+		try 
+		{
+			ms_numpress_slof = string_to_double(ms_numpress_slof_str); 
+		}
+		catch(...) {
+			config.filenames.push_back(ms_numpress_slof_str); // actually that was a filename
+            ms_numpress_slof = BinaryDataEncoder_default_numpressSlofErrorTolerance;
+		}
+	}
+	if (ms_numpress_linear_str.length()) // was that a numerical arg to --numpressLinear, or a filename?
+	{
+		try 
+		{
+			ms_numpress_linear = string_to_double(ms_numpress_linear_str); 
+		}
+		catch(...) {
+			config.filenames.push_back(ms_numpress_linear_str); // actually that was a filename
+            ms_numpress_linear = BinaryDataEncoder_default_numpressLinearErrorTolerance;
+		}
+	}
+
     if (config.filenames.empty())
         throw user_error("[msconvert] No files specified.");
 
@@ -545,33 +589,33 @@ Config parseCommandLine(int argc, const char* argv[])
     if (zlib)
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
 
-    if ((ms_numpress_slof>=0) && (ms_numpress_pic>=0))
+    if ((ms_numpress_slof>=0) && ms_numpress_pic)
         throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressSlof'.");
 
-    if ((ms_numpress_all>=0) && (ms_numpress_pic>=0))
+    if (ms_numpress_all && ms_numpress_pic)
         throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressAll'.");
 
-    if (ms_numpress_all>=0) {
+    if (ms_numpress_all) {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Slof;
-        config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_all;
+        config.writeConfig.binaryDataEncoderConfig.numpressLinearErrorTolerance = BinaryDataEncoder_default_numpressLinearErrorTolerance;
+        config.writeConfig.binaryDataEncoderConfig.numpressSlofErrorTolerance = BinaryDataEncoder_default_numpressSlofErrorTolerance;
     }
-    if (ms_numpress_pic>=0) 
+    if (ms_numpress_pic) 
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Pic;
-        config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_pic;
     }    
     if (ms_numpress_slof>=0) 
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Slof;
-        config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_slof;
+        config.writeConfig.binaryDataEncoderConfig.numpressSlofErrorTolerance = ms_numpress_slof;
     }
     if (ms_numpress_linear>=0) 
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
-        config.writeConfig.binaryDataEncoderConfig.numpressErrorTolerance = ms_numpress_linear;
+        config.writeConfig.binaryDataEncoderConfig.numpressLinearErrorTolerance = ms_numpress_linear;
     }
 
     return config;
