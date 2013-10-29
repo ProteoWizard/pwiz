@@ -165,6 +165,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             return nodePep + resultsText;
         }
 
+        public override Color? ChromColor
+        {
+            get { return SequenceTree.GetPeptideGraphInfo(Model).Color; }
+        }
+
         protected override void UpdateChildren(bool materialize)
         {
             UpdateNodes(SequenceTree, Nodes, DocNode.Children, materialize,

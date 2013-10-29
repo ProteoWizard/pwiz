@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public static class PeakFeatureCalculator
     {
-        private static readonly IPeakFeatureCalculator[] CALCULATORS =  new IPeakFeatureCalculator[]
+        private static readonly IPeakFeatureCalculator[] CALCULATORS =
         {
             // Intensity, retention time, library dotp
             new MQuestIntensityCalc(),

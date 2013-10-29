@@ -302,6 +302,13 @@ namespace pwiz.Skyline.Model.Results
     {
         private ReadOnlyCollection<float?> _ratios;
 
+        public TransitionChromInfo(float startRetentionTime, float endRetentionTime)
+            : base(null)
+        {
+            StartRetentionTime = startRetentionTime;
+            EndRetentionTime = endRetentionTime;
+        }
+
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
             IList<float?> ratios, Annotations annotations, UserSet userSet)
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,

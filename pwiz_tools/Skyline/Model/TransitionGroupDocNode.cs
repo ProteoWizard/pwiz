@@ -1751,7 +1751,7 @@ namespace pwiz.Skyline.Model
                 UserSet = AddUserSetInfo(UserSet, info.UserSet);
             }
 
-            private static readonly UserSet[] USER_SET_PRIORITY_LIST = new[] 
+            private static readonly UserSet[] USER_SET_PRIORITY_LIST =
             {
                 UserSet.TRUE,
                 UserSet.IMPORTED,

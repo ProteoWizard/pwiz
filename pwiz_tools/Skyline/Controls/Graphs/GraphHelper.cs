@@ -100,12 +100,13 @@ namespace pwiz.Skyline.Controls.Graphs
             _displayState = newDisplayState;
         }
 
-        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups)
+        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected = false)
         {
-            SetDisplayState(new ChromDisplayState(Settings.Default, transitionGroups));
+            SetDisplayState(new ChromDisplayState(Settings.Default, transitionGroups, proteinSelected));
         }
 
-        public void FinishedAddingChromatograms(double bestStartTime, double bestEndTime, bool forceZoom)
+        public void FinishedAddingChromatograms(double bestStartTime, double bestEndTime, bool forceZoom,
+            double leftPeakWidth = 0, double rightPeakWidth = 0)
         {
             if (!_zoomLocked)
             {
@@ -114,7 +115,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var chromDisplayState = _displayState as ChromDisplayState;
                     if (chromDisplayState != null)
                     {
-                        AutoZoomChromatograms(bestStartTime, bestEndTime);
+                        AutoZoomChromatograms(bestStartTime, bestEndTime, leftPeakWidth, rightPeakWidth);
                     }
                 }
             }
@@ -136,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             SetDisplayState(new SpectrumDisplayState(Settings.Default, transitionGroups));
         }
 
-        private void AutoZoomChromatograms(double bestStartTime, double bestEndTime)
+        private void AutoZoomChromatograms(double bestStartTime, double bestEndTime, double leftPeakWidth, double rightPeakWidth)
         {
             var chromDisplayState = (ChromDisplayState) _displayState;
             if (chromDisplayState.ZoomStateValid)
@@ -162,11 +163,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime)
                         {
                             double multiplier = (chromDisplayState.TimeRange != 0 ? chromDisplayState.TimeRange : GraphChromatogram.DEFAULT_PEAK_RELATIVE_WINDOW);
-                            double width = bestEndTime - bestStartTime;
-                            double window = width * multiplier;
-                            double margin = (window - width) / 2;
-                            bestStartTime -= margin;
-                            bestEndTime += margin;
+                            if (leftPeakWidth <= 0)
+                                leftPeakWidth = rightPeakWidth = bestEndTime - bestStartTime;
+                            bestStartTime -= leftPeakWidth * (multiplier - 1) / 2;
+                            bestEndTime += rightPeakWidth * (multiplier - 1) / 2;
                         }
                         // Otherwise, use an absolute peak width
                         else
@@ -461,7 +461,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class ChromDisplayState : DisplayState
         {
-            public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups) : base(transitionGroups)
+            private readonly bool _proteinSelected;
+
+            public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected) : base(transitionGroups)
             {
                 AutoZoomChrom = GraphChromatogram.AutoZoom;
                 MaxIntensity = settings.ChromatogramMaxIntensity;
@@ -471,6 +473,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ChromGraphItems = new List<KeyValuePair<PaneKey, ChromGraphItem>>();
                 ShowLegend = settings.ShowChromatogramLegend;
                 AllowLabelOverlap = settings.AllowLabelOverlap;
+                _proteinSelected = proteinSelected;
             }
             
             public AutoZoomChrom AutoZoomChrom { get; private set; }
@@ -487,7 +490,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (Equals(AutoZoomChrom, prevChromDisplayState.AutoZoomChrom) &&
                         Equals(MaxIntensity, prevChromDisplayState.MaxIntensity) &&
                         Equals(TimeRange, prevChromDisplayState.TimeRange) &&
-                        Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime))
+                        Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime) &&
+                        _proteinSelected == prevChromDisplayState._proteinSelected)
                     {
                         return ArrayUtil.ReferencesEqual(TransitionGroups, prevChromDisplayState.TransitionGroups);
                     }

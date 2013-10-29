@@ -55,6 +55,7 @@ namespace pwiz.Skyline.Controls
         private int _resultsIndex;
         private int _ratioIndex;
         private StatementCompletionTextBox _editTextBox;
+        private readonly Dictionary<int, PeptideGraphInfo> _peptideGraphInfos = new Dictionary<int, PeptideGraphInfo>();
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
@@ -313,6 +314,30 @@ namespace pwiz.Skyline.Controls
                 if (cover != null)
                     cover.Dispose();
             }
+
+            // Generate colors for each peptide.
+            int index = 0;
+            var colorGenerator = new ColorGenerator();
+            _peptideGraphInfos.Clear();
+            foreach (var peptideGroup in Document.PeptideGroups)
+            {
+                foreach (var peptideNode in peptideGroup.Children)
+                {
+                    var peptideDocNode = peptideNode as PeptideDocNode;
+                    if (peptideDocNode == null)
+                        continue;
+                    var peptideGraphInfo = new PeptideGraphInfo
+                    {
+                        Color = colorGenerator.GenerateColor(index++),
+                    };
+                    _peptideGraphInfos[peptideDocNode.Id.GlobalIndex] = peptideGraphInfo;
+                }
+            }
+        }
+
+        public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
+        {
+            return _peptideGraphInfos[docNode.Id.GlobalIndex];
         }
 
         [Browsable(false)]
@@ -771,6 +796,18 @@ namespace pwiz.Skyline.Controls
             HideEffects();
             base.OnLostFocus(e);
             Refresh();
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            // Invalidate on horizontal scroll or size events to keep the chromatogram color
+            // indicators displayed on the right edge of the tree view.
+            const int WM_HSCROLL = 0x114;
+            const int WM_SIZE = 0x005;
+            if (m.Msg == WM_HSCROLL || m.Msg == WM_SIZE)
+                Invalidate();
+
+            base.WndProc(ref m);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

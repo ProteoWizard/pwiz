@@ -284,6 +284,7 @@
     <Compile Include="Controls\Graphs\GraphRegression.Designer.cs">
       <DependentUpon>GraphRegression.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\PeptideGraphInfo.cs" />
     <Compile Include="Controls\Graphs\RTGraphController.cs" />
     <Compile Include="Controls\Graphs\RTPeptideGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryBarGraphPaneBase.cs" />
@@ -314,6 +315,7 @@
     <Compile Include="Controls\Graphs\GraphSpectrum.Designer.cs">
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\UniquePrefixGenerator.cs" />
     <Compile Include="Controls\ImmediateWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -344,6 +346,7 @@
     <Compile Include="Controls\ResultsGridForm.Designer.cs">
       <DependentUpon>ResultsGridForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ColorGenerator.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
     <Compile Include="Controls\PopupPickList.cs">

@@ -30,6 +30,8 @@ namespace pwiz.MSGraph
 {
     public class MSGraphPane : GraphPane
     {
+        private OverlapDetector _overlapDetector;
+
         public MSGraphPane()
         {
             Title.IsVisible = false;
@@ -91,8 +93,8 @@ namespace pwiz.MSGraph
             base.Draw( g );
         }
 
-        protected GraphObjList _pointAnnotations;
-        protected Dictionary<TextObj, RectangleF> _manualLabels;
+        protected readonly GraphObjList _pointAnnotations;
+        protected readonly Dictionary<TextObj, RectangleF> _manualLabels;
 
         private void drawLabels( Graphics g )
         {
@@ -116,7 +118,7 @@ namespace pwiz.MSGraph
             if( Chart.Rect.Width < 1 || Chart.Rect.Height < 1 )
                 return;
 
-            Region textBoundsRegion;
+            _overlapDetector = AllowLabelOverlap ? null : new OverlapDetector();
             Region chartRegion = new Region( Chart.Rect );
             Region clipRegion = new Region();
             clipRegion.MakeEmpty();
@@ -172,7 +174,7 @@ namespace pwiz.MSGraph
                     continue;
 
                 info.AddPreCurveAnnotations(this, g, points, _pointAnnotations);
-                AddAnnotations(g, item, clipRegion);
+                AddAnnotations(g);
             }
 
             // add automatic labels for MSGraphItems
@@ -250,18 +252,19 @@ namespace pwiz.MSGraph
 
                     TextObj text = new TextObj( annotation.Label, pt.X, labelY,
                                                 CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom )
-                                       {
-                                           ZOrder = ZOrder.A_InFront,
-                                           FontSpec = annotation.FontSpec
-                                       };
-                    text.IsClippedToChartRect = true;
+                    {
+                        ZOrder = ZOrder.A_InFront,
+                        FontSpec = annotation.FontSpec,
+                        IsClippedToChartRect = true
+                    };
 
-                    bool overlap2 = detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item is StickItem );
-                    _manualLabels[text] = textBoundsRegion.GetBounds(g);
-                    if (AllowLabelOverlap || !overlap2)
+                    var textRect = GetTextRectangle(g, text);
+                    bool overlap2 = _overlapDetector != null && _overlapDetector.Overlaps(textRect);
+                    _manualLabels[text] = textRect;
+                    if (!overlap2)
                     {
                         _pointAnnotations.Add(text);
-                        AddAnnotations(g, item, clipRegion);
+                        AddAnnotations(g);
                     }
                 }
             }
@@ -275,7 +278,7 @@ namespace pwiz.MSGraph
                     continue;
 
                 info.AddAnnotations( this, g,  points, _pointAnnotations );
-                AddAnnotations(g, item, clipRegion);
+                AddAnnotations(g);
             }
 
             autoScaleForManualLabels(g);
@@ -296,7 +299,7 @@ namespace pwiz.MSGraph
                    obj.Location.CoordinateFrame == CoordType.XScaleYChartFraction;
         }
 
-        private void AddAnnotations(Graphics g, CurveItem item, Region clipRegion)
+        private void AddAnnotations(Graphics g)
         {
             foreach (GraphObj obj in _pointAnnotations)
             {
@@ -306,14 +309,9 @@ namespace pwiz.MSGraph
                     if (isXChartFractionObject(text) && (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max))
                         continue;
 
-                    Region textBoundsRegion;
-                    bool overlap = detectLabelOverlap(this, g, text, out textBoundsRegion, item.Points, -1, item is StickItem);
-                    if (!AllowLabelOverlap && overlap)
-                        continue;
-                    _manualLabels[text] = textBoundsRegion.GetBounds(g);
-
-                    clipRegion.Union(textBoundsRegion);
-                    g.SetClip(clipRegion, CombineMode.Replace);
+                    var textRect = GetTextRectangle(g, text);
+                    if (_overlapDetector == null || !_overlapDetector.Overlaps(textRect))
+                        _manualLabels[text] = textRect;
                 }
                 else if (!GraphObjList.Contains(obj)) // always add non-text annotations
                     GraphObjList.Add(obj);
@@ -337,32 +335,32 @@ namespace pwiz.MSGraph
                     AxisChange(g);
                 }
 
-                double yMaxRequired = YAxis.Scale.Max;
+                double yMaxRequired = 0;
                 foreach (var kvp in _manualLabels)
                 {
                     TextObj text = kvp.Key;
-                    if (text.Location.X >= XAxis.Scale.Min && text.Location.X <= XAxis.Scale.Max)
+                    if (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max)
+                        continue;
+
+                    if (!YAxis.Scale.IsLog)
                     {
-                        if (!YAxis.Scale.IsLog)
+                        double axisHeight = YAxis.Scale.Max - YAxis.Scale.Min;
+
+                        PointF[] pts = text.FontSpec.GetBox(g, text.Text, 0, 0, text.Location.AlignH, text.Location.AlignV, 1.0f,
+                            new SizeF());
+                        double labelHeight = 
+                            Math.Abs(yAxis.Scale.ReverseTransform(pts[0].Y) - yAxis.Scale.ReverseTransform(pts[2].Y));
+                        if (labelHeight < axisHeight / 2)
                         {
-                            double axisHeight = YAxis.Scale.Max - YAxis.Scale.Min;
+                            // Ensure that the YAxis will have enough space to show the label.
+                            // Only do this if the labelHeight is going to take up less than half the space on the graph, because
+                            // otherwise the graph will be shrunk too much to have any useful information.
 
-                            PointF[] pts = text.FontSpec.GetBox(g, text.Text, 0, 0, AlignH.Center, AlignV.Bottom, 1.0f,
-                                new SizeF());
-                            double labelHeight = yAxis.Scale.ReverseTransform(pts[0].Y) -
-                                                    yAxis.Scale.ReverseTransform(pts[2].Y);
-                            if (labelHeight < axisHeight / 2)
-                            {
-                                // Ensure that the YAxis will have enough space to show the label.
-                                // Only do this if the labelHeight is going to take up less than half the space on the graph, because
-                                // otherwise the graph will be shrunk too much to have any useful information.
-
-                                // When calculating the scaling required, take into account that the height of the label
-                                // itself will not shrink when we shrink the YAxis.
-                                var labelYMaxRequired = (text.Location.Y - labelHeight*YAxis.Scale.Min/axisHeight)/
-                                                        (1 - labelHeight/axisHeight);
-                                yMaxRequired = Math.Max(yMaxRequired, labelYMaxRequired);
-                            }
+                            // When calculating the scaling required, take into account that the height of the label
+                            // itself will not shrink when we shrink the YAxis.
+                            var labelYMaxRequired = (text.Location.Y - labelHeight*YAxis.Scale.Min/axisHeight)/
+                                                    (1 - labelHeight/axisHeight);
+                            yMaxRequired = Math.Max(yMaxRequired, labelYMaxRequired);
                         }
                     }
 
@@ -376,7 +374,7 @@ namespace pwiz.MSGraph
                     }
                 }
 
-                if (maxAuto)
+                if (maxAuto && yMaxRequired > 0)
                 {
                     yAxis.Scale.Max = yMaxRequired;
                 }
@@ -446,24 +444,30 @@ namespace pwiz.MSGraph
             return false;
         }
 
-        protected bool detectLabelOverlap( GraphPane pane, Graphics g, TextObj text, out Region textBoundsRegion, IPointList points, int pointIndex, bool pointsAreSticks )
+        /// <summary>
+        /// Detect overlaps between rectangles.
+        /// </summary>
+        private class OverlapDetector
         {
-            PointF[] coords = GetCoords( pane, g, text );
-            if( coords.Length != 4 ) throw new InvalidOperationException( "coords length must be 4" );
-            byte[] textBoundsPointTypes =
-            {
-                (byte) PathPointType.Start,
-                (byte) PathPointType.Line,
-                (byte) PathPointType.Line,
-                (byte) PathPointType.Line
-            };
-            GraphicsPath textBoundsPath = new GraphicsPath( coords, textBoundsPointTypes );
-            textBoundsPath.CloseFigure();
-            textBoundsRegion = new Region( textBoundsPath );
-            textBoundsRegion.Intersect( pane.Chart.Rect );
-            RectangleF[] textBoundsRectangles = textBoundsRegion.GetRegionScans( g.Transform );
+            private readonly List<RectangleF> _rectangles = new List<RectangleF>();
 
-            return textBoundsRectangles.Any(t => IsVisibleToClip(g, t));
+            public bool Overlaps(RectangleF rectangle)
+            {
+                // At this point, we just do an O(n^2) intersection test between each
+                // pair of rectangles.  Obviously, we could do something much smarter
+                // if this became a performance bottleneck, but for now the number of
+                // rectangles is fairly small.
+                for (int i = _rectangles.Count-1; i >= 0; i--)
+                {
+                    if (rectangle.IntersectsWith(_rectangles[i]))
+                        return true;
+                }
+
+                // Add this non-overlapping rectangle to the list of rectangles, where
+                // it will suppress subsequent rectangles that interesect it.
+                _rectangles.Add(rectangle);
+                return false;
+            }
         }
 
         /// <summary>
@@ -482,25 +486,24 @@ namespace pwiz.MSGraph
                 textObj.Location.AlignV, scaleFactor, new SizeF());
         }
 
-        /// <summary>
-        /// Fixes an issue with <see cref="Region.IsVisible(RectangleF)"/> where it
-        /// sometimes returns true with complex regions when it should return false.
-        /// <para>
-        /// A reference on this issue can be found at:
-        /// https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=160358
-        /// </para>
-        /// </summary>
-        /// <param name="g">Source of <see cref="Graphics.Clip"/> region to check against</param>
-        /// <param name="rect">The rectagle to check for intersection with the clip region</param>
-        /// <returns>Tree if the rectangle intersects with the region</returns>
-        private static bool IsVisibleToClip( Graphics g, RectangleF rect )
+        private RectangleF GetTextRectangle(Graphics graphics, TextObj textObj)
         {
-            foreach( RectangleF rectClip in g.Clip.GetRegionScans( g.Transform ) )
+            var coords = GetCoords(this, graphics, textObj);
+            var min = coords[0];
+            var max = min;
+            for (int i = 1; i < coords.Length; i++)
             {
-                if( rectClip.IntersectsWith( rect ) )
-                    return true;
+                var point = coords[i];
+                if (min.X > point.X)
+                    min.X = point.X;
+                if (min.Y > point.Y)
+                    min.Y = point.Y;
+                if (max.X < point.X)
+                    max.X = point.X;
+                if (max.Y < point.Y)
+                    max.Y = point.Y;
             }
-            return false;
+            return new RectangleF(min.X, min.Y, max.X - min.X, max.Y - min.Y);
         }
     }
 }

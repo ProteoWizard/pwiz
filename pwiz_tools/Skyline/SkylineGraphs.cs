@@ -1110,6 +1110,11 @@ namespace pwiz.Skyline
             }
         }
 
+        public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
+        {
+            return SequenceTree.GetPeptideGraphInfo(docNode);
+        }
+
         void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
             // Store original menuitems in an array, and insert a separator

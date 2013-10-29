@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
         private readonly GraphHelper _graphHelper;
+        private bool _showPeptideTotals;
 
         public static ShowRTChrom ShowRT
         {
@@ -148,18 +149,22 @@ namespace pwiz.Skyline.Controls.Graphs
         public interface IStateProvider
         {
             TreeNodeMS SelectedNode { get; }
+            IList<TreeNodeMS> SelectedNodes { get; }
 
             SpectrumDisplayInfo SelectedSpectrum { get; }
             GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation();
 
             void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId);
+            PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode);
         }
 
         private class DefaultStateProvider : IStateProvider
         {
             public TreeNodeMS SelectedNode { get { return null; } }
+            public IList<TreeNodeMS> SelectedNodes { get { return null; } }
             public SpectrumDisplayInfo SelectedSpectrum { get { return null; } }
             public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId) { }
+            public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode) { return null; }
             public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
             {
                 return null;
@@ -194,6 +199,9 @@ namespace pwiz.Skyline.Controls.Graphs
             // Note that this only affects applying ZoomState to a graph pane.  Explicit changes 
             // to Scale Min/Max properties need to be manually applied to each axis.
             graphControl.IsSynchronizeXAxes = true;
+
+            // TODO: Remove this when there is UI to set AllowMultiplePeptideSelection
+            //Settings.Default.AllowMultiplePeptideSelection = true;
         }
 
         public string NameSet
@@ -586,14 +594,27 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nodeTranTree != null)
                 nodeGroupTree = nodeTranTree.Parent as TransitionGroupTreeNode;
 
-            PeptideDocNode nodePep = null;
+            PeptideDocNode[] nodePeps = null;
             ExplicitMods mods = null;
             TransitionGroupDocNode[] nodeGroups = null;
             IdentityPath[] groupPaths = null;
             PeptideTreeNode nodePepTree;
-            if (nodeGroupTree != null)
+            var peptideAndTransitionGroups = GetSelectedPeptides();
+            if (peptideAndTransitionGroups.ShowPeptideTotals)
+            {
+                // Display transition totals for multiple peptides.
+                nodePeps = peptideAndTransitionGroups.NodePep.ToArray();
+                nodeGroups = peptideAndTransitionGroups.NodeGroups.ToArray();
+                groupPaths = peptideAndTransitionGroups.GroupPaths.ToArray();
+            }
+            else if (nodeGroupTree != null)
             {
                 nodePepTree = nodeGroupTree.Parent as PeptideTreeNode;
+                if (nodePepTree != null)
+                {
+                    nodePeps = new[] {nodePepTree.DocNode};
+                    mods = nodePepTree.DocNode.ExplicitMods;
+                }
                 nodeGroups = new[] {nodeGroupTree.DocNode};
                 groupPaths = new[] {nodeGroupTree.Path};
             }
@@ -603,34 +624,38 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePepTree != null && nodePepTree.ChildDocNodes.Count > 0)
                 {
                     var children = nodePepTree.ChildDocNodes;
+                    nodePeps = new PeptideDocNode[children.Count];
                     nodeGroups = new TransitionGroupDocNode[children.Count];
                     groupPaths = new IdentityPath[children.Count];
                     var pathParent = nodePepTree.Path;
                     for (int i = 0; i < nodeGroups.Length; i++)
                     {
                         var nodeGroup = (TransitionGroupDocNode) children[i];
+                        nodePeps[i] = nodePepTree.DocNode;
                         nodeGroups[i] = nodeGroup;
                         groupPaths[i] = new IdentityPath(pathParent, nodeGroup.Id);
                     }
+                    mods = nodePepTree.DocNode.ExplicitMods;
                 }
-            }
-            if (nodePepTree != null)
-            {
-                nodePep = nodePepTree.DocNode;
-                mods = nodePep.ExplicitMods;
             }
 
             // Clear existing data from the graph pane
-            _graphHelper.ResetForChromatograms(nodeGroups == null ? null : nodeGroups.Select(node=>node.TransitionGroup));
+            _graphHelper.ResetForChromatograms(
+                nodeGroups == null ? null : nodeGroups.Select(node=>node.TransitionGroup),
+                peptideAndTransitionGroups.ProteinSelected);
 
             double bestStartTime = double.MaxValue;
             double bestEndTime = 0;
+            double leftPeakWidth = 0;
+            double rightPeakWidth = 0;
 
             // Check for appropriate chromatograms to load
             bool changedGroups = false;
 
             try
             {
+                _showPeptideTotals = peptideAndTransitionGroups.ShowPeptideTotals;
+
                 // Make sure all the chromatogram info for the relevant transition groups is present.
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
                 var displayType = GetDisplayType(DocumentUI);
@@ -670,9 +695,37 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
+                else if (peptideAndTransitionGroups.ShowPeptideTotals)
+                {
+                    if (EnsureChromInfo(results,
+                                        chromatograms,
+                                        nodePeps,
+                                        nodeGroups,
+                                        groupPaths,
+                                        mzMatchTolerance,
+                                        out changedGroups,
+                                        out changedGroupIds))
+                    {
+                        // Update the file choice toolbar, if the set of groups has changed
+                        if (changedGroups)
+                        {
+                            UpdateToolbar(_arrayChromInfo);
+                            EndDrag(false);
+                        }
+
+                        int countLabelTypes = settings.PeptideSettings.Modifications.CountLabelTypes;
+                        DisplayPeptides(timeRegressionFunction, chromatograms, mzMatchTolerance,
+                            countLabelTypes, nodePeps, ref bestStartTime, ref bestEndTime, out leftPeakWidth, out rightPeakWidth);
+                        foreach (var msGraphPane in GraphPanes)
+                        {
+                            msGraphPane.Legend.IsVisible = false;
+                            msGraphPane.AllowLabelOverlap = false;
+                        }
+                    }
+                }
                 else if (nodeGroups != null && EnsureChromInfo(results,
                                                                chromatograms,
-                                                               nodePep,
+                                                               nodePeps,
                                                                nodeGroups,
                                                                groupPaths,
                                                                mzMatchTolerance,
@@ -783,7 +836,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Show unavailable message, if no chromatogoram loaded
-            if (!_graphHelper.ListPrimaryGraphItems().Any())
+            if (peptideAndTransitionGroups.ShowPeptideTotals)
+            {
+                _graphHelper.FinishedAddingChromatograms(bestStartTime, bestEndTime, true, leftPeakWidth, rightPeakWidth);
+            }
+            else if (!_graphHelper.ListPrimaryGraphItems().Any())
             {
                 if (nodeGroups == null || changedGroups)
                 {
@@ -793,7 +850,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (CurveCount == 0)
                 {
                     string message = null;
-                    if (nodePep == null)
+                    if (nodePeps == null)
                         message = Resources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
                     else switch (DisplayType)
                     {
@@ -826,6 +883,57 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                         !Settings.Default.LockYChrom;
             graphControl.Refresh();
+        }
+
+        /// <summary>
+        /// Returns the peptides that are explicitly or implictly selected in the tree view.
+        /// Peptides are implicitly selected when the protein containing them is selected.
+        /// </summary>
+        private PeptidesAndTransitionGroups GetSelectedPeptides()
+        {
+            var peptidesAndTransitionGroups = new PeptidesAndTransitionGroups();
+            if (!Settings.Default.AllowMultiplePeptideSelection)
+                return peptidesAndTransitionGroups;
+
+            foreach (var selectedNode in _stateProvider.SelectedNodes)
+            {
+                // Add all transition groups from a selected protein.
+                var proteinNode = selectedNode as PeptideGroupTreeNode;
+                if (proteinNode != null)
+                {
+                    peptidesAndTransitionGroups.ProteinSelected = true;
+                    foreach (var treeNode in proteinNode.Nodes)
+                    {
+                        var pepTreeNode = treeNode as PeptideTreeNode;
+                        if (pepTreeNode != null)
+                            peptidesAndTransitionGroups.Add(pepTreeNode);
+                    }
+                    continue;
+                }
+
+                // Add all transition groups from a selected peptide.
+                var pepNode = selectedNode as PeptideTreeNode;
+                if (pepNode != null)
+                {
+                    peptidesAndTransitionGroups.Add(pepNode);
+                    continue;
+                }
+
+                // Add transition groups directly.
+                var node = selectedNode;
+                while (node != null)
+                {
+                    var groupTreeNode = node as TransitionGroupTreeNode;
+                    if (groupTreeNode != null)
+                    {
+                        peptidesAndTransitionGroups.Add((PeptideTreeNode)groupTreeNode.Parent, groupTreeNode.DocNode);
+                        break;
+                    }
+                    node = (TreeNodeMS) node.Parent;
+                }
+            }
+
+            return peptidesAndTransitionGroups;
         }
 
         private void DisplayFailureGraph(IEnumerable<TransitionGroupDocNode> nodeGroups,
@@ -1512,6 +1620,162 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        /// <summary>
+        /// Display summed transitions for multiple selected peptides.
+        /// </summary>
+        private void DisplayPeptides(IRegressionFunction timeRegressionFunction,
+                                   ChromatogramSet chromatograms,
+                                   float mzMatchTolerance,
+                                   int countLabelTypes,
+                                   IList<PeptideDocNode> peptideDocNodes,
+                                   ref double bestStartTime,
+                                   ref double bestEndTime,
+                                   out double leftPeakWidth,
+                                   out double rightPeakWidth)
+        {
+            leftPeakWidth = 0;
+            rightPeakWidth = 0;
+
+            // Construct and add graph items for all relevant transition groups.
+            float fontSize = FontSize;
+            int lineWidth = LineWidth;
+            var chromGroupInfos = ChromGroupInfos;
+            var lookupChromGroupInfoIndex = new Dictionary<int, int>(_nodeGroups.Length);
+            for (int i = 0; i < _nodeGroups.Length; i++)
+                lookupChromGroupInfoIndex[_nodeGroups[i].Id.GlobalIndex] = i;
+
+            // Generate a unique short identifier for each peptide.
+            var peptideNames = new string[peptideDocNodes.Count];
+            for (int i = 0; i < peptideDocNodes.Count; i++)
+                peptideNames[i] = peptideDocNodes[i].ModifiedSequence;
+            var uniqueNames = new UniquePrefixGenerator(peptideNames, 3);
+
+            foreach (var peptideDocNode in peptideDocNodes)
+            {
+                TransitionChromInfo bestPeakInfo = null;
+                ChromatogramInfo sumInfo = null;
+                float maxPeakHeight = float.MinValue;
+                double leftPeakStartTime = float.MaxValue;
+                double rightPeakEndTime = float.MinValue;
+
+                foreach (var precursor in peptideDocNode.TransitionGroups)
+                {
+                    var chromGroupInfo = chromGroupInfos[lookupChromGroupInfoIndex[precursor.Id.GlobalIndex]];
+                    if (chromGroupInfo == null)
+                        continue;
+                    ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
+                    foreach (var nodeTran in precursor.Transitions)
+                    {
+                        var info = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                        if (info == null)
+                            continue;
+                        if (sumInfo == null)
+                            sumInfo = info;
+                        else
+                        {
+                            // We need to sum the *intersection* of these two transitions.  To make that
+                            // easier, we arrange for the one with the earliest start time to be in times1/intensities1.
+                            bool swap = info.Times[0] < sumInfo.Times[0];
+                            float[] times1 = swap ? info.Times : sumInfo.Times;
+                            float[] times2 = swap ? sumInfo.Times : info.Times;
+                            float[] intensities1 = swap ? info.Intensities : sumInfo.Intensities;
+                            float[] intensities2 = swap ? sumInfo.Intensities : info.Intensities;
+                            
+                            // Find the time/index at the beginning of the intersection.
+                            int index = 0;
+                            float minTime2 = times2[0];
+                            while (index < times1.Length && times1[index] < minTime2)
+                                index++;
+                            if (index == times1.Length)
+                                continue;   // no intersection!
+                           
+                            // Find the time/index at the end of the intersection.
+                            int endIndex = times1.Length - 1;
+                            float maxTime2 = times2[times2.Length - 1];
+                            while (endIndex >= 0 && times1[endIndex] > maxTime2)
+                                endIndex--;
+
+                            // Now add the intensities within the intersection.
+                            var times = new float[endIndex - index];
+                            var intensities = new float[times.Length];
+                            for (int i = 0; i < times.Length; i++)
+                            {
+                                // TODO: handle case where times are not equal (interpolation may be needed)
+                                Assume.IsTrue(times1[index].Equals(times2[i]));
+                                times[i] = times2[i];
+                                intensities[i] = intensities2[i] + intensities1[index++];
+                            }
+
+                            sumInfo = new ChromatogramInfo(times, intensities);
+                        }
+
+                        // Keep track of which chromatogram owns the tallest member of
+                        // the peak on the document tree.
+                        var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, 0);
+                        if (transitionChromInfo == null)
+                            continue;
+
+                        if (transitionChromInfo.Height > maxPeakHeight)
+                        {
+                            maxPeakHeight = transitionChromInfo.Height;
+                            bestPeakInfo = transitionChromInfo;
+                        }
+                    }
+                }
+
+                // If we have a non-zero sum, display it.
+                if (sumInfo != null)
+                {
+                    // Intersect best peak with summed transition.
+                    if (bestPeakInfo != null)
+                    {
+                        float startRetentionTime = Math.Max(bestPeakInfo.StartRetentionTime, sumInfo.Times[0]);
+                        float endRetentionTime = Math.Min(bestPeakInfo.EndRetentionTime, sumInfo.Times[sumInfo.Times.Length - 1]);
+                        if (endRetentionTime > startRetentionTime)
+                        {
+                            if (bestStartTime > startRetentionTime)
+                            {
+                                bestStartTime = startRetentionTime;
+                                leftPeakWidth = endRetentionTime - startRetentionTime;
+                            }
+                            if (bestEndTime < endRetentionTime)
+                            {
+                                bestEndTime = endRetentionTime;
+                                rightPeakWidth = endRetentionTime - startRetentionTime;
+                            }
+                            bestPeakInfo = new TransitionChromInfo(startRetentionTime, endRetentionTime);
+                        }
+                    }
+
+                    // Get peptide graph color from SequenceTree.
+                    var peptideGraphInfo = _stateProvider.GetPeptideGraphInfo(peptideDocNode);
+                    Color color = peptideGraphInfo.Color;
+
+                    sumInfo.Transform(Transform);
+                    bool[] annotateAll = new bool[sumInfo.NumPeaks];
+                    ChromGraphItem graphItem = new ChromGraphItem(null,
+                        null,
+                        sumInfo,
+                        bestPeakInfo,
+                        timeRegressionFunction,
+                        annotateAll,
+                        null,
+                        0,
+                        false,
+                        false,
+                        0,
+                        color,
+                        fontSize,
+                        lineWidth)
+                    {
+                        CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.ModifiedSequence)
+                    };
+                    var graphPaneKey = new GraphHelper.PaneKey();
+                    _graphHelper.AddChromatogram(graphPaneKey, graphItem);
+                }
+            }
+        }
+
         private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary,
                                                 SrmSettings settings,
                                                 ChromatogramSet chromatograms,
@@ -1786,9 +2050,40 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
+        /// <summary>
+        /// Utility class to hold lists of selected peptides and transition groups.
+        /// </summary>
+        private class PeptidesAndTransitionGroups
+        {
+            public readonly List<PeptideDocNode> NodePep = new List<PeptideDocNode>();
+            public readonly List<TransitionGroupDocNode> NodeGroups = new List<TransitionGroupDocNode>();
+            public readonly List<IdentityPath> GroupPaths = new List<IdentityPath>();
+            public bool ProteinSelected;
+            public bool ShowPeptideTotals {get { return ProteinSelected || _peptideCount > 1; }}
+            private int _peptideCount;
+
+            public void Add(PeptideTreeNode nodePepTree, TransitionGroupDocNode nodeGroup)
+            {
+                if (!NodeGroups.Contains(nodeGroup))
+                {
+                    NodeGroups.Add(nodeGroup);
+                    if (!NodePep.Contains(nodePepTree.DocNode))
+                        _peptideCount++;
+                    NodePep.Add(nodePepTree.DocNode);
+                    GroupPaths.Add(new IdentityPath(nodePepTree.Path, nodeGroup.Id));
+                }
+            }
+
+            public void Add(PeptideTreeNode nodePepTree)
+            {
+                foreach (TransitionGroupDocNode nodeGroups in nodePepTree.ChildDocNodes)
+                    Add(nodePepTree, nodeGroups);
+            }
+        }
+
         private bool EnsureChromInfo(MeasuredResults results,
                                      ChromatogramSet chromatograms,
-                                     PeptideDocNode nodePep,
+                                     PeptideDocNode[] nodePeps,
                                      TransitionGroupDocNode[] nodeGroups,
                                      IdentityPath[] groupPaths,
                                      float mzMatchTolerance,
@@ -1807,11 +2102,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 // file paths in the process.
                 var listArrayChromInfo = new List<ChromatogramGroupInfo[]>();
                 var listFiles = new List<string>();
-                foreach (var nodeGroup in nodeGroups)
+                for (int i = 0; i < nodeGroups.Length; i++)
                 {
                     ChromatogramGroupInfo[] arrayChromInfo;
-                    if (!results.TryLoadChromatogram(chromatograms, nodePep, nodeGroup, mzMatchTolerance, true,
-                                                     out arrayChromInfo))
+                    if (!results.TryLoadChromatogram(
+                        chromatograms, 
+                        nodePeps[i], 
+                        nodeGroups[i], 
+                        mzMatchTolerance, 
+                        true,
+                        out arrayChromInfo))
                     {
                         listArrayChromInfo.Add(null);
                         continue;
@@ -2102,6 +2402,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            // Don't allow editing if multiple peptides are selected.
+            if (_showPeptideTotals)
+                return false;
+
             PointF pt = new PointF(e.X, e.Y);
 
             if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
@@ -2172,6 +2476,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            // Don't allow editing if multiple peptides are selected.
+            if (_showPeptideTotals)
+                return false;
+
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);

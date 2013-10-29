@@ -176,7 +176,53 @@ namespace pwiz.Skyline.Controls.SeqNode
             // Add parent nodes
             return SrmParent.GetPath(path);
         }
-        
+
+        public override void DrawNodeCustom(Graphics g, int rightEdge)
+        {
+            base.DrawNodeCustom(g, rightEdge);
+
+            // Draw color rectangle for a peptide if multiple peptides are selected.
+            if (Settings.Default.AllowMultiplePeptideSelection &&
+                (IsInSelection || (Parent != null && ((TreeNodeMS)Parent).IsInSelection)))
+            {
+                var color = ChromColor;
+                if (color.HasValue)
+                {
+                    // No color if this is the only selected peptide.
+                    bool multiSelect = false;
+                    foreach (var node in TreeViewMS.SelectedNodes)
+                    {
+                        if ((node is PeptideTreeNode && !ReferenceEquals(node, this)) ||
+                            node is PeptideGroupTreeNode)
+                        {
+                            multiSelect = true;
+                            break;
+                        }
+                    }
+                    if (multiSelect)
+                    {
+                        // Draw the peptide color rectangle: white background to erase text underneath,
+                        // black border, and the peptide color in the interior.
+                        const int imgWidth = TreeViewMS.IMG_WIDTH, imgHeight = TreeViewMS.IMG_WIDTH;
+                        const int colorRectWidth = imgWidth;
+                        const int colorRectHeight = imgHeight;
+                        rightEdge -= imgWidth + 3;
+                        int top = BoundsMS.Top + (BoundsMS.Height - imgHeight) / 2;
+                        var backgroundRect = new Rectangle(rightEdge - 2, top, colorRectWidth + 7, colorRectHeight);
+                        g.FillRectangle(Brushes.White, backgroundRect);
+                        var colorRect = new Rectangle(rightEdge, top, colorRectWidth - 2, colorRectHeight - 3);
+                        g.FillRectangle(new SolidBrush(color.Value), colorRect);
+                        g.DrawRectangle(Pens.Black, colorRect);
+                    }
+                }
+            }
+        }
+
+        public virtual Color? ChromColor
+        {
+            get { return null; }
+        }
+
         protected override void DrawTextMS(Graphics g)
         {
             base.DrawTextMS(g);

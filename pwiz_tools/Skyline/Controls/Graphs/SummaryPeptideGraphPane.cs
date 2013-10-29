@@ -235,13 +235,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide
-                var uniqueSeq = new List<KeyValuePair<string, string>>();
+                var sequences = new List<string>();
                 foreach (var nodePep in document.Peptides)
-                    AddUniqePrefix(uniqueSeq, nodePep.Peptide.Sequence, Math.Min(3, nodePep.Peptide.Sequence.Length));
-                // Flip the dictionary from ID - peptide to peptide - ID
-                var seqId = new Dictionary<string, string>();
-                foreach (var seqPair in uniqueSeq)
-                    seqId.Add(seqPair.Value, seqPair.Key);
+                    sequences.Add(nodePep.ModifiedSequence);
+                var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
 
                 int pointListCount = 0;
                 var dictTypeToSet = new Dictionary<IsotopeLabelType, int>();
@@ -358,7 +355,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (addLabel)
                     {
-                        string label = seqId[transitionGroup.Peptide.Sequence] +
+                        string label = uniquePrefixGenerator.GetUniquePrefix(nodePep.ModifiedSequence) +
                                        (chargeCount > 1
                                             ? Transition.GetChargeIndicator(transitionGroup.PrecursorCharge)
                                             : string.Empty);
@@ -583,77 +580,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     pointPair = MeanErrorBarItem.MakePointPair(iGroup, statValues.Mean(), statValues.StdDev());
                 maxY = Math.Max(maxY, MeanErrorBarItem.GetYTotal(pointPair));
                 return pointPair;
-            }
-
-            private sealed class PrefixComparer : IComparer<KeyValuePair<string, string>>
-            {
-                public int Compare(KeyValuePair<string, string> v1, KeyValuePair<string, string> v2)
-                {
-                    return Comparer.DefaultInvariant.Compare(v1.Key, v2.Key);
-                }
-            }
-
-            private static readonly PrefixComparer PREFIX_COMPARER = new PrefixComparer();
-
-            private static void AddUniqePrefix(List<KeyValuePair<string, string>> uniqueSeq, string seq, int len)
-            {
-                // Get the prefix of the specified length
-                string prefix = seq.Substring(0, len);
-
-                // If this prefix is not in the dictionary, add it
-                var insertVal = new KeyValuePair<string, string>(prefix, seq);
-                int iVal = uniqueSeq.BinarySearch(insertVal, PREFIX_COMPARER);
-                if (iVal < 0)
-                    iVal = ~iVal;
-
-                string nextPrefix = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Key : string.Empty);
-                string nextSeq = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Value : string.Empty);
-
-                if (Equals(prefix, nextPrefix))
-                {
-                    // If this is the same sequence again, ignore it.
-                    if (Equals(seq, nextSeq))
-                        return;
-
-                    // If the prefix is shorter than the matching sequence, lengthen it
-                    // for that sequence.
-                    if (len < nextSeq.Length)
-                    {
-                        uniqueSeq.RemoveAt(iVal);
-                        uniqueSeq.Insert(iVal, new KeyValuePair<string, string>(nextSeq.Substring(0, len + 1), nextSeq));
-                    }
-                    // If the prefix is shorter than the current sequence, lengthen it for
-                    // the current sequence also.
-                    if (len < seq.Length)
-                        len++;
-
-                    // Then try again for this sequence with either a longer next prefix
-                    // or a longer current prefix
-                    AddUniqePrefix(uniqueSeq, seq, len);
-                }
-                else if (nextPrefix.StartsWith(prefix))
-                {
-                    if (len == seq.Length)
-                    {
-                        uniqueSeq.Insert(iVal, insertVal);
-                    }
-                    else
-                    {
-                        // Advance until the prefixes no longer share a common prefix
-                        int stopIndex = Math.Min(nextPrefix.Length, seq.Length);
-                        do
-                        {
-                            prefix = seq.Substring(0, ++len);
-                        }
-                        while (len < stopIndex && nextPrefix.StartsWith(prefix));
-
-                        AddUniqePrefix(uniqueSeq, seq, len);
-                    }
-                }
-                else
-                {
-                    uniqueSeq.Insert(iVal, insertVal);
-                }
             }
 
             protected RetentionTimeValues? ScaleRetentionTimeValues(ChromFileInfoId chromFileInfoId, RetentionTimeValues? retentionTimeValues)

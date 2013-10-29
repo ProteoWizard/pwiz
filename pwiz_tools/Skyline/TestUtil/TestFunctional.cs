@@ -430,8 +430,10 @@ namespace pwiz.SkylineTestUtil
         public void PauseAndContinue(string description = null)
         {
             ClipboardEx.UseInternalClipboard(false);
+
             RunUI(() =>
-                      {
+            {
+                          SkylineWindow.UseKeysOverride = false;
                           var dlg = new PauseAndContinueForm(description) {Left = SkylineWindow.Left};
                           const int spacing = 15;
                           if (SkylineWindow.Top > dlg.Height + spacing)
@@ -447,6 +449,7 @@ namespace pwiz.SkylineTestUtil
                 // Wait for an event on the pause lock, when the form is closed
                 Monitor.Wait(_pauseLock);
                 ClipboardEx.UseInternalClipboard();
+                RunUI(() => SkylineWindow.UseKeysOverride = true);
             }
         }
 

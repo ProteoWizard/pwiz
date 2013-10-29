@@ -307,6 +307,8 @@ namespace pwiz.Skyline.Controls
                 InvalidateChangedNodes(SelectedNodes, unchangedNodes);
             }
 
+            Invalidate();
+
             // Make sure selection is updated before after select event is fired
             base.OnAfterSelect(e);
         }
@@ -358,7 +360,7 @@ namespace pwiz.Skyline.Controls
                 node != null && node.Bounds.Top <= bottom;
                 node = node.NextVisibleNode)
             {
-                ((TreeNodeMS)node).DrawNodeCustom(e.Graphics);
+                ((TreeNodeMS)node).DrawNodeCustom(e.Graphics, ClientRectangle.Right);
             }
         }
 
@@ -549,7 +551,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public void DrawNodeCustom(Graphics g)
+        public virtual void DrawNodeCustom(Graphics g, int rightEdge)
         {
             EnsureWidthCustom(g);
 

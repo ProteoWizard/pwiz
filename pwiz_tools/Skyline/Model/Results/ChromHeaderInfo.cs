@@ -1514,6 +1514,10 @@ namespace pwiz.Skyline.Model.Results
             _allScores = allScores;
         }
 
+        protected ChromatogramGroupInfo()
+        {
+        }
+
         internal ChromGroupHeaderInfo5 Header { get { return _groupHeaderInfo; } }
         public double PrecursorMz { get { return _groupHeaderInfo.Precursor; } }
         public string FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
@@ -1768,6 +1772,12 @@ namespace pwiz.Skyline.Model.Results
             MassError10XArray = massError10Xs;
             if (MassError10XArray != null)
                 MassError10Xs = massError10Xs[transitionIndex];
+        }
+
+        public ChromatogramInfo(float[] times, float[] intensities)
+        {
+            Times = times;
+            Intensities = intensities;
         }
 
         public double ProductMz

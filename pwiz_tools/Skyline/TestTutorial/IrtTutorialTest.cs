@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestTutorial
                           foreach (var nodePep in docCalibrate.Peptides)
                           {
                               Assert.IsTrue(enumLabels.MoveNext() && enumLabels.Current != null);
-                              Assert.IsTrue(nodePep.Peptide.Sequence.StartsWith(enumLabels.Current));
+                              Assert.IsTrue(nodePep.Peptide.Sequence.StartsWith(enumLabels.Current.Substring(0, 3)));
                           }
                       });
 

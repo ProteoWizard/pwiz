@@ -48,30 +48,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static Color ColorSelected { get { return Color.Red; } }
 
-        // private static readonly Color _colorNone = Color.Gray;
-
-        // private static readonly FontSpec _fontSpecNone = CreateFontSpec(_colorNone);
-
         private static FontSpec CreateFontSpec(Color color, float size)
         {
-            var fontSpec = new FontSpec(FONT_FACE, size, color, false, false, false);
-            if (Settings.Default.AllowLabelOverlap)
+            var fontSpec = new FontSpec(FONT_FACE, size, color, false, false, false)
             {
-                fontSpec.Fill = new Fill(Color.FromArgb(0xC0, 0xff, 0xff, 0xff));
-                fontSpec.Border = new Border(Color.FromArgb(0x40, 0xff, 0xff, 0xff), 2.0f);
-            }
-            else
-            {
-                fontSpec.Fill = new Fill(Color.Empty);
-                fontSpec.Border = new Border(false, Color.Empty, 0);
-            }
+                Fill = new Fill(Color.FromArgb(0xC0, 0xff, 0xff, 0xff)),
+                Border = new Border(Color.FromArgb(0x40, 0xff, 0xff, 0xff), 2.0f)
+            };
             return fontSpec;
         }
 
         private readonly double[] _measuredTimes;
         private readonly double[] _displayTimes;
         private readonly double[] _intensities;
-        private readonly Color _color;
         private readonly FontSpec _fontSpec;
         private readonly int _width;
 
@@ -106,9 +95,9 @@ namespace pwiz.Skyline.Controls.Graphs
             Chromatogram = chromatogram;
             TransitionChromInfo = tranPeakInfo;
             TimeRegressionFunction = timeRegressionFunction;
+            Color = color;
 
             _step = step;
-            _color = color;
             _fontSpec = CreateFontSpec(color, fontSize);
             _width = width;
 
@@ -186,6 +175,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _measuredTimes[_bestPeakTimeIndex] : 0; } }
 
+        public string CurveAnnotation { get; set; }
+
         internal PeakBoundsDragInfo DragInfo
         {
             get { return _dragInfo; }
@@ -216,7 +207,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public override Color Color { get { return _color; } }
         public FontSpec FontSpec { get { return _fontSpec; } }
 
         public override void CustomizeCurve(CurveItem curveItem)
@@ -248,6 +238,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static string GetTitle(TransitionGroupDocNode nodeGroup)
         {
+            if (nodeGroup == null)
+                return string.Empty;
+
             var seq = nodeGroup.TransitionGroup.Peptide.Sequence;
             return string.Format("{0} - {1:F04}{2}{3}", seq, nodeGroup.PrecursorMz, // Not L10N
                                  Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
@@ -288,7 +281,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             // Give priority to showing the best peak text object above all other annoations
-            if ((DragInfo != null || (!HideBest && TransitionChromInfo != null)))
+            if (DragInfo != null || (!HideBest && TransitionChromInfo != null) || CurveAnnotation != null)
             {
                 // Show text and arrow for the best peak
                 double intensityBest = 0;
@@ -307,32 +300,59 @@ namespace pwiz.Skyline.Controls.Graphs
                                                ? TransitionChromInfo.MassError
                                                : null;
                         double dotProduct = _dotProducts != null ? _bestProduct : 0;
-                        string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
 
-                        TextObj text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
-                                                   CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+                        TextObj text;
+                        if (CurveAnnotation != null)
                         {
-                            ZOrder = ZOrder.A_InFront,
-                            IsClippedToChartRect = true,
-                            FontSpec = FontSpec,
-                            Tag = new GraphObjTag(this, GraphObjType.best_peak, timeBest)
-                        };
+                            // Darken peptide name a little so light colors stand out against the white background.
+                            var color = FontSpec.FontColor;
+                            color = Color.FromArgb(color.R*7/10, color.G*7/10, color.B*7/10);
+                            var fontSpec = new FontSpec(FontSpec) {FontColor = color, Angle = 90};
+
+                            // Display peptide name label using vertical text.
+                            text = new TextObj(CurveAnnotation, timeBest.DisplayTime, intensityLabel,
+                                CoordType.AxisXYScale, AlignH.Left, AlignV.Center)
+                            {
+                                ZOrder = ZOrder.A_InFront,
+                                IsClippedToChartRect = true,
+                                FontSpec = fontSpec,
+                                Tag = new GraphObjTag(this, GraphObjType.best_peak, timeBest),
+                            };
+                        }
+                        else
+                        {
+                            string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
+
+                            text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
+                                CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+                            {
+                                ZOrder = ZOrder.A_InFront,
+                                IsClippedToChartRect = true,
+                                FontSpec = FontSpec,
+                                Tag = new GraphObjTag(this, GraphObjType.best_peak, timeBest),
+                            };
+                        }
+
                         annotations.Add(text);
                     }
 
-                    // Show the best peak arrow indicator
-                    double timeArrow = graphPane.XAxis.Scale.ReverseTransform(xBest - 4);
-                    double intensityArrow = graphPane.YAxis.Scale.ReverseTransform(yBest - 2);
-
-                    ArrowObj arrow = new ArrowObj(COLOR_BEST_PEAK, 12f,
-                                                  timeArrow, intensityArrow, timeArrow, intensityArrow)
+                    // If showing multiple peptides, skip the best peak arrow indicator.
+                    if (CurveAnnotation == null)
                     {
-                        Location = { CoordinateFrame = CoordType.AxisXYScale },
-                        IsArrowHead = true,
-                        IsClippedToChartRect = true,
-                        ZOrder = ZOrder.A_InFront
-                    };
-                    annotations.Add(arrow);
+                        // Show the best peak arrow indicator
+                        double timeArrow = graphPane.XAxis.Scale.ReverseTransform(xBest - 4);
+                        double intensityArrow = graphPane.YAxis.Scale.ReverseTransform(yBest - 2);
+
+                        ArrowObj arrow = new ArrowObj(COLOR_BEST_PEAK, 12f,
+                            timeArrow, intensityArrow, timeArrow, intensityArrow)
+                        {
+                            Location = {CoordinateFrame = CoordType.AxisXYScale},
+                            IsArrowHead = true,
+                            IsClippedToChartRect = true,
+                            ZOrder = ZOrder.A_InFront
+                        };
+                        annotations.Add(arrow);
+                    }
                 }
 
                 // Show the best peak boundary lines
@@ -803,10 +823,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                             MSPointList pointList, GraphObjList annotations);
         public abstract IPointList Points { get; }
 
-        public virtual Color Color
-        {
-            get { return Color.Gray; }
-        }
+        public Color Color { get; set; }
 
         public virtual void CustomizeCurve(CurveItem curveItem)
         {
