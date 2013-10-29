@@ -864,7 +864,6 @@ namespace pwiz.Skyline.Model
         public double DwellTime { get; set; }
         protected double? RTWindow { get; private set; }
 
-        private bool HasResults { get { return Document.Settings.HasResults; } }
         private int OptimizeStepIndex { get; set; }
 
         private Dictionary<string, int> _groupNamesToCharge = new Dictionary<string, int>();
@@ -950,70 +949,142 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             OptimizeStepIndex = step;
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
+            string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            string q3 = GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo);
 
-            double? predictedRT = null;
-            if (MethodType == ExportMethodType.Standard)
-                writer.Write(Math.Round(DwellTime, 2).ToString(CultureInfo));
-            else
+            double? predictedRT;
+            string dwellOrRt;
+            GetTransitionTimeValues(nodePep, nodeTranGroup, out predictedRT, out dwellOrRt);
+
+            string extPeptideId;
+            string extGroupId;
+            GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out extPeptideId, out extGroupId);
+
+            string dp = Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
+            string ce = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
+
+            string precursorWindow = string.Empty;
+            string productWindow = string.Empty;
+            if (FullScans)
             {
-                var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
-                predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, HasResults, out windowRT);
-                if (predictedRT.HasValue)
-                {
-                    RTWindow = windowRT; // Store for later use
-                    writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
-                }
-                else
-                {
-                    writer.Write(0);
-                }
-            }
-            writer.Write(FieldSeparator);
+                precursorWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+                productWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz).ToString(CultureInfo);
+            }          
 
+            double maxRtDiff = 0;
+            float? averagePeakArea = null;
+            if (nodeTran.Results != null && predictedRT.HasValue)
+            {
+                GetValuesFromResults(nodeTran, predictedRT, out averagePeakArea, out maxRtDiff);
+            }
+            string averagePeakAreaText = averagePeakArea.HasValue ? averagePeakArea.Value.ToString(CultureInfo) : string.Empty;
+
+            double? variableRtWindow;
+            string variableRtWindowText;
+            GetVariableRtWindow(maxRtDiff, out variableRtWindow, out variableRtWindowText);
+
+            string primaryOrSecondary = string.Empty;
+            if (MethodType == ExportMethodType.Triggered)
+            {
+                primaryOrSecondary = IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran) ? "1" : "2";
+            }
+
+            string oneLine = string.Format("{0},{1},{2},{3}", q1, q3, dwellOrRt, extPeptideId) +
+                             GetOptionalColumns(dp,
+                                                ce,
+                                                precursorWindow,
+                                                productWindow,
+                                                extGroupId,
+                                                averagePeakAreaText,
+                                                variableRtWindowText,
+                                                primaryOrSecondary);
+
+            writer.Write(oneLine.Replace(',', FieldSeparator));
+            writer.WriteLine();
+        }
+
+        protected virtual string GetOptionalColumns(string dp,
+                                          string ce,
+                                          string precursorWindow,
+                                          string productWindow,
+                                          string extGroupId,
+                                          string averagePeakAreaText,
+                                          string variableRtWindowText,
+                                          string primaryOrSecondary)
+        {
+            if (MethodType == ExportMethodType.Triggered) // CSV for triggered
+            {
+                return string.Format(",{0},{1},{2},{3},{4},{5},{6}",    // Not L10N
+                    extGroupId,
+                    variableRtWindowText,
+                    primaryOrSecondary,
+                    "1000",
+                    "1.0",
+                    dp,
+                    ce);
+            }
+            else // CSV
+            {
+                return string.Format(",{0},{1}",    // Not L10N
+                    dp,
+                    ce);
+            }
+        }
+
+        private void GetVariableRtWindow(double maxRtDiff, out double? variableRtWindow, out string variableRtWindowText)
+        {
+            // increase window size if observed data goes close to window edge
+            double maxWindowObservedInData = (maxRtDiff*2);
+            double? measuredWindow = Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
+            double triggerFraction = Settings.Default.FractionOfRtWindowAtWhichVariableSizeIsTriggered;
+            variableRtWindow = null;
+            if (measuredWindow.HasValue && maxWindowObservedInData > triggerFraction*measuredWindow.Value)
+            {
+                variableRtWindow = maxWindowObservedInData +
+                                   (Settings.Default.VariableRtWindowIncreaseFraction*measuredWindow);
+            }
+            variableRtWindowText = variableRtWindow.HasValue ? variableRtWindow.Value.ToString(CultureInfo) : string.Empty;
+        }
+
+        private void GetPeptideAndGroupNames(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, TransitionDocNode nodeTran, int step, out string extPeptideId,
+            out string extGroupId)
+        {
             // Write special ID for AB software
             // Use light modified sequence for peptide molecular structure, with decimal points replaced by underscores
             // because AB uses periods as field separators
             string modifiedPepSequence = GetSequenceWithModsString(nodePep, Document.Settings); // Not L10N;
 
-            string extPeptideId;
-            string extGroupId ;
             int charge = nodeTranGroup.TransitionGroup.PrecursorCharge;
             if (OptimizeType == null)
             {
                 extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
-                                                    nodePepGroup.Name,
-                                                    modifiedPepSequence,
-                                                    GetTransitionName(charge, nodeTran),
-                                                    nodeTranGroup.TransitionGroup.LabelType);
+                    nodePepGroup.Name,
+                    modifiedPepSequence,
+                    GetTransitionName(charge, nodeTran),
+                    nodeTranGroup.TransitionGroup.LabelType);
                 extGroupId = string.Format("{0}.{1}.{2}", // Not L10N
-                                                    nodePepGroup.Name,
-                                                    modifiedPepSequence,
-                                                    nodeTranGroup.TransitionGroup.LabelType);
+                    nodePepGroup.Name,
+                    modifiedPepSequence,
+                    nodeTranGroup.TransitionGroup.LabelType);
             }
             else
             {
                 extPeptideId = string.Format("{0}.{1}.{2}.CE_{3}.{4}", // Not L10N
-                                                    nodePepGroup.Name,
-                                                    modifiedPepSequence,
-                                                    GetTransitionName(charge, nodeTran),
-                                                    GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture),
-                                                    nodeTranGroup.TransitionGroup.LabelType);
+                    nodePepGroup.Name,
+                    modifiedPepSequence,
+                    GetTransitionName(charge, nodeTran),
+                    GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture),
+                    nodeTranGroup.TransitionGroup.LabelType);
                 extGroupId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
-                                                    nodePepGroup.Name,
-                                                    modifiedPepSequence,
-                                                    GetTransitionName(charge, nodeTran),
-                                                    nodeTranGroup.TransitionGroup.LabelType);
+                    nodePepGroup.Name,
+                    modifiedPepSequence,
+                    GetTransitionName(charge, nodeTran),
+                    nodeTranGroup.TransitionGroup.LabelType);
             }
 
             // remove commas to prevent addition of extra columns that will be misinterpretted in method builder exe 
-            extPeptideId = extPeptideId.Replace(',', '_');
-            extGroupId = extGroupId.Replace(',', '_');
+            extPeptideId = extPeptideId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_");
+            extGroupId = extGroupId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_");
 
             int existCharge;
             if (!_groupNamesToCharge.TryGetValue(extGroupId, out existCharge))
@@ -1024,77 +1095,29 @@ namespace pwiz.Skyline.Model
             {
                 extGroupId = string.Format("{0} +{1}", extGroupId, charge);
             }
+        }
 
-            writer.WriteDsvField(extPeptideId, FieldSeparator);
-            writer.Write(FieldSeparator);
-
-            writer.Write(Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));           
-            if (FullScans)
-            {
-                writer.Write(FieldSeparator);
-                writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
-                writer.Write(FieldSeparator);
-                writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz).ToString(CultureInfo));
-            }
+        private void GetTransitionTimeValues(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, out double? predictedRT, out string dwellOrRt)
+        {
+            predictedRT = null;
+            if (MethodType == ExportMethodType.Standard)
+                dwellOrRt = Math.Round(DwellTime, 2).ToString(CultureInfo);
             else
             {
-                // blanks for full scan window sizes
-                writer.Write(FieldSeparator);
-                writer.Write(string.Empty);
-                writer.Write(FieldSeparator);
-                writer.Write(string.Empty);
-            }
-
-            writer.Write(FieldSeparator);
-            writer.Write(extGroupId);
-           
-
-            double maxRtDiff = 0;
-            float? averagePeakArea = null;
-            if (nodeTran.Results != null && predictedRT.HasValue)
-            {
-                GetValuesFromResults(nodeTran, predictedRT, out averagePeakArea, out maxRtDiff);
-            }
-
-            writer.Write(FieldSeparator);
-            if (averagePeakArea.HasValue)
-                writer.Write(averagePeakArea.Value.ToString(CultureInfo));
-
-            // increase window size if observed data goes close to window edge
-            double maxWindowObservedInData = (maxRtDiff * 2);
-            double? measuredWindow = Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
-            double triggerFraction = Settings.Default.FractionOfRtWindowAtWhichVariableSizeIsTriggered;
-            double? variableRtWindow = null;
-            if (measuredWindow.HasValue && maxWindowObservedInData > triggerFraction*measuredWindow.Value)
-            {
-                variableRtWindow = maxWindowObservedInData +
-                                   (Settings.Default.VariableRtWindowIncreaseFraction*measuredWindow);
-            }
-            writer.Write(FieldSeparator);
-            if (variableRtWindow.HasValue)
-                writer.Write(variableRtWindow.Value.ToString(CultureInfo));
-
-            if (MethodType == ExportMethodType.Triggered)
-            {
-                if (IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran))
+                var prediction = Document.Settings.PeptideSettings.Prediction;
+                double windowRT;
+                predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                    SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out windowRT);
+                if (predictedRT.HasValue)
                 {
-                    writer.Write(FieldSeparator);
-                    writer.Write(String.Empty);  // Trigger Threshold (placeholder)
-                    writer.Write(FieldSeparator);
-                    writer.Write(1);     // Primary
+                    RTWindow = windowRT; // Store for later use
+                    dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
                 }
                 else
                 {
-                    writer.Write(FieldSeparator);
-                    writer.Write(String.Empty);  // Trigger Threshold (placeholder)
-                    writer.Write(FieldSeparator);
-                    writer.Write(2);          // Secondary
+                    dwellOrRt = 0.ToString(CultureInfo);
                 }
             }
-
-            writer.WriteLine();
         }
 
         private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,
@@ -1299,7 +1322,28 @@ namespace pwiz.Skyline.Model
                 return null;
             }
         }
-        
+
+        protected override string GetOptionalColumns(string dp,
+                                                     string ce,
+                                                     string precursorWindow,
+                                                     string productWindow,
+                                                     string extGroupId,
+                                                     string averagePeakAreaText,
+                                                     string variableRtWindowText,
+                                                     string primaryOrSecondary)
+        {
+            // Provide all columns for method export
+            return string.Format(",{0},{1},{2},{3},{4},{5},{6},{7},{8}",    // Not L10N
+                                 dp,
+                                 ce,
+                                 precursorWindow,
+                                 productWindow,
+                                 extGroupId,
+                                 averagePeakAreaText,
+                                 variableRtWindowText,
+                                 string.Empty,  // Threshold for triggering secondary
+                                 primaryOrSecondary);
+        }
     }
     public class AbiQtrapMethodExporter : AbiMethodExporter
     {

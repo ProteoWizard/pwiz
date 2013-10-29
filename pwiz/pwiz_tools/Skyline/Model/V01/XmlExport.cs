@@ -251,11 +251,6 @@ namespace pwiz.Skyline.Model.V01
             var nodePep = new PeptideDocNode(newPeptide, null);
             string modifiedPepSequence = AbiMassListExporter.GetSequenceWithModsString(nodePep, _document.Settings); // Not L10N;
             
-            string extGroupId = string.Format("{0}.{1}.{2}", // Not L10N
-                                                    sequence.Name,
-                                                    modifiedPepSequence,
-                                                    "light");
-
             string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                 sequence.Name,
                                                 modifiedPepSequence,
@@ -265,29 +260,10 @@ namespace pwiz.Skyline.Model.V01
             writer.WriteDsvField(extPeptideId, separator);
             writer.Write(separator);
             writer.Write(Math.Round(transition.DeclusteringPotential ?? 0, 1).ToString(_cultureInfo));
-//            Removed in v0.2 for test compatibility
-//            writer.Write(separator);
-            // EP : not used by Paulovich Lab
+
             writer.Write(separator);
             writer.Write(Math.Round(transition.CollisionEnergy, 1).ToString(_cultureInfo));
-//            Removed in v0.2 for test compatibility
-//            writer.Write(separator);
-            // CXP : not used by Paulovich Lab
 
-            // blanks for full scan window sizes
-            
-            writer.Write(separator);
-            writer.Write(string.Empty);
-            writer.Write(separator);
-            writer.Write(string.Empty);
-
-            writer.Write(separator);
-            writer.Write(extGroupId);
-
-            writer.Write(separator);
-            writer.Write(string.Empty);
-            writer.Write(separator);
-            writer.Write(string.Empty);
 
             writer.WriteLine();
         }
