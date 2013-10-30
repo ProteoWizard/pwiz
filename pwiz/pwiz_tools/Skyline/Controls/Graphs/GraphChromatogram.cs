@@ -2705,6 +2705,9 @@ namespace pwiz.Skyline.Controls.Graphs
     public struct ScaledRetentionTime
     {
         public static readonly ScaledRetentionTime ZERO = default(ScaledRetentionTime);
+        public ScaledRetentionTime(double measuredTime) : this(measuredTime, measuredTime)
+        {
+        }
         public ScaledRetentionTime(double measuredTime, double scaledTime) : this()
         {
             MeasuredTime = measuredTime;

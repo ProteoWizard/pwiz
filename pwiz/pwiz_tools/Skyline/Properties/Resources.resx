@@ -4748,7 +4748,7 @@ Are you sure you want to continue?</value>
     <value>You must save this document before importing a peptide search.</value>
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
-    <value>Next</value>
+    <value>&amp;Next ></value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_" xml:space="preserve">
     <value>The document specific spectral library does not have valid retention times.</value>
@@ -4757,7 +4757,7 @@ Are you sure you want to continue?</value>
     <value>Please check your peptide search pipeline or contact Skyline support to ensure retention times appear in your spectral libraries.</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
-    <value>Finish</value>
+    <value>&amp;Finish</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>An error occurred attempting to import the {0} library.</value>

@@ -204,7 +204,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (skipThis)
                     continue;
 
-                modificationsListBox.Items.Add(new ListBoxModification(mod), CheckState.Checked);
+                modificationsListBox.Items.Add(new ListBoxModification(mod), CheckState.Unchecked);
             }
 
             if (_matcher.UnmatchedSequences.Any())
@@ -217,6 +217,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 splitContainer.Panel2Collapsed = true;
             }
+            if (modificationsListBox.Items.Count <= 3)
+            {
+                cbSelectAll.Visible = false;
+                modificationsListBox.Height = cbSelectAll.Bottom - modificationsListBox.Bottom;
+            }
+        }
+
+        private void cbSelectAll_CheckedChanged(object sender, EventArgs e)
+        {
+            ChangeAll(cbSelectAll.Checked);
         }
 
         private void btnAddModification_Click(object sender, EventArgs e)

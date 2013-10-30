@@ -123,6 +123,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
+                importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             var docModified = WaitForDocumentChange(doc);

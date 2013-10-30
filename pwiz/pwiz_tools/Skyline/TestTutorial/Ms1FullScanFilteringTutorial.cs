@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -29,8 +30,8 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -250,8 +251,45 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("page 15 - main window layout");   // p. 15
 
-            return;
+            RunUI(() =>
+                {
+                    SkylineWindow.CollapsePeptides();
+                    var pathPep = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Peptides, 3);
+                    SkylineWindow.SelectedPath = pathPep;
+                    SkylineWindow.ShowAlignedPeptideIDTimes(true);
 
+                    var nodeGroup = ((PeptideDocNode) SkylineWindow.DocumentUI.FindNode(pathPep)).TransitionGroups.First();
+                    var graphChrom = SkylineWindow.GraphChromatograms.First();
+                    var listChanges = new List<ChangedPeakBoundsEventArgs>
+                        {
+                            new ChangedPeakBoundsEventArgs(new IdentityPath(pathPep, nodeGroup.TransitionGroup),
+                                null,
+                                graphChrom.NameSet,
+                                graphChrom.ChromGroupInfos[0].FilePath,
+                                new ScaledRetentionTime(38.8),
+                                new ScaledRetentionTime(39.4),
+                                PeakIdentification.ALIGNED,
+                                PeakBoundsChangeType.both)
+                        };
+                    graphChrom.SimulateChangedPeakBounds(listChanges);
+                });
+            WaitForGraphs();
+
+            PauseForScreenShot("page 17 - chromatogram graphs");    // p. 17
+
+            var alignmentForm = ShowDialog<AlignmentForm>(() => SkylineWindow.ShowRetentionTimeAlignmentForm());
+
+            RunUI(() =>
+                {
+                    alignmentForm.Width = 711;
+                    alignmentForm.Height = 561;
+                });
+
+            PauseForScreenShot("page 18 - retention time alginement form");
+
+            OkDialog(alignmentForm, alignmentForm.Close);
+
+/*
             RunUI(SkylineWindow.AutoZoomNone);
             PauseForScreenShot();   // p. 16
 
@@ -299,6 +337,8 @@ namespace pwiz.SkylineTestTutorial
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, Path.GetFileNameWithoutExtension(searchFiles[1]), 51, 52, 0, 156, 0);
 
             RunUI(SkylineWindow.AutoZoomNone);
+*/
+            var docAfter = SkylineWindow.Document;
 
             // Minimizing a chromatogram cache file.
             RunUI(SkylineWindow.CollapsePeptides);

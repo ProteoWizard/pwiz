@@ -154,6 +154,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
+            // Nothing to build, if now search files were specified
+            if (_searchFileNames.Length == 0)
+            {
+                var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+                if (!libraries.HasLibraries)
+                    return false;
+                DocLibrarySpec = libraries.LibrarySpecs.FirstOrDefault(s => s.IsDocumentLibrary);
+                if (DocLibrarySpec == null || !LoadPeptideSearchLibrary())
+                    return false;
+                return true;
+            }
+
             double cutOffScore;
             MessageBoxHelper helper = new MessageBoxHelper(WizardForm);
             if (!helper.ValidateDecimalTextBox(e, textCutoff, 0, 1.0, out cutOffScore))

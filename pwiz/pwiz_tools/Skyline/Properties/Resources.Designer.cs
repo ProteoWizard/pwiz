@@ -6686,7 +6686,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Next.
+        ///   Looks up a localized string similar to &amp;Next &gt;.
         /// </summary>
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {
             get {
@@ -6695,7 +6695,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finish.
+        ///   Looks up a localized string similar to &amp;Finish.
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_Finish {
             get {

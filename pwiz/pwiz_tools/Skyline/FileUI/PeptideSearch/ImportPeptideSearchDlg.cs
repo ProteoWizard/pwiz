@@ -57,7 +57,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             CurrentPage = Pages.spectra_page;
             btnNext.Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next;
             AcceptButton = btnNext;
-            btnNext.Enabled = false;
+            btnNext.Enabled = HasUnmatchedLibraryRuns();
 
             // Create and add wizard pages
             BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(SkylineWindow, libraryManager)
@@ -131,6 +131,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         private readonly HashSet<Pages> _pagesToSkip;
+
+        private bool HasUnmatchedLibraryRuns()
+        {
+            var doc = SkylineWindow.DocumentUI;
+            var libraries = doc.Settings.PeptideSettings.Libraries;
+            if (!libraries.HasLibraries || !libraries.HasDocumentLibrary)
+                return false;
+            for (int i = 0; i < libraries.LibrarySpecs.Count; i++)
+            {
+                if (libraries.LibrarySpecs[i].IsDocumentLibrary)
+                {
+                    var documentLibrary = libraries.Libraries[i];
+                    // CONSIDER: Load the library?
+                    if (documentLibrary == null)
+                        return false;
+                    foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
+                    {
+                        if (!doc.Settings.HasResults ||
+                                doc.Settings.MeasuredResults.FindMatchingMSDataFile(dataFile) == null)
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
 
         public Pages CurrentPage
         {

@@ -55,7 +55,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.tbxFasta.Name = "tbxFasta";
             this.tbxFasta.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.tbxFasta.Size = new System.Drawing.Size(282, 182);
-            this.tbxFasta.TabIndex = 0;
+            this.tbxFasta.TabIndex = 5;
             this.helpTipFasta.SetToolTip(this.tbxFasta, "FASTA sequence text pasted or loaded from files");
             this.tbxFasta.WordWrap = false;
             this.tbxFasta.TextChanged += new System.EventHandler(this.tbxFasta_TextChanged);
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.browseFastaBtn.Location = new System.Drawing.Point(302, 87);
             this.browseFastaBtn.Name = "browseFastaBtn";
             this.browseFastaBtn.Size = new System.Drawing.Size(75, 23);
-            this.browseFastaBtn.TabIndex = 1;
+            this.browseFastaBtn.TabIndex = 6;
             this.browseFastaBtn.Text = "&Browse...";
             this.browseFastaBtn.UseVisualStyleBackColor = true;
             this.browseFastaBtn.Click += new System.EventHandler(this.browseFastaBtn_Click);
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.clearBtn.Location = new System.Drawing.Point(302, 116);
             this.clearBtn.Name = "clearBtn";
             this.clearBtn.Size = new System.Drawing.Size(75, 23);
-            this.clearBtn.TabIndex = 2;
+            this.clearBtn.TabIndex = 7;
             this.clearBtn.Text = "&Clear";
             this.clearBtn.UseVisualStyleBackColor = true;
             this.clearBtn.Click += new System.EventHandler(this.clearBtn_Click);
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label1.Location = new System.Drawing.Point(14, 57);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(363, 29);
-            this.label1.TabIndex = 7;
+            this.label1.TabIndex = 4;
             this.label1.Text = "FASTA records begin with \'>\' and have the protein name followed by the optional p" +
     "rotein description.";
             // 
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label2.Location = new System.Drawing.Point(196, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(117, 13);
-            this.label2.TabIndex = 5;
+            this.label2.TabIndex = 2;
             this.label2.Text = "Max missed cleavages:";
             // 
             // cbMissedCleavages
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbMissedCleavages.Location = new System.Drawing.Point(199, 16);
             this.cbMissedCleavages.Name = "cbMissedCleavages";
             this.cbMissedCleavages.Size = new System.Drawing.Size(44, 21);
-            this.cbMissedCleavages.TabIndex = 6;
+            this.cbMissedCleavages.TabIndex = 3;
             // 
             // label3
             // 
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label3.Location = new System.Drawing.Point(11, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(47, 13);
-            this.label3.TabIndex = 3;
+            this.label3.TabIndex = 0;
             this.label3.Text = "Enzyme:";
             // 
             // comboEnzyme
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.comboEnzyme.Location = new System.Drawing.Point(14, 16);
             this.comboEnzyme.Name = "comboEnzyme";
             this.comboEnzyme.Size = new System.Drawing.Size(169, 21);
-            this.comboEnzyme.TabIndex = 4;
+            this.comboEnzyme.TabIndex = 1;
             this.comboEnzyme.SelectedIndexChanged += new System.EventHandler(this.enzyme_SelectedIndexChanged);
             // 
             // ImportFastaControl

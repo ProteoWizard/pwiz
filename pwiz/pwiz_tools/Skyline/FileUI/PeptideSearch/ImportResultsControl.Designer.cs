@@ -47,7 +47,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.resultsSplitContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.resultsSplitContainer.IsSplitterFixed = true;
             this.resultsSplitContainer.Location = new System.Drawing.Point(0, 0);
             this.resultsSplitContainer.Name = "resultsSplitContainer";
             this.resultsSplitContainer.Orientation = System.Windows.Forms.Orientation.Horizontal;
@@ -63,14 +62,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.resultsSplitContainer.Panel2.Controls.Add(this.label3);
             this.resultsSplitContainer.Panel2.Controls.Add(this.findResultsFilesButton);
             this.resultsSplitContainer.Panel2.Controls.Add(this.listResultsFilesMissing);
-            this.resultsSplitContainer.Size = new System.Drawing.Size(381, 272);
-            this.resultsSplitContainer.SplitterDistance = 111;
+            this.resultsSplitContainer.Size = new System.Drawing.Size(381, 274);
+            this.resultsSplitContainer.SplitterDistance = 145;
             this.resultsSplitContainer.TabIndex = 0;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(19, 10);
+            this.label2.Location = new System.Drawing.Point(16, 10);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(96, 13);
             this.label2.TabIndex = 0;
@@ -82,15 +81,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listResultsFilesFound.FormattingEnabled = true;
-            this.listResultsFilesFound.Location = new System.Drawing.Point(19, 30);
+            this.listResultsFilesFound.Location = new System.Drawing.Point(19, 26);
             this.listResultsFilesFound.Name = "listResultsFilesFound";
-            this.listResultsFilesFound.Size = new System.Drawing.Size(340, 69);
+            this.listResultsFilesFound.Size = new System.Drawing.Size(340, 108);
             this.listResultsFilesFound.TabIndex = 1;
             // 
             // browseToResultsFileButton
             // 
             this.browseToResultsFileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.browseToResultsFileButton.Location = new System.Drawing.Point(18, 100);
+            this.browseToResultsFileButton.Location = new System.Drawing.Point(19, 96);
             this.browseToResultsFileButton.Name = "browseToResultsFileButton";
             this.browseToResultsFileButton.Size = new System.Drawing.Size(88, 23);
             this.browseToResultsFileButton.TabIndex = 2;
@@ -101,7 +100,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(18, 5);
+            this.label3.Location = new System.Drawing.Point(16, 5);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(99, 13);
             this.label3.TabIndex = 0;
@@ -110,11 +109,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // findResultsFilesButton
             // 
             this.findResultsFilesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.findResultsFilesButton.Location = new System.Drawing.Point(112, 100);
+            this.findResultsFilesButton.Location = new System.Drawing.Point(113, 96);
             this.findResultsFilesButton.Name = "findResultsFilesButton";
             this.findResultsFilesButton.Size = new System.Drawing.Size(88, 23);
             this.findResultsFilesButton.TabIndex = 3;
-            this.findResultsFilesButton.Text = "F&ind in Folder...";
+            this.findResultsFilesButton.Text = "Find in F&older...";
             this.findResultsFilesButton.UseVisualStyleBackColor = true;
             this.findResultsFilesButton.Click += new System.EventHandler(this.findResultsFilesButton_Click);
             // 
@@ -124,7 +123,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listResultsFilesMissing.FormattingEnabled = true;
-            this.listResultsFilesMissing.Location = new System.Drawing.Point(18, 25);
+            this.listResultsFilesMissing.Location = new System.Drawing.Point(19, 21);
             this.listResultsFilesMissing.Name = "listResultsFilesMissing";
             this.listResultsFilesMissing.Size = new System.Drawing.Size(340, 69);
             this.listResultsFilesMissing.TabIndex = 1;
@@ -133,7 +132,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             this.cbExcludeSourceFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.cbExcludeSourceFiles.AutoSize = true;
-            this.cbExcludeSourceFiles.Location = new System.Drawing.Point(19, 278);
+            this.cbExcludeSourceFiles.Location = new System.Drawing.Point(21, 287);
             this.cbExcludeSourceFiles.Name = "cbExcludeSourceFiles";
             this.cbExcludeSourceFiles.Size = new System.Drawing.Size(166, 17);
             this.cbExcludeSourceFiles.TabIndex = 1;

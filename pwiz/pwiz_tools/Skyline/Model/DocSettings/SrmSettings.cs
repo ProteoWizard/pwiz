@@ -1608,6 +1608,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return false;
             }
+            if (!ArrayUtil.EqualsDeep(measuredResultsNew.CachedFilePaths.ToArray(),
+                                      measuredResultsOld.CachedFilePaths.ToArray()))
+            {
+                return false;
+            }
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
                 var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY);
