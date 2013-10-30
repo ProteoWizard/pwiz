@@ -275,11 +275,10 @@ string getOutputFilename(const string& inFilename, const Config& config)
         }
         else if (fs::is_directory(output))
         {
-            fs::path infile(inFilename);
-            string outFilename = input.stem();
-            outFilename += getExtension(config);
-            output /= fs::path(outFilename);
-            outFilename = output.string();
+            fs::path outFilepath = input;
+            outFilepath.replace_extension(getExtension(config));
+            output /= outFilepath;
+            outputFile = output.string();
         }
         else
             // TODO keep or check & over write symlinks

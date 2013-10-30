@@ -29,7 +29,6 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include <boost/foreach_field.hpp>
-#include <boost/tuple/tuple.hpp>
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI::identify(const std::string& filename, const std::string& head) const
@@ -71,7 +70,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
 
     string sampleName = wifffile->getSampleNames()[sample-1];
 
-    BOOST_FOREACH_FIELD((boost::tuples::ignore)(const ExperimentPtr& msExperiment), experimentsMap)
+    BOOST_FOREACH_FIELD((boost::fusion::ignore)(const ExperimentPtr& msExperiment), experimentsMap)
     {
         if (msExperiment->getExperimentType() != MRM)
             msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getExperimentType()));

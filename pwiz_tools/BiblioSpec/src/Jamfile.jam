@@ -66,9 +66,10 @@ rule mascot-api-usage-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        result += <library>$(PWIZ_ROOT_PATH)//msparser <dependency>unimod_2.xsd ;
-        result += <library>$(PWIZ_ROOT_PATH)//msparser <dependency>quantitation_1.xsd ;
-        result += <library>$(PWIZ_ROOT_PATH)//msparser <dependency>quantitation_2.xsd ;
+        result += <library>$(PWIZ_ROOT_PATH)//msparser ;
+        result += <dependency>unimod_2.xsd ;
+        result += <dependency>quantitation_1.xsd ;
+        result += <dependency>quantitation_2.xsd ;
     }
 
     return $(result) ;

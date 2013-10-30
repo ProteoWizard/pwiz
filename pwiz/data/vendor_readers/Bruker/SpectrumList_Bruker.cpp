@@ -503,6 +503,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 bfs::path relativePath = sourcePaths_[i] / "fid";
                 if (rootpath_.has_branch_path())
                     relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
+                relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_nativeID_format);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_file);
@@ -553,6 +554,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 bfs::path relativePath = sourcePaths_.back();
                 if (rootpath_.has_branch_path())
                     relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
+                relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
@@ -566,6 +568,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 bfs::path relativePath = sourcePaths_.back();
                 if (rootpath_.has_branch_path())
                     relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
+                relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);

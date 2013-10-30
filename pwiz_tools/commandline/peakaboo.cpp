@@ -26,11 +26,10 @@
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
-#include "pwiz/utility/misc/Timer.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/convenience.hpp"
 #include "boost/program_options.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Timer.hpp"
 
 using namespace pwiz::analysis;
 using namespace pwiz::data;
@@ -149,7 +148,7 @@ void processFile(const string& filename, const Config& config)
     // construct peak data
 
     peakdata::PeakData peakData;
-    peakData.sourceFilename = boost::filesystem::path(filename).leaf();
+    peakData.sourceFilename = BFS_STRING(boost::filesystem::path(filename).filename());
 
     peakData.software.name = "peakaboo";
     peakData.software.version = "1.2";
@@ -348,9 +347,6 @@ Config parseCommandLine(int argc, const char* argv[])
 int main(int argc, const char* argv[])
 {
     Timer timer;
-
-    namespace bfs = boost::filesystem;
-    bfs::path::default_name_check(bfs::native);
 
     try
     {

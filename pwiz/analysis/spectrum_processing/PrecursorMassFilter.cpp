@@ -81,12 +81,12 @@ struct PrecursorMassFilter::Impl
 {
     Impl(const Config& params_) : params(params_) {};
 
-    void filter(const SpectrumPtr spectrum) const;
+    void filter(const SpectrumPtr& spectrum) const;
 
     const Config& params;
 };
 
-void PrecursorMassFilter::Impl::filter(const SpectrumPtr spectrum) const
+void PrecursorMassFilter::Impl::filter(const SpectrumPtr& spectrum) const
 {
     vector<double>& massList_ = spectrum->getMZArray()->data;
     vector<double>& intensities_ = spectrum->getIntensityArray()->data;
@@ -104,10 +104,12 @@ void PrecursorMassFilter::Impl::filter(const SpectrumPtr spectrum) const
     vector<PrecursorReferenceMass> filterMassList;
     vector<int> chargeStates;
 
-    BOOST_FOREACH(const Precursor& precursor, spectrum->precursors)
+    for (size_t i=0; i < spectrum->precursors.size(); ++i)
     {
-        BOOST_FOREACH(const SelectedIon& selectedIon, precursor.selectedIons)
+        const Precursor& precursor = spectrum->precursors[i];
+        for (size_t j=0; j < precursor.selectedIons.size(); ++j)
         {
+            const SelectedIon& selectedIon = precursor.selectedIons[j];
             precursorMZ = selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>();
             if (precursorMZ == 0)
             {

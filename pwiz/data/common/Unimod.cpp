@@ -290,7 +290,7 @@ PWIZ_API_DECL Site site(char symbol)
         Site(Site::Any).value() // x
     };
 
-    if (symbol > 'x' || symbol != 'x' && symbolMap[(size_t) symbol] == nil)
+    if (symbol > 'x' || (symbol != 'x' && symbolMap[(size_t) symbol] == nil))
         throw invalid_argument("[unimod::site] invalid symbol");
 
     return Site::get_by_value(symbolMap[(size_t) symbol]).get();

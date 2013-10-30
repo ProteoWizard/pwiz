@@ -760,7 +760,12 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
 
                 string scanNumber = msdata::id::translateNativeIDToScanNumber(nativeIdFormat, sir.spectrumID);
                 if (scanNumber.empty())
-                    scanNumber = lexical_cast<string>(spectrumIndex);
+                {
+                    //if (sir.hasCVParam(MS_peak_list_scans))
+                    //    scanNumber = sir.cvParam(MS_peak_list_scans).value;
+                    //else
+                        scanNumber = lexical_cast<string>(spectrumIndex);
+                }
 
                 // basename.scanNumber.scanNumber.charge
                 ostringstream conventionalSpectrumId;
@@ -1821,11 +1826,11 @@ struct Handler_pepXML : public SAXParser::Handler
     }
 
     private:
+    CVTranslator cvTranslator;
     HandlerSampleEnzyme handlerSampleEnzyme;
     HandlerSearchSummary handlerSearchSummary;
     HandlerSearchResults handlerSearchResults;
 
-    CVTranslator cvTranslator;
     bool readSpectrumQueries;
     const IterationListenerRegistry* ilr;
     bool strict;

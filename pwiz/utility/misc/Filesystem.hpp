@@ -51,13 +51,15 @@ namespace bfs = boost::filesystem;
 #if BOOST_FILESYSTEM_VERSION == 2
 // in BFS2 p.filename() or p.leaf() or p.extension() returns a string
 #define BFS_STRING(p) p
+#define BFS_GENERIC_STRING(p) p
 // in BFS2 complete() is in namespace
 #define BFS_COMPLETE bfs::complete
 #else
 // in BFS3 p.filename() or p.leaf() or p.extension() returns a bfs::path
 #define BFS_STRING(p) (p).string()
+#define BFS_GENERIC_STRING(p) (p).generic_string()
 // in BFS3 complete() is not in namespace
-#define BFS_COMPLETE complete
+#define BFS_COMPLETE bfs::system_complete
 #endif
 
 namespace pwiz {

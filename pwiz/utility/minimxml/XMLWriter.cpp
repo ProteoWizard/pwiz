@@ -197,7 +197,7 @@ void XMLWriter::Impl::startElement(const string& name,
     *os << (emptyElementTag==EmptyElement ? "/>" : ">");
 
     if (!style(StyleFlag_InlineInner) || 
-        !style(StyleFlag_InlineOuter) && emptyElementTag==EmptyElement)
+        (!style(StyleFlag_InlineOuter) && emptyElementTag==EmptyElement))
         *os << "\n";
 
     if (emptyElementTag == NotEmptyElement)

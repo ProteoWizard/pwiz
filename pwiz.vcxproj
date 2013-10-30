@@ -18,6 +18,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
+    <OutDir>$(SolutionDir)build-nt-x86\msvc-release</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
@@ -46,8 +47,8 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR</NMakePreprocessorDefinitions>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_43_0;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_43_0;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_54_0;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_54_0;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -216,6 +217,8 @@
     <ClCompile Include="pwiz\data\identdata\ReaderTest.cpp" />
     <ClCompile Include="pwiz\data\identdata\References.cpp" />
     <ClCompile Include="pwiz\data\identdata\ReferencesTest.cpp" />
+    <ClCompile Include="pwiz\data\identdata\Serializer_protXML.cpp" />
+    <ClCompile Include="pwiz\data\identdata\Serializer_protXML_Test.cpp" />
     <ClCompile Include="pwiz\data\identdata\Serializer_Text.cpp" />
     <ClCompile Include="pwiz\data\identdata\Serializer_Text_Test.cpp" />
     <ClCompile Include="pwiz\data\identdata\Serializer_mzid.cpp" />
@@ -474,9 +477,10 @@
     <ClCompile Include="pwiz_tools\examples\write_mzid_example_files.cpp" />
     <ClCompile Include="pwiz_tools\examples\write_proteome_example_files.cpp" />
     <ClCompile Include="pwiz_tools\examples\write_traml_example_files.cpp" />
-    <ClCompile Include="pwiz_tools\prototype\methodextractor.cpp" />
+    <ClCompile Include="pwiz_tools\prototype\ThermoRawMetaDump.cpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinListFactory.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
+    <ClInclude Include="pwiz\data\identdata\Serializer_protXML.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Bruker\ChromatogramList_Bruker.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\bruker\reader_bruker.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\bruker\reader_bruker_detail.hpp" />

@@ -283,7 +283,7 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
         case VerbosityLevel_Detailed:
             try
             {
-                MSDataFile source(path.external_file_string(), &readers);
+                MSDataFile source(path.string(), &readers);
                 size_t spectraCount = source.run.spectrumListPtr->size();
                 cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %5%")
                         % pathType
@@ -308,8 +308,8 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
         case VerbosityLevel_Full:
             {
                 // display all source-level metadata
-                cout << "Source-level metadata for \"" << path.external_file_string() << "\"" << endl;
-                MSDataFile source(path.external_file_string(), &readers);
+                cout << "Source-level metadata for \"" << path.string() << "\"" << endl;
+                MSDataFile source(path.string(), &readers);
                 TextWriter(cout, 0)(source, true);
                 cout << endl << endl;
             }

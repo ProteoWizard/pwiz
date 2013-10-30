@@ -13,6 +13,7 @@
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/fusion/include/std_pair.hpp> 
+#include <boost/fusion/container/generation/ignore.hpp> // for boost::fusion::ignore
 
 #define BOOST_FOREACH_ASSIGN_VAR(R, ROW, I, VAR) \
     for (VAR = boost::fusion::at_c<I>(ROW); \

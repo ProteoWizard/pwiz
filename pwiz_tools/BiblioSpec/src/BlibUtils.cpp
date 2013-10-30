@@ -86,7 +86,7 @@ string getAbsoluteFilePath(string filename){
     bfs::path fullPath = bfs::system_complete(filename.c_str());
     fullPath = fullPath.normalize();
 
-    return fullPath.native_file_string();
+    return fullPath.string();
 }
 
 /*
