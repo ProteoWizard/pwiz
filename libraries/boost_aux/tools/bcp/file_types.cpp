@@ -13,6 +13,21 @@
 
 #include "bcp_imp.hpp"
 #include <boost/regex.hpp>
+#include <boost/version.hpp>
+
+#ifndef BOOST_FILESYSTEM_VERSION
+# if (BOOST_VERSION/100) >= 1046
+#  define BOOST_FILESYSTEM_VERSION 3
+# else
+#  define BOOST_FILESYSTEM_VERSION 2
+# endif
+#endif // BOOST_FILESYSTEM_VERSION
+
+#if BOOST_FILESYSTEM_VERSION == 2
+#define BFS_GENERIC_STRING(p) p
+#else
+#define BFS_GENERIC_STRING(p) (p).generic_string()
+#endif
 
 bool bcp_implementation::is_source_file(const fs::path& p)
 {
@@ -23,7 +38,7 @@ bool bcp_implementation::is_source_file(const fs::path& p)
       ")", 
       boost::regex::perl | boost::regex::icase
       );
-   return boost::regex_match(p.filename(), e);
+   return boost::regex_match(BFS_GENERIC_STRING(p.filename()), e);
 }
 
 bool bcp_implementation::is_html_file(const fs::path& p)
@@ -34,7 +49,7 @@ bool bcp_implementation::is_html_file(const fs::path& p)
          "html?|css"
       ")"
       );
-   return boost::regex_match(p.filename(), e);
+   return boost::regex_match(BFS_GENERIC_STRING(p.filename()), e);
 }
 
 bool bcp_implementation::is_binary_file(const fs::path& p)
@@ -52,7 +67,7 @@ bool bcp_implementation::is_binary_file(const fs::path& p)
       "|"
       "(Jamfile|makefile|configure)",
       boost::regex::perl | boost::regex::icase);
-   return !boost::regex_match(p.leaf(), e);
+   return !boost::regex_match(BFS_GENERIC_STRING(p.leaf()), e);
 
 }
 
@@ -67,6 +82,6 @@ bool bcp_implementation::is_jam_file(const fs::path& p)
       "(Jamfile|Jamroot)\\.?", 
       boost::regex::perl | boost::regex::icase
       );
-   return boost::regex_match(p.filename(), e);
+   return boost::regex_match(BFS_GENERIC_STRING(p.filename()), e);
 }
 

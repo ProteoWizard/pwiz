@@ -35,7 +35,7 @@ namespace pwiz {
 namespace msdata {
 
 
-using namespace boost::lambda;
+using boost::lambda::_1;
 using namespace pwiz::data;
 
 
