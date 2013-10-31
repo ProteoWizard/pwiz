@@ -157,7 +157,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI_T2D::spectrum(size_t index, bool getB
         BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 
         if (doCentroid)
+        {
             spectrum->getPeakData(mzArray->data, intensityArray->data);
+            result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
+        }
         else
             spectrum->getRawData(mzArray->data, intensityArray->data);
     }

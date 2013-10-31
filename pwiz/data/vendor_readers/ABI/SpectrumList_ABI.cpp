@@ -225,6 +225,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 
             spectrum->getData(doCentroid, mzArray->data, intensityArray->data);
+            if (doCentroid)
+                result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
         }
 
         result->defaultArrayLength = spectrum->getDataSize(doCentroid);

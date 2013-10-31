@@ -25,6 +25,7 @@
 
 #include "SpectrumList_PeakPicker.hpp"
 #include "pwiz/utility/misc/Container.hpp"
+#include <boost/range/algorithm/remove_if.hpp>
 
 #include "pwiz/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
 #include "pwiz/data/vendor_readers/ABI/T2D/SpectrumList_ABI_T2D.hpp"
@@ -167,7 +168,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
     // (could have been acquired as centroid, or vendor may have done the centroiding)
     if (itr != cvParams.end())
     {
-        this->warn_once("[SpectrumList_PeakPicker]: one or more spectra are already centroided, no processing needed");
+        // the vendor spectrum lists must put "profile spectrum" if they actually performed centroiding
+        vector<CVParam>::iterator itr2 = boost::range::remove_if(cvParams, CVParamIs(MS_profile_spectrum));
+        if (itr2 != cvParams.end())
+            cvParams.erase(itr2);
+        else
+            this->warn_once("[SpectrumList_PeakPicker]: one or more spectra are already centroided, no processing needed");
         return s;
     }
 

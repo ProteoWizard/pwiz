@@ -239,6 +239,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
         vector<double>& mzArray = result->getMZArray()->data;
         vector<double>& intensityArray = result->getIntensityArray()->data;
 
+        if (doCentroid)
+            result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
+
         if (doCentroid || xArray.size() < 3)
         {
             mzArray.assign(xArray.begin(), xArray.end());

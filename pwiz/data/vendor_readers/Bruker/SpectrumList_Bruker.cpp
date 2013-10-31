@@ -430,7 +430,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
 	        automation_vector<double> mzArray, intensityArray;
             if (getLineData)
+            {
                 spectrum->getLineData(mzArray, intensityArray);
+                if (spectrum->hasProfileData())
+                    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
+            }
             else
                 spectrum->getProfileData(mzArray, intensityArray);
             result->getMZArray()->data.assign(mzArray.begin(), mzArray.end());

@@ -589,10 +589,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 			{
 				// use label data for accurate centroids on FT profile data
 				massList = rawfile_->getMassListFromLabelData(ie.scan);
+                result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
 			}
 			else
 			{
 				massList = rawfile_->getMassList(ie.scan, "", Cutoff_None, 0, 0, doCentroid);
+                if (doCentroid)
+                    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
 			}
 
 			result->defaultArrayLength = massList->size();
