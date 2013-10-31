@@ -376,7 +376,7 @@ namespace pwiz.MSGraph
 
                 if (maxAuto && yMaxRequired > 0)
                 {
-                    yAxis.Scale.Max = yMaxRequired;
+                    yAxis.Scale.Max = Math.Max(yAxis.Scale.Max, yMaxRequired);
                 }
                 // TODO: adjust objects with ChartFraction coordinates
             }

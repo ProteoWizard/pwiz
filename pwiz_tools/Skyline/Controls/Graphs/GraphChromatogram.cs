@@ -46,8 +46,6 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
-        private readonly GraphHelper _graphHelper;
-        private bool _showPeptideTotals;
 
         public static ShowRTChrom ShowRT
         {
@@ -176,11 +174,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IStateProvider _stateProvider;
 
         // Active graph state
+        private readonly GraphHelper _graphHelper;
         private ChromExtractor? _extractor;
         private TransitionGroupDocNode[] _nodeGroups;
         private IdentityPath[] _groupPaths;
         private ChromatogramGroupInfo[][] _arrayChromInfo;
+        private bool _hasMergedChromInfo;
         private int _chromIndex;
+        private bool _showPeptideTotals;
 
         public GraphChromatogram(string name, IDocumentUIContainer documentUIContainer)
         {
@@ -555,8 +556,28 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI(false);
         }
 
+        private bool _inUpdateUI;
         private void UpdateUI(bool forceZoom)
         {
+            // Avoid reentrancy caused by changing comboBox SelectedIndex.
+            if (_inUpdateUI)
+                return;
+            try
+            {
+                _inUpdateUI = true;
+                UpdateUINoReenter(forceZoom);
+            }
+            finally
+            {
+                _inUpdateUI = false;
+            }
+        }
+
+        private void UpdateUINoReenter(bool forceZoom)
+        {
+            // Must be called by UpdateUI, which sets the reentrancy flag.
+            Assume.IsTrue(_inUpdateUI);
+
             IsCacheInvalidated = false;
 
             // Only worry about updates, if the graph is visible
@@ -1655,8 +1676,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionChromInfo bestPeakInfo = null;
                 ChromatogramInfo sumInfo = null;
                 float maxPeakHeight = float.MinValue;
-                double leftPeakStartTime = float.MaxValue;
-                double rightPeakEndTime = float.MinValue;
 
                 foreach (var precursor in peptideDocNode.TransitionGroups)
                 {
@@ -1926,7 +1945,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bestEndTime = Math.Max(bestEndTime, end);
         }
 
-        private void UpdateToolbar(ICollection<ChromatogramGroupInfo[]> arrayChromInfo)
+        private void UpdateToolbar(IList<ChromatogramGroupInfo[]> arrayChromInfo)
         {
             if (arrayChromInfo == null || arrayChromInfo.Count < 2)
             {
@@ -1941,8 +1960,11 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Check to see if the list of files has changed.
                 var listNames = new List<string>();
-                foreach (var arrayInfo in arrayChromInfo)
+                if (_hasMergedChromInfo)
+                    listNames.Add(Resources.GraphChromatogram_UpdateToolbar_All);
+                for (int i = _hasMergedChromInfo ? 1 : 0; i < arrayChromInfo.Count; i++)
                 {
+                    var arrayInfo = arrayChromInfo[i];
                     string name = string.Empty;
                     foreach (var info in arrayInfo)
                     {
@@ -1966,7 +1988,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     comboFiles.Items.Clear();
                     foreach (string name in listNames)
                         comboFiles.Items.Add(name);
-                    if (selected == null || comboFiles.Items.IndexOf(selected) == -1)
+                    if (selected == null || comboFiles.Items.IndexOf(selected) == -1 || 
+                        (_hasMergedChromInfo && listNames[0] != listExisting[0]))
                         comboFiles.SelectedIndex = 0;
                     else
                         comboFiles.SelectedItem = selected;
@@ -1980,6 +2003,37 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphControl.Top = toolBar.Bottom;
                     graphControl.Height -= toolBar.Height;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Utility class to hold lists of selected peptides and transition groups.
+        /// </summary>
+        private class PeptidesAndTransitionGroups
+        {
+            public readonly List<PeptideDocNode> NodePep = new List<PeptideDocNode>();
+            public readonly List<TransitionGroupDocNode> NodeGroups = new List<TransitionGroupDocNode>();
+            public readonly List<IdentityPath> GroupPaths = new List<IdentityPath>();
+            public bool ProteinSelected;
+            public bool ShowPeptideTotals {get { return ProteinSelected || _peptideCount > 1; }}
+            private int _peptideCount;
+
+            public void Add(PeptideTreeNode nodePepTree, TransitionGroupDocNode nodeGroup)
+            {
+                if (!NodeGroups.Contains(nodeGroup))
+                {
+                    NodeGroups.Add(nodeGroup);
+                    if (!NodePep.Contains(nodePepTree.DocNode))
+                        _peptideCount++;
+                    NodePep.Add(nodePepTree.DocNode);
+                    GroupPaths.Add(new IdentityPath(nodePepTree.Path, nodeGroup.Id));
+                }
+            }
+
+            public void Add(PeptideTreeNode nodePepTree)
+            {
+                foreach (TransitionGroupDocNode nodeGroups in nodePepTree.ChildDocNodes)
+                    Add(nodePepTree, nodeGroups);
             }
         }
 
@@ -2020,6 +2074,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
+                _hasMergedChromInfo = false;
                 _arrayChromInfo = new ChromatogramGroupInfo[listFiles.Count][];
                 for (int i = 0; i < _arrayChromInfo.Length; i++)
                 {
@@ -2048,37 +2103,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Utility class to hold lists of selected peptides and transition groups.
-        /// </summary>
-        private class PeptidesAndTransitionGroups
-        {
-            public readonly List<PeptideDocNode> NodePep = new List<PeptideDocNode>();
-            public readonly List<TransitionGroupDocNode> NodeGroups = new List<TransitionGroupDocNode>();
-            public readonly List<IdentityPath> GroupPaths = new List<IdentityPath>();
-            public bool ProteinSelected;
-            public bool ShowPeptideTotals {get { return ProteinSelected || _peptideCount > 1; }}
-            private int _peptideCount;
-
-            public void Add(PeptideTreeNode nodePepTree, TransitionGroupDocNode nodeGroup)
-            {
-                if (!NodeGroups.Contains(nodeGroup))
-                {
-                    NodeGroups.Add(nodeGroup);
-                    if (!NodePep.Contains(nodePepTree.DocNode))
-                        _peptideCount++;
-                    NodePep.Add(nodePepTree.DocNode);
-                    GroupPaths.Add(new IdentityPath(nodePepTree.Path, nodeGroup.Id));
-                }
-            }
-
-            public void Add(PeptideTreeNode nodePepTree)
-            {
-                foreach (TransitionGroupDocNode nodeGroups in nodePepTree.ChildDocNodes)
-                    Add(nodePepTree, nodeGroups);
-            }
         }
 
         private bool EnsureChromInfo(MeasuredResults results,
@@ -2149,6 +2173,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     _arrayChromInfo[i] = arrayNew;
                 }
+
+                // If multiple replicate files contain mutually exclusive data, create "all files" option.
+                var mergedChromGroupInfo = GetMergedChromInfo();
+                _hasMergedChromInfo = (mergedChromGroupInfo != null);
+                if (_hasMergedChromInfo)
+                {
+                    var arrayNew = new ChromatogramGroupInfo[_arrayChromInfo.Length + 1][];
+                    arrayNew[0] = mergedChromGroupInfo;
+                    for (int i = 1; i < arrayNew.Length; i++)
+                        arrayNew[i] = _arrayChromInfo[i - 1];
+                    _arrayChromInfo = arrayNew;
+                }
+
                 success = true;
             }
             finally
@@ -2159,6 +2196,32 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// If multiple replicate files contain mutually exclusive chromatogram groups, create
+        /// a merged chromatogram group.  If there are any collisions, return null.
+        /// </summary>
+        private ChromatogramGroupInfo[] GetMergedChromInfo()
+        {
+            if (!_showPeptideTotals || _arrayChromInfo.Length < 2)
+                return null;
+
+            var mergedChromGroupInfo = new ChromatogramGroupInfo[_arrayChromInfo[0].Length];
+            for (int i = 0; i < _arrayChromInfo.Length; i++)
+            {
+                for (int j = 0; j < mergedChromGroupInfo.Length; j++)
+                {
+                    if (_arrayChromInfo[i][j] != null)
+                    {
+                        if (mergedChromGroupInfo[j] != null)
+                            return null;
+                        mergedChromGroupInfo[j] = _arrayChromInfo[i][j];
+                    }
+                }
+            }
+
+            return mergedChromGroupInfo;
         }
 
         /// <summary>

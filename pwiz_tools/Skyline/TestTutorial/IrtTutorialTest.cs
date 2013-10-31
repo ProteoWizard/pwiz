@@ -298,6 +298,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
 
             PauseForScreenShot();   // RT Regression graph
+            //PauseAndContinue();
 
             RunUI(() =>
                       {

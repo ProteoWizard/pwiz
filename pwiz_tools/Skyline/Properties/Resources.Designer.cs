@@ -6266,6 +6266,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string GraphChromatogram_UpdateToolbar_All {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateToolbar_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No base peak chromatogram found.
         /// </summary>
         public static string GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found {

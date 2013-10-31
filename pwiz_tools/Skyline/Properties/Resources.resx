@@ -6020,4 +6020,7 @@ Are you sure you want to continue?</value>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
     <value>Train a model to see composite score</value>
   </data>
+  <data name="GraphChromatogram_UpdateToolbar_All" xml:space="preserve">
+    <value>All</value>
+  </data>
 </root>

@@ -212,7 +212,6 @@ namespace pwiz.Skyline.Controls.SeqNode
                         g.FillRectangle(Brushes.White, backgroundRect);
                         var colorRect = new Rectangle(rightEdge, top, colorRectWidth - 2, colorRectHeight - 3);
                         g.FillRectangle(new SolidBrush(color.Value), colorRect);
-                        g.DrawRectangle(Pens.Black, colorRect);
                     }
                 }
             }
