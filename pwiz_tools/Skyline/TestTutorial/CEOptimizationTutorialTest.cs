@@ -24,7 +24,6 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -316,32 +315,6 @@ namespace pwiz.SkylineTestTutorial
 
             // Check last precusor set.
             Assert.IsTrue(ceValues.Count == ceCount);
-        }
-
-        public static void RemovePeptide(string peptideSequence)
-        {
-            var docStart = SkylineWindow.Document;
-            var nodePeptide = docStart.Peptides.FirstOrDefault(nodePep =>
-                Equals(peptideSequence, nodePep.Peptide.Sequence));
-
-            Assert.IsNotNull(nodePeptide);
-
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-                                                                   {
-                                                                       findPeptideDlg.SearchString = peptideSequence;
-                                                                       findPeptideDlg.FindNext();
-                                                                       findPeptideDlg.Close();
-                                                                   });
-
-            RunUI(SkylineWindow.EditDelete);
-
-            Assert.IsTrue(WaitForCondition(() => !SkylineWindow.Document.Peptides.Any(nodePep =>
-                Equals(peptideSequence, nodePep.Peptide.Sequence))));
-            AssertEx.IsDocumentState(SkylineWindow.Document, null,
-                                     docStart.PeptideGroupCount,
-                                     docStart.PeptideCount - 1,
-                                     docStart.TransitionGroupCount - nodePeptide.TransitionGroupCount,
-                                     docStart.TransitionCount - nodePeptide.TransitionCount);
         }
     }
 }

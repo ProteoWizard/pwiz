@@ -180,5 +180,21 @@ namespace pwiz.Skyline.FileUI
                 item++;
             }
         }
+
+        #region TestHelpers
+
+        public bool BestScoresOnly
+        {
+            get { return checkBoxBestOnly.Checked; }
+            set { checkBoxBestOnly.Checked = value; }
+        }
+
+        public bool TargetsOnly
+        {
+            get { return checkBoxTargetsOnly.Checked; }
+            set { checkBoxTargetsOnly.Checked = value; }
+        }
+
+        #endregion
     }
 }

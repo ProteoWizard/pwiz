@@ -1000,7 +1000,7 @@ namespace pwiz.Skyline
             ShowMProphetFeaturesDialog();
         }
 
-        private void ShowMProphetFeaturesDialog()
+        public void ShowMProphetFeaturesDialog()
         {
             if (!DocumentUI.Settings.HasResults)
             {

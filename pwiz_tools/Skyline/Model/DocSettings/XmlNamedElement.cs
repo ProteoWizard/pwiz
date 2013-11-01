@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region object overrides
 
-        public bool Equals(XmlNamedElement obj)
+        protected bool Equals(XmlNamedElement obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

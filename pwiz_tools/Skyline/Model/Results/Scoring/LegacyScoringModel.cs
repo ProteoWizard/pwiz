@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Properties;
@@ -49,23 +50,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 W3*identifiedCount;
         }
 
-        private readonly ReadOnlyCollection<IPeakFeatureCalculator> _calculators;
+        private ReadOnlyCollection<IPeakFeatureCalculator> _calculators;
 
-        public LegacyScoringModel()
-            : this(DEFAULT_NAME)
+        public LegacyScoringModel(string name, LinearModelParams parameters = null, bool usesDecoys = true, bool usesSecondBest = false) : base(name)
         {
-        }
+            SetPeakFeatureCalculators();
 
-        public LegacyScoringModel(string name, bool usesDecoys = true, bool usesSecondBest = false) : base(name)
-        {
-            _calculators = new ReadOnlyCollection<IPeakFeatureCalculator>(new List<IPeakFeatureCalculator>
-                {
-                    new LegacyLogUnforcedAreaCalc(),
-                    new LegacyUnforcedCountScoreCalc(),
-                    new LegacyUnforcedCountScoreStandardCalc(),
-                    new LegacyIdentifiedCountCalc()
-                });
-
+            Parameters = parameters;
             UsesDecoys = usesDecoys;
             UsesSecondBest = usesSecondBest;
         }
@@ -75,12 +66,26 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return _calculators; }
         }
 
+        private void SetPeakFeatureCalculators()
+        {
+            _calculators = MakeReadOnly(new IPeakFeatureCalculator[]
+                {
+                    new LegacyLogUnforcedAreaCalc(),
+                    new LegacyUnforcedCountScoreCalc(),
+                    new LegacyUnforcedCountScoreStandardCalc(),
+                    new LegacyIdentifiedCountCalc()
+                });
+        } 
+
         public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false)
         {
             return ChangeProp(ImClone(this), im =>
                 {
+                    var parameters = new LinearModelParams(new[] { W0, W1, W2, W3 });
                     ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
                     ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets);
+                    targetTransitionGroups.ScorePeaks(parameters.Weights);
+
                     if (includeSecondBest)
                     {
                         ScoredGroupPeaksSet secondBestTransitionGroups;
@@ -90,11 +95,35 @@ namespace pwiz.Skyline.Model.Results.Scoring
                             decoyTransitionGroups.Add(secondBestGroup);
                         }
                     }
-
-                    var parameters = new LinearModelParams(new[] {W0, W1, W2, W3});
                     decoyTransitionGroups.ScorePeaks(parameters.Weights);
-                    parameters.RescaleParameters(decoyTransitionGroups.Mean, decoyTransitionGroups.Stdev);
+                    im.UsesDecoys = decoys.Count > 0;
+                    im.UsesSecondBest = includeSecondBest;
+                    im.Parameters = parameters.RescaleParameters(decoyTransitionGroups.Mean, decoyTransitionGroups.Stdev);
                 });
+        }
+
+        #region object overrides
+
+        // Because LegacyScoringModel has a fixed set of calculators, no equality override is necessary
+
+        #endregion
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        public LegacyScoringModel()
+        {
+            SetPeakFeatureCalculators();
+        }
+
+        private enum ATTR
+        {
+            // Model
+            uses_decoys,
+            uses_false_targets,
+            bias
         }
 
         public static LegacyScoringModel Deserialize(XmlReader reader)
@@ -104,11 +133,70 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override void ReadXml(XmlReader reader)
         {
-            // Consume the tag.  There is nothing else to do, because there is only
-            // a single type of this object that can be instantiated, and its name
-            // is known.  Do not call the base class ReadXml() method, as that will
-            // attempt to overwrite the name and fail.
+            // Read tag attributes
+            base.ReadXml(reader);
+            // Earlier versions always used decoys only
+            UsesDecoys = reader.GetBoolAttribute(ATTR.uses_decoys, true);
+            UsesSecondBest = reader.GetBoolAttribute(ATTR.uses_false_targets, false);
+            double bias = reader.GetDoubleAttribute(ATTR.bias);
+
+            bool isEmpty = reader.IsEmptyElement;
+
+            // Consume tag
             reader.Read();
+
+            if (!isEmpty)
+            {
+                // Read calculators
+                var calculators = new List<FeatureCalculator>();
+                reader.ReadElements(calculators);
+                var weights = new double[calculators.Count];
+                for (int i = 0; i < calculators.Count; i++)
+                {
+                    if (calculators[i].Type != PeakFeatureCalculators[i].GetType())
+                        throw new InvalidDataException(Resources.LegacyScoringModel_ReadXml_Invalid_legacy_model_);
+                    weights[i] = calculators[i].Weight;
+                }
+                Parameters = new LinearModelParams(weights, bias);
+
+                reader.ReadEndElement();
+            }
+
+            DoValidate();
         }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            base.WriteXml(writer);
+
+            if (IsTrained)
+            {
+                writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys, true);
+                writer.WriteAttribute(ATTR.uses_false_targets, UsesSecondBest);
+                writer.WriteAttribute(ATTR.bias, Parameters.Bias);
+
+                // Write calculators
+                var calculators = new List<FeatureCalculator>(PeakFeatureCalculators.Count);
+                for (int i = 0; i < PeakFeatureCalculators.Count; i++)
+                    calculators.Add(new FeatureCalculator(PeakFeatureCalculators[i].GetType(), Parameters.Weights[i]));
+                writer.WriteElements(calculators);
+            }
+        }
+
+        public override void Validate()
+        {
+            DoValidate();
+        }
+
+        private void DoValidate()
+        {
+            if (!string.Equals(Name, DEFAULT_NAME) && Parameters == null)
+                throw new InvalidDataException(Resources.LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_);
+            if (Parameters != null && Parameters.Weights != null && Parameters.Weights.Count < 1)
+                throw new InvalidDataException(Resources.MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value);
+        }
+
+        #endregion
     }
 }

@@ -4178,6 +4178,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed training the model:.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_ {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Composite Score (Normalized).
         /// </summary>
         public static string EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_ {
@@ -4229,6 +4238,16 @@ namespace pwiz.Skyline.Properties {
         public static string EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign {
             get {
                 return ResourceManager.GetString("EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no decoy peptides in the current document. Uncheck the Use Decoys Box..
+        /// </summary>
+        public static string EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_ {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_doc" +
+                        "ument__Uncheck_the_Use_Decoys_Box_", resourceCulture);
             }
         }
         
@@ -7615,6 +7634,24 @@ namespace pwiz.Skyline.Properties {
         public static string LegacyScoringModel__defaultName_Skyline_Legacy {
             get {
                 return ResourceManager.GetString("LegacyScoringModel__defaultName_Skyline_Legacy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy scoring model is not trained..
+        /// </summary>
+        public static string LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_ {
+            get {
+                return ResourceManager.GetString("LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid legacy model..
+        /// </summary>
+        public static string LegacyScoringModel_ReadXml_Invalid_legacy_model_ {
+            get {
+                return ResourceManager.GetString("LegacyScoringModel_ReadXml_Invalid_legacy_model_", resourceCulture);
             }
         }
         

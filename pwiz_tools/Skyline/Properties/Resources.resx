@@ -6020,6 +6020,18 @@ Are you sure you want to continue?</value>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
     <value>Train a model to see composite score</value>
   </data>
+  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
+    <value>Failed training the model:</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_" xml:space="preserve">
+    <value>There are no decoy peptides in the current document. Uncheck the Use Decoys Box.</value>
+  </data>
+  <data name="LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_" xml:space="preserve">
+    <value>Legacy scoring model is not trained.</value>
+  </data>
+  <data name="LegacyScoringModel_ReadXml_Invalid_legacy_model_" xml:space="preserve">
+    <value>Invalid legacy model.</value>
+  </data>
   <data name="GraphChromatogram_UpdateToolbar_All" xml:space="preserve">
     <value>All</value>
   </data>

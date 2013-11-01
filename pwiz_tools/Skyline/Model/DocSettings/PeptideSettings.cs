@@ -2101,11 +2101,11 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public PeptideIntegration(PeakScoringModelSpec peakScoringModel)
         {
-            PeakScoringModel = peakScoringModel ?? new LegacyScoringModel();
+            PeakScoringModel = peakScoringModel ?? new LegacyScoringModel(LegacyScoringModel.DEFAULT_NAME);
         }
 
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
-        public bool IsSerializable { get { return PeakScoringModel.GetType() != typeof(LegacyScoringModel); } }
+        public bool IsSerializable { get { return PeakScoringModel.IsTrained; } }
 
         #region Implementation of IXmlSerializable
 
@@ -2149,7 +2149,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write child elements
-            if (PeakScoringModel.GetType() != typeof(LegacyScoringModel))
+            if (IsSerializable)
             {
                 var helper = XmlUtil.FindHelper(PeakScoringModel, PEAK_SCORING_MODEL_SPEC_HELPERS);
                 if (helper == null)
@@ -2166,7 +2166,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.PeakScoringModel.Equals(PeakScoringModel);
+            return Equals(other.PeakScoringModel, PeakScoringModel);
         }
 
         public override bool Equals(object obj)

@@ -281,14 +281,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             trainData[row, j] = category;
         }
 
-        protected bool Equals(MProphetPeakScoringModel other)
+        #region object overrides
+        public bool Equals(MProphetPeakScoringModel other)
         {
             if (base.Equals(other) &&
-                Equals(Parameters, other.Parameters) &&
                 ColinearWarning.Equals(other.ColinearWarning) &&
                 Lambda.Equals(other.Lambda) &&
-                UsesDecoys.Equals(other.UsesDecoys) &&
-                UsesSecondBest.Equals(other.UsesSecondBest) &&
                 PeakFeatureCalculators.Count == other.PeakFeatureCalculators.Count)
             {
                 for (int i = 0; i < PeakFeatureCalculators.Count; i++)
@@ -314,16 +312,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
             unchecked
             {
                 int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Parameters != null ? Parameters.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ UsesDecoys.GetHashCode();
-                hashCode = (hashCode * 397) ^ UsesSecondBest.GetHashCode();
                 hashCode = (hashCode * 397) ^ ColinearWarning.GetHashCode();
                 hashCode = (hashCode * 397) ^ Lambda.GetHashCode();
                 hashCode = (hashCode * 397) ^ (PeakFeatureCalculators != null ? PeakFeatureCalculators.GetHashCode() : 0);
                 return hashCode;
             }
         }
+        #endregion
 
+        #region Implementation of IXmlSerializable
         private enum ATTR
         {
             // Model
@@ -345,7 +342,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             ColinearWarning = reader.GetBoolAttribute(ATTR.colinear_warning);
             // Earlier versions always used decoys only
             UsesDecoys = reader.GetBoolAttribute(ATTR.uses_decoys, true);
-            UsesSecondBest = reader.GetBoolAttribute(ATTR.uses_false_targets, false);
+            UsesSecondBest = reader.GetBoolAttribute(ATTR.uses_false_targets);
             double bias = reader.GetDoubleAttribute(ATTR.bias);
 
             // Consume tag
@@ -374,7 +371,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.colinear_warning, ColinearWarning);
-            writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys);
+            writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys, true);
             writer.WriteAttribute(ATTR.uses_false_targets, UsesSecondBest);
             writer.WriteAttribute(ATTR.bias, Parameters.Bias);
 
@@ -395,5 +392,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (Parameters != null && Parameters.Weights != null && Parameters.Weights.Count < 1 || PeakFeatureCalculators.Count < 1)
                 throw new InvalidDataException(Resources.MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value);
         }
+        #endregion
     }
 }

@@ -697,6 +697,32 @@ namespace pwiz.SkylineTestUtil
                                                                    });
         }
 
+        public static void RemovePeptide(string peptideSequence)
+        {
+            var docStart = SkylineWindow.Document;
+            var nodePeptide = docStart.Peptides.FirstOrDefault(nodePep =>
+                Equals(peptideSequence, nodePep.Peptide.Sequence));
+
+            Assert.IsNotNull(nodePeptide);
+
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
+            {
+                findPeptideDlg.SearchString = peptideSequence;
+                findPeptideDlg.FindNext();
+                findPeptideDlg.Close();
+            });
+
+            RunUI(SkylineWindow.EditDelete);
+
+            Assert.IsTrue(WaitForCondition(() => !SkylineWindow.Document.Peptides.Any(nodePep =>
+                Equals(peptideSequence, nodePep.Peptide.Sequence))));
+            AssertEx.IsDocumentState(SkylineWindow.Document, null,
+                                     docStart.PeptideGroupCount,
+                                     docStart.PeptideCount - 1,
+                                     docStart.TransitionGroupCount - nodePeptide.TransitionGroupCount,
+                                     docStart.TransitionCount - nodePeptide.TransitionCount);
+        }
+
         #region Modification helpers
 
         public static PeptideSettingsUI ShowPeptideSettings()

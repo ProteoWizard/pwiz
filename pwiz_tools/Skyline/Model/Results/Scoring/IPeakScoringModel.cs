@@ -22,10 +22,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -35,6 +37,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Name used in the UI for this Scoring model
         /// </summary>
         string Name { get; }
+
+        /// <summary>
+        /// Is the model trained?
+        /// </summary>
+        bool IsTrained { get; }
 
         /// <summary>
         /// List of feature calculators used by this model in scoring.
@@ -88,6 +95,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             UsesSecondBest = false;
         }
 
+        public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
         public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false);
         public double Score(IList<double> features)
@@ -97,6 +105,34 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public bool UsesDecoys { get; protected set; }
         public bool UsesSecondBest { get; protected set; }
         public LinearModelParams Parameters { get; protected set; }
+
+        protected bool Equals(PeakScoringModelSpec other)
+        {
+            return base.Equals(other) && 
+                UsesDecoys.Equals(other.UsesDecoys) && 
+                UsesSecondBest.Equals(other.UsesSecondBest) && 
+                Equals(Parameters, other.Parameters);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((PeakScoringModelSpec) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode*397) ^ UsesDecoys.GetHashCode();
+                hashCode = (hashCode*397) ^ UsesSecondBest.GetHashCode();
+                hashCode = (hashCode*397) ^ (Parameters != null ? Parameters.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
 
         public virtual void Validate()
         {
@@ -114,7 +150,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public LinearModelParams(int numWeights)
         {
-            Weights = new List<double>(numWeights);
+            Weights = new double[numWeights];
             Bias = 0;
         }
 
@@ -340,7 +376,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         private static readonly IPeakScoringModel[] MODELS =
         {
-            new LegacyScoringModel()
+            new LegacyScoringModel(LegacyScoringModel.DEFAULT_NAME)
         };
 
         public static IEnumerable<IPeakScoringModel> Models
