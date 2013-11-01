@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool SpectrumMatches(SpectrumDisplayInfo spectrumDisplayInfo, SpectrumIdentifier spectrumIdentifier)
         {
-            if (!Equals(spectrumDisplayInfo.FilePath, spectrumIdentifier.SourceFile))
+            if (string.Compare(spectrumDisplayInfo.FilePath, spectrumIdentifier.SourceFile, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 return false;
             }

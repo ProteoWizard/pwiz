@@ -130,7 +130,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>3</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -157,7 +157,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnNext.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>2</value>
   </data>
   <data name="btnNext.Text" xml:space="preserve">
     <value>&amp;Next &gt;</value>
@@ -494,7 +494,7 @@ injected into the mass spectrometer.</value>
     <value>75, 23</value>
   </data>
   <data name="btnEarlyFinish.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>1</value>
   </data>
   <data name="btnEarlyFinish.Text" xml:space="preserve">
     <value>&amp;Finish</value>
@@ -929,7 +929,7 @@ injected into the mass spectrometer.</value>
     <value>402, 395</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Name" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>

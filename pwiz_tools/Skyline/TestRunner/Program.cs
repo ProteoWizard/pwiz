@@ -274,6 +274,7 @@ namespace TestRunner
             var program = SkylineAssembly.GetType("pwiz.Skyline.Program");
             program.GetMethod("set_StressTest").Invoke(null, new object[] { true });
             program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { commandLineArgs.ArgAsBool("offscreen") });
+            program.GetMethod("set_DemoMode").Invoke(null, new object[] { commandLineArgs.ArgAsBool("demo") });
             program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !commandLineArgs.ArgAsBool("vendors") });
             program.GetMethod("set_NoSaveSettings").Invoke(null, new object[] { true });
             program.GetMethod("set_UnitTestTimeoutMultiplier").Invoke(null, new object[] { (int)commandLineArgs.ArgAsLong("multi") });
@@ -791,6 +792,10 @@ Here is a list of recognized arguments:
                                     each test.  Default value is ""en-US,fr-FR"".  You can
                                     specify just one culture if you want all tests to run
                                     in that culture.
+
+    demo=[on|off]                   Set demo=on to pause slightly at PauseForScreenshot() calls
+                                    maximize the main window and show all-chromatograms graph
+                                    in lower-right corner
 
     multi=[n]                       Multiply timeouts in unit tests by a factor of ""n"".
                                     This is necessary when running multiple instances of 

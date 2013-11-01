@@ -402,7 +402,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                       {
                           peptideSettingsDlg3.ChooseRegression("iRT Document Regression");
-                          peptideSettingsDlg3.UseMeasuredRT(true);
+                          peptideSettingsDlg3.IsUseMeasuredRT = true;
                           peptideSettingsDlg3.OkDialog();
 
                       });
@@ -418,7 +418,7 @@ namespace pwiz.SkylineTestFunctional
             var peptideSettingsDlg4 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
                                           {
-                                              peptideSettingsDlg4.UseMeasuredRT(false);
+                                              peptideSettingsDlg4.IsUseMeasuredRT = false;
                                               peptideSettingsDlg4.OkDialog();
                                           });
             WaitForClosedForm(peptideSettingsDlg4);
@@ -504,7 +504,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                       {
                           peptideSettingsDlg5.ChooseRegression("iRT Test Regression");
-                          peptideSettingsDlg5.UseMeasuredRT(false); //Use prediction
+                          peptideSettingsDlg5.IsUseMeasuredRT = false; //Use prediction
                           peptideSettingsDlg5.OkDialog();
                       });
             WaitForClosedForm(peptideSettingsDlg5);

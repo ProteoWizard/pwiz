@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -101,5 +102,21 @@ namespace pwiz.Skyline.EditUI
                 Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_widths : 
                 Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_minutes);
         }
+
+        #region Functional test support
+
+        public int LineWidth
+        {
+            get { return int.Parse(textLineWidth.Text); }
+            set { textLineWidth.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int FontSize
+        {
+            get { return int.Parse(textFontSize.Text); }
+            set { textFontSize.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        #endregion
     }
 }

@@ -807,7 +807,7 @@ namespace pwiz.Skyline.SettingsUI
 
         #endregion
 
-        # region IStateProvider Implementation
+        #region IStateProvider Implementation
 
         public IList<IonType> ShowIonTypes
         {
@@ -1076,7 +1076,8 @@ namespace pwiz.Skyline.SettingsUI
         
         #endregion
         
-        # region Mouse Click Events
+        #region Mouse Click Events
+
         private void aionsContextMenuItem_Click(object sender, EventArgs e)
         {
             GraphSettings.ShowAIons = !GraphSettings.ShowAIons;

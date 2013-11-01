@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -71,7 +72,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public Library DocLib { get; private set; }
         private LibrarySpec DocLibrarySpec { get; set; }
 
-        public bool FilterForDocumentPeptides { get { return cbFilterForDocumentPeptides.Checked; } }
+        public bool FilterForDocumentPeptides
+        {
+            get { return cbFilterForDocumentPeptides.Checked; }
+            set { cbFilterForDocumentPeptides.Checked = value; }
+        }
 
         private string[] _searchFileNames = new string[0];
         private string[] SearchFileNames
@@ -141,8 +146,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchFileNames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFileNames, fileNames);
         }
 
+        public double CutOffScore
+        {
+            get { return double.Parse(textCutoff.Text); }
+            set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
         public bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
+            // Nothing to build, if now search files were specified
+            if (_searchFileNames.Length == 0)
+            {
+                var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+                if (!libraries.HasLibraries)
+                    return false;
+                DocLibrarySpec = libraries.LibrarySpecs.FirstOrDefault(s => s.IsDocumentLibrary);
+                if (DocLibrarySpec == null || !LoadPeptideSearchLibrary())
+                    return false;
+                return true;
+            }
+
             double cutOffScore;
             MessageBoxHelper helper = new MessageBoxHelper(WizardForm);
             if (!helper.ValidateDecimalTextBox(e, textCutoff, 0, 1.0, out cutOffScore))

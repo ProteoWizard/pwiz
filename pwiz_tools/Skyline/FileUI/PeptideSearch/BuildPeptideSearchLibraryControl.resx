@@ -192,6 +192,30 @@
   <data name="&gt;&gt;peptideSearchSplitContainer.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="cbFilterForDocumentPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 217</value>
+  </data>
+  <data name="cbFilterForDocumentPeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 17</value>
+  </data>
+  <data name="cbFilterForDocumentPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
+    <value>&amp;Filter for document peptides</value>
+  </data>
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
+    <value>cbFilterForDocumentPeptides</value>
+  </data>
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.Parent" xml:space="preserve">
+    <value>peptideSearchSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnRemFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -205,7 +229,7 @@
     <value>93, 23</value>
   </data>
   <data name="btnRemFile.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="btnRemFile.Text" xml:space="preserve">
     <value>&amp;Remove Files</value>
@@ -220,7 +244,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;btnRemFile.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="listSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -229,7 +253,7 @@
     <value>14, 25</value>
   </data>
   <data name="listSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>265, 355</value>
+    <value>265, 186</value>
   </data>
   <data name="listSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -244,7 +268,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;listSearchFiles.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -271,7 +295,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -283,7 +307,7 @@
     <value>93, 23</value>
   </data>
   <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
     <value>&amp;Add Files...</value>
@@ -298,7 +322,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;peptideSearchSplitContainer.Panel2.Name" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
@@ -313,7 +337,7 @@
     <value>1</value>
   </data>
   <data name="peptideSearchSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 460</value>
+    <value>381, 310</value>
   </data>
   <data name="peptideSearchSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
     <value>53</value>
@@ -340,7 +364,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 460</value>
+    <value>381, 315</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>BuildPeptideSearchLibraryControl</value>

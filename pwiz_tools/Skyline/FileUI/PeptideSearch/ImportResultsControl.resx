@@ -121,10 +121,6 @@
   <data name="resultsSplitContainer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="resultsSplitContainer.IsSplitterFixed" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="resultsSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -132,11 +128,12 @@
   <data name="resultsSplitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 10</value>
+    <value>16, 10</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 13</value>
@@ -163,10 +160,10 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listResultsFilesFound.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 30</value>
+    <value>19, 26</value>
   </data>
   <data name="listResultsFilesFound.Size" type="System.Drawing.Size, System.Drawing">
-    <value>340, 69</value>
+    <value>340, 108</value>
   </data>
   <data name="listResultsFilesFound.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -199,7 +196,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="browseToResultsFileButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 100</value>
+    <value>19, 96</value>
   </data>
   <data name="browseToResultsFileButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>88, 23</value>
@@ -226,7 +223,7 @@
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 5</value>
+    <value>16, 5</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>99, 13</value>
@@ -253,7 +250,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="findResultsFilesButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>112, 100</value>
+    <value>113, 96</value>
   </data>
   <data name="findResultsFilesButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>88, 23</value>
@@ -280,7 +277,7 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listResultsFilesMissing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 25</value>
+    <value>19, 21</value>
   </data>
   <data name="listResultsFilesMissing.Size" type="System.Drawing.Size, System.Drawing">
     <value>340, 69</value>
@@ -313,10 +310,10 @@
     <value>1</value>
   </data>
   <data name="resultsSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 272</value>
+    <value>381, 274</value>
   </data>
   <data name="resultsSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
-    <value>111</value>
+    <value>145</value>
   </data>
   <data name="resultsSplitContainer.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -340,7 +337,7 @@
     <value>True</value>
   </data>
   <data name="cbExcludeSourceFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 278</value>
+    <value>21, 287</value>
   </data>
   <data name="cbExcludeSourceFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>166, 17</value>

@@ -98,10 +98,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void browseFastaBtn_Click(object sender, EventArgs e)
         {
+            string initialDir = Settings.Default.FastaDirectory;
+            if (string.IsNullOrEmpty(initialDir))
+            {
+                initialDir = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
+            }
             using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = Resources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA,
-                InitialDirectory = Settings.Default.FastaDirectory,
+                InitialDirectory = initialDir,
                 CheckPathExists = true
                 // FASTA files often have no extension as well as .fasta and others
             })

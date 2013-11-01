@@ -32,11 +32,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.textCutoff = new System.Windows.Forms.TextBox();
+            this.cbFilterForDocumentPeptides = new System.Windows.Forms.CheckBox();
             this.btnRemFile = new System.Windows.Forms.Button();
             this.listSearchFiles = new System.Windows.Forms.ListBox();
             this.label7 = new System.Windows.Forms.Label();
             this.btnAddFile = new System.Windows.Forms.Button();
-            this.cbFilterForDocumentPeptides = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.peptideSearchSplitContainer)).BeginInit();
             this.peptideSearchSplitContainer.Panel1.SuspendLayout();
             this.peptideSearchSplitContainer.Panel2.SuspendLayout();
@@ -72,6 +72,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.textCutoff, "textCutoff");
             this.textCutoff.Name = "textCutoff";
             // 
+            // cbFilterForDocumentPeptides
+            // 
+            resources.ApplyResources(this.cbFilterForDocumentPeptides, "cbFilterForDocumentPeptides");
+            this.cbFilterForDocumentPeptides.Name = "cbFilterForDocumentPeptides";
+            this.cbFilterForDocumentPeptides.UseVisualStyleBackColor = true;
+            // 
             // btnRemFile
             // 
             resources.ApplyResources(this.btnRemFile, "btnRemFile");
@@ -97,12 +103,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnAddFile.Name = "btnAddFile";
             this.btnAddFile.UseVisualStyleBackColor = true;
             this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
-            // 
-            // cbFilterForDocumentPeptides
-            // 
-            resources.ApplyResources(this.cbFilterForDocumentPeptides, "cbFilterForDocumentPeptides");
-            this.cbFilterForDocumentPeptides.Name = "cbFilterForDocumentPeptides";
-            this.cbFilterForDocumentPeptides.UseVisualStyleBackColor = true;
             // 
             // BuildPeptideSearchLibraryControl
             // 

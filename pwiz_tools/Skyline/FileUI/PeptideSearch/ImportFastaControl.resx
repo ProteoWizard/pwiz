@@ -139,7 +139,7 @@
     <value>282, 182</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>5</value>
   </data>
   <metadata name="helpTipFasta.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -172,7 +172,7 @@
     <value>75, 23</value>
   </data>
   <data name="browseFastaBtn.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>6</value>
   </data>
   <data name="browseFastaBtn.Text" xml:space="preserve">
     <value>&amp;Browse...</value>
@@ -250,7 +250,7 @@
     <value>75, 23</value>
   </data>
   <data name="clearBtn.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>7</value>
   </data>
   <data name="clearBtn.Text" xml:space="preserve">
     <value>&amp;Clear</value>
@@ -277,7 +277,7 @@
     <value>363, 29</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>FASTA records begin with '&gt;' and have the protein name followed by the optional protein description.</value>
@@ -304,7 +304,7 @@
     <value>117, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>Max missed cleavages:</value>
@@ -358,7 +358,7 @@
     <value>44, 21</value>
   </data>
   <data name="cbMissedCleavages.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -382,7 +382,7 @@
     <value>47, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>Enzyme:</value>
@@ -406,7 +406,7 @@
     <value>169, 21</value>
   </data>
   <data name="comboEnzyme.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
     <value>comboEnzyme</value>

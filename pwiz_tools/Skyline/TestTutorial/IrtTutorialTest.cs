@@ -433,7 +433,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction;
                     peptideSettingsUI.ChooseRegression(irtPredictorName);
-                    peptideSettingsUI.UseMeasuredRT(true);
+                    peptideSettingsUI.IsUseMeasuredRT = true;
                     peptideSettingsUI.TimeWindow = 5;
                 });
 

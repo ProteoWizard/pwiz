@@ -54,16 +54,25 @@ namespace pwiz.Skyline.Controls.Graphs
             Size size = Settings.Default.AllChromatogramsSize;
             if (!size.IsEmpty)
                 Size = size;
-            Point location = Settings.Default.AllChromatogramsLocation;
-            if (!location.IsEmpty)
+            if (Program.DemoMode)
             {
+                var rectScreen = Screen.PrimaryScreen.WorkingArea;
                 StartPosition = FormStartPosition.Manual;
+                Location = new Point(rectScreen.Right - Size.Width, rectScreen.Bottom - Size.Height);
+            }
+            else
+            {
+                Point location = Settings.Default.AllChromatogramsLocation;
+                if (!location.IsEmpty)
+                {
+                    StartPosition = FormStartPosition.Manual;
 
-                // Make sure the window is entirely on screen
-                var screen = Screen.FromPoint(location);
-                location.X = Math.Min(location.X, screen.WorkingArea.Right - Size.Width);
-                location.Y = Math.Min(location.Y, screen.WorkingArea.Bottom - Size.Height);
-                Location = location;
+                    // Make sure the window is entirely on screen
+                    var screen = Screen.FromPoint(location);
+                    location.X = Math.Min(location.X, screen.WorkingArea.Right - Size.Width);
+                    location.Y = Math.Min(location.Y, screen.WorkingArea.Bottom - Size.Height);
+                    Location = location;
+                }
             }
             if (Settings.Default.AllChromatogramsMaximized)
                 WindowState = FormWindowState.Maximized;

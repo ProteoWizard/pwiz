@@ -54,6 +54,7 @@ namespace pwiz.Skyline
         public static bool StressTest { get; set; }                 // Set true when doing stress testing.
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
+        public static bool DemoMode { get; set; }
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.

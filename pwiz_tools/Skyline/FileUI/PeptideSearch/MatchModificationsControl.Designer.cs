@@ -33,16 +33,17 @@
             this.modificationsListBox = new System.Windows.Forms.CheckedListBox();
             this.labelModifications = new System.Windows.Forms.Label();
             this.unmatchedListBox = new System.Windows.Forms.ListBox();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.cbSelectAll = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.btnAddModification = new System.Windows.Forms.Button();
             this.menuAddModification = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuItemAddStructuralModification = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemAddHeavyModification = new System.Windows.Forms.ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
+            this.splitContainer.Panel1.SuspendLayout();
+            this.splitContainer.Panel2.SuspendLayout();
+            this.splitContainer.SuspendLayout();
             this.menuAddModification.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -64,22 +65,29 @@
             this.unmatchedListBox.FormattingEnabled = true;
             this.unmatchedListBox.Name = "unmatchedListBox";
             // 
-            // splitContainer1
+            // splitContainer
             // 
-            resources.ApplyResources(this.splitContainer1, "splitContainer1");
-            this.splitContainer1.Name = "splitContainer1";
+            resources.ApplyResources(this.splitContainer, "splitContainer");
+            this.splitContainer.Name = "splitContainer";
             // 
-            // splitContainer1.Panel1
+            // splitContainer.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.modificationsListBox);
-            this.splitContainer1.Panel1.Controls.Add(this.labelModifications);
+            this.splitContainer.Panel1.Controls.Add(this.cbSelectAll);
+            this.splitContainer.Panel1.Controls.Add(this.modificationsListBox);
+            this.splitContainer.Panel1.Controls.Add(this.labelModifications);
             // 
-            // splitContainer1.Panel2
+            // splitContainer.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.label1);
-            this.splitContainer1.Panel2.Controls.Add(this.btnAddModification);
-            this.splitContainer1.Panel2.Controls.Add(this.unmatchedListBox);
-            this.splitContainer1.TabStop = false;
+            this.splitContainer.Panel2.Controls.Add(this.label1);
+            this.splitContainer.Panel2.Controls.Add(this.unmatchedListBox);
+            this.splitContainer.TabStop = false;
+            // 
+            // cbSelectAll
+            // 
+            resources.ApplyResources(this.cbSelectAll, "cbSelectAll");
+            this.cbSelectAll.Name = "cbSelectAll";
+            this.cbSelectAll.UseVisualStyleBackColor = true;
+            this.cbSelectAll.CheckedChanged += new System.EventHandler(this.cbSelectAll_CheckedChanged);
             // 
             // label1
             // 
@@ -118,13 +126,15 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.splitContainer);
+            this.Controls.Add(this.btnAddModification);
             this.Name = "MatchModificationsControl";
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.splitContainer.Panel1.ResumeLayout(false);
+            this.splitContainer.Panel1.PerformLayout();
+            this.splitContainer.Panel2.ResumeLayout(false);
+            this.splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
+            this.splitContainer.ResumeLayout(false);
             this.menuAddModification.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -135,11 +145,12 @@
         private System.Windows.Forms.CheckedListBox modificationsListBox;
         private System.Windows.Forms.Label labelModifications;
         private System.Windows.Forms.ListBox unmatchedListBox;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnAddModification;
         private System.Windows.Forms.ContextMenuStrip menuAddModification;
         private System.Windows.Forms.ToolStripMenuItem menuItemAddStructuralModification;
         private System.Windows.Forms.ToolStripMenuItem menuItemAddHeavyModification;
+        private System.Windows.Forms.CheckBox cbSelectAll;
     }
 }
