@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
-            IsPauseForScreenShots = true;
+            //IsPauseForScreenShots = true;
 
             TestFilesZipPaths = new[]
                 {
