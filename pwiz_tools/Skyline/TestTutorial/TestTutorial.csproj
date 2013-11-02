@@ -188,6 +188,7 @@
     <None Include="ExistingExperimentsViews.zip" />
     <None Include="MethodRefinementViews.zip" />
     <None Include="Ms1FullScanFilteringViews.zip" />
+    <None Include="PeakPickingViews.zip" />
     <None Include="TargetedMSMSViews.zip" />
   </ItemGroup>
   <ItemGroup>

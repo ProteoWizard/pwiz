@@ -96,8 +96,7 @@ namespace pwiz.SkylineTestTutorial
                 for (int i = 0; i < 5; ++i)
                 {
                     path[i] = new KeyValuePair<string, string[]>(_importFiles[i],
-                                            new[] { GetTestPath(_importFiles[i] + (ExtensionTestContext.CanImportAbWiff ? 
-                                                                                  ExtensionTestContext.ExtAbWiff : ".mzXML")) });
+                                            new[] { GetTestPath(_importFiles[i] + ExtensionTestContext.ExtAbWiff) });
                 }
 
                 importResultsDlg.NamedPathSets = path;
