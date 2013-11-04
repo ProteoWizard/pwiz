@@ -88,7 +88,7 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;" +
                 "test;skip;filter;" +
-                "loop=0;repeat=1;random=on;offscreen=on;multi=1;" +
+                "loop=0;repeat=1;random=on;offscreen=on;multi=1;demo=0;" +
                 "clipboardcheck=off;profile=off;vendors=on;culture=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log;summary";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
