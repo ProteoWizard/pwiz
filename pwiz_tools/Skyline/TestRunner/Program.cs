@@ -88,7 +88,7 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;" +
                 "test;skip;filter;" +
-                "loop=0;repeat=1;random=on;offscreen=on;multi=1;demo=0;" +
+                "loop=0;repeat=1;random=on;offscreen=on;multi=1;demo=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;culture=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log;summary";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -273,8 +273,9 @@ namespace TestRunner
             
             var program = SkylineAssembly.GetType("pwiz.Skyline.Program");
             program.GetMethod("set_StressTest").Invoke(null, new object[] { true });
-            program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { commandLineArgs.ArgAsBool("offscreen") });
-            program.GetMethod("set_DemoMode").Invoke(null, new object[] { commandLineArgs.ArgAsBool("demo") });
+            bool demoMode = commandLineArgs.ArgAsBool("demo");
+            program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { !demoMode && commandLineArgs.ArgAsBool("offscreen") });
+            program.GetMethod("set_DemoMode").Invoke(null, new object[] { demoMode });
             program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !commandLineArgs.ArgAsBool("vendors") });
             program.GetMethod("set_NoSaveSettings").Invoke(null, new object[] { true });
             program.GetMethod("set_UnitTestTimeoutMultiplier").Invoke(null, new object[] { (int)commandLineArgs.ArgAsLong("multi") });

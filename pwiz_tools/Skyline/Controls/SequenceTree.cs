@@ -316,22 +316,27 @@ namespace pwiz.Skyline.Controls
             }
 
             // Generate colors for each peptide.
-            int index = 0;
-            var colorGenerator = new ColorGenerator();
-            _peptideGraphInfos.Clear();
-            foreach (var peptideGroup in Document.PeptideGroups)
+            if (IsPeptideMissingColor)
             {
-                foreach (var peptideNode in peptideGroup.Children)
+                int index = 0;
+                var colorGenerator = new ColorGenerator();
+                _peptideGraphInfos.Clear();
+                foreach (var peptideNode in Document.Peptides)
                 {
-                    var peptideDocNode = peptideNode as PeptideDocNode;
-                    if (peptideDocNode == null)
-                        continue;
-                    var peptideGraphInfo = new PeptideGraphInfo
+                    _peptideGraphInfos[peptideNode.Id.GlobalIndex] = new PeptideGraphInfo
                     {
                         Color = colorGenerator.GenerateColor(index++),
                     };
-                    _peptideGraphInfos[peptideDocNode.Id.GlobalIndex] = peptideGraphInfo;
                 }
+            }
+        }
+
+        public bool IsPeptideMissingColor
+        {
+            get
+            {
+                // TODO: Turn this on when color generating is fast enough or on background thread
+                return false; // Document.Peptides.Any(nodePep => !_peptideGraphInfos.ContainsKey(nodePep.Peptide.GlobalIndex));
             }
         }
 

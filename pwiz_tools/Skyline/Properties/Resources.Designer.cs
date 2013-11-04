@@ -14271,6 +14271,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before it can be re-integrated..
+        /// </summary>
+        public static string SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_c" +
+                        "an_be_re_integrated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must have imported results..
         /// </summary>
         public static string SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_ {

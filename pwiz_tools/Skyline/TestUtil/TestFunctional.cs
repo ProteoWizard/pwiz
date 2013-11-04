@@ -415,12 +415,12 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static bool IsPauseForScreenShots { get; set; }
 
-        public static bool IsDemoMode { get; set; }
+        public static bool IsDemoMode { get { return Program.DemoMode; } }
 
         public void PauseForScreenShot(string description = null)
         {
             if (IsDemoMode)
-                Thread.Sleep(5*1000);
+                Thread.Sleep(3*1000);
             else if (IsPauseForScreenShots)
                 PauseAndContinue(description);
         }

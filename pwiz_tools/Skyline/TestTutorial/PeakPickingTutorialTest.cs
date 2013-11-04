@@ -203,6 +203,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Open OpenSWATH gold standard dataset
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("AQUA4_Human_picked_napedro2-mod2.sky"))); // Not L10N
+            WaitForDocumentLoaded();
 
             // Train the peak scoring model for the DIA dataset
             var peptideSettingsDlgDIA = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);

@@ -53,14 +53,12 @@ namespace pwiz.Skyline.EditUI
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
-            double qCutoff;
+            double qCutoff = double.MaxValue;
             if (reintegrateQCutoff.Checked)
             {
                 if (!helper.ValidateDecimalTextBox(e, textBoxCutoff, 0.0, 1.0, out qCutoff))
                     return;
             }
-            else
-                qCutoff = double.MaxValue;
 
             using (var longWaitDlg = new LongWaitDlg
                 {
