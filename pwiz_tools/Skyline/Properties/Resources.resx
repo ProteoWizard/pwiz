@@ -4950,13 +4950,13 @@ Are you sure you want to continue?</value>
     <value>Peak Scoring Models</value>
   </data>
   <data name="LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area" xml:space="preserve">
-    <value>Log coeluting area</value>
+    <value>Log co-eluting area</value>
   </data>
   <data name="LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count" xml:space="preserve">
-    <value>Coelution count</value>
+    <value>Co-elution count</value>
   </data>
   <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
-    <value>Reference coelution count</value>
+    <value>Reference co-elution count</value>
   </data>
   <data name="MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation" xml:space="preserve">
     <value>Library intensity dot-product</value>
@@ -4968,10 +4968,10 @@ Are you sure you want to continue?</value>
     <value>Shape (weighted)</value>
   </data>
   <data name="MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution" xml:space="preserve">
-    <value>Coelution (weighted)</value>
+    <value>Co-elution (weighted)</value>
   </data>
   <data name="MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution" xml:space="preserve">
-    <value>Reference coelution (weighted)</value>
+    <value>Reference co-elution (weighted)</value>
   </data>
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__" xml:space="preserve">
     <value>Attempt to serialize list containing invalid type {0}.</value>
@@ -5283,13 +5283,13 @@ Are you sure you want to continue?</value>
     <value>Shape</value>
   </data>
   <data name="MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution" xml:space="preserve">
-    <value>Coelution</value>
+    <value>Co-elution</value>
   </data>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape" xml:space="preserve">
     <value>Reference shape</value>
   </data>
   <data name="MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution" xml:space="preserve">
-    <value>Reference coelution</value>
+    <value>Reference co-elution</value>
   </data>
   <data name="TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_" xml:space="preserve">
     <value>Duplicate or out of order peak in transition {0}</value>

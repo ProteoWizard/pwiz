@@ -7620,7 +7620,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Log coeluting area.
+        ///   Looks up a localized string similar to Log co-eluting area.
         /// </summary>
         public static string LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area {
             get {
@@ -7656,7 +7656,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Coelution count.
+        ///   Looks up a localized string similar to Co-elution count.
         /// </summary>
         public static string LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count {
             get {
@@ -7665,7 +7665,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reference coelution count.
+        ///   Looks up a localized string similar to Reference co-elution count.
         /// </summary>
         public static string LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard {
             get {
@@ -8648,7 +8648,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Coelution.
+        ///   Looks up a localized string similar to Co-elution.
         /// </summary>
         public static string MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution {
             get {
@@ -8676,7 +8676,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reference coelution.
+        ///   Looks up a localized string similar to Reference co-elution.
         /// </summary>
         public static string MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution {
             get {
@@ -8732,7 +8732,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Coelution (weighted).
+        ///   Looks up a localized string similar to Co-elution (weighted).
         /// </summary>
         public static string MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution {
             get {
@@ -8742,7 +8742,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reference coelution (weighted).
+        ///   Looks up a localized string similar to Reference co-elution (weighted).
         /// </summary>
         public static string MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution {
             get {

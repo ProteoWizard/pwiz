@@ -104,6 +104,7 @@
             this.MinimizeBox = false;
             this.Name = "ImportResultsNameDlg";
             this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             this.ResumeLayout(false);
             this.PerformLayout();
 
