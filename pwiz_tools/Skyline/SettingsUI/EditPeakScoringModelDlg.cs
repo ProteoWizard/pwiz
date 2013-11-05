@@ -48,7 +48,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly IEnumerable<IPeakScoringModel> _existing;
         private IPeakScoringModel _peakScoringModel;
-        private IPeakScoringModel _originalPeakScoringModel;
+        private IPeakScoringModel _lastTrainedScoringModel;
         private const string UNNAMED = "<UNNAMED>"; // Not L10N
         private string _originalName;
         private TargetDecoyGenerator _targetDecoyGenerator;
@@ -91,18 +91,19 @@ namespace pwiz.Skyline.SettingsUI
         public IPeakScoringModel PeakScoringModel
         {
             get { return _peakScoringModel; }
-            set { SetScoringModel(value); }
+            set
+            {
+                // Scoring model is null if we're creating a new model from scratch (default to mProphet).
+                SetScoringModel(value ?? new MProphetPeakScoringModel(UNNAMED));
+            }
         }
 
         private void SetScoringModel(IPeakScoringModel scoringModel)
         {
-            if (_originalName == null)
-                _originalName = (scoringModel != null) ? scoringModel.Name : UNNAMED;
-
-            // Scoring model is null if we're creating a new model from scratch (default to mProphet).
-            _peakScoringModel = scoringModel ?? new MProphetPeakScoringModel(ModelName);
-
+            _peakScoringModel = scoringModel;
             ModelName = _peakScoringModel.Name;
+            if (_originalName == null)
+                _originalName = _peakScoringModel.Name;
 
             _targetDecoyGenerator = new TargetDecoyGenerator(_peakScoringModel);
 
@@ -119,8 +120,8 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeCalculatorGrid();
 
-            if (_originalPeakScoringModel == null)
-                _originalPeakScoringModel = _peakScoringModel;
+            if (_lastTrainedScoringModel == null)
+                _lastTrainedScoringModel = _peakScoringModel;
 
             decoyCheckBox.Checked = _peakScoringModel.UsesDecoys;
             secondBestCheckBox.Checked = _peakScoringModel.UsesSecondBest;
@@ -151,8 +152,33 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public void TrainModel(bool suppressWeights = false)
         {
-            var weightSuppressors = suppressWeights ? _gridViewDriver.Items.Select(item => !item.IsEnabled).ToArray() :
-                                                      _gridViewDriver.Items.Select(item => false).ToArray();
+            // Create new scoring model using the default calculators.
+            switch (comboModel.SelectedIndex)
+            {
+                case MPROPHET_MODEL_INDEX:
+                    _peakScoringModel = new MProphetPeakScoringModel(ModelName, null, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);  
+                    break;
+                case SKYLINE_LEGACY_MODEL_INDEX:
+                    _peakScoringModel = new LegacyScoringModel(ModelName, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);
+                    break;
+            }
+
+            // Disable the calculator types that were unchecked
+            var indicesToSuppress = _gridViewDriver.Items.Select(item => !item.IsEnabled).ToList();
+            var calculatorsToSuppress = _targetDecoyGenerator.FeatureCalculators.Select(calc => calc.GetType())
+                                                             .Where((type, i) => indicesToSuppress[i])
+                                                             .ToList();
+            var weightSuppressors =
+                _peakScoringModel.PeakFeatureCalculators.Select(calc => suppressWeights && calculatorsToSuppress.Contains(calc.GetType())).ToList();
+
+
+            // Need to regenerate the targets and decoys if the set of calculators has changed (backward compatibility)
+            if (!PeakScoringModelSpec.AreSameCalculators(_peakScoringModel.PeakFeatureCalculators, 
+                                                         _targetDecoyGenerator.FeatureCalculators))
+            {
+                SetScoringModel(_peakScoringModel);
+            }
+
             // Get scores for target and decoy groups.
             List<IList<double[]>> targetTransitionGroups;
             List<IList<double[]>> decoyTransitionGroups;
@@ -165,9 +191,7 @@ namespace pwiz.Skyline.SettingsUI
                 decoyTransitionGroups = new List<IList<double[]>>();
 
             // Set intial weights based on previous model (with NaN's reset to 0)
-            var initialWeights = _peakScoringModel.IsTrained
-                                     ? _peakScoringModel.Parameters.Weights.Select(weight => double.IsNaN(weight) ? 0 : weight).ToArray()
-                                     : new double[_peakScoringModel.PeakFeatureCalculators.Count];
+            var initialWeights = new double[_peakScoringModel.PeakFeatureCalculators.Count];
             // But then set to NaN the weights that were suppressed by the user or have unknown values for this dataset
             for (int i = 0; i < initialWeights.Length; ++i)
             {
@@ -175,14 +199,6 @@ namespace pwiz.Skyline.SettingsUI
                     initialWeights[i] = double.NaN;
             }
             var initialParams = new LinearModelParams(initialWeights);
-
-            // Create new scoring model using the active calculators.
-            switch (comboModel.SelectedIndex)
-            {
-                case MPROPHET_MODEL_INDEX:
-                    _peakScoringModel = new MProphetPeakScoringModel(_peakScoringModel.Name, initialParams, _peakScoringModel.PeakFeatureCalculators);  
-                    break;
-            }
 
             // Train the model.
             _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, initialParams, secondBestCheckBox.Checked);
@@ -234,8 +250,8 @@ namespace pwiz.Skyline.SettingsUI
                     name,
                     mProphetModel.Parameters,
                     mProphetModel.PeakFeatureCalculators,
-                    decoyCheckBox.Checked,
-                    secondBestCheckBox.Checked,
+                    mProphetModel.UsesDecoys,
+                    mProphetModel.UsesSecondBest,
                     mProphetModel.ColinearWarning);
                 return;
             }
@@ -246,8 +262,8 @@ namespace pwiz.Skyline.SettingsUI
                 _peakScoringModel = new LegacyScoringModel(
                     name,
                     legacyModel.Parameters, 
-                    decoyCheckBox.Checked,
-                    secondBestCheckBox.Checked);
+                    legacyModel.UsesDecoys,
+                    legacyModel.UsesSecondBest);
             }
         }
 
@@ -793,15 +809,16 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnTrainModel_Click(object sender, EventArgs e)
         {
+            TrainModelClick();
+        }
+
+        public void TrainModelClick()
+        {
             if (!decoyCheckBox.Checked && !secondBestCheckBox.Checked)
             {
                 MessageDlg.Show(this, Resources.EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_);
                 return;
             }
-            
-            _peakScoringModel = (comboModel.SelectedIndex == MPROPHET_MODEL_INDEX)
-                ? (IPeakScoringModel) new MProphetPeakScoringModel(ModelName)
-                : new LegacyScoringModel(ModelName, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);
 
             try
             {
@@ -815,20 +832,9 @@ namespace pwiz.Skyline.SettingsUI
                                                      x.Message));
             }
 
-            // We replace the original model when we retrain the mProphet model, because the list of
-            // calculators may have changed.
+            // Update last trained scoring model.
             if (comboModel.SelectedIndex == MPROPHET_MODEL_INDEX)
-                _originalPeakScoringModel = _peakScoringModel;
-        }
-
-        private void textMean_Leave(object sender, EventArgs e)
-        {
-            UpdateModelGraph();
-        }
-
-        private void textStdev_Leave(object sender, EventArgs e)
-        {
-            UpdateModelGraph();
+                _lastTrainedScoringModel = _peakScoringModel;
         }
 
         private void comboModel_SelectedIndexChanged(object sender, EventArgs e)
@@ -839,11 +845,15 @@ namespace pwiz.Skyline.SettingsUI
                 switch (comboModel.SelectedIndex)
                 {
                     case MPROPHET_MODEL_INDEX:
-                        SetScoringModel(_originalPeakScoringModel as MProphetPeakScoringModel); // default to mProphet
+                        SetScoringModel(_lastTrainedScoringModel is MProphetPeakScoringModel
+                                            ? _lastTrainedScoringModel
+                                            : new MProphetPeakScoringModel(ModelName));
                         break;
 
                     case SKYLINE_LEGACY_MODEL_INDEX:
-                        SetScoringModel(new LegacyScoringModel(ModelName));
+                        SetScoringModel(_lastTrainedScoringModel is LegacyScoringModel
+                                            ? _lastTrainedScoringModel
+                                            : new LegacyScoringModel(ModelName));
                         break;
                 }
             }
@@ -880,10 +890,27 @@ namespace pwiz.Skyline.SettingsUI
             set { secondBestCheckBox.Checked = value; }
         }
 
+        public string SelectedModelItem
+        {
+            get { return comboModel.SelectedItem.ToString(); }
+            set
+            {
+                foreach (var item in comboModel.Items)
+                {
+                    if (item.ToString() == value)
+                    {
+                        comboModel.SelectedItem = item;
+                        return;
+                    }
+                }
+                throw new InvalidDataException(Resources.EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection);
+            }
+        }
+
         public int SelectedGraphTab
         {
             get { return tabControl1.SelectedIndex; }
-            set { tabControl1.SelectTab(value);}
+            set { tabControl1.SelectTab(value); }
         }
 
         public SimpleGridViewDriver<PeakCalculatorWeight> PeakCalculatorsGrid
@@ -912,6 +939,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             public bool[] EligibleScores { get; private set; }
 
+            public IList<IPeakFeatureCalculator> FeatureCalculators { get; private set; }
+
             private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
 
             public Dictionary<KeyValuePair<int, int>, PeakTransitionGroupFeatures> PeakTransitionGroupDictionary { get; private set; }
@@ -919,13 +948,13 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Determine which calculators will be used to score peaks in this document.
                 var document = Program.ActiveDocumentUI;
-                var calculators = scoringModel.PeakFeatureCalculators.ToArray();
-                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(calculators).ToArray();
+                FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
+                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators).ToArray();
                 PopulateDictionary();
 
-                EligibleScores = new bool[calculators.Length];
+                EligibleScores = new bool[FeatureCalculators.Count];
                 // Disable calculators that have only a single score value or any unknown scores.
-                for (int i = 0; i < calculators.Length; i++)
+                for (int i = 0; i < FeatureCalculators.Count; i++)
                     EligibleScores[i] = IsValidCalculator(i);
             }
 

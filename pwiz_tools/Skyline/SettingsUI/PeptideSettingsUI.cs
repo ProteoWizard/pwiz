@@ -898,6 +898,23 @@ namespace pwiz.Skyline.SettingsUI
             _driverPeakScoringModel.EditList();
         }
 
+        public string ComboPeakScoringModelSelected 
+        {
+            get { return comboPeakScoringModel.SelectedItem.ToString(); }
+            set
+            {
+                foreach (var item in comboPeakScoringModel.Items)
+                {
+                    if (item.ToString() == value)
+                    {
+                        comboPeakScoringModel.SelectedItem = item;
+                        return;
+                    }
+                }
+                throw new InvalidDataException(Resources.EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection);
+            }
+        }
+
         #endregion
 
         private sealed class LabelTypeComboDriver

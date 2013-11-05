@@ -104,11 +104,26 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public bool UsesSecondBest { get; protected set; }
         public LinearModelParams Parameters { get; protected set; }
 
+        public static bool AreSameCalculators(IList<IPeakFeatureCalculator> peakCalculator1, IList<IPeakFeatureCalculator> peakCalculator2)
+        {
+            if (peakCalculator1 == null ||
+                peakCalculator2 == null ||
+                peakCalculator1.Count != peakCalculator2.Count)
+                return false;
+            for (int i = 0; i < peakCalculator1.Count; ++i)
+            {
+                if (peakCalculator1[i].GetType() != peakCalculator2[i].GetType())
+                    return false;
+            }
+            return true;
+        }
+
         protected bool Equals(PeakScoringModelSpec other)
         {
             return base.Equals(other) && 
                 UsesDecoys.Equals(other.UsesDecoys) && 
                 UsesSecondBest.Equals(other.UsesSecondBest) && 
+                AreSameCalculators(PeakFeatureCalculators, other.PeakFeatureCalculators) &&
                 Equals(Parameters, other.Parameters);
         }
 

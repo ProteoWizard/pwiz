@@ -284,19 +284,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         #region object overrides
         public bool Equals(MProphetPeakScoringModel other)
         {
-            if (base.Equals(other) &&
-                ColinearWarning.Equals(other.ColinearWarning) &&
-                Lambda.Equals(other.Lambda) &&
-                PeakFeatureCalculators.Count == other.PeakFeatureCalculators.Count)
-            {
-                for (int i = 0; i < PeakFeatureCalculators.Count; i++)
-                {
-                    if (PeakFeatureCalculators[i].GetType() != other.PeakFeatureCalculators[i].GetType())
-                        return false;
-                }
-                return true;
-            }
-            return false;
+            return (base.Equals(other) &&
+                    ColinearWarning.Equals(other.ColinearWarning) &&
+                    Lambda.Equals(other.Lambda));
         }
 
         public override bool Equals(object obj)

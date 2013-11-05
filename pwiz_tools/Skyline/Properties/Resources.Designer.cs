@@ -4242,6 +4242,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid model selection..
+        /// </summary>
+        public static string EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There are no decoy peptides in the current document. Uncheck the Use Decoys Box..
         /// </summary>
         public static string EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_ {
@@ -10536,6 +10545,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_ha" +
                         "ve_imported_results_in_order_to_train_a_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized Model.
+        /// </summary>
+        public static string PeptideSettingsUI_ComboPeakScoringModelSelected_Unrecognized_Model {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ComboPeakScoringModelSelected_Unrecognized_Model", resourceCulture);
             }
         }
         

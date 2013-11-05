@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
-    class LegacyIdentifiedCountCalc : SummaryPeakFeatureCalculator
+    public class LegacyIdentifiedCountCalc : SummaryPeakFeatureCalculator
     {
         public LegacyIdentifiedCountCalc() : base(Resources.LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count) { }
 

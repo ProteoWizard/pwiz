@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestA
         {
             // Round-trip serialization.
             const string testRoundTrip = @"
-                <mprophet_peak_scoring_model name=""TestRoundTrip"" decoy_mean=""11.11"" decoy_stdev=""0.22"">
+                <mprophet_peak_scoring_model name=""TestRoundTrip"" uses_decoys=""true"" uses_second_best=""false"">
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc"" weight=""4.44""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
@@ -166,18 +166,57 @@ namespace pwiz.SkylineTestA
 
             // No peak calculators.
             const string testNoCalculators = @"
-                <mprophet_peak_scoring_model name=""TestNoCalculators"" decoy_mean=""11.11"" decoy_stdev=""0.22""/>";
+                <mprophet_peak_scoring_model name=""TestNoCalculators"" uses_decoys=""true"" uses_second_best=""false""/>";
             AssertEx.DeserializeError<MProphetPeakScoringModel, XmlException>(testNoCalculators);
 
             // Bad calculator type.
             const string testBadType = @"
-                <mprophet_peak_scoring_model name=""TestBadType"" decoy_mean=""11.11"" decoy_stdev=""0.22"">
+                <mprophet_peak_scoring_model name=""TestBadType"" uses_decoys=""true"" uses_second_best=""false"">
                     <peak_feature_calculator type=""System.Double"" weight=""4.44""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc"" weight=""7.77""/>
                 </mprophet_peak_scoring_model>";
             AssertEx.DeserializeError<MProphetPeakScoringModel, InvalidDataException>(testBadType);
+        }
+
+        [TestMethod]
+        public void TestLegacySerialize()
+        {
+            // Round-trip serialization.
+            const string testRoundTrip = @"
+                <legacy_peak_scoring_model name=""TestRoundTrip"" uses_decoys=""true"" uses_second_best=""false"" bias=""1.2"">
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyLogUnforcedAreaCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc"" weight=""4.44""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
+                </legacy_peak_scoring_model>";
+            AssertEx.Serialization<LegacyScoringModel>(testRoundTrip, AssertEx.Cloned);
+
+            // No peak calculators.
+            const string testNoCalculators = @"
+                <legacy_peak_scoring_model name=""TestNoCalculators"" uses_decoys=""true"" uses_second_best=""false"" bias=""1.2""/>";
+            AssertEx.DeserializeError<LegacyScoringModel, InvalidDataException>(testNoCalculators);
+
+            // Bad calculator type.
+            const string testBadType = @"
+                <legacy_peak_scoring_model name=""TestBadType"" uses_decoys=""true"" uses_second_best=""false"" bias=""1.2"">
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyLogUnforcedAreaCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc"" weight=""4.44""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
+                    <peak_feature_calculator type=""System.Double"" weight=""6.66""/>
+                </legacy_peak_scoring_model>";
+            AssertEx.DeserializeError<LegacyScoringModel, InvalidDataException>(testBadType);
+
+            // Wrong calculators.
+            const string testWrongCalculators = @"
+                <legacy_peak_scoring_model name=""TestBadType"" uses_decoys=""true"" uses_second_best=""false"" bias=""1.2"">
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyLogUnforcedAreaCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc"" weight=""4.44""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc"" weight=""7.77""/>
+                </legacy_peak_scoring_model>";
+            AssertEx.DeserializeError<LegacyScoringModel, InvalidDataException>(testWrongCalculators);
         }
 
         private void LoadData(
