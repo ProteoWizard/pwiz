@@ -8562,6 +8562,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} missing from chromatogram peak.
+        /// </summary>
+        public static string MissingScoresFinder_Match__0__missing_from_chromatogram_peak {
+            get {
+                return ResourceManager.GetString("MissingScoresFinder_Match__0__missing_from_chromatogram_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} missing from peptide.
+        /// </summary>
+        public static string MissingScoresFinder_Match__0__missing_from_peptide {
+            get {
+                return ResourceManager.GetString("MissingScoresFinder_Match__0__missing_from_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid attempt to add data to completed MassLookup..
         /// </summary>
         public static string ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup {

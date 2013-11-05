@@ -1521,9 +1521,10 @@ namespace pwiz.Skyline
             return findPredicate.FindAll(longWaitBroker, Document);
         }
 
-        public void FindAll(Control parent)
+        public void FindAll(Control parent, FindOptions findOptions = null)
         {
-            var findOptions = FindOptions.ReadFromSettings(Settings.Default);
+            if (findOptions == null)
+                findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
             IList<FindResult> results = null;
             using (var longWaitDlg = new LongWaitDlg(this))

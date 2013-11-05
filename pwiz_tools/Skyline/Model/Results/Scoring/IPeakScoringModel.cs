@@ -22,12 +22,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {

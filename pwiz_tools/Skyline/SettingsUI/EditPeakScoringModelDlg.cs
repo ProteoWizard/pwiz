@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -54,6 +55,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly PeakCalculatorGridViewDriver _gridViewDriver;
         private int _selectedCalculator = -1;
         private int _selectedIndex = -1;
+        private bool _hasUnknownScores;
         private SortableBindingList<PeakCalculatorWeight> PeakCalculatorWeights { get { return _gridViewDriver.Items; } }
         
         private enum ColumnNames { enabled, calculator_name, weight, percent_contribution }
@@ -77,6 +79,7 @@ namespace pwiz.Skyline.SettingsUI
             InitGraphPane(zedGraphSelectedCalculator.GraphPane);
 
             lblColinearWarning.Visible = false;
+            toolStripFind.Visible = false;
 
             gridPeakCalculators.DataBindingComplete += OnDataBindingComplete;
             comboModel.SelectedIndexChanged += comboModel_SelectedIndexChanged;
@@ -466,7 +469,6 @@ namespace pwiz.Skyline.SettingsUI
             PointPairList secondBestPoints;
             double min;
             double max;
-            bool hasUnknownScores;
             GetPoints(
                 _selectedCalculator,
                 out targetPoints,
@@ -474,7 +476,7 @@ namespace pwiz.Skyline.SettingsUI
                 out secondBestPoints,
                 out min, 
                 out max,
-                out hasUnknownScores);
+                out _hasUnknownScores);
             if (decoyCheckBox.Checked)
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
@@ -492,7 +494,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // If the calculator produces unknown scores, split the graph and show a histogram
             // of the unknown scores on the right side of the graph.
-            if (hasUnknownScores)
+            if (_hasUnknownScores)
             {
                 // Create "unknown" label.
                 var unknownLabel = new TextObj(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown, 1.0, 1.02, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
@@ -895,6 +897,12 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewDriver.Items[row].IsEnabled = value;
         }
 
+        public bool IsFindButtonVisible
+        {
+            get { return toolStripFind.Visible; }
+            set { toolStripFind.Visible = value; }
+        }
+
         #endregion
 
         /// <summary>
@@ -906,17 +914,30 @@ namespace pwiz.Skyline.SettingsUI
 
             private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
 
+            public Dictionary<KeyValuePair<int, int>, PeakTransitionGroupFeatures> PeakTransitionGroupDictionary { get; private set; }
             public TargetDecoyGenerator(IPeakScoringModel scoringModel)
             {
                 // Determine which calculators will be used to score peaks in this document.
                 var document = Program.ActiveDocumentUI;
                 var calculators = scoringModel.PeakFeatureCalculators.ToArray();
                 _peakTransitionGroupFeaturesList = document.GetPeakFeatures(calculators).ToArray();
+                PopulateDictionary();
 
                 EligibleScores = new bool[calculators.Length];
                 // Disable calculators that have only a single score value or any unknown scores.
                 for (int i = 0; i < calculators.Length; i++)
                     EligibleScores[i] = IsValidCalculator(i);
+            }
+
+            private void PopulateDictionary()
+            {
+                PeakTransitionGroupDictionary = new Dictionary<KeyValuePair<int, int>, PeakTransitionGroupFeatures>();
+                foreach (var transitionGroupFeatures in _peakTransitionGroupFeaturesList)
+                {
+                    var pepId = transitionGroupFeatures.Id.NodePep.Id.GlobalIndex;
+                    var fileId = transitionGroupFeatures.Id.ChromatogramSet.FindFile(transitionGroupFeatures.Id.FilePath).GlobalIndex;
+                    PeakTransitionGroupDictionary.Add(new KeyValuePair<int, int>(pepId, fileId), transitionGroupFeatures);
+                }
             }
 
             public void GetTransitionGroups(out List<IList<double[]>> targetGroups,
@@ -1099,6 +1120,30 @@ namespace pwiz.Skyline.SettingsUI
         {
             UpdateCalculatorGraph();
             UpdateModelGraph();
+        }
+
+        private void findPeptidesButton_Click(object sender, EventArgs e)
+        {
+           FindMissingValues(_selectedCalculator);
+        }
+
+        public void FindMissingValues(int selectedCalculatorIndex)
+        {
+            string calculatorName = _peakScoringModel.PeakFeatureCalculators[selectedCalculatorIndex].Name;
+            var featureDictionary = _targetDecoyGenerator.PeakTransitionGroupDictionary;
+            var finders = new[]
+                {
+                    new MissingScoresFinder(calculatorName, selectedCalculatorIndex, featureDictionary)
+                };
+            var findOptions = new FindOptions().ChangeCustomFinders(finders).ChangeCaseSensitive(false).ChangeText("");
+            Program.MainWindow.FindAll(this, findOptions);
+        }
+
+        private bool zedGraphSelectedCalculator_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            bool isMouseOverUnknown = _hasUnknownScores && e.X > sender.Width - 100;
+            toolStripFind.Visible = isMouseOverUnknown;
+            return true;
         }
     }
 

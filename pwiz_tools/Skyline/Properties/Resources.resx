@@ -6038,4 +6038,10 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_" xml:space="preserve">
     <value>The document must be fully loaded before it can be re-integrated.</value>
   </data>
+  <data name="MissingScoresFinder_Match__0__missing_from_peptide" xml:space="preserve">
+    <value>{0} missing from peptide</value>
+  </data>
+  <data name="MissingScoresFinder_Match__0__missing_from_chromatogram_peak" xml:space="preserve">
+    <value>{0} missing from chromatogram peak</value>
+  </data>
 </root>

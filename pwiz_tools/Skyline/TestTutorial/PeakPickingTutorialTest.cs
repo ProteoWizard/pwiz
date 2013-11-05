@@ -20,7 +20,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -47,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestPeakPickingTutorial()
         {
             // Set true to look at tutorial screenshots.
-            IsPauseForScreenShots = false;
+            //IsPauseForScreenShots = true;
 
             TestFilesZipPaths = new[]
                 {
@@ -115,24 +117,44 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsNotNull(chromGroupInfo.RetentionTime);
                     Assert.AreEqual(chromGroupInfo.RetentionTime.Value, 16.5, 0.1);
                 });
-            PauseForScreenShot("p4 -- main window");
+            PauseForScreenShot("p5 -- main window");
 
             // Train the peak scoring model
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration);
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
-            PauseForScreenShot("p5 -- peak scoring dialog trained");
+            PauseForScreenShot("p6 -- peak scoring dialog trained");
 
             RunUI(() => editDlg.SelectedGraphTab = 1);
             RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(2));
-            PauseForScreenShot("p6 -- peak scoring dialog feature score");
+            PauseForScreenShot("p7 -- peak scoring dialog feature score");
             
-            RunUI(() => editDlg.PeakScoringModelName = "test1");
+            RunUI(() =>
+            {
+                editDlg.IsFindButtonVisible = true;
+                editDlg.FindMissingValues(2);
+                editDlg.PeakScoringModelName = "test1";
+            });
+            PauseForScreenShot("p8 -- peak scoring dialog find missing");
+
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
 
             // Remove the peptide with no library dot product, and train again
+            FindResultsForm findResultsForm = null;
+            RunUI(() =>
+            {
+                findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+                Assert.IsNotNull(findResultsForm);
+                Assert.AreEqual(findResultsForm.ItemCount, 1);
+                findResultsForm.ActivateItem(0);
+                Assert.AreEqual(SkylineWindow.SelectedPeptideSequence, "GGYAGMLVGSVGETVAQLAR");
+            });
+            PauseForScreenShot("p8 -- find results form");
+
+            RunUI(() => findResultsForm.Close());
+
             RemovePeptide("GGYAGMLVGSVGETVAQLAR");
             var peptideSettingsDlgNew = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsDlgNew.SelectedTab = PeptideSettingsUI.TABS.Integration);
@@ -146,7 +168,7 @@ namespace pwiz.SkylineTestTutorial
                     editDlgLibrary.PeakCalculatorsGrid.Items[2].IsEnabled = true;
                     editDlgLibrary.TrainModel(true);
                 });
-            PauseForScreenShot("p7 - peak scoring dialog with library score");
+            PauseForScreenShot("p9 - peak scoring dialog with library score");
 
             OkDialog(editDlgLibrary, editDlgLibrary.OkDialog);
 
@@ -161,7 +183,8 @@ namespace pwiz.SkylineTestTutorial
                     editDlgNew.PeakCalculatorsGrid.Items[6].IsEnabled = false;
                     editDlgNew.TrainModel(true);
                 });
-            PauseForScreenShot("p8 - peak scoring dialog with second best");
+            PauseForScreenShot("p10 - peak scoring dialog with second best");
+
             OkDialog(editDlgNew, editDlgNew.CancelDialog);
             OkDialog(editListLibrary, editListLibrary.CancelDialog);
             OkDialog(peptideSettingsDlgNew, peptideSettingsDlgNew.OkDialog);
@@ -169,7 +192,7 @@ namespace pwiz.SkylineTestTutorial
             // Apply the model to reintegrate peaks
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() => reintegrateDlg.ReintegrateAll = true);
-            PauseForScreenShot("p9 -- reintegrate");
+            PauseForScreenShot("p11 -- reintegrate");
 
             OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"SRM2.view"));
@@ -181,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(chromGroupInfo.RetentionTime);
                 Assert.AreEqual(chromGroupInfo.RetentionTime.Value, 18.0, 0.1);
             });
-            PauseForScreenShot("p10 -- main window");
+            PauseForScreenShot("p12 -- main window");
 
             // Reintegrate slightly differently, with a q value cutoff
             var reintegrateDlgNew = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -191,12 +214,16 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgNew.Cutoff = 0.001;
                 });
             OkDialog(reintegrateDlgNew, reintegrateDlgNew.OkDialog);
+            PauseForScreenShot("p13 -- main window with some null peaks");
+
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"SRM3.view"));
+            PauseForScreenShot("p14 -- main window with interference on transition");
 
             // Export the mProphet features
             var mProphetExportDlg = ShowDialog<MProphetFeaturesDlg>(SkylineWindow.ShowMProphetFeaturesDialog);
 
             RunUI(() => mProphetExportDlg.BestScoresOnly = true);
-            PauseForScreenShot("p11 -- mProphet features dialog");
+            PauseForScreenShot("p15 -- mProphet features dialog");
             
             // TODO: actually write the features here using WriteFeatures
             OkDialog(mProphetExportDlg, mProphetExportDlg.CancelDialog);
@@ -206,23 +233,35 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentLoaded();
 
             // Train the peak scoring model for the DIA dataset
-            var peptideSettingsDlgDIA = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsDlgDIA.SelectedTab = PeptideSettingsUI.TABS.Integration);
-            var editDlgDIA = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlgDIA.AddPeakScoringModel);
+            var peptideSettingsDlgDia = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettingsDlgDia.SelectedTab = PeptideSettingsUI.TABS.Integration);
+
+            // Open the previous scoring model for use with the DIA dataset
+            var editListDia = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
+                    peptideSettingsDlgDia.EditPeakScoringModel);
+            RunUI(() => editListDia.SelectItem("test1"));
+            var editDlgFromSrm = ShowDialog<EditPeakScoringModelDlg>(editListDia.EditItem);
+            PauseForScreenShot("p17 -- SRM model applied to DIA data");
+            
+            OkDialog(editDlgFromSrm, editDlgFromSrm.CancelDialog);
+            OkDialog(editListDia, editListDia.CancelDialog);
+
+            // Train a new model for the DIA dataset
+            var editDlgDia = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlgDia.AddPeakScoringModel);
             RunUI(() =>
                 {
-                    editDlgDIA.UsesDecoys = false;
-                    editDlgDIA.UsesSecondBest = true;
-                    editDlgDIA.TrainModel();
+                    editDlgDia.UsesDecoys = false;
+                    editDlgDia.UsesSecondBest = true;
+                    editDlgDia.TrainModel();
                 });
-            PauseForScreenShot("p13 -- DIA peak scoring dialog with second best");
+            PauseForScreenShot("p18 -- DIA peak scoring dialog with second best");
             
             RunUI(() =>
                 {
-                    editDlgDIA.PeakScoringModelName = "test3";
+                    editDlgDia.PeakScoringModelName = "testDIA";
                 });
-            OkDialog(editDlgDIA, editDlgDIA.OkDialog);
-            OkDialog(peptideSettingsDlgDIA, peptideSettingsDlgDIA.OkDialog);
+            OkDialog(editDlgDia, editDlgDia.OkDialog);
+            OkDialog(peptideSettingsDlgDia, peptideSettingsDlgDia.OkDialog);
 
             // Reintegrate
             var reintegrateDlgDia = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
