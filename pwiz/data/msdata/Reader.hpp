@@ -46,6 +46,9 @@ class PWIZ_API_DECL Reader
         bool simAsSpectra;
         bool srmAsSpectra;
 
+		/// when true, allows for skipping 0 length checks (and thus skip re-reading data for ABI)
+		bool acceptZeroLengthSpectra;
+
         Config();
         Config(const Config& rhs);
     };

@@ -70,19 +70,24 @@ void Reader::read(System::String^ filename, System::String^ head, MSData^ result
     read(filename, head, result, 0, config);
 }
 
+static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^ readerConfig)
+{
+    config.simAsSpectra = readerConfig->simAsSpectra;
+    config.srmAsSpectra = readerConfig->srmAsSpectra;
+	config.acceptZeroLengthSpectra = readerConfig->acceptZeroLengthSpectra;
+}
+
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)
 {
     pwiz::msdata::Reader::Config config;
-    config.simAsSpectra = readerConfig->simAsSpectra;
-    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    copyReaderConfig(config,readerConfig);
     try {base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex, config);} CATCH_AND_FORWARD
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSDataList^ results, ReaderConfig^ readerConfig)
 {
     pwiz::msdata::Reader::Config config;
-    config.simAsSpectra = readerConfig->simAsSpectra;
-    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    copyReaderConfig(config,readerConfig);
     try {base_->read(ToStdString(filename), ToStdString(head), *results->base_, config);} CATCH_AND_FORWARD
 }
 
@@ -146,8 +151,7 @@ void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex)
 void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)
 {    
     pwiz::msdata::Reader::Config config;
-    config.simAsSpectra = readerConfig->simAsSpectra;
-    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    copyReaderConfig(config,readerConfig);
     try {base_->read(ToStdString(filename), **result->base_, sampleIndex, config);} CATCH_AND_FORWARD
 }
 
@@ -159,8 +163,7 @@ void ReaderList::read(System::String^ filename, MSDataList^ results)
 void ReaderList::read(System::String^ filename, MSDataList^ results, ReaderConfig^ readerConfig)
 {    
     pwiz::msdata::Reader::Config config;
-    config.simAsSpectra = readerConfig->simAsSpectra;
-    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    copyReaderConfig(config,readerConfig);
     try {base_->read(ToStdString(filename), *results->base_, config);} CATCH_AND_FORWARD
 }
 

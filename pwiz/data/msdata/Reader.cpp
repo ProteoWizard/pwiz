@@ -39,6 +39,7 @@ using namespace pwiz::util;
 Reader::Config::Config()
     : simAsSpectra(false)
     , srmAsSpectra(false)
+    , acceptZeroLengthSpectra(false)
 {
 }
 
@@ -47,6 +48,7 @@ Reader::Config::Config(const Config& rhs)
 {
     simAsSpectra = rhs.simAsSpectra;
     srmAsSpectra = rhs.srmAsSpectra;
+	acceptZeroLengthSpectra = rhs.acceptZeroLengthSpectra;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files

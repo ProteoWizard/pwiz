@@ -53,9 +53,13 @@ public ref class ReaderConfig
     /// return Selected Reaction Monitoring as spectra
     bool srmAsSpectra;
 
+	/// when true, allows for skipping 0 length checks (and thus skip re-reading data for ABI)
+	bool acceptZeroLengthSpectra;
+
     ReaderConfig()
     :   simAsSpectra(false)
     ,   srmAsSpectra(false)
+	,   acceptZeroLengthSpectra(false)
     {
     }
 };

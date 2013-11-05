@@ -67,7 +67,8 @@ namespace pwiz.ProteowizardWrapper
         private MsDataFileImpl(MSData msDataFile)
         {
             _msDataFile = msDataFile;
-            _config = new ReaderConfig();
+			// we don't mind zero length spectra, so skip potentially expensive checks
+            _config = new ReaderConfig {acceptZeroLengthSpectra = true};
             _isMsx = CheckMsx();
         }
 
@@ -75,15 +76,16 @@ namespace pwiz.ProteowizardWrapper
         {
             FilePath = path;
             _msDataFile = new MSDataFile(path);
-            _config = new ReaderConfig();
+			// we don't mind zero length spectra, so skip potentially expensive checks
+            _config = new ReaderConfig { acceptZeroLengthSpectra = true };
             _isMsx = CheckMsx();
         }
 
-        public MsDataFileImpl(string path, int sampleIndex, bool simAsSpectra = false, bool srmAsSpectra = false)
+        public MsDataFileImpl(string path, int sampleIndex, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true)
         {
             FilePath = path;
             _msDataFile = new MSData();
-            _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra};
+            _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra, acceptZeroLengthSpectra = acceptZeroLengthSpectra};
             FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
             _isMsx = CheckMsx();
         }
