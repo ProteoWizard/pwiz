@@ -357,7 +357,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
     {
         std::vector<unsigned long> sindex;
         sindex.reserve(sl->size());
-        size_t accIndex = 0;
+        unsigned long accIndex = 0;
 
         pwiz::msdata::SpectrumPtr sp;
         pwiz::msdata::BinaryDataArrayPtr bdap;
@@ -388,7 +388,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
                         {
                             Translator_mz5::translateMZ(mz);
                         }
-                        accIndex += mz.size();
+                        accIndex += (unsigned long)mz.size();
                         connection.extendData(mz, Configuration_mz5::SpectrumMZ);
                         connection.extendData(sp->getIntensityArray().get()->data,
                                 Configuration_mz5::SpectrumIntensity);
@@ -421,7 +421,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatogr
         {
             std::vector<unsigned long> cindex;
             cindex.reserve(cl->size());
-            size_t accIndex = 0;
+            unsigned long accIndex = 0;
 
             pwiz::msdata::ChromatogramPtr cp;
             pwiz::msdata::BinaryDataArrayPtr bdap;
@@ -449,7 +449,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatogr
                             *cp->getIntensityArray().get(), *this));
                         if (inten.size() > 0)
                         {
-                            accIndex += inten.size();
+                            accIndex += (unsigned long)inten.size();
                             connection.extendData(time,
                                     Configuration_mz5::ChomatogramTime);
                             connection.extendData(inten,
