@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -86,7 +85,7 @@ namespace pwiz.SkylineTestTutorial
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
-            string[] searchFiles = new[]
+            string[] searchFiles =
                 {
                     GetTestPath("100803_0001_MCF7_TiB_L.group.xml"),  // Not L10N
                     GetTestPath("100803_0005b_MCF7_TiTip3.group.xml")  // Not L10N

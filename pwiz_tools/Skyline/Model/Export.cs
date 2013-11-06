@@ -930,7 +930,7 @@ namespace pwiz.Skyline.Model
             if (OptimizeType == null || OptimizeType == ExportOptimize.NONE)
             {
                 IEnumerable<DocNode> transitionsInBestOrder = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
-                int i = transitionsInBestOrder.TakeWhile(node => node != nodeTran).Count();
+                int i = transitionsInBestOrder.TakeWhile(node => !ReferenceEquals(node, nodeTran)).Count();
                 return i < PrimaryTransitionCount;
             }
             else
@@ -1153,7 +1153,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             if (resultsUsedCount > 0)
-                averagePeakArea = sumPeakArea/(float) resultsUsedCount;
+                averagePeakArea = sumPeakArea/resultsUsedCount;
         }
 
         static internal string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)

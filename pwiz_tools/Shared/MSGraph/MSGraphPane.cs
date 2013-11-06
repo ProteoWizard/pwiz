@@ -50,6 +50,14 @@ namespace pwiz.MSGraph
             _manualLabels = new Dictionary<TextObj, RectangleF>();
         }
 
+        public MSGraphPane(MSGraphPane other)
+            : base(other)
+        {
+            _currentItemType = other._currentItemType;
+            _pointAnnotations = new GraphObjList(other._pointAnnotations);
+            _manualLabels = new Dictionary<TextObj, RectangleF>(other._manualLabels);
+        }
+
         public bool AllowCurveOverlap { get; set; }
         public bool AllowLabelOverlap { get; set; }
 

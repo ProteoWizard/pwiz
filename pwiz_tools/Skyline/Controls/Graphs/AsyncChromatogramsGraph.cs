@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
         //private static readonly Log LOG = new Log<AsyncChromatogramsGraph>();
 
         public AsyncChromatogramsGraph()
-            : base(MAX_FRAMES_PER_SECOND)
+            : base(MAX_FRAMES_PER_SECOND, "AllChromatograms background render") // Not L10N
         {
         }
 

@@ -288,7 +288,7 @@ namespace pwiz.SkylineTestTutorial
             string lowRes80Search = GetTestPath(Path.Combine(lowResDir, Path.Combine(searchDir, lowRes80Base + BiblioSpecLiteBuilder.EXT_PERCOLATOR)));
             string shortLowRes80FileName = (Path.GetFileNameWithoutExtension(lowRes80File) ?? "").Substring(prefixLen);
 
-            string[] searchFiles = new[] { lowRes20Search, lowRes80Search };
+            string[] searchFiles = { lowRes20Search, lowRes80Search };
             var doc = SkylineWindow.Document;
             RunUI(() =>
             {
@@ -518,7 +518,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg2 =>
             {
-                string[] filePaths = new[]
+                string[] filePaths =
                     {
                         GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)
                     };
@@ -567,7 +567,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg2 =>
             {
-                string[] filePaths = new[]
+                string[] filePaths =
                     {
                         GetTestPath(@"TOF\1-BSA-50amol"  + ExtAgilentRaw),
                         GetTestPath(@"TOF\2-BSA-100amol" + ExtAgilentRaw),

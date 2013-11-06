@@ -186,6 +186,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public GraphChromatogram(string name, IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
+            graphControl.GraphPane = new AsyncMSGraphPane(this);
+            DoubleBuffered = false;
             _graphHelper = GraphHelper.Attach(graphControl);
             NameSet = name;
             Icon = Resources.SkylineData;

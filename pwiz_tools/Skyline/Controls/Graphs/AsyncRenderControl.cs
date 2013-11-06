@@ -41,11 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         //private static readonly Log LOG = new Log<AsyncRenderControl>();
 
-        public AsyncRenderControl()
-        {
-        }
-
-        protected AsyncRenderControl(int framesPerSecond)
+        protected AsyncRenderControl(int framesPerSecond, string backgroundThreadName = "Background render")    // Not L10N
         {
             InitializeComponent();
             pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -69,7 +65,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Thread backgroundRenderThread = new Thread(BackgroundRender)
             {
-                Name = "AllChromatograms background render",    // Not L10N
+                Name = backgroundThreadName,
                 IsBackground = true
             };
             LocalizationHelper.InitThread(backgroundRenderThread);
