@@ -273,8 +273,8 @@ void Connection_mz5::extendAndWrite1DDataSet(const DataSet& dataset,
     hsize_t start[1], end[1];
     dataset.getSpace().getSelectBounds(start, end);
 
-    int currentsize = d1.size();
-    int fullsize = end[0] + 1;
+    hsize_t currentsize = d1.size();
+    hsize_t fullsize = end[0] + 1;
 
     hsize_t extension_size[1], offset[1], dims1[1];
     extension_size[0] = fullsize + currentsize;
