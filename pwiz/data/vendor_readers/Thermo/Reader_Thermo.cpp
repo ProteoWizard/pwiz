@@ -38,6 +38,9 @@ bool _hasRAWHeader(const std::string& head)
         'i', '\0', 'g', '\0', 'a', '\0', 'n', '\0'
     };
 
+    if (head.length() < sizeof(rawHeader)) // as with input "files" that are actually directories
+        return false;
+
     for (size_t i=0; i<sizeof(rawHeader); i++)
         if (head[i] != rawHeader[i])
             return false;
