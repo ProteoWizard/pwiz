@@ -28,6 +28,8 @@ namespace pwiz.Skyline.Controls
     /// </summary>
     public static class ColorGenerator
     {
+        private const int CollisionThreshold = 30;
+
         private static readonly Dictionary<string, Dictionary<string, int>> _colorDictionary =
             new Dictionary<string, Dictionary<string, int>>();
  
@@ -63,9 +65,9 @@ namespace pwiz.Skyline.Controls
                         foreach (var colorIndex in colorsPerPeptide.Values)
                         {
                             var existingColor = _colors[colorIndex];
-                            if (Math.Abs(color.R - existingColor.R) < 25 &&
-                                Math.Abs(color.G - existingColor.G) < 25 &&
-                                Math.Abs(color.B - existingColor.B) < 25)
+                            if (Math.Abs(color.R - existingColor.R) < CollisionThreshold &&
+                                Math.Abs(color.G - existingColor.G) < CollisionThreshold &&
+                                Math.Abs(color.B - existingColor.B) < CollisionThreshold)
                             {
                                 collision = true;
                                 break;

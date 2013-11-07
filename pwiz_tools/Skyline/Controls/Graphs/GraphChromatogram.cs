@@ -920,7 +920,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             foreach (var selectedNode in _stateProvider.SelectedNodes)
             {
-                // Add all transition groups from a selected protein.
+                // Add all peptides from a selected protein.
                 var proteinNode = selectedNode as PeptideGroupTreeNode;
                 if (proteinNode != null)
                 {
@@ -931,28 +931,33 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (pepTreeNode != null)
                             peptidesAndTransitionGroups.Add(pepTreeNode);
                     }
-                    continue;
                 }
-
-                // Add all transition groups from a selected peptide.
-                var pepNode = selectedNode as PeptideTreeNode;
-                if (pepNode != null)
+                else
                 {
-                    peptidesAndTransitionGroups.Add(pepNode);
-                    continue;
+                    // Walk up the sequence tree until we find a peptide.
+                    var node = (TreeNode) selectedNode;
+                    while (node != null && !(node is PeptideTreeNode))
+                        node = node.Parent;
+                    if (node != null)
+                        peptidesAndTransitionGroups.Add((PeptideTreeNode)node);
                 }
+            }
 
-                // Add transition groups directly.
-                var node = selectedNode;
-                while (node != null)
+            if (peptidesAndTransitionGroups.NodePep.Count == 0)
+            {
+                foreach (var selectedNode in _stateProvider.SelectedNodes)
                 {
-                    var groupTreeNode = node as TransitionGroupTreeNode;
-                    if (groupTreeNode != null)
+                    // Add transition groups directly.
+                    var node = (TreeNode) selectedNode;
+                    while (node != null && !(node is TransitionGroupTreeNode))
+                        node = node.Parent;
+                    if (node != null)
                     {
-                        peptidesAndTransitionGroups.Add((PeptideTreeNode)groupTreeNode.Parent, groupTreeNode.DocNode);
-                        break;
+                        var groupTreeNode = (TransitionGroupTreeNode) node;
+                        peptidesAndTransitionGroups.Add(
+                            (PeptideTreeNode)groupTreeNode.Parent,
+                            groupTreeNode.DocNode);
                     }
-                    node = (TreeNodeMS) node.Parent;
                 }
             }
 
@@ -2874,23 +2879,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 iCharge++;
             }
             return iCharge * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
-        }
-
-        public class ListChromGraphs : List<KeyValuePair<GraphHelper.PaneKey, ChromGraphItem>>
-        {
-            public void Add(GraphHelper.PaneKey graphPaneKey, ChromGraphItem chromGraphItem)
-            {
-                Add(new KeyValuePair<GraphHelper.PaneKey, ChromGraphItem>(graphPaneKey, chromGraphItem));
-            }
-
-            public IEnumerable<ChromGraphItem> PrimaryGraphItems
-            {
-                get { return PrimaryGraphPaneKeyItems.Select(keyValuePair=>keyValuePair.Value); }
-            }
-            public IEnumerable<KeyValuePair<GraphHelper.PaneKey, ChromGraphItem>> PrimaryGraphPaneKeyItems
-            {
-                get { return this.ToLookup(kvp => kvp.Key).Select(grouping => grouping.Last()); }
-            }
         }
     }
 
