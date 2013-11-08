@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Linq;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return "Missing all results"; }
+            get { return Resources.MissingAllResultsFinder_DisplayName_Missing_all_results; }
         }
 
         protected override bool IsMatch(PeptideDocNode nodePep)

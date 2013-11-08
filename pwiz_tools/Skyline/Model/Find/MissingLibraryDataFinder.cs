@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using pwiz.Skyline.Properties;
+
 namespace pwiz.Skyline.Model.Find
 {
     /// <summary>
@@ -30,7 +33,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return "No matching library data"; }
+            get { return Resources.MissingLibraryDataFinder_DisplayName_No_matching_library_data; }
         }
 
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup)

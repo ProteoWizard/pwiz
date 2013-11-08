@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -14,7 +15,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return "Missing any results"; }
+            get { return Resources.MissingAnyResultsFinder_DisplayName_Missing_any_results; }
         }
 
         protected override bool IsMatch(PeptideDocNode nodePep)

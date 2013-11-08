@@ -56,6 +56,7 @@ namespace pwiz.Skyline.SettingsUI
         private int _selectedCalculator = -1;
         private int _selectedIndex = -1;
         private bool _hasUnknownScores;
+        private bool _allUnknownScores;
         private SortableBindingList<PeakCalculatorWeight> PeakCalculatorWeights { get { return _gridViewDriver.Items; } }
         
         private enum ColumnNames { enabled, calculator_name, weight, percent_contribution }
@@ -129,11 +130,6 @@ namespace pwiz.Skyline.SettingsUI
             UpdateModelGraph();
         }
 
-        private static string DoubleToString(double d)
-        {
-            return double.IsNaN(d) ? string.Empty : d.ToString("F3");   // Not L10N
-        }
-
         /// <summary>
         /// Get the number format used for displaying weights in calculator grid.
         /// </summary>
@@ -147,6 +143,31 @@ namespace pwiz.Skyline.SettingsUI
             } 
         }
 
+        public void TrainModelClick()
+        {
+            if (!decoyCheckBox.Checked && !secondBestCheckBox.Checked)
+            {
+                MessageDlg.Show(this, Resources.EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_);
+                return;
+            }
+
+            try
+            {
+                TrainModel(true);
+                SetScoringModel(_peakScoringModel);   // update graphs and grid
+            }
+            catch (InvalidDataException x)
+            {
+                MessageDlg.Show(this,
+                               TextUtil.LineSeparate(string.Format(Resources.EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_),
+                                                     x.Message));
+            }
+
+            // Update last trained scoring model.
+            if (comboModel.SelectedIndex == MPROPHET_MODEL_INDEX)
+                _lastTrainedScoringModel = _peakScoringModel;
+        }
+
         /// <summary>
         /// Train mProphet scoring model. If suppressWeights is true, disable the weights unchecked by the user
         /// </summary>
@@ -156,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI
             switch (comboModel.SelectedIndex)
             {
                 case MPROPHET_MODEL_INDEX:
-                    _peakScoringModel = new MProphetPeakScoringModel(ModelName, null, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);  
+                    _peakScoringModel = new MProphetPeakScoringModel(ModelName, null as LinearModelParams, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);  
                     break;
                 case SKYLINE_LEGACY_MODEL_INDEX:
                     _peakScoringModel = new LegacyScoringModel(ModelName, null, decoyCheckBox.Checked, secondBestCheckBox.Checked);
@@ -208,7 +229,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 double weight = _peakScoringModel.Parameters.Weights[i];
                 _gridViewDriver.Items[i].Weight = double.IsNaN(weight) ? null : (double?) weight;
-                _gridViewDriver.Items[i].PercentContribution = double.IsNaN(weight) ? null : (double?)GetPercentContribution(i);
+                _gridViewDriver.Items[i].PercentContribution = double.IsNaN(weight) ? null : GetPercentContribution(i);
             }
             gridPeakCalculators.Invalidate();
 
@@ -217,6 +238,18 @@ namespace pwiz.Skyline.SettingsUI
             UpdateCalculatorGraph();
             UpdateModelGraph();
             UpdateCalculatorGrid();
+        }
+
+        public void FindMissingValues(int selectedCalculatorIndex)
+        {
+            string calculatorName = _peakScoringModel.PeakFeatureCalculators[selectedCalculatorIndex].Name;
+            var featureDictionary = _targetDecoyGenerator.PeakTransitionGroupDictionary;
+            var finders = new[]
+                {
+                    new MissingScoresFinder(calculatorName, selectedCalculatorIndex, featureDictionary)
+                };
+            var findOptions = new FindOptions().ChangeCustomFinders(finders).ChangeCaseSensitive(false).ChangeText("");
+            Program.MainWindow.FindAll(this, findOptions);
         }
 
         /// <summary>
@@ -348,7 +381,6 @@ namespace pwiz.Skyline.SettingsUI
                 zedGraphMProphet.Refresh();
                 return;
             }
-            zedGraphMProphet.GraphPane.Title.Text = Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_;
 
             // Get binned scores for targets and decoys.
             PointPairList targetPoints;
@@ -357,6 +389,7 @@ namespace pwiz.Skyline.SettingsUI
             double min;
             double max;
             bool hasUnknownScores;
+            bool allUnknownScores;
             GetPoints(
                 -1,
                 out targetPoints,
@@ -364,7 +397,14 @@ namespace pwiz.Skyline.SettingsUI
                 out secondBestPoints,
                 out min,
                 out max,
-                out hasUnknownScores);
+                out hasUnknownScores,
+                out allUnknownScores);
+
+            // If there are unknown composite scores, display the model graph but warn the user
+            // that the model does not apply to this data and the model should be retrained
+            graphPane.Title.Text = hasUnknownScores ? 
+                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_: 
+                                                    Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_;
 
             // Add bar graphs.
             if (decoyCheckBox.Checked)
@@ -373,8 +413,8 @@ namespace pwiz.Skyline.SettingsUI
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, secondBestPoints, _secondBestColor);
             graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
 
-            // Graph normal curve if the model is trained
-            if (_peakScoringModel.Parameters != null)
+            // Graph normal curve if the model is trained and at least some composite scores are valid
+            if (_peakScoringModel.Parameters != null && !allUnknownScores)
             {
                 // Calculate scale value for normal curve by calculating area of decoy histogram.
                 double yScaleDecoy = 0;
@@ -458,6 +498,13 @@ namespace pwiz.Skyline.SettingsUI
             }
             graphPane.XAxis.Scale.Min = min - (max - min) / HISTOGRAM_BAR_COUNT;
             graphPane.XAxis.Scale.Max = max;
+
+            // If the calculator produces unknown scores, split the graph and show a histogram
+            // of the unknown scores on the right side of the graph.
+            // Unlike the calculator graph, the model graph should ONLY produce unknown scores when a model is applied to an incompatible dataset
+            if (hasUnknownScores)
+                CreateUnknownLabel(graphPane);
+
             graphPane.AxisChange();
             zedGraphMProphet.Refresh();
         }
@@ -492,7 +539,8 @@ namespace pwiz.Skyline.SettingsUI
                 out secondBestPoints,
                 out min, 
                 out max,
-                out _hasUnknownScores);
+                out _hasUnknownScores,
+                out _allUnknownScores);
             if (decoyCheckBox.Checked)
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
@@ -511,42 +559,7 @@ namespace pwiz.Skyline.SettingsUI
             // If the calculator produces unknown scores, split the graph and show a histogram
             // of the unknown scores on the right side of the graph.
             if (_hasUnknownScores)
-            {
-                // Create "unknown" label.
-                var unknownLabel = new TextObj(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown, 1.0, 1.02, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
-                    {
-                        FontSpec = new FontSpec(graphPane.XAxis.Scale.FontSpec) { IsItalic = true }
-                    };
-                unknownLabel.FontSpec.Size -= 2;
-                graphPane.GraphObjList.Add(unknownLabel);
-
-                // Try to erase the axis labels below the histogram of unknown values.
-                var hideAxisValues = new BoxObj(
-                    0.87,
-                    1.01,
-                    0.13 + 0.03,
-                    0.10,
-                    Color.White, Color.White)
-                    {
-                        Location = { CoordinateFrame = CoordType.ChartFraction },
-                        ZOrder = ZOrder.A_InFront
-                    };
-                graphPane.GraphObjList.Add(hideAxisValues);
-
-                // Erase a portion of the axis to indicate discontinuous data.
-                var xAxisGap = new BoxObj(
-                    0.8,
-                    0.99,
-                    0.07,
-                    0.02,
-                    Color.White, Color.White)
-                    {
-                        Location = { CoordinateFrame = CoordType.ChartFraction },
-                        ZOrder = ZOrder.A_InFront
-                    };
-                graphPane.GraphObjList.Add(xAxisGap);
-            }
-
+                CreateUnknownLabel(graphPane);
 
             // Change the graph title
             if(_selectedCalculator >= 0)
@@ -555,6 +568,43 @@ namespace pwiz.Skyline.SettingsUI
             // Calculate the Axis Scale Ranges
             graphPane.AxisChange();
             zedGraphSelectedCalculator.Refresh();
+        }
+
+        private static void CreateUnknownLabel(GraphPane graphPane)
+        {
+            // Create "unknown" label.
+            var unknownLabel = new TextObj(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown, 1.0, 1.02, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
+            {
+                FontSpec = new FontSpec(graphPane.XAxis.Scale.FontSpec) { IsItalic = true }
+            };
+            unknownLabel.FontSpec.Size -= 2;
+            graphPane.GraphObjList.Add(unknownLabel);
+
+            // Try to erase the axis labels below the histogram of unknown values.
+            var hideAxisValues = new BoxObj(
+                0.87,
+                1.01,
+                0.13 + 0.03,
+                0.10,
+                Color.White, Color.White)
+            {
+                Location = { CoordinateFrame = CoordType.ChartFraction },
+                ZOrder = ZOrder.A_InFront
+            };
+            graphPane.GraphObjList.Add(hideAxisValues);
+
+            // Erase a portion of the axis to indicate discontinuous data.
+            var xAxisGap = new BoxObj(
+                0.8,
+                0.99,
+                0.07,
+                0.02,
+                Color.White, Color.White)
+            {
+                Location = { CoordinateFrame = CoordType.ChartFraction },
+                ZOrder = ZOrder.A_InFront
+            };
+            graphPane.GraphObjList.Add(xAxisGap);
         }
 
         /// <summary>
@@ -567,6 +617,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="min">Min score.</param>
         /// <param name="max">Max score.</param>
         /// <param name="hasUnknownScores">Returns true if the calculator returns unknown scores.</param>
+        /// <param name="allUnknownScores">Returns true if all scores in the calculator are unknown.</param>
         private void GetPoints(
             int selectedCalculator, 
             out PointPairList targetBins, 
@@ -574,7 +625,8 @@ namespace pwiz.Skyline.SettingsUI
             out PointPairList secondBestBins,
             out double min, 
             out double max,
-            out bool hasUnknownScores)
+            out bool hasUnknownScores,
+            out bool allUnknownScores)
         {
             var modelParameters = _peakScoringModel.IsTrained ? _peakScoringModel.Parameters : new LinearModelParams(_peakScoringModel.PeakFeatureCalculators.Count);
             LinearModelParams calculatorParameters = selectedCalculator == -1 ? modelParameters : CreateParametersSelect(selectedCalculator);
@@ -606,9 +658,10 @@ namespace pwiz.Skyline.SettingsUI
             secondBestBins = new PointPairList();
             double binWidth = (max - min)/HISTOGRAM_BAR_COUNT;
 
-            if (countUnknownTargetScores == targetScores.Count &&
-                countUnknownDecoyScores == decoyScores.Count &&
-                countUnknownSecondBestScores == secondBestScores.Count)
+            allUnknownScores = countUnknownTargetScores == targetScores.Count &&
+                               countUnknownDecoyScores == decoyScores.Count &&
+                               countUnknownSecondBestScores == secondBestScores.Count;
+            if (allUnknownScores)
             {
                 min = -1;
                 max = 1;
@@ -696,17 +749,6 @@ namespace pwiz.Skyline.SettingsUI
             }
             for (int row = 0; row < gridPeakCalculators.RowCount; row++)
             {
-                bool isUnknownWeight = !_peakScoringModel.IsTrained || double.IsNaN(_peakScoringModel.Parameters.Weights[row]);
-                // Show row in disabled style if the score is not eligible and the weight is not defined
-                if (!_targetDecoyGenerator.EligibleScores[row] && isUnknownWeight)
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        var cell = gridPeakCalculators.Rows[row].Cells[i];
-                        cell.Style = inactiveStyle;
-                        cell.ReadOnly = true;
-                    }
-                }
                 // Show row in red if weight is the wrong sign
                 if (IsWrongSignWeight(row))
                 {
@@ -715,6 +757,16 @@ namespace pwiz.Skyline.SettingsUI
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = warningStyle;
                         cell.ToolTipText = Resources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
+                    }
+                }
+                // Show row in disabled style if the score is not eligible
+                if (!_targetDecoyGenerator.EligibleScores[row])
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var cell = gridPeakCalculators.Rows[row].Cells[i];
+                        cell.Style = inactiveStyle;
+                        cell.ReadOnly = true;
                     }
                 }
             }
@@ -730,7 +782,8 @@ namespace pwiz.Skyline.SettingsUI
             PeakCalculatorWeights.Clear();
             for (int i = 0; i < _peakScoringModel.PeakFeatureCalculators.Count; i++)
             {
-                bool isNanWeight = !_peakScoringModel.IsTrained || double.IsNaN(_peakScoringModel.Parameters.Weights[i]);
+                bool isNanWeight = !_peakScoringModel.IsTrained ||
+                                   double.IsNaN(_peakScoringModel.Parameters.Weights[i]);
 
                 var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
                 double? weight = null, normalWeight = null;
@@ -739,17 +792,18 @@ namespace pwiz.Skyline.SettingsUI
                     weight = _peakScoringModel.Parameters.Weights[i];
                     normalWeight = GetPercentContribution(i);
                 }
-                // If the model is trained, show non-Nan weights as enabled
-                // If the model is not trained, enabled scores are those which have no unknown values / not all the same value
-                bool enabled = _peakScoringModel.IsTrained ? !isNanWeight : _targetDecoyGenerator.EligibleScores[i];
+                // If the score is not eligible (e.g. has unknown values), definitely don't enable it
+                // If it is eligible, enable if untrained or if trained and not nan
+                bool enabled = _targetDecoyGenerator.EligibleScores[i] && 
+                              (!_peakScoringModel.IsTrained || !double.IsNaN(_peakScoringModel.Parameters.Weights[i]));
                 PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight, normalWeight, enabled));
             }
         }
 
-        private double GetPercentContribution(int index)
+        private double? GetPercentContribution(int index)
         {
             if (double.IsNaN(_peakScoringModel.Parameters.Weights[index]))
-                return 0;
+                return null;
             List<double> targetScores;
             List<double> activeDecoyScores;
             List<double> targetScoresAll;
@@ -763,11 +817,13 @@ namespace pwiz.Skyline.SettingsUI
                 targetScoresAll.Count == 0 ||
                 activeDecoyScoresAll.Count == 0)
             {
-                return 0;
+                return null;
             }
             double meanDiffAll = targetScoresAll.Average() - activeDecoyScoresAll.Average();
             double meanDiff = targetScores.Average() - activeDecoyScores.Average();
             double meanWeightedDiff = meanDiff * _peakScoringModel.Parameters.Weights[index];
+            if (meanDiffAll == 0 || double.IsNaN(meanDiffAll) || double.IsNaN(meanDiff))
+                return null;
             return meanWeightedDiff / meanDiffAll;
         }
 
@@ -812,31 +868,6 @@ namespace pwiz.Skyline.SettingsUI
             TrainModelClick();
         }
 
-        public void TrainModelClick()
-        {
-            if (!decoyCheckBox.Checked && !secondBestCheckBox.Checked)
-            {
-                MessageDlg.Show(this, Resources.EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_);
-                return;
-            }
-
-            try
-            {
-                TrainModel(true);
-                SetScoringModel(_peakScoringModel);   // update graphs and grid
-            }
-            catch (InvalidDataException x)
-            {
-                MessageDlg.Show(this,
-                               TextUtil.LineSeparate(string.Format(Resources.EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_),
-                                                     x.Message));
-            }
-
-            // Update last trained scoring model.
-            if (comboModel.SelectedIndex == MPROPHET_MODEL_INDEX)
-                _lastTrainedScoringModel = _peakScoringModel;
-        }
-
         private void comboModel_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (_selectedIndex != comboModel.SelectedIndex)
@@ -867,6 +898,31 @@ namespace pwiz.Skyline.SettingsUI
                 return name.Length > 0 ? name : UNNAMED;    // Not L10N
             }
             set { textName.Text = (value == UNNAMED) ? string.Empty : value; }
+        }
+
+        private void decoyCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCalculatorGraph();
+            UpdateModelGraph();
+        }
+
+        private void falseTargetCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCalculatorGraph();
+            UpdateModelGraph();
+        }
+
+        private void findPeptidesButton_Click(object sender, EventArgs e)
+        {
+            FindMissingValues(_selectedCalculator);
+        }
+
+        private bool zedGraphSelectedCalculator_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            // Find button is visible on the right side of graph, if some scores are unknown, but not if all scores are unknown
+            bool isMouseOverUnknown = _hasUnknownScores && !_allUnknownScores && e.X > sender.Width - 100;
+            toolStripFind.Visible = isMouseOverUnknown;
+            return true;
         }
         #endregion
 
@@ -916,6 +972,11 @@ namespace pwiz.Skyline.SettingsUI
         public SimpleGridViewDriver<PeakCalculatorWeight> PeakCalculatorsGrid
         {
             get { return _gridViewDriver; }
+        }
+
+        public bool IsActiveCell(int row, int column)
+        {
+            return !gridPeakCalculators.Rows[row].Cells[column].ReadOnly;
         }
 
 
@@ -1137,42 +1198,6 @@ namespace pwiz.Skyline.SettingsUI
                     menuStrip.Items.Remove(item);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(graphControl, menuStrip);
-        }
-
-        private void decoyCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateCalculatorGraph();
-            UpdateModelGraph();
-        }
-
-        private void falseTargetCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateCalculatorGraph();
-            UpdateModelGraph();
-        }
-
-        private void findPeptidesButton_Click(object sender, EventArgs e)
-        {
-           FindMissingValues(_selectedCalculator);
-        }
-
-        public void FindMissingValues(int selectedCalculatorIndex)
-        {
-            string calculatorName = _peakScoringModel.PeakFeatureCalculators[selectedCalculatorIndex].Name;
-            var featureDictionary = _targetDecoyGenerator.PeakTransitionGroupDictionary;
-            var finders = new[]
-                {
-                    new MissingScoresFinder(calculatorName, selectedCalculatorIndex, featureDictionary)
-                };
-            var findOptions = new FindOptions().ChangeCustomFinders(finders).ChangeCaseSensitive(false).ChangeText("");
-            Program.MainWindow.FindAll(this, findOptions);
-        }
-
-        private bool zedGraphSelectedCalculator_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
-        {
-            bool isMouseOverUnknown = _hasUnknownScores && e.X > sender.Width - 100;
-            toolStripFind.Visible = isMouseOverUnknown;
-            return true;
         }
     }
 

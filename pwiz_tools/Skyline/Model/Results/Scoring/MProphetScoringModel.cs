@@ -64,8 +64,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             string name,
             IList<double> weights,
             IList<IPeakFeatureCalculator> peakFeatureCalculators = null,
-            double decoyMean = 0,
-            double decoyStdev = 0,
             bool usesDecoys = false,
             bool usesSecondBest = false,
             bool colinearWarning = false,

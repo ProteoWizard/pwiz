@@ -697,11 +697,12 @@ namespace pwiz.SkylineTestUtil
                                                                    });
         }
 
-        public static void RemovePeptide(string peptideSequence)
+        public static void RemovePeptide(string peptideSequence, bool isDecoy = false)
         {
             var docStart = SkylineWindow.Document;
             var nodePeptide = docStart.Peptides.FirstOrDefault(nodePep =>
-                Equals(peptideSequence, nodePep.Peptide.Sequence));
+                Equals(peptideSequence, nodePep.Peptide.Sequence) &&
+                Equals(isDecoy, nodePep.IsDecoy));
 
             Assert.IsNotNull(nodePeptide);
 
@@ -709,13 +710,16 @@ namespace pwiz.SkylineTestUtil
             {
                 findPeptideDlg.SearchString = peptideSequence;
                 findPeptideDlg.FindNext();
+                while(!SkylineWindow.SequenceTree.SelectedDocNodes.Contains(nodePeptide))
+                    findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
 
             RunUI(SkylineWindow.EditDelete);
 
             Assert.IsTrue(WaitForCondition(() => !SkylineWindow.Document.Peptides.Any(nodePep =>
-                Equals(peptideSequence, nodePep.Peptide.Sequence))));
+                Equals(peptideSequence, nodePep.Peptide.Sequence) &&
+                Equals(isDecoy, nodePep.IsDecoy))));
             AssertEx.IsDocumentState(SkylineWindow.Document, null,
                                      docStart.PeptideGroupCount,
                                      docStart.PeptideCount - 1,

@@ -496,5 +496,17 @@ namespace pwiz.SkylineTestUtil
                 startIndex = partIndex + expectedPart.Length;
             }
         }
+
+        public static void AreEqualNullable(double? num1, double? num2, double diff)
+        {
+            if (num1 == null || num2 == null)
+            {
+                Assert.IsTrue(num1 == null && num2 == null);
+            }
+            else
+            {
+                Assert.AreEqual(num1.Value, num2.Value, diff);
+            }
+        }
     }
 }

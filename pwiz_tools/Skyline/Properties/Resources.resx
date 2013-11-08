@@ -6050,4 +6050,25 @@ Are you sure you want to continue?</value>
   <data name="MissingScoresFinder_Match__0__missing_from_chromatogram_peak" xml:space="preserve">
     <value>{0} missing from chromatogram peak</value>
   </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_" xml:space="preserve">
+    <value>Trained model is not applicable to current dataset.</value>
+  </data>
+  <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
+    <value>The current peak scoring model is incompatible with one or more peptides in the document.  Please train a new model.</value>
+  </data>
+  <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
+    <value>Adjusting peak boundaries</value>
+  </data>
+  <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
+    <value>missing scores</value>
+  </data>
+  <data name="MissingAllResultsFinder_DisplayName_Missing_all_results" xml:space="preserve">
+    <value>Missing all results</value>
+  </data>
+  <data name="MissingAnyResultsFinder_DisplayName_Missing_any_results" xml:space="preserve">
+    <value>Missing any results</value>
+  </data>
+  <data name="MissingLibraryDataFinder_DisplayName_No_matching_library_data" xml:space="preserve">
+    <value>No matching library data</value>
+  </data>
 </root>

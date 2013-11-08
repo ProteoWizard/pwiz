@@ -21,11 +21,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -33,6 +37,11 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PeakScoringModelTest : AbstractFunctionalTest
     {
+        private string _format;
+        private string _percentFormat;
+        private IList<IPeakFeatureCalculator> _defaultMProphetCalcs;
+        private IList<string[]> _cellValuesOriginal;
+        
         [TestMethod]
         public void TestPeakScoringModel()
         {
@@ -47,11 +56,17 @@ namespace pwiz.SkylineTestFunctional
             var documentFile = TestFilesDir.GetTestPath("MProphetGold-rescore2.sky");
             RunUI(() => SkylineWindow.OpenFile(documentFile));
             WaitForDocumentLoaded();
+            _defaultMProphetCalcs = (new MProphetPeakScoringModel("dummy")).PeakFeatureCalculators.ToArray();
 
             TestDialog();
             TestModelChangesAndSave();
             TestBackwardCompatibility();
             TestIncompatibleDataSet();
+
+            var documentMissingScores = TestFilesDir.GetTestPath("SRMCourse_DosR-hDP__20130501.sky");
+            RunUI(() => SkylineWindow.OpenFile(documentMissingScores));
+            WaitForDocumentLoaded();
+            TestFindMissingScores();
         }
 
         protected void TestDialog()
@@ -64,7 +79,6 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration;
             });
 
-            var calculators = (new MProphetPeakScoringModel("dummy")).PeakFeatureCalculators.ToArray();     // Not L10N
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
 
@@ -73,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.AreEqual(editDlg.PeakScoringModelName, string.Empty);
                         var rows = editDlg.PeakCalculatorsGrid.RowCount;
-                        Assert.AreEqual(calculators.Length, rows, "Unexpected count of peak calculators"); // Not L10N
+                        Assert.AreEqual(_defaultMProphetCalcs.Count, rows, "Unexpected count of peak calculators"); // Not L10N
                     });
 
                 // Test empty name.
@@ -95,9 +109,8 @@ namespace pwiz.SkylineTestFunctional
                             editDlg.PeakCalculatorsGrid.SelectRow(i);
                         }
                         Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
-                        editDlg.OkDialog();
                     });
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.OkDialog);
             }
 
             var editList =
@@ -108,51 +121,49 @@ namespace pwiz.SkylineTestFunctional
 
             {
                 var editDlg = ShowDialog<EditPeakScoringModelDlg>(editList.EditItem);
-                var format = editDlg.PeakCalculatorWeightFormat;
-                var percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
-                var cellValuesOriginal = new[]
-                    {
-                        new[] {"True", calculators[0].Name, (0.4886).ToString(format), (0.1710).ToString(percentFormat)},
-                        new[] {"False", calculators[1].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[2].Name, (2.6711).ToString(format), (0.0408).ToString(percentFormat)},
-                        new[] {"True", calculators[3].Name, (0.4533).ToString(format), (0.0791).ToString(percentFormat)},
-                        new[] {"True", calculators[4].Name, (1.5071).ToString(format), (0.0795).ToString(percentFormat)},
-                        new[] {"True", calculators[5].Name, (-0.2925).ToString(format), (0.1850).ToString(percentFormat)},
-                        new[] {"False", calculators[6].Name, string.Empty, string.Empty},  
-                        new[] {"False", calculators[7].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[8].Name, string.Empty, string.Empty},                      
-                        new[] {"True", calculators[9].Name, (4.2907).ToString(format), (0.1145).ToString(percentFormat)},
-                        new[] {"True", calculators[10].Name, (10.0902).ToString(format), (0.5022).ToString(percentFormat)},
-                        new[] {"True", calculators[11].Name, (0.2666).ToString(format), (-0.2189).ToString(percentFormat)},
-                        new[] {"True", calculators[12].Name, (0.1933).ToString(format), (0.0467).ToString(percentFormat)},
-                        new[] {"False", calculators[13].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[14].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[15].Name, string.Empty, string.Empty},
-                    };
-                var cellValuesNew = new[]
-                    {
-                        new[] {"True", calculators[0].Name, (0.5569).ToString(format), (0.2111).ToString(percentFormat)},
-                        new[] {"False", calculators[1].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[2].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[3].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[4].Name, (2.7995).ToString(format), (0.1416).ToString(percentFormat)},
-                        new[] {"True", calculators[5].Name, (-0.5237).ToString(format), (0.2518).ToString(percentFormat)},
-                        new[] {"False", calculators[6].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[7].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[8].Name, string.Empty, string.Empty},
-                        new[] {"True", calculators[9].Name, (4.9975).ToString(format), (0.1395).ToString(percentFormat)},
-                        new[] {"True", calculators[10].Name, (9.0669).ToString(format), (0.4515).ToString(percentFormat)},
-                        new[] {"True", calculators[11].Name, (0.3698).ToString(format), (-0.2679).ToString(percentFormat)},
-                        new[] {"True", calculators[12].Name, (0.2942).ToString(format), (0.0723).ToString(percentFormat)},
-                        new[] {"False", calculators[13].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[14].Name, string.Empty, string.Empty},
-                        new[] {"False", calculators[15].Name, string.Empty, string.Empty},
-                    };
+                _format = editDlg.PeakCalculatorWeightFormat;
+                _percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
+                var gridGen = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
+                gridGen.AddRow(true, 0.4886, 0.1710);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(true, 2.6711, 0.0408);
+                gridGen.AddRow(true, 0.4533, 0.0791);
+                gridGen.AddRow(true, 1.5071, 0.0795);
+                gridGen.AddRow(true, -0.2925, 0.1850);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(true, 4.2907, 0.1145);
+                gridGen.AddRow(true, 10.0902, 0.5022);
+                gridGen.AddRow(true, 0.2666, -0.2189);
+                gridGen.AddRow(true, 0.1933, 0.0467);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                _cellValuesOriginal = gridGen.Rows;
+                var gridGenNew = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
+                gridGenNew.AddRow(true, 0.5569, 0.2111);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(true, 2.7995, 0.1416);
+                gridGenNew.AddRow(true, -0.5237, 0.2518);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(true, 4.9975, 0.1395);
+                gridGenNew.AddRow(true, 9.0669, 0.4515);
+                gridGenNew.AddRow(true, 0.3698, -0.2679);
+                gridGenNew.AddRow(true, 0.2942, 0.0723);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                var cellValuesNew = gridGenNew.Rows;
                 // Verify weights, change name.
                 RunUI(() =>
                     {
                         Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
-                        VerifyCellValues(editDlg, cellValuesOriginal);
+                        VerifyCellValues(editDlg, _cellValuesOriginal);
                         Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
                         // Manually uncheck two of the scores
                         editDlg.SetChecked(2, false);
@@ -164,12 +175,11 @@ namespace pwiz.SkylineTestFunctional
                         editDlg.SetChecked(2, true);
                         editDlg.SetChecked(3, true);
                         editDlg.TrainModelClick();
-                        VerifyCellValues(editDlg, cellValuesOriginal);
+                        VerifyCellValues(editDlg, _cellValuesOriginal);
                         Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
                         editDlg.PeakScoringModelName = "test2"; // Not L10N
-                        editDlg.OkDialog();
                     });
-                WaitForClosedForm(editDlg);
+               OkDialog(editDlg, editDlg.OkDialog);
             }
             {
                 // Add conflicting name.
@@ -184,8 +194,7 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.AreComparableStrings(Resources.EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists, messageDlg.Message, 1);
                     messageDlg.OkDialog();
                 });
-                RunUI(() => editDlg.CancelButton.PerformClick());
-                WaitForClosedForm(editDlg);
+                OkDialog(editDlg, editDlg.CancelDialog);
                 OkDialog(editList, editList.OkDialog);
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
             }
@@ -206,23 +215,18 @@ namespace pwiz.SkylineTestFunctional
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
 
             var calculatorsLegacy = (new LegacyScoringModel("dummy")).PeakFeatureCalculators.ToArray();
-            var format = editDlg.PeakCalculatorWeightFormat;
-            var percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
-            var cellValuesLegacy = new[]
-                {
-                    new[] {"True", calculatorsLegacy[0].Name, (0.5954).ToString(format), (0.5708).ToString(percentFormat)},
-                    new[] {"True", calculatorsLegacy[1].Name, (0.5954).ToString(format), (0.2602).ToString(percentFormat)},
-                    new[] {"True", calculatorsLegacy[2].Name, (0.7144).ToString(format), (0.1690).ToString(percentFormat)},
-                    new[] {"True", calculatorsLegacy[3].Name, (11.9072).ToString(format), (0.0000).ToString(percentFormat)},
-                };
-            var cellValuesLegacyNew = new[]
-                {
-                    new[] {"True", calculatorsLegacy[0].Name, (0.5716).ToString(format), (0.6172).ToString(percentFormat)},
-                    new[] {"True", calculatorsLegacy[1].Name, (0.5716).ToString(format), (0.2237).ToString(percentFormat)},
-                    new[] {"True", calculatorsLegacy[2].Name, (0.6859).ToString(format), (0.1591).ToString(percentFormat)},
-                    new[] {"True", calculatorsLegacy[3].Name, (11.4310).ToString(format), (0.000).ToString(percentFormat)},
-                };
-
+            var gridGen = new GridDataGenerator(calculatorsLegacy, _format, _percentFormat);
+            gridGen.AddRow(true, 0.5954, 0.5708);
+            gridGen.AddRow(true, 0.5954, 0.2602);
+            gridGen.AddRow(true, 0.7144, 0.1690);
+            gridGen.AddRow(false, 11.9072, 0.000);
+            var cellValuesLegacy = gridGen.Rows;
+            var gridGenNew = new GridDataGenerator(calculatorsLegacy, _format, _percentFormat);
+            gridGenNew.AddRow(true, 0.5716, 0.6172);
+            gridGenNew.AddRow(true, 0.5716, 0.2237);
+            gridGenNew.AddRow(true, 0.6859, 0.1591);
+            gridGenNew.AddRow(false, 11.4310, 0.0000);
+            var cellValuesLegacyNew = gridGenNew.Rows;
             RunUI(() =>
             {
                 Assert.AreEqual(editDlg.PeakScoringModelName, "");
@@ -322,43 +326,52 @@ namespace pwiz.SkylineTestFunctional
         // and also two calculators which are no longer in the default list
         protected void TestBackwardCompatibility()
         {
+            var oldCalcs = new List<IPeakFeatureCalculator>
+                {
+                    new MQuestIntensityCalc(),
+                    new MQuestIntensityCorrelationCalc(),
+                    new MQuestWeightedShapeCalc(),
+                    new NextGenSignalNoiseCalc(),
+                    new NextGenProductMassErrorCalc(),
+                    new LegacyIdentifiedCountCalc(),
+                    new MQuestWeightedReferenceShapeCalc(),
+                    new MQuestWeightedReferenceCoElutionCalc(),
+                    new MQuestShapeCalc(),
+                    new MQuestCoElutionCalc()
+                };
+            var gridGen = new GridDataGenerator(oldCalcs, _format, _percentFormat);
+            gridGen.AddRow(true, 0.8633, 0.3150);
+            gridGen.AddRow(true, 2.0177, 0.0350);
+            gridGen.AddRow(true, 6.2170, 0.2740);
+            gridGen.AddRow(false, double.NaN, double.NaN);
+            gridGen.AddRow(false, double.NaN, double.NaN);
+            gridGen.AddRow(false, double.NaN, double.NaN);
+            gridGen.AddRow(true, 7.5352, 0.3170);
+            gridGen.AddRow(true, -0.1277, 0.0580);
+            gridGen.AddRow(false, double.NaN, double.NaN);
+            gridGen.AddRow(false, double.NaN, double.NaN);
+            var cellValuesOld = gridGen.Rows;
+            var gridGenNew = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
+            gridGenNew.AddRow(true, 0.4690, 0.1680);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(true, 3.1637, 0.0500);
+            gridGenNew.AddRow(true, 0.3440, 0.0730);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(true, -0.3664, 0.2210);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(true, 4.8301, 0.1240);
+            gridGenNew.AddRow(true, 10.2590, 0.5080);
+            gridGenNew.AddRow(true, 0.2756, -0.2200);
+            gridGenNew.AddRow(true, 0.3640, 0.0760);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            var cellValuesNew = gridGenNew.Rows;       
+
             RunEditPeakScoringDlg("backward_compatibility_test", editDlg =>
                 {
-                    var format = editDlg.PeakCalculatorWeightFormat;
-                    var percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
-                    var calculatorsMprophet = (new MProphetPeakScoringModel("dummy")).PeakFeatureCalculators.ToArray();
-                    var cellValuesOld = new[]
-                    {
-                        new[] {"True", new MQuestIntensityCalc().Name, (0.8633).ToString(format), (0.3150).ToString(percentFormat)},
-                        new[] {"True", new MQuestIntensityCorrelationCalc().Name, (2.0177).ToString(format), (0.0350).ToString(percentFormat)},
-                        new[] {"True", new MQuestWeightedShapeCalc().Name, (6.2170).ToString(format), (0.2740).ToString(percentFormat)},
-                        new[] {"False", new NextGenSignalNoiseCalc().Name, string.Empty, string.Empty},
-                        new[] {"False", new NextGenProductMassErrorCalc().Name, string.Empty, string.Empty},
-                        new[] {"False", new LegacyIdentifiedCountCalc().Name, string.Empty, string.Empty},
-                        new[] {"True", new MQuestWeightedReferenceShapeCalc().Name, (7.5352).ToString(format), (0.3170).ToString(percentFormat)},
-                        new[] {"True", new MQuestWeightedReferenceCoElutionCalc().Name, (-0.1277).ToString(format), (0.0580).ToString(percentFormat)},
-                        new[] {"False", new MQuestShapeCalc().Name, string.Empty, string.Empty},
-                        new[] {"False", new MQuestCoElutionCalc().Name, string.Empty, string.Empty},
-                    };
-                    var cellValuesNew = new[]
-                    {
-                        new[] {"True", calculatorsMprophet[0].Name, (0.4690).ToString(format), (0.1680).ToString(percentFormat)},
-                        new[] {"False", calculatorsMprophet[1].Name, string.Empty, string.Empty},
-                        new[] {"True", calculatorsMprophet[2].Name, (3.1637).ToString(format), (0.0500).ToString(percentFormat)},
-                        new[] {"True", calculatorsMprophet[3].Name, (0.3440).ToString(format), (0.0730).ToString(percentFormat)},
-                        new[] {"False", calculatorsMprophet[4].Name,  string.Empty, string.Empty},
-                        new[] {"True", calculatorsMprophet[5].Name, (-0.3664).ToString(format), (0.2210).ToString(percentFormat)},
-                        new[] {"False", calculatorsMprophet[6].Name, string.Empty, string.Empty},
-                        new[] {"False", calculatorsMprophet[7].Name, string.Empty, string.Empty},
-                        new[] {"False", calculatorsMprophet[8].Name, string.Empty, string.Empty},
-                        new[] {"True", calculatorsMprophet[9].Name, (4.8301).ToString(format), (0.1240).ToString(percentFormat)},
-                        new[] {"True", calculatorsMprophet[10].Name, (10.2590).ToString(format), (0.5080).ToString(percentFormat)},
-                        new[] {"True", calculatorsMprophet[11].Name, (0.2756).ToString(format), (-0.2200).ToString(percentFormat)},
-                        new[] {"True", calculatorsMprophet[12].Name, (0.3640).ToString(format), (0.0760).ToString(percentFormat)},
-                        new[] {"False", calculatorsMprophet[13].Name, string.Empty, string.Empty},
-                        new[] {"False", calculatorsMprophet[14].Name, string.Empty, string.Empty},
-                        new[] {"False", calculatorsMprophet[15].Name, string.Empty, string.Empty},
-                    };
                     VerifyCellValues(editDlg, cellValuesOld);
                     // Unchecking a calculator which is common to both models carries over
                     editDlg.SetChecked(2, false);
@@ -371,10 +384,114 @@ namespace pwiz.SkylineTestFunctional
                 });
         }
 
-        // Test that the dialog behaves correctly when opening a model that is incompatible with the dataset (composite scores all NaN's)
+        // Test that the dialog behaves correctly when opening a model 
+        // that is incompatible with the dataset (some or all composite scores are NaN's)
         protected void TestIncompatibleDataSet()
         {
-            
+            // Define an incompatible model
+            var weights = new[] {0.5322, -1.0352, double.NaN, 0.0477, 1.4744, 0.0430, -0.2740, double.NaN, 
+                                 double.NaN, 2.0096, 7.7726, -0.0566, 0.4751, double.NaN, double.NaN, double.NaN};
+            var parameters = new LinearModelParams(weights, -2.5);
+            var incompatibleModel = new MProphetPeakScoringModel("incompatible", parameters, null, true);
+            Settings.Default.PeakScoringModelList.Add(incompatibleModel);
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsDlg =>
+                {
+                    peptideSettingsDlg.ComboPeakScoringModelSelected = "incompatible";
+                    peptideSettingsDlg.OkDialog();
+                });
+            var gridGen = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
+            gridGen.AddRow(true, weights[0], double.NaN);
+            gridGen.AddRow(false, weights[1], double.NaN);
+            gridGen.AddRow(false, weights[2], double.NaN);
+            gridGen.AddRow(true, weights[3], double.NaN);
+            gridGen.AddRow(true, weights[4], double.NaN);
+            gridGen.AddRow(true, weights[5], double.NaN);
+            gridGen.AddRow(false, weights[6], double.NaN);
+            gridGen.AddRow(false, weights[7], double.NaN);
+            gridGen.AddRow(false, weights[8], double.NaN);
+            gridGen.AddRow(true, weights[9], double.NaN);
+            gridGen.AddRow(true, weights[10], double.NaN);
+            gridGen.AddRow(true, weights[11], double.NaN);
+            gridGen.AddRow(true, weights[12], double.NaN);
+            gridGen.AddRow(false, weights[13], double.NaN);
+            gridGen.AddRow(false, weights[14], double.NaN);
+            gridGen.AddRow(false, weights[15], double.NaN);
+            var cellValuesIncompatible = gridGen.Rows; 
+
+            RunEditPeakScoringDlg("incompatible", editDlgTemp =>
+            {
+                // All of the percentage fields should be null
+                VerifyCellValues(editDlgTemp, cellValuesIncompatible, 0.0);
+                editDlgTemp.TrainModelClick();
+                // Cell values go back to the standard trained model after we train and enable calculators, 
+                // despite having been loaded with weird values
+                editDlgTemp.SetChecked(2, true);
+                editDlgTemp.TrainModelClick();
+                VerifyCellValues(editDlgTemp, _cellValuesOriginal);
+                editDlgTemp.CancelDialog();
+            });
+            // Trying to reintegrate gives an error because the model is incompatible
+            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            RunDlg<MessageDlg>(reintegrateDlg.OkDialog, messageDlg =>
+            {
+                Assert.AreEqual(TextUtil.LineSeparate(string.Format(Resources.ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_),
+                                                      Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_),
+                                messageDlg.Message);
+                messageDlg.OkDialog();
+            });
+            OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
+        }
+
+        /// <summary>
+        /// Tests the missing scores finder for finding peptides that lack a particular score
+        /// </summary>
+        protected void TestFindMissingScores()
+        {
+            RunEditPeakScoringDlg(null, editDlgTemp =>
+            {
+                // Find missing scores
+                editDlgTemp.PeakScoringModelName = "missing_scores";
+                editDlgTemp.TrainModelClick();
+                editDlgTemp.PeakCalculatorsGrid.SelectRow(2);
+                editDlgTemp.FindMissingValues(2);
+                editDlgTemp.OkDialog();
+            });
+            var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
+                                                     "DFDSLGTLR", "GGYAGMLVGSVGETVAQLAR", "GGYAGMLVGSVGETVAQLAR"};
+            var isDecoys = new List<bool> { false, false, false, false, false, true };
+            RunUI(() =>
+                {
+                    var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+                    Assert.IsNotNull(findResultsForm);
+                    // There are 6 peptides for which scores are missing
+                    Assert.AreEqual(findResultsForm.ItemCount, 6);
+                    for (int i = 0; i < 6; ++i)
+                    {
+                        findResultsForm.ActivateItem(i);
+                        Assert.AreEqual(SkylineWindow.SelectedPeptideSequence, missingPeptides[i]);
+                    }
+                });
+            for (int i = 0; i < 6; ++i)
+            {
+                RemovePeptide(missingPeptides[i], isDecoys[i]);
+            }
+            RunEditPeakScoringDlg("missing_scores", editDlgTemp =>
+            {
+                // No missing values for these scores any more
+                Assert.IsTrue(editDlgTemp.IsActiveCell(2, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(9, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(10, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(11, 0));
+               
+                // But they aren't automatically enabled
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[2].IsEnabled);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[9].IsEnabled);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[10].IsEnabled);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[11].IsEnabled);
+                editDlgTemp.SetChecked(9, true);
+                editDlgTemp.TrainModelClick();
+                editDlgTemp.OkDialog();
+            });
         }
 
         // Check that the items in the list are all equal and not null
@@ -415,13 +532,46 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
         }
 
-        private static void VerifyCellValues(EditPeakScoringModelDlg editDlg, string[][] expectedValues)
+        private class GridDataGenerator
+        {
+            private readonly IList<IPeakFeatureCalculator> _calculatorList;
+            public IList<string[]> Rows { get; private set; }
+            private readonly string _format;
+            private readonly string _percentFormat;
+
+            public GridDataGenerator(IList<IPeakFeatureCalculator> calculatorList, string format, string percentFormat)
+            {
+                _calculatorList = calculatorList;
+                _format = format;
+                _percentFormat = percentFormat;
+                Rows = new List<string[]>();
+            }
+
+            public void AddRow(bool enabled, double weights, double percentages)
+            {
+                int i = Rows.Count;
+                Rows.Add(new[]
+                    {
+                        enabled.ToString(),
+                        _calculatorList[i].Name,
+                        double.IsNaN(weights) ? null : weights.ToString(_format),
+                        double.IsNaN(percentages) ? null : percentages.ToString(_percentFormat)
+                    });
+            }
+
+            public void Clear()
+            {
+                Rows.Clear();
+            }
+        }
+
+        private static void VerifyCellValues(EditPeakScoringModelDlg editDlg, IList<string[]> expectedValues, double sumWeights = 1.0)
         {
             // Verify expected number of rows.
-            Assert.AreEqual(editDlg.PeakCalculatorsGrid.RowCount, expectedValues.Length);
+            Assert.AreEqual(editDlg.PeakCalculatorsGrid.RowCount, expectedValues.Count);
             // Verify normalized weights add to 1
             double sumNormWeights = 0;
-            for (int row = 0; row < expectedValues.Length; row++)
+            for (int row = 0; row < expectedValues.Count; row++)
             {
                 // Verify expected number of columns.
                 Assert.AreEqual(4, expectedValues[row].Length);
@@ -444,7 +594,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(expectedValue, actualValue);
                 }
             }
-            Assert.AreEqual(sumNormWeights, 1.0, 0.005);
+            Assert.AreEqual(sumNormWeights, sumWeights, 0.005);
         }
     }
 }

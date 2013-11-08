@@ -129,7 +129,6 @@ namespace pwiz.Skyline.SettingsUI
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize peak scoring settings.
-            tabControl1.TabPages.Remove(tabIntegration);  // TODO: Remove this line when the Integration tab is ready
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboPeakScoringModel, Settings.Default.PeakScoringModelList);
             var peakScoringModel = _peptideSettings.Integration.PeakScoringModel;
             _driverPeakScoringModel.LoadList(peakScoringModel != null ? peakScoringModel.Name : null);

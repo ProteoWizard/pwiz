@@ -48,12 +48,9 @@ namespace pwiz.Skyline.Model.Find
             get { return "missing_scores_finder"; }
         }
 
-        /// <summary>
-        /// No name for display in the FindNodeDlg.
-        /// </summary>
         public override string DisplayName
         {
-            get { return string.Empty; }
+            get { return Resources.MissingScoresFinder_DisplayName_missing_scores; }
         }
 
         public override FindMatch Match(BookmarkEnumerator bookmarkEnumerator)

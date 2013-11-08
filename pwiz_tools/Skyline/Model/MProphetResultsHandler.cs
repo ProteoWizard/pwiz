@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -83,7 +84,12 @@ namespace pwiz.Skyline.Model
             _qValues = new Statistics(bestPvalues).Qvalues().ToList();
         }
 
-        public SrmDocument ChangePeaks(double qValueCutoff)
+        public bool IsMissingScores()
+        {
+            return _qValues.Any(double.IsNaN);
+        }
+
+        public SrmDocument ChangePeaks(double qValueCutoff, IProgressMonitor progressMonitor = null)
         {
             SrmDocument docNew = Document;
             var annotationNames = from def in Document.Settings.DataSettings.AnnotationDefs
@@ -91,8 +97,11 @@ namespace pwiz.Skyline.Model
                                   select def.Name;
             var containsQAnnotation = annotationNames.Contains(Q_VALUE_ANNOTATION);
             int i = 0;
+            var status = new ProgressStatus(Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries);
             foreach (var transitionGroupFeatures in _features)
             {
+                if (progressMonitor != null)
+                    progressMonitor.UpdateProgress(status = status.ChangePercentComplete(100 * i / (_qValues.Count + 1)));
                 // Pick the highest-scoring peak
                 var bestIndex = _bestIndices[i];
                 var bestFeature = transitionGroupFeatures.PeakGroupFeatures[bestIndex];

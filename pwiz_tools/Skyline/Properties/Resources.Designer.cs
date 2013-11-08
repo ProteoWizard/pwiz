@@ -4333,6 +4333,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Trained model is not applicable to current dataset..
+        /// </summary>
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_curre" +
+                        "nt_dataset_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to comboHeavy.
         /// </summary>
         public static string EditPepModsDlg_GetHeavyName_Prefix_Heavy_Name {
@@ -8571,6 +8581,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing all results.
+        /// </summary>
+        public static string MissingAllResultsFinder_DisplayName_Missing_all_results {
+            get {
+                return ResourceManager.GetString("MissingAllResultsFinder_DisplayName_Missing_all_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing any results.
+        /// </summary>
+        public static string MissingAnyResultsFinder_DisplayName_Missing_any_results {
+            get {
+                return ResourceManager.GetString("MissingAnyResultsFinder_DisplayName_Missing_any_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching library data.
+        /// </summary>
+        public static string MissingLibraryDataFinder_DisplayName_No_matching_library_data {
+            get {
+                return ResourceManager.GetString("MissingLibraryDataFinder_DisplayName_No_matching_library_data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to missing scores.
+        /// </summary>
+        public static string MissingScoresFinder_DisplayName_missing_scores {
+            get {
+                return ResourceManager.GetString("MissingScoresFinder_DisplayName_missing_scores", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} missing from chromatogram peak.
         /// </summary>
         public static string MissingScoresFinder_Match__0__missing_from_chromatogram_peak {
@@ -8671,6 +8717,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_on" +
                         "e_peak_feature_calculator_with_a_weight_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adjusting peak boundaries.
+        /// </summary>
+        public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
+            get {
+                return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
             }
         }
         
@@ -11483,6 +11538,16 @@ namespace pwiz.Skyline.Properties {
         public static string ReintegrateDlg_OkDialog_Reintegrating {
             get {
                 return ResourceManager.GetString("ReintegrateDlg_OkDialog_Reintegrating", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The current peak scoring model is incompatible with one or more peptides in the document.  Please train a new model..
+        /// </summary>
+        public static string ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_ {
+            get {
+                return ResourceManager.GetString("ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_o" +
+                        "r_more_peptides_in_the_document___Please_train_a_new_model_", resourceCulture);
             }
         }
         
