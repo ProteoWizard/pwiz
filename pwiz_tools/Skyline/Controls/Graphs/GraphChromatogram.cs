@@ -806,7 +806,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                    mzMatchTolerance,
                                                    nodeGroup, chromGroupInfo,
                                                    new GraphHelper.PaneKey(nodeGroup),
-                                                   DisplayType, ref bestStartTime, ref bestEndTime);
+                                                   GetDisplayType(DocumentUI, nodeGroup), ref bestStartTime, ref bestEndTime);
                             }
                             else
                             {
