@@ -141,8 +141,12 @@ namespace pwiz.Skyline.Model.Results
                     double startFilter = target - filterWindow / 2;
                     endFilter = startFilter + filterWindow;
 
-                    while (iPeak < mzArray.Length && mzArray[iPeak] < startFilter)
-                        iPeak++;
+                    if (iPeak < mzArray.Length)
+                    {
+                        iPeak = Array.BinarySearch(mzArray, iPeak, mzArray.Length - iPeak, startFilter);
+                        if (iPeak < 0)
+                            iPeak = ~iPeak;
+                    }
                 }
 
                 // Add the intensity values of all peaks less than the end of the filter
