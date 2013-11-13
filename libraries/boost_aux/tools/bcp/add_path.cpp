@@ -193,6 +193,14 @@ void bcp_implementation::add_file(const fs::path& p)
    //
 static const std::pair<fs::path, fs::path>
    specials[] = {
+      std::pair<fs::path, fs::path>("boost/filesystem/convenience.hpp", "boost/filesystem.hpp"),
+      std::pair<fs::path, fs::path>("boost/filesystem/exception.hpp", "boost/filesystem.hpp"),
+      std::pair<fs::path, fs::path>("boost/filesystem/fstream.hpp", "boost/filesystem.hpp"),
+      std::pair<fs::path, fs::path>("boost/filesystem/operations.hpp", "boost/filesystem.hpp"),
+      std::pair<fs::path, fs::path>("boost/filesystem/path.hpp", "boost/filesystem.hpp"),
+      std::pair<fs::path, fs::path>("boost/filesystem.hpp", "libs/filesystem/build"),
+      std::pair<fs::path, fs::path>("boost/filesystem.hpp", "libs/filesystem/v2"),
+      std::pair<fs::path, fs::path>("boost/filesystem.hpp", "libs/filesystem/v3"),
       std::pair<fs::path, fs::path>("boost/config.hpp", "boost/config"),
       std::pair<fs::path, fs::path>("tools/build/allyourbase.jam", "Jamrules"),
       std::pair<fs::path, fs::path>("tools/build/allyourbase.jam", "project-root.jam"),
@@ -204,6 +212,12 @@ static const std::pair<fs::path, fs::path>
       std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "project-root.jam"),
       std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "boost-build.jam"),
       std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "Jamfile.v2"),
+      std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "boostcpp.jam"),
+      std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "bootstrap.bat"),
+      std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "bootstrap.sh"),
+      std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "Jamroot"),
+      std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "INSTALL"),
+      std::pair<fs::path, fs::path>("tools/build/v2/boost-build.jam", "LICENSE_1_0.txt"),
       std::pair<fs::path, fs::path>("boost/preprocessor/iterate.hpp", "boost/preprocessor/iteration"),
       std::pair<fs::path, fs::path>("boost/preprocessor/slot/slot.hpp", "boost/preprocessor/slot/detail"),
       std::pair<fs::path, fs::path>("boost/function.hpp", "boost/function/detail"),
@@ -236,6 +250,7 @@ static const std::pair<fs::path, fs::path>
       std::pair<fs::path, fs::path>("boost/graph/distributed/detail/tag_allocator.hpp", "libs/graph_parallel"),
       std::pair<fs::path, fs::path>("boost/graph/distributed/mpi_process_group.hpp", "libs/graph_parallel"),
       std::pair<fs::path, fs::path>("boost/parameter/parameters.hpp", "boost/parameter/aux_/overloads.hpp"),
+      std::pair<fs::path, fs::path>("boost/chrono/chrono.hpp", "libs/chrono/src/chrono.cpp"),
    };
 
    for(unsigned int n = 0; n < (sizeof(specials)/sizeof(specials[0])); ++n)
@@ -322,7 +337,7 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
    // Now we need to scan for Boost.Preprocessor includes that
    // are included via preprocessor iteration:
    //
-   static const boost::regex ppfiles("^[[:blank:]]*#[[:blank:]]*define[[:blank:]]+(?:BOOST_PP_FILENAME|BOOST_PP_ITERATION_PARAMS|BOOST_PP_INDIRECT_SELF)[^\\n]+?[\"<]([^\">]+)[\">]");
+   static const boost::regex ppfiles("^[[:blank:]]*#[[:blank:]]*define[[:blank:]]+(?:BOOST_PP_FILENAME|BOOST_PP_ITERATION_PARAMS|BOOST_PP_INDIRECT_SELF)(?:[^\\n]|\\\\\\n)+?[\"<]([^\">]+)[\">]");
    i = boost::regex_token_iterator<const char*>(view.begin(), view.end(), ppfiles, 1);
    while(i != j)
    {
@@ -485,7 +500,7 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
       //
       static const boost::regex lib1("boost/([^\\./]+)(?!detail).*");
       boost::smatch swhat;
-      std::string gs(p.string());
+      std::string gs(p.generic_string());
       if(boost::regex_match(gs, swhat, lib1))
       {
          add_dependent_lib(swhat.str(1), p, view);
@@ -494,7 +509,7 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
       // and this one catches boost/x/y/whatever (for example numeric/ublas):
       //
       static const boost::regex lib2("boost/([^/]+/[^/]+)/(?!detail).*");
-      gs = p.string();
+      gs = p.generic_string();
       if(boost::regex_match(gs, swhat, lib2))
       {
          add_dependent_lib(swhat.str(1), p, view);

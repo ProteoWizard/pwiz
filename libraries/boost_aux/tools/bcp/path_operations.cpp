@@ -21,8 +21,8 @@ namespace std{
 
 int compare_paths(const fs::path& a, const fs::path& b)
 {
-   const std::string& as = a.string();
-   const std::string& bs = b.string();
+   const std::string& as = a.generic_string();
+   const std::string& bs = b.generic_string();
    std::string::const_iterator i, j, k, l;
    i = as.begin();
    j = as.end();

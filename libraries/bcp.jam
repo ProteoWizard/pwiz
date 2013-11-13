@@ -29,7 +29,7 @@ rule init ( boost-root : build-dir ? : requirements * )
         project bcp : build-dir $(build-dir:E=bin) ;
 
         path-constant BOOST_PATH : [ boost-root ] ;
-        using ext-boost : 1.39.0 : $(BOOST_PATH) ;
+        using ext-boost : 1.54.0 : $(BOOST_PATH) ;
 
         exe bcp
         : # sources
@@ -60,20 +60,10 @@ toolset.flags bcp.bcp COMMAND <bcp> ;
 
 type.register BCP : bcp ;
 
-import os ;
-if [ os.name ] = NT
-{
-    .NUL = nul ;
-}
-else
-{
-    .NUL = /dev/null ;
-}
-
-actions quietly bcp.create bind COMMAND
+actions bcp.create bind COMMAND
 {
     @($(STDOUT):E=$(MODULE_LIST)) > "$(MODULE_LIST_FILENAME)"
-    $(COMMAND) --scan --boost=$(BOOST_PATH) --module-list-file=$(MODULE_LIST_FILENAME) $(<:D) > $(.NUL)
+    $(COMMAND) --scan --boost=$(BOOST_PATH) --module-list-file=$(MODULE_LIST_FILENAME) $(<:D) > $(MODULE_LIST_FILENAME:P)/bcp.log 2>&1
 }
 
 class bcp-generator : generator

@@ -31,7 +31,7 @@ void bcp_implementation::scan_cvs_path(const fs::path& p)
    static const boost::regex dir_expression("^(?:A\\s+)?D/([^/\\n]+)/");
    static const int file_subs[] = {1,2,};
 
-   for(int entry = 0; entry < sizeof(file_list)/sizeof(file_list[0]); ++entry)
+   for(std::size_t entry = 0; entry < sizeof(file_list)/sizeof(file_list[0]); ++entry)
    {
       fs::path entries(m_boost_path / p / file_list[entry]);
       if(fs::exists(entries))

@@ -49,7 +49,7 @@ void show_usage()
       "output-path:         the path to which files will be copied\n";
 }
 
-bool filesystem_name_check( const std::string & name )
+bool filesystem_name_check( const std::string & )
 {
    return true;
 }

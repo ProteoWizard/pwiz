@@ -9,6 +9,7 @@
  */
 
 #include "fileview.hpp"
+#include <boost/filesystem/fstream.hpp>
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -38,7 +39,7 @@ fileview::~fileview()
 {
 }
 
-fileview::fileview(const fileview& that)
+fileview::fileview(const fileview& )
 {
 }
 
@@ -57,7 +58,7 @@ void fileview::close()
 void fileview::open(const boost::filesystem::path& p)
 {
    cow();
-   std::ifstream is(p.string().c_str());
+   boost::filesystem::ifstream is(p);
    if(!is)
    {
       std::string msg("Bad file name: ");

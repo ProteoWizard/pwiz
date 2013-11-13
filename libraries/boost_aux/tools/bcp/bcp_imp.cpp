@@ -148,7 +148,7 @@ void bcp_implementation::set_namespace_list(bool b)
 fs::path get_short_path(const fs::path& p)
 {
    // truncate path no more than "x/y":
-   std::string s = p.string();
+   std::string s = p.generic_string();
    std::string::size_type n = s.find('/');
    if(n != std::string::npos)
    {
@@ -271,7 +271,7 @@ int bcp_implementation::run()
       std::cout << "\n\nThe top level namespaces found for header and source files were:\n";
       while(i != j)
       {
-         if(regex_match(i->second.string(), important_file))
+         if(regex_match(i->second.generic_string(), important_file))
             std::cout << i->first << " (from " << i->second << ")" << std::endl;
          ++i;
       }
@@ -280,7 +280,7 @@ int bcp_implementation::run()
       std::cout << "\n\nThe top level namespaces found for all other source files were:\n";
       while(i != j)
       {
-         if(!regex_match(i->second.string(), important_file))
+         if(!regex_match(i->second.generic_string(), important_file))
             std::cout << i->first << " (from " << i->second << ")" << std::endl;
          ++i;
       }
