@@ -250,7 +250,7 @@ static const std::pair<fs::path, fs::path>
       std::pair<fs::path, fs::path>("boost/graph/distributed/detail/tag_allocator.hpp", "libs/graph_parallel"),
       std::pair<fs::path, fs::path>("boost/graph/distributed/mpi_process_group.hpp", "libs/graph_parallel"),
       std::pair<fs::path, fs::path>("boost/parameter/parameters.hpp", "boost/parameter/aux_/overloads.hpp"),
-      std::pair<fs::path, fs::path>("boost/chrono/chrono.hpp", "libs/chrono/src/chrono.cpp"),
+      std::pair<fs::path, fs::path>("boost/chrono/chrono.hpp", "libs/chrono/src"),
    };
 
    for(unsigned int n = 0; n < (sizeof(specials)/sizeof(specials[0])); ++n)
