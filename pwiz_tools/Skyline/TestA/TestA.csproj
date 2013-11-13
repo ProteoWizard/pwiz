@@ -121,7 +121,6 @@
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="ZedGraph, Version=5.1.5.27012, Culture=neutral, PublicKeyToken=8b2485f42e5e887d, processorArchitecture=MSIL" />
     <Reference Include="zlib.net, Version=1.0.3.0, Culture=neutral, PublicKeyToken=47d7877cb3620160" />
   </ItemGroup>
   <ItemGroup>
