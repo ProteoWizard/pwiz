@@ -2112,7 +2112,11 @@ namespace pwiz.Skyline
             StringBuilder commandLineArguments = new StringBuilder();
             foreach (string argument in arguments)
             {
-                if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty)) //Consider: Should this handle null reference?
+                if (argument == null)
+                {
+                    commandLineArguments.Append(" \"\"");
+                }
+                else if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty))
                 {
                     commandLineArguments.Append(" \"" + argument + "\"");
                 }
