@@ -35,7 +35,6 @@ namespace pwiz {
 namespace msdata {
 
 
-using boost::lambda::_1;
 using namespace pwiz::data;
 
 
@@ -79,6 +78,8 @@ void removeCVParams(vector<CVParam>& cvParams, CVID cvid)
 
 void removeUserParams(vector<UserParam>& userParams, const string& name)
 {
+    using boost::lambda::_1;
+
     userParams.erase(
     remove_if(userParams.begin(), 
               userParams.end(), 
