@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec", "..\Shared\Bib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTest", "..\Shared\CommonTest\CommonTest.csproj", "{3F077244-13E5-4815-BA55-31F030042E06}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "..\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Topograph.vsmdi
@@ -128,6 +130,15 @@ Global
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x64.ActiveCfg = Release|Any CPU
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x64.Build.0 = Release|Any CPU
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x86.ActiveCfg = Release|Any CPU
+		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x86.Build.0 = Release|Any CPU
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.ActiveCfg = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.Build.0 = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.ActiveCfg = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.Build.0 = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.ActiveCfg = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.Build.0 = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.ActiveCfg = Release|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

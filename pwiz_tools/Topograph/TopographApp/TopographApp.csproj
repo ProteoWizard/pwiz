@@ -71,6 +71,7 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -80,6 +81,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
+    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/daily/</InstallUrl>
     <ProductName>Topograph-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
@@ -148,10 +150,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="ZedGraph, Version=5.1.5.28844, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\ZedGraph.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\CopyGraphDataToolStripMenuItem.cs">
@@ -792,6 +790,10 @@
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
+      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="..\TopographLib\TopographLib.csproj">
       <Project>{6ED3F65E-B0A0-48F0-8966-F3E4D146F07F}</Project>
