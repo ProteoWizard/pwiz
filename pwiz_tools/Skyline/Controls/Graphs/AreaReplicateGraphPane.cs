@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public class AreaReplicateGraphPane : SummaryReplicateGraphPane
     {
-        public AreaReplicateGraphPane(GraphSummary graphSummary, GraphHelper.PaneKey paneKey)
+        public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
@@ -149,11 +149,11 @@ namespace pwiz.Skyline.Controls.Graphs
             Title.Text = null;
 
             DisplayTypeChrom displayType;
-            if (Equals(PaneKey, GraphHelper.PaneKey.PRECURSORS))
+            if (Equals(PaneKey, PaneKey.PRECURSORS))
             {
                 displayType = DisplayTypeChrom.precursors;
             }
-            else if (Equals(PaneKey, GraphHelper.PaneKey.PRODUCTS))
+            else if (Equals(PaneKey, PaneKey.PRODUCTS))
             {
                 displayType = DisplayTypeChrom.products;
             }
@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  int ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
-                                 GraphHelper.PaneKey paneKey)
+                                 PaneKey paneKey)
                 : base(document, docNode, displayType, replicateGroupOp, paneKey)
             {
                 _docNode = docNode;

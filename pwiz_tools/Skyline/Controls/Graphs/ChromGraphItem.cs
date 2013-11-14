@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Chromatogram == null)
                 return;
 
-            // Give priority to showing the best peak text object above all other annoations
+            // Give priority to showing the best peak text object above all other annotations
             if (DragInfo != null || (!HideBest && TransitionChromInfo != null) || CurveAnnotation != null)
             {
                 // Show text and arrow for the best peak
@@ -356,20 +356,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Show the best peak boundary lines
-                double startTime = 0, endTime = 0;
-                if (DragInfo != null)
+                if (CurveAnnotation == null)
                 {
-                    startTime = DragInfo.StartTime.MeasuredTime;
-                    endTime = DragInfo.EndTime.MeasuredTime;
+                    double startTime = 0, endTime = 0;
+                    if (DragInfo != null)
+                    {
+                        startTime = DragInfo.StartTime.MeasuredTime;
+                        endTime = DragInfo.EndTime.MeasuredTime;
+                    }
+                    else if (TransitionChromInfo != null)
+                    {
+                        var tranPeakInfo = TransitionChromInfo;
+                        startTime = tranPeakInfo.StartRetentionTime;
+                        endTime = tranPeakInfo.EndRetentionTime;
+                    }
+                    AddPeakBoundaries(graphPane, annotations, true,
+                        ScaleRetentionTime(startTime), ScaleRetentionTime(endTime), intensityBest);
                 }
-                else if (TransitionChromInfo != null)
-                {
-                    var tranPeakInfo = TransitionChromInfo;
-                    startTime = tranPeakInfo.StartRetentionTime;
-                    endTime = tranPeakInfo.EndRetentionTime;
-                }
-                AddPeakBoundaries(graphPane, annotations, true,
-                                  ScaleRetentionTime(startTime), ScaleRetentionTime(endTime), intensityBest);
             }
         }
 

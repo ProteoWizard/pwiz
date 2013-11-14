@@ -411,14 +411,13 @@ namespace pwiz.Skyline.SettingsUI
                 string fullPath;
                 try
                 {
-                    fullPath = Path.GetFullPath(path);
+                    fullPath = string.IsNullOrEmpty(path) ? null : Path.GetFullPath(path);
                 }
                 catch (Exception)
                 {
                     fullPath = null;
                 }
                 bool browse = path == null ||   // For ReSharper
-                              string.IsNullOrEmpty(path) ||
                               !Equals(path, fullPath) ||
                               Directory.Exists(path);
                 if (!browse)

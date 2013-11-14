@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return _spectra; }
         }
 
-        public void UpdateUI()
+        public void UpdateUI(bool selectionChanged = true)
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
@@ -524,7 +524,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     var graphItem = new ChromGraphItem(nodeGroup, matchingTransition, chromatogramInfo, iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
                                                                        new[] {iChromData == iChromDataPrimary}, null, 0, false, false, 0,
                                                                        color, Settings.Default.ChromatogramFontSize, 1);
-                                    LineItem curve = (LineItem) _graphHelper.AddChromatogram(GraphHelper.PaneKey.DEFAULT, graphItem);
+                                    LineItem curve = (LineItem) _graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
                                     if (matchingTransition == null)
                                     {
                                         curve.Label.Text = label;
@@ -777,9 +777,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public class GraphSpectrumSettings
     {
-        private readonly Action _update;
+        private readonly Action<bool> _update;
 
-        public GraphSpectrumSettings(Action update)
+        public GraphSpectrumSettings(Action<bool> update)
         {
             _update = update;
         }
@@ -787,7 +787,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ActAndUpdate(Action act)
         {
             act();
-            _update();
+            _update(true);
         }
 
         private static Settings Set

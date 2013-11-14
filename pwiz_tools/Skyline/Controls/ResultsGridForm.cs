@@ -63,10 +63,10 @@ namespace pwiz.Skyline.Controls
         {
             base.OnVisibleChanged(e);
             
-            UpdateUI();
+            UpdateUI(false);
         }
 
-        public void UpdateUI()
+        public void UpdateUI(bool selectionChanged = true)
         {
             if (!Visible || IsDisposed)
                 return;

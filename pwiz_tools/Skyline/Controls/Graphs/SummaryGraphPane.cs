@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected SummaryGraphPane(GraphSummary graphSummary)
         {
             GraphSummary = graphSummary;
-            PaneKey = GraphHelper.PaneKey.DEFAULT;
+            PaneKey = PaneKey.DEFAULT;
             Border.IsVisible = false;
             Title.IsVisible = true;
 
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public GraphSummary GraphSummary { get; private set; }
-        public GraphHelper.PaneKey PaneKey { get; protected set; }
+        public PaneKey PaneKey { get; protected set; }
 
         /// <summary>
         /// Sets a fixed minimum y value, which the graph control will maintain through

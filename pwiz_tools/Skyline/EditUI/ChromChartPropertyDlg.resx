@@ -145,7 +145,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -172,7 +172,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -199,7 +199,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="textLineWidth.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 25</value>
@@ -220,7 +220,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textLineWidth.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="textFontSize.Location" type="System.Drawing.Point, System.Drawing">
     <value>147, 25</value>
@@ -241,7 +241,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textFontSize.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -268,7 +268,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textTimeRange.Location" type="System.Drawing.Point, System.Drawing">
     <value>26, 49</value>
@@ -348,6 +348,66 @@
   <data name="groupBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="&gt;&gt;cbRelative.Name" xml:space="preserve">
+    <value>cbRelative</value>
+  </data>
+  <data name="&gt;&gt;cbRelative.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbRelative.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;cbRelative.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.Name" xml:space="preserve">
+    <value>textMaxIntensity</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 97</value>
+  </data>
+  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>215, 153</value>
+  </data>
+  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="groupBox1.Text" xml:space="preserve">
+    <value>&amp;Graph area dimensions:</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="cbRelative.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -423,55 +483,61 @@
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 74</value>
-  </data>
-  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>215, 161</value>
-  </data>
-  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="groupBox1.Text" xml:space="preserve">
-    <value>&amp;Graph area dimensions:</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="cbHideOverlappingLabels.AutoSize" type="System.Boolean, mscorlib">
+  <data name="cbShowOverlappingLabels.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbHideOverlappingLabels.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 51</value>
+  <data name="cbShowOverlappingLabels.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 51</value>
   </data>
-  <data name="cbHideOverlappingLabels.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 17</value>
+  <data name="cbShowOverlappingLabels.Size" type="System.Drawing.Size, System.Drawing">
+    <value>141, 17</value>
   </data>
-  <data name="cbHideOverlappingLabels.TabIndex" type="System.Int32, mscorlib">
+  <data name="cbShowOverlappingLabels.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="cbHideOverlappingLabels.Text" xml:space="preserve">
-    <value>Hide overlapping labels</value>
+  <data name="cbShowOverlappingLabels.Text" xml:space="preserve">
+    <value>Show overlapping labels</value>
   </data>
-  <data name="&gt;&gt;cbHideOverlappingLabels.Name" xml:space="preserve">
-    <value>cbHideOverlappingLabels</value>
+  <data name="&gt;&gt;cbShowOverlappingLabels.Name" xml:space="preserve">
+    <value>cbShowOverlappingLabels</value>
   </data>
-  <data name="&gt;&gt;cbHideOverlappingLabels.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbShowOverlappingLabels.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbHideOverlappingLabels.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbShowOverlappingLabels.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbHideOverlappingLabels.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbShowOverlappingLabels.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbShowMultiplePeptides.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbShowMultiplePeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbShowMultiplePeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 74</value>
+  </data>
+  <data name="cbShowMultiplePeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>134, 17</value>
+  </data>
+  <data name="cbShowMultiplePeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="cbShowMultiplePeptides.Text" xml:space="preserve">
+    <value>Show multiple peptides</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.Name" xml:space="preserve">
+    <value>cbShowMultiplePeptides</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -481,7 +547,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>337, 247</value>
+    <value>337, 262</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

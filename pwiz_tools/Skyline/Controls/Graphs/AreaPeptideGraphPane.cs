@@ -24,7 +24,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaPeptideGraphPane : SummaryPeptideGraphPane
     {
-        public AreaPeptideGraphPane(GraphSummary graphSummary, GraphHelper.PaneKey paneKey)
+        public AreaPeptideGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary, paneKey)
         {
         }
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  PeptideGroupDocNode selectedProtein,
                                  int? result,
                                  DisplayTypeChrom displayType,
-                                 GraphHelper.PaneKey paneKey)
+                                 PaneKey paneKey)
                 : base(document, selectedGroup, selectedProtein, result, displayType, null, paneKey)
             {
             }

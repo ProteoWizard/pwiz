@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         private void DisplayResults(ProteinMatchQuery proteinMatchQuery)
         {
-            if (TextBox.IsDisposed)
+            if (TextBox == null || TextBox.IsDisposed)
             {
                 return;
             }

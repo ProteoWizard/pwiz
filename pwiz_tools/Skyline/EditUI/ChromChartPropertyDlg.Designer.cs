@@ -42,7 +42,8 @@
             this.cbRelative = new System.Windows.Forms.CheckBox();
             this.textMaxIntensity = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.cbHideOverlappingLabels = new System.Windows.Forms.CheckBox();
+            this.cbShowOverlappingLabels = new System.Windows.Forms.CheckBox();
+            this.cbShowMultiplePeptides = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -124,11 +125,21 @@
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
             // 
-            // cbHideOverlappingLabels
+            // cbShowOverlappingLabels
             // 
-            resources.ApplyResources(this.cbHideOverlappingLabels, "cbHideOverlappingLabels");
-            this.cbHideOverlappingLabels.Name = "cbHideOverlappingLabels";
-            this.cbHideOverlappingLabels.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.cbShowOverlappingLabels, "cbShowOverlappingLabels");
+            this.cbShowOverlappingLabels.Checked = true;
+            this.cbShowOverlappingLabels.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbShowOverlappingLabels.Name = "cbShowOverlappingLabels";
+            this.cbShowOverlappingLabels.UseVisualStyleBackColor = true;
+            // 
+            // cbShowMultiplePeptides
+            // 
+            resources.ApplyResources(this.cbShowMultiplePeptides, "cbShowMultiplePeptides");
+            this.cbShowMultiplePeptides.Checked = true;
+            this.cbShowMultiplePeptides.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbShowMultiplePeptides.Name = "cbShowMultiplePeptides";
+            this.cbShowMultiplePeptides.UseVisualStyleBackColor = true;
             // 
             // ChromChartPropertyDlg
             // 
@@ -136,7 +147,8 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbHideOverlappingLabels);
+            this.Controls.Add(this.cbShowMultiplePeptides);
+            this.Controls.Add(this.cbShowOverlappingLabels);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.textFontSize);
             this.Controls.Add(this.label1);
@@ -171,6 +183,7 @@
         private System.Windows.Forms.TextBox textMaxIntensity;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.CheckBox cbRelative;
-        private System.Windows.Forms.CheckBox cbHideOverlappingLabels;
+        private System.Windows.Forms.CheckBox cbShowOverlappingLabels;
+        private System.Windows.Forms.CheckBox cbShowMultiplePeptides;
     }
 }

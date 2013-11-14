@@ -114,10 +114,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="ZedGraph, Version=5.1.5.29886, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shared\Lib\ZedGraph.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Annotation.cs" />
@@ -390,6 +386,10 @@
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
+      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Name>ZedGraph</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnUpdateGraph()
         {
-            GraphHelper.PaneKey[] paneKeys = null;
+            PaneKey[] paneKeys = null;
             if (Settings.Default.SplitChromatogramGraph)
             {
                 if (GraphType == GraphTypeArea.replicate)
@@ -114,13 +114,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                 bool hasProducts = transitionGroup.Transitions.Any(transition => !transition.IsMs1);
                                 if (hasPrecursors && hasProducts)
                                 {
-                                    paneKeys = new[] { GraphHelper.PaneKey.PRECURSORS, GraphHelper.PaneKey.PRODUCTS };
+                                    paneKeys = new[] { PaneKey.PRECURSORS, PaneKey.PRODUCTS };
                                 }
                             }
                         }
                         else if (transitionGroups.Length > 1)
                         {
-                            paneKeys = transitionGroups.Select(group => new GraphHelper.PaneKey(group))
+                            paneKeys = transitionGroups.Select(group => new PaneKey(group))
                                 .Distinct().ToArray();
                         }
                     }
@@ -128,10 +128,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     paneKeys = GraphSummary.StateProvider.SelectionDocument.TransitionGroups.Select(
-                            group => new GraphHelper.PaneKey(group.TransitionGroup.LabelType)).Distinct().ToArray();
+                            group => new PaneKey(group.TransitionGroup.LabelType)).Distinct().ToArray();
                 }
             }
-            paneKeys = paneKeys ?? new[] {GraphHelper.PaneKey.DEFAULT};
+            paneKeys = paneKeys ?? new[] {PaneKey.DEFAULT};
             Array.Sort(paneKeys);
 
             bool panesValid = paneKeys.SequenceEqual(GraphSummary.GraphPanes.Select(pane => pane.PaneKey));

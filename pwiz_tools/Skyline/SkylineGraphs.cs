@@ -754,13 +754,13 @@ namespace pwiz.Skyline
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
-            UpdateSpectrumGraph();
+            UpdateSpectrumGraph(false);
         }
 
         private void ionMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowIonMz = !Settings.Default.ShowIonMz;
-            UpdateSpectrumGraph();
+            UpdateSpectrumGraph(false);
         }
 
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
@@ -771,7 +771,7 @@ namespace pwiz.Skyline
         public void ToggleObservedMzValues()
         {
             Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
-            UpdateSpectrumGraph();
+            UpdateSpectrumGraph(false);
         }
 
         void GraphSpectrum.IStateProvider.BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
@@ -850,7 +850,7 @@ namespace pwiz.Skyline
         private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowDuplicateIons = duplicatesContextMenuItem.Checked;
-            UpdateSpectrumGraph();
+            UpdateSpectrumGraph(false);
         }
 
         private void lockYaxisContextMenuItem_Click(object sender, EventArgs e)
@@ -875,7 +875,7 @@ namespace pwiz.Skyline
             using (var dlg = new SpectrumChartPropertyDlg())
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
-                    UpdateSpectrumGraph();
+                    UpdateSpectrumGraph(false);
             }
         }
 
@@ -982,10 +982,10 @@ namespace pwiz.Skyline
             }
         }
 
-        private void UpdateSpectrumGraph()
+        private void UpdateSpectrumGraph(bool selectionChanged)
         {
             if (_graphSpectrum != null)
-                _graphSpectrum.UpdateUI();
+                _graphSpectrum.UpdateUI(selectionChanged);
         }
 
 //        private static bool SameChargeGroups(PeptideTreeNode nodeTree)
@@ -1731,7 +1731,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowTransitionGraphs = displayType.ToString();
             UpdateChromGraphs();
-            UpdateSpectrumGraph();
+            UpdateSpectrumGraph(false);
             UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();
         }

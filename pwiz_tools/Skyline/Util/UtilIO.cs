@@ -606,15 +606,21 @@ namespace pwiz.Skyline.Util
                 {
                     string backupFile = GetBackupFileName(pathDestination);
                     FileEx.SafeDelete(backupFile, true);
+
                     // First try replacing the destination file, if it exists
-                    File.Replace(pathTemp, pathDestination, backupFile, true);
-                    FileEx.SafeDelete(backupFile, true);
+                    if (File.Exists(pathDestination))
+                    {
+                        File.Replace(pathTemp, pathDestination, backupFile, true);
+                        FileEx.SafeDelete(backupFile, true);
+                        return;
+                    }
                 }
                 catch (FileNotFoundException)
                 {
-                    // Or just move, if it does not.
-                    Helpers.TryTwice(() => File.Move(pathTemp, pathDestination));
                 }
+
+                // Or just move, if it does not.
+                Helpers.TryTwice(() => File.Move(pathTemp, pathDestination));
             }
         }
 
@@ -726,7 +732,8 @@ namespace pwiz.Skyline.Util
             {
                 try
                 {
-                    Helpers.TryTwice(() => File.Delete(path));
+                    if (path != null && File.Exists(path))
+                        Helpers.TryTwice(() => File.Delete(path));
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch (Exception)

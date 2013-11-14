@@ -31,8 +31,9 @@ namespace pwiz.MSGraph
     public class MSGraphPane : GraphPane
     {
         private OverlapDetector _overlapDetector;
+        private readonly LabelBoundsCache _labelBoundsCache;
 
-        public MSGraphPane()
+        public MSGraphPane(LabelBoundsCache labelBoundsCache = null)
         {
             Title.IsVisible = false;
             Chart.Border.IsVisible = false;
@@ -48,14 +49,16 @@ namespace pwiz.MSGraph
             _currentItemType = MSGraphItemType.unknown;
             _pointAnnotations = new GraphObjList();
             _manualLabels = new Dictionary<TextObj, RectangleF>();
+            _labelBoundsCache = labelBoundsCache ?? new LabelBoundsCache();
         }
 
         public MSGraphPane(MSGraphPane other)
             : base(other)
         {
             _currentItemType = other._currentItemType;
-            _pointAnnotations = new GraphObjList(other._pointAnnotations);
-            _manualLabels = new Dictionary<TextObj, RectangleF>(other._manualLabels);
+            _pointAnnotations = new GraphObjList();
+            _manualLabels = new Dictionary<TextObj, RectangleF>();
+            _labelBoundsCache = other._labelBoundsCache;
         }
 
         public bool AllowCurveOverlap { get; set; }
@@ -266,7 +269,7 @@ namespace pwiz.MSGraph
                         IsClippedToChartRect = true
                     };
 
-                    var textRect = GetTextRectangle(g, text);
+                    var textRect = _labelBoundsCache.GetLabelBounds(text, this, g);
                     bool overlap2 = _overlapDetector != null && _overlapDetector.Overlaps(textRect);
                     _manualLabels[text] = textRect;
                     if (!overlap2)
@@ -317,7 +320,7 @@ namespace pwiz.MSGraph
                     if (isXChartFractionObject(text) && (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max))
                         continue;
 
-                    var textRect = GetTextRectangle(g, text);
+                    var textRect = _labelBoundsCache.GetLabelBounds(text, this, g);
                     if (_overlapDetector == null || !_overlapDetector.Overlaps(textRect))
                         _manualLabels[text] = textRect;
                 }
@@ -476,42 +479,6 @@ namespace pwiz.MSGraph
                 _rectangles.Add(rectangle);
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Returns the 4 points of the rectangle surrounding a text obj.
-        /// This code was copied from <see cref="TextObj.GetCoords"/>
-        /// but avoids the conversion of floats to strings.
-        /// </summary>
-        protected PointF[] GetCoords(GraphPane graphPane, Graphics graphics, TextObj textObj)
-        {
-            const float scaleFactor = 1.0f;
-            // transform the x,y location from the user-defined
-            // coordinate frame to the screen pixel location
-            PointF pix = textObj.Location.Transform(graphPane);
-
-            return textObj.FontSpec.GetBox(graphics, textObj.Text, pix.X, pix.Y, textObj.Location.AlignH,
-                textObj.Location.AlignV, scaleFactor, new SizeF());
-        }
-
-        private RectangleF GetTextRectangle(Graphics graphics, TextObj textObj)
-        {
-            var coords = GetCoords(this, graphics, textObj);
-            var min = coords[0];
-            var max = min;
-            for (int i = 1; i < coords.Length; i++)
-            {
-                var point = coords[i];
-                if (min.X > point.X)
-                    min.X = point.X;
-                if (min.Y > point.Y)
-                    min.Y = point.Y;
-                if (max.X < point.X)
-                    max.X = point.X;
-                if (max.Y < point.Y)
-                    max.Y = point.Y;
-            }
-            return new RectangleF(min.X, min.Y, max.X - min.X, max.Y - min.Y);
         }
     }
 }

@@ -265,7 +265,6 @@
     <Compile Include="Controls\Graphs\AsyncChromatogramsGraph.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\Graphs\AsyncMSGraphPane.cs" />
     <Compile Include="Controls\Graphs\AsyncRenderControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

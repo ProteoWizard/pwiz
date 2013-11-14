@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public RTPeptideGraphPane(GraphSummary graphSummary)
-            : base(graphSummary, GraphHelper.PaneKey.DEFAULT)
+            : base(graphSummary, PaneKey.DEFAULT)
         {
         }
 
@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                DisplayTypeChrom displayType,
                                GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp
                 )
-                : base(document, selectedGroup, selectedProtein, result, displayType, retentionTimeTransformOp, GraphHelper.PaneKey.DEFAULT)
+                : base(document, selectedGroup, selectedProtein, result, displayType, retentionTimeTransformOp, PaneKey.DEFAULT)
             {
             }
 

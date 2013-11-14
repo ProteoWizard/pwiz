@@ -22,6 +22,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ZedGraph;
 
@@ -33,7 +34,7 @@ namespace pwiz.MSGraph
         {
             InitializeComponent();
 
-            GraphPane = new MSGraphPane(); // replace default ZedGraph.GraphPane
+            GraphPane = new MSGraphPane(new LabelBoundsCache()); // replace default ZedGraph.GraphPane
 
             IsZoomOnMouseCenter = false;
             IsEnableVZoom = false;
@@ -61,22 +62,15 @@ namespace pwiz.MSGraph
         {
             if( e.Button == MouseButtons.None )
                 return false;
-
-            Point pos = MousePosition;
-            pos = PointToClient( pos );
-            MSGraphPane pane = MasterPane.FindChartRect( new PointF( pos.X, pos.Y ) ) as MSGraphPane;
-            if( pane == null )
-                pos = PointToClient( new Point( ContextMenuStrip.Left, ContextMenuStrip.Top ) );
-            pane = MasterPane.FindChartRect( new PointF( pos.X, pos.Y ) ) as MSGraphPane;
-            if( pane == null )
-                return false;
-
             if( ( IsEnableHPan ) &&
                 ( ( e.Button == PanButtons && ModifierKeys == PanModifierKeys ) ||
                 ( e.Button == PanButtons2 && ModifierKeys == PanModifierKeys2 ) ) )
             {
                 Graphics g = CreateGraphics();
-                pane.SetScale(g);
+                foreach (var pane in MasterPane.PaneList.OfType<MSGraphPane>())
+                {
+                    pane.SetScale(g);
+                }
             }
             return false;
         }

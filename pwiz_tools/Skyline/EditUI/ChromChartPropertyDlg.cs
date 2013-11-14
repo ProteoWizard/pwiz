@@ -48,7 +48,8 @@ namespace pwiz.Skyline.EditUI
 
             if (Settings.Default.ChromatogramMaxIntensity != 0)
                 textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(LocalizationHelper.CurrentCulture);
-            cbHideOverlappingLabels.Checked = !Settings.Default.AllowLabelOverlap;
+            cbShowOverlappingLabels.Checked = Settings.Default.AllowLabelOverlap;
+            cbShowMultiplePeptides.Checked = Settings.Default.AllowMultiplePeptideSelection;
         }
 
         public void OkDialog()
@@ -87,7 +88,8 @@ namespace pwiz.Skyline.EditUI
             Settings.Default.ChromatogramMaxIntensity = maxIntensity;
             if (maxIntensity != 0)
                 Settings.Default.LockYChrom = true;
-            Settings.Default.AllowLabelOverlap = !cbHideOverlappingLabels.Checked;
+            Settings.Default.AllowLabelOverlap = cbShowOverlappingLabels.Checked;
+            Settings.Default.AllowMultiplePeptideSelection = cbShowMultiplePeptides.Checked;
             DialogResult = DialogResult.OK;
         }
 

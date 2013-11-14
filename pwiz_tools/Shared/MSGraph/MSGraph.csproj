@@ -75,6 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LabelBoundsCache.cs" />
     <Compile Include="MSGraphItem.cs" />
     <Compile Include="MSGraphControl.cs">
       <SubType>UserControl</SubType>

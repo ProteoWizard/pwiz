@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected GraphData _graphData;
 
-        protected SummaryPeptideGraphPane(GraphSummary graphSummary, GraphHelper.PaneKey paneKey)
+        protected SummaryPeptideGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
                              int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp, 
-                             GraphHelper.PaneKey paneKey)
+                             PaneKey paneKey)
             {
                 RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide

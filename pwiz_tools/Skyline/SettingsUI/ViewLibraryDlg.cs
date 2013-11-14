@@ -559,7 +559,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Updates the spectrum graph using the currently selected peptide.
         /// </summary>
-        public void UpdateUI()
+        public void UpdateUI(bool selectionChanged = true)
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
@@ -721,7 +721,7 @@ namespace pwiz.Skyline.SettingsUI
                                 var graphItem = new ChromGraphItem(nodeGroup, null, chromatogramInfo, iChromData == iChromDataPrimary ? transitionChromInfo : null, null,
                                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, 0,
                                    color, Settings.Default.ChromatogramFontSize, 1);
-                                LineItem curve = (LineItem) _graphHelper.AddChromatogram(GraphHelper.PaneKey.DEFAULT, graphItem);
+                                LineItem curve = (LineItem) _graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
                                 var pointAnnotation = GraphItem.AnnotatePoint(new PointPair(chromData.Mz, 1.0));
                                 if (null != pointAnnotation)
                                 {

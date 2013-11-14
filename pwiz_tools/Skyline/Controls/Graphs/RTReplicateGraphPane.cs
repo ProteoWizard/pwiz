@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public RTGraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.RetentionTimeTransform retentionTimeTransform, GraphValues.ReplicateGroupOp replicateGroupOp)
-                : base(document, docNode, displayType, replicateGroupOp, GraphHelper.PaneKey.DEFAULT)
+                : base(document, docNode, displayType, replicateGroupOp, PaneKey.DEFAULT)
             {
                 RetentionTimeTransform = retentionTimeTransform;
             }

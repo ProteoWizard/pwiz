@@ -702,7 +702,7 @@ namespace pwiz.SkylineTestUtil
             var docStart = SkylineWindow.Document;
             var nodePeptide = docStart.Peptides.FirstOrDefault(nodePep =>
                 Equals(peptideSequence, nodePep.Peptide.Sequence) &&
-                Equals(isDecoy, nodePep.IsDecoy));
+                isDecoy == nodePep.IsDecoy);
 
             Assert.IsNotNull(nodePeptide);
 
@@ -719,7 +719,7 @@ namespace pwiz.SkylineTestUtil
 
             Assert.IsTrue(WaitForCondition(() => !SkylineWindow.Document.Peptides.Any(nodePep =>
                 Equals(peptideSequence, nodePep.Peptide.Sequence) &&
-                Equals(isDecoy, nodePep.IsDecoy))));
+                isDecoy == nodePep.IsDecoy)));
             AssertEx.IsDocumentState(SkylineWindow.Document, null,
                                      docStart.PeptideGroupCount,
                                      docStart.PeptideCount - 1,

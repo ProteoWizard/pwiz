@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Util
         /// Update this UI element.  Updates are performed on a time
         /// event to avoid blocking the UI thread.
         /// </summary>
-        void UpdateUI();        
+        void UpdateUI(bool selectionChanged = true);
     }
 
     public sealed class MoveThreshold

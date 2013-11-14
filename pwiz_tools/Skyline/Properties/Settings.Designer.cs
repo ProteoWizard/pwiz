@@ -1803,7 +1803,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool AllowMultiplePeptideSelection {
             get {
                 return ((bool)(this["AllowMultiplePeptideSelection"]));

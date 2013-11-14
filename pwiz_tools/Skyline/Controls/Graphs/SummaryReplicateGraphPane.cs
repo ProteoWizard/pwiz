@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly SrmDocument _document;
             private readonly DocNode _docNode;
             private readonly DisplayTypeChrom _displayType;
-            private GraphHelper.PaneKey _paneKey;
+            private PaneKey _paneKey;
 
             private ReadOnlyCollection<DocNode> _docNodes;
             private ReadOnlyCollection<String> _docNodeLabels;
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private ReadOnlyCollection<ReplicateGroup> _replicateGroups;
 
 
-            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, GraphHelper.PaneKey paneKey)
+            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
             {
                 _document = document;
                 _docNode = docNode;

@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return GraphPanes.First().XAxis.Scale.TextLabels; }
         }
 
-        public void UpdateUI()
+        public void UpdateUI(bool selectionChanged = true)
         {
             UpdateGraph(true);
         }
