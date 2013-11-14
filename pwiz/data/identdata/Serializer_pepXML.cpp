@@ -500,14 +500,21 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
         BOOST_FOREACH(const SearchModificationPtr& sm, sip.modificationParams)
         {
             vector<char> residues = sm->residues;
-            if (residues.empty())
+            if (residues.empty() || (residues.size() == 1 && residues[0] == '.'))
             {
+                residues.clear();
+
                 if (sm->specificityRules.empty())
-                    throw runtime_error("[write_search_summary] Empty SearchModification.");
-                if (sm->specificityRules == MS_modification_specificity_peptide_N_term)
-                    residues.push_back('n');
-                else
-                    residues.push_back('c');
+                    throw runtime_error("[write_search_summary] Empty or non-specific SearchModification.");
+
+                switch (sm->specificityRules.cvid)
+                {
+                    case MS_modification_specificity_peptide_N_term: residues.push_back('n'); break;
+                    case MS_modification_specificity_protein_N_term: residues.push_back('o'); break;
+                    case MS_modification_specificity_peptide_C_term: residues.push_back('c'); break;
+                    case MS_modification_specificity_protein_C_term: residues.push_back('d'); break;
+                    default: throw runtime_error("[write_search_summary] Cannot handle CV term in specificityRules: " + sm->specificityRules.name());
+                }
             }
 
             BOOST_FOREACH(char aa, residues)
@@ -515,13 +522,26 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
                 attributes.clear();
                 if (aa > 'Z') // terminal_modification
                 {
-                    attributes.add("terminus", string(1, aa));
-                    attributes.add("massdiff", sm->massDelta);
+                    switch (aa)
+                    {
+                        case 'o':
+                            attributes.add("protein_terminus", "n");
+                        case 'n':
+                            attributes.add("terminus", "n");
+                            attributes.add("massdiff", sm->massDelta);
+                            attributes.add("mass", nTerm.monoisotopicMass() + sm->massDelta);
+                            break;
 
-                    if (aa == 'n')
-                        attributes.add("mass", nTerm.monoisotopicMass() + sm->massDelta);
-                    else
-                        attributes.add("mass", cTerm.monoisotopicMass() + sm->massDelta);
+                        case 'd':
+                            attributes.add("protein_terminus", "c");
+                        case 'c':
+                            attributes.add("terminus", "c");
+                            attributes.add("massdiff", sm->massDelta);
+                            attributes.add("mass", cTerm.monoisotopicMass() + sm->massDelta);
+                            break;
+
+                        default: throw runtime_error("[write_search_summary] Unsupported AA residue: " + aa);
+                    }
                 }
                 else // aminoacid_modificiation
                 {
@@ -529,10 +549,14 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
                     attributes.add("aminoacid", string(1, aa));
                     attributes.add("massdiff", sm->massDelta);
                     attributes.add("mass", sm->massDelta + aaMass);
-                    if (sm->specificityRules == MS_modification_specificity_peptide_N_term)
-                        attributes.add("peptide_terminus", "n");
-                    if (sm->specificityRules == MS_modification_specificity_peptide_C_term)
-                        attributes.add("peptide_terminus", "c");
+                    
+                    if (!sm->specificityRules.empty())
+                        switch (sm->specificityRules.cvid)
+                        {
+                            case MS_modification_specificity_peptide_N_term: attributes.add("peptide_terminus", "n"); break;
+                            case MS_modification_specificity_peptide_C_term: attributes.add("peptide_terminus", "c"); break;
+                            default: throw runtime_error("[write_search_summary] Cannot handle CV term in specificityRules: " + sm->specificityRules.name());
+                        }
                 }
                 attributes.add("variable", sm->fixedMod ? "N" : "Y");
 
@@ -761,9 +785,11 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
                 string scanNumber = msdata::id::translateNativeIDToScanNumber(nativeIdFormat, sir.spectrumID);
                 if (scanNumber.empty())
                 {
-                    //if (sir.hasCVParam(MS_peak_list_scans))
-                    //    scanNumber = sir.cvParam(MS_peak_list_scans).value;
-                    //else
+                    if (sir.hasCVParam(MS_peak_list_scans))
+                        scanNumber = sir.cvParam(MS_peak_list_scans).value;
+                    else if (sir.hasCVParam(MS_scan_number_s__OBSOLETE))
+                        scanNumber = sir.cvParam(MS_scan_number_s__OBSOLETE).value;
+                    else
                         scanNumber = lexical_cast<string>(spectrumIndex);
                 }
 
@@ -1288,20 +1314,34 @@ struct HandlerSearchSummary : public SAXParser::Handler
         }
         else if (name == "terminal_modification")
         {
-            string terminus, variable;
+            string terminus, variable, proteinTerminus;
             bal::to_lower(getAttribute(attributes, "terminus", terminus));
             bal::to_lower(getAttribute(attributes, "variable", variable));
+            bal::to_lower(getAttribute(attributes, "protein_terminus", proteinTerminus));
             
             SearchModificationPtr searchModification(new SearchModification);
             getAttribute(attributes, "massdiff", searchModification->massDelta);
             searchModification->fixedMod = !(variable == "y" || lexical_cast<bool>(variable));
-
-            if (terminus == "n")
+            searchModification->residues.push_back('.');
+            
+            if (bal::icontains(proteinTerminus, "n"))
+                searchModification->specificityRules.cvid = MS_modification_specificity_protein_N_term;
+            else if (bal::icontains(proteinTerminus, "c"))
+                searchModification->specificityRules.cvid = MS_modification_specificity_protein_C_term;
+            else if (terminus == "n")
                 searchModification->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
             else if (terminus == "c")
                 searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
 
             _sip->modificationParams.push_back(searchModification);
+
+            // in the case of either terminus, duplicate the mod with C terminal specificity
+            if (proteinTerminus == "nc")
+            {
+                searchModification.reset(new SearchModification(*searchModification));
+                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
+                _sip->modificationParams.push_back(searchModification);
+            }
         }
         else if (name == "parameter")
         {

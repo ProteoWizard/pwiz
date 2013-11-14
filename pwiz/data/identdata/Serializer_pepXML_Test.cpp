@@ -139,6 +139,11 @@ void stripUnmappedMetadata(IdentData& mzid)
     // pepXML doesn't have protein assembly
     mzid.analysisCollection.proteinDetection = ProteinDetection();
     mzid.dataCollection.analysisData.proteinDetectionListPtr.reset();
+
+    // pepXML expects the residues to be '.' or an amino acid list
+    BOOST_FOREACH(SearchModificationPtr& sm, mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->modificationParams)
+        if (sm->residues.empty())
+            sm->residues.push_back('.');
 }
 
 void testTranslation(const string& str)

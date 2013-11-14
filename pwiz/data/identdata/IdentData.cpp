@@ -1010,7 +1010,7 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
     if (pe.empty())
         throw runtime_error("[identdata::digestedPeptide] null or empty PeptideEvidence element");
     if (!pe.peptidePtr.get() || pe.peptidePtr->empty())
-        throw runtime_error("[identdata::digestedPeptide] null or empty Peptide reference");
+        throw runtime_error("[identdata::digestedPeptide] null or empty Peptide reference: " + pe.id);
 
     const Peptide& peptide = *pe.peptidePtr;
 
@@ -1026,7 +1026,7 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
     }
 
     if (!hasValidFlankingSymbols(pe))
-        throw runtime_error("[identdata::digestedPeptide] invalid pre/post on PeptideEvidence element");
+        throw runtime_error("[identdata::digestedPeptide] invalid pre/post on PeptideEvidence element: " + pe.id);
 
     string peptideSequenceInContext = peptide.peptideSequence;
     if (pe.pre != '-') peptideSequenceInContext = pe.pre + peptideSequenceInContext;
@@ -1055,7 +1055,7 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
     }
 
     if (!bestResult.get())
-        throw runtime_error("[identdata::digestedPeptide] invalid PeptideEvidence element");
+        throw runtime_error("[identdata::digestedPeptide] invalid PeptideEvidence element: " + pe.id);
     return *bestResult;
 }
 
@@ -1229,7 +1229,11 @@ PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)
     {
         SearchModification& mod = *modPtr;
         vector<char> residues = mod.residues;
-        if (residues.empty()) residues.push_back('x');
+        if (residues.empty() || (residues.size() == 1 && residues[0] == '.'))
+        {
+            residues.clear();
+            residues.push_back('x');
+        }
         
         mod.cvParams.clear();
         BOOST_FOREACH(char residue, residues)

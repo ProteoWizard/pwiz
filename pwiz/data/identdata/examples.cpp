@@ -248,7 +248,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
 
     SearchModificationPtr sm(new SearchModification);
     sm->massDelta = acetylation.monoisotopicMass();
-    sm->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
+    sm->residues.push_back('.');
+    sm->specificityRules.cvid = MS_modification_specificity_protein_N_term;
     sm->set(UNIMOD_Acetyl);
     sip->modificationParams.push_back(sm);
 
