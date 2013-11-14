@@ -291,7 +291,7 @@ PWIZ_API_DECL Site site(char symbol)
     };
 
     if (symbol > 'x' || (symbol != 'x' && symbolMap[(size_t) symbol] == nil))
-        throw invalid_argument("[unimod::site] invalid symbol");
+        throw invalid_argument("[unimod::site] invalid symbol \"" + string(1, symbol) + "\"");
 
     return Site::get_by_value(symbolMap[(size_t) symbol]).get();
 }
@@ -304,7 +304,9 @@ PWIZ_API_DECL Position position(CVID cvid)
         case CVID_Unknown: return Position::Anywhere;
         case MS_modification_specificity_peptide_N_term: return Position::AnyNTerminus;
         case MS_modification_specificity_peptide_C_term: return Position::AnyCTerminus;
-        default: throw invalid_argument("[unimod::position] invalid cvid");
+        case MS_modification_specificity_protein_N_term: return Position::ProteinNTerminus;
+        case MS_modification_specificity_protein_C_term: return Position::ProteinCTerminus;
+        default: throw invalid_argument("[unimod::position] invalid cvid \"" + cvTermInfo(cvid).shortName() + "\"");
     }
 }
 
@@ -382,7 +384,7 @@ PWIZ_API_DECL const Modification& modification(CVID cvid)
     UnimodData::lease unimodData;
     map<CVID, size_t>::const_iterator itr = unimodData->indexByCVID.find(cvid);
     if (itr == unimodData->indexByCVID.end())
-        throw runtime_error("[unimod::modification] invalid cvid \"" + lexical_cast<string>(cvid) + "\"");
+        throw runtime_error("[unimod::modification] invalid cvid \"" + cvTermInfo(cvid).shortName() + "\"");
 
     return unimodData->modifications[itr->second];
 }
