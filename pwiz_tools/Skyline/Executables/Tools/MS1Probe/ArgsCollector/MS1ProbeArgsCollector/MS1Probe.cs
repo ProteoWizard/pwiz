@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace MS1ProbeArgsCollector
 {
 
+// ReSharper disable once InconsistentNaming
     public partial class MS1Probe : Form
 
     {
@@ -39,11 +39,9 @@ namespace MS1ProbeArgsCollector
             RestoreValues();
         }
 
-        private const int ARGUMENT_COUNT = 7;
-
         private void RestoreValues()
         {
-            if (Arguments != null && Arguments.Count() == ARGUMENT_COUNT)
+            if (Arguments != null)
             {
                 tboxNumerator.Text = Arguments[(int) ArgumentIndices.factor1];
                 tboxDenominator.Text = Arguments[(int) ArgumentIndices.factor2];
@@ -66,12 +64,13 @@ namespace MS1ProbeArgsCollector
             {
                 MessageBox.Show(this, "Please enter a name for the reports");
                 return false;
-            } else if (string.IsNullOrWhiteSpace(tboxNumerator.Text))
+            }
+            if (string.IsNullOrWhiteSpace(tboxNumerator.Text))
             {
                 MessageBox.Show(this, "Please enter the distinguishing factor for condition one");
                 return false;
             }
-            else if (string.IsNullOrWhiteSpace(tboxDenominator.Text))
+            if (string.IsNullOrWhiteSpace(tboxDenominator.Text))
             {
                 MessageBox.Show(this, "Please enter the distinguishing factor for condition two");
                 return false;
@@ -92,18 +91,22 @@ namespace MS1ProbeArgsCollector
 
         private enum ArgumentIndices
         {
+// ReSharper disable InconsistentNaming
             conditions,
             factor1,
             factor2,
             ratio_calculations,
             numerator,
             denominator,
-            name
+            name,
+
+            count
+// ReSharper restore InconsistentNaming
         }
 
         private void GenerateArguments()
         {
-            Arguments = new string[ARGUMENT_COUNT];
+            Arguments = new string[(int) ArgumentIndices.count];
 
             Arguments[(int) ArgumentIndices.conditions] = "2";
             Arguments[(int) ArgumentIndices.factor1] = tboxNumerator.Text;
@@ -116,6 +119,7 @@ namespace MS1ProbeArgsCollector
 
     }
 
+// ReSharper disable once InconsistentNaming
     public class MS1ProbeArgsCollector
     {
         public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
