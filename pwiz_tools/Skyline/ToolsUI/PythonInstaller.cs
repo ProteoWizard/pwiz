@@ -543,7 +543,9 @@ namespace pwiz.Skyline.ToolsUI
             RegistryKey pythonKey =
                 (Registry.LocalMachine.OpenSubKey(PYTHON_X64_LOCATION + FormatVersion(version) + INSTALL_DIR))
                 ??
-                (Registry.LocalMachine.OpenSubKey(PYTHON_X86_LOCATION + FormatVersion(version) + INSTALL_DIR));
+                (Registry.LocalMachine.OpenSubKey(PYTHON_X86_LOCATION + FormatVersion(version) + INSTALL_DIR))
+                ??
+                (Registry.CurrentUser.OpenSubKey(PYTHON_X86_LOCATION + FormatVersion(version) + INSTALL_DIR));
 
             return pythonKey;
         }

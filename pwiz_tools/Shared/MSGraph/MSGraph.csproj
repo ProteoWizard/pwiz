@@ -76,7 +76,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MSGraphItem.cs" />
-    <Compile Include="MSGraphControl.cs" />
+    <Compile Include="MSGraphControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="MSGraphControl.Designer.cs">
       <DependentUpon>MSGraphControl.cs</DependentUpon>
     </Compile>
