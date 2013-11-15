@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             base.DrawNodeCustom(g, rightEdge);
 
             // Draw color rectangle for a peptide if multiple peptides are selected.
-            if (Settings.Default.AllowMultiplePeptideSelection &&
+            if (Settings.Default.AllowMultiplePeptideSelection && Document.Settings.HasResults &&
                 (IsInSelection || (Parent != null && ((TreeNodeMS)Parent).IsInSelection)))
             {
                 var color = ChromColor;
