@@ -306,7 +306,7 @@ PWIZ_API_DECL Position position(CVID cvid)
         case MS_modification_specificity_peptide_C_term: return Position::AnyCTerminus;
         case MS_modification_specificity_protein_N_term: return Position::ProteinNTerminus;
         case MS_modification_specificity_protein_C_term: return Position::ProteinCTerminus;
-        default: throw invalid_argument("[unimod::position] invalid cvid \"" + cvTermInfo(cvid).shortName() + "\"");
+        default: throw invalid_argument("[unimod::position] invalid cvid \"" + cvTermInfo(cvid).shortName() + "\" (" + lexical_cast<string>(cvid) + ")");
     }
 }
 

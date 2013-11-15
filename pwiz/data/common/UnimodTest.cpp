@@ -48,14 +48,14 @@ void test()
     unit_assert_operator_equal(Site::Tyrosine, site('Y'));
     unit_assert_operator_equal((Site::Asparagine | Site::AsparticAcid), site('B'));
     unit_assert_operator_equal((Site::Glutamine | Site::GlutamicAcid), site('Z'));
-    unit_assert_throws_what(site('1'), invalid_argument, "[unimod::site] invalid symbol");
-    unit_assert_throws_what(site('z'), invalid_argument, "[unimod::site] invalid symbol");
+    unit_assert_throws_what(site('1'), invalid_argument, "[unimod::site] invalid symbol \"1\"");
+    unit_assert_throws_what(site('z'), invalid_argument, "[unimod::site] invalid symbol \"z\"");
 
 
     unit_assert_operator_equal(Position::Anywhere, position());
     unit_assert_operator_equal(Position::AnyNTerminus, position(MS_modification_specificity_peptide_N_term));
     unit_assert_operator_equal(Position::AnyCTerminus, position(MS_modification_specificity_peptide_C_term));
-    unit_assert_throws_what(position(MS_ion_trap), invalid_argument, "[unimod::position] invalid cvid");
+    unit_assert_throws_what(position(MS_matrix_assisted_laser_desorption_ionization), invalid_argument, "[unimod::position] invalid cvid \"MALDI\" (1000075)");
 
 
     if (os_) *os_ << "Unimod entries: " << modifications().size() << endl;

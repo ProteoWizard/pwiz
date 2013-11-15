@@ -74,9 +74,11 @@ inline std::string unit_assert_numeric_equal_message(const char* filename, int l
 inline std::string unit_assert_exception_message(const char* filename, int line, const char* expression, const std::string& exception)
 {
     std::ostringstream oss;
-    oss << "[" << filename << ":" << line << "] Assertion failed to throw \"" << exception << "\": " << expression;
+    oss << "[" << filename << ":" << line << "] Assertion \"" << expression << "\" failed to throw " << exception;
     return oss.str();
 }
+
+inline std::string quote_string(const string& str) {return "\"" + str + "\"";}
 
 
 #define unit_assert(x) \
@@ -113,10 +115,10 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
             if (e.what() == std::string(whatStr)) \
                 threw = true; \
             else \
-                throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+(whatStr)+"\nBut a different exception was thrown: ")+(e.what())); \
+                throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+quote_string(whatStr)+"\nBut a different exception was thrown: ")+quote_string(e.what())); \
         } \
         if (!threw) \
-            throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+(whatStr))); \
+            throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+quote_string(whatStr))); \
     }
 
 
