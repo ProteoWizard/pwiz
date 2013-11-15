@@ -99,14 +99,14 @@ void test()
     unit_assert_operator_equal(Site::Tyrosine, unimod::site('Y'));
     unit_assert_operator_equal((Site::Asparagine | Site::AsparticAcid), unimod::site('B'));
     unit_assert_operator_equal((Site::Glutamine | Site::GlutamicAcid), unimod::site('Z'));
-    unit_assert_throws_what(unimod::site('1'), ArgumentException, "[unimod::site] invalid symbol");
-    unit_assert_throws_what(unimod::site('z'), ArgumentException, "[unimod::site] invalid symbol");
+    unit_assert_throws_what(unimod::site('1'), ArgumentException, "[unimod::site] invalid symbol \"1\"");
+    unit_assert_throws_what(unimod::site('z'), ArgumentException, "[unimod::site] invalid symbol \"z\"");
 
 
     //unit_assert_operator_equal(Position::Anywhere, unimod::position());
     unit_assert_operator_equal(Position::AnyNTerminus, unimod::position(CVID::MS_modification_specificity_peptide_N_term));
     unit_assert_operator_equal(Position::AnyCTerminus, unimod::position(CVID::MS_modification_specificity_peptide_C_term));
-    unit_assert_throws_what(unimod::position(CVID::MS_ion_trap), ArgumentException, "[unimod::position] invalid cvid");
+    unit_assert_throws_what(unimod::position(CVID::MS_ion_trap), ArgumentException, "[unimod::position] invalid cvid \"IT\"");
 
 
     //if (os_) *os_ << "Unimod entries: " << modifications()->Count << endl;
