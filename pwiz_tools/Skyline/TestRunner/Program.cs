@@ -32,7 +32,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using log4net;
 using pwiz.Common.SystemUtil;
 using pwiz.Crawdad;
-using pwiz.SkylineTestUtil;
+//WARNING: Including TestUtil in this project causes a strange build problem, where the first
+//         build from Visual Studio after a full bjam build removes all of the Skyline project
+//         root files from the Skyline bin directory, leaving it un-runnable until a full
+//         rebuild is performed.  Do not commit a reference to TestUtil to this project without
+//         testing this case and getting someone else to validate that you have fixed this
+//         problem.
+//using pwiz.SkylineTestUtil;
 
 namespace TestRunner
 {
@@ -167,7 +173,7 @@ namespace TestRunner
                     Console.WriteLine("\nRunning each test once to warm up memory...\n");
                     RunTests(testList, unfilteredTestList, commandLineArgs, log, 1, 1);
                     Console.WriteLine("\nTaking memory snapshot...\n");
-                    MemoryProfiler.Snapshot();
+//                    MemoryProfiler.Snapshot();
                     if (passes == 0)
                         passes = 1;
                 }
@@ -184,7 +190,7 @@ namespace TestRunner
                 if (profiling)
                 {
                     Console.WriteLine("\nTaking second memory snapshot...\n");
-                    MemoryProfiler.Snapshot();
+//                    MemoryProfiler.Snapshot();
                 }
             }
             catch (Exception e)
