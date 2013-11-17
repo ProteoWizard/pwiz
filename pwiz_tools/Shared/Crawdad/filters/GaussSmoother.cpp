@@ -84,7 +84,7 @@ void GaussSmoother::trim_weights_by_frac_max(float frac ) {
             break;
         }
     }
-    for ( size_t i = weights.size() - 1; i>= first_keep ; i-- ) {
+    for ( size_t i = weights.size() - 1; i>= (size_t) first_keep ; i-- ) {
         if ( fabs(weights[i]) >= thresh ) {
             last_keep = (int)i;
             break;

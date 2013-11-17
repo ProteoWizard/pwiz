@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>5103</ApplicationRevision>
-    <ApplicationVersion>2.1.1.5103</ApplicationVersion>
+    <ApplicationRevision>5165</ApplicationRevision>
+    <ApplicationVersion>2.1.1.5165</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1245,22 +1245,6 @@
     <EmbeddedResource Include="ToolsUI\ToolUpdatesDlg.resx">
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <None Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\Interop.EDAL.SxS.manifest">
-      <Link>Interop.EDAL.SxS.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\Interop.HSREADWRITELib.SxS.manifest">
-      <Link>Interop.HSREADWRITELib.SxS.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\Interop.EDAL.SxS.manifest">
-      <Link>Interop.EDAL.SxS.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\Interop.HSREADWRITELib.SxS.manifest">
-      <Link>Interop.HSREADWRITELib.SxS.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
@@ -1938,19 +1922,11 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.MHDAC">
-      <Link>EULA.MHDAC</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\EULA.MSFileReader">
-      <Link>EULA.MSFileReader</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\Shared\BiblioSpec\binaries\unimod_2.xsd">
       <Link>unimod_2.xsd</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Resources\add-pro32.bmp" />
+    <EmbeddedResource Include="Resources\add-pro32.bmp" />
     <None Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

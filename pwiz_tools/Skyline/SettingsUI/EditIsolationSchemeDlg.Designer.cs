@@ -354,11 +354,6 @@
         private System.Windows.Forms.Button btnGraph;
         private System.Windows.Forms.Button btnCalculate;
         private System.Windows.Forms.BindingSource editIsolationWindowBindingSource;
-        private System.Windows.Forms.DataGridViewTextBoxColumn startDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn endDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn targetDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn startMarginDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn endMarginDataGridViewTextBoxColumn;
         private System.Windows.Forms.ComboBox comboDeconv;
         private System.Windows.Forms.Label labelDeconvolution;
         private System.Windows.Forms.Label labelDeconvPre;
