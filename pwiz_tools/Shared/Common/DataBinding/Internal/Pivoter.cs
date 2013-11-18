@@ -201,7 +201,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public IEnumerable<RowItem> ExpandAndPivot(TickCounter tickCounter, IEnumerable<RowItem> rowItems)
         {
-            var expandedNodes = rowItems.SelectMany(rowItem => Expand(rowItem)).ToArray();
+            var expandedNodes = rowItems.SelectMany(Expand).ToArray();
             return Pivot(tickCounter, expandedNodes);
         }
         private PivotKey GetPivotKey(RowItem rowItem)

@@ -121,7 +121,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
         class SortRow : IComparable<SortRow>
         {
-            private object[] _keys;
+            private readonly object[] _keys;
             public SortRow(CancellationToken cancellationToken, QueryParameters queryParameters, RowItem rowItem, int rowIndex)
             {
                 CancellationToken = cancellationToken;
@@ -134,6 +134,7 @@ namespace pwiz.Common.DataBinding.Internal
                     _keys[i] = Sorts[i].PropertyDescriptor.GetValue(RowItem);
                 }
             }
+// ReSharper disable MemberCanBePrivate.Local
             public CancellationToken CancellationToken { get; private set; }
             public QueryParameters QueryParameters { get; private set; }
             public RowItem RowItem { get; private set; }
@@ -142,6 +143,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 get { return QueryParameters.SortDescriptions; }
             }
+// ReSharper restore MemberCanBePrivate.Local
             public int CompareTo(SortRow other)
             {
                 CancellationToken.ThrowIfCancellationRequested();

@@ -273,12 +273,7 @@ namespace pwiz.SkylineTestFunctional
             // Now rescore the remaining replicate.
             docRemoved = SkylineWindow.Document;
             var manageResultsDlg3 = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-            RunDlg<RescoreResultsDlg>(manageResultsDlg3.Rescore, dlg =>
-            {
-                dlg.Rescore(false);
-                // TODO: This is regularly failing on Don's machine:
-                //Assert.IsFalse(SkylineWindow.Document.Settings.IsLoaded);
-            });
+            RunDlg<RescoreResultsDlg>(manageResultsDlg3.Rescore, dlg => dlg.Rescore(false));
             WaitForDocumentLoaded();
             var docRescore = SkylineWindow.Document;
             // Roundtrip to get rid of different revision indexes

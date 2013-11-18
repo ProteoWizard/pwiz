@@ -2154,7 +2154,7 @@ namespace pwiz.Skyline
         /// <summary>
         /// Modifies a document in response to a user's mouse dragging on a GraphChromatogram.
         /// </summary>
-        private static SrmDocument ChangePeakBounds(SrmDocument document, ChangedPeakBoundsEventArgs[] changes)
+        private static SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
         {
             var changedGroupIds = new HashSet<IdentityPath>();
             var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();

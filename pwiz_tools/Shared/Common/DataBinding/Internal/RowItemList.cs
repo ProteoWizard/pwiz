@@ -230,6 +230,7 @@ namespace pwiz.Common.DataBinding.Internal
                 return Equals(obj as PropertyChangeKey);
             }
 
+// ReSharper disable once MemberCanBePrivate.Local
             public bool Equals(PropertyChangeKey that)
             {
                 if (null == that)

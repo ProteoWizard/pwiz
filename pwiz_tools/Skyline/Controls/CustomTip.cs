@@ -1099,6 +1099,7 @@ namespace pwiz.Skyline.Controls
 
 		#region #  Events  #
 
+// ReSharper disable EventNeverSubscribedTo.Global
 		public event PaintEventHandler Paint;
 		public event EventHandler SizeChanged;
 		public event EventHandler LocationChanged;
@@ -1109,6 +1110,7 @@ namespace pwiz.Skyline.Controls
 		public event MouseEventHandler MouseMove;
 		public event EventHandler MouseEnter;
 		public event EventHandler MouseLeave;
+// ReSharper restore EventNeverSubscribedTo.Global
 
 		#endregion
 
@@ -1156,6 +1158,7 @@ namespace pwiz.Skyline.Controls
     // ReSharper disable InconsistentNaming
     internal struct PAINTSTRUCT
 	{
+// ReSharper disable UnusedField.Compiler
 		public IntPtr hdc;
 		public int fErase;
 		public Rectangle rcPaint;
@@ -1169,7 +1172,8 @@ namespace pwiz.Skyline.Controls
 		public int Reserved6;
 		public int Reserved7;
 		public int Reserved8;
-	}
+// ReSharper restore UnusedField.Compiler
+    }
 	[StructLayout(LayoutKind.Sequential)]
 	internal struct POINT
 	{
@@ -1187,10 +1191,12 @@ namespace pwiz.Skyline.Controls
 	[StructLayout(LayoutKind.Sequential)]
 	internal struct RECT
 	{
+// ReSharper disable FieldCanBeMadeReadOnly.Global
 		public int left;
 		public int top;
 		public int right;
 		public int bottom;
+// ReSharper restore FieldCanBeMadeReadOnly.Global
 
         public RECT(int left, int top, int right, int bottom)
         {
@@ -1239,11 +1245,13 @@ namespace pwiz.Skyline.Controls
     //[CLSCompliant(false)]
 	internal struct TRACKMOUSEEVENTS
 	{
+// ReSharper disable FieldCanBeMadeReadOnly.Global
 		public uint cbSize;
 		public uint dwFlags;
 		public IntPtr hWnd;
 		public uint dwHoverTime;
-	}
+// ReSharper restore FieldCanBeMadeReadOnly.Global
+    }
 	[StructLayout(LayoutKind.Sequential, Pack=1)]
 	internal struct BLENDFUNCTION
 	{
@@ -1256,10 +1264,13 @@ namespace pwiz.Skyline.Controls
     //[CLSCompliant(false)]
     public struct LOGBRUSH
     {
+// ReSharper disable FieldCanBeMadeReadOnly.Global
         public uint lbStyle;
         public uint lbColor;
         public uint lbHatch;
+// ReSharper restore FieldCanBeMadeReadOnly.Global
     }
+// ReSharper disable once ClassNeverInstantiated.Global
     internal class AnimateWindow
 	{
 		private AnimateWindow() 
@@ -1305,16 +1316,13 @@ namespace pwiz.Skyline.Controls
 		WM_LBUTTONUP = 0x0202,
 		WM_MOUSELEAVE = 0x02A3
     }
-	internal class User32
+	internal static class User32
 	{
         public static IntPtr FALSE = new IntPtr(0);
         public static IntPtr TRUE = new IntPtr(1);
 
         // Methods
-		private User32()
-		{
-		}
-        // Not L10N
+	    // Not L10N
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
 		internal static extern bool AnimateWindow(IntPtr hWnd, uint dwTime, uint dwFlags);
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
@@ -1417,13 +1425,10 @@ namespace pwiz.Skyline.Controls
         DCX_CLIPSIBLINGS = 0x0010,
         DCX_INTERSECTRGN = 0x0080
     }
-	internal class Gdi32
+	internal static class Gdi32
 	{
 		// Methods
-		private Gdi32()
-		{
-		}
-        // Not L10N
+	    // Not L10N
 		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
 		internal static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int flags);
 		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]

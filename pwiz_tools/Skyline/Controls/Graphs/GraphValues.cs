@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return dict;
             }
 
-            private IDictionary<ChromFileInfoId, Tuple<ChromatogramSet, ChromFileInfo>> _chromSetInfos;
+            private readonly IDictionary<ChromFileInfoId, Tuple<ChromatogramSet, ChromFileInfo>> _chromSetInfos;
             private AlignToFileOp(ChromatogramSet chromatogramSet, ChromFileInfo chromFileInfo, 
                 FileRetentionTimeAlignments fileRetentionTimeAlignments, IDictionary<ChromFileInfoId, Tuple<ChromatogramSet, ChromFileInfo>> chromSetInfos)
             {

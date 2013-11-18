@@ -262,7 +262,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCopyLink.Location" type="System.Drawing.Point, System.Drawing">
-    <value>152, 79</value>
+    <value>152, 80</value>
   </data>
   <data name="btnCopyLink.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -271,7 +271,7 @@
     <value>2</value>
   </data>
   <data name="btnCopyLink.Text" xml:space="preserve">
-    <value>Copy link</value>
+    <value>Copy Link</value>
   </data>
   <data name="&gt;&gt;btnCopyLink.Name" xml:space="preserve">
     <value>btnCopyLink</value>
@@ -310,6 +310,6 @@
     <value>AlertLinkDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

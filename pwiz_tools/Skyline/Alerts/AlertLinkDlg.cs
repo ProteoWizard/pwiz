@@ -25,11 +25,11 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class AlertLinkDlg : FormEx
     {
-        public static DialogResult Show(IWin32Window parent, string message, string linkMessage, string linkUrl, bool liveLink = true)
+        public static void Show(IWin32Window parent, string message, string linkMessage, string linkUrl, bool liveLink = true)
         {
             using (var dlg = new AlertLinkDlg(message, linkMessage, linkUrl, liveLink))
             {
-                return dlg.ShowDialog(parent);
+                dlg.ShowDialog(parent);
             }
         }
 

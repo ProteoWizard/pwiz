@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model
             _chromatogramSets = _measuredResults.Chromatograms;
 	    }
 
-        public static readonly char MAIN_SEPARATOR = TextUtil.SEPARATOR_TSV;
+        public const char MAIN_SEPARATOR = TextUtil.SEPARATOR_TSV;
 
         private readonly SrmSettings _settings;
         private readonly MeasuredResults _measuredResults;

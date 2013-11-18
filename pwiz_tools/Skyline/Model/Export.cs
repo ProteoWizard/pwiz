@@ -866,7 +866,7 @@ namespace pwiz.Skyline.Model
 
         private int OptimizeStepIndex { get; set; }
 
-        private Dictionary<string, int> _groupNamesToCharge = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> _groupNamesToCharge = new Dictionary<string, int>();
 
         protected override string InstrumentType
         {

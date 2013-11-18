@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             get
             {
+// ReSharper disable once ConvertIfStatementToNullCoalescingExpression
                 if (_reportCache == null)
                     _reportCache = new ToolReportCache();
                 return _reportCache;

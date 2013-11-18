@@ -135,7 +135,7 @@ namespace pwiz.Common.DataBinding.Internal
 
     internal class QueryParameters
     {
-        public static QueryParameters Empty = new QueryParameters();
+        public static readonly QueryParameters Empty = new QueryParameters();
         private QueryParameters()
         {
             ViewInfo = null;
