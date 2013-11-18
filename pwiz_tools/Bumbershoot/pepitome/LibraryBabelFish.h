@@ -38,13 +38,13 @@ struct LibraryBabelFish
     sqlite::database    libraryIndex;
     bool                error;
 
-    LibraryBabelFish(const string& name);
+    LibraryBabelFish(const std::string& name);
     ~LibraryBabelFish();
 
     void initializeDatabase();
-	static std::string mergeDatabaseWithContam(std::string database, std::string contam);
-	static std::string mergeLibraryWithContam(std::string library, std::string contam);
-	static void refreshLibrary(string library, proteinStore database, bool hcdMode, bool iTraqMode, string decoy);
+	static std::string mergeDatabaseWithContam(const std::string& database, const std::string& contam);
+	static std::string mergeLibraryWithContam(const std::string& library, const std::string& contam);
+	static void refreshLibrary(const std::string& library, proteinStore database, bool hcdMode, bool iTraqMode, const std::string& decoy = "rev_");
     void indexLibrary();
     void appendContaminants();
 };

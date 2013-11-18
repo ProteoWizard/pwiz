@@ -379,7 +379,7 @@ namespace freicore
 			}
         }
 
-		std::string LibraryBabelFish::mergeDatabaseWithContam(std::string database, std::string contam)
+		std::string LibraryBabelFish::mergeDatabaseWithContam(const std::string& database, const std::string& contam)
 		{
 			cout << "Appending contaminants to database..." << endl;
 
@@ -390,7 +390,7 @@ namespace freicore
 					return database;
 				else
 				{
-					ifstream testStream(contam);
+                    ifstream testStream(contam.c_str());
 					if (testStream)
 					{
 						testStream.close();
@@ -422,7 +422,7 @@ namespace freicore
 			return data_out_full_path.string();
 		}
 
-		std::string LibraryBabelFish::mergeLibraryWithContam(std::string library, std::string contam)
+		std::string LibraryBabelFish::mergeLibraryWithContam(const std::string& library, const std::string& contam)
 		{
 			cout << "Appending contaminants to spectral library..." << endl;
 			bool appendContams = true;
@@ -434,7 +434,7 @@ namespace freicore
 					appendContams = false;
 				else
 				{
-					ifstream testStream(contam);
+                    ifstream testStream(contam.c_str());
 					if (testStream)
 					{
 						testStream.close();
@@ -489,7 +489,7 @@ namespace freicore
 			return newLibraryPath.string();
 		}
 
-		void LibraryBabelFish::refreshLibrary(string libraryPath, proteinStore proteins, bool hcdMode, bool iTraqMode, string decoy = "rev_")
+		void LibraryBabelFish::refreshLibrary(const std::string& libraryPath, proteinStore proteins, bool hcdMode, bool iTraqMode, const std::string& decoy)
 		{
 			cout << "Synchronizing spectral library with database..." << endl;
 			_hcdMode = hcdMode;
@@ -597,7 +597,7 @@ namespace freicore
 						for( ; aminoAcidLetter != end; ++aminoAcidLetter )
 							fullAminoAcidList.push_back(*aminoAcidLetter);						
 						
-						for (int x=0; x < originalAminoAcidList.size(); x++)
+						for (size_t x=0; x < originalAminoAcidList.size(); x++)
 						{
 							ionDescriptions.push_back("b"+lexical_cast<string>(x+1));
 							ionDescriptions.push_back("a"+lexical_cast<string>(x+1));
