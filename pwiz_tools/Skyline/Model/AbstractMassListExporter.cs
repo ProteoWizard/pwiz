@@ -506,20 +506,24 @@ namespace pwiz.Skyline.Model
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
             var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
-            foreach (DocNode transition in reorderedTransitions)
+            foreach (TransitionDocNode nodeTran in reorderedTransitions)
             {
                 if (OptimizeType == null)
-                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, (TransitionDocNode)transition, 0);
+                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, 0);
                 else
                 {
                     // -step through step
                     for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
                     {
                         // But avoid writing zero or negative CE values, which will just mess up actuisition
-                        if (GetCollisionEnergy(nodePep, nodeGroup, (TransitionDocNode)transition, i) > 0)
+                        // Always write the highest CE, even if it is negative, since not doing so makes it
+                        // a lot harder to understand why a particular transition did not get written at all.
+                        if (Equals(OptimizeType, ExportOptimize.CE) && GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i) <= 0)
                         {
-                            fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, (TransitionDocNode)transition, i);
+                            if (i < OptimizeStepCount)
+                                continue;
                         }
+                        fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, i);
                     }
                 }
             }

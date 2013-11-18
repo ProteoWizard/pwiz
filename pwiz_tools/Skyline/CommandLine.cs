@@ -225,7 +225,7 @@ namespace pwiz.Skyline
             switch (value.ToUpper())
             {
                 case OPT_NONE:
-                    return ExportOptimize.NONE;
+                    return null;
                 case OPT_CE:
                     return ExportOptimize.CE;
                 case OPT_DP:
