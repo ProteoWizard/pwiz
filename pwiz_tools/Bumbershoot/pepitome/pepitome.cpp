@@ -174,7 +174,7 @@ namespace freicore
 					preplib = true;
 					hcdMode = true;
 				}
-				else if( args[i] == "-prepitraq")
+				else if( args[i] == "-itraq4plex")
 				{
 					preplib = true;
 					hcdMode = true;
@@ -210,8 +210,11 @@ namespace freicore
 			{
 				string temp = g_rtConfig->ContamDatabase;
 				//if (std::string::npos != temp.find("default"))
+				boost::filesystem::path p(args[0]);
+				boost::filesystem::path dir = p.parent_path();
+				dir /= "contams.fasta";
 				if (boost::iequals(temp, "default"))
-					g_rtConfig->ContamDatabase = "default";
+					g_rtConfig->ContamDatabase = dir.string();
 				else
 				{
 					cerr << "Specified contaminant FASTA protein database not found or cannot be read." << endl << g_rtConfig->ContamDatabase << endl << endl;
@@ -222,15 +225,17 @@ namespace freicore
 			{
 				string temp = g_rtConfig->ContamLibrary;
 				//if (std::string::npos != temp.find("default"))
+				boost::filesystem::path p(args[0]);
+				boost::filesystem::path dir = p.parent_path();
+				dir /= "contams.sptxt";
 				if (boost::iequals(temp, "default"))
-					g_rtConfig->ContamLibrary = "default";
+					g_rtConfig->ContamLibrary = dir.string();
 				else
 				{
 					cerr << "Specified contaminant spectral library not found or cannot be read.\n\n" << endl;
 					return 1;			
 				}
 			}
-
 
 			//Create merged database and library
 			string newDatabase = LibraryBabelFish::mergeDatabaseWithContam(g_rtConfig->ProteinDatabase, g_rtConfig->ContamDatabase);
@@ -1177,7 +1182,7 @@ namespace freicore
 
 int main( int argc, char* argv[] )
 {
-    char buf[256];
+	char buf[256];
     GetHostname( buf, sizeof(buf) );
 
     g_numProcesses = 1;

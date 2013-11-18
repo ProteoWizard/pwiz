@@ -386,18 +386,7 @@ namespace freicore
 			//Get local contam database
 			string contamPath;
 			{
-				if (contam == "default")
-				{
-					char buffer[MAX_PATH];
-					GetModuleFileName(NULL,buffer,sizeof(buffer));
-					string exeDir(buffer);
-					exeDir = exeDir.substr(0, exeDir.find_last_of("/\\"));
-					path dataDir (exeDir);
-					path dataFile ("contams.fasta");
-					path data_full_path = dataDir / dataFile;
-					contamPath = data_full_path.string();
-				}
-				else if (contam == "")
+				if (contam == "")
 					return database;
 				else
 				{
@@ -441,18 +430,7 @@ namespace freicore
 			//get location of contam library
 			string contamPath;
 			{
-				if (contam == "default")
-				{
-					char buffer[MAX_PATH];
-					GetModuleFileName(NULL,buffer,sizeof(buffer));
-					string exeDir(buffer);
-					exeDir = exeDir.substr(0, exeDir.find_last_of("/\\"));			
-					path contamDirectory (exeDir);
-					path contamFile ("contams.sptxt");
-					path contamFullPath = contamDirectory / contamFile;
-					contamPath = contamFullPath.string();
-				}
-				else if (contam == "")
+				if (contam == "")
 					appendContams = false;
 				else
 				{
