@@ -127,10 +127,9 @@ namespace pwiz.SkylineTestFunctional
                 gridGen.AddRow(true, 0.4886, 0.1710);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(true, 2.6711, 0.0408);
-                gridGen.AddRow(true, 0.4533, 0.0791);
                 gridGen.AddRow(true, 1.5071, 0.0795);
                 gridGen.AddRow(true, -0.2925, 0.1850);
-                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(true, 0.4533, 0.0791);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(true, 4.2907, 0.1145);
@@ -140,10 +139,10 @@ namespace pwiz.SkylineTestFunctional
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(false, double.NaN, double.NaN);
                 _cellValuesOriginal = gridGen.Rows;
                 var gridGenNew = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
                 gridGenNew.AddRow(true, 0.5569, 0.2111);
-                gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(true, 2.7995, 0.1416);
@@ -158,6 +157,7 @@ namespace pwiz.SkylineTestFunctional
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
                 var cellValuesNew = gridGenNew.Rows;
                 // Verify weights, change name.
                 RunUI(() =>
@@ -167,13 +167,13 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
                         // Manually uncheck two of the scores
                         editDlg.SetChecked(2, false);
-                        editDlg.SetChecked(3, false);
+                        editDlg.SetChecked(5, false);
                         editDlg.TrainModelClick();
                         VerifyCellValues(editDlg, cellValuesNew);
                         Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -13.727219, 1e-5);
                         // Re-check the scores, show that model goes back to normal
                         editDlg.SetChecked(2, true);
-                        editDlg.SetChecked(3, true);
+                        editDlg.SetChecked(5, true);
                         editDlg.TrainModelClick();
                         VerifyCellValues(editDlg, _cellValuesOriginal);
                         Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
@@ -355,16 +355,16 @@ namespace pwiz.SkylineTestFunctional
             gridGenNew.AddRow(true, 0.4690, 0.1680);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(true, 3.1637, 0.0500);
-            gridGenNew.AddRow(true, 0.3440, 0.0730);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(true, -0.3664, 0.2210);
-            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(true, 0.3440, 0.0730);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(true, 4.8301, 0.1240);
             gridGenNew.AddRow(true, 10.2590, 0.5080);
             gridGenNew.AddRow(true, 0.2756, -0.2200);
             gridGenNew.AddRow(true, 0.3640, 0.0760);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
@@ -389,8 +389,8 @@ namespace pwiz.SkylineTestFunctional
         protected void TestIncompatibleDataSet()
         {
             // Define an incompatible model
-            var weights = new[] {0.5322, -1.0352, double.NaN, 0.0477, 1.4744, 0.0430, -0.2740, double.NaN, 
-                                 double.NaN, 2.0096, 7.7726, -0.0566, 0.4751, double.NaN, double.NaN, double.NaN};
+            var weights = new[] {0.5322, -1.0352, double.NaN, 1.4744, 0.0430, 0.0477, -0.2740, double.NaN, 
+                                 2.0096, 7.7726, -0.0566, 0.4751, double.NaN, double.NaN, double.NaN, double.NaN};
             var parameters = new LinearModelParams(weights, -2.5);
             var incompatibleModel = new MProphetPeakScoringModel("incompatible", parameters, null, true);
             Settings.Default.PeakScoringModelList.Add(incompatibleModel);
@@ -400,22 +400,23 @@ namespace pwiz.SkylineTestFunctional
                     peptideSettingsDlg.OkDialog();
                 });
             var gridGen = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
-            gridGen.AddRow(true, weights[0], double.NaN);
-            gridGen.AddRow(false, weights[1], double.NaN);
-            gridGen.AddRow(false, weights[2], double.NaN);
-            gridGen.AddRow(true, weights[3], double.NaN);
-            gridGen.AddRow(true, weights[4], double.NaN);
-            gridGen.AddRow(true, weights[5], double.NaN);
-            gridGen.AddRow(false, weights[6], double.NaN);
-            gridGen.AddRow(false, weights[7], double.NaN);
-            gridGen.AddRow(false, weights[8], double.NaN);
-            gridGen.AddRow(true, weights[9], double.NaN);
-            gridGen.AddRow(true, weights[10], double.NaN);
-            gridGen.AddRow(true, weights[11], double.NaN);
-            gridGen.AddRow(true, weights[12], double.NaN);
-            gridGen.AddRow(false, weights[13], double.NaN);
-            gridGen.AddRow(false, weights[14], double.NaN);
-            gridGen.AddRow(false, weights[15], double.NaN);
+            int i = 0;
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(true, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i], double.NaN);
             var cellValuesIncompatible = gridGen.Rows; 
 
             RunEditPeakScoringDlg("incompatible", editDlgTemp =>
@@ -479,15 +480,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 // No missing values for these scores any more
                 Assert.IsTrue(editDlgTemp.IsActiveCell(2, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(8, 0));
                 Assert.IsTrue(editDlgTemp.IsActiveCell(9, 0));
                 Assert.IsTrue(editDlgTemp.IsActiveCell(10, 0));
-                Assert.IsTrue(editDlgTemp.IsActiveCell(11, 0));
                
                 // But they aren't automatically enabled
                 Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[2].IsEnabled);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[8].IsEnabled);
                 Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[9].IsEnabled);
                 Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[10].IsEnabled);
-                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[11].IsEnabled);
                 editDlgTemp.SetChecked(9, true);
                 editDlgTemp.TrainModelClick();
                 editDlgTemp.OkDialog();

@@ -93,12 +93,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestIntensityCorrelationCalc(), 
 
             // Shape-based and related calculators
-            new LegacyUnforcedCountScoreCalc(),
             new MQuestWeightedShapeCalc(), 
             new MQuestWeightedCoElutionCalc(), 
+            new LegacyUnforcedCountScoreCalc(),
             new NextGenSignalNoiseCalc(),
             new NextGenProductMassErrorCalc(),
-            new LegacyIdentifiedCountCalc(),
 
             // Reference standard calculators
             new MQuestReferenceCorrelationCalc(),
@@ -109,7 +108,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // Precursor calculators
             new NextGenCrossWeightedShapeCalc(),
             new NextGenPrecursorMassErrorCalc(),
-            new NextGenIsotopeDotProductCalc() 
+            new NextGenIsotopeDotProductCalc(),
+            new LegacyIdentifiedCountCalc(),
         };
 
         protected MProphetPeakScoringModel()
