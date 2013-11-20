@@ -935,16 +935,14 @@ namespace IDPicker.Forms
         };
 
         private string _exportLocation;
-        private Form _owner;
+        private IDPickerForm _owner;
         private ISession _session;
-        private bool _ptmMode;
         private LibraryExportOptions _libraryExportSettings;
 
-        public void toLibrary(Form ownerInput, ISession sessionInput, bool ptmMode = false)
+        public void toLibrary(IDPickerForm ownerInput, ISession sessionInput)
         {
             _owner = ownerInput;
             _session = sessionInput;
-            _ptmMode = ptmMode;
 
             var tableExists = _session.CreateSQLQuery(
                 @"SELECT name FROM sqlite_master WHERE type='table' AND name='SpectralPeaks'")
@@ -1001,7 +999,7 @@ namespace IDPicker.Forms
                 timer.Start();
 
                 var bg = new BackgroundWorker {WorkerReportsProgress = true};
-                bg.DoWork += (x, y) => StoreSpectraInfo((BackgroundWorker) x);
+                bg.DoWork += (x, y) => CreateNewLibrary((BackgroundWorker) x);
                 bg.ProgressChanged += (x, y) =>
                                           {
                                               if (y.ProgressPercentage < 0)
@@ -1053,7 +1051,7 @@ namespace IDPicker.Forms
         int _minSpectraFails;
         int _overlapFails;
         int _decoyFails;
-        private void StoreSpectraInfo(BackgroundWorker bg)
+        private void CreateNewLibrary(BackgroundWorker bg)
         {
             bg.ReportProgress(-1, "Querying spectra...");
             IList<object[]> queryRows;
