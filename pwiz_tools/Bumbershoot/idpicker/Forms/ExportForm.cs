@@ -935,14 +935,16 @@ namespace IDPicker.Forms
         };
 
         private string _exportLocation;
-        private IDPickerForm _owner;
+        private Form _owner;
         private ISession _session;
+        private bool _ptmMode;
         private LibraryExportOptions _libraryExportSettings;
 
-        public void toLibrary(IDPickerForm ownerInput, ISession sessionInput)
+        public void toLibrary(Form ownerInput, ISession sessionInput, bool ptmMode = false)
         {
             _owner = ownerInput;
             _session = sessionInput;
+            _ptmMode = ptmMode;
 
             var tableExists = _session.CreateSQLQuery(
                 @"SELECT name FROM sqlite_master WHERE type='table' AND name='SpectralPeaks'")
@@ -999,7 +1001,7 @@ namespace IDPicker.Forms
                 timer.Start();
 
                 var bg = new BackgroundWorker {WorkerReportsProgress = true};
-                bg.DoWork += (x, y) => CreateNewLibrary((BackgroundWorker) x);
+                bg.DoWork += (x, y) => StoreSpectraInfo((BackgroundWorker) x);
                 bg.ProgressChanged += (x, y) =>
                                           {
                                               if (y.ProgressPercentage < 0)
@@ -1051,7 +1053,7 @@ namespace IDPicker.Forms
         int _minSpectraFails;
         int _overlapFails;
         int _decoyFails;
-        private void CreateNewLibrary(BackgroundWorker bg)
+        private void StoreSpectraInfo(BackgroundWorker bg)
         {
             bg.ReportProgress(-1, "Querying spectra...");
             IList<object[]> queryRows;
@@ -1410,21 +1412,29 @@ namespace IDPicker.Forms
                             var postAA = "X";
                             foreach (var instance in peptide.Instances)
                             {
-                                proteinNames.Add(instance.Protein.Accession);
-                                if (instance.Protein.Sequence == null)
+                                try
+                                {
+                                    proteinNames.Add(instance.Protein.Accession);
+                                    if (instance.Protein.Sequence == null)
+                                    {
+                                        preAA = "X";
+                                        postAA = "X";
+                                    }
+                                    else
+                                    {
+                                        preAA = instance.Offset > 0
+                                                    ? instance.Protein.Sequence[instance.Offset - 1].ToString()
+                                                    : "X";
+                                        postAA = instance.Offset + instance.Length < instance.Protein.Sequence.Length
+                                                     ? instance.Protein.Sequence[instance.Offset + instance.Length]
+                                                           .ToString()
+                                                     : "X";
+                                    }
+                                }
+                                catch (Exception)
                                 {
                                     preAA = "X";
                                     postAA = "X";
-                                }
-                                else
-                                {
-                                    preAA = instance.Offset > 0
-                                                ? instance.Protein.Sequence[instance.Offset - 1].ToString()
-                                                : "X";
-                                    postAA = instance.Offset + instance.Length < instance.Protein.Sequence.Length
-                                                 ? instance.Protein.Sequence[instance.Offset + instance.Length]
-                                                       .ToString()
-                                                 : "X";
                                 }
                             }
 
