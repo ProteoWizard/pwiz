@@ -1789,7 +1789,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MAX_ISOTOPE_PERCENT = 100;
         public const double DEFAULT_ISOTOPE_PERCENT = 20;
         public const int MIN_ISOTOPE_COUNT = 1;
-        public const int MAX_ISOTOPE_COUNT = 5;
+        public const int MAX_ISOTOPE_COUNT = 10;
         public const int DEFAULT_ISOTOPE_COUNT = 3;
         public const double ISOTOPE_PEAK_CENTERING_RES = 0.1;
         public const double MIN_ISOTOPE_PEAK_ABUNDANCE = 0.01;

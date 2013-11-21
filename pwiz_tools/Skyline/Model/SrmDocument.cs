@@ -1942,13 +1942,14 @@ namespace pwiz.Skyline.Model
                 transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge,info.DecoyMassShift);
             }
 
+            var losses = info.Losses;
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
-            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, isotopeDist);
+            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, losses, isotopeDist);
 
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
 
-            return new TransitionDocNode(transition, info.Annotations, info.Losses,
+            return new TransitionDocNode(transition, info.Annotations, losses,
                 massH, isotopeDistInfo, info.LibInfo, info.Results);
         }
 

@@ -694,7 +694,7 @@ namespace pwiz.Skyline.Model
                             var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
-                            var isotopeDistInfo = losses == null ? TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist) : null;
+                            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, losses, isotopeDist);
                             var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;
                             Helpers.AssignIfEquals(ref info, nodeTranResult.LibInfo);
                             if (!ReferenceEquals(info, nodeTranResult.LibInfo))
@@ -771,7 +771,7 @@ namespace pwiz.Skyline.Model
                         if (!TransitionDocNode.IsValidIsotopeTransition(tran, isotopeDist))
                             continue;
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
-                        var isotopeDistInfo = losses == null ? TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist) : null;
+                        var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, losses, isotopeDist);
                         var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;
                         Helpers.AssignIfEquals(ref info, nodeTransition.LibInfo);
                         if (!ReferenceEquals(info, nodeTransition.LibInfo))

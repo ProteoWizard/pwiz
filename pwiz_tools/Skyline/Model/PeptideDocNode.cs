@@ -839,7 +839,7 @@ namespace pwiz.Skyline.Model
                                              transition.DecoyMassShift);
                 var isotopeDist = nodeGroupMatching.IsotopeDist;
                 double massH = calc.GetFragmentMass(tranNew, isotopeDist);
-                var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, isotopeDist);
+                var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, losses, isotopeDist);
                 listTrans.Add(new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, libInfo));
             }
             return listTrans.ToArray();
