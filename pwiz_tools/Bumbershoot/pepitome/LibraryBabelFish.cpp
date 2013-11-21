@@ -547,7 +547,9 @@ namespace freicore
 			cout << "Peptides mapped...                    " << endl;
 
 			//copy library into new file with modified proteins
-			boost::regex findPeptideRegex ("^Name: ([^/]+)/",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex findPeptideRegex ("^Name: ([^/]+)/(\\d+)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex findMwRegex ("MW: ([\\d\\.]+)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex findPrecursorMzRegex ("PrecursorMZ: ([\\d\\.]+)",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex findCommentRegex ("(Comment: .*)(Protein=\\d/)([^ ]*)(.*Spec=)([^ ]*)(.*)",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex aminoAcidRegex ("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex spectraRegex ("([\\d.]+)(\\t[\\d.]+)\\t\\[?([?a-zA-Z]\\d*)(i|[+-]\\d+i?)?\\^?(\\d+i?)?\\/?([^\\],\\t]+)?[^\\t]*(.+)",boost::regex_constants::icase|boost::regex_constants::perl);
@@ -555,6 +557,7 @@ namespace freicore
 
 			ofstream outFile((libraryPath + ".tmp").c_str());
 			ifstream inFile(libraryPath.c_str());
+			int charge = -1;
 			string activeProtein = "";
 			string decoyPeptide;
 			string peptideFullName;
@@ -582,8 +585,13 @@ namespace freicore
 				//Initial name line
 				else if (boost::regex_search (newLine, findPeptideRegex, boost::regex_constants::format_perl))
 				{
-					string sequence = newLine.substr(6,(newLine.length()-8));
+					string sequence;
 					boost::match_results<std::string::const_iterator> regex_matches;
+					if (boost::regex_search (newLine, regex_matches, findPeptideRegex, boost::regex_constants::format_perl))
+					{
+						sequence = regex_matches[1];
+						charge = lexical_cast<int>(regex_matches[2]);
+					}
 					
 					string noModSequence = boost::regex_replace(sequence, removeModRegex, "");
 					map<string,string>::iterator it = peptideMap.find(noModSequence);
@@ -637,8 +645,20 @@ namespace freicore
 				//only continue if there is a protein associated
 				else if (activeProtein != "")
 				{
-					//comment line
-					if (boost::regex_search (newLine, findCommentRegex, boost::regex_constants::format_perl))
+					//MW Line
+					if ((_hcdMode || _iTraqMode) && boost::regex_search (newLine, findMwRegex, boost::regex_constants::format_perl))
+					{
+						outputStream << "MW: " << std::fixed << std::setprecision(4) << theoreticalIons["p"] << endl;
+						decoyStream << "MW: " << std::fixed << std::setprecision(4) << theoreticalIons["p"] << endl;
+					}		
+					//PrecursorMZ Line
+					else if ((_hcdMode || _iTraqMode) && charge > 0 && boost::regex_search (newLine, findPrecursorMzRegex, boost::regex_constants::format_perl))
+					{
+						outputStream << "PrecursorMZ: " << std::fixed << std::setprecision(4) << theoreticalIons["p"]/charge << endl;
+						decoyStream << "PrecursorMZ: " << std::fixed << std::setprecision(4) << theoreticalIons["p"]/charge << endl;
+					}					
+					//Comment line
+					else if (boost::regex_search (newLine, findCommentRegex, boost::regex_constants::format_perl))
 					{
 						boost::match_results<std::string::const_iterator> regex_matches;
 						if (boost::regex_search (newLine, regex_matches, findCommentRegex, boost::regex_constants::format_perl))
