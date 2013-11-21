@@ -23,26 +23,21 @@ parse.cmdline <- function () {
     # expected arguments not present -- error
     stop ("USAGE: R --slave --no-save --args '<number> <highres.ms> <save.meta>' < QCplotsRgui2.R\n") #<libdir>
     
-  for (i in 1:4) {
-    arg <- arguments [i]
+  for (z in 1:4) {
+    arg <- arguments [z]
     # remove leading and trailing blanks
     arg <- gsub ("^ *", "", arg)
     arg <- gsub (" *$", "", arg)
     # remove any embedded quotation marks
     arg <- gsub ("['\'\"]", "", arg)
-    if (i==1) filename <<- arg
-    if (i==2) Q1 <<- as.numeric (arg)
-    if (i==3) Q4 <<- as.numeric (arg)
-    if (i==4) Q6 <<- as.numeric (arg)
+    if (z==1) filename <<- arg
+    if (z==2) Q1 <<- as.numeric (arg)
+    if (z==3) Q6 <<- as.numeric (arg)
+    if (z==4) Q4 <<- as.numeric (arg)
+        
   }
 
-Q1<-2
-Q4<-1
-Q6<-1
-
 windows(15,15)
-
-print('we made it here 2')
 
 ##filename<-commandArgs(trailingOnly = TRUE)[1];
 mydata=read.table(filename,sep=",",header=TRUE); # reads files in
