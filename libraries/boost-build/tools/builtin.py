@@ -267,11 +267,12 @@ def register_globals ():
     # The specific instruction set in an architecture to compile.
     feature.feature('instruction-set', [
         # x86 and x86-64
-        'i386', 'i486', 'i586', 'i686', 'pentium', 'pentium-mmx', 'pentiumpro', 'pentium2', 'pentium3',
-        'pentium3m', 'pentium-m', 'pentium4', 'pentium4m', 'prescott', 'nocona', 'conroe', 'conroe-xe',
-        'conroe-l', 'allendale', 'mermon', 'mermon-xe', 'kentsfield', 'kentsfield-xe', 'penryn', 'wolfdale',
-        'yorksfield', 'nehalem', 'k6', 'k6-2', 'k6-3', 'athlon', 'athlon-tbird', 'athlon-4', 'athlon-xp',
-        'athlon-mp', 'k8', 'opteron', 'athlon64', 'athlon-fx', 'winchip-c6', 'winchip2', 'c3', 'c3-2',
+        'native', 'i486', 'i586', 'i686', 'pentium', 'pentium-mmx', 'pentiumpro', 'pentium2', 'pentium3',
+        'pentium3m', 'pentium-m', 'pentium4', 'pentium4m', 'prescott', 'nocona', 'core2', 'corei7', 'corei7-avx', 'core-avx-i',
+        'conroe', 'conroe-xe', 'conroe-l', 'allendale', 'merom', 'merom-xe', 'kentsfield', 'kentsfield-xe', 'penryn', 'wolfdale',
+        'yorksfield', 'nehalem', 'sandy-bridge', 'ivy-bridge', 'haswell', 'k6', 'k6-2', 'k6-3', 'athlon', 'athlon-tbird', 'athlon-4', 'athlon-xp',
+        'athlon-mp', 'k8', 'opteron', 'athlon64', 'athlon-fx', 'k8-sse3', 'opteron-sse3', 'athlon64-sse3', 'amdfam10', 'barcelona',
+        'bdver1', 'bdver2', 'bdver3', 'btver1', 'btver2', 'winchip-c6', 'winchip2', 'c3', 'c3-2', 'atom',
 
         # ia64
         'itanium', 'itanium1', 'merced', 'itanium2', 'mckinley',

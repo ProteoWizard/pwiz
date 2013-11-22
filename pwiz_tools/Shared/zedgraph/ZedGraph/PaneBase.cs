@@ -1035,6 +1035,23 @@ namespace ZedGraph
 			}
 		}
 
+        /// <summary>
+        /// Save the current GraphPane to an enhanced metafile.
+        /// </summary>
+        /// <param name="filepath"></param>
+        public void SaveAsEmf(string filepath)
+        {
+            Bitmap bm = new Bitmap(1, 1);
+            using (Graphics g = Graphics.FromImage(bm))
+            {
+                IntPtr hdc = g.GetHdc();
+                Metafile metaFile = this.GetMetafile();
+                ZedGraphControl.ClipboardMetafileHelper.SaveEnhMetafileToFile(metaFile, filepath);
+
+                g.ReleaseHdc(hdc);
+            }
+        }
+
 		/*
 		         System.Drawing.Imaging.Metafile metafile = null; 
    

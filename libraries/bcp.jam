@@ -156,5 +156,5 @@ generators.register [ new bcp-generator bcp.bcp.create true : : BCP ] ;
 rule copy-boost-dependencies ( target-name : sources + : requirements * )
 {
     targets.create-typed-target BCP : [ project.current ] :
-        $(target-name) : $(sources) : $(requirements) <bcp>/bcp//bcp ;
+        $(target-name) : $(sources) : $(requirements) <bcp>bcp ;
 }

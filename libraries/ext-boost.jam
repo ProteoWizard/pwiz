@@ -125,7 +125,7 @@ rule filesystem-requirements ( properties * )
         if $(version-tokens[2]) > 45 { fs-version = 3 ; }
     }
 
-    local sources = [ glob $(location)/libs/filesystem/v$(fs-version)/src/*.cpp ] [ glob $(location)/libs/filesystem/src/*.cpp ] ;
+    local sources = [ path.glob $(location)/libs/filesystem/v$(fs-version)/src $(location)/libs/filesystem/src : *.cpp ] ;
     result += <source>$(sources) ;
 
     if $(version-tokens[2]) < 44 && <toolset>msvc in $(properties)
@@ -239,7 +239,7 @@ rule init ( version : location : options * )
             ;
 
         lib program_options
-            :   [ glob $(location)/libs/program_options/src/*.cpp ]
+            :   [ path.glob $(location)/libs/program_options/src : *.cpp ]
             :   $(requirements)
                 <location-prefix>program_options-$(version-tokens:J=_)
                 <use>boost
@@ -252,7 +252,7 @@ rule init ( version : location : options * )
             ;
 
         lib iostreams
-            :   [ glob $(location)/libs/iostreams/src/*.cpp : $(location)/libs/iostreams/src/zlib.cpp $(location)/libs/iostreams/src/gzip.cpp $(location)/libs/iostreams/src/bzip2.cpp ]
+            :   [ path.glob $(location)/libs/iostreams/src : *.cpp : zlib.cpp gzip.cpp bzip2.cpp ]
             :   $(requirements)
                 <location-prefix>iostreams-$(version-tokens:J=_)
                 <use>boost
@@ -504,7 +504,7 @@ rule init ( version : location : options * )
         }
 
         lib regex
-            :   [ glob $(location)/libs/regex/src/*.cpp ]
+            :   [ path.glob $(location)/libs/regex/src : *.cpp ]
             :   $(requirements)
                 $(regex_pthread_requirement)
                 <location-prefix>regex-$(version-tokens:J=_)

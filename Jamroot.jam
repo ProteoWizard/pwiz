@@ -544,7 +544,7 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = $(PWIZ_BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = [ path.make $(PWIZ_BUILD_PATH)/$(toolsets[1])-$(variants[1]) ] ;
     if <link>shared in $(properties) { location = $(location)-shared ; }
     if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
 
@@ -602,7 +602,7 @@ rule dotNET-dependencies ( properties * )
     if <toolset-msvc:version>10.0 in $(properties) || <toolset-msvc:version>10.0express in $(properties)
     {
         local location = [ install-location $(properties) ] ;
-        return <dependency>pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location) 
+        return <dependency>pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
                <dependency>pwiz_tools/SeeMS//seems.exe/$(location) ;
     }
 }
@@ -1173,8 +1173,7 @@ This source tree is a subset of the full pwiz source tree.
     $(PWIZ_LIBRARIES_PATH)/boost-build
     $(PWIZ_LIBRARIES_PATH)/boost_aux
     $(PWIZ_LIBRARIES_PATH)/libsvm-3.0
-    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 ]
-    [ mz5-build [ path.glob $(PWIZ_LIBRARIES_PATH) : hdf5*.tar.bz2 ] ]
+    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     path-anchor:$(BOOST_SUBSET_PATH)

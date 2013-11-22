@@ -11,8 +11,8 @@ feature.feature auto-index : off "on" ;
 feature.feature auto-index-internal : off "on" ;
 feature.feature auto-index-verbose : off "on" ;
 feature.feature auto-index-no-duplicates : off "on" ;
-feature.feature auto-index-script : : free ;
-feature.feature auto-index-prefix : : free ;
+feature.feature auto-index-script : : free path ;
+feature.feature auto-index-prefix : : free path ;
 feature.feature auto-index-type : : free ;
 feature.feature auto-index-section-names : "on" off ;
 
@@ -157,15 +157,7 @@ class auto-index-generator : generator
         #ECHO "binary = " $(auto-index-binary) ;
         #ECHO "dependencies = " $(auto-index-binary-dependencies) ;
 
-        if [ $(property-set).get <auto-index> ] = "on"
-        {
-            return [ generator.run $(project) $(name) : $(property-set) : $(sources) ] ;
-        }
-        else
-        {
-            return [ generators.construct $(project) $(name) : DOCBOOK : $(property-set)
-              : $(sources) ] ;
-        }        
+        return [ generator.run $(project) $(name) : $(property-set) : $(sources) ] ;
     }
 }
 
@@ -192,7 +184,7 @@ rule init (
 toolset.flags auto-index.auto-index AI-COMMAND      <auto-index-binary> ;
 toolset.flags auto-index.auto-index AI-DEPENDENCIES <auto-index-binary-dependencies> ;
 
-generators.register [ class.new auto-index-generator auto-index.auto-index : DOCBOOK : DOCBOOK(%.auto_index) ] ;
+generators.register [ class.new auto-index-generator auto-index.auto-index : DOCBOOK : DOCBOOK(%.auto_index) : <auto-index>on ] ;
 generators.override auto-index.auto-index : boostbook.boostbook-to-docbook ;
 
 rule auto-index ( target : source : properties * )

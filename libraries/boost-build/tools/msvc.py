@@ -176,7 +176,6 @@ def configure_version_specific(toolset_arg, version, conditions):
 
         cpu_arch_i386_cond = extend_conditions(conditions, __cpu_arch_i386)
         toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS', extend_conditions(cpu_arch_i386_cond,['<instruction-set>']),['/GB'])
-        toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS', extend_conditions(cpu_arch_i386_cond,['<instruction-set>i386']),['/G3'])
         toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS', extend_conditions(cpu_arch_i386_cond,['<instruction-set>i486']),['/G4'])
 
         toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS', extend_conditions(cpu_arch_i386_cond,['<instruction-set>' + t for t in __cpu_type_g5]), ['/G5'])
@@ -208,7 +207,7 @@ def configure_version_specific(toolset_arg, version, conditions):
         
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
-        toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', extend_conditions(conditions,["<embed-manifest>off"]), ['/MANIFEST'])
+        toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', conditions, ['/MANIFEST'])
 
 
 # Registers this toolset including all of its flags, features & generators. Does
@@ -646,6 +645,8 @@ def configure_really(version=None, options=[]):
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
+            if re.search("Microsoft Visual Studio 11", command):
+                version = '11.0'
             if re.search("Microsoft Visual Studio 10", command):
                 version = '10.0'
             elif re.search("Microsoft Visual Studio 9", command):
@@ -1143,10 +1144,11 @@ __cpu_arch_ia64 = [
 __cpu_type_g5       = ['i586', 'pentium', 'pentium-mmx' ]
 __cpu_type_g6       = ['i686', 'pentiumpro', 'pentium2', 'pentium3', 'pentium3m', 'pentium-m', 'k6',
                       'k6-2', 'k6-3', 'winchip-c6', 'winchip2', 'c3', 'c3-2' ]
-__cpu_type_em64t    = ['prescott', 'nocona', 'conroe', 'conroe-xe', 'conroe-l', 'allendale', 'mermon',
-                      'mermon-xe', 'kentsfield', 'kentsfield-xe', 'penryn', 'wolfdale',
-                      'yorksfield', 'nehalem' ]
-__cpu_type_amd64    = ['k8', 'opteron', 'athlon64', 'athlon-fx']
+__cpu_type_em64t    = ['prescott', 'nocona', 'core2', 'corei7', 'corei7-avx', 'core-avx-i', 'conroe', 'conroe-xe', 'conroe-l', 'allendale', 'merom',
+                      'merom-xe', 'kentsfield', 'kentsfield-xe', 'penryn', 'wolfdale',
+                      'yorksfield', 'nehalem', 'sandy-bridge', 'ivy-bridge', 'haswell' ]
+__cpu_type_amd64    = ['k8', 'opteron', 'athlon64', 'athlon-fx', 'k8-sse3', 'opteron-sse3', 'athlon64-sse3', 'amdfam10', 'barcelona',
+                      'bdver1', 'bdver2', 'bdver3', 'btver1', 'btver2' ]
 __cpu_type_g7       = ['pentium4', 'pentium4m', 'athlon', 'athlon-tbird', 'athlon-4', 'athlon-xp'
                       'athlon-mp'] + __cpu_type_em64t + __cpu_type_amd64
 __cpu_type_itanium  = ['itanium', 'itanium1', 'merced']
@@ -1154,7 +1156,7 @@ __cpu_type_itanium2 = ['itanium2', 'mckinley']
 
 
 # Known toolset versions, in order of preference.
-_known_versions = ['10.0', '10.0express', '9.0', '9.0express', '8.0', '8.0express', '7.1', '7.1toolkit', '7.0', '6.0']
+_known_versions = ['11.0', '10.0', '10.0express', '9.0', '9.0express', '8.0', '8.0express', '7.1', '7.1toolkit', '7.0', '6.0']
 
 # Version aliases.
 __version_alias_6 = '6.0'
@@ -1163,6 +1165,7 @@ __version_alias_7 = '7.0'
 __version_alias_8 = '8.0'
 __version_alias_9 = '9.0'
 __version_alias_10 = '10.0'
+__version_alias_11 = '11.0'
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1175,6 +1178,7 @@ __version_9_0_reg = "VisualStudio\\9.0\\Setup\\VC"
 __version_9_0express_reg = "VCExpress\\9.0\\Setup\\VC"
 __version_10_0_reg = "VisualStudio\\10.0\\Setup\\VC"
 __version_10_0express_reg = "VCExpress\\10.0\\Setup\\VC"
+__version_11_0_reg = "VisualStudio\\11.0\\Setup\\VC"
 
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation

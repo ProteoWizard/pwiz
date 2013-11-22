@@ -69,10 +69,8 @@ static void processfile(const char *name,
     char *p;
 #endif
 
-    target = copystr( (char*) name );
-
 #ifdef DOWNSHIFT_PATHS
-    string_copy( &path, target );
+    string_copy( &path, name );
     p = path.value;
 
     do
@@ -80,8 +78,8 @@ static void processfile(const char *name,
         *p = tolower( *p );
 #ifdef NT
         /* On NT, we must use backslashes or the file will not be found. */
-        if ( *p == '/' )
-            *p = PATH_DELIM;
+        if ( *p == '\\' )
+            *p = '/';
 #endif
     }
     while ( *p++ );
@@ -94,7 +92,7 @@ static void processfile(const char *name,
     * for every source file "<path>\<filename>, the "working copy" base can
     * be found in "<path>\.svn\text-base\<filename>.svn-base"
     */
-    if ((p1 = strrchr(name, PATH_DELIM)) != NULL) {
+    if ((p1 = strrchr(name, '/')) != NULL) {
         ++p1; /* skip directory separator character ('\' in Windows, '/' in Linux) */
         strncpy(name_base, name, (int)(p1 - name));
         name_base[(int)(p1 - name)] = '\0';
@@ -102,8 +100,7 @@ static void processfile(const char *name,
         name_base[0] = '\0';
         p1 = (char*)name;
     } /* if */
-    sprintf(name_base + strlen(name_base), ".svn%ctext-base%c%s.svn-base",
-        PATH_DELIM, PATH_DELIM, p1);
+    sprintf(name_base + strlen(name_base), ".svn/text-base/%s.svn-base", p1);
 
     /* first extract the revision keywords */
     fp = fopen(name, "r");
@@ -179,6 +176,7 @@ LIST *svnrevinfo( FRAME *frame, int flags )
 {
     LIST* filepaths = lol_get( frame->args, 0 );
     LIST* revision_info;
+    LISTITER iter = list_begin( filepaths ), end = list_end( filepaths );
 
     int warnonmissing = lol_get( frame->args, 1 ) ? 1 : 0;
     int printrevisioninfo = lol_get( frame->args, 2 ) ? 1 : 0;
@@ -191,23 +189,23 @@ LIST *svnrevinfo( FRAME *frame, int flags )
     accum_build = 0; /* for RCS / CVS */
     max_year = max_month = max_day = 0;
     modifiedfiles = 0;
-    for (; filepaths; filepaths = filepaths->next)
+    for (; iter != end; iter = list_next( iter ) )
     {
         /* phase 1: scan through all files and get the highest build number */
 
         filemodified = 0;
-        processfile(object_str(filepaths->value),
+        processfile(object_str(list_item( iter )),
                     0, warnonmissing, printrevisioninfo, 
                     &max_build, &accum_build, &max_year, &max_month, &max_day,
                     &filemodified);
         modifiedfiles += filemodified;
     } /* for */
 
-    revision_info = list_new(0, outf_int(max_build));
-    revision_info = list_new(revision_info, outf_int(max_year));
-    revision_info = list_new(revision_info, outf_int(max_month));
-    revision_info = list_new(revision_info, outf_int(max_day));
-    revision_info = list_new(revision_info, outf_int(modifiedfiles));
+    revision_info = list_push_back(L0, outf_int(max_build));
+    revision_info = list_push_back(revision_info, outf_int(max_year));
+    revision_info = list_push_back(revision_info, outf_int(max_month));
+    revision_info = list_push_back(revision_info, outf_int(max_day));
+    revision_info = list_push_back(revision_info, outf_int(modifiedfiles));
 
     return revision_info;
 }

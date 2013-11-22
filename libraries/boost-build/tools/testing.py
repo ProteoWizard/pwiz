@@ -286,8 +286,11 @@ toolset.flags("testing.capture-output", "LAUNCHER", [], ["<testing.launcher>"])
 toolset.flags("testing.unit-test", "LAUNCHER", [], ["<testing.launcher>"])
 toolset.flags("testing.unit-test", "ARGS", [], ["<testing.arg>"])
 
+# This is a composing generator to support cases where a generator for the
+# specified target constructs other targets as well. One such example is msvc's
+# exe generator that constructs both EXE and PDB targets.
 type.register("TIME", ["time"])
-generators.register_standard("testing.time", [], ["TIME"])
+generators.register_composing("testing.time", [], ["TIME"])
 
 
 # The following code sets up actions for this module. It's pretty convoluted,

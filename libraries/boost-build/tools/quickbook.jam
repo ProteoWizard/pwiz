@@ -165,7 +165,7 @@ class quickbook-binary-generator : generator
                 # properties found in target-id. We do not care about these
                 # since we have passed the id ourselves.
                 quickbook-main-target =
-                    [ $(quickbook-main-target[1]).main-target quickbook-auto ] ;
+                    [ $(quickbook-main-target[1]).main-target quickbook ] ;
 
                 quickbook-binary-dependencies =
                     [ $(quickbook-main-target).generate [ $(property-set).propagated ] ] ;

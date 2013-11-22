@@ -1,7 +1,8 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import "class" : new ;
 import feature ;
@@ -37,7 +38,7 @@ class property-set
     import property ;
     import property-set ;
     import set ;
-    
+
     rule __init__ ( raw-properties * )
     {
         self.raw = $(raw-properties) ;
@@ -47,49 +48,6 @@ class property-set
             if ! $(p:G)
             {
                 errors.error "Invalid property: '$(p)'" ;
-            }
-
-            local att = [ feature.attributes $(p:G) ] ;
-            # A feature can be both incidental and free, in which case we add it
-            # to incidental.
-            if incidental in $(att)
-            {
-                self.incidental += $(p) ;
-            }
-            else if free in $(att)
-            {
-                self.free += $(p) ;
-            }
-            else
-            {
-                self.base += $(p) ;
-            }
-
-            if dependency in $(att)
-            {
-                self.dependency += $(p) ;
-            }
-            else
-            {
-                self.non-dependency += $(p) ;
-            }
-
-            if [ MATCH (:) : $(p:G=) ]
-            {
-                self.conditional += $(p) ;
-            }
-            else
-            {
-                self.non-conditional += $(p) ;
-            }
-
-            if propagated in $(att)
-            {
-                self.propagated += $(p) ;
-            }
-            if link-incompatible in $(att)
-            {
-                self.link-incompatible += $(p) ;
             }
         }
     }
@@ -110,6 +68,10 @@ class property-set
     #
     rule base ( )
     {
+        if ! $(self.base-initialized)
+        {
+            init-base ;
+        }
         return $(self.base) ;
     }
 
@@ -117,6 +79,10 @@ class property-set
     #
     rule free ( )
     {
+        if ! $(self.base-initialized)
+        {
+            init-base ;
+        }
         return $(self.free) ;
     }
 
@@ -124,21 +90,37 @@ class property-set
     #
     rule dependency ( )
     {
+        if ! $(self.dependency-initialized)
+        {
+            init-dependency ;
+        }
         return $(self.dependency) ;
     }
 
     rule non-dependency ( )
     {
+        if ! $(self.dependency-initialized)
+        {
+            init-dependency ;
+        }
         return $(self.non-dependency) ;
     }
 
     rule conditional ( )
     {
+        if ! $(self.conditional-initialized)
+        {
+            init-conditional ;
+        }
         return $(self.conditional) ;
     }
 
     rule non-conditional ( )
     {
+        if ! $(self.conditional-initialized)
+        {
+            init-conditional ;
+        }
         return $(self.non-conditional) ;
     }
 
@@ -146,6 +128,10 @@ class property-set
     #
     rule incidental ( )
     {
+        if ! $(self.base-initialized)
+        {
+            init-base ;
+        }
         return $(self.incidental) ;
     }
 
@@ -170,7 +156,8 @@ class property-set
     {
         if ! $(self.expanded)
         {
-            self.expanded = [ property-set.create [ feature.expand $(self.raw) ] ] ;
+            self.expanded = [ property-set.create [ feature.expand $(self.raw) ]
+                ] ;
         }
         return $(self.expanded) ;
     }
@@ -191,7 +178,8 @@ class property-set
         if ! $(self.evaluated.$(context))
         {
             self.evaluated.$(context) = [ property-set.create
-                [ property.evaluate-conditionals-in-context $(self.raw) : [ $(context).raw ] ] ] ;
+                [ property.evaluate-conditionals-in-context $(self.raw) : [
+                $(context).raw ] ] ] ;
         }
         return $(self.evaluated.$(context)) ;
     }
@@ -200,28 +188,17 @@ class property-set
     {
         if ! $(self.propagated-ps)
         {
-            self.propagated-ps = [ property-set.create $(self.propagated) ] ;
+            local result ;
+            for local p in $(self.raw)
+            {
+                if propagated in [ feature.attributes $(p:G) ]
+                {
+                    result += $(p) ;
+                }
+            }
+            self.propagated-ps = [ property-set.create $(result) ] ;
         }
         return $(self.propagated-ps) ;
-    }
-
-    rule link-incompatible ( )
-    {
-        if ! $(self.link-incompatible-ps)
-        {
-            self.link-incompatible-ps =
-              [ property-set.create $(self.link-incompatible) ] ;
-        }
-        return $(self.link-incompatible-ps) ;
-    }
-
-    rule run-actions ( )
-    {
-        if ! $(self.run)
-        {
-            self.run = [ property-set.create [ feature.run-actions $(self.raw) ] ] ;
-        }
-        return $(self.run) ;
     }
 
     rule add-defaults ( )
@@ -238,7 +215,7 @@ class property-set
     {
         if ! $(self.as-path)
         {
-            self.as-path = [ property.as-path $(self.base) ] ;
+            self.as-path = [ property.as-path [ base ] ] ;
         }
         return $(self.as-path) ;
     }
@@ -261,9 +238,8 @@ class property-set
             }
             else
             {
-                local p = [ as-path ] ;
-                p = [ property-set.hash-maybe $(p) ] ;
-                
+                local p = [ property-set.hash-maybe [ as-path ] ] ;
+
                 # A real ugly hack. Boost regression test system requires
                 # specific target paths, and it seems that changing it to handle
                 # other directory layout is really hard. For that reason, we
@@ -293,7 +269,8 @@ class property-set
     {
         if ! $(self.added.$(ps))
         {
-            self.added.$(ps) = [ property-set.create $(self.raw) [ $(ps).raw ] ] ;
+            self.added.$(ps) = [ property-set.create $(self.raw) [ $(ps).raw ] ]
+                ;
         }
         return $(self.added.$(ps)) ;
     }
@@ -301,31 +278,6 @@ class property-set
     rule add-raw ( properties * )
     {
         return [ add [ property-set.create $(properties) ] ] ;
-    }
-
-    rule link-incompatible-with ( ps )
-    {
-        if ! $(.li.$(ps))
-        {
-            local li1 = [ $(__name__).link-incompatible ] ;
-            local li2 = [ $(ps).link-incompatible ] ;
-            if [ set.equal $(li1) : $(li2) ]
-            {
-                .li.$(ps) = false ;
-            }
-            else
-            {
-                .li.$(ps) = true ;
-            }
-        }
-        if $(.li.$(ps)) = true
-        {
-            return true ;
-        }
-        else
-        {
-            return ;
-        }
     }
 
     # Returns all values of 'feature'.
@@ -344,6 +296,89 @@ class property-set
             }
         }
         return $($(feature)) ;
+    }
+
+    # Returns true if the property-set contains all the
+    # specified properties.
+    #
+    rule contains-raw ( properties * )
+    {
+        if $(properties) in $(self.raw)
+        {
+            return true ;
+        }
+    }
+
+    # Returns true if the property-set has values for
+    # all the specified features
+    #
+    rule contains-features ( features * )
+    {
+        if $(features) in $(self.raw:G)
+        {
+            return true ;
+        }
+    }
+
+    # private
+
+    rule init-base ( )
+    {
+        for local p in $(self.raw)
+        {
+            local att = [ feature.attributes $(p:G) ] ;
+            # A feature can be both incidental and free, in which case we add it
+            # to incidental.
+            if incidental in $(att)
+            {
+                self.incidental += $(p) ;
+            }
+            else if free in $(att)
+            {
+                self.free += $(p) ;
+            }
+            else
+            {
+                self.base += $(p) ;
+            }
+        }
+        self.base-initialized = true ;
+    }
+
+    rule init-dependency ( )
+    {
+        for local p in $(self.raw)
+        {
+            if dependency in [ feature.attributes $(p:G) ]
+            {
+                self.dependency += $(p) ;
+            }
+            else
+            {
+                self.non-dependency += $(p) ;
+            }
+        }
+        self.dependency-initialized = true ;
+    }
+
+    rule init-conditional ( )
+    {
+        for local p in $(self.raw)
+        {
+            # TODO: Note that non-conditional properties may contain colon (':')
+            # characters as well, e.g. free or indirect properties. Indirect
+            # properties for example contain a full Jamfile path in their value
+            # which on Windows file systems contains ':' as the drive separator.
+            if [ MATCH (:) : $(p:G=) ]
+            {
+                self.conditional += $(p) ;
+            }
+            else
+            {
+                self.non-conditional += $(p) ;
+            }
+        }
+        self.conditional-initialized = true ;
     }
 }
 
@@ -366,9 +401,18 @@ rule create ( raw-properties * )
 }
 NATIVE_RULE property-set : create ;
 
+if [ HAS_NATIVE_RULE class@property-set : get : 1 ]
+{
+    NATIVE_RULE class@property-set : get ;
+}
+
+if [ HAS_NATIVE_RULE class@property-set : contains-features : 1 ]
+{
+    NATIVE_RULE class@property-set : contains-features ;
+}
 
 # Creates a new 'property-set' instance after checking that all properties are
-# valid and converting incidental properties into gristed form.
+# valid and converting implicit properties into gristed form.
 #
 rule create-with-validation ( raw-properties * )
 {
@@ -382,18 +426,10 @@ rule create-with-validation ( raw-properties * )
 #
 rule create-from-user-input ( raw-properties * : jamfile-module location )
 {
-    local specification = [ property.translate-paths $(raw-properties)
-        : $(location) ] ;
-    specification = [ property.translate-indirect $(specification)
-        : $(jamfile-module) ] ;
     local project-id = [ project.attribute $(jamfile-module) id ] ;
     project-id ?= [ path.root $(location) [ path.pwd ] ] ;
-    specification = [ property.translate-dependencies
-                      $(specification) : $(project-id) : $(location) ] ;
-    specification =
-        [ property.expand-subfeatures-in-conditions $(specification) ] ;
-    specification = [ property.make $(specification) ] ;
-    return [ property-set.create $(specification) ] ;
+    return [ property-set.create [ property.translate $(raw-properties)
+        : $(project-id) : $(location) : $(jamfile-module) ] ] ;
 }
 
 
@@ -463,8 +499,9 @@ rule empty ( )
     return $(.empty) ;
 }
 
+
 if [ option.get hash : : yes ] = yes
-{    
+{
     rule hash-maybe ( path ? )
     {
         path ?= "" ;
@@ -476,6 +513,5 @@ else
     rule hash-maybe ( path ? )
     {
         return $(path) ;
-    }    
+    }
 }
-

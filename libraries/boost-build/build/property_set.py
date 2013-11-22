@@ -25,7 +25,7 @@ def reset ():
     # A cache of property sets
     # TODO: use a map of weak refs?
     __cache = {}
-    
+
 reset ()
 
 
@@ -36,13 +36,13 @@ def create (raw_properties = []):
     # FIXME: propagate to callers.
     if len(raw_properties) > 0 and isinstance(raw_properties[0], property.Property):
         x = raw_properties
-    else:        
+    else:
         x = [property.create_from_string(ps) for ps in raw_properties]
     x.sort()
     x = unique (x)
 
     # FIXME: can we do better, e.g. by directly computing
-    # has value of the list?
+    # hash value of the list?
     key = tuple(x)
 
     if not __cache.has_key (key):
@@ -52,12 +52,12 @@ def create (raw_properties = []):
 
 def create_with_validation (raw_properties):
     """ Creates new 'PropertySet' instances after checking
-        that all properties are valid and converting incidental
+        that all properties are valid and converting implicit
         properties into gristed form.
     """
     properties = [property.create_from_string(s) for s in raw_properties]
     property.validate(properties)
-    
+
     return create(properties)
 
 def empty ():
@@ -75,7 +75,7 @@ def create_from_user_input(raw_properties, jamfile_module, location):
 
     project_id = get_manager().projects().attributeDefault(jamfile_module, 'id', None)
     if not project_id:
-        project_id = os.path.abspath(location)    
+        project_id = os.path.abspath(location)
     properties = property.translate_dependencies(properties, project_id, location)
     properties = property.expand_subfeatures_in_conditions(properties)
     return create(properties)
@@ -97,7 +97,7 @@ def refine_from_user_input(parent_requirements, specification, jamfile_module,
     if not specification:
         return parent_requirements
 
-    
+
     add_requirements = []
     remove_requirements = []
 
@@ -106,23 +106,23 @@ def refine_from_user_input(parent_requirements, specification, jamfile_module,
             remove_requirements.append(r[1:])
         else:
             add_requirements.append(r)
-        
+
     if remove_requirements:
         # Need to create property set, so that path features
         # and indirect features are translated just like they
         # are in project requirements.
         ps = create_from_user_input(remove_requirements,
                                     jamfile_module, location)
-        
+
         parent_requirements = create(difference(parent_requirements.all(),
                                                 ps.all()))
         specification = add_requirements
 
     requirements = create_from_user_input(specification,
                                           jamfile_module, location)
-        
+
     return parent_requirements.refine(requirements)
-    
+
 class PropertySet:
     """ Class for storing a set of properties.
         - there's 1<->1 correspondence between identity and value. No
@@ -152,7 +152,7 @@ class PropertySet:
         self.all_ = properties
         self.all_raw_ = raw_properties
         self.all_set_ = set(properties)
-        
+
         self.incidental_ = []
         self.free_ = []
         self.base_ = []
@@ -162,10 +162,10 @@ class PropertySet:
         self.non_conditional_ = []
         self.propagated_ = []
         self.link_incompatible = []
-        
+
         # A cache of refined properties.
         self.refined_ = {}
-        
+
         # A cache of property sets created by adding properties to this one.
         self.added_ = {}
 
@@ -183,24 +183,24 @@ class PropertySet:
 
         # Cache for the property set containing propagated properties.
         self.propagated_ps_ = None
-        
+
         # A map of features to its values.
         self.feature_map_ = None
-        
+
         # A tuple (target path, is relative to build directory)
         self.target_path_ = None
-        
+
         self.as_path_ = None
-        
+
         # A cache for already evaluated sets.
         self.evaluated_ = {}
-        
+
         for p in raw_properties:
             if not get_grist (p):
                 raise BaseException ("Invalid property: '%s'" % p)
-            
+
             att = feature.attributes (get_grist (p))
-                                                                   
+
             if 'propagated' in att:
                 self.propagated_.append (p)
 
@@ -227,11 +227,11 @@ class PropertySet:
                 self.dependency_.append (p)
             else:
                 self.non_dependency_.append (p)
-                
+
 
     def all(self):
         return self.all_
-    
+
     def raw (self):
         """ Returns the list of stored properties.
         """
@@ -239,12 +239,12 @@ class PropertySet:
 
     def __str__(self):
         return ' '.join(str(p) for p in self.all_)
-    
+
     def base (self):
         """ Returns properties that are neither incidental nor free.
         """
         return self.base_
-    
+
     def free (self):
         """ Returns free properties which are not dependency properties.
         """
@@ -257,27 +257,27 @@ class PropertySet:
         """ Returns dependency properties.
         """
         return self.dependency_
-    
+
     def non_dependency (self):
         """ Returns properties that are not dependencies.
         """
         return self.non_dependency_
-    
+
     def conditional (self):
         """ Returns conditional properties.
         """
         return self.conditional_
-        
+
     def non_conditional (self):
         """ Returns properties that are not conditional.
         """
         return self.non_conditional_
-              
+
     def incidental (self):
         """ Returns incidental properties.
         """
         return self.incidental_
-    
+
     def refine (self, requirements):
         """ Refines this set's properties using the requirements passed as an argument.
         """
@@ -339,10 +339,10 @@ class PropertySet:
 
             # trim redundancy
             properties = feature.minimize(self.base_)
-                
+
             # sort according to path_order
             properties.sort (path_order)
-                
+
             components = []
             for p in properties:
                 if p.feature().implicit():
@@ -355,12 +355,12 @@ class PropertySet:
         return self.as_path_
 
     def target_path (self):
-        """ Computes the target path that should be used for 
+        """ Computes the target path that should be used for
             target with these properties.
             Returns a tuple of
               - the computed path
               - if the path is relative to build directory, a value of
-                'true'. 
+                'true'.
         """
         if not self.target_path_:
             # The <location> feature can be used to explicitly
@@ -372,18 +372,18 @@ class PropertySet:
 
             else:
                 p = self.as_path ()
-                
+
                 # Really, an ugly hack. Boost regression test system requires
                 # specific target paths, and it seems that changing it to handle
                 # other directory layout is really hard. For that reason,
                 # we teach V2 to do the things regression system requires.
                 # The value o '<location-prefix>' is predended to the path.
                 prefix = self.get ('<location-prefix>')
-                
+
                 if prefix:
                     if len (prefix) > 1:
                         raise AlreadyDefined ("Two <location-prefix> properties specified: '%s'" % prefix)
-                        
+
                     computed = os.path.join(prefix[0], p)
 
                 else:
@@ -397,7 +397,7 @@ class PropertySet:
             self.target_path_ = (computed, is_relative)
 
         return self.target_path_
-                    
+
     def add (self, ps):
         """ Creates a new property set containing the properties in this one,
             plus the ones of the property set passed as argument.
@@ -405,14 +405,14 @@ class PropertySet:
         if not self.added_.has_key(ps):
             self.added_[ps] = create(self.all_ + ps.all())
         return self.added_[ps]
-    
+
     def add_raw (self, properties):
         """ Creates a new property set containing the properties in this one,
             plus the ones passed as argument.
         """
         return self.add (create (properties))
 
-    
+
     def get (self, feature):
         """ Returns all values of 'feature'.
         """
@@ -420,7 +420,7 @@ class PropertySet:
             feature = feature[0]
         if not isinstance(feature, b2.build.feature.Feature):
             feature = b2.build.feature.get(feature)
-        
+
         if not self.feature_map_:
             self.feature_map_ = {}
 
@@ -428,7 +428,7 @@ class PropertySet:
                 if not self.feature_map_.has_key(v.feature()):
                     self.feature_map_[v.feature()] = []
                 self.feature_map_[v.feature()].append(v.value())
-        
+
         return self.feature_map_.get(feature, [])
 
     @cached
@@ -438,12 +438,12 @@ class PropertySet:
         if not isinstance(feature, b2.build.feature.Feature):
             feature = b2.build.feature.get(feature)
 
-        result = []        
+        result = []
         for p in self.all_:
             if p.feature() == feature:
                 result.append(p)
         return result
-    
+
     def __contains__(self, item):
         return item in self.all_set_
-    
+

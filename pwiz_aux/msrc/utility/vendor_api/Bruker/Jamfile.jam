@@ -157,7 +157,7 @@ rule install-requirements ( properties * )
     local dll_location = [ bruker-dll-location $(API_PATH) : $(properties) ] ;
     if $(dll_location)
     {
-        for file in [ glob $(dll_location)\\*.dll ] [ glob $(dll_location)\\*.xml ] [ glob $(dll_location)\\*.manifest ]
+        for file in [ path.glob $(dll_location) : *.dll *.xml *.manifest ]
         {
             result += <source>$(file) ;
         }
