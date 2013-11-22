@@ -122,7 +122,7 @@ namespace QuaSAR
                 tboxUnits.Text = Arguments[(int) ArgumentIndices.units];
 
                 // plots
-                numberTransitions.Value = decimal.Parse(Arguments[(int)ArgumentIndices.ntransitions]);
+                numberTransitions.SelectedItem = int.Parse(Arguments[(int)ArgumentIndices.ntransitions]);
                 tboxLinearScale.Text = Arguments[(int)ArgumentIndices.max_linear];
                 tboxLogScale.Text = Arguments[(int)ArgumentIndices.max_log];
 
@@ -130,13 +130,13 @@ namespace QuaSAR
                 cboxAuDIT.Checked = Arguments[(int)ArgumentIndices.perform_audit].Equals(Constants.TRUE_STRING);
                 tboxAuDITCVThreshold.Text =
                     Arguments[(int) ArgumentIndices.audit_threshold].Equals(Constants.NULL_STRING)
-                        ? Defaults.AUDIT_CV_THRESHOLD
+                        ? Defaults.AUDIT_CV_THRESHOLD.ToString(CultureInfo.CurrentCulture)
                         : Arguments[(int) ArgumentIndices.audit_threshold];
 
                 // endogenous estimation
                 cboxEndogenousCalc.Checked = Arguments[(int)ArgumentIndices.perform_endocalc].Equals(Constants.TRUE_STRING);
                 tboxEndoConf.Text = Arguments[(int) ArgumentIndices.endo_ci].Equals(Constants.NULL_STRING)
-                                        ? Defaults.ENDOGENOUS_CI
+                                        ? Defaults.ENDOGENOUS_CI.ToString(CultureInfo.CurrentCulture)
                                         : Arguments[(int) ArgumentIndices.endo_ci];
             }
         }
@@ -211,7 +211,7 @@ namespace QuaSAR
             Arguments[(int) ArgumentIndices.units] = tboxUnits.Text;
             Arguments[(int) ArgumentIndices.cv_table] = cboxCVTable.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.calcurves] = cboxCalCurves.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.ntransitions] = numberTransitions.Value.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) ArgumentIndices.ntransitions] = numberTransitions.SelectedIndex.ToString(CultureInfo.InvariantCulture) + 1;
             Arguments[(int) ArgumentIndices.lodloq_table] = cboxLODLOQTable.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.lodloq_comp] = cboxLODLOQComp.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.peakplots] = cboxPeakAreaPlots.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
@@ -223,6 +223,7 @@ namespace QuaSAR
             Arguments[(int) ArgumentIndices.perform_endocalc] = cboxEndogenousCalc.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int) ArgumentIndices.endo_ci] = cboxEndogenousCalc.Checked ? tboxEndoConf.Text : Constants.NULL_STRING;
             Arguments[(int) ArgumentIndices.output_prefix] = tboxTitle.Text;
+            Arguments[(int)ArgumentIndices.create_individual_plots] = cboxGraphPlot.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
         }
         
         private void btnDefault_Click(object sender, EventArgs e)
@@ -242,19 +243,21 @@ namespace QuaSAR
             // options group box
             cboxPAR.Checked = Defaults.USE_PAR;
             tboxUnits.Text = Defaults.UNITS;
+            PopulateAnalyteAndStandard();
 
             // plots group box
-            numberTransitions.Value = Defaults.NUMBER_TRANSITIONS;
-            tboxLinearScale.Text = Defaults.MAX_LINEAR;
-            tboxLogScale.Text = Defaults.MAX_LOG;
+            numberTransitions.SelectedIndex = Defaults.NUMBER_TRANSITIONS - 1;
+            cboxGraphPlot.Checked = Defaults.GRAPH_PLOT;
+            tboxLinearScale.Text = Defaults.MAX_LINEAR.ToString(CultureInfo.CurrentCulture);
+            tboxLogScale.Text = Defaults.MAX_LOG.ToString(CultureInfo.CurrentCulture);
 
             // AuDIT group box
             cboxAuDIT.Checked = Defaults.PERFORM_AUDIT;
-            tboxAuDITCVThreshold.Text = Defaults.AUDIT_CV_THRESHOLD;
+            tboxAuDITCVThreshold.Text = Defaults.AUDIT_CV_THRESHOLD.ToString(CultureInfo.CurrentCulture);
 
             // endogenous estimation group box
             cboxEndogenousCalc.Checked = Defaults.PERFORM_ENDOCALC;
-            tboxEndoConf.Text = Defaults.ENDOGENOUS_CI;
+            tboxEndoConf.Text = Defaults.ENDOGENOUS_CI.ToString(CultureInfo.CurrentCulture);
         }
 
         private void NumericTextBox_KeyPress(object sender, KeyPressEventArgs e)
@@ -302,9 +305,25 @@ namespace QuaSAR
         {
             // Split report (.csv file) by lines
             string[] lines = report.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            List<string> fields = lines[0].ParseCsvFields().ToList();
+            if (lines.Length < 2)
+            {
+                MessageBox.Show("QuaSAR requires peak area values.  The document must have imported data.");
+                return null;
+            }
+            var fields = lines[0].ParseCsvFields().ToList();
+            var areas = fields.Where(s => s.EndsWith("Area")).ToList();
+            if (areas.Count == 0)
+            {
+                MessageBox.Show("QuaSAR requires peak area values.  Input report format may be incorrect.");
+                return null;
+            }
+            if (areas.Count < 2)
+            {
+                MessageBox.Show("QuaSAR requires peak areas for multiple label types.");
+                return null;
+            }
 
-            using (var dlg = new QuaSARUI(oldArgs, fields.Where(s => s.EndsWith("Area")))) // Not L10N
+            using (var dlg = new QuaSARUI(oldArgs, areas))
             {
                 if (parent != null)
                 {

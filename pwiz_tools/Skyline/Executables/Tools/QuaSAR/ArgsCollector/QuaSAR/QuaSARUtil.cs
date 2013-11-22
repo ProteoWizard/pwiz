@@ -27,7 +27,7 @@ namespace QuaSAR
         public const string FALSE_STRING = "0";             // Not L10N
         public const string NULL_STRING = "NULL";           // Not L10N
         public const string NONE_STRING = "None";           // Not L10N
-        public const int ARGUMENT_COUNT = 20;
+        public const int ARGUMENT_COUNT = 21;
     }
 
     static class ArgumentDocumentation
@@ -110,7 +110,8 @@ namespace QuaSAR
         audit_threshold,
         perform_endocalc,
         endo_ci,
-        output_prefix
+        output_prefix,
+        create_individual_plots
     }
 
     static class Defaults
@@ -120,17 +121,18 @@ namespace QuaSAR
         public const string UNITS = "fmol/ul";                                      // Not L10N
         public const bool CV_TABLE = true;
         public const bool CALIBRATION_CURVES = true;
-        public const decimal NUMBER_TRANSITIONS = 3;
+        public const int NUMBER_TRANSITIONS = 3;
+        public const bool GRAPH_PLOT = false;
         public const bool LODLOQ_TABLE = true;
         public const bool LODLOQ_COMPARISON = false;
         public const bool PEAK_AREA_PLOTS = false;
         public const bool USE_PAR = false;
-        public const string MAX_LINEAR = "150";                                     // Not L10N
-        public const string MAX_LOG = "150";                                        // Not L10N
+        public const int MAX_LINEAR = 150;
+        public const int MAX_LOG = 150;
         public const bool PERFORM_AUDIT = true;
-        public const string AUDIT_CV_THRESHOLD = "0.2";                             // Not L10N
+        public const double AUDIT_CV_THRESHOLD = 0.2;
         public const bool PERFORM_ENDOCALC = false;
-        public const string ENDOGENOUS_CI = "0.95";                                 // Not L10N
+        public const double ENDOGENOUS_CI = 0.95;
     }
 
     public static class TextUtil

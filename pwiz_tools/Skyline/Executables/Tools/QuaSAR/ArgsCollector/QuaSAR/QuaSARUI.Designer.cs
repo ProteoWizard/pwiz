@@ -1,5 +1,6 @@
 ﻿namespace QuaSAR
 {
+   
     partial class QuaSARUI
     {
         /// <summary>
@@ -46,6 +47,8 @@
             this.labelLogScale = new System.Windows.Forms.Label();
             this.labelLinearScale = new System.Windows.Forms.Label();
             this.cboxAuDIT = new System.Windows.Forms.CheckBox();
+            this.cboxGraphPlot = new System.Windows.Forms.CheckBox();
+            this.labelGraphPlot = new System.Windows.Forms.Label();
             this.tboxAuDITCVThreshold = new System.Windows.Forms.TextBox();
             this.labelAuDITCV = new System.Windows.Forms.Label();
             this.btnDefault = new System.Windows.Forms.Button();
@@ -54,7 +57,7 @@
             this.labelEndogenousConfidence = new System.Windows.Forms.Label();
             this.tboxEndoConf = new System.Windows.Forms.TextBox();
             this.labelNumberTransitions = new System.Windows.Forms.Label();
-            this.numberTransitions = new System.Windows.Forms.NumericUpDown();
+            this.numberTransitions = new System.Windows.Forms.ComboBox();
             this.gboxOptions = new System.Windows.Forms.GroupBox();
             this.comboBoxStandard = new System.Windows.Forms.ComboBox();
             this.comboBoxAnalyte = new System.Windows.Forms.ComboBox();
@@ -71,7 +74,6 @@
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.gboxGenerate.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numberTransitions)).BeginInit();
             this.gboxOptions.SuspendLayout();
             this.gboxPlots.SuspendLayout();
             this.gboxAuDIT.SuspendLayout();
@@ -161,9 +163,9 @@
             this.cboxCalCurves.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cboxCalCurves.Location = new System.Drawing.Point(16, 30);
             this.cboxCalCurves.Name = "cboxCalCurves";
-            this.cboxCalCurves.Size = new System.Drawing.Size(110, 17);
-            this.cboxCalCurves.TabIndex = 0;
-            this.cboxCalCurves.Text = "&Calibration curves";
+            this.cboxCalCurves.Size = new System.Drawing.Size(109, 17);
+            this.cboxCalCurves.TabIndex = 1;
+            this.cboxCalCurves.Text = "&Plot each peptide";
             this.cboxCalCurves.UseVisualStyleBackColor = true;
             // 
             // cboxLODLOQTable
@@ -207,7 +209,7 @@
             this.groupBox1.Controls.Add(this.tboxLinearScale);
             this.groupBox1.Controls.Add(this.labelLogScale);
             this.groupBox1.Controls.Add(this.labelLinearScale);
-            this.groupBox1.Location = new System.Drawing.Point(16, 56);
+            this.groupBox1.Location = new System.Drawing.Point(16, 76);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(191, 73);
             this.groupBox1.TabIndex = 2;
@@ -262,6 +264,23 @@
             this.cboxAuDIT.Text = "&Perform AuDIT";
             this.cboxAuDIT.UseVisualStyleBackColor = true;
             this.cboxAuDIT.CheckedChanged += new System.EventHandler(this.cboxAuDIT_CheckedChanged);
+            // 
+            // cboxGraphPlot
+            // 
+            this.cboxGraphPlot.AutoSize = true;
+            this.cboxGraphPlot.Location = new System.Drawing.Point(17, 50);
+            this.cboxGraphPlot.Name = "cboxGraphPlot";
+            this.cboxGraphPlot.Size = new System.Drawing.Size(154, 17);
+            this.cboxGraphPlot.TabIndex = 0;
+            this.cboxGraphPlot.Text = "&Generate graphs as JPEGs";
+            this.cboxGraphPlot.UseVisualStyleBackColor = true;
+            // 
+            // labelGraphPlot
+            // 
+            this.labelGraphPlot.Location = new System.Drawing.Point(0, 0);
+            this.labelGraphPlot.Name = "labelGraphPlot";
+            this.labelGraphPlot.Size = new System.Drawing.Size(100, 23);
+            this.labelGraphPlot.TabIndex = 0;
             // 
             // tboxAuDITCVThreshold
             // 
@@ -333,20 +352,18 @@
             // 
             // numberTransitions
             // 
+            this.numberTransitions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.numberTransitions.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"});
             this.numberTransitions.Location = new System.Drawing.Point(160, 23);
-            this.numberTransitions.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.numberTransitions.Name = "numberTransitions";
-            this.numberTransitions.Size = new System.Drawing.Size(47, 20);
-            this.numberTransitions.TabIndex = 1;
-            this.numberTransitions.Value = new decimal(new int[] {
-            3,
-            0,
-            0,
-            0});
+            this.numberTransitions.Size = new System.Drawing.Size(47, 21);
+            this.numberTransitions.TabIndex = 2;
             // 
             // gboxOptions
             // 
@@ -422,9 +439,10 @@
             this.gboxPlots.Controls.Add(this.groupBox1);
             this.gboxPlots.Controls.Add(this.labelNumberTransitions);
             this.gboxPlots.Controls.Add(this.numberTransitions);
+            this.gboxPlots.Controls.Add(this.cboxGraphPlot);
             this.gboxPlots.Location = new System.Drawing.Point(9, 6);
             this.gboxPlots.Name = "gboxPlots";
-            this.gboxPlots.Size = new System.Drawing.Size(220, 138);
+            this.gboxPlots.Size = new System.Drawing.Size(220, 158);
             this.gboxPlots.TabIndex = 0;
             this.gboxPlots.TabStop = false;
             this.gboxPlots.Text = "&Plots";
@@ -525,7 +543,6 @@
             this.gboxGenerate.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numberTransitions)).EndInit();
             this.gboxOptions.ResumeLayout(false);
             this.gboxOptions.PerformLayout();
             this.gboxPlots.ResumeLayout(false);
@@ -561,6 +578,8 @@
         private System.Windows.Forms.Label labelLogScale;
         private System.Windows.Forms.Label labelLinearScale;
         private System.Windows.Forms.CheckBox cboxAuDIT;
+        private System.Windows.Forms.CheckBox cboxGraphPlot;
+        private System.Windows.Forms.Label labelGraphPlot;
         private System.Windows.Forms.TextBox tboxAuDITCVThreshold;
         private System.Windows.Forms.Label labelAuDITCV;
         private System.Windows.Forms.Button btnDefault;
@@ -570,7 +589,6 @@
         private System.Windows.Forms.Label labelEndogenousConfidence;
         private System.Windows.Forms.TextBox tboxEndoConf;
         private System.Windows.Forms.Label labelNumberTransitions;
-        private System.Windows.Forms.NumericUpDown numberTransitions;
         private System.Windows.Forms.GroupBox gboxOptions;
         private System.Windows.Forms.TextBox tboxUnits;
         private System.Windows.Forms.Label labelUnits;
@@ -585,5 +603,6 @@
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.ComboBox comboBoxStandard;
         private System.Windows.Forms.ComboBox comboBoxAnalyte;
+        private System.Windows.Forms.ComboBox numberTransitions;
     }
 }
