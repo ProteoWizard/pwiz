@@ -39,7 +39,7 @@ namespace pwiz.Topograph.ui.Forms
         public DataFilesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            bindingSource1.SetViewContext(new TopographViewContext(workspace, typeof(DataFileRow))
+            bindingSource1.SetViewContext(new TopographViewContext(workspace, typeof(DataFileRow), new DataFileRow[0])
                                               {
                                                   DeleteHandler = new DataFileDeleteHandler(this),
                                               });

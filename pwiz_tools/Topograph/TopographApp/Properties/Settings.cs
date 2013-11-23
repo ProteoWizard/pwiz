@@ -66,19 +66,19 @@ namespace pwiz.Topograph.ui.Properties {
             }
         }
         [System.Configuration.UserScopedSettingAttribute]
-        public List<ViewSpecList> ViewSpecLists
+        public ViewSpecList ViewSpecList
         {
             get
             {
-                if (this["ViewSpecLists"] == null)
+                if (this["ViewSpecList"] == null)
                 {
-                    ViewSpecLists = new List<ViewSpecList>();
+                    ViewSpecList = ViewSpecList.EMPTY;
                 }
-                return (List<ViewSpecList>)this["ViewSpecLists"];
+                return (ViewSpecList)this["ViewSpecList"];
             }
             set
             {
-                this["ViewSpecLists"] = value;
+                this["ViewSpecList"] = value;
             }
         }
         [System.Configuration.UserScopedSettingAttribute]

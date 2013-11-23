@@ -28,8 +28,7 @@ namespace pwiz.Topograph.ui.Forms
         public HalfLifeRowDataForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            var viewContext = new TopographViewContext(workspace, typeof(HalfLifeCalculator.ProcessedRowData));
-            bindingSource1.RowSource = new HalfLifeCalculator.ProcessedRowData[0];
+            var viewContext = new TopographViewContext(workspace, typeof(HalfLifeCalculator.ProcessedRowData), new HalfLifeCalculator.ProcessedRowData[0]);
             bindingSource1.SetViewContext(viewContext);
         }
 

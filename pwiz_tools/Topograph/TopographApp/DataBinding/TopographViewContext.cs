@@ -18,11 +18,14 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Serialization;
+using NHibernate.Hql.Ast.ANTLR;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Topograph.ui.Forms;
@@ -35,19 +38,22 @@ namespace pwiz.Topograph.ui.DataBinding
 {
     public class TopographViewContext : AbstractViewContext
     {
-        public TopographViewContext(Workspace workspace, Type rowType, params ViewSpec[] builtInViews) : this(workspace, rowType)
+        public TopographViewContext(Workspace workspace, Type rowType, IEnumerable rows, params ViewSpec[] builtInViews) 
+            : base(new TopographDataSchema(workspace), new[]
+            {
+                new RowSourceInfo(rowType, rows, builtInViews.Select(
+                    viewSpec=>new ViewInfo(new TopographDataSchema(workspace), rowType, viewSpec)))
+            })
         {
             Workspace = workspace;
-            BuiltInViewSpecs = builtInViews;
         }
 
-        public TopographViewContext(Workspace workspace, Type rowType) : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType))
+        public TopographViewContext(Workspace workspace, Type rowType, IEnumerable rows)
+            : this(workspace, rowType, rows, GetDefaultViewSpec(workspace, rowType))
         {
-            var childColumns = ParentColumn.GetChildColumns().Select(c => new ColumnSpec(PropertyPath.Root.Property(c.Name)));
-            BuiltInViewSpecs = new[] {new ViewSpec().SetName("default").SetColumns(childColumns)};
         }
 
-        public Type RowType { get { return ParentColumn.PropertyType; } }
+        public Type RowType { get { return RowSources.First().RowType; } }
         public Workspace Workspace { get; private set; }
         public DeleteHandler DeleteHandler { get; set; }
 
@@ -66,69 +72,100 @@ namespace pwiz.Topograph.ui.DataBinding
             Settings.Default.Save();
         }
 
-        public override string GetDefaultExportFilename(ViewSpec viewSpec)
+        protected override ViewSpecList GetViewSpecList()
         {
-            return Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + base.GetDefaultExportFilename(viewSpec);
+            return Settings.Default.ViewSpecList;
         }
 
-        private string ViewSpecKey
+        protected override void SaveViewSpecList(ViewSpecList viewSpecList)
         {
-            get
-            {
-                return RowType.FullName;
-            }
-        }
-        public override IEnumerable<ViewSpec> CustomViewSpecs
-        {
-            get
-            {
-                Settings.Default.Reload();
-                var viewSpecLists = Settings.Default.ViewSpecLists;
-                if (viewSpecLists != null)
-                {
-                    var viewSpecList = viewSpecLists.FirstOrDefault(vsl => ViewSpecKey == vsl.Name);
-                    if (viewSpecList != null)
-                    {
-                        return viewSpecList.ViewSpecs;
-                    }
-                }
-                return new ViewSpec[0];
-            }
-        }
-        protected override void SetCustomViewSpecs(IEnumerable<ViewSpec> value)
-        {
-            var newValue = value.ToArray();
-            Array.Sort(newValue);
-            if (CustomViewSpecs.SequenceEqual(newValue))
-            {
-                return;
-            }
-            var viewSpecLists = Settings.Default.ViewSpecLists;
-            var newViewSpecList = newValue.Length == 0 ? null : new ViewSpecList
-                                   {
-                                       Name = ViewSpecKey,
-                                       ViewSpecs = new ReadOnlyCollection<ViewSpec>(newValue),
-                                   };
-            var existingIndex = viewSpecLists.FindIndex(vsl => ViewSpecKey == vsl.Name);
-            if (existingIndex >= 0)
-            {
-                if (newViewSpecList == null)
-                {
-                    viewSpecLists.RemoveAt(existingIndex);
-                }
-                else
-                {
-                    viewSpecLists[existingIndex] = newViewSpecList;
-                }
-            }
-            else if (newViewSpecList != null)
-            {
-                viewSpecLists.Add(newViewSpecList);
-            }
-            Settings.Default.ViewSpecLists = viewSpecLists;
+            Settings.Default.Reload();
+            Settings.Default.ViewSpecList = viewSpecList;
             Settings.Default.Save();
         }
-        public override void RunLongJob(Control owner, Action<IProgressMonitor> job)
+
+        private const string ViewFileFilter = "tpgview Files (*.tpgview)|*.tpgview";
+
+        public override void ExportViews(Control owner, IEnumerable<ViewSpec> views)
+        {
+            using (var saveFileDialog = new SaveFileDialog
+            {
+                InitialDirectory = Settings.Default.ExportResultsDirectory,
+                CheckPathExists = true,
+                Filter = ViewFileFilter,
+            })
+            {
+                saveFileDialog.ShowDialog(owner);
+                if (!string.IsNullOrEmpty(saveFileDialog.FileName))
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
+                    var viewSpecList = new ViewSpecList(views);
+                    using (FileStream stream = File.OpenWrite(saveFileDialog.FileName))
+                    {
+                        xmlSerializer.Serialize(stream, viewSpecList);
+                        stream.Close();
+                    }
+                }
+            }
+        }
+
+        public override void ImportViews(Control owner)
+        {
+            using (var importDialog = new OpenFileDialog
+            {
+                InitialDirectory = Settings.Default.ExportResultsDirectory,
+                CheckPathExists = true,
+                Filter = ViewFileFilter,
+            })
+            {
+                importDialog.ShowDialog(owner);
+                if (string.IsNullOrEmpty(importDialog.FileName))
+                {
+                    return;
+                }
+                ViewSpec[] views;
+                try
+                {
+                    views = LoadViews(importDialog.FileName).ToArray();
+                }
+                catch (Exception x)
+                {
+                    ShowMessageBox(owner, string.Format("Failure loading {0}:\n{1}", importDialog.FileName, x.InnerException), MessageBoxButtons.OK);
+                    return;
+                }
+                if (views.Length == 0)
+                {
+                    ShowMessageBox(owner, "No views were found in that file.", MessageBoxButtons.OK);
+                    return;
+                }
+                var currentViews = CustomViews.ToList();
+                var conflicts = new HashSet<string>(views.Select(view => view.Name));
+                conflicts.IntersectWith(currentViews.Select(view => view.Name));
+                currentViews = currentViews.Where(view => !conflicts.Contains(view.Name)).ToList();
+                foreach (var view in views)
+                {
+                    // ReSharper disable once SimplifyLinqExpression
+                    if (!currentViews.Any(currentView => currentView.Name == view.Name))
+                    {
+                        currentViews.Add(view);
+                    }
+                }
+                SetCustomViews(currentViews);
+            }
+        }
+        protected IEnumerable<ViewSpec> LoadViews(string filename)
+        {
+            using (var stream = File.OpenRead(filename))
+            {
+                var viewSerializer = new XmlSerializer(typeof(ViewSpecList));
+                ViewSpecList viewSpecList = (ViewSpecList)viewSerializer.Deserialize(stream);
+                return viewSpecList.ViewSpecs;
+            }
+        }
+
+
+
+        public override bool RunLongJob(Control owner, Action<IProgressMonitor> job)
         {
             using (var longWaitDialog = new LongWaitDialog(owner.TopLevelControl, Program.AppName))
             {
@@ -151,16 +188,12 @@ namespace pwiz.Topograph.ui.DataBinding
                                                                                       }
                                                                                   })), longWaitDialog);
                 longOperationBroker.LaunchJob();
+                return !longOperationBroker.WasCancelled;
             }
         }
         public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
         {
             return MessageBox.Show(owner.TopLevelControl, message, Program.AppName, messageBoxButtons);
-        }
-
-        public override IViewContext GetViewContext(ColumnDescriptor column)
-        {
-            return new TopographViewContext(Workspace, column.PropertyType);
         }
 
         public override bool DeleteEnabled
@@ -177,6 +210,15 @@ namespace pwiz.Topograph.ui.DataBinding
             {
                 DeleteHandler.Delete();
             }
+        }
+
+
+
+        protected static ViewSpec GetDefaultViewSpec(Workspace workspace, Type type)
+        {
+            var parentColumn = ColumnDescriptor.RootColumn(new TopographDataSchema(workspace), type);
+            var childColumns = parentColumn.GetChildColumns().Select(c => new ColumnSpec(PropertyPath.Root.Property(c.Name)));
+            return new ViewSpec().SetName("default").SetColumns(childColumns);
         }
     }
 }

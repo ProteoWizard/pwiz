@@ -159,11 +159,6 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridViewResults.Size = new System.Drawing.Size(736, 461);
             this.dataGridViewResults.TabIndex = 0;
             // 
-            // bindingSourceResults
-            // 
-            this.bindingSourceResults.RowSource = new object[0];
-            this.bindingSourceResults.ViewInfo = null;
-            // 
             // navBar21
             // 
             this.navBar21.AutoSize = true;

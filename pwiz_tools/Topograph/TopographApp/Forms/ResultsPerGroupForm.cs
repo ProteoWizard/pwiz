@@ -327,7 +327,7 @@ namespace pwiz.Topograph.ui.Forms
             var viewInfo = bindingSource1.ViewInfo;
             if (viewInfo == null || "default" == viewInfo.Name)
             {
-                bindingSource1.ViewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(halfLifeCalculator.ByProtein));
+                bindingSource1.SetViewSpec(GetDefaultViewSpec(halfLifeCalculator.ByProtein));
             }
             bindingSource1.RowSource = displayRows;
             dataGridViewSummary.Rows.Clear();

@@ -37,7 +37,7 @@ namespace pwiz.Topograph.Test
             var stringBuilder = new StringBuilder();
             var viewSpec = new ViewSpec();
             var xmlSerializer = new XmlSerializer(typeof (ViewSpecList));
-            xmlSerializer.Serialize(XmlWriter.Create(stringBuilder), new ViewSpecList{ViewSpecs = new[] {viewSpec}});
+            xmlSerializer.Serialize(XmlWriter.Create(stringBuilder), new ViewSpecList(new[] {viewSpec}));
             var viewSpecCompare = ((ViewSpecList) xmlSerializer.Deserialize(new StringReader(stringBuilder.ToString()))).ViewSpecs[0];
             Assert.AreEqual(viewSpec, viewSpecCompare);
             var viewSpecEmpty = ((ViewSpecList) xmlSerializer.Deserialize(new StringReader("<views><view /></views>"))).ViewSpecs[0];
@@ -47,7 +47,7 @@ namespace pwiz.Topograph.Test
                 .SetColumns(new[] {new ColumnSpec().SetName("foo"), new ColumnSpec().SetName("bar"),});
             Assert.AreNotEqual(viewSpecCompare, viewSpec);
             stringBuilder.Length = 0;
-            xmlSerializer.Serialize(XmlWriter.Create(stringBuilder), new ViewSpecList {ViewSpecs = new[] {viewSpec}});
+            xmlSerializer.Serialize(XmlWriter.Create(stringBuilder), new ViewSpecList(new[] {viewSpec}));
             viewSpecCompare = ((ViewSpecList) xmlSerializer.Deserialize(new StringReader(stringBuilder.ToString()))).ViewSpecs[0];
             Assert.AreEqual(viewSpec, viewSpecCompare);
         }

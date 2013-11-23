@@ -96,10 +96,10 @@ namespace pwiz.Topograph.ui.Forms
             var rows = calculator.ResultRows.Select(row => new ResultRow(this, row)).ToArray();
             if (viewInfo == null || "default" == viewInfo.Name)
             {
-                viewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein));
+                // TODO
+                // viewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein));
             }
-            bindingSource1.ViewInfo = viewInfo;
-            bindingSource1.RowSource = rows;
+            bindingSource1.SetView(viewInfo, rows);
         }
 
         /// <summary>

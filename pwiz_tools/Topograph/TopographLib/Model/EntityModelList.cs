@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.RowSources;
 using pwiz.Topograph.Model.Data;
 
@@ -98,6 +97,11 @@ namespace pwiz.Topograph.Model
         }
 
         public abstract IList<TEntity> DeepClone();
+        IEnumerable ICloneableList.DeepClone()
+        {
+            return DeepClone();
+        }
+
         [CanBeNull]
         protected abstract ImmutableSortedList<TKey, TData> GetData(WorkspaceData workspaceData);
         protected abstract WorkspaceData SetData(WorkspaceData workspaceData, ImmutableSortedList<TKey, TData> data);

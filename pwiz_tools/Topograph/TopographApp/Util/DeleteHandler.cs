@@ -39,10 +39,6 @@ namespace pwiz.Topograph.ui.Util
             foreach (DataGridViewRow row in dataGridView.SelectedRows)
             {
                 var rowItem = (RowItem) bindingSource[row.Index];
-                while (null != rowItem.Parent && null != rowItem.Parent.Value)
-                {
-                    rowItem = rowItem.Parent;
-                }
                 if (!(rowItem.Value is TRow))
                 {
                     continue;

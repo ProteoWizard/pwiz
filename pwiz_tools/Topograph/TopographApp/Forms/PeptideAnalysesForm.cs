@@ -44,7 +44,8 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             TabText = Name = Title;
-            var viewContext = new TopographViewContext(Workspace, typeof (PeptideAnalysisRow))
+            _peptideAnalyses = new PeptideAnalysisRows(Workspace.PeptideAnalyses);
+            var viewContext = new TopographViewContext(Workspace, typeof(PeptideAnalysisRow), _peptideAnalyses)
                                   {
                                       DeleteHandler = new PeptideAnalysisDeleteHandler(this),
                                   };
@@ -65,9 +66,7 @@ namespace pwiz.Topograph.ui.Forms
                         new ColumnSpec(PropertyPath.Root.Property("MinScore")), 
                         new ColumnSpec(PropertyPath.Root.Property("MaxScore")),
                     });
-            viewContext.BuiltInViewSpecs = new[] {viewSpec};
             bindingListSource1.SetViewContext(viewContext);
-            _peptideAnalyses = new PeptideAnalysisRows(Workspace.PeptideAnalyses);
             bindingListSource1.RowSource = _peptideAnalyses;
         }
 
