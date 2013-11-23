@@ -63,6 +63,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     TransparentColor = Color.Magenta,
                 };
             ImageList.Images.AddRange(ImagelistImages);
+            DrawMode = TreeViewDrawMode.OwnerDrawText;
         }
         [Browsable(false)]
         public ColumnDescriptor RootColumn
@@ -79,7 +80,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 }
                 _rootColumn = value;
                 Nodes.Clear();
-                if (_rootColumn.IsSelectable)
+                if (_rootColumn.DataSchema.IsRootTypeSelectable(_rootColumn.PropertyType))
                 {
                     var rootNode = new TreeNode();
                     SetColumnDescriptor(rootNode, _rootColumn);
@@ -270,21 +271,43 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        protected override void OnDrawNode(DrawTreeNodeEventArgs e)
+        {
+            Font font = e.Node.NodeFont ?? e.Node.TreeView.Font;
+            Color fore = e.Node.ForeColor;
+            if (fore == Color.Empty) fore = e.Node.TreeView.ForeColor;
+            if (e.Node == e.Node.TreeView.SelectedNode)
+            {
+                fore = SystemColors.HighlightText;
+                e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+                ControlPaint.DrawFocusRectangle(e.Graphics, e.Bounds, fore, SystemColors.Highlight);
+                TextRenderer.DrawText(e.Graphics, e.Node.Text, font, e.Bounds, fore, TextFormatFlags.GlyphOverhangPadding);
+            }
+            else
+            {
+                e.Graphics.FillRectangle(SystemBrushes.Window, e.Bounds);
+                TextRenderer.DrawText(e.Graphics, e.Node.Text, font, e.Bounds, fore, TextFormatFlags.GlyphOverhangPadding);
+            }
+        }
+
         protected IList<ColumnDescriptor> ListChildren(ColumnDescriptor parent)
         {
             var result = new List<ColumnDescriptor>();
             if (parent.CollectionInfo != null && parent.CollectionInfo.IsDictionary)
             {
-                result.Add(new ColumnDescriptor(parent, "Key"));
-                result.AddRange(ListChildren(new ColumnDescriptor(parent, "Value")));
+                if (ShowAdvancedFields)
+                {
+                    result.Add(parent.ResolveChild("Key"));
+                }
+                result.AddRange(ListChildren(parent.ResolveChild("Value")));
                 return result;
             }
             foreach (var child in parent.GetChildColumns())
             {
-                var collectionInfo = parent.DataSchema.GetCollectionInfo(child.PropertyType);
-                if (collectionInfo != null)
+                var collectionColumn = child.GetCollectionColumn();
+                if (null != collectionColumn)
                 {
-                    result.Add(new ColumnDescriptor(child, collectionInfo));
+                    result.Add(collectionColumn);
                 }
                 else
                 {

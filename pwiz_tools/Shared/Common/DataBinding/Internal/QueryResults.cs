@@ -31,12 +31,10 @@ namespace pwiz.Common.DataBinding.Internal
             Parameters = QueryParameters.Empty;
             PivotedRows = FilteredRows = SortedRows = new RowItem[0];
             ItemProperties = null;
-            Pivoter = null;
         }
         public QueryResults(QueryResults copy)
         {
             Parameters = copy.Parameters;
-            Pivoter = copy.Pivoter;
 
             SourceRows = copy.SourceRows;
 
@@ -57,7 +55,6 @@ namespace pwiz.Common.DataBinding.Internal
             if (Parameters.PivotValid(result.Parameters))
             {
                 result.PivotedRows = PivotedRows;
-                result.Pivoter = Pivoter;
                 result.ItemProperties = ItemProperties;
                 if (Parameters.FilterValid(newParameters))
                 {
@@ -87,18 +84,12 @@ namespace pwiz.Common.DataBinding.Internal
                     result.SortedRows = result.FilteredRows = result.PivotedRows = null;
                 }
                 result.ItemProperties = null;
-                result.Pivoter = null;
             }
             return result;
         }
         public bool IsComplete
         {
             get { return SortedRows != null;}
-        }
-        public Pivoter Pivoter { get; private set; }
-        public QueryResults SetPivoter(Pivoter pivoter)
-        {
-            return new QueryResults(this){Pivoter =  pivoter};
         }
         public PropertyDescriptorCollection ItemProperties { get; private set; }
 
@@ -110,14 +101,12 @@ namespace pwiz.Common.DataBinding.Internal
             };
         }
         public IList<RowItem> PivotedRows { get; private set; }
-        public QueryResults SetPivotedRows(Pivoter pivoter, IEnumerable<RowItem> pivotedRows)
+        public QueryResults SetPivotedRows(PivotedRows pivotedRows)
         {
-            var pivotedRowList = ImmutableList.ValueOf(pivotedRows);
             return new QueryResults(this)
                        {
-                           Pivoter = pivoter,
-                           PivotedRows = pivotedRowList,
-                           ItemProperties = new ViewProperties(pivoter.ViewInfo, pivoter.GetAllPivotKeys(pivotedRowList)),
+                           PivotedRows = pivotedRows.RowItems,
+                           ItemProperties = pivotedRows.ItemProperties,
                        };
         }
         public IList<RowItem> FilteredRows { get; private set; }

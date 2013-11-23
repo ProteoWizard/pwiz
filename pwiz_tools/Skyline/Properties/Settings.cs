@@ -22,6 +22,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -249,6 +250,20 @@ namespace pwiz.Skyline.Properties
                 return (List<string>)(this["StackTraceList"]);
             }
             set { this["StackTraceList"] = value; }
+        }
+
+        [UserScopedSettingAttribute]
+        public ViewSpecList ViewSpecList
+        {
+            get
+            {
+                if (this["ViewSpecList"] == null)
+                {
+                    ViewSpecList = new ViewSpecList(new ViewSpec[0]);
+                }
+                return (ViewSpecList) this["ViewSpecList"];
+            }
+            set { this["ViewSpecList"] = value; }
         }
 
         [UserScopedSettingAttribute]

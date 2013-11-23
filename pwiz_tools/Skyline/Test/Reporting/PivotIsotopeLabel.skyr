@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <revision index="1" />
+  <report name="PivotIsotopeLabel">
+    <table name="T1">DbPrecursor</table>
+    <select>
+      <column name="T1">Peptide.Sequence</column>
+      <column name="T1">Charge</column>
+    </select>
+    <group_by>
+      <column name="T1">Peptide</column>
+      <column name="T1">Charge</column>
+    </group_by>
+    <cross_tab_headers>
+      <column name="T1">IsotopeLabelType</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column name="T1">Mz</column>
+    </cross_tab_values>
+  </report>
+  <report name="PivotIsotopeLabelWithResults">
+    <table name="T1">DbPrecursor</table>
+    <table name="T2">DbPrecursorResult</table>
+    <select>
+      <column name="T1">Peptide.Sequence</column>
+    </select>
+    <group_by>
+      <column name="T1">Peptide</column>
+      <column name="T1">Charge</column>
+      <column name="T2">ResultFile.Replicate.Replicate</column>
+      <column name="T2">OptStep</column>
+    </group_by>
+    <cross_tab_headers>
+      <column name="T1">IsotopeLabelType</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column name="T1">Mz</column>
+      <column name="T2">TotalArea</column>
+    </cross_tab_values>
+  </report>
+</ReportSpecList>

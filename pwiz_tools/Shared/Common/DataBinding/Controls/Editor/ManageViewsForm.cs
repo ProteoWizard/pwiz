@@ -28,7 +28,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     /// </summary>
     public partial class ManageViewsForm : Form
     {
-        private ViewSpec[] _viewSpecs = new ViewSpec[0];
+        private ViewSpec[] _views = new ViewSpec[0];
         public ManageViewsForm(IViewContext viewContext)
         {
             InitializeComponent();
@@ -43,35 +43,30 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             if (reloadSettings)
             {
-                _viewSpecs = ViewContext.CustomViewSpecs.ToArray();
-                ListViewHelper.ReplaceItems(listView1, _viewSpecs.Select(vs=>new ListViewItem(vs.Name)).ToArray());
+                _views = ViewContext.CustomViews.ToArray();
+                ListViewHelper.ReplaceItems(listView1, _views.Select(vs=>new ListViewItem(vs.Name)).ToArray());
             }
-            btnEdit.Enabled = listView1.SelectedIndices.Count == 1;
-            btnRemove.Enabled = listView1.SelectedIndices.Count > 0;
-        }
-
-        private void BtnAddOnClick(object sender, EventArgs e)
-        {
-            var newView = ViewContext.CustomizeView(this, new ViewSpec());
-            if (newView != null)
-            {
-                newView = ViewContext.SaveView(newView);
-            }
-            RefreshUi(true);
-            if (newView != null)
-            {
-                ListViewHelper.SelectIndex(listView1, Array.IndexOf(_viewSpecs, newView));
-            }
-        }
-
-        private void BtnRefreshOnClick(object sender, EventArgs e)
-        {
-            RefreshUi(true);
+            btnExportData.Enabled = btnCopy.Enabled = btnEdit.Enabled = listView1.SelectedIndices.Count == 1;
+            btnShare.Enabled = btnRemove.Enabled = listView1.SelectedIndices.Count > 0;
+            btnUp.Enabled = ListViewHelper.IsMoveUpEnabled(listView1);
+            btnDown.Enabled = ListViewHelper.IsMoveDownEnabled(listView1);
+            AfterResizeListView();
         }
 
         private void BtnEditOnClick(object sender, EventArgs e)
         {
-            ViewContext.CustomizeView(this, _viewSpecs[listView1.SelectedIndices[0]]);
+            ViewContext.CustomizeView(this, _views[listView1.SelectedIndices[0]]);
+            RefreshUi(true);
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            AddView();
+        }
+
+        public void AddView()
+        {
+            ViewContext.NewView(this);
             RefreshUi(true);
         }
 
@@ -82,7 +77,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void BtnRemoveOnClick(object sender, EventArgs e)
         {
-            var selectedItems = listView1.SelectedIndices.Cast<int>().Select(i => _viewSpecs[i]).ToArray();
+            var selectedItems = listView1.SelectedIndices.Cast<int>().Select(i => _views[i]).ToArray();
             if (selectedItems.Length == 0)
             {
                 return;
@@ -104,9 +99,118 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             RefreshUi(true);
         }
 
-        private void ListView1OnResize(object sender, EventArgs e)
+        private void listView1_SizeChanged(object sender, EventArgs e)
         {
-            colHdrName.Width = listView1.ClientSize.Width;
+            if (IsHandleCreated)
+            {
+                BeginInvoke(new Action(AfterResizeListView));
+            }
+        }
+
+        private void AfterResizeListView()
+        {
+            listView1.Columns[0].Width = listView1.ClientSize.Width
+                        - SystemInformation.VerticalScrollBarWidth - 1;
+        }
+
+        private void btnShare_Click(object sender, EventArgs e)
+        {
+            var selectedItems = listView1.SelectedIndices.Cast<int>().Select(i => _views[i]).ToArray();
+            ViewContext.ExportViews(this, selectedItems);
+        }
+
+        private void btnImport_Click(object sender, EventArgs e)
+        {
+            ViewContext.ImportViews(this);
+            RefreshUi(true);
+        }
+
+        private void btnExportData_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedIndices.Count == 0)
+            {
+                return;
+            }
+            var view = _views[listView1.SelectedIndices[0]];
+            ViewContext.Export(this, ViewContext.ExecuteQuery(this, view));
+        }
+
+        public bool AddButtonVisible
+        {
+            get { return btnAdd.Visible; }
+            set { btnAdd.Visible = value; }
+        }
+
+        public bool EditButtonVisible
+        {
+            get { return btnEdit.Visible; }
+            set { btnEdit.Visible = value; }
+        }
+
+        public bool RemoveButtonVisible
+        {
+            get { return btnRemove.Visible; }
+            set { btnRemove.Visible = value; }
+        }
+
+        public bool ShareButtonVisible
+        {
+            get { return btnShare.Visible; }
+            set { btnShare.Visible = value; }
+        }
+
+        public bool ExportDataButtonVisible
+        {
+            get { return btnExportData.Visible; }
+            set { btnExportData.Visible = value; }
+        }
+
+        public bool UpDownButtonsVisible
+        {
+            get
+            {
+                return panelUpDown.Visible;
+            }
+            set
+            {
+                panelUpDown.Visible = value;
+            }
+        }
+
+        private void btnUp_Click(object sender, EventArgs e)
+        {
+            MoveViews(true);
+        }
+
+
+        public void MoveViews(bool up)
+        {
+            var newViews = ListViewHelper.MoveItems(_views, listView1.SelectedIndices.Cast<int>(), up);
+            var newSelectedIndices = ListViewHelper.MoveSelectedIndexes(_views.Length,
+                listView1.SelectedIndices.Cast<int>(), up);
+            ViewContext.CustomViews = newViews;
+            RefreshUi(true);
+            ListViewHelper.SelectIndexes(listView1, newSelectedIndices);
+        }
+
+        private void btnDown_Click(object sender, EventArgs e)
+        {
+            MoveViews(false);
+        }
+
+        private void btnCopy_Click(object sender, EventArgs e)
+        {
+            CopyView();
+        }
+
+        public void CopyView()
+        {
+            if (listView1.SelectedIndices.Count != 1)
+            {
+                return;
+            }
+            ViewContext.CopyView(this, _views[listView1.SelectedIndices[0]]);
+            RefreshUi(true);
         }
     }
 }

@@ -20,8 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -47,20 +49,14 @@ namespace pwiz.Common.DataBinding.Internal
             var collectionColumnArray = ViewInfo.GetCollectionColumns().ToArray();
             Array.Sort(collectionColumnArray, (cd1, cd2) => cd1.PropertyPath.CompareTo(cd2.PropertyPath));
             CollectionColumns = Array.AsReadOnly(collectionColumnArray);
-            var filterPredicates = new Predicate<RowNode>[CollectionColumns.Count];
-            for (int iCollectionColumn = 0; iCollectionColumn < CollectionColumns.Count; iCollectionColumn++)
-            {
-                int column = iCollectionColumn;
-                filterPredicates[iCollectionColumn] =
-                    MakeFilterPredicate(
-                        ViewInfo.Filters.Where(filter => filter.CollectionColumn == CollectionColumns[column]));
-            }
-            Filters = Array.AsReadOnly(filterPredicates);
-
             var sublistColumns = new List<ColumnDescriptor>();
             var pivotColumns = new List<ColumnDescriptor>();
             foreach (var collectionColumn in CollectionColumns)
             {
+                if (collectionColumn.PropertyPath.IsRoot)
+                {
+                    continue;
+                }
                 if (ViewInfo.SublistId.StartsWith(collectionColumn.PropertyPath))
                 {
                     sublistColumns.Add(collectionColumn);
@@ -70,9 +66,8 @@ namespace pwiz.Common.DataBinding.Internal
                     pivotColumns.Add(collectionColumn);
                 }
             }
-
-            SublistColumns = Array.AsReadOnly(sublistColumns.ToArray());
-            PivotColumns = Array.AsReadOnly(pivotColumns.ToArray());
+            SublistColumns = ImmutableList.ValueOf(sublistColumns);
+            PivotColumns = ImmutableList.ValueOf(pivotColumns);
         }
 
         /// <summary>
@@ -94,218 +89,255 @@ namespace pwiz.Common.DataBinding.Internal
         /// and show be expanded horizontally in the grid.
         /// </summary>
         public IList<ColumnDescriptor> PivotColumns { get; private set; }
-        /// <summary>
-        /// Contains a Predicate which has the user-defined Filter for each
-        /// ColumnDescriptor in CollectionColumns.
-        /// </summary>
-        internal IList<Predicate<RowNode>> Filters { get; private set; }
 
-        private Predicate<RowNode> MakeFilterPredicate(IEnumerable<FilterInfo> filterInfos)
+        public IEnumerable<RowItem> Expand(TickCounter tickCounter, RowItem rowItem, int sublistColumnIndex)
         {
-            var predicates = new List<Predicate<RowNode>>();
-            foreach (var grouping in filterInfos.ToLookup(filterInfo=>filterInfo.ColumnDescriptor, filterInfo=>filterInfo.Predicate))
+            if (sublistColumnIndex >= SublistColumns.Count)
             {
-                var predicate = MakePredicate(grouping.Key, grouping);
-                if (predicate != null)
-                {
-                    predicates.Add(predicate);    
-                }
+                return new[] {rowItem};
             }
-            return Conjunction(predicates.ToArray());
-        }
-        private Predicate<RowNode> MakePredicate(ColumnDescriptor columnDescriptor, IEnumerable<Predicate<object>> predicates)
-        {
-            var predicate = Conjunction(predicates.Where(p=>null != p).ToArray());
-            return rowNode=>predicate(columnDescriptor.DataSchema.UnwrapValue(columnDescriptor.GetPropertyValue(rowNode, false)));
-        }
-
-        private object GetValue(RowNode rowNode, ColumnDescriptor columnDescriptor)
-        {
-            if (columnDescriptor.PropertyPath.Length == rowNode.PropertyPath.Length)
+            var sublistColumn = SublistColumns[sublistColumnIndex];
+            object parentValue = sublistColumn.Parent.GetPropertyValue(rowItem, null, false);
+            if (null == parentValue)
             {
-                return rowNode.RowItem.Value;
+                return new[] {rowItem};
             }
-            var parentValue = GetValue(rowNode, columnDescriptor.Parent);
-            if (parentValue == null)
+            var items = sublistColumn.CollectionInfo.GetItems(parentValue).Cast<object>().ToArray();
+            if (items.Length == 0)
             {
-                return null;
+                return new[] {rowItem};
             }
-            return columnDescriptor.GetPropertyValueFromParent(parentValue, null, false);
-        }
-        public int Expand(TickCounter tickCounter, RowNode rowNode, int columnIndex)
-        {
-            tickCounter.Tick();
-            var unboundColumn = CollectionColumns[columnIndex];
-            if (!unboundColumn.PropertyPath.StartsWith(rowNode.PropertyPath))
-            {
-                return columnIndex;
-            }
-            int result = columnIndex + 1;
-            while (result < CollectionColumns.Count && CollectionColumns[result].PropertyPath.StartsWith(unboundColumn.PropertyPath))
-            {
-                result++;
-            }
-            if (unboundColumn.CollectionInfo == null)
-            {
-                return result;
-            }
-            object parentValue = GetValue(rowNode, unboundColumn.Parent);
-            if (parentValue == null)
-            {
-                return result;
-            }
-            if (!Filters[columnIndex](rowNode))
-            {
-                return result;
-            }
-            var items = unboundColumn.CollectionInfo.GetItems(parentValue).Cast<object>().ToArray();
             IList<object> keys = null;
-            if (unboundColumn.CollectionInfo.IsDictionary)
+            if (sublistColumn.CollectionInfo.IsDictionary)
             {
-                keys = unboundColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToArray();
+                keys = sublistColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToArray();
             }
-
+            var expandedItems = new List<RowItem>();
             for (int index = 0; index < items.Length; index++)
             {
                 object key = keys == null ? index : keys[index];
-                var rowItem = new RowItem(rowNode.RowItem, unboundColumn.PropertyPath, key, items[index]);
-                var child = new RowNode(rowItem);
-                rowNode.AddChild(child);
+                var child = rowItem.SetRowKey(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key));
+                expandedItems.AddRange(Expand(tickCounter, child, sublistColumnIndex + 1));
+            }
+            return expandedItems;
+        }
 
-                for (int currentColumnIndex = columnIndex + 1; currentColumnIndex < result;)
+        public RowItem Pivot(TickCounter tickCounter, RowItem rowItem)
+        {
+            foreach (var pivotColumn in PivotColumns)
+            {
+                var parent = pivotColumn.Parent.CollectionAncestor();
+                IList<PivotKey> pivotKeys;
+                if (null == parent)
                 {
-                    currentColumnIndex = Expand(tickCounter, child, currentColumnIndex);
+                    pivotKeys = new PivotKey[] { null };
                 }
+                else
+                {
+                    pivotKeys = rowItem.PivotKeys.Where(key => key.Last.Key.Equals(parent.PropertyPath)).ToArray();
+                }
+                foreach (var pivotKey in pivotKeys)
+                {
+                    var parentValue = pivotColumn.Parent.GetPropertyValue(rowItem, pivotKey, false);
+                    if (null != parentValue)
+                    {
+                        var keys = pivotColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToArray();
+                        if (keys.Length > 0)
+                        {
+                            var newPivotKeys = rowItem.PivotKeys.Except(new[] {pivotKey}).ToList();
+                            var pivotKeyLocal = pivotKey ?? PivotKey.EMPTY;
+                            var propertyPath = pivotColumn.PropertyPath;
+                            newPivotKeys.AddRange(keys.Select(key => pivotKeyLocal.AppendValue(propertyPath, key)));
+                            rowItem = rowItem.SetPivotKeys(new HashSet<PivotKey>(newPivotKeys));
+                        }
+
+                    }
+                }
+            }
+            return rowItem;
+        }
+
+        public IEnumerable<RowItem> Filter(IEnumerable<RowItem> rowItems)
+        {
+            if (ViewInfo.Filters.Count == 0)
+            {
+                return rowItems;
+            }
+            var filteredRows = new List<RowItem>();
+            foreach (var rowItem in rowItems)
+            {
+                var filteredRowItem = rowItem;
+                foreach (var filter in ViewInfo.Filters)
+                {
+                    filteredRowItem = filter.ApplyFilter(filteredRowItem);
+                    if (null == filteredRowItem)
+                    {
+                        break;
+                    }
+                }
+                if (null != filteredRowItem)
+                {
+                    filteredRows.Add(filteredRowItem);
+                }
+            }
+            return filteredRows;
+        }
+
+        public PivotedRows ExpandAndPivot(TickCounter tickCounter, IEnumerable<RowItem> rowItems)
+        {
+            var expandedItems = rowItems.SelectMany(rowItem => Expand(tickCounter, rowItem, 0)).ToArray();
+            var pivotedItems = expandedItems.Select(item => Pivot(tickCounter, item));
+            var filteredItems = Filter(pivotedItems);
+            var rows = ImmutableList.ValueOf(filteredItems);
+            var result = new PivotedRows(rows, new PropertyDescriptorCollection(GetItemProperties(rows).ToArray()));
+            if (ViewInfo.HasTotals)
+            {
+                result = GroupAndTotal(tickCounter, result);
             }
             return result;
         }
-        public IEnumerable<RowNode> Expand(TickCounter tickCounter, RowItem rowItem)
+
+        public PivotedRows GroupAndTotal(TickCounter tickCounter, PivotedRows pivotedRows)
         {
-            var root = new RowNode(rowItem);
-            if (!Filters[0](root))
+            IDictionary<IList<Tuple<PropertyPath, PivotKey, object>>, List<GroupedRow>> allReportRows
+                = new Dictionary<IList<Tuple<PropertyPath, PivotKey, object>>, List<GroupedRow>>();
+            var groupColumns = ViewInfo.DisplayColumns
+                .Where(col => TotalOperation.GroupBy == col.ColumnSpec.TotalOperation)
+                .Select(col => col.ColumnDescriptor)
+                .ToArray();
+            var pivotOnColumns = ViewInfo.DisplayColumns
+                .Where(col => TotalOperation.PivotKey == col.ColumnSpec.TotalOperation)
+                .Select(col => col.ColumnDescriptor)
+                .ToArray();
+            var allInnerPivotKeys = new HashSet<PivotKey>();
+            var allPivotKeys = new Dictionary<PivotKey, PivotKey>();
+            foreach (var rowItem in pivotedRows.RowItems)
             {
-                return new RowNode[0];
+                allInnerPivotKeys.UnionWith(rowItem.PivotKeys);
+                IList<Tuple<PropertyPath, PivotKey, object>> groupKey = new List<Tuple<PropertyPath, PivotKey, object>>();
+                foreach (var column in groupColumns)
+                {
+                    var pivotColumn = GetPivotColumn(column);
+                    if (null == pivotColumn)
+                    {
+                        groupKey.Add(new Tuple<PropertyPath, PivotKey, object>(column.PropertyPath, null,
+                            column.GetPropertyValue(rowItem, null, false)));
+                    }
+                    else
+                    {
+                        foreach (var pivotKey in GetPivotKeys(pivotColumn.PropertyPath, new []{rowItem}))
+                        {
+                            if (!pivotKey.Contains(pivotColumn.PropertyPath))
+                            {
+                                continue;
+                            }
+                            groupKey.Add(new Tuple<PropertyPath, PivotKey, object>(column.PropertyPath, pivotKey, column.GetPropertyValue(rowItem, pivotKey, false)));
+                        }
+                    }
+                }
+                groupKey = ImmutableList.ValueOf(groupKey);
+                var pivotOnKeyValues = new List<KeyValuePair<PropertyPath, object>>();
+                foreach (var column in pivotOnColumns)
+                {
+                    var pivotColumn = GetPivotColumn(column);
+                    if (null == pivotColumn)
+                    {
+                        pivotOnKeyValues.Add(new KeyValuePair<PropertyPath, object>(column.PropertyPath,
+                            column.GetPropertyValue(rowItem, null, false)));
+                    }
+                    else
+                    {
+                        Trace.TraceWarning("Unable to pivot on column {0} because it is already pivoted.", pivotColumn.PropertyPath);
+                    }
+                }
+                var pivotOnKey = PivotKey.GetPivotKey(allPivotKeys, pivotOnKeyValues);
+                List<GroupedRow> rowGroups;
+                if (!allReportRows.TryGetValue(groupKey, out rowGroups))
+                {
+                    rowGroups = new List<GroupedRow>();
+                    allReportRows.Add(groupKey, rowGroups);
+                }
+                var rowGroup = rowGroups.FirstOrDefault(rg => !rg.ContainsKey(pivotOnKey));
+                if (null == rowGroup)
+                {
+                    rowGroup = new GroupedRow();
+                    rowGroups.Add(rowGroup);
+                }
+                rowGroup.AddInnerRow(pivotOnKey, rowItem);
             }
-
-            for (int currentColumnIndex = 1; currentColumnIndex < CollectionColumns.Count; )
+            var outerPivotKeys = allPivotKeys.Keys.Where(key=>key.Length == pivotOnColumns.Length).ToArray();
+            var pivotKeyComparer = PivotKey.GetComparer(ViewInfo.DataSchema);
+            Array.Sort(outerPivotKeys, pivotKeyComparer);
+            var innerPivotKeys = allInnerPivotKeys.ToArray();
+            Array.Sort(innerPivotKeys, pivotKeyComparer);
+            var reportItemProperties = new List<PropertyDescriptor>();
+            var propertyNames = new HashSet<string>();
+            foreach (var displayColumn in ViewInfo.DisplayColumns)
             {
-                currentColumnIndex = Expand(tickCounter, root, currentColumnIndex);
-            }
-            return new[]{root};
-        }
-        public IEnumerable<RowNode> Expand(RowItem rowItem)
-        {
-            return Expand(new TickCounter(), rowItem);
-        }
-
-
-        public IEnumerable<RowItem> ExpandAndPivot(TickCounter tickCounter, IEnumerable<RowItem> rowItems)
-        {
-            var expandedNodes = rowItems.SelectMany(Expand).ToArray();
-            return Pivot(tickCounter, expandedNodes);
-        }
-        private PivotKey GetPivotKey(RowItem rowItem)
-        {
-            return rowItem.GetGroupKey().RemoveSublist(ViewInfo.SublistId);
-        }
-
-        private IEnumerable<RowItem> GetRowItems(TickCounter tickCounter, RowNode rowNode, RowItem parentRowItem, int sublistColumnIndex)
-        {
-            tickCounter.Tick();
-            var sublistColumn = SublistColumns[sublistColumnIndex];
-            var result = new List<RowItem>();
-            HashSet<PivotKey> pivotKeySet = new HashSet<PivotKey>();
-            foreach (var pivotColumn in PivotColumns)
-            {
-                if (!pivotColumn.PropertyPath.StartsWith(sublistColumn.PropertyPath))
+                if (displayColumn.ColumnSpec.Hidden)
                 {
                     continue;
                 }
-                if (sublistColumnIndex + 1 < SublistColumns.Count)
+                var totalOperation = displayColumn.ColumnSpec.TotalOperation;
+                if (TotalOperation.GroupBy == totalOperation)
                 {
-                    if (pivotColumn.PropertyPath.StartsWith(SublistColumns[sublistColumnIndex + 1].PropertyPath))
+                    var pivotColumn = GetPivotColumn(displayColumn.ColumnDescriptor);
+                    if (null == pivotColumn)
+                    {
+                        string propertyName = MakeUniqueName(propertyNames, displayColumn.PropertyPath);
+                        reportItemProperties.Add(new GroupedPropertyDescriptor(propertyName, displayColumn, null));
+                    }
+                    else
+                    {
+                        foreach (var innerPivotKey in innerPivotKeys)
+                        {
+                            string propertyName = MakeUniqueName(propertyNames, displayColumn.PropertyPath);
+                            reportItemProperties.Add(new GroupedPropertyDescriptor(propertyName, displayColumn, innerPivotKey));
+                        }
+                    }
+                }
+            }
+            foreach (var outerPivotKey in outerPivotKeys)
+            {
+                foreach (var displayColumn in ViewInfo.DisplayColumns)
+                {
+                    if (displayColumn.ColumnSpec.Hidden)
                     {
                         continue;
                     }
-                }
-                foreach (var descendant in rowNode.GetDescendants(pivotColumn.PropertyPath))
-                {
-                    tickCounter.Tick();
-                    var pivotKey = GetPivotKey(descendant.RowItem);
-                    pivotKeySet.Add(pivotKey);
-                }
-            }
-            var rowItem = rowNode.RowItem.SetParent(parentRowItem);
-            rowItem = rowItem.SetPivotKeys(pivotKeySet);
-            if (sublistColumnIndex < SublistColumns.Count - 1)
-            {
-                foreach (var child in rowNode.GetChildren(SublistColumns[sublistColumnIndex + 1].PropertyPath))
-                {
-                    result.AddRange(GetRowItems(tickCounter, child, rowItem, sublistColumnIndex + 1));
-                }
-            }
-            if (result.Count > 0)
-            {
-                return result;
-            }
-            for (int icolFilter = sublistColumnIndex; icolFilter < Filters.Count; icolFilter++)
-            {
-                if (!Filters[icolFilter](rowNode))
-                {
-                    return new RowItem[0];
+                    if (TotalOperation.PivotValue == displayColumn.ColumnSpec.TotalOperation || TotalOperation.PivotKey == displayColumn.ColumnSpec.TotalOperation)
+                    {
+                        var pivotColumn = GetPivotColumn(displayColumn.ColumnDescriptor);
+                        if (null == pivotColumn)
+                        {
+                            string propertyName = MakeUniqueName(propertyNames, displayColumn.PropertyPath);
+                            reportItemProperties.Add(new GroupedPropertyDescriptor(propertyName, outerPivotKey, displayColumn, null));
+                        }
+                        else
+                        {
+                            foreach (var innerPivotKey in allInnerPivotKeys)
+                            {
+                                string propertyName = MakeUniqueName(propertyNames, displayColumn.PropertyPath);
+                                reportItemProperties.Add(new GroupedPropertyDescriptor(propertyName, outerPivotKey, displayColumn, innerPivotKey));
+                            }
+                        }
+                    }
                 }
             }
-            return new[] {rowItem};
-        }
-        public IEnumerable<RowItem> Pivot(TickCounter tickCounter, IEnumerable<RowNode> rowNodes)
-        {
-            var result = new List<RowItem>();
-            foreach (var rowNode in rowNodes)
-            {
-                result.AddRange(GetRowItems(tickCounter, rowNode, null, 0));
-            }
-            return result;
-        }
-        private static Predicate<T> Conjunction<T>(IEnumerable<Predicate<T>> predicates)
-        {
-            return value =>
-                       {
-                           foreach (var predicate in predicates)
-                           {
-                               if (!predicate(value))
-                               {
-                                   return false;
-                               }
-                           }
-                           return true;
-                       };
+            return new PivotedRows(allReportRows.SelectMany(entry=>entry.Value.Select(
+                reportRow=>new RowItem(reportRow))), 
+                new PropertyDescriptorCollection(reportItemProperties.ToArray()));
         }
 
         public HashSet<PivotKey> GetPivotKeys(PropertyPath pivotColumnId, IEnumerable<RowItem> rowItems)
         {
-            PropertyPath sublistId = PropertyPath.Root;
-            foreach (ColumnDescriptor t in SublistColumns)
+            var pivotKeys = new HashSet<PivotKey>();
+            foreach (var row in rowItems)
             {
-                if (!pivotColumnId.StartsWith(t.PropertyPath))
-                {
-                    break;
-                }
-                sublistId = t.PropertyPath;
+                pivotKeys.UnionWith(row.PivotKeys);
             }
-            var result = new HashSet<PivotKey>();
-            foreach (var sublistItem in rowItems)
-            {
-                var rowItem = sublistItem;
-                while (rowItem != null)
-                {
-                    if (Equals(rowItem.SublistId, sublistId))
-                    {
-                        result.UnionWith(rowItem.PivotKeys.Where(pivotKey=>pivotKey.FindValue(pivotColumnId) != null));
-                    }
-                    rowItem = rowItem.Parent;
-                }
-            }
-            return result;
+            pivotKeys.RemoveWhere(pivotKey => !pivotKey.Contains(pivotColumnId));
+            return pivotKeys;
         }
         public IDictionary<PropertyPath, ICollection<PivotKey>> GetAllPivotKeys(IEnumerable<RowItem> rowItems)
         {
@@ -318,6 +350,11 @@ namespace pwiz.Common.DataBinding.Internal
             return result;
         }
 
+        private ColumnDescriptor GetPivotColumn(ColumnDescriptor columnDescriptor)
+        {
+            return PivotColumns.LastOrDefault(col => columnDescriptor.PropertyPath.StartsWith(col.PropertyPath));
+        }
+
         public IEnumerable<PropertyDescriptor> GetItemProperties(IEnumerable<RowItem> rowItems)
         {
             var columnNames = new HashSet<string>();
@@ -326,6 +363,10 @@ namespace pwiz.Common.DataBinding.Internal
             var rowItemsArray = rowItems as RowItem[] ?? rowItems.ToArray();
             foreach (var displayColumn in ViewInfo.DisplayColumns)
             {
+                if (displayColumn.ColumnSpec.Hidden)
+                {
+                    continue;
+                }
                 var pivotColumn = PivotColumns.LastOrDefault(pc => displayColumn.PropertyPath.StartsWith(pc.PropertyPath));
                 ICollection<PivotKey> pivotKeys = null;
                 if (pivotColumn != null)
@@ -355,22 +396,27 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 foreach (var pivotColumn in pivotDisplayColumns[pivotKey])
                 {
-                    var identifierPath = PivotKey.QualifyIdentifierPath(pivotKey, pivotColumn.PropertyPath);
-                    var columnName = MakeUniqueName(columnNames, identifierPath);
-                    propertyDescriptors.Add(new ColumnPropertyDescriptor(pivotColumn, columnName, identifierPath, pivotKey));
+                    var qualifiedPropertyPath = PivotKey.QualifyPropertyPath(pivotKey, pivotColumn.PropertyPath);
+                    var columnName = MakeUniqueName(columnNames, qualifiedPropertyPath);
+                    propertyDescriptors.Add(new ColumnPropertyDescriptor(pivotColumn, columnName, qualifiedPropertyPath, pivotKey));
                 }
             }
             return propertyDescriptors;
         }
         private string MakeUniqueName(HashSet<string> columnNames, PropertyPath propertyPath)
         {
-            const string baseName = "COLUMN_";
-            string columnName = baseName + propertyPath;
-            for (int index = 1; columnNames.Contains(columnName); index++ )
+            return MakeUniqueName(columnNames, "COLUMN_" + propertyPath);
+        }
+
+        private string MakeUniqueName(HashSet<string> existingNames, string baseName)
+        {
+            string columnName = baseName;
+            for (int index = 1; !existingNames.Add(columnName); index++)
             {
-                columnName = baseName + propertyPath + index;
+                columnName = baseName + index;
             }
             return columnName;
+            
         }
 
         public class TickCounter
@@ -403,5 +449,4 @@ namespace pwiz.Common.DataBinding.Internal
             public CancellationToken CancellationToken { get; private set; }
         }
     }
-
 }

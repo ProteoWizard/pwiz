@@ -18,13 +18,20 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.DataBinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
@@ -38,6 +45,7 @@ namespace pwiz.SkylineTestTutorial
     /// <summary>
     /// Testing the tutorial for Skyline Custom Reports and Results Grid
     /// </summary>
+    // ReSharper disable LocalizableElement
     [TestClass]
     public class CustomReportsTutorialTest : AbstractFunctionalTest
     {
@@ -54,7 +62,8 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             // Data Overview, p. 2
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky"))); // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky")));
+                // Not L10N
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
                 findPeptideDlg.SearchString = "HGFLPR"; // Not L10N
@@ -70,6 +79,17 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             WaitForCondition(() => SkylineWindow.GraphPeakArea.IsHidden);
 
+            if (IsEnableLiveReports)
+            {
+                DoLiveReportsTest();
+            }
+            else
+            {
+                DoCustomReportsTest();
+            }
+        }
+
+        protected void DoCustomReportsTest() {
             // Creating a Simple Custom Report, p. 3
             var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
             PauseForScreenShot();
@@ -385,6 +405,344 @@ namespace pwiz.SkylineTestTutorial
                           Assert.IsNotNull(colNote);
                           colTailing.DisplayIndex = colNote.DisplayIndex + 1;
                       });
+            PauseForScreenShot();   // p. 27
+        }
+        protected void DoLiveReportsTest()
+        {
+            // Creating a Simple Custom Report, p. 3
+            var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+            PauseForScreenShot();
+
+            // p. 4
+            var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg.EditList);
+            var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
+            const string customReportName = "Overview";
+            RunUI(() => viewEditor.ViewName = customReportName);
+            PauseForScreenShot();
+
+            // p. 5
+            RunUI(() =>
+            {
+                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Root.Property("Peptides").LookupAllItems().Property("Sequence"))); // Not L10N
+                viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
+                var expectedFields = new[]
+                {
+                    // Not L10N
+                    PropertyPath.Root.Property("Name"),
+                    PropertyPath.Root.Property("Description"),
+                    PropertyPath.Root.Property("Sequence"),
+                    PropertyPath.Root.Property("Note"),
+                    PropertyPath.Root.Property("Results").LookupAllItems(),
+                };
+                foreach (var id in expectedFields)
+                {
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                }
+            });
+            PauseForScreenShot();
+
+            // p. 6
+            RunUI(() =>
+            {
+                var columnsToAdd = new[]
+                { 
+                    // Not L10N
+                    PropertyPath.Parse("Peptides!*.Precursors!*.IsotopeLabelType"),
+                    PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"),
+                    PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.TotalArea"),
+                };
+                foreach (var id in columnsToAdd)
+                {
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                }
+                Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
+                viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
+            });
+            PauseForScreenShot();
+            // p. 7
+            {
+                var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+                WaitForConditionUI(() => previewReportDlg.IsComplete);
+                RunUI(() =>
+                {
+                    Assert.AreEqual(20, previewReportDlg.RowCount);
+                    Assert.AreEqual(58, previewReportDlg.ColumnCount);
+                });
+                PauseForScreenShot();
+
+                OkDialog(previewReportDlg, previewReportDlg.Close);
+            }
+
+            // p. 8
+            OkDialog(viewEditor, viewEditor.OkDialog);
+            PauseForScreenShot();
+
+            OkDialog(editReportListDlg, editReportListDlg.OkDialog);
+            PauseForScreenShot();
+
+            OkDialog(exportReportDlg, exportReportDlg.CancelClick);
+
+            // Exporting Report Data to a File, p. 9
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg0 =>
+            {
+                exportReportDlg0.ReportName = customReportName; // Not L10N
+                exportReportDlg0.OkDialog(TestFilesDir.GetTestPath("Overview_Study7_example.csv"), TextUtil.SEPARATOR_CSV); // Not L10N
+            });
+
+            // Sharing Report Templates, p. 9
+            var exportReportDlg1 = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+
+            // p. 10
+            {
+                var shareListDlg = ShowDialog<ShareListDlg<ReportOrViewSpecList, ReportOrViewSpec>>(exportReportDlg1.ShowShare);
+                PauseForScreenShot();
+
+                RunUI(() => shareListDlg.ChosenNames = new[] { customReportName }); // Not L10N
+                OkDialog(shareListDlg, () => shareListDlg.OkDialog(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr"))); // Not L10N
+            }
+
+            // Managing Report Templayes in Skyline, p. 10
+            var editReportListDlg0 = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg1.EditList);
+            RunUI(() => editReportListDlg0.SelectItem(customReportName));
+            PauseForScreenShot();   // p. 11
+
+            RunUI(() =>
+            {
+                editReportListDlg0.MoveItemDown();
+                editReportListDlg0.MoveItemDown();
+                var listReportSpecs = new List<ReportOrViewSpec>(editReportListDlg0.GetAllEdited());
+                Assert.AreEqual(3, listReportSpecs.IndexOf(spec => spec.Name == customReportName)); // Not L10N
+                editReportListDlg0.MoveItemUp();
+                editReportListDlg0.MoveItemUp();
+                editReportListDlg0.MoveItemUp();
+                listReportSpecs = new List<ReportOrViewSpec>(editReportListDlg0.GetAllEdited());
+                Assert.AreEqual(0, listReportSpecs.IndexOf(spec => spec.Name == customReportName)); // Not L10N
+                editReportListDlg0.RemoveItem();
+            });
+            OkDialog(editReportListDlg0, editReportListDlg0.OkDialog);
+            PauseForScreenShot();   // p. 12
+
+            RunUI(() =>
+            {
+                exportReportDlg1.Import(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr")); // Not L10N
+                exportReportDlg1.ReportName = customReportName; // Not L10N
+            });
+            var previewDlg = ShowDialog<DocumentGridForm>(exportReportDlg1.ShowPreview);
+            WaitForCondition(()=>previewDlg.RowCount == 20);
+            Assert.AreEqual(20, previewDlg.RowCount);
+            Assert.AreEqual(58, previewDlg.ColumnCount);
+            RunUI(previewDlg.Close);
+
+            // Modifying Existing Report Templates, p. 13
+            var editReportListDlg1 = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg1.EditList);
+            RunUI(() => editReportListDlg1.SelectItem(customReportName)); // Not L10N
+            var pivotReportDlg0 = ShowDialog<ViewEditor>(editReportListDlg1.CopyItem);
+            PauseForScreenShot();
+
+            RunUI(() =>
+            {
+                pivotReportDlg0.ViewName = "Study 7"; // Not L10N
+                // Not L10N
+                var columnsToAdd = new[]
+                                       {
+                                           // Not L10N
+                                           PropertyPath.Parse("Results!*.Value.FileName"),
+                                           PropertyPath.Parse("Results!*.Value.SampleName"),
+                                           PropertyPath.Parse("Results!*.Value.Replicate.Name"),
+                                           PropertyPath.Parse("Name"),
+                                           PropertyPath.Parse("Peptides!*.AverageMeasuredRetentionTime"),
+                                           PropertyPath.Parse("Peptides!*.Results!*.Value.PeptideRetentionTime"),
+                                           PropertyPath.Parse("Peptides!*.Results!*.Value.RatioToStandard"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Charge"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Mz"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.ProductCharge"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.ProductMz"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.FragmentIon"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.MaxFwhm"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.MinStartTime"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.MaxEndTime"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.RetentionTime"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Fwhm"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.StartTime"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.EndTime"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Height"),
+                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.UserSetPeak"),
+                                       };
+                foreach (var id in columnsToAdd)
+                {
+                    Assert.IsTrue(pivotReportDlg0.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                    pivotReportDlg0.ChooseColumnsTab.AddSelectedColumn();
+                }
+                var pivotWidget = pivotReportDlg0.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First();
+                pivotWidget.SetPivotReplicate(false);
+            });
+            PauseForScreenShot();   // p. 15
+
+            int columnCount = 0;
+            int rowCount = 0;
+            {
+                var previewReportDlg = ShowDialog<DocumentGridForm>(pivotReportDlg0.ShowPreview);
+                WaitForCondition(() => previewReportDlg.ColumnCount > 0);
+                PauseForScreenShot();
+                RunUI(() =>
+                {
+                    columnCount = previewReportDlg.ColumnCount;
+                    rowCount = previewReportDlg.RowCount;
+                });
+                OkDialog(previewReportDlg, previewReportDlg.Close);
+            }
+            RunUI(() => pivotReportDlg0.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotIsotopeLabel(true));
+            {
+                var previewReportDlg = ShowDialog<DocumentGridForm>(pivotReportDlg0.ShowPreview);
+                WaitForCondition(() => previewReportDlg.ColumnCount > 0);
+                RunUI(() =>
+                {
+                    Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
+                    Assert.AreEqual(rowCount / 2, previewReportDlg.RowCount);
+                });
+                PauseForScreenShot();
+                OkDialog(previewReportDlg, previewReportDlg.Close);
+            }
+            RunUI(() =>
+            {
+                pivotReportDlg0.ChooseColumnsTab.RemoveColumn(PropertyPath.Parse("IsotopeLabelType")); // Not L10N
+                pivotReportDlg0.OkDialog();
+                editReportListDlg1.OkDialog();
+            });
+            PauseForScreenShot();   // p. 17
+
+            OkDialog(exportReportDlg1, exportReportDlg1.CancelClick);
+
+            // Quality Control Summary Reports, p. 18
+            RunUI(() =>
+            {
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\study9pilot.sky")); // Not L10N
+                SkylineWindow.ExpandPeptides();
+            });
+            var exportReportDlg2 = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+            RunUI(() => exportReportDlg2.Import(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr"))); // Not L10N
+            PauseForScreenShot();
+
+            var editReportListDlg2 = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg2.EditList);
+            RunUI(() => editReportListDlg2.SelectItem("Summary Statistics")); // Not L10N
+            var pivotReportDlg1 = ShowDialog<ViewEditor>(editReportListDlg2.EditItem);
+            RunUI(() => Assert.AreEqual(11, pivotReportDlg1.ChooseColumnsTab.ColumnCount));
+            PauseForScreenShot();   // p. 19
+
+            {
+                var previewReportDlg = ShowDialog<DocumentGridForm>(pivotReportDlg1.ShowPreview);
+                PauseForScreenShot();   // p. 20
+
+                OkDialog(previewReportDlg, previewReportDlg.Close);
+            }
+            RunUI(() =>
+            {
+                pivotReportDlg1.OkDialog();
+                editReportListDlg2.OkDialog();
+            });
+            OkDialog(exportReportDlg2, exportReportDlg2.CancelClick);
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
+            {
+                findPeptideDlg.SearchString = "INDISHTQSVSAK"; // Not L10N
+                findPeptideDlg.FindNext();
+                findPeptideDlg.Close();
+            });
+            RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
+            WaitForGraphs();
+            PauseForScreenShot();   // p. 21
+
+            // Results Grid View, p. 22
+            var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
+            PauseForScreenShot();
+
+            BoundDataGridView resultsGrid = null;
+            RunUI(() =>
+            {
+                resultsGrid = resultsGridForm.DataGridView;
+                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.SelectedPath = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode.Nodes[0]).Path;
+            });
+            WaitForGraphs();
+            PauseForScreenShot();   // p. 23
+
+            RunUI(() =>
+            {
+                var precursorNoteColumn =
+                    resultsGrid.Columns.Cast<DataGridViewColumn>()
+                        .First(col => "PrecursorReplicateNote" == col.HeaderText);
+                resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells[precursorNoteColumn.Index];
+                resultsGrid.BeginEdit(true);
+                // ReSharper disable LocalizableElement
+                resultsGrid.EditingControl.Text = "Low signal";   // Not L10N
+                // ReSharper restore LocalizableElement
+                resultsGrid.EndEdit();
+                resultsGrid.CurrentCell = resultsGrid.Rows[1].Cells[resultsGrid.CurrentCell.ColumnIndex];
+            });
+            WaitForGraphs();
+            RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
+            WaitForGraphs();
+
+            RunDlg<ViewEditor>(resultsGridForm.NavBar.CustomizeView, resultsGridViewEditor =>
+            {
+                var chooseColumnTab = resultsGridViewEditor.ChooseColumnsTab;
+                foreach (var column in chooseColumnTab.GetSelectedColumns())
+                {
+                    chooseColumnTab.RemoveColumn(column.PropertyPath);
+                }
+                foreach (
+                    var column in
+                        new[]
+                        {
+                            PropertyPath.Parse("MinStartTime"), PropertyPath.Parse("MaxEndTime"),
+                            PropertyPath.Parse("LibraryDotProduct"), PropertyPath.Parse("TotalBackground"),
+                            PropertyPath.Parse("TotalAreaRatio")
+                        })
+                {
+                    Assert.IsTrue(chooseColumnTab.TrySelect(column), "Unable to select {0}", column);
+                    chooseColumnTab.AddSelectedColumn();
+                }
+                resultsGridViewEditor.DialogResult = DialogResult.OK;
+            });
+            PauseForScreenShot();   // p. 24
+
+            RunUI(() => SkylineWindow.SelectedNode.Expand());
+
+            // Custom Annotations, p. 25
+            var chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
+            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
+            RunUI(() =>
+            {
+                defineAnnotationDlg.AnnotationName = "Tailing"; // Not L10N
+                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.true_false;
+                defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.precursor_result);
+            });
+            PauseForScreenShot();   // p. 25
+
+            OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
+            OkDialog(editListDlg, editListDlg.OkDialog);
+            RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
+            PauseForScreenShot();   // p. 26
+
+            OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
+
+            FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++");
+            // TODO(nicksh)
+            var liveResultsGrid = FindOpenForm<LiveResultsGrid>();
+            RunUI(() => liveResultsGrid.ChooseView("Precursor Results"));
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                var colTailing = resultsGrid.Columns.Cast<DataGridViewColumn>().First(col=>col.HeaderText == "Tailing");
+                Assert.IsNotNull(colTailing);
+                Assert.AreEqual(typeof(bool), colTailing.ValueType);
+                var colNote = resultsGrid.Columns.Cast<DataGridViewColumn>().First(col=>col.HeaderText == "PrecursorReplicateNote");
+                Assert.IsNotNull(colNote);
+                colTailing.DisplayIndex = colNote.DisplayIndex + 1;
+            });
             PauseForScreenShot();   // p. 27
         }
     }

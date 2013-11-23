@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -347,7 +348,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphRetentionTime(true);
             });
             PauseForScreenShot();
-
+            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             RunUI(SkylineWindow.EditDelete);
             FindNode("IVGGWECEK"); // Not L10N
 
@@ -445,8 +446,15 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 ResultsGridForm.SynchronizeSelection = false;
-
-                var resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
+                DataGridView resultsGrid;
+                if (IsEnableLiveReports)
+                {
+                    resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
+                }
+                else
+                {
+                    resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
+                }
                 var colConcentration =
 // ReSharper disable LocalizableElement
                     resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText); // Not L10N

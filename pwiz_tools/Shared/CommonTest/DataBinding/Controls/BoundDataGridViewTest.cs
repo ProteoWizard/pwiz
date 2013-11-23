@@ -24,7 +24,6 @@ using CommonTest.DataBinding.SampleData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.DataBinding.Internal;
 
 namespace CommonTest.DataBinding.Controls
 {
@@ -55,10 +54,9 @@ namespace CommonTest.DataBinding.Controls
                     .SetColumns(columnIds.Select(id => new ColumnSpec().SetPropertyPath(id)))
                     .SetSublistId(PropertyPath.Parse("AminoAcidsList!*"));
                 var viewInfo = new ViewInfo(new DataSchema(), typeof (LinkValue<Peptide>), viewSpec);
-                ((BindingListSource) boundDataGridView.DataSource).ViewInfo = viewInfo;
                 var innerList = new BindingList<LinkValue<Peptide>>();
                 innerList.Add(new LinkValue<Peptide>(new Peptide("AD"), null));
-                ((BindingListSource)boundDataGridView.DataSource).RowSource = innerList;
+                ((BindingListSource)boundDataGridView.DataSource).SetViewContext(new TestViewContext(viewInfo.DataSchema, new[]{new RowSourceInfo(innerList, viewInfo)}));
                 Assert.AreEqual(2, boundDataGridView.Rows.Count);
                 innerList.Add(new LinkValue<Peptide>(new Peptide("TISE"), null));
                 Assert.AreEqual(6, boundDataGridView.Rows.Count);

@@ -6071,4 +6071,7 @@ Are you sure you want to continue?</value>
   <data name="MissingLibraryDataFinder_DisplayName_No_matching_library_data" xml:space="preserve">
     <value>No matching library data</value>
   </data>
+  <data name="ExportLiveReportDlg_ShowPreview_Preview__" xml:space="preserve">
+    <value>Preview: </value>
+  </data>
 </root>

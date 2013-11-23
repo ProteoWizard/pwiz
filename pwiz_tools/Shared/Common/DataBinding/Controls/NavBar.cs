@@ -67,6 +67,8 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
+        public BindingNavigator BindingNavigator { get { return bindingNavigator1; }}
+
         public IViewContext ViewContext
         {
             get { return BindingListSource == null ? null : BindingListSource.ViewContext; } 
@@ -123,7 +125,7 @@ namespace pwiz.Common.DataBinding.Controls
                     }
                     else
                     {
-                        if (BindingListView.IsRequerying)
+                        if (!BindingListSource.IsComplete)
                         {
                             lblFilterApplied.Text = Resources.NavBar_RefreshUi_Transforming_data___;
                             lblFilterApplied.Visible = true;
@@ -157,21 +159,30 @@ namespace pwiz.Common.DataBinding.Controls
         {
             var contextMenu = new ContextMenuStrip();
             var bindingSource = BindingListSource;
-            if (bindingSource != null)
+            if (bindingSource != null && ViewContext != null)
             {
-                var builtInViewItems = ViewContext.BuiltInViewSpecs.Select(viewSpec => NewChooseViewItem(viewSpec, FontStyle.Regular)).ToArray();
+                bool currentViewIsBuiltIn = ViewContext.BuiltInViews.Select(view => view.Name)
+                    .Contains(GetCurrentViewName());
+                var builtInViewItems = ViewContext.BuiltInViews.Select(viewInfo => NewChooseViewItem(viewInfo, FontStyle.Regular)).ToArray();
                 if (builtInViewItems.Length > 0)
                 {
                     contextMenu.Items.AddRange(builtInViewItems);
                     contextMenu.Items.Add(new ToolStripSeparator());
                 }
-                var customViewItems = ViewContext.CustomViewSpecs.Select(viewSpec => NewChooseViewItem(viewSpec, FontStyle.Italic)).ToArray();
+                var customViewItems = ViewContext.CustomViews.Select(viewInfo => NewChooseViewItem(viewInfo, FontStyle.Italic)).ToArray();
                 if (customViewItems.Length > 0)
                 {
                     contextMenu.Items.AddRange(customViewItems);
                     contextMenu.Items.Add(new ToolStripSeparator());
                 }
-                contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View___, null, OnCustomizeView));
+                if (currentViewIsBuiltIn)
+                {
+                    contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View, null, OnCopyView));
+                }
+                else
+                {
+                    contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___, null, OnEditView));
+                }
                 contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___, null, OnManageViews));
             }
             navBarButtonViews.DropDown = contextMenu;
@@ -195,7 +206,8 @@ namespace pwiz.Common.DataBinding.Controls
 
         public void ApplyView(ViewSpec viewSpec)
         {
-            BindingListView.ViewSpec = viewSpec;
+            var viewInfo = ViewContext.GetViewInfo(viewSpec);
+            BindingListSource.SetViewContext(ViewContext, viewInfo);
             RefreshUi();
         }
 
@@ -205,14 +217,28 @@ namespace pwiz.Common.DataBinding.Controls
             OnExport(this, e);
         }
 
-        void OnCustomizeView(object sender, EventArgs eventArgs)
+        void OnEditView(object sender, EventArgs eventArgs)
         {
-            var newView = ViewContext.CustomizeView(this, BindingListView.ViewSpec);
+            CustomizeView();
+        }
+
+        public void CustomizeView()
+        {
+            var newView = ViewContext.CustomizeView(this, BindingListSource.ViewSpec);
             if (newView == null)
             {
                 return;
             }
-            BindingListView.ViewSpec = newView;
+            BindingListSource.SetViewSpec(newView);
+        }
+
+        void OnCopyView(object sender, EventArgs eventArgs)
+        {
+            var newView = ViewContext.CopyView(this, BindingListSource.ViewSpec);
+            if (null != newView)
+            {
+                BindingListSource.SetViewSpec(newView);
+            }
         }
 
         void OnManageViews(object sender, EventArgs eventArgs)
@@ -242,6 +268,18 @@ namespace pwiz.Common.DataBinding.Controls
         private void NavBarDeleteItemOnClick(object sender, EventArgs e)
         {
             ViewContext.Delete();
+        }
+
+        public bool ShowViewsButton
+        {
+            get
+            {
+                return navBarButtonViews.Visible;
+            }
+            set
+            {
+                navBarButtonViews.Visible = value;
+            }
         }
     }
 }

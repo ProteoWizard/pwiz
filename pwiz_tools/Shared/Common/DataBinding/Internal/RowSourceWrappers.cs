@@ -52,13 +52,13 @@ namespace pwiz.Common.DataBinding.Internal
 
                 var contructor = wrapperType.GetConstructor(new[] { cloneableListType });
                 Debug.Assert(contructor != null);
-// ReSharper disable PossibleNullReferenceException
+                // ReSharper disable PossibleNullReferenceException
                 return (IRowSourceWrapper)contructor.Invoke(new object[] { items });
-// ReSharper restore PossibleNullReferenceException
+                // ReSharper restore PossibleNullReferenceException
             }
             return new RowSourceWrapper(items);
         }
-        private static bool IsCloneableListType(Type type, object args)
+        public static bool IsCloneableListType(Type type, object args)
         {
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICloneableList<,>);
         }
@@ -84,7 +84,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public override IEnumerable<RowItem> ListRowItems()
         {
-            return WrappedRowSource.Cast<object>().Select((item, index) => new RowItem(index, item));
+            return WrappedRowSource.Cast<object>().Select(item => new RowItem(item));
         }
     }
 }

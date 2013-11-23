@@ -32,7 +32,7 @@ namespace CommonTest.DataBinding.SampleData
         public string Sequence { get; private set; }
         public IList<AminoAcid> AminoAcidsList { get {
             return
-                Sequence.Select(c => new AminoAcid(Enumerable.First<KeyValuePair<string, char>>(AminoAcidFormulas.LongNames, kvp => kvp.Value == c).Key)).
+                Sequence.Select(c => new AminoAcid(AminoAcidFormulas.LongNames.First(kvp => kvp.Value == c).Key)).
                     ToArray(); } }
         public IDictionary<int,AminoAcid> AminoAcidsDict
         {

@@ -17,8 +17,11 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding.Controls
@@ -32,8 +35,13 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public class BoundDataGridView : DataGridView
     {
-        private DataGridViewColumn[] _oldColumns = new DataGridViewColumn[0];
         private IViewContext _viewContext;
+        private IList<PropertyDescriptor> _itemProperties;
+
+        public BoundDataGridView()
+        {
+            AutoGenerateColumns = false;
+        }
 
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
@@ -51,30 +59,41 @@ namespace pwiz.Common.DataBinding.Controls
                     DataError += _viewContext.OnDataError;
                 }
             }
-            AutoGenerateColumns = true;
+            UpdateColumns();
             base.OnDataBindingComplete(e);
+        }
+
+        protected virtual void UpdateColumns()
+        {
+            var bindingListSource = DataSource as BindingListSource;
             if (DesignMode)
             {
                 return;
             }
-            if (_oldColumns.SequenceEqual(Columns.Cast<DataGridViewColumn>()))
+            if (null == bindingListSource || null == _viewContext)
             {
                 return;
             }
-            if (!AutoGenerateColumns)
+            var newItemProperties = ImmutableList.ValueOf(bindingListSource.GetItemProperties(null).Cast<PropertyDescriptor>());
+            if (Equals(newItemProperties, _itemProperties))
             {
                 return;
             }
-            if (bindingListSource == null)
+            var newColumns = new List<DataGridViewColumn>();
+            foreach (var propertyDescriptor in newItemProperties)
             {
-                return;
+                var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
+                if (null != column)
+                {
+                    newColumns.Add(column);
+                }
             }
-            var columnArray = new DataGridViewColumn[Columns.Count];
-            Columns.CopyTo(columnArray, 0);
-            bindingListSource.BindingListView.ViewInfo.DataSchema.UpdateGridColumns(bindingListSource, columnArray);
-            Columns.Clear();
-            Columns.AddRange(columnArray);
-            _oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
+            if (newColumns.Count > 0)
+            {
+                Columns.Clear();
+                Columns.AddRange(newColumns.ToArray());
+            }
+            _itemProperties = newItemProperties;
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)

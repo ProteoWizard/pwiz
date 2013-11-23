@@ -120,6 +120,7 @@
   <ItemGroup>
     <Compile Include="AssertEx.cs" />
     <Compile Include="CheckDocumentState.cs" />
+    <Compile Include="CheckReportCompatibility.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="MemoryProfiler.cs" />
@@ -174,6 +175,9 @@
     <EmbeddedResource Include="PauseAndContinueForm.resx">
       <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CheckReportCompatibility.skyr" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -121,6 +121,11 @@ namespace pwiz.Common.DataBinding.RowSources
             return SourceList.DeepClone().Select(Convert).ToArray();
         }
 
+        IEnumerable ICloneableList.DeepClone()
+        {
+            return DeepClone();
+        }
+
         protected abstract TTarget Convert(TSource source);
         protected virtual TSource Unconvert(TTarget target)
         {

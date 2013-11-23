@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -30,20 +31,25 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public interface IViewContext
     {
-        ColumnDescriptor ParentColumn { get; }
-        IEnumerable<ViewSpec> BuiltInViewSpecs { get; }
-        IEnumerable<ViewSpec> CustomViewSpecs { get; }
+        IEnumerable<ViewSpec> BuiltInViews { get; }
+        IEnumerable<ViewSpec> CustomViews { get; set; }
+        IEnumerable GetRowSource(ViewInfo viewInfo);
+        ViewInfo GetViewInfo(ViewSpec viewSpec);
         void Export(Control owner, BindingListSource bindingListSource);
+        BindingListSource ExecuteQuery(Control owner, ViewSpec viewSpec);
+        ViewSpec NewView(Control owner);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec);
+        ViewSpec CopyView(Control owner, ViewSpec currentView);
         void ManageViews(Control owner);
-        ViewSpec SaveView(ViewSpec viewSpec);
         void DeleteViews(IEnumerable<ViewSpec> viewSpecs);
+        void ExportViews(Control owner, IEnumerable<ViewSpec> views);
+        void ImportViews(Control owner);
         DialogResult ShowMessageBox(Control owner, string messsage, MessageBoxButtons messageBoxButtons);
         Icon ApplicationIcon { get; }
-        IViewContext GetViewContext(ColumnDescriptor column);
         DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor);
         void OnDataError(object sender, DataGridViewDataErrorEventArgs dataGridViewDataErrorEventArgs);
         bool DeleteEnabled { get; }
         void Delete();
+        void Preview(Control owner, ViewInfo viewInfo);
     }
 }

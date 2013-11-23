@@ -37,6 +37,7 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
+            checkBoxLiveReports.Checked = Settings.Default.EnableLiveReports;
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)
@@ -47,6 +48,15 @@ namespace pwiz.Skyline.ToolsUI
         public void EditServers()
         {
             _driverServers.EditList();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (DialogResult == DialogResult.OK)
+            {
+                Program.MainWindow.SetEnableLiveReports(checkBoxLiveReports.Checked);
+            }
+            base.OnClosed(e);
         }
 
         public void OkDialog()

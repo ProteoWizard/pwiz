@@ -212,9 +212,6 @@
   <data name="CustomizeViewForm_UpdatePropertySheet_Multiple_Selection" xml:space="preserve">
     <value>Multiple Selection</value>
   </data>
-  <data name="CustomizeViewForm_UpdateSublistCombo__None_" xml:space="preserve">
-    <value>&lt;None&gt;</value>
-  </data>
   <data name="NavBar_RefreshUi_Transforming_data___" xml:space="preserve">
     <value>Transforming data...</value>
   </data>
@@ -224,10 +221,13 @@
   <data name="NavBar_RefreshUi__Transforming_data____" xml:space="preserve">
     <value>(Transforming data...)</value>
   </data>
-  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View___" xml:space="preserve">
-    <value>Customize View...</value>
+  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___" xml:space="preserve">
+    <value>Edit View...</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___" xml:space="preserve">
     <value>Manage Views...</value>
+  </data>
+  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
+    <value>Customize View...</value>
   </data>
 </root>

@@ -22,6 +22,7 @@ using pwiz.Skyline.Model.Results;
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.result)]
+    [DatabindingTable(RootTable = typeof(Databinding.Entities.Transition), Property = "Results!*.Value")]
     public class DbTransitionResult : DbRatioResult
     {
         public override Type EntityClass
@@ -29,6 +30,7 @@ namespace pwiz.Skyline.Model.Hibernate
             get { return typeof(DbTransitionResult); }
         }
         public virtual DbTransition Transition { get; set; }
+        [DatabindingColumn(Name = "PrecursorResult.PeptideResult.ResultFile")]
         public virtual DbResultFile ResultFile { get; set; }
         public virtual DbPrecursorResult PrecursorResult { get; set; }
         [QueryColumn(Format = Formats.RETENTION_TIME)]

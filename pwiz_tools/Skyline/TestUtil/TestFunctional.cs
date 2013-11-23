@@ -47,6 +47,12 @@ namespace pwiz.SkylineTestUtil
         private const int SLEEP_INTERVAL = 100;
         private const int WAIT_TIME = 60*1000;    // 1 minute
 
+        static AbstractFunctionalTest()
+        {
+            IsEnableLiveReports = true;
+            IsCheckLiveReportsCompatibility = false;
+        }
+
         private string[] _testFilesZips;
         public string TestFilesZip
         {
@@ -137,12 +143,12 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.Invoke(act);
         }
 
-        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act) where TDlg : FormEx
+        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act) where TDlg : Form
         {
             RunDlg(show, false, act);
         }
 
-        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act) where TDlg : FormEx
+        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act) where TDlg : Form
         {
             var doc = SkylineWindow.Document;
             TDlg dlg = ShowDialog<TDlg>(show);
@@ -417,8 +423,14 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
+        public static bool IsEnableLiveReports { get; set; }
+
+        public static bool IsCheckLiveReportsCompatibility { get; set; }
+
         public void PauseForScreenShot(string description = null)
         {
+            if (IsCheckLiveReportsCompatibility)
+                CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             if (IsDemoMode)
                 Thread.Sleep(3*1000);
             else if (IsPauseForScreenShots)
@@ -569,7 +581,7 @@ namespace pwiz.SkylineTestUtil
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
                 Settings.Default.Reset();
-
+                Settings.Default.EnableLiveReports = IsEnableLiveReports;
                 RunTest();
             }
             catch (Exception x)
@@ -597,7 +609,7 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
-            
+
             DoTest();
             
             if (doClipboardCheck)

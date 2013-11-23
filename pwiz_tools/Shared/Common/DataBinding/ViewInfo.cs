@@ -31,7 +31,7 @@ namespace pwiz.Common.DataBinding
     {
         private readonly IDictionary<PropertyPath, ColumnDescriptor> _columnDescriptors = new Dictionary<PropertyPath, ColumnDescriptor>();
         
-        public ViewInfo(DataSchema dataSchema, Type rootType, ViewSpec viewSpec) : this(new ColumnDescriptor(dataSchema, rootType), viewSpec)
+        public ViewInfo(DataSchema dataSchema, Type rootType, ViewSpec viewSpec) : this(ColumnDescriptor.RootColumn(dataSchema, rootType), viewSpec)
         {
         }
 
@@ -40,6 +40,7 @@ namespace pwiz.Common.DataBinding
             ParentColumn = parentColumn;
             DataSchema = parentColumn.DataSchema;
             Name = viewSpec.Name;
+            RowSourceName = viewSpec.RowSource;
 
             _columnDescriptors.Add(parentColumn.PropertyPath, parentColumn);
             var displayColumns = new List<DisplayColumn>();
@@ -57,7 +58,7 @@ namespace pwiz.Common.DataBinding
                 ColumnDescriptor collectionColumn = null;
                 if (columnDescriptor != null)
                 {
-                    collectionColumn = columnDescriptor.FirstUnboundParent() ?? ParentColumn;
+                    collectionColumn = columnDescriptor.CollectionAncestor() ?? ParentColumn;
                 }
                 filters.Add(new FilterInfo(filterSpec, columnDescriptor, collectionColumn));
             }
@@ -85,15 +86,33 @@ namespace pwiz.Common.DataBinding
         {
             return new ViewSpec()
                 .SetName(Name)
+                .SetRowSource(RowSourceName)
                 .SetSublistId(SublistId)
                 .SetColumns(DisplayColumns.Select(dc=>dc.ColumnSpec))
                 .SetFilters(Filters.Select(filterInfo=>filterInfo.FilterSpec));
+        }
+
+        public ViewSpec ViewSpec
+        {
+            get
+            {
+                return GetViewSpec();
+            }
+        }
+
+        public bool HasTotals
+        {
+            get
+            {
+                return DisplayColumns.Any(col => TotalOperation.PivotValue == col.ColumnSpec.Total);
+            }
         }
 
 
         public DataSchema DataSchema { get; private set; }
         public ColumnDescriptor ParentColumn { get; private set; }
         public string Name { get; private set; }
+        public string RowSourceName { get; private set; }
         public PropertyPath SublistId { get; private set; }
         public IList<DisplayColumn> DisplayColumns { get; private set; }
         public IList<DisplayColumn> SortColumns { get; private set; }
@@ -104,7 +123,11 @@ namespace pwiz.Common.DataBinding
             var unboundColumnSet = new HashSet<ColumnDescriptor> {ParentColumn};
             foreach (var displayColumn in DisplayColumns)
             {
-                for (var unboundParent = displayColumn.ColumnDescriptor.FirstUnboundParent(); unboundParent != null; unboundParent = unboundParent.Parent.FirstUnboundParent())
+                if (displayColumn.ColumnDescriptor == null)
+                {
+                    continue;
+                }
+                for (var unboundParent = displayColumn.ColumnDescriptor.CollectionAncestor(); unboundParent != null; unboundParent = unboundParent.Parent.CollectionAncestor())
                 {
                     unboundColumnSet.Add(unboundParent);
                 }
@@ -125,7 +148,7 @@ namespace pwiz.Common.DataBinding
             }
             if (idPath.Name != null)
             {
-                columnDescriptor = new ColumnDescriptor(parent, idPath.Name);
+                columnDescriptor = parent.ResolveChild(idPath.Name);
             }
             else
             {
@@ -133,12 +156,11 @@ namespace pwiz.Common.DataBinding
                 {
                     return null;
                 }
-                var collectionInfo = DataSchema.GetCollectionInfo(parent.PropertyType);
-                if (collectionInfo == null)
+                columnDescriptor = parent.GetCollectionColumn();
+                if (columnDescriptor == null)
                 {
                     return null;
                 }
-                columnDescriptor = new ColumnDescriptor(parent, collectionInfo);
             }
             _columnDescriptors.Add(idPath, columnDescriptor);
             return columnDescriptor;

@@ -23,14 +23,19 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.DataBinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
@@ -212,62 +217,126 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(messageDlg, messageDlg.OkDialog);
             }
 
-            // Making a report by hand p.11
-            ExportReportDlg exportReportDlg = ShowDialog<ExportReportDlg>(() => SkylineWindow.ShowExportReportDialog());
-            var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
-            var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
-            RunUI(() =>
+            if (IsEnableLiveReports)
             {
-                Assert.IsTrue(pivotReportDlg.TrySelect(new Identifier("ProteinName")));
-                pivotReportDlg.AddSelectedColumn();
-                Assert.AreEqual(1, pivotReportDlg.ColumnCount);
-                var columnsToAdd = new[]
+                // Making a report by hand p.11
+                ExportLiveReportDlg exportReportDlg = ShowDialog<ExportLiveReportDlg>(() => SkylineWindow.ShowExportReportDialog());
+                var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg.EditList);
+                var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
+                RunUI(() =>
+                {
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Name")));
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                    Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
+                    var columnsToAdd = new[]
+                                {
+                                    PropertyPath.Parse("Peptides!*.Precursors!*.ModifiedSequence"),
+                                    PropertyPath.Parse("Peptides!*.Precursors!*.Charge"),
+                                    PropertyPath.Parse("Peptides!*.Precursors!*.Mz"),
+                                };
+                    foreach (var id in columnsToAdd)
+                    {
+                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                        viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                    }
+                    Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
+                });
+                PauseForScreenShot("p. 13 - Custom report template");
+
+                {
+                    var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+                    RunUI(() =>
+                    {
+                        Assert.AreEqual(10, previewReportDlg.RowCount);
+                        Assert.AreEqual(4, previewReportDlg.ColumnCount);
+                        var precursors =
+                            SkylineWindow.Document.TransitionGroups.ToArray();
+                        const int precursorIndex = 3;
+                        for (int i = 0; i < 10; i++)
+                        {
+                            Assert.AreEqual(precursors[i].PrecursorMz, double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()), 0.000001);
+                        }
+                        var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
+                        Assert.IsNotNull(precursorMzCol);
+                        previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
+                    });
+                    PauseForScreenShot("p. 14 - Report preview");
+
+                    OkDialog(previewReportDlg, previewReportDlg.Close);
+                }
+
+                // Press the Esc key until all forms have been dismissed.
+                RunUI(() =>
+                {
+                    viewEditor.Close();
+                    editReportListDlg.CancelDialog();
+                    exportReportDlg.CancelClick();
+                });
+                WaitForClosedForm(viewEditor);
+                WaitForClosedForm(editReportListDlg);
+                WaitForClosedForm(exportReportDlg);
+
+            }
+            else
+            {
+                // Making a report by hand p.11
+                ExportReportDlg exportReportDlg = ShowDialog<ExportReportDlg>(() => SkylineWindow.ShowExportReportDialog());
+                var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
+                var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
+                RunUI(() =>
+                {
+                    Assert.IsTrue(pivotReportDlg.TrySelect(new Identifier("ProteinName")));
+                    pivotReportDlg.AddSelectedColumn();
+                    Assert.AreEqual(1, pivotReportDlg.ColumnCount);
+                    var columnsToAdd = new[]
                                 {
                                     new Identifier("Peptides", "Precursors", "ModifiedSequence"),
                                     new Identifier("Peptides", "Precursors", "Charge"),
                                     new Identifier("Peptides", "Precursors", "Mz")
                                 };
-                foreach (Identifier id in columnsToAdd)
-                {
-                    Assert.IsTrue(pivotReportDlg.TrySelect(id));
-                    pivotReportDlg.AddSelectedColumn();
-                }
-                Assert.AreEqual(4, pivotReportDlg.ColumnCount);
-            });
-            PauseForScreenShot("p. 13 - Custom report template");
+                    foreach (Identifier id in columnsToAdd)
+                    {
+                        Assert.IsTrue(pivotReportDlg.TrySelect(id));
+                        pivotReportDlg.AddSelectedColumn();
+                    }
+                    Assert.AreEqual(4, pivotReportDlg.ColumnCount);
+                });
+                PauseForScreenShot("p. 13 - Custom report template");
 
-            {
-                var previewReportDlg = ShowDialog<PreviewReportDlg>(pivotReportDlg.ShowPreview);
+                {
+                    var previewReportDlg = ShowDialog<PreviewReportDlg>(pivotReportDlg.ShowPreview);
+                    RunUI(() =>
+                    {
+                        Assert.AreEqual(10, previewReportDlg.RowCount);
+                        Assert.AreEqual(4, previewReportDlg.ColumnCount);
+                        var precursors =
+                            SkylineWindow.Document.TransitionGroups.ToArray();
+                        const int precursorIndex = 3;
+                        for (int i = 0; i < 10; i++)
+                        {
+                            Assert.AreEqual(precursors[i].PrecursorMz, double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()), 0.000001);
+                        }
+                        var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
+                        Assert.IsNotNull(precursorMzCol);
+                        previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
+                    });
+                    PauseForScreenShot("p. 14 - Report preview");
+
+                    OkDialog(previewReportDlg, previewReportDlg.OkDialog);
+                }
+
+                // Press the Esc key until all forms have been dismissed.
                 RunUI(() =>
                 {
-                    Assert.AreEqual(10, previewReportDlg.RowCount);
-                    Assert.AreEqual(4, previewReportDlg.ColumnCount);
-                    var precursors =
-                        SkylineWindow.Document.TransitionGroups.ToArray();
-                    const int precursorIndex = 3;
-                    for (int i = 0; i < 10; i++)
-                    {
-                        Assert.AreEqual(precursors[i].PrecursorMz, double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()), 0.000001);
-                    }
-                    var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
-                    Assert.IsNotNull(precursorMzCol);
-                    previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
+                    pivotReportDlg.CancelDialog();
+                    editReportListDlg.CancelDialog();
+                    exportReportDlg.CancelClick();
                 });
-                PauseForScreenShot("p. 14 - Report preview");
+                WaitForClosedForm(pivotReportDlg);
+                WaitForClosedForm(editReportListDlg);
+                WaitForClosedForm(exportReportDlg);
 
-                OkDialog(previewReportDlg, previewReportDlg.OkDialog);
             }
-
-            // Press the Esc key until all forms have been dismissed.
-            RunUI(() =>
-            {
-                pivotReportDlg.CancelDialog();
-                editReportListDlg.CancelDialog();
-                exportReportDlg.CancelClick();
-            });
-            WaitForClosedForm(pivotReportDlg);
-            WaitForClosedForm(editReportListDlg);
-            WaitForClosedForm(exportReportDlg);
 
             //p. 12 Import Full-Scan Data
             // Launch import peptide search wizard

@@ -23,7 +23,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Common.DataBinding.Internal
@@ -49,9 +51,14 @@ namespace pwiz.Common.DataBinding.Internal
         private QueryResults _queryResults;
         private readonly QueryRequestor _queryRequestor;
 
-        public BindingListView(TaskScheduler eventTaskScheduler) : base(new RowItemList())
+        public BindingListView(TaskScheduler eventTaskScheduler) : this(eventTaskScheduler, CancellationToken.None)
+        {
+        }
+        
+        public BindingListView(TaskScheduler eventTaskScheduler, CancellationToken cancellationToken) : base(new RowItemList())
         {
             EventTaskScheduler = eventTaskScheduler;
+            CancellationToken = cancellationToken;
             _queryResults = QueryResults.Empty;
             _itemProperties = new PropertyDescriptorCollection(new PropertyDescriptor[0], true);
             _queryRequestor = new QueryRequestor(this);
@@ -77,12 +84,17 @@ namespace pwiz.Common.DataBinding.Internal
                 _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetViewInfo(value);
             }
         }
+
+        public void SetViewAndRows(ViewInfo viewInfo, IEnumerable rows)
+        {
+            _queryRequestor.SetRowsAndParameters(rows, _queryRequestor.QueryParameters.SetViewInfo(viewInfo));
+        }
         public ViewSpec ViewSpec
         {
             get
             {
                 // TODO(nicksh):Apply current sort if any.
-                return ViewInfo.GetViewSpec();
+                return ViewInfo.ViewSpec;
             }
             set
             {
@@ -189,6 +201,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
 
         public TaskScheduler EventTaskScheduler { get; private set; }
+        public CancellationToken CancellationToken { get; private set; }
 
         public string GetListName(PropertyDescriptor[] listAccessors)
         {
@@ -234,15 +247,15 @@ namespace pwiz.Common.DataBinding.Internal
             }
             _queryResults = _queryRequestor.QueryResults;
             RowItemList.Reset(QueryResults.ResultRows);
-            bool propsChanged = true;
-            if (_itemProperties != null)
+            bool propsChanged = false;
+            if (_itemProperties == null)
             {
-                var oldNameSet = new HashSet<string>(_itemProperties.Cast<PropertyDescriptor>().Select(pd => pd.Name));
-                var newNameSet = new HashSet<string>(QueryResults.ItemProperties.Cast<PropertyDescriptor>().Select(pd => pd.Name));
-                if (oldNameSet.SetEquals(newNameSet))
-                {
-                    propsChanged = false;
-                }
+                propsChanged = true;
+            }
+            else if (!_itemProperties.Cast<PropertyDescriptor>()
+                .SequenceEqual(QueryResults.ItemProperties.Cast<PropertyDescriptor>()))
+            {
+                propsChanged = true;
             }
             _itemProperties = QueryResults.ItemProperties;
             AllowNew = false;
@@ -351,6 +364,20 @@ namespace pwiz.Common.DataBinding.Internal
         public void Dispose()
         {
             _queryRequestor.Dispose();
+            _queryResults = null;
+            RowItemList.Dispose();
+        }
+
+        public event EventHandler<BindingManagerDataErrorEventArgs> UnhandledExceptionEvent;
+
+        public void OnUnhandledException(Exception exception)
+        {
+            Trace.TraceError("BindingListView unhandled exception {0}", exception);
+            var unhandledExceptionEvent = UnhandledExceptionEvent;
+            if (null != unhandledExceptionEvent)
+            {
+                unhandledExceptionEvent(this, new BindingManagerDataErrorEventArgs(exception));
+            }
         }
     }
 }

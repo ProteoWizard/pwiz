@@ -17,17 +17,23 @@
  * limitations under the License.
  */
 
+using System.Collections;
 using System.Collections.Generic;
 
 namespace pwiz.Common.DataBinding.RowSources
 {
+    public interface ICloneableList : IEnumerable
+    {
+        IEnumerable DeepClone();
+    }
+
     /// <summary>
     /// A list which can make an immutable copy of itself.
     /// If the <see cref="pwiz.Common.DataBinding.Controls.BindingListSource.RowSource"/>
     /// is an ICloneableList, then the pivoting and filtering can be performed on a background 
     /// thread.
     /// </summary>
-    public interface ICloneableList<TKey, TItem> : IList<TItem>
+    public interface ICloneableList<TKey, TItem> : IList<TItem>, ICloneableList
     {
         int IndexOfKey(TKey key);
         /// <summary>
@@ -38,6 +44,6 @@ namespace pwiz.Common.DataBinding.RowSources
         /// <summary>
         /// Returns a copy of this list whose elements will not change.
         /// </summary>
-        IList<TItem> DeepClone();
+        new IList<TItem> DeepClone();
     }
 }

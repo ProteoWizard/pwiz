@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -884,9 +885,19 @@ namespace pwiz.Skyline
 
         public void ShowExportReportDialog()
         {
-            using (ExportReportDlg dlg = new ExportReportDlg(this))
+            if (Settings.Default.EnableLiveReports)
             {
-                dlg.ShowDialog(this);
+                using (var dlg = new ExportLiveReportDlg(this))
+                {
+                    dlg.ShowDialog(this);
+                }
+            }
+            else
+            {
+                using (ExportReportDlg dlg = new ExportReportDlg(this))
+                {
+                    dlg.ShowDialog(this);
+                }
             }
         }
 

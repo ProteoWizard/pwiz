@@ -16,76 +16,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
 {
     public class RowItem
     {
-        public RowItem(object key, object value) : this(null, PropertyPath.Root, key, value)
+        public RowItem(object value) : this(value, PivotKey.EMPTY, ImmutableList.Empty<PivotKey>())
         {
         }
-        public RowItem(RowItem parent, PropertyPath sublistId, object key, object value)
+        public RowItem(object value, PivotKey rowKey, IEnumerable<PivotKey> pivotKeys)
         {
-            Parent = parent;
-            SublistId = sublistId;
-            Key = key;
             Value = value;
-            PivotKeys = new PivotKey[0];
+            RowKey = rowKey;
+            PivotKeys = ImmutableList.ValueOf(pivotKeys);
         }
         protected RowItem(RowItem copy)
         {
-            Parent = copy.Parent;
-            SublistId = copy.SublistId;
-            Key = copy.Key;
             Value = copy.Value;
+            RowKey = copy.RowKey;
             PivotKeys = copy.PivotKeys;
         }
 
-        public PivotKey GetGroupKey()
+        public PivotKey RowKey { get; private set; }
+
+        public RowItem SetRowKey(PivotKey rowKey)
         {
-            var result = Key as PivotKey;
-            if (result != null)
-            {
-                return result;
-            }
-            if (Parent == null)
-            {
-                return new PivotKey(SublistId, Key);
-            }
-            return PivotKey.OfValues(Parent.GetGroupKey(), Parent.SublistId, new[] {new KeyValuePair<PropertyPath, object>(SublistId, Key)});
+            return new RowItem(this){RowKey = rowKey};
         }
 
-        public RowItem SetPivotKeys(HashSet<PivotKey> pivotKeys)
+        public object Value { get; private set; }
+
+        public RowItem SetValue(object value)
         {
-            if (PivotKeys.Count == 0 && pivotKeys.Count == 0)
+            return new RowItem(this) {Value = value};
+        }
+        public ICollection<PivotKey> PivotKeys { get; private set; }
+        public RowItem SetPivotKeys(IEnumerable<PivotKey> pivotKeys)
+        {
+            var newPivotKeys = ImmutableList.ValueOf(pivotKeys);
+            if (newPivotKeys.Count == 0 && PivotKeys.Count == 0)
             {
                 return this;
             }
-            return new RowItem(this){PivotKeys = Array.AsReadOnly(pivotKeys.ToArray())};
+            return new RowItem(this) { PivotKeys = newPivotKeys };
         }
 
-        public RowItem SetParent(RowItem newParent)
-        {
-            return new RowItem(this){Parent=newParent};
-        }
-        public RowItem ChangeParentAndValue(RowItem newParent, object newValue)
-        {
-            return new RowItem(this)
-                {
-                    Parent = newParent,
-                    Value = newValue
-                };
-        }
-
-        public RowItem Parent { get; private set; }
-        public PropertyPath SublistId { get; private set; }
-        public object Key { get; private set; }
-        public object Value { get; private set; }
-        public ICollection<PivotKey> PivotKeys { get; private set; }
         public virtual void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor)
         {
         }

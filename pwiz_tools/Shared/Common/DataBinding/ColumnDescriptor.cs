@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding
 {
@@ -28,62 +27,30 @@ namespace pwiz.Common.DataBinding
     /// Provides a description of a property on a Type, or a descendent of a Type.
     /// </summary>
     /// <seealso cref="DataBinding.PropertyPath"/>
-    public class ColumnDescriptor
+    public abstract class ColumnDescriptor
     {
-        private ColumnDescriptor(DataSchema dataSchema)
+        public static ColumnDescriptor RootColumn(DataSchema dataSchema, Type propertyType)
+        {
+            return new Root(dataSchema, propertyType);
+        }
+
+        protected ColumnDescriptor(DataSchema dataSchema)
         {
             DataSchema = dataSchema;
         }
-        public ColumnDescriptor(DataSchema dataSchema, Type propertyType) : this(dataSchema)
-        {
-            PropertyType = propertyType;
-            PropertyPath = PropertyPath.Root;
-        }
 
-        public ColumnDescriptor(ColumnDescriptor parent, String name) 
-            : this(parent, name, parent.DataSchema.GetPropertyDescriptor(parent.PropertyType, name))
-        {
-        }
-
-        public ColumnDescriptor(ColumnDescriptor parent, PropertyDescriptor propertyDescriptor) 
-            : this(parent, propertyDescriptor.Name, propertyDescriptor)
-        {
-        }
-        public ColumnDescriptor(ColumnDescriptor parent, string name, PropertyDescriptor propertyDescriptor)
-        {
-            DataSchema = parent.DataSchema;
-            Parent = parent;
-            PropertyPath = parent.PropertyPath.Property(name);
-            ReflectedPropertyDescriptor = propertyDescriptor;
-            if (ReflectedPropertyDescriptor != null)
-            {
-                PropertyType = ReflectedPropertyDescriptor.PropertyType;
-            }
-        }
-
-
-        public ColumnDescriptor(ColumnDescriptor parent, CollectionInfo collectionInfo) : this(parent.DataSchema)
+        protected ColumnDescriptor(ColumnDescriptor parent, PropertyPath propertyPath) : this(parent.DataSchema)
         {
             Parent = parent;
-            CollectionInfo = collectionInfo;
-            PropertyType = collectionInfo.ElementType;
-            PropertyPath = parent.PropertyPath.LookupAllItems();
+            PropertyPath = propertyPath;
         }
-        public ColumnDescriptor(ColumnDescriptor columnDescriptor)
-        {
-            DataSchema = columnDescriptor.DataSchema;
-            Parent = columnDescriptor.Parent;
-            PropertyPath = columnDescriptor.PropertyPath;
-            PropertyType = columnDescriptor.PropertyType;
-            CollectionInfo = columnDescriptor.CollectionInfo;
-            ReflectedPropertyDescriptor = columnDescriptor.ReflectedPropertyDescriptor;
-        }
+
         public DataSchema DataSchema { get; private set; }
         public ColumnDescriptor Parent { get; private set; }
         public String Name { get { return PropertyPath.Name;} }
-        public CollectionInfo CollectionInfo { get; private set; }
-        public PropertyDescriptor ReflectedPropertyDescriptor { get; private set; }
-        public Type PropertyType { get; private set; }
+        public virtual ICollectionInfo CollectionInfo { get { return null; } }
+        public virtual PropertyDescriptor ReflectedPropertyDescriptor { get { return null; } }
+        public abstract Type PropertyType { get;  }
         public Type WrappedPropertyType
         {
             get
@@ -91,84 +58,14 @@ namespace pwiz.Common.DataBinding
                 return PropertyType == null ? null : DataSchema.GetWrappedValueType(PropertyType);
             }
         }
-        public object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
-        {
-            while (!PropertyPath.StartsWith(rowItem.SublistId))
-            {
-                rowItem = rowItem.Parent;
-            }
-            if (PropertyPath.Equals(rowItem.SublistId))
-            {
-                return rowItem.Value;
-            }
-            var parentValue = Parent.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
-            if (parentValue == null)
-            {
-                return null;
-            }
-            if (notifyFutureChanges)
-            {
-                rowItem.HookPropertyChange(parentValue, ReflectedPropertyDescriptor);
-            }
-            return GetPropertyValueFromParent(parentValue, pivotKey, notifyFutureChanges);
-        }
-        internal object GetPropertyValue(RowNode rowNode, bool notifyFutureChanges)
-        {
-            if (PropertyPath.Length == rowNode.PropertyPath.Length)
-            {
-                return rowNode.RowItem.Value;
-            }
-            var parentValue = Parent.GetPropertyValue(rowNode, notifyFutureChanges);
-            if (parentValue == null)
-            {
-                return null;
-            }
-            
-            return GetPropertyValueFromParent(parentValue, null, notifyFutureChanges);
-        }
 
-        public object GetPropertyValueFromParent(object parentComponent, PivotKey pivotKey, bool notifyFutureChanges)
-        {
-            if (parentComponent == null)
-            {
-                return null;
-            }
-            if (ReflectedPropertyDescriptor == null)
-            {
-                if (pivotKey == null)
-                {
-                    return null;
-                }
-                var collectionInfo = CollectionInfo;
-                if (collectionInfo == null)
-                {
-                    return null;
-                }
-                var key = pivotKey.FindValue(PropertyPath);
-                if (key == null)
-                {
-                    return null;
-                }
-                return collectionInfo.GetItemFromKey(parentComponent, key);
-            }
-            try
-            {
-                return ReflectedPropertyDescriptor.GetValue(parentComponent);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-        public bool IsReadOnly
+        public abstract object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges);
+
+        public virtual bool IsReadOnly
         {
             get
             {
-                if (Parent == null || ReflectedPropertyDescriptor == null)
-                {
-                    return true;
-                }
-                return ReflectedPropertyDescriptor.IsReadOnly;
+                return true;
             }
         }
         public ColumnDescriptor GetOneToManyColumn()
@@ -177,16 +74,14 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
-            if (Parent.ReflectedPropertyDescriptor != null)
-            {
-                if (Parent.ReflectedPropertyDescriptor.PropertyType.IsGenericType && Parent.PropertyType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                {
-                    return Parent.GetOneToManyColumn();
-                }
-            }
             if (Parent.CollectionInfo != null)
             {
                 return Parent.Parent;
+            }
+            if (Parent.Parent != null && Parent.Parent.PropertyType.IsGenericType 
+                && Parent.Parent.PropertyType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                return Parent.GetOneToManyColumn();
             }
             return null;
         }
@@ -197,38 +92,10 @@ namespace pwiz.Common.DataBinding
                 return DataSchema.IsAdvanced(this);
             }
         }
-        public void SetValue(RowItem rowItem, PivotKey pivotKey, object value)
+        public virtual void SetValue(RowItem rowItem, PivotKey pivotKey, object value)
         {
-            if (Parent == null || ReflectedPropertyDescriptor == null)
-            {
-                return;
-            }
-            var parentComponent = Parent.GetPropertyValue(rowItem, pivotKey, true);
-            if (parentComponent == null)
-            {
-                return;
-            }
-            ReflectedPropertyDescriptor.SetValue(parentComponent, value);
         }
 
-        public bool IsReadOnlyForRow(RowItem rowItem, PivotKey pivotKey)
-        {
-            if (IsReadOnly)
-            {
-                return true;
-            }
-            return Parent.GetPropertyValue(rowItem, pivotKey, true) == null;
-        }
-
-        public string Caption { get; private set; } 
-        public ColumnDescriptor SetCaption(string value)
-        {
-            if (value == Caption)
-            {
-                return this;
-            }
-            return new ColumnDescriptor(this){Caption = value};
-        }
         public string DefaultCaption
         {
             get
@@ -240,114 +107,269 @@ namespace pwiz.Common.DataBinding
         public string DisplayName {
             get
             {
-                return Caption ?? DefaultCaption;
+                return DefaultCaption;
             }
         }
 
-        public bool Hidden { get; private set; }
-        public ColumnDescriptor SetHidden(bool value)
-        {
-            return Hidden == value ? this : new ColumnDescriptor(this){Hidden = value};
-        }
-        public ColumnDescriptor SetColumnSpec(ColumnSpec columnSpec)
-        {
-            return SetCaption(columnSpec.Caption)
-                .SetHidden(columnSpec.Hidden);
-        }
-        public bool IsUnbound()
-        {
-            if (Parent == null)
-            {
-                return false;
-            }
-            if (Parent.IsUnbound())
-            {
-                return true;
-            }
-            return ReflectedPropertyDescriptor == null;
-        }
-
-        public IList<ColumnDescriptor> ListUnboundColumns()
-        {            
-            if (Parent == null)
-            {
-                return new ColumnDescriptor[0];
-            }
-            var parentUnboundColumns = Parent.ListUnboundColumns();
-            if (ReflectedPropertyDescriptor != null)
-            {
-                return parentUnboundColumns;
-            }
-            var result = new ColumnDescriptor[parentUnboundColumns.Count + 1];
-            parentUnboundColumns.CopyTo(result, 0);
-            result[result.Length - 1] = this;
-            return result;
-        }
-
-        public ColumnDescriptor FirstUnboundParent()
+        public ColumnDescriptor CollectionAncestor()
         {
             if (Parent == null)
             {
                 return null;
             }
-            if (ReflectedPropertyDescriptor == null)
+            if (CollectionInfo != null)
             {
                 return this;
             }
-            return Parent.FirstUnboundParent();
+            return Parent.CollectionAncestor();
         }
 
         public PropertyPath PropertyPath
         {
-            get; private set;
+            get; protected set;
         }
         public ColumnDescriptor ResolveChild(string name)
         {
-            if (PropertyType == null)
-            {
-                return null;
-            }
-            if (name == null)
-            {
-                var collectionInfo = DataSchema.GetCollectionInfo(PropertyType);
-                if (collectionInfo != null)
-                {
-                    return new ColumnDescriptor(this, collectionInfo);
-                }
-            }
             var propertyDescriptor = DataSchema.GetPropertyDescriptor(PropertyType, name);
             if (propertyDescriptor == null)
             {
                 return null;
             }
-            return new ColumnDescriptor(this, propertyDescriptor);
+            return new Reflected(this, propertyDescriptor);
         }
-        public IEnumerable<ColumnDescriptor> GetChildColumns()
+
+        public ColumnDescriptor GetCollectionColumn()
         {
-            return DataSchema.GetPropertyDescriptors(PropertyType).Select(pd => new ColumnDescriptor(this, pd));
-        }
-        public ColumnDescriptor ResolveDescendant(PropertyPath propertyPath)
-        {
-            if (propertyPath.IsRoot)
-            {
-                return this;
-            }
-            ColumnDescriptor parent = ResolveDescendant(propertyPath.Parent);
-            if (parent == null)
+            var collectionInfo = DataSchema.GetCollectionInfo(PropertyType);
+            if (null == collectionInfo)
             {
                 return null;
             }
-            return parent.ResolveChild(propertyPath.Name);
+            return new Collection(this, collectionInfo);
         }
-        public bool IsSelectable
+        public IEnumerable<ColumnDescriptor> GetChildColumns()
         {
-            get
+            return DataSchema.GetPropertyDescriptors(PropertyType).Select(pd => new Reflected(this, pd));
+        }
+
+        public virtual IEnumerable<Attribute> GetAttributes()
+        {
+            return new Attribute[0];
+        }
+
+        #region Equality Members
+        protected bool Equals(ColumnDescriptor other)
+        {
+            return Equals(DataSchema, other.DataSchema)
+                   && Equals(Parent, other.Parent)
+                   && Equals(PropertyPath, other.PropertyPath);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ColumnDescriptor) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
             {
-                if (Parent != null)
+                int hashCode = (DataSchema != null ? DataSchema.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Parent != null ? Parent.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (PropertyPath != null ? PropertyPath.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+        #endregion
+
+        private class Root : ColumnDescriptor
+        {
+            private readonly Type _propertyType;
+            public Root(DataSchema dataSchema, Type propertyType) : base(dataSchema)
+            {
+                PropertyPath = PropertyPath.Root;
+                _propertyType = propertyType;
+            }
+
+            public override Type PropertyType
+            {
+                get { return _propertyType; }
+            }
+
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
+            {
+                if (null != pivotKey)
                 {
-                    return true;
+                    if (!rowItem.PivotKeys.Contains(pivotKey))
+                    {
+                        return null;
+                    }
                 }
-                return DataSchema.IsRootTypeSelectable(PropertyType);
+                return rowItem.Value;
+            }
+
+            protected bool Equals(Root other)
+            {
+                return base.Equals(other) && _propertyType == other._propertyType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Root) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (base.GetHashCode()*397) ^ _propertyType.GetHashCode();
+                }
+            }
+        }
+
+        private class Reflected : ColumnDescriptor
+        {
+            private readonly PropertyDescriptor _propertyDescriptor;
+            public Reflected(ColumnDescriptor parent, PropertyDescriptor propertyDescriptor) : base(parent, parent.PropertyPath.Property(propertyDescriptor.Name))
+            {
+                _propertyDescriptor = propertyDescriptor;
+            }
+
+            public override Type PropertyType
+            {
+                get { return _propertyDescriptor.PropertyType; }
+            }
+
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
+            {
+                object parentValue = Parent.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
+                if (null == parentValue)
+                {
+                    return null;
+                }
+                if (notifyFutureChanges)
+                {
+                    rowItem.HookPropertyChange(parentValue, _propertyDescriptor);
+                }
+                try
+                {
+                    return _propertyDescriptor.GetValue(parentValue);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            public override bool IsReadOnly
+            {
+                get { return _propertyDescriptor.IsReadOnly; }
+            }
+
+            public override void SetValue(RowItem rowItem, PivotKey pivotKey, object value)
+            {
+                var parentComponent = Parent.GetPropertyValue(rowItem, pivotKey, true);
+                if (parentComponent == null)
+                {
+                    return;
+                }
+                _propertyDescriptor.SetValue(parentComponent, value);
+            }
+
+            public override IEnumerable<Attribute> GetAttributes()
+            {
+                return _propertyDescriptor.Attributes.Cast<Attribute>().Concat(base.GetAttributes());
+            }
+
+            protected bool Equals(Reflected other)
+            {
+                return base.Equals(other) && _propertyDescriptor.Equals(other._propertyDescriptor);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Reflected) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (base.GetHashCode()*397) ^ _propertyDescriptor.GetHashCode();
+                }
+            }
+
+            public override PropertyDescriptor ReflectedPropertyDescriptor
+            {
+                get { return _propertyDescriptor; }
+            }
+        }
+
+        private class Collection : ColumnDescriptor
+        {
+            private readonly ICollectionInfo _collectionInfo;
+            public Collection(ColumnDescriptor parent, ICollectionInfo collectionInfo) : base(parent, parent.PropertyPath.LookupAllItems())
+            {
+                _collectionInfo = collectionInfo;
+            }
+
+            public override Type PropertyType
+            {
+                get { return _collectionInfo.ElementType; }
+            }
+
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
+            {
+                var collection = Parent.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
+                if (null == collection)
+                {
+                    return null;
+                }
+                object key = rowItem.RowKey.FindValue(PropertyPath);
+                if (null == key && null != pivotKey)
+                {
+                    key = pivotKey.FindValue(PropertyPath);
+                }
+                if (null == key)
+                {
+                    return null;
+                }
+                return _collectionInfo.GetItemFromKey(collection, key);
+            }
+
+            public override ICollectionInfo CollectionInfo
+            {
+                get { return _collectionInfo; }
+            }
+
+            protected bool Equals(Collection other)
+            {
+                return base.Equals(other) && _collectionInfo.Equals(other._collectionInfo);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Collection) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (base.GetHashCode()*397) ^ _collectionInfo.GetHashCode();
+                }
             }
         }
     }

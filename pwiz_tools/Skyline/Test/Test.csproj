@@ -94,6 +94,10 @@
       <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="NHibernate, Version=3.3.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\NHibernate.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -111,7 +115,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="RandomTest.cs" />
+    <Compile Include="Reporting\DocumentViewTransformerTest.cs" />
+    <Compile Include="Reporting\LiveReportPivotTest.cs" />
     <Compile Include="Reporting\PivotTypeTest.cs" />
+    <Compile Include="Reporting\ReportSpecConverterTest.cs" />
     <Compile Include="Reporting\ReportTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
@@ -155,6 +162,10 @@
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
     <None Include="Proteome\high_ipi.Human.20060111.zip" />
+    <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
+    <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
+    <EmbeddedResource Include="Reporting\ResultSummaryPivot.skyr" />
+    <EmbeddedResource Include="Reporting\LiveReportPivots.skyr" />
     <None Include="Results\AgilentMix.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />

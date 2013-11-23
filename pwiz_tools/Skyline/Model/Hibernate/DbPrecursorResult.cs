@@ -17,12 +17,14 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.result)]
+    [DatabindingTable(RootTable = typeof(Precursor), Property = "Results!*.Value")]
     public class DbPrecursorResult : DbRatioResult
     {
         public override Type EntityClass
@@ -30,6 +32,7 @@ namespace pwiz.Skyline.Model.Hibernate
             get { return typeof (DbPrecursorResult); }
         }
         public virtual DbPrecursor Precursor { get; set; }
+        [DatabindingColumn(Name = "PeptideResult.ResultFile")]
         public virtual DbResultFile ResultFile { get; set; }
         public virtual DbPeptideResult PeptideResult { get; set; }
         [QueryColumn(Format=Formats.PEAK_FOUND_RATIO)]

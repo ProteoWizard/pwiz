@@ -17,6 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Text;
 
 namespace pwiz.Common.DataBinding
@@ -29,7 +32,7 @@ namespace pwiz.Common.DataBinding
             ColumnDescriptor = columnDescriptor;
             ColumnSpec = columnSpec;
             CollectionColumn = columnDescriptor == null ? null 
-                : columnDescriptor.FirstUnboundParent() ?? viewInfo.ParentColumn;
+                : columnDescriptor.CollectionAncestor() ?? viewInfo.ParentColumn;
         }
 
         public ViewInfo ViewInfo { get; private set; }
@@ -42,7 +45,7 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                return DataSchema.GetDefaultDisplayName(this);
+                return DataSchema.GetBaseDisplayName(this);
             }
         }
         public string ColumnCaption
@@ -54,26 +57,31 @@ namespace pwiz.Common.DataBinding
         }
         public string GetColumnCaption(PivotKey pivotKey)
         {
+            return GetColumnCaption(pivotKey, ColumnCaption);
+        }
+
+        public static string GetColumnCaption(PivotKey pivotKey, string columnCaption)
+        {
+            if (null == pivotKey)
+            {
+                return columnCaption;
+            }
             StringBuilder prefix = new StringBuilder();
-            while (pivotKey != null)
+            foreach (var kvp in pivotKey.KeyPairs)
             {
                 if (prefix.Length > 0)
                 {
-                    prefix.Insert(0, " ");
+                    prefix.Append(" ");
                 }
-                foreach (var kvp in pivotKey.ValuePairs)
-                {
-                    prefix.Insert(0, kvp.Value ?? "");
-                }
-                pivotKey = pivotKey.Parent;
+                prefix.Append(kvp.Value ?? "");
             }
             if (prefix.Length == 0)
             {
-                return ColumnCaption;
+                return columnCaption;
             }
-            return prefix + " " + ColumnCaption;
-
+            return prefix + " " + columnCaption;
         }
+
         public object GetValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
         {
             if (rowItem == null)
@@ -93,14 +101,7 @@ namespace pwiz.Common.DataBinding
                 return ColumnDescriptor == null || ColumnDescriptor.IsReadOnly;
             }
         }
-        public bool IsReadOnlyForRow(RowItem rowItem, PivotKey pivotKey)
-        {
-            if (IsReadOnly)
-            {
-                return true;
-            }
-            return ColumnDescriptor.IsReadOnlyForRow(rowItem, pivotKey);
-        }
+
         public void SetValue(RowItem rowItem, PivotKey pivotKey, object value)
         {
             if (IsReadOnly)
@@ -119,6 +120,17 @@ namespace pwiz.Common.DataBinding
                 }
                 return ColumnDescriptor.PropertyType ?? typeof (object);
             }
+        }
+
+        public IEnumerable<Attribute> GetAttributes(PivotKey pivotKey)
+        {
+            if (null == ColumnDescriptor)
+            {
+                return new Attribute[0];
+            }
+            var overrideAttributes = new Attribute[] {new DisplayNameAttribute(GetColumnCaption(pivotKey))};
+            var mergedAttributes = AttributeCollection.FromExisting(new AttributeCollection(ColumnDescriptor.GetAttributes().ToArray()), overrideAttributes);
+            return mergedAttributes.Cast<Attribute>();
         }
     }
 }

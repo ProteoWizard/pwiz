@@ -21,10 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
@@ -38,11 +40,10 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class QuasarTutorialTest : AbstractFunctionalTest
     {
-/*
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 msg, IntPtr wParam, StringBuilder lParam);
-        const UInt32 WM_KEYDOWN	= 0x100;
-*/
+        static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+        const int WM_KEYDOWN	= 0x100;
+        private const int WM_KEYUP = 0x101;
         [TestMethod]
         public void TestQuasarTutorial()
         {
@@ -142,15 +143,25 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.PeptideGroups, 0);
             });
             WaitForGraphs();
-            ResultsGrid resultsGrid = null;
+            DataGridView resultsGrid;
             DataGridViewColumn colSampleId = null, colConcentration = null, colIsConc = null;
+            if (IsEnableLiveReports)
+            {
+                resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
+            }
+            else
+            {
+                resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
+            }
+            WaitForConditionUI(() => 0 != resultsGrid.ColumnCount);
             RunUI(() =>
                 {
-                    resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
                     colSampleId =
-                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => SAMPLEGROUP.Name == col.HeaderText);
+                        resultsGrid.Columns.Cast<DataGridViewColumn>()
+                            .First(col => SAMPLEGROUP.Name == col.HeaderText);
                     colConcentration =
-                        resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => CONCENTRATION.Name == col.HeaderText);
+                        resultsGrid.Columns.Cast<DataGridViewColumn>()
+                            .First(col => CONCENTRATION.Name == col.HeaderText);
                     colIsConc =
                         resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => IS_SPIKE.Name == col.HeaderText);
                 });
@@ -181,7 +192,18 @@ namespace pwiz.SkylineTestTutorial
                 }
                 resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells[colSampleId.Index];
                 ClipboardEx.SetText(clipboardText.ToString());
-                resultsGrid.SendPaste();
+                var oldResultsGrid = resultsGrid as ResultsGrid;
+                if (oldResultsGrid != null)
+                {
+                    oldResultsGrid.SendPaste();
+                }
+                else
+                {
+                    SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.Control, (IntPtr)0);
+                    SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.V, (IntPtr)0);
+                    SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.V, (IntPtr)0);
+                    SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.Control, (IntPtr)0);
+                }
             });
             WaitForGraphs();
             PauseForScreenShot("p. 7 - Results Grid");

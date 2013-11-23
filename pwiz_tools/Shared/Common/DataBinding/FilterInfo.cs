@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 
 namespace pwiz.Common.DataBinding
 {
@@ -39,16 +40,56 @@ namespace pwiz.Common.DataBinding
         public FilterSpec FilterSpec { get; private set; }
         public ColumnDescriptor ColumnDescriptor { get; private set; }
         public ColumnDescriptor CollectionColumn { get; private set; }
+        private Predicate<object> Predicate { get; set; }
         public String Error { get; private set; }
-        public Predicate<object> Predicate { get; private set; }
-        private Predicate<object> MakePredicate()
+        public RowItem ApplyFilter(RowItem rowItem)
         {
-            var operation = FilterSpec.Operation ?? FilterOperations.OP_HAS_ANY_VALUE;
-            if (ColumnDescriptor == null || string.IsNullOrEmpty(operation.OpName))
+            var predicate = Predicate;
+            if (CollectionColumn.PropertyPath.IsRoot || rowItem.RowKey.Contains(CollectionColumn.PropertyPath))
+            {
+                if (predicate(ColumnDescriptor.GetPropertyValue(rowItem, null, false)))
+                {
+                    return rowItem;
+                }
+                return null;
+            }
+            if (rowItem.PivotKeys.Count == 0)
+            {
+                return FilterSpec.Operation == FilterOperations.OP_IS_BLANK ? rowItem : null;
+            }
+            List<PivotKey> newPivotKeys = new List<PivotKey>();
+            bool anyPivotKeysLeft = false;
+            foreach (var pivotKey in rowItem.PivotKeys)
+            {
+                if (!pivotKey.Contains(CollectionColumn.PropertyPath))
+                {
+                    newPivotKeys.Add(pivotKey);
+                }
+                else
+                {
+                    object value = ColumnDescriptor.GetPropertyValue(rowItem, pivotKey, false);
+                    if (predicate(value)) 
+                    {
+                        newPivotKeys.Add(pivotKey);
+                        anyPivotKeysLeft = true;
+                    }
+                }
+            }
+            if (newPivotKeys.Count == rowItem.PivotKeys.Count)
+            {
+                return rowItem;
+            }
+            if (!anyPivotKeysLeft)
             {
                 return null;
             }
-            return operation.MakePredicate(ColumnDescriptor, FilterSpec.Operand);
+            return rowItem.SetPivotKeys(new HashSet<PivotKey>(newPivotKeys));
+        }
+
+        private Predicate<object> MakePredicate()
+        {
+            var op = FilterSpec.Operation ?? FilterOperations.OP_HAS_ANY_VALUE;
+            return op.MakePredicate(ColumnDescriptor, FilterSpec.Operand);
         }
     }
 }

@@ -36,14 +36,18 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditServers = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.tabMisc = new System.Windows.Forms.TabPage();
+            this.checkBoxLiveReports = new System.Windows.Forms.CheckBox();
             this.PanaramaTabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
+            this.tabMisc.SuspendLayout();
             this.SuspendLayout();
             // 
             // PanaramaTabControl
             // 
             resources.ApplyResources(this.PanaramaTabControl, "PanaramaTabControl");
             this.PanaramaTabControl.Controls.Add(this.tabPanorama);
+            this.PanaramaTabControl.Controls.Add(this.tabMisc);
             this.PanaramaTabControl.Name = "PanaramaTabControl";
             this.PanaramaTabControl.SelectedIndex = 0;
             // 
@@ -89,6 +93,19 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
+            // tabMisc
+            // 
+            this.tabMisc.Controls.Add(this.checkBoxLiveReports);
+            resources.ApplyResources(this.tabMisc, "tabMisc");
+            this.tabMisc.Name = "tabMisc";
+            this.tabMisc.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxLiveReports
+            // 
+            resources.ApplyResources(this.checkBoxLiveReports, "checkBoxLiveReports");
+            this.checkBoxLiveReports.Name = "checkBoxLiveReports";
+            this.checkBoxLiveReports.UseVisualStyleBackColor = true;
+            // 
             // ToolOptionsUI
             // 
             this.AcceptButton = this.btnOK;
@@ -105,6 +122,8 @@ namespace pwiz.Skyline.ToolsUI
             this.PanaramaTabControl.ResumeLayout(false);
             this.tabPanorama.ResumeLayout(false);
             this.tabPanorama.PerformLayout();
+            this.tabMisc.ResumeLayout(false);
+            this.tabMisc.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -118,5 +137,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.ListBox listboxServers;
+        private System.Windows.Forms.TabPage tabMisc;
+        private System.Windows.Forms.CheckBox checkBoxLiveReports;
     }
 }

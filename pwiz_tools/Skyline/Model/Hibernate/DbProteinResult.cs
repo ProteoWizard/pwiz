@@ -17,16 +17,21 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.result)]
+    [DatabindingTable(RootTable = typeof(Protein), Property = "Results!*.Value")]
     public class DbProteinResult : DbEntity
     {
         public override Type EntityClass { get { return typeof (DbProteinResult); } }
         public virtual DbProtein Protein { get; set;}
+        [DatabindingColumn(Name="")]
         public virtual DbResultFile ResultFile { get; set; }
+        [DatabindingColumn(Name = "Replicate.Name")]
         public virtual String ReplicateName { get; set; }
+        [DatabindingColumn(Name = "Replicate.ReplicatePath")]
         public virtual String ReplicatePath { get; set; }
         // Duplicated properties of the DbResultFile
         public virtual String FileName { get; set; }

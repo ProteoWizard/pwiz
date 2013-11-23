@@ -66,8 +66,12 @@ namespace pwiz.Common.DataBinding.Internal
 
         private void Reset()
         {
-            Stop();
-            EnsureRunning();
+            lock (this)
+            {
+                Stop();
+                SourceRowItems = ImmutableList.ValueOf(RowSource.ListRowItems());
+                EnsureRunning();
+            }
         }
         public void Stop()
         {
@@ -103,7 +107,14 @@ namespace pwiz.Common.DataBinding.Internal
             }
             catch (OperationCanceledException)
             {
-                
+
+            }
+            catch (Exception e)
+            {
+                if (!(e.InnerException is OperationCanceledException))
+                {
+                    QueryRequest.OnUnhandledException(e);
+                }
             }
         }
     }

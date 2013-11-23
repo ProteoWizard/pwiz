@@ -25,6 +25,8 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.DataBinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -52,7 +54,8 @@ namespace pwiz.Skyline
         private readonly GraphSpectrumSettings _graphSpectrumSettings;
         private GraphSummary _graphRetentionTime;
         private GraphSummary _graphPeakArea;
-        private ResultsGridForm _resultsGridForm;
+        private DockableForm _resultsGridForm;
+        private DocumentGridForm _documentGridForm;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
         private ChromFileInfoId _alignToFile;
@@ -396,8 +399,8 @@ namespace pwiz.Skyline
                     listUpdateGraphs.Add(_graphRetentionTime);
                 if (_graphPeakArea != null)
                     listUpdateGraphs.Add(_graphPeakArea);                
-                if (_resultsGridForm != null)
-                    listUpdateGraphs.Add(_resultsGridForm);
+                if (_resultsGridForm is ResultsGridForm)
+                    listUpdateGraphs.Add((ResultsGridForm) _resultsGridForm);
             }
 
             UpdateGraphPanes(listUpdateGraphs);
@@ -422,6 +425,8 @@ namespace pwiz.Skyline
             DestroyGraphRetentionTime();
             DestroyGraphPeakArea();
             DestroyResultsGrid();
+            DestroyDocumentGrid();
+
             DestroyImmediateWindow();
             HideFindResults(true);
             DestroyAllChromatogramsGraph();
@@ -493,9 +498,13 @@ namespace pwiz.Skyline
             {
                 return _graphPeakArea ?? CreateGraphPeakArea();                
             }
-            if (Equals(persistentString, typeof(ResultsGridForm).ToString()))
+            if (Equals(persistentString, typeof(ResultsGridForm).ToString()) || Equals(persistentString, typeof (LiveResultsGrid).ToString()))
             {
                 return _resultsGridForm ?? CreateResultsGrid();
+            }
+            if (Equals(persistentString, typeof (DocumentGridForm).ToString()))
+            {
+                return _documentGridForm ?? CreateDocumentGrid();
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
@@ -535,8 +544,8 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_graphRetentionTime);
             if (_graphPeakArea != null && _graphPeakArea.Visible)
                 listUpdateGraphs.Add(_graphPeakArea);
-            if (_resultsGridForm != null && _resultsGridForm.Visible)
-                listUpdateGraphs.Add(_resultsGridForm);
+            if (_resultsGridForm is ResultsGridForm && _resultsGridForm.Visible)
+                listUpdateGraphs.Add((ResultsGridForm) _resultsGridForm);
 
             UpdateGraphPanes(listUpdateGraphs);
         }
@@ -2255,6 +2264,26 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
+        /// <summary>
+        /// Returns a rectangle suitable for positioning a floating DockableForm.
+        /// The size of the rectangle is based off of the size of the DockPanel, and the size of the screen.
+        /// </summary>
+        private Rectangle GetFloatingRectangleForNewWindow()
+        {
+            var rectFloat = dockPanel.Bounds;
+            rectFloat = dockPanel.RectangleToScreen(rectFloat);
+            rectFloat.X += rectFloat.Width / 4;
+            rectFloat.Y += rectFloat.Height / 3;
+            rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
+            rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
+            // Make sure it is on the screen.
+            var screen = Screen.FromControl(dockPanel);
+            var rectScreen = screen.WorkingArea;
+            rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
+            rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
+            return rectFloat;
+        }
+
         #region Retention time graph
 
         public GraphSummary GraphRetentionTime { get { return _graphRetentionTime; } }
@@ -2272,18 +2301,7 @@ namespace pwiz.Skyline
                     _graphRetentionTime = CreateGraphRetentionTime();
 
                     // Choose a position to float the window
-                    var rectFloat = dockPanel.Bounds;
-                    rectFloat = dockPanel.RectangleToScreen(rectFloat);
-                    rectFloat.X += rectFloat.Width / 4;
-                    rectFloat.Y += rectFloat.Height / 3;
-                    rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
-                    rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-                    // Make sure it is on the screen.
-                    var screen = Screen.FromControl(dockPanel);
-                    var rectScreen = screen.WorkingArea;
-                    rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-                    rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
-
+                    var rectFloat = GetFloatingRectangleForNewWindow();
                     _graphRetentionTime.Show(dockPanel, rectFloat);
                 }
             }
@@ -3048,18 +3066,7 @@ namespace pwiz.Skyline
                     _graphPeakArea = CreateGraphPeakArea();
 
                     // Choose a position to float the window
-                    var rectFloat = dockPanel.Bounds;
-                    rectFloat = dockPanel.RectangleToScreen(rectFloat);
-                    rectFloat.X += rectFloat.Width / 4;
-                    rectFloat.Y += rectFloat.Height / 3;
-                    rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
-                    rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-                    // Make sure it is on the screen.
-                    var screen = Screen.FromControl(dockPanel);
-                    var rectScreen = screen.WorkingArea;
-                    rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-                    rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
-
+                    var rectFloat = GetFloatingRectangleForNewWindow();
                     _graphPeakArea.Show(dockPanel, rectFloat);
                 }
             }
@@ -3619,20 +3626,7 @@ namespace pwiz.Skyline
                 {
                     _resultsGridForm = CreateResultsGrid();
 
-                    // TODO(nicksh): this code was copied from ShowGraphRetentionTime
-                    // coalesce duplicate code
-                    var rectFloat = dockPanel.Bounds;
-                    rectFloat = dockPanel.RectangleToScreen(rectFloat);
-                    rectFloat.X += rectFloat.Width / 4;
-                    rectFloat.Y += rectFloat.Height / 3;
-                    rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
-                    rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-                    // Make sure it is on the screen.
-                    var screen = Screen.FromControl(dockPanel);
-                    var rectScreen = screen.WorkingArea;
-                    rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-                    rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
-
+                    var rectFloat = GetFloatingRectangleForNewWindow();
                     _resultsGridForm.Show(dockPanel, rectFloat);
                 }
             }
@@ -3645,9 +3639,17 @@ namespace pwiz.Skyline
             }
         }
 
-        private ResultsGridForm CreateResultsGrid()
+        private DockableForm CreateResultsGrid()
         {
-            _resultsGridForm = new ResultsGridForm(this, SequenceTree);
+            Debug.Assert(null == _resultsGridForm);
+            if (Settings.Default.EnableLiveReports)
+            {
+                _resultsGridForm = new LiveResultsGrid(this);
+            }
+            else
+            {
+                _resultsGridForm = new ResultsGridForm(this, SequenceTree);
+            }
             _resultsGridForm.FormClosed += resultsGrid_FormClosed;
             _resultsGridForm.VisibleChanged += resultsGrid_VisibleChanged;
             return _resultsGridForm;
@@ -3664,7 +3666,6 @@ namespace pwiz.Skyline
                 _resultsGridForm = null;
             }
         }
-
         private void resultsGrid_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowResultsGrid = (_resultsGridForm != null && _resultsGridForm.Visible);
@@ -3674,8 +3675,67 @@ namespace pwiz.Skyline
         {
             // Update settings and menu check
             Settings.Default.ShowResultsGrid = false;
-
             _resultsGridForm = null;
+        }
+        #endregion
+
+
+        #region Document Grid
+        private void documentGridMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDocumentGrid(true);
+        }
+
+        public void ShowDocumentGrid(bool show)
+        {
+            if (show)
+            {
+                if (_documentGridForm != null)
+                {
+                    _documentGridForm.Activate();
+                }
+                else
+                {
+                    _documentGridForm = CreateDocumentGrid();
+                    var rectFloat = GetFloatingRectangleForNewWindow();
+                    _documentGridForm.Show(dockPanel, rectFloat);
+                }
+            }
+            else
+            {
+                if (_documentGridForm != null)
+                {
+                    _documentGridForm.Close();
+                }
+            }
+            
+        }
+
+        private DocumentGridForm CreateDocumentGrid()
+        {
+            Debug.Assert(null == _documentGridForm);
+            if (!Settings.Default.EnableLiveReports)
+            {
+                return null;
+            }
+            _documentGridForm = new DocumentGridForm(this);
+            _documentGridForm.FormClosed += documentGrid_FormClosed;
+            return _documentGridForm;
+        }
+
+        private void DestroyDocumentGrid()
+        {
+            if (null != _documentGridForm)
+            {
+                _documentGridForm.FormClosed -= documentGrid_FormClosed;
+                _documentGridForm.Close();
+                _documentGridForm = null;
+            }
+        }
+
+        void documentGrid_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _documentGridForm = null;
         }
 
         #endregion

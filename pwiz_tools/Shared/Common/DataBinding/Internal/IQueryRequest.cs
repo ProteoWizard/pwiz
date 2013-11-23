@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,5 +11,6 @@ namespace pwiz.Common.DataBinding.Internal
         QueryParameters QueryParameters { get; }
         QueryResults InitialQueryResults { get; }
         void SetFinalQueryResults(QueryResults newResults);
+        void OnUnhandledException(Exception exception);
     }
 }

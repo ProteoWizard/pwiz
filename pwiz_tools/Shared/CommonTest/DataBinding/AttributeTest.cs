@@ -8,6 +8,7 @@ namespace CommonTest.DataBinding
     /// <summary>
     /// Summary description for AttributeTest
     /// </summary>
+    // ReSharper disable LocalizableElement
     [TestClass]
     public class AttributeTest
     {
@@ -15,15 +16,15 @@ namespace CommonTest.DataBinding
         public void TestChildDisplayName()
         {
             var dataSchema = new DataSchema();
-            var coldescRoot = new ColumnDescriptor(dataSchema, typeof (RowValue));
-            var coldescRetentionTime = new ColumnDescriptor(coldescRoot, "RetentionTime");
-            var coldescMinRetentionTime = new ColumnDescriptor(coldescRetentionTime, "Min");
-            var coldescMeanRetentionTime = new ColumnDescriptor(coldescRetentionTime, "Mean");
+            var coldescRoot = ColumnDescriptor.RootColumn(dataSchema, typeof (RowValue));
+            var coldescRetentionTime = coldescRoot.ResolveChild("RetentionTime");
+            var coldescMinRetentionTime = coldescRetentionTime.ResolveChild("Min");
+            var coldescMeanRetentionTime = coldescRetentionTime.ResolveChild("Mean");
             Assert.AreEqual("MinRetentionTime", dataSchema.GetDisplayName(coldescMinRetentionTime));
             Assert.AreEqual("AverageRetentionTime", dataSchema.GetDisplayName(coldescMeanRetentionTime));
-            var coldescParent = new ColumnDescriptor(coldescRoot, "Parent");
-            var coldescParentRetentionTime = new ColumnDescriptor(coldescParent, "RetentionTime");
-            var coldescParentMeanRetentionTime = new ColumnDescriptor(coldescParentRetentionTime, "Mean");
+            var coldescParent = coldescRoot.ResolveChild("Parent");
+            var coldescParentRetentionTime = coldescParent.ResolveChild("RetentionTime");
+            var coldescParentMeanRetentionTime = coldescParentRetentionTime.ResolveChild("Mean");
             Assert.AreEqual("Parent", dataSchema.GetDisplayName(coldescParent));
             Assert.AreEqual("ParentRetentionTime", dataSchema.GetDisplayName(coldescParentRetentionTime));
             Assert.AreEqual("ParentAverageRetentionTime", dataSchema.GetDisplayName(coldescParentMeanRetentionTime));

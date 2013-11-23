@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Linq;
 
 namespace pwiz.Common.DataBinding
 {
@@ -30,23 +31,8 @@ namespace pwiz.Common.DataBinding
         {
         }
         public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name, PropertyPath propertyPath, PivotKey pivotKey)
-            : base(name, new Attribute[0])
+            : base(name, displayColumn.GetAttributes(pivotKey).ToArray())
         {
-//            if (columnDescriptor.CollectionInfo != null && columnDescriptor.CollectionInfo.IsDictionary)
-//            {
-                // Special case dictionary items.
-                // No one wants to see a KeyValuePair displayed in a GridColumn,
-                // so we display the Value instead.
-//                ColumnDescriptor = columnDescriptor.ResolveChild("Value");
-//            }
-//            if (ColumnDescriptor == null)
-//            {
-//                ColumnDescriptor = columnDescriptor;
-//            }
-//            else
-//            {
-//                ColumnDescriptor = ColumnDescriptor.SetCaption(columnDescriptor.Caption);
-//            }
             DisplayColumn = displayColumn;
             PropertyPath = propertyPath;
             PivotKey = pivotKey;
@@ -68,9 +54,14 @@ namespace pwiz.Common.DataBinding
             return DisplayColumn.GetValue(component as RowItem, PivotKey, true);
         }
 
+        public object GetValueNoNotifyFutureChanges(RowItem rowItem)
+        {
+            return DisplayColumn.GetValue(rowItem, PivotKey, false);
+        }
+
         public override void ResetValue(object component)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void SetValue(object component, object value)
@@ -80,7 +71,7 @@ namespace pwiz.Common.DataBinding
 
         public override bool ShouldSerializeValue(object component)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override Type ComponentType
@@ -91,11 +82,6 @@ namespace pwiz.Common.DataBinding
         public override bool IsReadOnly
         {
             get { return DisplayColumn.IsReadOnly; }
-        }
-
-        public bool IsReadOnlyForRow(object rowValue)
-        {
-            return DisplayColumn.IsReadOnlyForRow(rowValue as RowItem, PivotKey);
         }
 
         public override Type PropertyType
@@ -111,5 +97,35 @@ namespace pwiz.Common.DataBinding
             }
         }
         public delegate void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor);
+
+        #region Equality Members
+        protected bool Equals(ColumnPropertyDescriptor other)
+        {
+            return base.Equals(other) 
+                && Equals(PropertyPath, other.PropertyPath) 
+                && Equals(PivotKey, other.PivotKey) 
+                && Equals(DisplayColumn, other.DisplayColumn);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ColumnPropertyDescriptor) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode*397) ^ (PropertyPath != null ? PropertyPath.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (PivotKey != null ? PivotKey.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (DisplayColumn != null ? DisplayColumn.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+        #endregion
     }
 }

@@ -22,10 +22,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
@@ -175,7 +179,7 @@ namespace pwiz.SkylineTestTutorial
                     importResultsDlg1.OkDialog();
                 });
             WaitForGraphs();
-
+            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             WaitForCondition(5 * 60 * 1000, // five minutes
                              () =>
                              SkylineWindow.Document.Settings.HasResults &&
@@ -230,45 +234,88 @@ namespace pwiz.SkylineTestTutorial
                 CheckGstGraphs(transitionGroupCount, transitionGroupCount - 1);
             });
             PauseForScreenShot();
+            const int columnsToAddCount = 4;
+            var columnSeparator = TextUtil.CsvSeparator;
+            if (IsEnableLiveReports)
+            {
+                // Generating a Calibration Curve p. 11
+                var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+                var editReportListDlg =
+                    ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportLiveReportDlg.EditList);
+                const string reportName = "Peptide Ratio Results Test";
+                var columnsToAdd = new[]
+                                   {
+                                       PropertyPath.Parse("Peptides!*.Sequence"),
+                                       PropertyPath.Parse("Name"),
+                                       PropertyPath.Parse("Results!*.Value.Replicate.Name"),
+                                       PropertyPath.Parse("Peptides!*.Results!*.Value.RatioToStandard"),
+                                   };
+                Assert.AreEqual(columnsToAddCount, columnsToAdd.Length);
+                {
+                    var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
+                    RunUI(() =>
+                    {
+                        viewEditor.ViewName = reportName;
+                        foreach (var id in columnsToAdd)
+                        {
+                            Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                            viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                        }
+                        Assert.AreEqual(columnsToAdd.Length, viewEditor.ChooseColumnsTab.ColumnCount);
+                    });
+                    PauseForScreenShot();
 
-            // Generating a Calibration Curve p. 11
-            var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-            var editReportListDlg =
-                ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
-            const string reportName = "Peptide Ratio Results Test";
-            var columnsToAdd = new[]
+                    OkDialog(viewEditor, viewEditor.OkDialog);
+                }
+
+                RunUI(editReportListDlg.OkDialog);
+                WaitForClosedForm(editReportListDlg);
+                RunUI(() =>
+                {
+                    exportLiveReportDlg.ReportName = reportName;
+                    exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
+                });
+            }
+            else
+            {
+                // Generating a Calibration Curve p. 11
+                var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
+                var editReportListDlg =
+                    ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
+                const string reportName = "Peptide Ratio Results Test";
+                var columnsToAdd = new[]
                                    {
                                        new Identifier("Peptides", "Sequence"),
                                        new Identifier("ProteinName"),
                                        new Identifier("Results", "ReplicateName"),
                                        new Identifier("Peptides", "PeptideResults", "RatioToStandard")
                                    };
-            {
-                var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
+                Assert.AreEqual(columnsToAddCount, columnsToAdd.Length);
+                {
+                    var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
+                    RunUI(() =>
+                    {
+                        pivotReportDlg.ReportName = reportName;
+                        foreach (Identifier id in columnsToAdd)
+                        {
+                            Assert.IsTrue(pivotReportDlg.TrySelect(id));
+                            pivotReportDlg.AddSelectedColumn();
+                        }
+                        Assert.AreEqual(columnsToAdd.Length, pivotReportDlg.ColumnCount);
+                    });
+                    PauseForScreenShot();
+
+                    OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
+                }
+
+                RunUI(editReportListDlg.OkDialog);
+                WaitForClosedForm(editReportListDlg);
                 RunUI(() =>
-                          {
-                              pivotReportDlg.ReportName = reportName;
-                              foreach (Identifier id in columnsToAdd)
-                              {
-                                  Assert.IsTrue(pivotReportDlg.TrySelect(id));
-                                  pivotReportDlg.AddSelectedColumn();
-                              }
-                              Assert.AreEqual(columnsToAdd.Length, pivotReportDlg.ColumnCount);
-                          });
-                PauseForScreenShot();
-
-                OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
+                {
+                    exportReportDlg.ReportName = reportName;
+                    exportReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
+                });
             }
-
-            RunUI(editReportListDlg.OkDialog);
-            WaitForClosedForm(editReportListDlg);
-
-            var columnSeparator = TextUtil.CsvSeparator;
-            RunUI(() =>
-            {
-                exportReportDlg.ReportName = reportName;
-                exportReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
-            });
 
             // Check if export file is correct. 
             string filePath = TestFilesDir.GetTestPath("Calibration.csv");
@@ -277,7 +324,7 @@ namespace pwiz.SkylineTestTutorial
             string[] line0 = lines[0].Split(columnSeparator);
             int count = line0.Length;
             Assert.IsTrue(lines.Count() == SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count + 1);
-            Assert.IsTrue(count == columnsToAdd.Length);
+            Assert.AreEqual(columnsToAddCount, count);
 
             // Check export file data
             double ratio1 = Double.Parse(lines[1].Split(new[] { columnSeparator }, 4)[3]);
@@ -299,6 +346,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(0.0819, ratio7, 0.1);
             Assert.AreEqual(0.0248, ratio8, 0.1);
             Assert.AreEqual(0.7079, ratio9, 0.1);
+            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
         }
 
         private static void CheckGstGraphs(int rtCurveCount, int areaCurveCount)

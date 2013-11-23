@@ -388,6 +388,7 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -2224,6 +2225,7 @@ namespace pwiz.Skyline
             this.retentionTimesMenuItem,
             this.peakAreasMenuItem,
             this.resultsGridMenuItem,
+            this.documentGridMenuItem,
             this.toolStripSeparator36,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
@@ -2917,6 +2919,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
+            // liveReportToolStripMenuItem
+            // 
+            this.documentGridMenuItem.Name = "liveReportToolStripMenuItem";
+            resources.ApplyResources(this.documentGridMenuItem, "documentGridMenuItem");
+            this.documentGridMenuItem.Click += new System.EventHandler(this.documentGridMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -3302,6 +3310,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem showLibraryChromatogramsSpectrumContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chromatogramsToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton publishToolbarButton;
+        private System.Windows.Forms.ToolStripMenuItem documentGridMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reintegrateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updatesToolsMenuItem;
     }

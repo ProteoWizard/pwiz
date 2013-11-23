@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj.GlobalIndexes.ToArray(), GlobalIndexes.ToArray());
+            return GlobalIndexes.SequenceEqual(obj.GlobalIndexes);
         }
 
         public override bool Equals(object obj)

@@ -21,6 +21,7 @@ using System;
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.node)]
+    [DatabindingTable(RootTable = typeof(Databinding.Entities.Peptide))]
     public class DbPeptide : DbEntity
     {
         public override Type EntityClass

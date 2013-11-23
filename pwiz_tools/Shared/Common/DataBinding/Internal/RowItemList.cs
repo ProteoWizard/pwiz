@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.Internal
@@ -221,7 +222,7 @@ namespace pwiz.Common.DataBinding.Internal
             public PropertyDescriptor ComponentProperty { get; private set; }
             public override int GetHashCode()
             {
-                int result = Component.GetHashCode();
+                int result = RuntimeHelpers.GetHashCode(Component);
                 result = result*397 ^ (ComponentProperty == null ? 0 : ComponentProperty.GetHashCode());
                 return result;
             }

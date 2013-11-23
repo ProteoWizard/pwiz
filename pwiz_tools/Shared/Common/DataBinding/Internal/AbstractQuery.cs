@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -39,8 +38,7 @@ namespace pwiz.Common.DataBinding.Internal
         protected QueryResults Pivot(Pivoter.TickCounter tickCounter, QueryResults results)
         {
             var pivoter = new Pivoter(results.Parameters.ViewInfo);
-            var rowItems = ImmutableList.ValueOf(pivoter.ExpandAndPivot(tickCounter, results.SourceRows));
-            return results.SetPivotedRows(pivoter, rowItems);
+            return results.SetPivotedRows(pivoter.ExpandAndPivot(tickCounter, results.SourceRows));
         }
 
         protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, QueryResults results)

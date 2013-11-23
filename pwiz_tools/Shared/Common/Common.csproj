@@ -18,23 +18,6 @@
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -111,6 +94,7 @@
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\AdvancedWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
@@ -126,14 +110,30 @@
     <Compile Include="DataBinding\Controls\BoundDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DataBinding\Controls\Editor\IViewEditor.cs" />
+    <Compile Include="DataBinding\Controls\Editor\ViewEditorWidget.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\Editor\AvailableFieldsTree.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DataBinding\Controls\Editor\CustomizeViewForm.cs">
+    <Compile Include="DataBinding\Controls\Editor\ChooseColumnsTab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\ChooseColumnsTab.Designer.cs">
+      <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\ViewEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DataBinding\Controls\Editor\CustomizeViewForm.Designer.cs">
-      <DependentUpon>CustomizeViewForm.cs</DependentUpon>
+    <Compile Include="DataBinding\Controls\Editor\ViewEditor.Designer.cs">
+      <DependentUpon>ViewEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\FilterTab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\FilterTab.Designer.cs">
+      <DependentUpon>FilterTab.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\Controls\Editor\ListViewHelper.cs" />
     <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.cs">
@@ -141,6 +141,12 @@
     </Compile>
     <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.Designer.cs">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\SourceTab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\SourceTab.Designer.cs">
+      <DependentUpon>SourceTab.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\Controls\NavBar.cs">
       <SubType>UserControl</SubType>
@@ -153,6 +159,7 @@
     <Compile Include="DataBinding\DataFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
+    <Compile Include="DataBinding\DsvWriter.cs" />
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
@@ -161,23 +168,25 @@
     <Compile Include="DataBinding\Internal\BindingListView.cs" />
     <Compile Include="DataBinding\Internal\CloneableRowSourceWrapper.cs" />
     <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
+    <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\Internal\GroupedRow.cs" />
     <Compile Include="DataBinding\Internal\IQueryRequest.cs" />
     <Compile Include="DataBinding\Internal\LongDecimal.cs" />
+    <Compile Include="DataBinding\Internal\PivotedRows.cs" />
     <Compile Include="DataBinding\Internal\Pivoter.cs" />
     <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
     <Compile Include="DataBinding\Internal\RowFilter.cs" />
-    <Compile Include="DataBinding\Internal\RowItemIndex.cs" />
     <Compile Include="DataBinding\Internal\RowItemList.cs" />
-    <Compile Include="DataBinding\Internal\RowNode.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrappers.cs" />
     <Compile Include="DataBinding\Internal\TreeList.cs" />
-    <Compile Include="DataBinding\Internal\ViewProperties.cs" />
+    <Compile Include="DataBinding\IViewTransformer.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
     <Compile Include="DataBinding\PropertyPath.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
+    <Compile Include="DataBinding\RowSourceInfo.cs" />
     <Compile Include="DataBinding\RowSources\BindingListSupport.cs" />
     <Compile Include="DataBinding\RowSources\ConvertedCloneableBindingList.cs" />
     <Compile Include="DataBinding\RowSources\ConvertedCloneableList.cs" />
@@ -185,6 +194,7 @@
     <Compile Include="DataBinding\RowSources\IListChanged.cs" />
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
+    <Compile Include="DataBinding\TotalOperation.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
     <Compile Include="Graph\CurveDataHandler.cs" />
     <Compile Include="Graph\DataColumn.cs" />
@@ -209,11 +219,20 @@
       <DependentUpon>RecordNavBar.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\CustomizeViewForm.resx">
-      <DependentUpon>CustomizeViewForm.cs</DependentUpon>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.resx">
+      <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.resx">
+      <DependentUpon>ViewEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.resx">
+      <DependentUpon>FilterTab.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.resx">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\SourceTab.resx">
+      <DependentUpon>SourceTab.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\NavBar.resx">
       <DependentUpon>NavBar.cs</DependentUpon>

@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
+    [DatabindingTable(RootTable = typeof(ResultFile))]
     public class DbResultFile : DbEntity
     {
         public override Type EntityClass

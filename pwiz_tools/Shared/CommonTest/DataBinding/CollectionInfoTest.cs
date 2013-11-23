@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Internal;
 
 namespace CommonTest.DataBinding
 {

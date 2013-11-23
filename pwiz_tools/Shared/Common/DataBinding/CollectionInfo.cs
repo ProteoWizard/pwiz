@@ -24,58 +24,30 @@ using System.Linq;
 
 namespace pwiz.Common.DataBinding
 {
+    public interface ICollectionInfo
+    {
+        Type ElementType { get; }
+        Type KeyType { get; }
+        bool IsDictionary { get; }
+        object GetItemFromKey(object collection, object key);
+        IEnumerable GetKeys(object collection);
+        IEnumerable GetItems(object collection);
+    }
     /// <summary>
     /// Helper for displaying Dictionaries and Lists in a BindingListView.
-    /// This is not implemented yet, but users will be able to choose to pivot dictionaries,
-    /// and will be able to display all collections in a grid by effectively denormalizing the data.
     /// </summary>
-    public class CollectionInfo
+    public static class CollectionInfo
     {
-        private readonly Func<object, IEnumerable> _fnGetKeys;
-        private readonly Func<object, object, object> _fnLookupItemByKey;
-        
-        public CollectionInfo(Type elementType, Type keyType, Func<object, IEnumerable> fnGetKeys, Func<object, object, object> fnLookupItemByKey)
+        public static ICollectionInfo ForType(Type type)
         {
-            ElementType = elementType;
-            KeyType = keyType;
-            _fnGetKeys = fnGetKeys;
-            _fnLookupItemByKey = fnLookupItemByKey;
-        }
-
-        public Type ElementType { get; private set; }
-        public Type KeyType { get; private set; }
-        public bool IsDictionary
-        {
-            get
-            {
-                return ElementType.IsGenericType
-                       && ElementType.GetGenericTypeDefinition() == typeof (KeyValuePair<,>)
-                       && ElementType.GetGenericArguments()[0] == KeyType;
-            }
-        }
-
-        public object GetItemFromKey(object collection, object key)
-        {
-            if (collection == null || key == null)
+            if (!typeof(IEnumerable).IsAssignableFrom(type))
             {
                 return null;
             }
-            return _fnLookupItemByKey(collection, key);
-        }
-        public IEnumerable GetKeys(object collection)
-        {
-            if (collection == null)
-            {
-                return new object[0];
-            }
-            return _fnGetKeys(collection);
-        }
-        public IEnumerable GetItems(object collection)
-        {
-            return ((IEnumerable) collection);
+            return GetCollectionInfo(type);
         }
 
-        private static CollectionInfo GetCollectionInfo(Type type)
+        private static ICollectionInfo GetCollectionInfo(Type type)
         {
             if (type.IsGenericType && !type.ContainsGenericParameters)
             {
@@ -86,24 +58,9 @@ namespace pwiz.Common.DataBinding
                         if (type.GetGenericTypeDefinition() == typeof(IList<>))
                         {
                             var elementType = genericArguments[0];
-                            var countProperty = type.GetInterface(typeof(ICollection<>).Name).GetProperty("Count");
-                            var itemProperty = type.GetProperty("Item");
-                            var fnLookupItem = new Func<object,object,object>((list, key) =>
-                                                   {
-                                                       var index = key as int?;
-                                                       if (!index.HasValue || index < 0 ||
-                                                           index >= (int) countProperty.GetValue(list, null))
-                                                       {
-                                                           return null;
-                                                       }
-                                                       return itemProperty.GetValue(list, new[] {key});
-                                                   });
-
-                            return new CollectionInfo(
-                                elementType, typeof (int),
-                                list => Enumerable.Range(0, (int) countProperty.GetValue(list, null)),
-                                fnLookupItem
-                            );
+                            var listCollectionInfoType = typeof(ListCollectionInfo<>).MakeGenericType(elementType);
+                            var array = Array.CreateInstance(listCollectionInfoType, 1);
+                            return (ICollectionInfo) array.GetValue(0);
                         }
                         break;
                     case 2:
@@ -111,25 +68,10 @@ namespace pwiz.Common.DataBinding
                         {
                             var keyType = genericArguments[0];
                             var valueType = genericArguments[1];
-                            var elementType = typeof (KeyValuePair<,>).MakeGenericType(keyType, valueType);
-                            var elementConstructor = elementType.GetConstructor(new[] {keyType, valueType});
-                            var keysProperty = type.GetProperty("Keys");
-                            var tryGetValueMethod = type.GetMethod("TryGetValue");
-                            var fnLookupItem = new Func<object, object, object>(
-                                (dict, key) =>
-                                    {
-                                        var parameters = new[] {key, null};
-                                        if (!(bool) tryGetValueMethod.Invoke(dict, parameters) || elementConstructor == null)
-                                        {
-                                            return null;
-                                        }
-                                        return elementConstructor.Invoke(parameters);
-                                    });
-                            return new CollectionInfo(
-                                elementType, keyType,
-                                dict =>(IEnumerable)keysProperty.GetValue(dict, null),
-                                fnLookupItem
-                            );
+                            var dictionaryCollectionInfoType =
+                                typeof (DictionaryCollectionInfo<,>).MakeGenericType(keyType, valueType);
+                            var array = Array.CreateInstance(dictionaryCollectionInfoType, 1);
+                            return (ICollectionInfo) array.GetValue(0);
                         }
                         break;
                 }
@@ -153,13 +95,98 @@ namespace pwiz.Common.DataBinding
             return null;
         }
         
-        public static CollectionInfo ForType(Type type)
+        private struct DictionaryCollectionInfo<TKey, TValue> : ICollectionInfo
         {
-            if (!typeof(IEnumerable).IsAssignableFrom(type))
+            public Type ElementType
             {
+                get { return typeof(KeyValuePair<TKey, TValue>); }
+            }
+
+            public Type KeyType
+            {
+                get { return typeof(TKey); }
+            }
+
+            public bool IsDictionary
+            {
+                get { return true; }
+            }
+
+            public object GetItemFromKey(object collection, object key)
+            {
+                if (collection == null || key == null)
+                {
+                    return null;
+                }
+                TValue value;
+                if (((IDictionary<TKey, TValue>) collection).TryGetValue((TKey) key, out value))
+                {
+                    return new KeyValuePair<TKey, TValue>((TKey) key, value);
+                }
                 return null;
             }
-            return GetCollectionInfo(type);
+
+            public IEnumerable GetKeys(object collection)
+            {
+                if (null == collection)
+                {
+                    return new TKey[0];
+                }
+                return ((IDictionary<TKey, TValue>)collection).Keys;
+            }
+
+            public IEnumerable GetItems(object collection)
+            {
+                return (IDictionary<TKey, TValue>) collection;
+            }
+        }
+
+        private struct ListCollectionInfo<TItem> : ICollectionInfo
+        {
+            public Type KeyType
+            {
+                get { return typeof (int); }
+            }
+
+            public Type ElementType
+            {
+                get { return typeof(TItem); }
+            }
+
+            public bool IsDictionary
+            {
+                get { return false; }
+            }
+
+            public object GetItemFromKey(object collection, object key)
+            {
+                var list = collection as IList<TItem>;
+                if (null == list)
+                {
+                    return null;
+                }
+                int? index = key as int?;
+                if (!index.HasValue || index < 0 || index >= list.Count)
+                {
+                    return null;
+                }
+                return list[index.Value];
+            }
+
+            public IEnumerable GetKeys(object collection)
+            {
+                var list = collection as IList<TItem>;
+                if (null == list)
+                {
+                    return Enumerable.Range(0, 0);
+                }
+                return Enumerable.Range(0, list.Count);
+            }
+
+            public IEnumerable GetItems(object collection)
+            {
+                return collection as IList<TItem> ?? new TItem[0];
+            }
         }
     }
 }

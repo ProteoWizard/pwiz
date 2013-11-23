@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.node)]
+    [DatabindingTable(RootTable = typeof(Protein))]
     public class DbProtein : DbEntity
     {
         public override Type EntityClass

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
@@ -132,11 +133,18 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForDocumentLoaded();
             WaitForGraphs();
-            ResultsGrid resultsGrid = null;
+            DataGridView resultsGrid = null;
             DataGridViewColumn colBioreplicate = null, colCondition = null, colRunName = null;
             RunUI(() =>
             {
-                resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
+                if (IsEnableLiveReports)
+                {
+                    resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
+                }
+                else
+                {
+                    resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
+                }
                 colBioreplicate =
                     resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => BIOREPLICATE.Name == col.HeaderText);
                 colCondition =

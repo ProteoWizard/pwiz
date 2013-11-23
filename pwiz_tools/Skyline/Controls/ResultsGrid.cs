@@ -2166,7 +2166,6 @@ namespace pwiz.Skyline.Controls
             OnKeyDown(new KeyEventArgs(Keys.V | Keys.Control));
         }
 
-
         public IDocumentUIContainer DocumentUiContainer { get; private set; }
         public IStateProvider StateProvider { get; private set; }
 

@@ -44,7 +44,7 @@ namespace CommonTest.DataBinding
                 int value = target.Count;
                 target.Insert(index, value);
                 boundList.Insert(index, value);
-                CollectionAssert.AreEqual(target, Enumerable.ToArray<int>(boundList));
+                CollectionAssert.AreEqual(target, boundList.ToArray());
             }
         }
         [TestMethod]
@@ -145,43 +145,43 @@ namespace CommonTest.DataBinding
                             {
                                 if (!Equals(targetList[index], item))
                                 {
-                                    Assert.AreEqual<int>(targetList[index], item);
+                                    Assert.AreEqual(targetList[index], item);
                                 }
                                 if (!Equals(targetList[index], boundList[index]))
                                 {
-                                    Assert.AreEqual<int>(targetList[index], boundList[index]);
+                                    Assert.AreEqual(targetList[index], boundList[index]);
                                 }
                                 index++;
                             }
-                            CollectionAssert.AreEqual(targetList, Enumerable.ToArray<int>(boundList));
+                            CollectionAssert.AreEqual(targetList, boundList.ToArray());
 
                             foreach (var deletion in boundList.ItemDeletions)
                             {
-                                Assert.AreEqual<ListChangedType>(ListChangedType.ItemDeleted, deletion.ListChangedType);
-                                Assert.AreEqual<int>(boundList.OriginalList[deletion.OldIndex], deletion.OldItem);
-                                Assert.AreEqual<int>(-1, deletion.NewIndex);
-                                Assert.AreEqual<int>(0, deletion.NewItem);
+                                Assert.AreEqual(ListChangedType.ItemDeleted, deletion.ListChangedType);
+                                Assert.AreEqual(boundList.OriginalList[deletion.OldIndex], deletion.OldItem);
+                                Assert.AreEqual(-1, deletion.NewIndex);
+                                Assert.AreEqual(0, deletion.NewItem);
                             }
                             foreach (var addition in boundList.ItemAdditions)
                             {
-                                Assert.AreEqual<ListChangedType>(ListChangedType.ItemAdded, addition.ListChangedType);
-                                Assert.AreEqual<int>(-1, addition.OldIndex);
-                                Assert.AreEqual<int>(0, addition.OldItem);
+                                Assert.AreEqual(ListChangedType.ItemAdded, addition.ListChangedType);
+                                Assert.AreEqual(-1, addition.OldIndex);
+                                Assert.AreEqual(0, addition.OldItem);
                                 if (!Equals(boundList[addition.NewIndex], addition.NewItem))
                                 {
-                                    Assert.AreEqual<int>(boundList[addition.NewIndex], addition.NewItem);
+                                    Assert.AreEqual(boundList[addition.NewIndex], addition.NewItem);
                                 }
                             }
                             foreach (var itemChange in boundList.ItemChanges)
                             {
-                                Assert.AreEqual<ListChangedType>(ListChangedType.ItemChanged, itemChange.ListChangedType);
-                                Assert.AreEqual<int>(boundList.OriginalList[itemChange.OldIndex], itemChange.OldItem);
+                                Assert.AreEqual(ListChangedType.ItemChanged, itemChange.ListChangedType);
+                                Assert.AreEqual(boundList.OriginalList[itemChange.OldIndex], itemChange.OldItem);
                                 if (!Equals(boundList[itemChange.NewIndex], itemChange.NewItem))
                                 {
-                                    Assert.AreEqual<int>(boundList[itemChange.NewIndex], itemChange.NewItem);
+                                    Assert.AreEqual(boundList[itemChange.NewIndex], itemChange.NewItem);
                                 }
                             }
-                            Assert.AreEqual<int>(boundList.Count,
+                            Assert.AreEqual(boundList.Count,
                                             boundList.OriginalList.Count - boundList.ItemDeletions.Count() +
                                             boundList.ItemAdditions.Count());
 

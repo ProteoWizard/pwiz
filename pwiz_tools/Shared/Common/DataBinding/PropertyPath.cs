@@ -92,6 +92,11 @@ namespace pwiz.Common.DataBinding
             return new PropertyPath(Concat(propertyPath.Parent), propertyPath.Name, propertyPath.IsProperty);
         }
 
+        public PropertyPath SetParent(PropertyPath newParent)
+        {
+            return new PropertyPath(newParent, Name, IsProperty);
+        }
+
         public bool IsRoot { get { return ReferenceEquals(this, Root); } }
         public PropertyPath Parent { get; private set; }
         public string Name { get; private set; }

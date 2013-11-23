@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
@@ -46,6 +47,7 @@ namespace pwiz.Common.DataBinding
             Hidden = that.Hidden;
             SortIndex = that.SortIndex;
             SortDirection = that.SortDirection;
+            Total = that.Total;
         }
         public string Name { get; private set; }
         public ColumnSpec SetName(string value)
@@ -77,6 +79,13 @@ namespace pwiz.Common.DataBinding
         {
             return new ColumnSpec(this){SortDirection = value};
         }
+        public TotalOperation Total { get; private set; }
+        public TotalOperation TotalOperation { get { return Total; } }
+
+        public ColumnSpec SetTotal(TotalOperation totalOperation)
+        {
+            return new ColumnSpec(this){Total = totalOperation};
+        }
 
         [XmlIgnore]
         public PropertyPath PropertyPath
@@ -89,12 +98,19 @@ namespace pwiz.Common.DataBinding
         }
         public static ColumnSpec ReadXml(XmlReader reader)
         {
+            TotalOperation total = TotalOperation.GroupBy;
+            string strTotal = reader.GetAttribute("total");
+            if (strTotal != null)
+            {
+                total = (TotalOperation) Enum.Parse(typeof(TotalOperation), strTotal);
+            }
             var columnSpec = new ColumnSpec
                 {
                     Name = reader.GetAttribute("name"),
                     Caption = reader.GetAttribute("caption"),
                     Format = reader.GetAttribute("format"),
-                    Hidden = "true" == reader.GetAttribute("hidden")
+                    Hidden = "true" == reader.GetAttribute("hidden"),
+                    Total = total,
                 };
             string sortIndex = reader.GetAttribute("sortindex");
             if (sortIndex != null)
@@ -143,6 +159,10 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteAttributeString("sortdirection", SortDirection.ToString());
             }
+            if (Total != TotalOperation.GroupBy)
+            {
+                writer.WriteAttributeString("total", Total.ToString());
+            }
         }
 
         public bool Equals(ColumnSpec other)
@@ -154,7 +174,8 @@ namespace pwiz.Common.DataBinding
                 && Equals(other.Format, Format)
                 && Equals(other.Hidden, Hidden)
                 && Equals(other.SortIndex, SortIndex)
-                && Equals(other.SortDirection, SortDirection);
+                && Equals(other.SortDirection, SortDirection)
+                && Equals(other.Total, Total);
         }
 
         public override bool Equals(object obj)
@@ -175,6 +196,7 @@ namespace pwiz.Common.DataBinding
                 result = (result*397) ^ Hidden.GetHashCode();
                 result = (result*397) ^ (SortIndex != null ? SortIndex.GetHashCode() : 0);
                 result = (result*397) ^ (SortDirection != null ? SortDirection.GetHashCode() : 0);
+                result = (result*397) ^ Total.GetHashCode();
                 return result;
             }
         }
@@ -287,18 +309,32 @@ namespace pwiz.Common.DataBinding
             Columns = new ColumnSpec[0];
             Filters = new FilterSpec[0];
         }
-        public ViewSpec(ViewSpec that)
+        private ViewSpec(ViewSpec that)
         {
             Name = that.Name;
             Columns = that.Columns;
             Filters = that.Filters;
             SublistName = that.SublistName;
+            RowSource = that.RowSource;
         }
         public string Name { get; private set; }
         public ViewSpec SetName(string value)
         {
             return new ViewSpec(this){Name = value};
         }
+        public string RowSource { get; private set; }
+
+        public ViewSpec SetRowSource(string value)
+        {
+            return new ViewSpec(this){RowSource = value};
+        }
+
+        public ViewSpec SetRowType(Type type)
+        {
+            return SetRowSource(type.FullName);
+        }
+
+
         public IList<ColumnSpec> Columns { get; private set; }
         public ViewSpec SetColumns(IEnumerable<ColumnSpec> value)
         {
@@ -322,11 +358,21 @@ namespace pwiz.Common.DataBinding
         {
             return new ViewSpec(this){SublistId = sublistId};
         }
+
+        public bool HasTotals
+        {
+            get
+            {
+                return Columns.Any(col => TotalOperation.PivotValue == col.Total);
+            }
+        }
+
         public static ViewSpec ReadXml(XmlReader reader)
         {
             var viewSpec = new ViewSpec
                 {
                     Name = reader.GetAttribute("name"),
+                    RowSource = reader.GetAttribute("rowsource"),
                     SublistName = reader.GetAttribute("sublist")
                 };
             var columns = new List<ColumnSpec>();
@@ -368,6 +414,10 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteAttributeString("name", Name);
             }
+            if (RowSource != null)
+            {
+                writer.WriteAttributeString("rowsource", RowSource);
+            }
             if (SublistName != null)
             {
                 writer.WriteAttributeString("sublist", SublistName);
@@ -391,6 +441,7 @@ namespace pwiz.Common.DataBinding
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.Name, Name)
+                   && Equals(other.RowSource, RowSource)
                    && Columns.SequenceEqual(other.Columns)
                    && Filters.SequenceEqual(other.Filters)
                    && SublistId.Equals(other.SublistId);
@@ -409,8 +460,9 @@ namespace pwiz.Common.DataBinding
             unchecked
             {
                 int result = (Name != null ? Name.GetHashCode() : 0);
+                result = result*397 ^ (RowSource != null ? RowSource.GetHashCode() : 0);
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Columns);
-                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(Filters);
+                result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Filters);
                 result = (result*397) ^ SublistId.GetHashCode();
                 return result;
             }
@@ -425,23 +477,49 @@ namespace pwiz.Common.DataBinding
     [XmlRoot("views")]
     public class ViewSpecList : IXmlSerializable
     {
-        public ViewSpecList()
+        public static readonly ViewSpecList EMPTY = new ViewSpecList(ImmutableList.Empty<ViewSpec>());
+        public ViewSpecList(IEnumerable<ViewSpec> viewSpecs)
         {
-            ViewSpecs = new ViewSpec[0];
+            ViewSpecs = ImmutableList.ValueOf(viewSpecs ?? ImmutableList.Empty<ViewSpec>());
         }
-        public string Name { get; set; }
-        public IList<ViewSpec> ViewSpecs { get; set; }
+        
+        private ViewSpecList(ViewSpecList viewSpecList)
+        {
+            ViewSpecs = viewSpecList.ViewSpecs;
+        }
 
-        public XmlSchema GetSchema()
+        public IList<ViewSpec> ViewSpecs
+        {
+            get; private set;
+        }
+
+        public ViewSpecList SetViewSpecs(IEnumerable<ViewSpec> viewSpecs)
+        {
+            return new ViewSpecList(this)
+            {
+                ViewSpecs = ImmutableList.ValueOf(viewSpecs ?? ImmutableList.Empty<ViewSpec>())
+            };
+        }
+
+        #region XML Serialization
+        private ViewSpecList()
+        {
+        }
+
+        XmlSchema IXmlSerializable.GetSchema()
         {
             return null;
         }
 
-        public void ReadXml(XmlReader reader)
+        void IXmlSerializable.ReadXml(XmlReader reader)
         {
-            Name = reader.GetAttribute("name");
+            if (ViewSpecs != null)
+            {
+                throw new ReadOnlyException();
+            }
             if (reader.IsEmptyElement)
             {
+                ViewSpecs = ImmutableList.Empty<ViewSpec>();
                 reader.ReadElementString("views");
                 return;
             }
@@ -463,15 +541,11 @@ namespace pwiz.Common.DataBinding
                     reader.Read();
                 }
             }
-            ViewSpecs = viewSpecs.AsReadOnly();
+            ViewSpecs = ImmutableList.ValueOf(viewSpecs);
         }
 
-        public void WriteXml(XmlWriter writer)
+        void IXmlSerializable.WriteXml(XmlWriter writer)
         {
-            if (Name != null)
-            {
-                writer.WriteAttributeString("name", Name);
-            }
             foreach (var viewSpec in ViewSpecs)
             {
                 writer.WriteStartElement("view");
@@ -479,5 +553,29 @@ namespace pwiz.Common.DataBinding
                 writer.WriteEndElement();
             }
         }
+        #endregion
+
+        #region Equality Members
+        protected bool Equals(ViewSpecList other)
+        {
+            return Equals(ViewSpecs, other.ViewSpecs);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ViewSpecList) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ViewSpecs.GetHashCode();
+            }
+        }
+        #endregion
     }
 }

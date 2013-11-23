@@ -1,0 +1,28 @@
+﻿<?xml version="1.0"?>
+<ReportSpecList>
+  <report name="ResultSummaryPivot" rowsource="pwiz.Skyline.Model.Databinding.Entities.Precursor" sublist="Results!*">
+    <column name="Peptide.Sequence" />
+    <column name="Peptide" hidden="true" />
+    <column name="Charge" hidden="true" />
+    <column name="Results!*.Value.OptStep" hidden="true" />
+    <column name="Results!*.Value.File.Replicate.Name" caption="Replicate" total="PivotKey" hidden="true" />
+    <column name="IsotopeLabelType" total="PivotKey" />
+    <column name="Results!*.Value.PeptideResult.PeptideRetentionTime" total="PivotValue" />
+    <column name="IsotopeLabelType" total="PivotValue" />
+    <column name="ResultSummary.TotalArea.Mean" total="PivotValue" />
+    <column name="Results!*.Value.TotalArea" total="PivotValue" />
+    <filter column="Results.Count" opname="&gt;" operand="0" />
+  </report>
+  <report name="ResultSummaryPivotResultsThenLabelType" rowsource="pwiz.Skyline.Model.Databinding.Entities.Precursor">
+    <column name="Peptide.Sequence" />
+    <column name="Peptide" hidden="true" />
+    <column name="Charge" hidden="true" />
+    <column name="Results!*.Value.OptStep" hidden="true" />
+    <column name="Results!*.Value.PeptideResult.ResultFile.Replicate.Name" caption="Replicate" />
+    <column name="IsotopeLabelType" total="PivotKey" />
+    <column name="Results!*.Value.PeptideResult.PeptideRetentionTime" />
+    <column name="ResultSummary.TotalArea.Mean" total="PivotValue" />
+    <column name="Results!*.Value.TotalArea" total="PivotValue" />
+    <filter column="Results.Count" opname="&gt;" operand="0" />
+  </report>
+</ReportSpecList>

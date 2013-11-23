@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 
 namespace CommonTest.DataBinding.SampleData
@@ -48,8 +49,12 @@ namespace CommonTest.DataBinding.SampleData
         {
             get
             {
-                return Enumerable.ToList<KeyValuePair<double, double>>(AminoAcidFormulas.Default.GetMassDistribution(Molecule, 0));
+                return AminoAcidFormulas.Default.GetMassDistribution(Molecule, 0).ToList();
             }
         }
+
+        public static readonly IList<AminoAcid> AMINO_ACIDS =
+            ImmutableList.ValueOf(AminoAcidFormulas.LongNames.Keys.Select(code => new AminoAcid(code)));
+
     }
 }

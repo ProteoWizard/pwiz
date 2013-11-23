@@ -57,7 +57,9 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using PasteFormat = pwiz.Skyline.EditUI.PasteFormat;
+using Peptide = pwiz.Skyline.Model.Peptide;
 using Timer = System.Windows.Forms.Timer;
+using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
 {
@@ -107,6 +109,7 @@ namespace pwiz.Skyline
             LocalizationHelper.InitThread();
 
             InitializeComponent();
+            SetEnableLiveReports(Settings.Default.EnableLiveReports);
 
             _undoManager = new UndoManager(this);
             UndoRedoButtons undoRedoButtons = new UndoRedoButtons(_undoManager,
@@ -1503,7 +1506,11 @@ namespace pwiz.Skyline
             var bookmark = new Bookmark(startPath);
             if (_resultsGridForm != null && _resultsGridForm.Visible)
             {
-                bookmark = bookmark.ChangeChromFileInfoId(_resultsGridForm.ResultsGrid.GetCurrentChromFileInfoId());
+                var resultsGridForm = _resultsGridForm as ResultsGridForm;
+                if (null != resultsGridForm)
+                {
+                    bookmark = bookmark.ChangeChromFileInfoId(resultsGridForm.ResultsGrid.GetCurrentChromFileInfoId());
+                }
             }            
             var findResult = DocumentUI.SearchDocument(bookmark,
                 findOptions, displaySettings);
@@ -1599,7 +1606,12 @@ namespace pwiz.Skyline
             if (isAnnotationOrNote && bookmarkEnumerator.CurrentChromInfo != null)
             {
                 ShowResultsGrid(true);
-                _resultsGridForm.ResultsGrid.HighlightFindResult(findResult);
+                ResultsGridForm resultsGridForm = _resultsGridForm as ResultsGridForm;
+                // TODO(nicksh)
+                if (null != resultsGridForm)
+                {
+                    resultsGridForm.ResultsGrid.HighlightFindResult(findResult);
+                }
                 return;
             }
             SequenceTree.HighlightFindMatch(owner, findResult.FindMatch);
@@ -3178,8 +3190,19 @@ namespace pwiz.Skyline
                 _graphRetentionTime.ResultsIndex = ComboResults.SelectedIndex;
             if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != ComboResults.SelectedIndex)
                 _graphPeakArea.ResultsIndex = ComboResults.SelectedIndex;
-            if (_resultsGridForm != null && _resultsGridForm.ResultsIndex != ComboResults.SelectedIndex)
-                _resultsGridForm.ResultsIndex = ComboResults.SelectedIndex;
+            if (_resultsGridForm is ResultsGridForm)
+            {
+                var resultsGridForm = (ResultsGridForm) _resultsGridForm;
+                // TODO(nicksh)
+                if (null != resultsGridForm)
+                {
+                    // ReSharper disable once RedundantCheckBeforeAssignment
+                    if (resultsGridForm.ResultsIndex != ComboResults.SelectedIndex)
+                    {
+                        resultsGridForm.ResultsIndex = ComboResults.SelectedIndex;
+                    }
+                }
+            } 
             if (SequenceTree.ResultsIndex != ComboResults.SelectedIndex)
             {
                 // Show the right result set in the tree view.
@@ -3653,6 +3676,20 @@ namespace pwiz.Skyline
         public bool IsPasteKeys(Keys keys)
         {
             return Equals(pasteMenuItem.ShortcutKeys, keys);
+        }
+
+        public void SetEnableLiveReports(bool enable)
+        {
+            Settings.Default.EnableLiveReports = enable;
+            if (Settings.Default.EnableLiveReports)
+            {
+                documentGridMenuItem.Visible = true;
+            }
+            else
+            {
+                documentGridMenuItem.Visible = false;
+            }
+
         }
     }
 }

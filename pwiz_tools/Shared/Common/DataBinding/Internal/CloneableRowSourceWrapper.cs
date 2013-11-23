@@ -66,21 +66,19 @@ namespace pwiz.Common.DataBinding.Internal
 
         public override IEnumerable<RowItem> ListRowItems()
         {
-            return WrappedList.DeepClone().Select(item => new RowItem(WrappedList.GetKey(item), item));
+            return WrappedList.DeepClone().Select(item => new RowItem(item));
         }
 
         public override QueryResults MakeLive(QueryResults queryResults)
         {
-            var sublistColumns = queryResults.Pivoter.SublistColumns.ToDictionary(cd => cd.PropertyPath);
-            var liveResults = queryResults.SetSourceRows(MakeLive(sublistColumns, queryResults.SourceRows));
+            var liveResults = queryResults.SetSourceRows(MakeLive(queryResults.SourceRows));
             if (ReferenceEquals(queryResults.SourceRows, queryResults.PivotedRows))
             {
-                liveResults = liveResults.SetPivotedRows(queryResults.Pivoter, liveResults.SourceRows);
+                liveResults = liveResults.SetPivotedRows(new PivotedRows(liveResults.SourceRows, queryResults.ItemProperties));
             }
             else
             {
-                liveResults = liveResults.SetPivotedRows(queryResults.Pivoter,
-                    MakeLive(sublistColumns, queryResults.PivotedRows));
+                liveResults = liveResults.SetPivotedRows(new PivotedRows(MakeLive(queryResults.PivotedRows), queryResults.ItemProperties));
             }
             if (ReferenceEquals(queryResults.PivotedRows, queryResults.FilteredRows))
             {
@@ -88,7 +86,7 @@ namespace pwiz.Common.DataBinding.Internal
             }
             else
             {
-                liveResults = liveResults.SetFilteredRows(MakeLive(sublistColumns, queryResults.FilteredRows));
+                liveResults = liveResults.SetFilteredRows(MakeLive(queryResults.FilteredRows));
             }
             if (ReferenceEquals(queryResults.FilteredRows, queryResults.SortedRows))
             {
@@ -96,35 +94,27 @@ namespace pwiz.Common.DataBinding.Internal
             }
             else
             {
-                liveResults = liveResults.SetSortedRows(MakeLive(sublistColumns, queryResults.SortedRows));
+                liveResults = liveResults.SetSortedRows(MakeLive(queryResults.SortedRows));
             }
             return liveResults;
         }
-        private IEnumerable<RowItem> MakeLive(IDictionary<PropertyPath, ColumnDescriptor> sublistColumns,
-                              IEnumerable<RowItem> rowItems)
+        private IEnumerable<RowItem> MakeLive(IEnumerable<RowItem> rowItems)
         {
             if (null == rowItems)
             {
                 return null;
             }
-            return rowItems.Select(rowItem => MakeLive(sublistColumns, rowItem));
+            return rowItems.Select(MakeLive);
         }
-        private RowItem MakeLive(IDictionary<PropertyPath, ColumnDescriptor> sublistColumns, RowItem rowItem)
+        private RowItem MakeLive(RowItem rowItem)
         {
-            if (rowItem.SublistId.IsRoot)
+            if (rowItem.Value is GroupedRow)
             {
-                int index = WrappedList.IndexOfKey((TKey) rowItem.Key);
-                TItem item = index >= 0 ? WrappedList[index] : default(TItem);
-                return rowItem.ChangeParentAndValue(null, item);
+                return rowItem;
             }
-            var newParent = MakeLive(sublistColumns, rowItem.Parent);
-            ColumnDescriptor sublistColumn;
-            if (!sublistColumns.TryGetValue(rowItem.SublistId, out sublistColumn))
-            {
-                // Should not happen
-                return newParent;
-            }
-            return rowItem.ChangeParentAndValue(newParent, sublistColumn.GetPropertyValue(newParent, new PivotKey(rowItem.SublistId, rowItem.Key), false));
+            int index = WrappedList.IndexOfKey(WrappedList.GetKey((TItem) rowItem.Value));
+            TItem item = index >= 0 ? WrappedList[index] : default(TItem);
+            return rowItem.SetValue(item);
         }
     }
 }

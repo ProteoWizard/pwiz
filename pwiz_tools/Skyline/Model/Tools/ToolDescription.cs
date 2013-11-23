@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,8 +29,10 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -709,6 +712,35 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns> Returns a string representation of the ReportTitle report, or throws an error that the reportSpec no longer exist. </returns>
         public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle, IExceptionHandler exceptionHandler)
         {
+            if (Settings.Default.EnableLiveReports)
+            {
+                var container = new MemoryDocumentContainer();
+                container.SetDocument(doc, container.Document);
+                var dataSchema = new SkylineDataSchema(container);
+                var viewContext = new DocumentGridViewContext(dataSchema);
+                var viewSpec = viewContext.CustomViews.First(view2 => view2.Name == reportTitle);
+                if (null == viewSpec)
+                {
+                    var x = new Exception(string.Format(
+                    Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
+                    toolTitle, reportTitle));
+                    if (exceptionHandler == null)
+                        throw x;
+
+                    exceptionHandler.HandleException(x);
+                    return null;
+                }
+                var status =
+                    new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+                        reportTitle));
+                var writer = new StringWriter();
+                if (viewContext.Export(exceptionHandler as IProgressMonitor, ref status, viewContext.GetViewInfo(viewSpec), writer, 
+                    new DsvWriter(CultureInfo.InvariantCulture, TextUtil.CsvSeparator)))
+                {
+                    return writer.ToString();
+                }
+                return null;
+            }
             ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportTitle);
             if (reportSpec == null)
             {

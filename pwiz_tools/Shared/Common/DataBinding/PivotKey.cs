@@ -18,101 +18,144 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
 {
     public class PivotKey
     {
-        private readonly KeyValuePair<PropertyPath, object>[] _valuePairs;
+        private readonly int _hashCode;
+        public static readonly PivotKey EMPTY = new PivotKey();
 
-        public static readonly PivotKey Root = 
-            new PivotKey(null, PropertyPath.Root, new KeyValuePair<PropertyPath, object>[0]);
-        public static PivotKey OfValues(PivotKey parent, PropertyPath collectionId, IEnumerable<KeyValuePair<PropertyPath, object>> valuePairs)
+        private PivotKey()
         {
-            var valuePairList = new List<KeyValuePair<PropertyPath, object>>();
-            foreach (var vp in valuePairs)
-            {
-                if (!vp.Key.StartsWith(collectionId))
-                {
-                    throw new ArgumentException(vp.Key + " does not start with " + collectionId);
-                }
-                if (vp.Value == null)
-                {
-                    continue;
-                }
-                valuePairList.Add(vp);
-            }
-            if (valuePairList.Count == 0)
-            {
-                return parent;
-            }
-            valuePairList.Sort(Comparer);
-            return new PivotKey(parent, collectionId, valuePairList.ToArray());
         }
-        private PivotKey(PivotKey parent, PropertyPath collectionId, KeyValuePair<PropertyPath, object>[] valuePairs)
+
+        public static PivotKey GetPivotKey(IDictionary<PivotKey, PivotKey> pivotKeys,
+            IEnumerable<KeyValuePair<PropertyPath, object>> keyPairs)
+        {
+            var result = EMPTY;
+            foreach (var entry in keyPairs)
+            {
+                result = new PivotKey(result, entry.Key, entry.Value);
+                PivotKey existing;
+                if (pivotKeys.TryGetValue(result, out existing))
+                {
+                    result = existing;
+                }
+                else
+                {
+                    pivotKeys.Add(result, result);
+                }
+            }
+            return result;
+        }
+
+        public PivotKey(IEnumerable<KeyValuePair<PropertyPath, object>> keyPairs)
+        {
+            Parent = EMPTY;
+            foreach (var keyPair in keyPairs)
+            {
+                Parent = new PivotKey(Parent, keyPair.Key, keyPair.Value);
+            }
+        }
+
+        public PivotKey(PivotKey parent, PropertyPath propertyPath, object value)
         {
             Parent = parent;
-            CollectionId = collectionId;
-            _valuePairs = valuePairs;
-        }
-        private static int CompareValuePairs(KeyValuePair<PropertyPath, object> vp1, KeyValuePair<PropertyPath, object> vp2)
-        {
-            return vp1.Key.CompareTo(vp2.Key);
-        }
-        private class ValuePairComparer : IComparer<KeyValuePair<PropertyPath, object>>
-        {
-            public int Compare(KeyValuePair<PropertyPath, object> x, KeyValuePair<PropertyPath, object> y)
+            if (null != parent)
             {
-                return CompareValuePairs(x, y);
+                Length = parent.Length + 1;
             }
-        }
-        private static readonly ValuePairComparer Comparer = new ValuePairComparer();
-        public PivotKey(PropertyPath collectionId)
-        {
-            CollectionId = collectionId;
-            _valuePairs = new KeyValuePair<PropertyPath, object>[0];
-        }
-        public PivotKey(PropertyPath propertyPath, object value)
-        {
-            CollectionId = PropertyPath.Root;
-            _valuePairs = new[]{new KeyValuePair<PropertyPath, object>(propertyPath, value)};
-        }
-        public PivotKey RemoveSublist(PropertyPath sublistId)
-        {
-            PivotKey newParent;
-            if (sublistId.StartsWith(CollectionId) || Parent == null)
+            PropertyPath = propertyPath;
+            Value = value;
+            if (null != Parent)
             {
-                newParent = null;
+                Length = Parent.Length + 1;
+                _hashCode = Parent.GetHashCode();
             }
             else
             {
-                newParent = Parent.RemoveSublist(sublistId);
+                Length = 1;
             }
-            return OfValues(newParent, CollectionId, ValuePairs.Where(vp => !sublistId.StartsWith(vp.Key)));
+            _hashCode = _hashCode * 397 ^ PropertyPath.GetHashCode();
+            if (Value != null)
+            {
+                _hashCode = _hashCode * 397 ^ Value.GetHashCode();
+            }
         }
-        public PropertyPath CollectionId { get; private set; }
-        public PivotKey Parent { get; private set; }
-        public IList<KeyValuePair<PropertyPath, object>> ValuePairs { get { return Array.AsReadOnly(_valuePairs); } }
+
+        public PivotKey Concat(PivotKey pivotKey)
+        {
+            if (Length == 0)
+            {
+                return pivotKey;
+            }
+            if (pivotKey.Length == 0)
+            {
+                return this;
+            }
+            return new PivotKey(Concat(pivotKey.Parent), pivotKey.PropertyPath, pivotKey.Value);
+        }
+
+        private PivotKey Parent { get; set; }
+        private PropertyPath PropertyPath { get; set; }
+        private object Value { get; set; }
+
+        public IEnumerable<KeyValuePair<PropertyPath, object>> KeyPairs
+        {
+            get
+            {
+                if (null != Parent)
+                {
+                    foreach (var entry in Parent.KeyPairs)
+                    {
+                        yield return entry;
+                    }
+                    yield return new KeyValuePair<PropertyPath, object>(PropertyPath, Value);
+                }
+            }
+        }
+
+        public KeyValuePair<PropertyPath, object> Last
+        {
+            get
+            {
+                return new KeyValuePair<PropertyPath, object>(PropertyPath, Value);
+            }
+        }
+        public int Length { get; private set; }
         public object FindValue(PropertyPath propertyPath)
         {
-            if (propertyPath.StartsWith(CollectionId))
+            for (var pivotKey = this; pivotKey != null; pivotKey = pivotKey.Parent)
             {
-                int index = Array.BinarySearch(
-                    _valuePairs, new KeyValuePair<PropertyPath, object>(propertyPath, null), Comparer);
-                if (index < 0)
+                if (Equals(pivotKey.PropertyPath, propertyPath))
                 {
-                    return null;
+                    return pivotKey.Value;
                 }
-                return _valuePairs[index].Value;
-            }
-            if (Parent != null)
-            {
-                return Parent.FindValue(propertyPath);
             }
             return null;
+        }
+
+        public bool Contains(PropertyPath propertyPath)
+        {
+            for (var pivotKey = this; pivotKey != null; pivotKey = pivotKey.Parent)
+            {
+                if (Equals(pivotKey.PropertyPath, propertyPath))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public PivotKey AppendValue(PropertyPath propertyPath, object value)
+        {
+#if DEBUG
+            Debug.Assert(!Contains(propertyPath));
+#endif
+            return new PivotKey(this, propertyPath, value);
         }
 
         #region Equality Members
@@ -120,181 +163,120 @@ namespace pwiz.Common.DataBinding
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return _valuePairs.SequenceEqual(other._valuePairs)
-                   && Equals(CollectionId, other.CollectionId)
-                   && Equals(Parent, other.Parent);
+            return Equals(Parent, other.Parent) && Equals(PropertyPath, other.PropertyPath) && Equals(Value, other.Value);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (PivotKey)) return false;
-            return Equals((PivotKey) obj);
+            if (obj.GetType() != typeof(PivotKey)) return false;
+            return Equals((PivotKey)obj);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                int result = CollectionUtil.GetHashCodeDeep(_valuePairs);
-                result = (result*397) ^ CollectionId.GetHashCode();
-                result = (result*397) ^ (Parent != null ? Parent.GetHashCode() : 0);
-                return result;
-            }
+            return _hashCode;
         }
         #endregion
-        public static Comparison<PivotKey> GetComparison(DataSchema dataSchema, IEnumerable<PropertyPath> keys)
+        public static Comparison<PivotKey> GetComparison(DataSchema dataSchema)
         {
-            var sortedKeys = keys.ToArray();
-            Array.Sort(sortedKeys);
-            return (groupKey1, groupKey2) =>
-            {
-                foreach (var key in sortedKeys)
-                {
-                    var result = dataSchema.Compare(groupKey1.FindValue(key), groupKey2.FindValue(key));
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                }
-                return 0;
-            };
+            return new Comparer(dataSchema).Compare;
         }
 
         public override string ToString()
         {
-            var result = new StringBuilder();
-            var collectionIdToString = CollectionId.ToString();
-            if (Parent != null)
-            {
-                result.Append(Parent);
-                result.Append("[");
-                result.Append(collectionIdToString.Substring(Parent.CollectionId.ToString().Length));
-            }
-            else
-            {
-                result.Append(CollectionId);
-            }
-            result.Append("{");
-            result.Append(string.Join("},{", ValuePairs.Select(vp => vp.Key.ToString().Substring(collectionIdToString.Length) + "," + vp.Value).ToArray()));
-            result.Append("}");
-            if (Parent != null)
-            {
-                result.Append("]");
-            }
-            return result.ToString();
+            return ("[{" + String.Join("},{", KeyPairs.Select(vp => vp.Key.ToString() + "," + vp.Value).ToArray()) + "}]");
         }
         /// <summary>
         /// Take the values from the PivotKey and plug them into the unbound (i.e. name=null)
         /// parts of the PropertyPath.
         /// </summary>
-        public static PropertyPath QualifyIdentifierPath(PivotKey pivotKey, PropertyPath propertyPath)
+        public static PropertyPath QualifyPropertyPath(PivotKey pivotKey, PropertyPath propertyPath)
         {
-            if (pivotKey == null)
+            if (pivotKey == null || propertyPath.IsRoot)
             {
                 return propertyPath;
             }
-            var parts = new KeyValuePair<string, bool>[propertyPath.Length];
-            while (propertyPath.Length > 0)
+            var parent = QualifyPropertyPath(pivotKey, propertyPath.Parent);
+            if (propertyPath.IsUnboundLookup)
             {
-                parts[propertyPath.Length - 1] = new KeyValuePair<string, bool>(propertyPath.Name, propertyPath.IsProperty);
-                propertyPath = propertyPath.Parent;
-            }
-            while (pivotKey != null)
-            {
-                if (pivotKey.CollectionId.Length <= parts.Length)
+                object value = pivotKey.FindValue(propertyPath);
+                if (null != value)
                 {
-                    if (pivotKey.ValuePairs.Count == 1 && Equals(pivotKey.ValuePairs[0].Key, pivotKey.CollectionId))
-                    {
-                        parts[pivotKey.CollectionId.Length] = new KeyValuePair<string, bool>(pivotKey.ValuePairs[0].Value.ToString(), false);
-                    }
-                    else
-                    {
-                        parts[pivotKey.CollectionId.Length] 
-                            = new KeyValuePair<string, bool>(string.Join(",", pivotKey.ValuePairs.Select(vp => vp.ToString()).ToArray()), false);
-                    }
-                }
-                pivotKey = pivotKey.Parent;
-            }
-            foreach (var part in parts)
-            {
-                if (part.Value)
-                {
-                    propertyPath = propertyPath.Property(part.Key);
-                }
-                else
-                {
-                    if (null == part.Key)
-                    {
-                        propertyPath = propertyPath.LookupAllItems();
-                    }
-                    else
-                    {
-                        propertyPath = propertyPath.LookupByKey(part.Key);
-                    }
+                    return parent.LookupByKey(value.ToString());
                 }
             }
-            return propertyPath;
+            if (ReferenceEquals(parent, propertyPath.Parent))
+            {
+                return propertyPath;
+            }
+            if (propertyPath.IsUnboundLookup)
+            {
+                return parent.LookupAllItems();
+            }
+            if (propertyPath.IsProperty)
+            {
+                return parent.Property(propertyPath.Name);
+            }
+            return parent.LookupByKey(propertyPath.Name);
         }
 
         public static IComparer<PivotKey> GetComparer(DataSchema dataSchema)
         {
-            return new GroupKeyComparer(dataSchema);
+            return new Comparer(dataSchema);
         }
 
-        private class GroupKeyComparer : IComparer<PivotKey>
+        public class Comparer : IComparer<PivotKey>
         {
-            public GroupKeyComparer(DataSchema dataSchema)
+            private readonly DataSchema _dataSchema;
+            public Comparer(DataSchema dataSchema)
             {
-                DataSchema = dataSchema;
+                _dataSchema = dataSchema;
             }
-
-            private DataSchema DataSchema { get; set; }
 
             public int Compare(PivotKey x, PivotKey y)
             {
-                if (x.CollectionId.Length > y.CollectionId.Length)
+                if (x.Length == 0)
                 {
-                    return -Compare(y, x);
+                    return y.Length == 0 ? 0 : -1;
                 }
-                int defResult = x.CollectionId.Length < y.CollectionId.Length ? -1 : 0;
-                while (x.CollectionId.Length < y.CollectionId.Length)
+                if (y.Length == 0)
                 {
-                    y = y.Parent;
+                    return 1;
                 }
-                int result;
-                if (x.CollectionId.Length > 1)
+                if (x.Length > y.Length)
                 {
-                    result = Compare(x.Parent, y.Parent);
+                    int result = Compare(x.Parent, y);
                     if (result != 0)
                     {
                         return result;
                     }
+                    return 1;
                 }
-                result = x.CollectionId.CompareTo(y.CollectionId);
-                if (result != 0)
+                else if (x.Length < y.Length)
                 {
-                    return result;
-                }
-                for (int i = 0; i < x.ValuePairs.Count; i++)
-                {
-                    if (i >= y.ValuePairs.Count)
-                    {
-                        return 1;
-                    }
-                    result = x.ValuePairs[i].Key.CompareTo(y.ValuePairs[i].Key);
+                    int result = Compare(x, y.Parent);
                     if (result != 0)
                     {
                         return result;
                     }
-                    result = DataSchema.Compare(x.ValuePairs[i].Value, y.ValuePairs[i].Value);
+                    return -1;
+                }
+                else
+                {
+                    int result = Compare(x.Parent, y.Parent);
                     if (result != 0)
                     {
                         return result;
                     }
+                    result = x.PropertyPath.CompareTo(y.PropertyPath);
+                    if (result != 0)
+                    {
+                        return result;
+                    }
+                    return _dataSchema.Compare(x.Value, y.Value);
                 }
-                return defResult;
             }
         }
     }

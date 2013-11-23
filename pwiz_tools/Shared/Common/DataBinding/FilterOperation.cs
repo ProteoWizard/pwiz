@@ -141,6 +141,10 @@ namespace pwiz.Common.DataBinding
         public static object ConvertOperand(ColumnDescriptor columnDescriptor, string operand)
         {
             var type = columnDescriptor.WrappedPropertyType;
+            if (null == type)
+            {
+                return operand;
+            }
             if (typeof(char) == type)
             {
                 if (operand.Length != 1)
@@ -168,23 +172,7 @@ namespace pwiz.Common.DataBinding
                     return Enum.Parse(type, operand, true);
                 }
             }
-            if (type.IsPrimitive)
-            {
-                if (typeof(double) == type)
-                {
-                    return Convert.ToDouble(operand);
-                }
-                if (typeof(float) == type)
-                {
-                    return Convert.ToSingle(operand);
-                }
-                if (typeof(decimal) == type)
-                {
-                    return Convert.ToDecimal(operand);
-                }
-                return Convert.ToInt64(operand);
-            }
-            return Convert.ToString(operand);
+            return Convert.ChangeType(operand, type);
         }
         public static object ConvertValue(ColumnDescriptor columnDescriptor, object value)
         {
@@ -203,19 +191,7 @@ namespace pwiz.Common.DataBinding
             }
             if (type.IsPrimitive)
             {
-                if (typeof(double) == type)
-                {
-                    return Convert.ToDouble(value);
-                }
-                if (typeof(float) == type)
-                {
-                    return Convert.ToSingle(value);
-                }
-                if (typeof(decimal) == type)
-                {
-                    return Convert.ToDecimal(value);
-                }
-                return Convert.ToInt64(value);
+                return Convert.ChangeType(value, type);
             }
             return Convert.ToString(value);
         }

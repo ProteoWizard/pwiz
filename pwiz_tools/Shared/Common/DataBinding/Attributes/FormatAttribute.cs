@@ -30,6 +30,11 @@ namespace pwiz.Common.DataBinding.Attributes
         {
             Format = format;
         }
+
+        public FormatAttribute()
+        {
+        }
         public string Format { get; private set; }
+        public string NullValue { get; set; }
     }
 }

@@ -17,16 +17,20 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
+    [DatabindingTable(RootTable = typeof(Replicate))]
     public class DbReplicate : DbEntity
     {
         public override Type EntityClass
         {
             get { return typeof(DbReplicate); }
         }
+        [DatabindingColumn(Name = "Name")]
         public virtual string Replicate { get; set; }
+        [DatabindingColumn(Name = "ReplicatePath")]
         public virtual string ReplicatePath { get; set; }
     }
 }

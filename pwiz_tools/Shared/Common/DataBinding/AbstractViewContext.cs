@@ -20,14 +20,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.DataBinding.RowSources;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
@@ -38,39 +41,99 @@ namespace pwiz.Common.DataBinding
     public abstract class AbstractViewContext : IViewContext
     {
         public const string DefaultViewName = "default";
-        private IList<ViewSpec> _builtInViewSpecs;
-        protected AbstractViewContext(ColumnDescriptor parentColumn)
+        private IList<RowSourceInfo> _rowSources;
+
+        protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
         {
-            ParentColumn = parentColumn;
-            BuiltInViewSpecs = new[] {GetDefaultViewSpec(parentColumn)};
-        }
-        protected AbstractViewContext(ColumnDescriptor parentColumn, IEnumerable<ViewSpec> builtInViewSpecs)
-        {
-            ParentColumn = parentColumn;
-            BuiltInViewSpecs = builtInViewSpecs;
+            DataSchema = dataSchema;
+            RowSources = rowSources;
         }
 
         public abstract string GetExportDirectory();
         public abstract void SetExportDirectory(string value);
         public abstract DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons);
-        public virtual string GetDefaultExportFilename(ViewSpec viewSpec)
+        protected virtual string GetDefaultExportFilename(ViewInfo viewInfo)
         {
-            string currentViewName = viewSpec.Name;
-            return ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? "" : currentViewName);
+            string currentViewName = viewInfo.Name;
+            return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? "" : currentViewName);
         }
-        public abstract void RunLongJob(Control owner, Action<IProgressMonitor> job);
-        public ColumnDescriptor ParentColumn { get; protected set; }
-        public IEnumerable<ViewSpec> BuiltInViewSpecs
+        public abstract bool RunLongJob(Control owner, Action<IProgressMonitor> job);
+        public DataSchema DataSchema { get; private set; }
+        public IEnumerable<ViewSpec> BuiltInViews
         {
-            get { return _builtInViewSpecs; }
-            set { _builtInViewSpecs = ImmutableList.ValueOf(value); }
+            get { return _rowSources.SelectMany(rowSourceInfo=>rowSourceInfo.Views.Select(view=>view.ViewSpec.SetRowSource(rowSourceInfo.Name))); }
         }
-        public abstract IEnumerable<ViewSpec> CustomViewSpecs { get;}
-        protected abstract void SetCustomViewSpecs(IEnumerable<ViewSpec> values);
+
+        protected IEnumerable<RowSourceInfo> RowSources
+        {
+            get
+            {
+                return _rowSources;
+            }
+            set
+            {
+                _rowSources = ImmutableList.ValueOf(value);
+            }
+        }
+
+        protected RowSourceInfo FindRowSourceInfo(Type rowType)
+        {
+            return _rowSources.FirstOrDefault(rowSource => rowSource.RowType == rowType);
+        }
+
+        protected RowSourceInfo FindRowSourceInfo(ViewInfo viewInfo)
+        {
+            return FindRowSourceInfo(viewInfo.ParentColumn.PropertyType);
+        }
+        protected abstract ViewSpecList GetViewSpecList();
+        protected abstract void SaveViewSpecList(ViewSpecList viewSpecList);
+
+        public virtual IEnumerable<ViewSpec> CustomViews
+        {
+            get
+            {
+                var viewSpecList = GetViewSpecList() ?? ViewSpecList.EMPTY;
+                var views = viewSpecList.ViewSpecs.Where(viewSpec => null != GetRowSourceInfo(viewSpec)).ToArray();
+                return views;
+            }
+            set
+            {
+                SetCustomViews(value);
+            }
+        }
+
+        public ViewInfo GetViewInfo(ViewSpec viewSpec)
+        {
+            var rowSourceInfo = GetRowSourceInfo(viewSpec);
+            if (null == rowSourceInfo)
+            {
+                return null;
+            }
+            return new ViewInfo(DataSchema, rowSourceInfo.RowType, viewSpec);
+        }
+
+        protected RowSourceInfo GetRowSourceInfo(ViewSpec viewSpec)
+        {
+            return RowSources.FirstOrDefault(rowSource => rowSource.Name == viewSpec.RowSource);
+        }
+
+        protected virtual void SetCustomViews(IEnumerable<ViewSpec> customViewSpecs)
+        {
+            var oldViewSpecList = GetViewSpecList().ViewSpecs.ToList();
+            int indexInsert = oldViewSpecList.FindIndex(viewSpec => null != GetRowSourceInfo(viewSpec));
+            if (indexInsert < 0)
+            {
+                indexInsert = oldViewSpecList.Count;
+            }
+            var otherViews = oldViewSpecList.Where(view => null == GetRowSourceInfo(view)).ToArray();
+            var combinedList = otherViews.Take(indexInsert).Concat(customViewSpecs).Concat(otherViews.Skip(indexInsert));
+            SaveViewSpecList(new ViewSpecList(combinedList));
+        }
+
         public virtual string GetNewViewName()
         {
-            var takenNames = new HashSet<string>(BuiltInViewSpecs.Select(viewSpec => viewSpec.Name));
-            takenNames.UnionWith(CustomViewSpecs.Select(viewSpec=>viewSpec.Name));
+            var takenNames = new HashSet<string>(BuiltInViews.Select(viewSpec => viewSpec.Name));
+            takenNames.UnionWith(CustomViews.Select(viewSpec=>viewSpec.Name));
             const string baseName = "CustomView";
             for (int index = 1;;index++)
             {
@@ -87,14 +150,24 @@ namespace pwiz.Common.DataBinding
             return DefaultViewName;
         }
 
+        public virtual IEnumerable GetRowSource(ViewInfo viewInfo)
+        {
+            var rowSource = _rowSources.FirstOrDefault(rowSourceInfo => rowSourceInfo.Name == viewInfo.RowSourceName);
+            if (rowSource == null)
+            {
+                return Array.CreateInstance(viewInfo.ParentColumn.PropertyType, 0);
+            }
+            return rowSource.Rows;
+        } 
+
         public Icon ApplicationIcon { get; protected set; }
 
-        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListSource bindingListSource, IDataFormat dataFormat)
+        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListSource bindingListSource, DsvWriter dsvWriter)
         {
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             var status = new ProgressStatus("Writing " + rows.Count + " rows");
-            dataFormat.WriteRow(writer, properties.Select(pd=>pd.DisplayName));
+            dsvWriter.WriteHeaderRow(writer, properties);
             var rowCount = rows.Count;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
@@ -105,17 +178,7 @@ namespace pwiz.Common.DataBinding
                 status = status.ChangeMessage("Writing row " + (rowIndex + 1) + "/" + rowCount)
                     .ChangePercentComplete(rowIndex*100/rowCount);
                 progressMonitor.UpdateProgress(status);
-                var row = rows[rowIndex];
-                // TODO(nicksh): Format the column values.
-                dataFormat.WriteRow(writer, properties.Select(pd =>
-                    {
-                        var columnPropertyDescriptor = pd as ColumnPropertyDescriptor;
-                        if (null == columnPropertyDescriptor)
-                        {
-                            return pd.GetValue(row);
-                        }
-                        return columnPropertyDescriptor.DisplayColumn.GetValue(row, columnPropertyDescriptor.PivotKey, false);
-                    }));
+                dsvWriter.WriteDataRow(writer, rows[rowIndex], properties);
             }
         }
 
@@ -127,7 +190,7 @@ namespace pwiz.Common.DataBinding
                 {
                 Filter = fileFilter,
                 InitialDirectory = GetExportDirectory(),
-                FileName = GetDefaultExportFilename(bindingListSource.ViewSpec),
+                FileName = GetDefaultExportFilename(bindingListSource.ViewInfo),
             })
             {
                 if (saveFileDialog.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
@@ -137,141 +200,288 @@ namespace pwiz.Common.DataBinding
                 var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
                 RunLongJob(owner, progressMonitor =>
                 {
-// ReSharper disable AccessToDisposedClosure
                     using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName), new UTF8Encoding(false)))
-// ReSharper restore AccessToDisposedClosure
                     {
-                        WriteData(progressMonitor, writer, bindingListSource, dataFormat);
+                        WriteData(progressMonitor, writer, bindingListSource, dataFormat.GetDsvWriter());
                     }
                 });
                 SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
             }
         }
 
-        protected virtual bool IsReadOnly(ViewSpec viewSpec)
+        public BindingListSource ExecuteQuery(Control owner, ViewSpec viewSpec)
         {
-            return BuiltInViewSpecs.Any(builtInViewSpec => viewSpec.Name == builtInViewSpec.Name);
+            var viewInfo = GetViewInfo(viewSpec);
+            var rowSource = GetRowSource(viewInfo);
+            BindingListSource bindingListSource = new BindingListSource();
+            var cloneableList = rowSource as ICloneableList;
+            if (null != cloneableList)
+            {
+                var clonedValues = ((ICloneableList) rowSource).DeepClone();
+                RunLongJob(owner, progressMonitor =>
+                {
+                    progressMonitor.UpdateProgress(new ProgressStatus("Executing query"));
+                    bindingListSource.SetView(viewInfo, clonedValues);
+                });
+            }
+            else
+            {
+                bindingListSource.SetView(viewInfo, rowSource);
+            }
+            return bindingListSource;
         }
 
-        public virtual ViewSpec MakeEditable(ViewSpec viewSpec)
+        protected virtual bool IsReadOnly(ViewInfo viewInfo)
         {
-            if (!IsReadOnly(viewSpec) && !string.IsNullOrEmpty(viewSpec.Name))
+            return BuiltInViews.Any(builtInView => viewInfo.Name == builtInView.Name);
+        }
+
+        public virtual ViewSpec MakeEditable(ViewSpec viewSpec, string originalName)
+        {
+            if (string.IsNullOrEmpty(viewSpec.Name))
             {
                 return viewSpec;
             }
-            var viewNames = new HashSet<string>(BuiltInViewSpecs.Select(builtInViewSpec => builtInViewSpec.Name));
-            viewNames.UnionWith(CustomViewSpecs.Select(customViewSpec=>customViewSpec.Name));
-            for (int index = 1; ;index++ )
+            var viewNames = new HashSet<string>(BuiltInViews.Select(builtInViewSpec => builtInViewSpec.Name));
+            if (originalName == viewSpec.Name && !string.IsNullOrEmpty(originalName))
             {
-                string name = "CustomView" + index;
-                if (!viewNames.Contains(name))
+                if (!viewNames.Contains(viewSpec.Name))
                 {
-                    return viewSpec.SetName(name);
+                    return viewSpec;
+                }
+            }
+            viewNames.UnionWith(CustomViews.Select(customViewSpec=>customViewSpec.Name));
+            return viewSpec.SetName(FindUniqueName(viewNames, viewSpec.Name));
+        }
+
+        protected string FindUniqueName(ISet<string> existingNames, string startingName)
+        {
+            if (!string.IsNullOrEmpty(startingName) && !existingNames.Contains(startingName))
+            {
+                return startingName;
+            }
+            string baseName = startingName ?? string.Empty;
+            int lastDigit = baseName.Length;
+            while (lastDigit > 0 && char.IsDigit(baseName[lastDigit - 1]))
+            {
+                lastDigit--;
+            }
+            baseName = baseName.Substring(0, lastDigit);
+            if (baseName.Length == 0)
+            {
+                baseName = "CustomView";
+            }
+            for (int uniquifier = 1;; uniquifier++)
+            {
+                string name = baseName + uniquifier;
+                if (!existingNames.Contains(name))
+                {
+                    return name;
                 }
             }
         }
 
         public ViewSpec CustomizeView(Control owner, ViewSpec viewSpec)
         {
-            viewSpec = MakeEditable(viewSpec);
-            using (var customizeViewForm = new CustomizeViewForm(this, viewSpec))
+            return CustomizeOrCreateView(owner, viewSpec, viewSpec.Name);
+        }
+
+        protected virtual ViewEditor CreateViewEditor(ViewSpec viewSpec)
+        {
+            return new ViewEditor(this, GetViewInfo(viewSpec));
+        }
+        
+        protected virtual ViewSpec CustomizeOrCreateView(Control owner, ViewSpec viewSpec, string originalName)
+        {
+            viewSpec = MakeEditable(viewSpec, originalName);
+            using (var customizeViewForm = CreateViewEditor(viewSpec))
             {
                 if (customizeViewForm.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
                 {
                     return null;
                 }
                 // Consider: if save fails, reshow CustomizeViewForm?
-                return SaveView(customizeViewForm.ViewSpec);
+                return SaveView(customizeViewForm.ViewInfo, originalName).ViewSpec;
             }
+        }
+
+        public ViewSpec NewView(Control owner)
+        {
+            return CustomizeOrCreateView(owner, new ViewSpec().SetRowSource(RowSources.First().Name), null);
+        }
+
+        public ViewSpec CopyView(Control owner, ViewSpec currentView)
+        {
+            if (null == currentView)
+            {
+                currentView = BuiltInViews.FirstOrDefault();
+            }
+            if (null == currentView)
+            {
+                currentView = new ViewSpec().SetRowSource(RowSources.First().Name);
+            }
+            return CustomizeOrCreateView(owner, currentView, null);
         }
 
         public void ManageViews(Control owner)
         {
-            using (var manageViewsForm = new ManageViewsForm(this))
+            using (var manageViewsForm = new ManageViewsForm(this)
+            {
+                ExportDataButtonVisible = false,
+            })
             {
                 manageViewsForm.ShowDialog(owner.TopLevelControl);
             }
         }
 
-        public virtual ViewSpec GetBlankView()
+        protected virtual ViewInfo SaveView(ViewInfo viewInfo, string originalName)
         {
-            return MakeEditable(new ViewSpec());
-        }
-
-        public virtual ViewSpec SaveView(ViewSpec newViewSpec)
-        {
-            var viewSpecs = new List<ViewSpec>(CustomViewSpecs);
-            var existingIndex = viewSpecs.FindIndex(vs => vs.Name == newViewSpec.Name);
+            var viewSpecs = CustomViews.ToList();
+            var existingIndex = viewSpecs.FindIndex(vs => vs.Name == originalName);
             if (existingIndex >= 0)
             {
-                viewSpecs[existingIndex] = newViewSpec;
+                viewSpecs[existingIndex] = viewInfo.ViewSpec;
             }
             else
             {
-                viewSpecs.Add(newViewSpec);
+                viewSpecs.Add(viewInfo.ViewSpec);
             }
-            SetCustomViewSpecs(viewSpecs);
-            return newViewSpec;
+            SetCustomViews(viewSpecs);
+            return viewInfo;
         }
 
-        public void DeleteViews(IEnumerable<ViewSpec> viewSpecs)
+        public void DeleteViews(IEnumerable<ViewSpec> views)
         {
-            var deletedViews = new HashSet<ViewSpec>(viewSpecs);
-            SetCustomViewSpecs(CustomViewSpecs.Where(viewSpec=>!deletedViews.Contains(viewSpec)));
+            var deletedViewNames = new HashSet<string>(views.Select(view=>view.Name));
+            SetCustomViews(CustomViews.Where(view=>!deletedViewNames.Contains(view.Name)));
         }
 
-        public abstract IViewContext GetViewContext(ColumnDescriptor column);
+        public abstract void ExportViews(Control owner, IEnumerable<ViewSpec> views);
+        public abstract void ImportViews(Control owner);
 
         public virtual DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor)
         {
-            if (!propertyDescriptor.IsReadOnly)
+            DataGridViewColumn column = CreateCustomColumn(propertyDescriptor);
+            if (null == column)
             {
-                var valueList = GetValueList(propertyDescriptor);
-                if (valueList != null)
+                column = CreateLinkColumn(propertyDescriptor);
+            }
+            if (null == column)
+            {
+                column = CreateComboBoxColumn(propertyDescriptor);
+            }
+            if (null == column)
+            {
+                column = CreateDefaultColumn(propertyDescriptor);
+            }
+            column = InitializeColumn(column, propertyDescriptor);
+            return column;
+        }
+
+        protected virtual DataGridViewComboBoxColumn CreateComboBoxColumn(PropertyDescriptor propertyDescriptor)
+        {
+            if (propertyDescriptor.IsReadOnly)
+            {
+                return null;
+            }
+            var valueList = GetValueList(propertyDescriptor);
+            if (valueList == null)
+            {
+                return null;
+            }
+            DataGridViewComboBoxColumn comboBoxColumn = new DataGridViewComboBoxColumn();
+            foreach (var value in valueList)
+            {
+                comboBoxColumn.Items.Add(value);
+            }
+            return comboBoxColumn;
+        }
+
+        protected virtual DataGridViewColumn CreateCustomColumn(PropertyDescriptor propertyDescriptor)
+        {
+            var columnPropertyDescriptor = propertyDescriptor as ColumnPropertyDescriptor;
+            if (null == columnPropertyDescriptor)
+            {
+                return null;
+            }
+            var columnDescriptor = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor;
+            if (null == columnDescriptor)
+            {
+                return null;
+            }
+            var columnTypeAttribute = columnDescriptor.GetAttributes().OfType<DataGridViewColumnTypeAttribute>().FirstOrDefault();
+
+            if (columnTypeAttribute == null || columnTypeAttribute.ColumnType == null)
+            {
+                return null;
+            }
+            try
+            {
+                var constructor = columnTypeAttribute.ColumnType.GetConstructor(new Type[0]);
+                Debug.Assert(null != constructor);
+                var newColumn = (DataGridViewColumn) constructor.Invoke(new object[0]);
+                return newColumn;
+            }
+            catch (Exception exception)
+            {
+                Trace.TraceError("Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception);
+                return null;
+            }
+        }
+
+        protected DataGridViewLinkColumn CreateLinkColumn(PropertyDescriptor propertyDescriptor)
+        {
+            if (!typeof (ILinkValue).IsAssignableFrom(propertyDescriptor.PropertyType))
+            {
+                return null;
+            }
+            return new DataGridViewLinkColumn {TrackVisitedState = false};
+        }
+
+        protected virtual TColumn InitializeColumn<TColumn>(TColumn column, PropertyDescriptor propertyDescriptor) 
+            where TColumn : DataGridViewColumn
+        {
+            column.DataPropertyName = propertyDescriptor.Name;
+            column.HeaderText = propertyDescriptor.DisplayName;
+            column.SortMode = DataGridViewColumnSortMode.Automatic;
+            column.FillWeight = 1;
+            var attributes = GetAttributeCollection(propertyDescriptor);
+            var formatAttribute = attributes[typeof (FormatAttribute)] as FormatAttribute;
+            if (null != formatAttribute)
+            {
+                if (null != formatAttribute.Format)
                 {
-                    var result = new DataGridViewComboBoxColumn
-                        {
-                        Name = propertyDescriptor.Name,
-                        DataPropertyName = propertyDescriptor.Name,
-                        HeaderText = propertyDescriptor.DisplayName,
-                    };
-                    foreach (var value in valueList)
-                    {
-                        result.Items.Add(value);
-                    }
-                    return result;
+                    column.DefaultCellStyle.Format = formatAttribute.Format;
+                }
+                if (null != formatAttribute.NullValue)
+                {
+                    column.DefaultCellStyle.NullValue = formatAttribute.NullValue;
                 }
             }
-            if (propertyDescriptor.PropertyType == typeof(bool))
-            {
-                return new DataGridViewCheckBoxColumn
-                    {
-                               Name = propertyDescriptor.Name,
-                               DataPropertyName = propertyDescriptor.Name,
-                               HeaderText = propertyDescriptor.DisplayName,
-                           };
-            }
-            var columnPropertyDescriptor = propertyDescriptor as ColumnPropertyDescriptor;
-            if (columnPropertyDescriptor == null)
-            {
-                return new DataGridViewTextBoxColumn
-                    {
-                               Name = propertyDescriptor.Name,
-                               DataPropertyName = propertyDescriptor.Name,
-                               HeaderText = propertyDescriptor.DisplayName
-                           };
-            }
-            return new ViewColumn(this, columnPropertyDescriptor);
+            return column;
         }
-        public virtual IEnumerable GetValueList(PropertyDescriptor propertyDescriptor)
+
+        protected virtual AttributeCollection GetAttributeCollection(PropertyDescriptor propertyDescriptor)
         {
-            if (propertyDescriptor.PropertyType.IsEnum)
+            return propertyDescriptor.Attributes;
+        }
+
+
+        protected virtual IEnumerable GetValueList(PropertyDescriptor propertyDescriptor)
+        {
+            var propertyType = propertyDescriptor.PropertyType;
+            if (propertyType.IsEnum)
             {
-                return Enum.GetValues(propertyDescriptor.PropertyType);
+                return Enum.GetValues(propertyType);
             }
-            if (propertyDescriptor.PropertyType.IsGenericType && propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(Nullable))
+            if (propertyType.IsGenericType 
+                && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                return new object[] {null}.Concat(Enum.GetValues(propertyDescriptor.PropertyType).Cast<object>());
+                var innerType = propertyType.GetGenericArguments()[0];
+                if (innerType.IsEnum)
+                {
+                    return new object[] { null }.Concat(Enum.GetValues(innerType).Cast<object>());
+                }
             }
             return null;
         }
@@ -314,10 +524,51 @@ namespace pwiz.Common.DataBinding
         {
         }
 
-        public static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
+        protected static ViewSpec GetDefaultViewSpec(ColumnDescriptor parentColumn)
         {
-            return new ViewSpec().SetName(DefaultViewName).SetColumns(parentColumn.GetChildColumns()
-                .Select(c => new ColumnSpec(PropertyPath.Root.Property(c.Name))));
+            var viewSpec = new ViewSpec().SetName(DefaultViewName).SetRowType(parentColumn.PropertyType);
+            var columns = new List<ColumnSpec>();
+            foreach (var column in parentColumn.GetChildColumns())
+            {
+                if (null != column.DataSchema.GetCollectionInfo(column.PropertyType))
+                {
+                    continue;
+                }
+                if (column.DataSchema.IsAdvanced(column))
+                {
+                    continue;
+                }
+                columns.Add(new ColumnSpec(PropertyPath.Root.Property(column.Name)));
+            }
+            viewSpec = viewSpec.SetColumns(columns);
+            return viewSpec;
+        }
+
+        protected virtual DataGridViewColumn CreateDefaultColumn(PropertyDescriptor propertyDescriptor)
+        {
+            DataGridViewColumn dataGridViewColumn;
+            var type = propertyDescriptor.PropertyType;
+            if (type == typeof(bool) || type == typeof(CheckState))
+            {
+                dataGridViewColumn = new DataGridViewCheckBoxColumn(type.Equals(typeof(CheckState)));
+            }
+            else 
+            {
+                TypeConverter converter = TypeDescriptor.GetConverter(typeof(Image));
+                if (typeof (Image).IsAssignableFrom(type) || converter.CanConvertFrom(type))
+                {
+                    dataGridViewColumn = new DataGridViewImageColumn();
+                }
+                else
+                {
+                    dataGridViewColumn = new DataGridViewTextBoxColumn();
+                }
+            }
+            return dataGridViewColumn;
+        }
+
+        public virtual void Preview(Control owner, ViewInfo viewInfo)
+        {
         }
     }
 }

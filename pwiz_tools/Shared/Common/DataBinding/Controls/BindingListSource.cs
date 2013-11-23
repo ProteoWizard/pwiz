@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Linq;
 using System.Collections;
 using System.ComponentModel;
@@ -38,6 +39,7 @@ namespace pwiz.Common.DataBinding.Controls
         private BindingListSource(TaskScheduler taskScheduler)
         {
             base.DataSource = BindingListView = new BindingListView(taskScheduler);
+            BindingListView.UnhandledExceptionEvent += BindingListViewOnUnhandledException;
         }
 
         protected override void Dispose(bool disposing)
@@ -66,31 +68,55 @@ namespace pwiz.Common.DataBinding.Controls
         public void SetViewContext(IViewContext viewContext, ViewInfo viewInfo)
         {
             ViewContext = viewContext;
-            BindingListView.ViewInfo = viewInfo;
+            if (null == viewInfo)
+            {
+                BindingListView.ViewInfo = null;
+            }
+            else
+            {
+                BindingListView.SetViewAndRows(viewInfo, viewContext.GetRowSource(viewInfo));
+            }
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+        }
+
+        public void SetView(ViewInfo viewInfo, IEnumerable rows)
+        {
+            BindingListView.SetViewAndRows(viewInfo, rows);
         }
         public void SetViewContext(IViewContext viewContext)
         {
             ViewInfo viewInfo = BindingListView.ViewInfo;
             if (viewInfo == null && viewContext != null)
             {
-                var viewSpec = viewContext.BuiltInViewSpecs.FirstOrDefault();
-                if (viewSpec != null)
-                {
-                    viewInfo = new ViewInfo(viewContext.ParentColumn, viewSpec);
-                }
+                viewInfo = viewContext.GetViewInfo(viewContext.BuiltInViews.FirstOrDefault());
             }
             SetViewContext(viewContext, viewInfo);
         }
         public ViewInfo ViewInfo
         {
             get { return BindingListView.ViewInfo; }
-            set { BindingListView.ViewInfo = value; }
         }
-
         public ViewSpec ViewSpec
         {
-            get { return ViewInfo.GetViewSpec(); }
+            get { return ViewInfo.ViewSpec; }
+        }
+
+        public void SetViewSpec(ViewSpec viewSpec)
+        {
+            SetViewContext(ViewContext, ViewContext.GetViewInfo(viewSpec));
+        }
+
+        private void BindingListViewOnUnhandledException(object sender, BindingManagerDataErrorEventArgs args)
+        {
+            OnDataError(args);
+        }
+
+        public bool IsComplete
+        {
+            get
+            {
+                return !BindingListView.IsRequerying;
+            }
         }
     }
 }

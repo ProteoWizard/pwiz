@@ -138,20 +138,25 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Id, Id);
+            return Equals(obj.Id, Id) && Equals(obj.Annotations, Annotations);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (DocNode)) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((DocNode) obj);
         }
 
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            unchecked
+            {
+                int result = Id.GetHashCode();
+                result = result*397 ^ (Annotations == null ? 0 : Annotations.GetHashCode());
+                return result;
+            }
         }
 
         #endregion
@@ -1072,8 +1077,9 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && ArrayUtil.EqualsDeep(obj.Children, Children) 
-                && Equals(AutoManageChildren, obj.AutoManageChildren);
+            return base.Equals(obj) 
+                && ArrayUtil.EqualsDeep(obj.Children, Children) 
+                && AutoManageChildren == obj.AutoManageChildren;
         }
 
         public override bool Equals(object obj)

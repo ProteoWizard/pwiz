@@ -40,12 +40,27 @@ namespace CommonTest.DataBinding
                 });
             var bindingListSource = new BindingListSource();
             var bindingListSourceWithFilter = new BindingListSource();
-            bindingListSource.ViewInfo = new ViewInfo(dataSchema, typeof(Peptide), viewSpec);
-            bindingListSourceWithFilter.ViewInfo = new ViewInfo(dataSchema, typeof(Peptide), viewSpecWithFilter);
-            bindingListSourceWithFilter.RowSource = new[] {new Peptide("")};
+            bindingListSource.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpec), null);
+            bindingListSourceWithFilter.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpecWithFilter), new[] {new Peptide("")});
             Assert.AreEqual(0, bindingListSourceWithFilter.Count);
             bindingListSource.RowSource = bindingListSourceWithFilter.RowSource;
             Assert.AreEqual(1, bindingListSource.Count);
+        }
+
+        [TestMethod]
+        public void TestIsSulfur()
+        {
+            var dataSchema = new DataSchema();
+            var viewSpec =
+                new ViewSpec().SetColumns(new[]
+                {new ColumnSpec(PropertyPath.Parse("Code")), new ColumnSpec(PropertyPath.Parse("Molecule!*.Key")),})
+                    .SetFilters(new[]
+                    {new FilterSpec(PropertyPath.Parse("Molecule!*.Key"), FilterOperations.OP_EQUALS, "S")});
+            var bindingListSource = new BindingListSource();
+            bindingListSource.SetView(new ViewInfo(dataSchema, typeof(AminoAcid), viewSpec), AminoAcid.AMINO_ACIDS);
+            Assert.AreEqual(2, bindingListSource.Count);
+
+
         }
     }
 }

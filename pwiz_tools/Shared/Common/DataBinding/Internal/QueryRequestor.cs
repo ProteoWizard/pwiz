@@ -34,7 +34,8 @@ namespace pwiz.Common.DataBinding.Internal
         public QueryRequestor(BindingListView bindingListView)
         {
             _bindingListView = bindingListView;
-            _cancellationTokenSource = new CancellationTokenSource();
+            // ReSharper disable once PossiblyMistakenUseOfParamsMethod
+            _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(bindingListView.CancellationToken);
             _queryParameters = QueryParameters.Empty;
             _rowSourceWrapper = RowSourceWrapper.Empty;
         }
@@ -65,6 +66,17 @@ namespace pwiz.Common.DataBinding.Internal
                 Requery();
             }
         }
+
+        public void SetRowsAndParameters(IEnumerable rowSource, QueryParameters queryParameters)
+        {
+            if (ReferenceEquals(RowSource, rowSource) && Equals(QueryParameters, queryParameters))
+            {
+                return;
+            }
+            _rowSourceWrapper = WrapRowSource(rowSource);
+            _queryParameters = queryParameters;
+            Requery();
+        }
         public QueryResults QueryResults
         {
             get
@@ -76,6 +88,9 @@ namespace pwiz.Common.DataBinding.Internal
         public void Dispose()
         {
             _cancellationTokenSource.Cancel();
+            _queryParameters = null;
+            _rowSourceWrapper = null;
+            _request = null;
         }
         public void Requery()
         {
@@ -96,7 +111,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
             if (null == EventTaskScheduler)
             {
-                return new RowSourceWrapper(items);
+                return new RowSourceWrapper(items ?? new object[0]);
             }
             return RowSourceWrappers.Wrap(items);
         }
@@ -127,8 +142,15 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 var action = new Action(() =>
                     {
-                        LiveQueryResults = _queryRequestor._rowSourceWrapper.MakeLive(newResults);
-                        _queryRequestor._bindingListView.UpdateResults();
+                        try
+                        {
+                            LiveQueryResults = _queryRequestor._rowSourceWrapper.MakeLive(newResults);
+                            _queryRequestor._bindingListView.UpdateResults();
+                        }
+                        catch (Exception exception)
+                        {
+                            OnUnhandledException(exception);
+                        }
                     });
                 if (null == EventTaskScheduler)
                 {
@@ -144,6 +166,11 @@ namespace pwiz.Common.DataBinding.Internal
             public void Dispose()
             {
                 _cancellationTokenSource.Cancel();
+            }
+
+            public void OnUnhandledException(Exception exception)
+            {
+                _queryRequestor._bindingListView.OnUnhandledException(exception);
             }
         }
     }

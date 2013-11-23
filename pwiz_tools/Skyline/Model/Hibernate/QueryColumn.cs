@@ -33,4 +33,15 @@ namespace pwiz.Skyline.Model.Hibernate
     {
         public TableType TableType { get; set; }
     }
+
+    public class DatabindingColumnAttribute : Attribute
+    {
+        public string Name { get; set; }
+    }
+
+    public class DatabindingTableAttribute : Attribute
+    {
+        public Type RootTable { get; set; }
+        public string Property { get; set; }
+    }
 }

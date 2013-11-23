@@ -21,6 +21,7 @@ using System;
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.result)]
+    [DatabindingTable(RootTable = typeof(Databinding.Entities.Peptide), Property = "Results!*.Value")]
     public class DbPeptideResult : DbRatioResult
     {
         public override Type EntityClass
@@ -29,6 +30,7 @@ namespace pwiz.Skyline.Model.Hibernate
         }
         public virtual DbPeptide Peptide { get; set; }
         public virtual DbResultFile ResultFile { get; set; }
+        [DatabindingColumn(Name="ResultFile")]
         public virtual DbProteinResult ProteinResult { get; set; }
         [QueryColumn(Format=Formats.PEAK_FOUND_RATIO)]
         public virtual double PeptidePeakFoundRatio { get; set; }
