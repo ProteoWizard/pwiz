@@ -93,13 +93,13 @@ namespace pwiz.ProteomeDatabase.API
                 }
                 int proteinCount = 0;
                 using (var transaction = session.BeginTransaction())
+                using (IDbCommand insertProtein = session.Connection.CreateCommand())
+                using (IDbCommand insertName = session.Connection.CreateCommand())
                 {
                     FastaImporter fastaImporter = new FastaImporter();
-                    IDbCommand insertProtein = session.Connection.CreateCommand();
                     insertProtein.CommandText =
                         "INSERT INTO ProteomeDbProtein (Version, Sequence) Values (1,?);select last_insert_rowid();"; // Not L10N
                     insertProtein.Parameters.Add(new SQLiteParameter());
-                    IDbCommand insertName = session.Connection.CreateCommand();
                     insertName.CommandText =
                         "INSERT INTO ProteomeDbProteinName (Version, Protein, IsPrimary, Name, Description) Values(1,?,?,?,?)"; // Not L10N
                     insertName.Parameters.Add(new SQLiteParameter());
