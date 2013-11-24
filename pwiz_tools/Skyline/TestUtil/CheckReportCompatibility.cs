@@ -98,15 +98,8 @@ namespace pwiz.SkylineTestUtil
                 {
                     Assert.AreEqual(resultSet.RowCount, resultRows.Count, message);
                 }
-                var orderedPropertyIndexes =
-                    properties.Cast<PropertyDescriptor>()
-                        .Select((pd, index) => new KeyValuePair<PropertyDescriptor, int>(pd, index))
-                        .ToArray();
-                Array.Sort(orderedPropertyIndexes, ComparePropertyIndexes);
-                resultRows = SortRows(resultRows,
-                    new PropertyDescriptorCollection(orderedPropertyIndexes.Select(kvp => kvp.Key).ToArray()));
-                resultSet = SortResultSet(resultSet, orderedPropertyIndexes.Select(kvp => kvp.Value).ToArray());
-                bool allValuesExactlyEqual = true;
+                resultRows = SortRows(resultRows, properties);
+                resultSet = SortResultSet(resultSet);
                 for (int iRow = 0; iRow < resultSet.RowCount; iRow++)
                 {
                     for (int iCol = 0; iCol < resultSet.ColumnInfos.Count; iCol++)
@@ -114,10 +107,13 @@ namespace pwiz.SkylineTestUtil
                         var propertyDescriptor = properties[iCol];
                         object oldValue = resultSet.GetRow(iRow)[iCol];
                         object newValue = propertyDescriptor.GetValue(resultRows[iRow]);
-                        allValuesExactlyEqual = allValuesExactlyEqual && Equals(oldValue, newValue);
-                        AssertValuesEqual(oldValue, newValue,
-                            message + "{0}:Values are not equal on Row {1} Column {2} ({3}) FullName:{4}",
-                            message, iRow, iCol, propertyDescriptor.DisplayName, propertyDescriptor.Name);
+                        if (!Equals(oldValue, newValue))
+                        {
+                            Assert.AreEqual(oldValue, newValue,
+                                message + "{0}:Values are not equal on Row {1} Column {2} ({3}) FullName:{4}",
+                                message, iRow, iCol, propertyDescriptor.DisplayName, propertyDescriptor.Name);
+                            
+                        }
                     }
                 }
                 foreach (char separator in new[] { ',', '\t' })
@@ -138,32 +134,10 @@ namespace pwiz.SkylineTestUtil
                     if (!anyHiddenColumns)
                     {
                         Assert.AreEqual(oldLines[0], newLines[0]);
-                        if (allValuesExactlyEqual)
-                        {
-                            CollectionAssert.AreEquivalent(oldLines, newLines);
-                        }
+                        CollectionAssert.AreEquivalent(oldLines, newLines);
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// When sorting the rows in the result set, we first sort on all of the properties that are not doubles, and
-        /// then on the doubles, so that, if there are rounding errors with the doubles, we still end up comparing
-        /// each row with the one it's supposed to match to.
-        /// </summary>
-        private int ComparePropertyIndexes(KeyValuePair<PropertyDescriptor, int> kvp1,
-            KeyValuePair<PropertyDescriptor, int> kvp2)
-        {
-            if (kvp1.Key.PropertyType == typeof (double))
-            {
-                return kvp2.Key.PropertyType == typeof (double) ? kvp1.Value.CompareTo(kvp2.Value) : 1;
-            }
-            if (kvp2.Key.PropertyType == typeof (double))
-            {
-                return -1;
-            }
-            return kvp1.Value.CompareTo(kvp2.Value);
         }
 
         private IList SortRows(IList rows, PropertyDescriptorCollection properties)
@@ -194,7 +168,7 @@ namespace pwiz.SkylineTestUtil
             return sortedRows.Select(entry=>entry.Item1).ToArray();
         }
 
-        private ResultSet SortResultSet(ResultSet resultSet, int[] orderedColumnIndexes)
+        private ResultSet SortResultSet(ResultSet resultSet)
         {
             var sortedRows = new List<object[]>();
             for (int i = 0; i < resultSet.RowCount; i++)
@@ -203,7 +177,7 @@ namespace pwiz.SkylineTestUtil
             }
             sortedRows.Sort((row1, row2) =>
             {
-                foreach (int i in orderedColumnIndexes)
+                for (int i= 0; i < resultSet.ColumnInfos.Count; i++)
                 {
                     var value1 = row1[i];
                     var value2 = row2[i];
@@ -269,27 +243,6 @@ namespace pwiz.SkylineTestUtil
             }
             CollectionAssert.AreEquivalent(reportSpecs, reportSpecSet.ToArray());
             return reportSpecs;
-        }
-
-        public static void AssertValuesEqual(object value1, object value2, string message, params object[] parameters)
-        {
-            if (value1 is double && value2 is double)
-            {
-                const double delta = .000001;
-                double d1 = (double) value1;
-                double d2 = (double) value2;
-                if (!d1.Equals(d2) && Math.Abs(d1 - d2) >= delta)
-                {
-                    Assert.AreEqual(d1, d2, delta, message, parameters);
-                }
-            }
-            else
-            {
-                if (!Equals(value1, value2))
-                {
-                    Assert.AreEqual(value1, value2, message, parameters);
-                }
-            }
         }
     }
 }
