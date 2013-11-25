@@ -205,7 +205,12 @@ namespace freicore
         }		
 		if (preplib)
 		{
-			cout << "!!! Warning: Pepitome library preparation is currently in beta mode. For critical data please use SpectraST to decoy libraries." << endl;
+			if (iTraqMode)
+				cout << "Using iTRAQ library preparation mode; peak mz values will be shifted to match iTRAQ 4plex modifications" << endl;
+			else if (hcdMode)
+				cout << "Using HCD library preparation mode; peak mz values will be shifted to match theoretical location" << endl;
+			else
+				cout << "Using library preparation mode" << endl;
 			if (!bfs::exists(g_rtConfig->ContamDatabase) && g_rtConfig->ContamDatabase != "")
 			{
 				string temp = g_rtConfig->ContamDatabase;

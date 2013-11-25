@@ -93,6 +93,7 @@ namespace freicore
 			double b = 1;
 			double y = 19;
 			double nTermMod = 0;
+			bool diasableiTraq = false;
 			
 			if (_iTraqMode)
 			{
@@ -108,6 +109,12 @@ namespace freicore
 					tempString = tempString.substr(2,tempString.length()-3);
 					b += lexical_cast<double>(tempString);
 					nTermMod += lexical_cast<double>(tempString);
+					if (_iTraqMode)
+					{
+						b -= 144.1021;
+						nTermMod -= 144.1021;
+						diasableiTraq = true;
+					}
 				}
 				else if (tempString[0] == 'c') //consider c-term mods
 				{
@@ -122,7 +129,7 @@ namespace freicore
 			{
 				//calculate b
 				double mass = AminoAcid::Info::record(aminoAcidList[x][0]).residueFormula.monoisotopicMass();
-				if (_iTraqMode && aminoAcidList[x][0] == 'K')
+				if (_iTraqMode && !diasableiTraq && aminoAcidList[x][0] == 'K')
 					mass += 144.1021;
 				if (aminoAcidList[x].length() > 1)
 				{
@@ -135,7 +142,7 @@ namespace freicore
 
 				//calculate y
 				mass = AminoAcid::Info::record(aminoAcidList[aminoAcidList.size()-1-x][0]).residueFormula.monoisotopicMass();
-				if (_iTraqMode && aminoAcidList[aminoAcidList.size()-1-x][0] == 'K')
+				if (_iTraqMode && !diasableiTraq && aminoAcidList[aminoAcidList.size()-1-x][0] == 'K')
 					mass += 144.1021;
 				if (aminoAcidList[aminoAcidList.size()-1-x].length() > 1)
 				{
@@ -381,8 +388,6 @@ namespace freicore
 
 		std::string LibraryBabelFish::mergeDatabaseWithContam(const std::string& database, const std::string& contam)
 		{
-			cout << "Appending contaminants to database..." << endl;
-
 			//Get local contam database
 			string contamPath;
 			{
@@ -400,6 +405,7 @@ namespace freicore
 						return database;
 				}
 			}
+			cout << "Appending contaminants to database..." << endl;
 			
 			ifstream originalData(database.c_str());
 			ifstream contamData(contamPath.c_str());
@@ -424,7 +430,6 @@ namespace freicore
 
 		std::string LibraryBabelFish::mergeLibraryWithContam(const std::string& library, const std::string& contam)
 		{
-			cout << "Appending contaminants to spectral library..." << endl;
 			bool appendContams = true;
 
 			//get location of contam library
@@ -448,9 +453,19 @@ namespace freicore
 			//Set up output for merged library
 			string filenameSuffix;
 			if (appendContams)
-				filenameSuffix = "_with_contams.sptxt";
+			{
+				filenameSuffix = "_decoyed_with_contams.sptxt";
+				cout << "Appending contaminants to spectral library..." << endl;
+			}
 			else
-				filenameSuffix = "_with_decoys.sptxt";
+			{
+				if (_iTraqMode)
+					filenameSuffix = "_decoyed_itraq4plex.sptxt";
+				else if (_hcdMode)
+					filenameSuffix = "_decoyed_hcd.sptxt";
+				else
+					filenameSuffix = "_decoyed.sptxt";
+			}
 			path originalLibraryPath(library);
 			path newLibraryFile(originalLibraryPath.stem() + filenameSuffix);
 			path newLibraryPath = current_path() / newLibraryFile;
@@ -569,6 +584,7 @@ namespace freicore
 			map<string,double> unlabeledIons;
 			map<string,double> theoreticalIons;
 			map<string,double> decoyIons;
+			map<double,string> outputSpectra;
 			map<double,string> decoySpectra;
 			bool report = false;
 
@@ -801,7 +817,8 @@ namespace freicore
 									mass += massCorrection;
 								stringstream temp;
 								temp << std::fixed << std::setprecision(4) << mass;
-								decoySpectra.insert(pair<double, string>(mass, temp.str() + "\t" + contents)); //+ "\t| " + lexical_cast<string>(massCorrection) + " |"
+								decoySpectra[mass] = temp.str() + contents;
+								//decoySpectra.insert(pair<double, string>(mass, temp.str() + contents));
 								
 								if (_hcdMode || _iTraqMode)
 								{
@@ -810,15 +827,19 @@ namespace freicore
 										temp << std::fixed << std::setprecision(4) << theoreticalMass;
 									else
 										temp << std::fixed << std::setprecision(4) << theoreticalMass + massCorrection;
-									outputStream << temp.str() << "\t" << contents << endl;// << "\t" << theoreticalMass << "| " << regex_matches[1] << " | " << unlabeledMass << " | " << massCorrection << " |" << endl; // << "\t" << theoreticalMass << "| " << regex_matches[1] << " | " << unlabeledMass << " | " << massCorrection << " |" 
+									//outputSpectra.insert(pair<double, string>(lexical_cast<double>(regex_matches[1]), temp.str() + contents));
+									outputSpectra[lexical_cast<double>(regex_matches[1])] = temp.str() + contents;
 								}
 								else
-									outputStream << newLine << endl;
+									outputSpectra[lexical_cast<double>(regex_matches[1])] = regex_matches[1] + contents;
+									//outputSpectra.insert(pair<double, string>(lexical_cast<double>(regex_matches[1]), regex_matches[1] + contents));
 							}
 							else
 							{
-								decoySpectra.insert(pair<double, string>(lexical_cast<double>(regex_matches[1]), regex_matches[1] + "\t" + contents));
-								outputStream << newLine << endl;
+								outputSpectra[lexical_cast<double>(regex_matches[1])] = regex_matches[1] + contents;
+								//outputSpectra.insert(pair<double, string>(lexical_cast<double>(regex_matches[1]), regex_matches[1] + contents));
+								decoySpectra[lexical_cast<double>(regex_matches[1])] = regex_matches[1] + contents;
+								//decoySpectra.insert(pair<double, string>(lexical_cast<double>(regex_matches[1]), regex_matches[1] + contents));
 							}
 							
 						}
@@ -827,8 +848,12 @@ namespace freicore
 					//end of spectra
 					else if (newLine.length() == 0)
 					{
-						//consolidate decoy spectra
+						//consolidate output spectra
 						map<double, string>::iterator it;
+						for (it = outputSpectra.begin(); it != outputSpectra.end(); ++it)
+							outputStream << it->second << endl;
+					
+						//consolidate decoy spectra
 						for (it = decoySpectra.begin(); it != decoySpectra.end(); ++it)
 							decoyStream << it->second << endl;
 
@@ -839,10 +864,11 @@ namespace freicore
 							outFile << decoyStream.rdbuf() << endl;
 							writeIndex+=2;
 							if (writeIndex%1000 == 0)
-								cout << "Refreshing spectra: " << writeIndex << '\r' << flush;
+								cout << "Refreshing spectra: " << writeIndex/2 << '\r' << flush;
 						}
 							
 						decoyPeptide = "";
+						outputSpectra.clear();
 						decoySpectra.clear();
 						outputStream.str("");
 						decoyStream.str("");
