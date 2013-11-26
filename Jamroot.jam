@@ -244,7 +244,10 @@ project pwiz
 
         # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
         # warning: '__cur' might be used uninitialized in this function 
-        <toolset>gcc:<cxxflags>-Wno-uninitialized   
+        <toolset>gcc:<cxxflags>-Wno-uninitialized
+
+        # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
+        <toolset>gcc,<variant>debug:<cxxflags>-Wno-unused-local-typedefs
 
         # special Cygwin gcc-3.4.4 hack
         # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
