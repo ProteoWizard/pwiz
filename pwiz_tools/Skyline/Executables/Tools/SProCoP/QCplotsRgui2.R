@@ -3,7 +3,7 @@
 # (https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/begin.view)
 
 
-options (warn = -1)
+options (echo = FALSE)
 debug <- FALSE
 
 # Retention Time Reproducibility, Peak Asymmetry (a+b/2a), fwhm, and Peak Areas are monitored for 2-9 selected peptides and at least 3 QC replicates
@@ -19,11 +19,11 @@ parse.cmdline <- function () {
   # set up for command line processing (if needed)
   # arguments are specified positionally (since there are no optional arguments) and ...
   arguments <- commandArgs(trailingOnly=TRUE)
-  if ( length (arguments) != 4)
+  if ( length (arguments) != 5)
     # expected arguments not present -- error
-    stop ("USAGE: R --slave --no-save --args '<number> <highres.ms> <save.meta>' < QCplotsRgui2.R\n") #<libdir>
+    stop ("USAGE: R --slave --no-save --args '<number> <highres.ms> <save.meta> <mma.value>' < QCplotsRgui2.R\n") #<libdir>
     
-  for (z in 1:4) {
+  for (z in 1:5) {
     arg <- arguments [z]
     # remove leading and trailing blanks
     arg <- gsub ("^ *", "", arg)
@@ -34,6 +34,7 @@ parse.cmdline <- function () {
     if (z==2) Q1 <<- as.numeric (arg)
     if (z==3) Q6 <<- as.numeric (arg)
     if (z==4) Q4 <<- as.numeric (arg)
+    if (z==5) Q8 <<- as.numeric (arg)  
         
   }
 
@@ -323,24 +324,39 @@ H[i]=sumPS
 
 }
 
+if (Q6==1)
+{
+
 for (i in 1:L2) {
 
-MAhigh=length(which(MA[,i]> 5))    # Finding the number of NonConformers +/- 3s for Psym
-MAlow=length(which(MA[,i]< -5))
+MAhigh=length(which(MA[,i]> Q8))    # Finding the number of NonConformers +/- 3s for MMA User defined
+MAlow=length(which(MA[,i]< -Q8))
 MAtotal=MAhigh+MAlow
 M[i]=MAtotal
 
-}
-
-Exp=c(sum(E),sum(F),sum(G),sum(H),sum(M))
+}}
 
 dev.set(3)
 library(qcc)
 
-metrics=c("peak area", "RT", "fwhm", "Peak Symmetry", "MMA")
-names(Exp)=metrics
-PChart=pareto.chart(Exp,ylab="# of NonConformers ±3s")
-dev.set(2)
+if (Q6==1){
+
+Exp=c(sum(E),sum(F),sum(G),sum(H),sum(M)) 
+metrics=c("peak area", "RT", "fwhm", "Peak Symmetry", "MMA") 
+names(Exp)=metrics 
+PChart=pareto.chart(Exp,ylab="# of NonConformers ±3s") 
+dev.set(2) 
+
+} 
+
+if (Q6==0){
+
+Exp=c(sum(E),sum(F),sum(G),sum(H)) 
+metrics=c("peak area", "RT", "fwhm", "Peak Symmetry") 
+names(Exp)=metrics 
+PChart=pareto.chart(Exp,ylab="# of NonConformers ±3s") 
+dev.set(2) 
+}
 
 if (Q6==1)
 {
@@ -351,7 +367,6 @@ boxplot(MA,main="Mass Measurement Accuracy (MMA)",pars=list(boxwex=0.5,staplewex
 
 
 identify(QCnum,fwhm[,1])
-
 }
 
 tryCatch({parse.cmdline()}, 

@@ -35,6 +35,13 @@ namespace SProCoP
 
         private bool VerifyArguments()
         {
+            double mma;
+            if (!double.TryParse(textBoxMMAValue.Text, out mma))
+            {
+                MessageBox.Show("MMA Value must be a numeric value.");
+                textBoxMMAValue.Focus();
+                return false;
+            }
             return true;
         }
 
@@ -44,6 +51,23 @@ namespace SProCoP
             Arguments[(int)ArgumentIndices.qc_runs] = qcRunsNumUpDown.Value.ToString(CultureInfo.InvariantCulture);
             Arguments[(int)ArgumentIndices.hq_ms] = cBoxHighResolution.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
             Arguments[(int)ArgumentIndices.create_meta] = cboxMetaFile.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+            Arguments[(int)ArgumentIndices.mma_value] = textBoxMMAValue.Text.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private void cBoxHighResolution_CheckedChanged(object sender, System.EventArgs e)
+        {
+            textBoxMMAValue.Enabled = cBoxHighResolution.Checked;
+            if (labelMMAValue.ForeColor == System.Drawing.Color.DimGray)
+            {
+                labelMMAValue.ForeColor = System.Drawing.Color.Black;
+                labelUnitPPM.ForeColor = System.Drawing.Color.Black;
+            }
+            else
+            {
+                labelMMAValue.ForeColor = System.Drawing.Color.DimGray;
+                labelUnitPPM.ForeColor = System.Drawing.Color.DimGray; 
+            }
+            
         }
 
     }
