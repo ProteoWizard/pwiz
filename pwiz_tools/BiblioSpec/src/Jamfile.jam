@@ -150,6 +150,7 @@ alias pwiz-boost-libraries
   : /ext/boost//program_options
     /ext/boost//filesystem
     /ext/boost//regex
+    /ext/boost//thread
     /ext/boost//iostreams
     /ext/boost//system
     /ext/expat//expat
