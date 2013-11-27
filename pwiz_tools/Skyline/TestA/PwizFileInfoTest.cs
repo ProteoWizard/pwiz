@@ -37,9 +37,15 @@ namespace pwiz.SkylineTestA
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
-            // Waters file (.raw directory)
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ExtensionTestContext.ExtWatersRaw),
-                "Waters instrument model", "", "", "");
+            // Waters file (.raw directory) and mz5 equivalent
+            foreach (
+                var ext in
+                    new[]
+                    {ExtensionTestContext.ExtWatersRaw, ExtensionTestContext.ExtMz5})
+            {
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ext),
+                    "Waters instrument model", "", "", "");
+            }
 
             // ABI .wiff file
             if (ExtensionTestContext.CanImportAbWiff)
@@ -57,8 +63,14 @@ namespace pwiz.SkylineTestA
                 "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
 
             // Thermo .raw|mzML file
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw),
-                "TSQ Vantage", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
+            foreach (
+                var ext in
+                    new[]
+                    {ExtensionTestContext.ExtThermoRaw, ExtensionTestContext.ExtMzml})
+            {
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ext),
+                    "TSQ Vantage", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
+            }
         }
 
         private static void VerifyInstrumentInfo(string path, string model, string ionization, string analyzer, string detector)

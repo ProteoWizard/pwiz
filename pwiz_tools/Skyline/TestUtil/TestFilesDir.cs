@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -52,6 +53,20 @@ namespace pwiz.SkylineTestUtil
         /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
         /// <param name="directoryName">Name of directory to create in the test results</param>
         public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName)
+            : this(testContext, relativePathZip, directoryName, null)
+        {
+
+        }
+
+        /// <summary>
+        /// Creates a sub-directory of the Test Results directory with extracted files
+        /// from a ZIP file in the test project tree to a directory in TestResults.
+        /// </summary>
+        /// <param name="testContext">The test context for the test creating the directory</param>
+        /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
+        /// <param name="directoryName">Name of directory to create in the test results</param>
+        /// <param name="persistentFiles">List of files we'd like to extract in the ZIP file's directory for (re)use</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string[] persistentFiles)
         {
             TestContext = testContext;
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
@@ -60,10 +75,20 @@ namespace pwiz.SkylineTestUtil
                 ? Path.Combine(directoryName, zipBaseName)
                 : zipBaseName;
             FullPath = TestContext.GetTestPath(directoryName);
-            TestContext.ExtractTestFiles(relativePathZip, FullPath);
+            // where to place persistent (usually large, expensive to extract) files if any>
+            PersistentFiles = persistentFiles;
+            PersistentFilesDir = Path.GetDirectoryName(relativePathZip);
+            PersistentFilesDir = PersistentFilesDir != null
+                ? Path.Combine(PersistentFilesDir, zipBaseName)
+                : zipBaseName;
+            TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
         }
 
         public string FullPath { get; private set; }
+
+        public string PersistentFilesDir { get; private set; }
+
+        public string[] PersistentFiles { get; private set; }
 
         /// <summary>
         /// Returns a full path to a file in the unzipped directory.
@@ -72,6 +97,11 @@ namespace pwiz.SkylineTestUtil
         /// <returns>Absolute path to the file for use in tests</returns>
         public string GetTestPath(string relativePath)
         {
+            if ((PersistentFiles != null) && PersistentFiles.Contains(relativePath))
+            {
+                // persistent file - probably so because it's large. 
+                return Path.Combine(PersistentFilesDir, relativePath);
+            }
             return Path.Combine(FullPath, relativePath);
         }
 

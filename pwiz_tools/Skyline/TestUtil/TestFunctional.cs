@@ -64,6 +64,9 @@ namespace pwiz.SkylineTestUtil
             set { TestFilesZipPaths = new[] {value}; }
         }
 
+        // optional list of files to be retained from run to run (useful for really large data files which are expensive to extract and keep as local copies)
+        public string[] TestFilesPersistent { get; set; }
+
         public string[] TestFilesZipPaths
         {
             get { return _testFilesZips; }
@@ -79,14 +82,15 @@ namespace pwiz.SkylineTestUtil
                     if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://")) // Not L10N
                     {
                         string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? String.Empty, "Downloads"); 
-                        string tutorialsFolder = Path.Combine(downloadsFolder, "Tutorials"); 
+                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? String.Empty, "Downloads");
+                        string urlFolder = zipPath.Split('/')[zipPath.Split('/').Length-2]; // usually "tutorial" or "PerfTest"
+                        string targetFolder = Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0])+urlFolder.Substring(1)); // "tutorial"->"Tutorial"
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N
-                        string zipFilePath = Path.Combine(tutorialsFolder, fileName);
+                        string zipFilePath = Path.Combine(targetFolder, fileName);
                         if (!File.Exists(zipFilePath))
                         {
-                            if (!Directory.Exists(tutorialsFolder))
-                                Directory.CreateDirectory(tutorialsFolder);
+                            if (!Directory.Exists(targetFolder))
+                                Directory.CreateDirectory(targetFolder);
 
                             WebClient webClient = new WebClient();
                             webClient.DownloadFile(zipPath, zipFilePath);
@@ -515,7 +519,7 @@ namespace pwiz.SkylineTestUtil
                     TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
                     for (int i = 0; i < TestFilesZipPaths.Length; i++)
                     {
-                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName);
+                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName, TestFilesPersistent);
                     }
                 }
 

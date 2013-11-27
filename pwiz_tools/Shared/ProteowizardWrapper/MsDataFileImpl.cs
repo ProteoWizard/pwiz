@@ -24,12 +24,32 @@ using System.Threading;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.ProteowizardWrapper
 {
+    /// <summary>
+    /// This is our wrapper class for ProteoWizard's MSData file reader interface.
+    /// 
+    /// Performance measurements can be made here, see notes below on enabling that.   
+    /// 
+    /// When performance measurement is enabled, the GetLog() method can be called
+    /// after read operations have been completed. This returns a handy CSV-formatted
+    /// report on file read performance.
+    /// </summary>
     public class MsDataFileImpl : IDisposable
     {
         private static readonly ReaderList FULL_READER_LIST = ReaderList.FullReaderList;
+
+        // By default this creates dummy non-functional performance timers.
+        // Place "MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false;" in 
+        // the calling code to enable performance measurement.
+        public static PerfUtilFactory PerfUtilFactory { get; private set; }
+
+        static MsDataFileImpl()
+        {
+            PerfUtilFactory = new PerfUtilFactory();
+        }
 
         // Cached disposable objects
         private MSData _msDataFile;
@@ -38,7 +58,7 @@ namespace pwiz.ProteowizardWrapper
         private SpectrumList _spectrumListCentroided;
         private ChromatogramList _chromatogramList;
         private MsDataScanCache _scanCache;
-
+        private readonly IPerfUtil _perf; // for performance measurement, dummied by default
         /// <summary>
         /// is the file multiplexed DIA?
         /// </summary>
@@ -64,30 +84,29 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
-        private MsDataFileImpl(MSData msDataFile)
+        public MsDataFileImpl(string path, int sampleIndex = 0, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true)
         {
-            _msDataFile = msDataFile;
-			// we don't mind zero length spectra, so skip potentially expensive checks
-            _config = new ReaderConfig {acceptZeroLengthSpectra = true};
-            _isMsx = CheckMsx();
+            // see note above on enabling performance measurement
+            _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + String.Format("{0},{1},{2},{3},{4}", path, sampleIndex, simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra));  // Not L10N
+            using (_perf.CreateTimer("open")) // Not L10N
+            {
+                FilePath = path;
+                _msDataFile = new MSData();
+                _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra, acceptZeroLengthSpectra = acceptZeroLengthSpectra};
+                FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
+                _isMsx = CheckMsx();
+            }
         }
 
-        public MsDataFileImpl(string path)
+        /// <summary>
+        /// get the accumulated performance log, if any (see note above on enabling this)
+        /// </summary>
+        /// <returns>CSV-formatted multiline string with performance information, if any</returns>
+        public string GetLog()
         {
-            FilePath = path;
-            _msDataFile = new MSDataFile(path);
-			// we don't mind zero length spectra, so skip potentially expensive checks
-            _config = new ReaderConfig { acceptZeroLengthSpectra = true };
-            _isMsx = CheckMsx();
-        }
-
-        public MsDataFileImpl(string path, int sampleIndex, bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true)
-        {
-            FilePath = path;
-            _msDataFile = new MSData();
-            _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra, acceptZeroLengthSpectra = acceptZeroLengthSpectra};
-            FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
-            _isMsx = CheckMsx();
+            if (_perf != null)
+                return _perf.GetLog();
+            return null;
         }
 
         public void EnableCaching(int? cacheSize)
@@ -128,9 +147,9 @@ namespace pwiz.ProteowizardWrapper
             get
             {
                 int spectra = SpectrumList.size();
-                string ionSource = "";
-                string analyzer = "";
-                string detector = "";
+                string ionSource = string.Empty;
+                string analyzer = string.Empty;
+                string detector = string.Empty;
                 foreach (InstrumentConfiguration ic in _msDataFile.instrumentConfigurationList)
                 {
                     string instrumentIonSource;
@@ -244,39 +263,42 @@ namespace pwiz.ProteowizardWrapper
 
         public IEnumerable<MsInstrumentConfigInfo> GetInstrumentConfigInfoList()
         {
-            IList<MsInstrumentConfigInfo> configList = new List<MsInstrumentConfigInfo>();
-
-            foreach (InstrumentConfiguration ic in _msDataFile.instrumentConfigurationList)
+            using (_perf.CreateTimer("GetInstrumentConfigList")) // Not L10N
             {
-                string instrumentModel = null;
-                string ionization;
-                string analyzer;
-                string detector;
+                IList<MsInstrumentConfigInfo> configList = new List<MsInstrumentConfigInfo>();
+
+                foreach (InstrumentConfiguration ic in _msDataFile.instrumentConfigurationList)
+                {
+                    string instrumentModel = null;
+                    string ionization;
+                    string analyzer;
+                    string detector;
                 
-                CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
-                if (!param.empty() && param.cvid != CVID.MS_instrument_model)
-                {
-                    instrumentModel = param.name;
-                }
-                if(instrumentModel == null)
-                {
-                    // If we did not find the instrument model in a CVParam it may be in a UserParam
-                    UserParam uParam = ic.userParam("msModel"); // Not L10N
-                    if (HasInfo(uParam))
+                    CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
+                    if (!param.empty() && param.cvid != CVID.MS_instrument_model)
                     {
-                        instrumentModel = uParam.value;
+                        instrumentModel = param.name;
+                    }
+                    if(instrumentModel == null)
+                    {
+                        // If we did not find the instrument model in a CVParam it may be in a UserParam
+                        UserParam uParam = ic.userParam("msModel"); // Not L10N
+                        if (HasInfo(uParam))
+                        {
+                            instrumentModel = uParam.value;
+                        }
+                    }
+
+                    // get the ionization type, analyzer and detector
+                    GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
+
+                    if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
+                    {
+                        configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector));
                     }
                 }
-
-                // get the ionization type, analyzer and detector
-                GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
-
-                if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
-                {
-                    configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector));
-                }
+                return configList;
             }
-            return configList;
         }
 
         private static bool HasInfo(UserParam uParam)
@@ -452,26 +474,30 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public double[] GetScanTimes()
         {
-            if (ChromatogramList == null || ChromatogramList.empty())
+            using (_perf.CreateTimer("GetScanTimes"))   // Not L10N
             {
-                return null;
-            }
-            using (var chromatogram = ChromatogramList.chromatogram(0, true))
-            {
-                if (chromatogram == null)
+                if (ChromatogramList == null || ChromatogramList.empty())
                 {
                     return null;
                 }
-                TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
-                chromatogram.getTimeIntensityPairs(ref timeIntensityPairList);
-                double[] times = new double[timeIntensityPairList.Count];
-                for (int i = 0; i < times.Length; i++)
+                using (var chromatogram = ChromatogramList.chromatogram(0, true))
                 {
-                    times[i] = timeIntensityPairList[i].time;
+                    if (chromatogram == null)
+                    {
+                        return null;
+                    }
+                    TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
+                    chromatogram.getTimeIntensityPairs(ref timeIntensityPairList);
+                    double[] times = new double[timeIntensityPairList.Count];
+                    for (int i = 0; i < times.Length; i++)
+                    {
+                        times[i] = timeIntensityPairList[i].time;
+                    }
+                    return times;
                 }
-                return times;
             }
         }
+
         public double[] GetTotalIonCurrent()
         {
             if (ChromatogramList == null)
@@ -535,22 +561,25 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataSpectrum GetSpectrum(int scanIndex)
         {
-            if (_scanCache != null)
+            using (_perf.CreateTimer(String.Format("GetSpectrum(index)"))) // Not L10N
             {
-                MsDataSpectrum returnSpectrum;
-                // check the scan for this cache
-                if (!_scanCache.TryGetSpectrum(scanIndex, out returnSpectrum))
+                if (_scanCache != null)
                 {
-                    // spectrum not in the cache, pull it from the file
-                    returnSpectrum = GetSpectrum(SpectrumList.spectrum(scanIndex, true));
-                    // add it to the cache
-                    _scanCache.Add(scanIndex, returnSpectrum);
+                    MsDataSpectrum returnSpectrum;
+                    // check the scan for this cache
+                    if (!_scanCache.TryGetSpectrum(scanIndex, out returnSpectrum))
+                    {
+                        // spectrum not in the cache, pull it from the file
+                        returnSpectrum = GetSpectrum(SpectrumList.spectrum(scanIndex, true));
+                        // add it to the cache
+                        _scanCache.Add(scanIndex, returnSpectrum);
+                    }
+                    return returnSpectrum;
                 }
-                return returnSpectrum;
-            }
-            using (var spectrum = SpectrumList.spectrum(scanIndex, true))
-            {
-                return GetSpectrum(spectrum);
+                using (var spectrum = SpectrumList.spectrum(scanIndex, true))
+                {
+                    return GetSpectrum(spectrum);
+                }
             }
         }
 
@@ -593,21 +622,24 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataSpectrum GetCentroidedSpectrum(int scanIndex)
         {
-            var msDataSpectrum = GetSpectrum(scanIndex);
-            if (!msDataSpectrum.Centroided && msDataSpectrum.Mzs.Length > 0)
+            using (_perf.CreateTimer("GetCentroidedSpectrum(index)")) // Not L10N
             {
-                // Spectra from mzWiff files lack zero intensity m/z values necessary for
-                // correct centroiding.
-                if (IsMzWiffXml)
-                    InsertZeros(msDataSpectrum);
+                var msDataSpectrum = GetSpectrum(scanIndex);
+                if (!msDataSpectrum.Centroided && msDataSpectrum.Mzs.Length > 0)
+                {
+                    // Spectra from mzWiff files lack zero intensity m/z values necessary for
+                    // correct centroiding.
+                    if (IsMzWiffXml)
+                        InsertZeros(msDataSpectrum);
 
-                var centroider = new Centroider(msDataSpectrum.Mzs, msDataSpectrum.Intensities);
-                double[] mzArray, intensityArray;
-                centroider.GetCentroidedData(out mzArray, out intensityArray);
-                msDataSpectrum.Mzs = mzArray;
-                msDataSpectrum.Intensities = intensityArray;
+                    var centroider = new Centroider(msDataSpectrum.Mzs, msDataSpectrum.Intensities);
+                    double[] mzArray, intensityArray;
+                    centroider.GetCentroidedData(out mzArray, out intensityArray);
+                    msDataSpectrum.Mzs = mzArray;
+                    msDataSpectrum.Intensities = intensityArray;
+                }
+                return msDataSpectrum;
             }
-            return msDataSpectrum;
         }
 
         private static void InsertZeros(MsDataSpectrum msDataSpectrum)

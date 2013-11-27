@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestA.Results
         public void TestOverlap(SrmDocument doc, string dataPath)
         {
             // Load the file and check MsDataFileImpl
-            using (var file = new MsDataFileImpl(dataPath, 0))
+            using (var file = new MsDataFileImpl(dataPath))
             {
                 var filter = new SpectrumFilter(doc, null);
                 Assert.IsTrue(filter.EnabledMsMs);
@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestA.Results
         public void TestMsx(SrmDocument doc, string dataPath)
         {
             // Load the file and check MsDataFileImpl
-            using (var file = new MsDataFileImpl(dataPath, 0))
+            using (var file = new MsDataFileImpl(dataPath))
             {
                 Assert.IsTrue(file.IsMsx);
 

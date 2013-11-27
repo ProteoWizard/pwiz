@@ -479,6 +479,7 @@ namespace pwiz.Skyline
                             continue;
                         string pathPartCache = ChromatogramCache.PartPathForName(path, pathFileSample);
                         if (File.Exists(pathFile) ||
+                            Directory.Exists(pathFile) || // some sample "files" are actually directories (.d etc)
                             File.Exists(pathPartCache) ||
                             File.Exists(Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, Path.GetFileName(pathFile) ?? string.Empty)))
                         {
@@ -496,16 +497,14 @@ namespace pwiz.Skyline
                     return true;
 
                 // TODO: Ask the user to locate the missing data files
-                string message = TextUtil.LineSeparate((foundFiles.Count > 0
-                                     ? string.Format(
-                                         Resources.
-                                             SkylineWindow_CheckResults_The_data_file__0__is_missing_and_some_of_the_original_instrument_output_could_not_be_found,
-                                         ChromatogramCache.FinalPathForName(path, null))
-                                     : string.Format(
-                                         Resources.
-                                             SkylineWindow_CheckResults_The_data_file__0__is_missing_and_the_original_instrument_output_could_not_be_found,
-                                         ChromatogramCache.FinalPathForName(path, null))),
-                                       Resources.SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway);
+                string missingFilesString = TextUtil.LineSeparate(missingFiles);
+                string message = TextUtil.LineSeparate(string.Format(
+                                    Resources.SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_,
+                                    ChromatogramCache.FinalPathForName(path, null)),
+                                    string.Empty,
+                                    missingFilesString,
+                                    string.Empty,
+                                    Resources.SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway);
 
                 if (MessageBox.Show(this, message, Program.Name,
                         MessageBoxButtons.OKCancel) == DialogResult.Cancel)

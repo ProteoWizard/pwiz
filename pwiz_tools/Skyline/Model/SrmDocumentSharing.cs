@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model
                     {
                         XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                         ser.Serialize(writer, Document);
-                        zip.AddEntry(Path.GetFileName(DocumentPath), string.Empty, stringWriter.ToString(), Encoding.UTF8);
+                        zip.AddEntry(Path.GetFileName(DocumentPath), stringWriter.ToString(), Encoding.UTF8);
                     }
                 }
                 Save(zip);

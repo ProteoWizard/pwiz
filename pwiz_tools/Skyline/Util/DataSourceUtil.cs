@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Util
         public const string EXT_MZXML =  ".mzxml";
         public const string EXT_MZDATA = ".mzdata";
         public const string EXT_MZML = ".mzml";
+        public const string EXT_MZ5 = ".mz5";
         public const string EXT_XML = ".xml";
 
         public const string TYPE_WIFF = "ABSciex WIFF";
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_WATERS_RAW = "Waters RAW";
         public const string TYPE_MZML = "mzML";
         public const string TYPE_MZXML = "mzXML";
+        public const string TYPE_MZ5 = "mz5";
         public const string TYPE_MZDATA = "mzData";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
@@ -106,6 +108,7 @@ namespace pwiz.Skyline.Util
                 case EXT_MZXML: return TYPE_MZXML;
                 case EXT_MZDATA: return TYPE_MZDATA;
                 case EXT_MZML: return TYPE_MZML;
+                case EXT_MZ5: return TYPE_MZ5;
                 case EXT_XML: return GetSourceTypeFromXML(fileInfo.FullName);
                 default: return UNKNOWN_TYPE;
             }

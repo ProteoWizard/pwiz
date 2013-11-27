@@ -13342,22 +13342,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The data file {0} is missing, and some of the original instrument output could not be found..
+        ///   Looks up a localized string similar to The data file &apos;{0}&apos; is missing, and the following original instrument output could not be found:.
         /// </summary>
-        public static string SkylineWindow_CheckResults_The_data_file__0__is_missing_and_some_of_the_original_instrument_output_could_not_be_found {
+        public static string SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_CheckResults_The_data_file__0__is_missing_and_some_of_the_original_" +
-                        "instrument_output_could_not_be_found", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The data file {0} is missing, and the original instrument output could not be found..
-        /// </summary>
-        public static string SkylineWindow_CheckResults_The_data_file__0__is_missing_and_the_original_instrument_output_could_not_be_found {
-            get {
-                return ResourceManager.GetString("SkylineWindow_CheckResults_The_data_file__0__is_missing_and_the_original_instrume" +
-                        "nt_output_could_not_be_found", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_orig" +
+                        "inal_instrument_output_could_not_be_found_", resourceCulture);
             }
         }
         

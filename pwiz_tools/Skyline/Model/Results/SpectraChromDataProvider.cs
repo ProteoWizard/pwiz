@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -238,6 +239,10 @@ namespace pwiz.Skyline.Model.Results
                 AddChromatograms(chromMap, ChromSource.fragment);
                 AddChromatograms(chromMapSim, ChromSource.sim);
                 AddChromatograms(chromMapMs1, ChromSource.ms1);
+
+                if (dataFile.GetLog() != null) // in case perf logging is enabled
+                    DebugLog.Info(dataFile.GetLog());
+
             }
         }
 

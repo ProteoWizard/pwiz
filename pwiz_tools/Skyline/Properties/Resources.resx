@@ -3724,11 +3724,8 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway" xml:space="preserve">
     <value>Click OK to open the document anyway.</value>
   </data>
-  <data name="SkylineWindow_CheckResults_The_data_file__0__is_missing_and_some_of_the_original_instrument_output_could_not_be_found" xml:space="preserve">
-    <value>The data file {0} is missing, and some of the original instrument output could not be found.</value>
-  </data>
-  <data name="SkylineWindow_CheckResults_The_data_file__0__is_missing_and_the_original_instrument_output_could_not_be_found" xml:space="preserve">
-    <value>The data file {0} is missing, and the original instrument output could not be found.</value>
+  <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
+    <value>The data file '{0}' is missing, and the following original instrument output could not be found:</value>
   </data>
   <data name="SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes" xml:space="preserve">
     <value>Do you want to save changes?</value>

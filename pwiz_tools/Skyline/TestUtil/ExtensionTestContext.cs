@@ -51,11 +51,32 @@ namespace pwiz.SkylineTestUtil
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir)
         {
+            testContext.ExtractTestFiles(relativePathZip, testContext.TestDir, null, null);
+        }
+
+        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)
+        {
             string pathZip = testContext.GetProjectDirectory(relativePathZip);
             using (ZipFile zipFile = ZipFile.Read(pathZip))
             {
                 foreach (ZipEntry zipEntry in zipFile)
-                    zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
+                {
+                    bool persist = false;
+                    if (persistentFiles != null)
+                    {
+                        foreach (var persistentFile in persistentFiles)
+                        {
+                            if (zipEntry.FileName.Replace('\\', '/').Contains(persistentFile.Replace('\\', '/')))
+                            {
+                                zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
+                                persist = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!persist)
+                        zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
+                }
             }
         }
 
@@ -67,6 +88,11 @@ namespace pwiz.SkylineTestUtil
                     Equals(".", LocalizationHelper.OriginalCulture.NumberFormat.NumberDecimalSeparator) &&
                     Equals(",", LocalizationHelper.OriginalCulture.TextInfo.ListSeparator);
             }
+        }
+
+        public static string ExtMz5
+        {
+            get { return ".mz5"; }
         }
 
         public static string ExtMzml

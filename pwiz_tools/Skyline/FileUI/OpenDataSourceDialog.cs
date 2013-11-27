@@ -52,6 +52,7 @@ namespace pwiz.Skyline.FileUI
                 DataSourceUtil.TYPE_WATERS_RAW,
                 DataSourceUtil.TYPE_MZML,
                 DataSourceUtil.TYPE_MZXML,
+                DataSourceUtil.TYPE_MZ5
             };
 
             sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
@@ -143,6 +144,11 @@ namespace pwiz.Skyline.FileUI
             {
                 if (Equals(item.Text, fileName))
                     listView.SelectedIndices.Add(item.Index);
+            }
+            if (0 == listView.SelectedIndices.Count && fileName.Contains("\\"))
+            {
+                // mimic the action of user pasting an entire path into the textbox
+                sourcePathTextBox.Text = fileName;
             }
         }
 
@@ -619,6 +625,17 @@ namespace pwiz.Skyline.FileUI
                     return;
                 }
             }
+
+            // perhaps the user has typed an entire filename into the text box?
+            if (DataSourceUtil.IsDataSource(sourcePathTextBox.Text) || 
+               DataSourceUtil.IsDataSource(new DirectoryInfo(sourcePathTextBox.Text)) // some input "files" are directories
+)            {
+                DataSources = new[] { sourcePathTextBox.Text };
+                DialogResult = DialogResult.OK;
+                return;
+            }
+
+
             // No files or folders selected: Show an error message.
             MessageBox.Show(this, Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources,
                 Resources.OpenDataSourceDialog_Open_Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
