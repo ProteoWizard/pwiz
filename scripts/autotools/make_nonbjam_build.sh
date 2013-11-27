@@ -94,6 +94,10 @@ echo "ls -l autotools"
 ls -l autotools
 echo "ls -l"
 ls -l
+if [ ! -e autotools/configure ] ; then
+echo "something bad has happened: autotools/configure not found. Exit with error code 1."
+exit 1
+fi
 echo "bash autotools/configure"
 bash autotools/configure
 echo "ls -l"
