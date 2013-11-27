@@ -35,7 +35,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     rule build-properties ( targets + : sources * : properties * )
     {
         if <variant>debug in $(properties) ||
-           <debug-symbols>on in $(properties)
+           ( ( <debug-symbols>on in $(properties) ) && ( ! <variant>release in $(properties) ) )
         {
             CONFIGURATION on $(<[1]) = "Debug" ;
         }
@@ -53,6 +53,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
     }
+
+    # we're loosely coupled to ProteoWizard, just grabbing whatever was built last time
+    # this lets us run a debug skyline with a release proteowizard DLL (pwiz is pretty slow in debug build)
+    # but we have to explicitly manage some pwiz files that get copied around as part of the IDE dependency tree
+    # but not updated since msbuild doesn't have a sense of their sources
+
+    actions freshen_proteowizard
+    {
+        echo Freshening ProteoWizard DLLs...
+        copy /Y "$(PWIZ_WRAPPER_PATH)\obj\$(PLATFORM)\pwiz_data_cli.*" "$(SKYLINE_PATH)\TestUtil\bin\$(PLATFORM)\$(CONFIGURATION)\*"
+        copy /Y "$(PWIZ_WRAPPER_PATH)\obj\$(PLATFORM)\pwiz_data_cli.*" "$(PWIZ_WRAPPER_PATH)\bin\$(PLATFORM)\$(CONFIGURATION)\*"
+    }
+
 
     actions do_skyline_build
     {
@@ -138,7 +151,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         if ! <location> in $(properties:G)
         {
             if <variant>debug in $(properties) ||
-               <debug-symbols>on in $(properties)
+               ( ( <debug-symbols>on in $(properties) ) && ( ! <variant>release in $(properties) ) )
             {
                 result = <location>$(SKYLINE_PATH)/bin/$(PLATFORM)/Debug ;
             }
@@ -155,11 +168,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     }
 
 
-
     make Skyline.exe
         : # sources
         : # actions
             @do_skyline_build
+            @freshen_proteowizard
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement
