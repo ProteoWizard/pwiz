@@ -255,27 +255,49 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             mzArray.reserve(xArray.size() / 2);
             intensityArray.reserve(xArray.size() / 2);
 
-            // special case for the first sample
-            if (yArray[0] > 0 || yArray[1] > 0)
+            size_t index=0;
+            size_t lastIndex = yArray.size();
+            while ((index < lastIndex) && (0==yArray[index])) index++; // look for first nonzero value
+
+            if (index < lastIndex) // we have at least one nonzero value
             {
-                mzArray.push_back(xArray[0]);
-                intensityArray.push_back(yArray[0]);
-            }
-
-            size_t lastIndex = yArray.size() - 1;
-
-            for (size_t i=1; i < lastIndex; ++i)
-                if (yArray[i-1] > 0 || yArray[i] > 0 || yArray[i+1] > 0)
+                if (index>0)
                 {
-                    mzArray.push_back(xArray[i]);
-                    intensityArray.push_back(yArray[i]);
+                    mzArray.push_back(xArray[index-1]);
+                    intensityArray.push_back(0);
                 }
+                mzArray.push_back(xArray[index]);
+                intensityArray.push_back(yArray[index]);
+                index++;
 
-            // special case for the last sample
-            if (yArray[lastIndex-1] > 0 || yArray[lastIndex] > 0)
-            {
-                mzArray.push_back(xArray[lastIndex]);
-                intensityArray.push_back(yArray[lastIndex]);
+                while ( index < lastIndex )
+                {
+                    if (0 != yArray[index])
+                    {
+                        mzArray.push_back(xArray[index]);
+                        intensityArray.push_back(yArray[index++]);
+                    }
+                    else // skip over a run of zeros if possible, preserving those adjacent to nonzeros
+                    {
+                        mzArray.push_back(xArray[index]);  // we're adjacent to a nonzero so save this one at least
+                        intensityArray.push_back(0);
+                        // now look for next nonzero value if any
+                        size_t z = index+1;
+                        float *y=&yArray[index];
+                        while (z<lastIndex && (0==*++y)) z++;
+                        if (z < lastIndex )
+                        {
+                            if (z != index+1) // did we cover a run of zeros?
+                            {
+                                mzArray.push_back(xArray[z-1]); // write a single adjacent zero
+                                intensityArray.push_back(0);
+                            }
+                            mzArray.push_back(xArray[z]); 
+                            intensityArray.push_back(yArray[z]);
+                        }
+                        index = z+1;
+                    }
+                }
             }
 
         }
