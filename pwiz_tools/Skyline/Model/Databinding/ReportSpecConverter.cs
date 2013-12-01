@@ -25,6 +25,7 @@ using System.Reflection;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -203,7 +204,6 @@ namespace pwiz.Skyline.Model.Databinding
             return new ViewInfo(DataSchema, rootTable, viewSpec);
         }
 
-
         private ColumnSpec ConvertReportColumn(ReportColumn reportColumn)
         {
             var identifierPath = PropertyPath.Root;
@@ -226,6 +226,65 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     oldCaption = annotationName;
                     component = typeof (string);
+                }
+                else if (RatioPropertyAccessor.IsRatioOrRdotpProperty(part))
+                {
+                    propertyPath = null;
+                    if (component == typeof (DbPeptideResult))
+                    {
+                        const string prefixPeptideRatio = "ratio_Ratio";
+                        string labelName, standardName;
+                        if (part.StartsWith(prefixPeptideRatio))
+                        {
+                            if (TryParseLabelNames(part.Substring(prefixPeptideRatio.Length), out labelName, out standardName))
+                            {
+                                propertyPath = PropertyPath.Root.Property(RatioPropertyDescriptor.MakePropertyName(
+                                    RatioPropertyDescriptor.RATIO_PREFIX, labelName, standardName));
+                            }
+                        }
+                        const string prefixPeptideRdotp = "rdotp_DotProduct";
+                        if (part.StartsWith(prefixPeptideRdotp))
+                        {
+                            if (TryParseLabelNames(part.Substring(prefixPeptideRdotp.Length), out labelName, out standardName))
+                            {
+                                propertyPath = PropertyPath.Root.Property(RatioPropertyDescriptor.MakePropertyName(
+                                    RatioPropertyDescriptor.RDOTP_PREFIX, labelName, standardName));
+                            }
+                        }
+                    }
+                    else if (component == typeof (DbPrecursorResult))
+                    {
+                        const string prefixPrecursorRatio = "ratio_TotalAreaRatioTo";
+                        const string prefixPrecursorRdotp = "rdotp_DotProductTo";
+                        if (part.StartsWith(prefixPrecursorRatio))
+                        {
+                            propertyPath = PropertyPath.Root.Property(
+                                RatioPropertyDescriptor.MakePropertyName(RatioPropertyDescriptor.RATIO_PREFIX, part.Substring(prefixPrecursorRatio.Length)));
+                        }
+                        else if (part.StartsWith(prefixPrecursorRdotp))
+                        {
+                            propertyPath = PropertyPath.Root.Property(
+                                RatioPropertyDescriptor.MakePropertyName(RatioPropertyDescriptor.RDOTP_PREFIX,
+                                    part.Substring(prefixPrecursorRdotp.Length)));
+                        }
+                    }
+                    else if (component == typeof (DbTransitionResult))
+                    {
+                        const string prefixTransitionRatio = "ratio_AreaRatioTo";
+                        if (part.StartsWith(prefixTransitionRatio))
+                        {
+                            propertyPath = PropertyPath.Root.Property(
+                                RatioPropertyDescriptor.MakePropertyName(RatioPropertyDescriptor.RATIO_PREFIX, 
+                                part.Substring(prefixTransitionRatio.Length)));
+                        }
+                    }
+                    component = typeof (double);
+                    oldCaption = null;
+                    if (null == propertyPath)
+                    {
+                        Trace.TraceWarning("Unable to parse ratio property {0}", part);
+                        propertyPath = PropertyPath.Root.Property(part);
+                    }
                 }
                 else
                 {
@@ -256,6 +315,10 @@ namespace pwiz.Skyline.Model.Databinding
                 
             }
             var columnDescriptor = GetColumnDescriptor(databindingTableAttribute, identifierPath);
+            if (null == columnDescriptor)
+            {
+                return new ColumnSpec(identifierPath);
+            }
             var columnSpec = new ColumnSpec(columnDescriptor.PropertyPath);
             var newCaption = columnDescriptor.DefaultCaption;
             if (oldCaption != newCaption)
@@ -271,6 +334,20 @@ namespace pwiz.Skyline.Model.Databinding
             var viewSpec = new ViewSpec().SetColumns(new[] { new ColumnSpec(identifierPath) });
             var viewInfo = new ViewInfo(DataSchema, databindingTable.RootTable, viewSpec);
             return viewInfo.DisplayColumns.First().ColumnDescriptor;
+        }
+
+        private bool TryParseLabelNames(string ratioParts, out string labelName, out string standardName)
+        {
+            const string splitter = "To";
+            int ichSplitter = ratioParts.IndexOf(splitter, 1, StringComparison.InvariantCulture);
+            if (ichSplitter < 0 || ichSplitter + splitter.Length >= ratioParts.Length)
+            {
+                labelName = standardName = null;
+                return false;
+            }
+            labelName = ratioParts.Substring(0, ichSplitter);
+            standardName = ratioParts.Substring(ichSplitter + splitter.Length);
+            return true;
         }
     }
 }

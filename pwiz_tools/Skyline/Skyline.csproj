@@ -577,6 +577,7 @@
     <Compile Include="Model\Databinding\Entities\Transition.cs" />
     <Compile Include="Model\Databinding\Entities\TransitionResult.cs" />
     <Compile Include="Model\Databinding\IDocumentChangeListener.cs" />
+    <Compile Include="Model\Databinding\RatioPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ReplicateSummaries.cs" />
     <Compile Include="Model\Databinding\ReportOrViewSpec.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />

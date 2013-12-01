@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override IEnumerable<PropertyDescriptor> GetPropertyDescriptors(Type type)
         {
-            return base.GetPropertyDescriptors(type).Concat(GetAnnotations(type));
+            return base.GetPropertyDescriptors(type).Concat(GetAnnotations(type)).Concat(GetRatioProperties(type));
 
         }
 
@@ -83,6 +83,11 @@ namespace pwiz.Skyline.Model.Databinding
                 type.GetCustomAttributes(true)
                     .OfType<AnnotationTargetAttribute>()
                     .Select(attr => attr.AnnotationTarget));
+        }
+
+        public IEnumerable<PropertyDescriptor> GetRatioProperties(Type type)
+        {
+            return RatioPropertyDescriptor.ListProperties(Document, type);
         }
 
         public SrmDocument Document
@@ -196,6 +201,11 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return null;
             }
+            propertyDescriptor = RatioPropertyDescriptor.GetProperty(Document, type, name);
+            if (null != propertyDescriptor)
+            {
+                return propertyDescriptor;
+            }
             if (name.StartsWith(AnnotationDef.ANNOTATION_PREFIX))
             {
                 var annotationTargets = GetAnnotationTargets(type);
@@ -206,6 +216,7 @@ namespace pwiz.Skyline.Model.Databinding
                     return new AnnotationPropertyDescriptor(annotationDef, false);
                 }
             }
+
             return null;
         }
     }
