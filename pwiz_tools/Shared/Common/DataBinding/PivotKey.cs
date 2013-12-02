@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace pwiz.Common.DataBinding
@@ -153,6 +154,8 @@ namespace pwiz.Common.DataBinding
         {
 #if DEBUG
             Debug.Assert(!Contains(propertyPath));
+#else
+            Debug.Assert(true);
 #endif
             return new PivotKey(this, propertyPath, value);
         }
