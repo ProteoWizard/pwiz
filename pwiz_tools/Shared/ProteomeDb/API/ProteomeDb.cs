@@ -69,6 +69,7 @@ namespace pwiz.ProteomeDatabase.API
         }
         public ReaderWriterLock DatabaseLock { get { return _databaseResource.DatabaseLock; } }
         public String Path { get { return _databaseResource.Path; } }
+        public ProteomeDbPath ProteomeDbPath {get { return new ProteomeDbPath(Path);}}
         private struct ProtIdNames
         {
             public ProtIdNames(long id, ICollection<DbProteinName> names) : this()
@@ -242,7 +243,7 @@ namespace pwiz.ProteomeDatabase.API
                 List<Protein> proteins = new List<Protein>();
                 foreach (DbProtein dbProtein in session.CreateCriteria(typeof(DbProtein)).List())
                 {
-                    proteins.Add(new Protein(this, dbProtein));
+                    proteins.Add(new Protein(ProteomeDbPath, dbProtein));
                 }
                 return proteins;
             }
@@ -260,7 +261,7 @@ namespace pwiz.ProteomeDatabase.API
                 List<Protein> result = new List<Protein>();
                 foreach (var dbProteinName in proteinNames)
                 {
-                    result.Add(new Protein(this, dbProteinName.Protein, dbProteinName));
+                    result.Add(new Protein(ProteomeDbPath, dbProteinName.Protein, dbProteinName));
                 }
                 return result;
             }
@@ -276,7 +277,7 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     return null;
                 }
-                return new Protein(this, proteinName.Protein, proteinName);
+                return new Protein(ProteomeDbPath, proteinName.Protein, proteinName);
             }
         }
         public Digestion Digest(IProtease protease, ProgressMonitor progressMonitor)
@@ -345,7 +346,7 @@ namespace pwiz.ProteomeDatabase.API
                             {
                                 return null;
                             }
-                            Protein protein = new Protein(this, proteins[i]);
+                            Protein protein = new Protein(ProteomeDbPath, proteins[i]);
 
                             foreach (DigestedPeptide digestedPeptide in protease.Digest(protein))
                             {

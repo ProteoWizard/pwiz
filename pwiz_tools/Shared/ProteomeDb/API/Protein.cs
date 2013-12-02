@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.ProteomeDatabase.DataModel;
+using pwiz.ProteomeDatabase.Util;
 
 namespace pwiz.ProteomeDatabase.API
 {
@@ -28,12 +29,12 @@ namespace pwiz.ProteomeDatabase.API
         private String _name;
         private String _description;
         
-        public Protein(ProteomeDb proteomeDb, DbProtein protein)
-            : this(proteomeDb, protein,(DbProteinName) null)
+        internal Protein(ProteomeDbPath proteomeDb, DbProtein protein)
+            : this(proteomeDb, protein, (DbProteinName) null)
         {
         }
 
-        public Protein(ProteomeDb proteomeDb, DbProtein protein, DbProteinName primaryName)
+        internal Protein(ProteomeDbPath proteomeDb, DbProtein protein, DbProteinName primaryName)
             : base(proteomeDb, protein)
         {
             Sequence = protein.Sequence;
@@ -44,8 +45,8 @@ namespace pwiz.ProteomeDatabase.API
             }
         }
 
-        public Protein(ProteomeDb proteomeDb, DbProtein protein, IEnumerable<DbProteinName> proteinNames)
-            : this(proteomeDb, protein, (DbProteinName) null)
+        internal Protein(ProteomeDbPath proteomeDbPath, DbProtein protein, IEnumerable<DbProteinName> proteinNames)
+            : this(proteomeDbPath, protein, (DbProteinName) null)
         {
             _alternativeNames = new List<AlternativeName>();
             foreach (DbProteinName proteinName in proteinNames)
@@ -69,7 +70,8 @@ namespace pwiz.ProteomeDatabase.API
                 return;
             }
             _alternativeNames = new List<AlternativeName>();
-            using (var session = ProteomeDb.OpenSession())
+            using (var proteomeDb = OpenProteomeDb())
+            using (var session = proteomeDb.OpenSession())
             {
                 var protein = GetEntity(session);
                 foreach (var name in protein.Names)
@@ -105,7 +107,7 @@ namespace pwiz.ProteomeDatabase.API
         {
             get
             {
-                if (_description == null)
+                if (_description == null && _name == null)
                     InitNames();
                 return _description;
             }

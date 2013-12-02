@@ -123,6 +123,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Util\DatabaseResource.cs" />
+    <Compile Include="Util\ProteomeDbPath.cs" />
     <Compile Include="Util\SessionFactoryFactory.cs" />
     <Compile Include="Util\SessionWithLock.cs" />
   </ItemGroup>

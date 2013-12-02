@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using NHibernate;
 using NHibernate.Criterion;
 using pwiz.ProteomeDatabase.DataModel;
+using pwiz.ProteomeDatabase.Util;
 
 namespace pwiz.ProteomeDatabase.API
 {
@@ -29,18 +30,21 @@ namespace pwiz.ProteomeDatabase.API
     /// </summary>
     public class ProteinMatchSettings
     {
-        public ProteinMatchSettings(ProteomeDb proteomeDb, IProtease protease, ProteinMatchType proteinMatchTypes, String searchText)
+        public ProteinMatchSettings(ProteomeDbPath proteomeDbPath, IProtease protease, ProteinMatchType proteinMatchTypes, String searchText)
         {
-            ProteomeDb = proteomeDb;
+            ProteomeDbPath = proteomeDbPath;
             Protease = protease;
             if (protease != null)
             {
-                Digestion = ProteomeDb.GetDigestion(protease.Name);
+                using (var proteomeDb = proteomeDbPath.OpenProteomeDb())
+                {
+                    Digestion = proteomeDb.GetDigestion(protease.Name);
+                }
             }
             MatchTypes = proteinMatchTypes;
             SearchText = searchText;
         }
-        public ProteomeDb ProteomeDb { get; private set; }
+        public ProteomeDbPath ProteomeDbPath { get; private set; }
         public IProtease Protease { get; private set; }
         public Digestion Digestion { get; private set; }
         public ProteinMatchType MatchTypes { get; private set; }
@@ -157,7 +161,7 @@ namespace pwiz.ProteomeDatabase.API
             // Create a ProteinMatch for each Protein
             foreach (var entry in proteinNames)
             {
-                var proteinMatch = new ProteinMatch(Settings, new Protein(Settings.ProteomeDb, entry.Key, entry.Value));
+                var proteinMatch = new ProteinMatch(Settings, new Protein(Settings.ProteomeDbPath, entry.Key, entry.Value));
                 if (entry.Key.Id.HasValue)
                     newMatches.Add(entry.Key.Id.Value, proteinMatch);
             }
@@ -245,7 +249,8 @@ namespace pwiz.ProteomeDatabase.API
         {
             try
             {
-                using (_session = Settings.ProteomeDb.OpenSession())
+                using (var proteomeDb = Settings.ProteomeDbPath.OpenProteomeDb())
+                using (_session = proteomeDb.OpenSession())
                 {
                     if (0 != (Settings.MatchTypes & ProteinMatchType.sequence) && Settings.Digestion != null &&
                         IsAminoAcidSequence(Settings.SearchText))

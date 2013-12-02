@@ -19,16 +19,21 @@
 using System;
 using NHibernate;
 using pwiz.ProteomeDatabase.DataModel;
+using pwiz.ProteomeDatabase.Util;
 
 namespace pwiz.ProteomeDatabase.API
 {
     public class EntityModel<T> where T : DbEntity<T>, new()
     {
         private readonly T _entity;
-        public EntityModel(ProteomeDb proteomeDb, T entity)
+        protected EntityModel(ProteomeDbPath proteomeDb, T entity)
         {
             _entity = entity;
-            ProteomeDb = proteomeDb;
+            ProteomeDbPath = proteomeDb;
+        }
+
+        public EntityModel(ProteomeDb proteomeDb, T entity) : this(proteomeDb.ProteomeDbPath, entity)
+        {
         }
         public T GetEntity(ISession session)
         {
@@ -38,7 +43,12 @@ namespace pwiz.ProteomeDatabase.API
         {
             get { return _entity.Id.HasValue ? _entity.Id.Value : 0; }
         }
-        public ProteomeDb ProteomeDb { get; private set; }
+        protected ProteomeDbPath ProteomeDbPath { get; private set; }
+
+        protected ProteomeDb OpenProteomeDb()
+        {
+            return ProteomeDbPath.OpenProteomeDb();
+        }
         public override bool Equals(Object other)
         {
             if (other == this)

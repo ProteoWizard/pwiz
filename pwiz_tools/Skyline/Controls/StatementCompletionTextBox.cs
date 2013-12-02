@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Controls
                 HideStatementCompletionForm();
                 return;
             }
-            if (_proteinMatcherLast != null && ReferenceEquals(_proteomeDb, _proteinMatcherLast.Settings.ProteomeDb))
+            if (_proteinMatcherLast != null)
             {
                 //if (_proteinMatcherLast.Settings.SearchText == searchText)
                 //{
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Controls
                     if (results != null)
                     {
                         var oldSettings = _proteinMatcherLast.Settings;
-                        var newSettings = new ProteinMatchSettings(oldSettings.ProteomeDb, oldSettings.Protease, MatchTypes, searchText);
+                        var newSettings = new ProteinMatchSettings(oldSettings.ProteomeDbPath, oldSettings.Protease, MatchTypes, searchText);
                         newResults.AddRange(RefineMatches(results, newSettings));
                     }
                     if (newResults.Count == 0)
@@ -549,7 +549,7 @@ namespace pwiz.Skyline.Controls
                 {
                     _proteomeDb = backgroundProteome.OpenProteomeDb();
                 }
-                return new ProteinMatchSettings(_proteomeDb,
+                return new ProteinMatchSettings(_proteomeDb.ProteomeDbPath,
                                             new ProteaseImpl(peptideSettings.Enzyme),
                                             matchTypes,
                                             searchText);

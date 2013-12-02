@@ -45,15 +45,16 @@ namespace pwiz.ProteomeDatabase.API
         public List<Protein> GetProteinsWithSequence(String sequence)
         {
             List<Protein> proteins = new List<Protein>();
-            using (ISession session = ProteomeDb.OpenSession())
+            using (var proteomeDb = OpenProteomeDb())
+            using (ISession session = proteomeDb.OpenSession())
             {
                 DbDigestion digestion = GetEntity(session);
                 String sequencePrefix = sequence.Substring(0, Math.Min(sequence.Length, MaxSequenceLength));
                 String hql = "SELECT DISTINCT pp.Protein, pn" // Not L10N
-                 + "\nFROM " + typeof(DbDigestedPeptideProtein) + " pp, " + typeof(DbProteinName) + " pn" // Not L10N
-                 + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0" // Not L10N
-                 + "\nAND pp.Peptide.Digestion = :Digestion" // Not L10N
-                 + "\nAND pp.Peptide.Sequence = :Sequence"; // Not L10N
+                    + "\nFROM " + typeof(DbDigestedPeptideProtein) + " pp, " + typeof(DbProteinName) + " pn" // Not L10N
+                    + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0" // Not L10N
+                    + "\nAND pp.Peptide.Digestion = :Digestion" // Not L10N
+                    + "\nAND pp.Peptide.Sequence = :Sequence"; // Not L10N
                 IQuery query = session.CreateQuery(hql);
                 query.SetParameter("Digestion", digestion); // Not L10N
                 query.SetParameter("Sequence", sequencePrefix); // Not L10N
@@ -65,7 +66,7 @@ namespace pwiz.ProteomeDatabase.API
                     if (protein.Sequence.IndexOf(sequence, StringComparison.Ordinal) < 0)
                         continue;
 
-                    proteins.Add(new Protein(ProteomeDb, protein, name));
+                    proteins.Add(new Protein(ProteomeDbPath, protein, name));
                 }
             }
             return proteins;
@@ -74,10 +75,11 @@ namespace pwiz.ProteomeDatabase.API
         public List<KeyValuePair<Protein, String>> GetProteinsWithSequencePrefix(String sequence, int maxResults)
         {
             List<KeyValuePair<Protein,String>> proteinSequences = new List<KeyValuePair<Protein,String>>();
-            using (ISession session = ProteomeDb.OpenSession())
+            using (var proteomeDb = OpenProteomeDb())
+            using (ISession session = proteomeDb.OpenSession())
             {
                 DbDigestion digestion = GetEntity(session);
-                ICriteria criteria = session.CreateCriteria(typeof (DbDigestedPeptide))
+                ICriteria criteria = session.CreateCriteria(typeof(DbDigestedPeptide))
                     .Add(Restrictions.Eq("Digestion", digestion)) // Not L10N
                     .Add(Restrictions.Like("Sequence", sequence + "%")) // Not L10N
                     .AddOrder(Order.Asc("Sequence")) // Not L10N
@@ -88,7 +90,7 @@ namespace pwiz.ProteomeDatabase.API
                     {
                         proteinSequences.Add(
                             new KeyValuePair<Protein, string>(
-                                new Protein(ProteomeDb, peptideProtein.Protein), 
+                                new Protein(ProteomeDbPath, peptideProtein.Protein),
                                 dbDigestedPeptide.Sequence));
                     }
                 }
