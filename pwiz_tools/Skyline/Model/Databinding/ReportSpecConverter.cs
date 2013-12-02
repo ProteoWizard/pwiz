@@ -25,7 +25,6 @@ using System.Reflection;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding
 {

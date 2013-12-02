@@ -1728,6 +1728,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             float maxTime2 = times2[times2.Length - 1];
                             while (endIndex >= 0 && times1[endIndex] > maxTime2)
                                 endIndex--;
+                            endIndex++;
 
                             // Now add the intensities within the intersection.
                             var times = new float[endIndex - index];

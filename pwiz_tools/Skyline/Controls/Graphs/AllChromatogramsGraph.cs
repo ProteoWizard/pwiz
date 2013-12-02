@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private string _currentFilePath;
         private readonly int _adjustLayoutForMultifile;
 
-        private static readonly Log LOG = new Log<AllChromatogramsGraph>();
+        //private static readonly Log LOG = new Log<AllChromatogramsGraph>();
 
         public AllChromatogramsGraph()
         {

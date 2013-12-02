@@ -63,7 +63,11 @@ namespace pwiz.Skyline.Util
         public static void CheckAllFormsDisposed()
         {
             if (_undisposedForms.Count != 0)
-                throw new ApplicationException("Form was not disposed"); // Not L10N
+            {
+                var formType = _undisposedForms[0].GetType().Name;
+                _undisposedForms.Clear();
+                throw new ApplicationException(formType + " was not disposed"); // Not L10N
+            }
         }
 
         public static void SetOffscreen(Form form)

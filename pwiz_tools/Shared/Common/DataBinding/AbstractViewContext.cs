@@ -419,8 +419,7 @@ namespace pwiz.Common.DataBinding
             {
                 var constructor = columnTypeAttribute.ColumnType.GetConstructor(new Type[0]);
                 Debug.Assert(null != constructor);
-                var newColumn = (DataGridViewColumn) constructor.Invoke(new object[0]);
-                return newColumn;
+                return constructor != null ? (DataGridViewColumn) constructor.Invoke(new object[0]) : null;
             }
             catch (Exception exception)
             {
