@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -171,7 +170,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public abstract class DocNodeParent : DocNode
     {
-        private ReadOnlyCollection<DocNode> _children;
+        private DocNodeChildren _children;
         private IList<int> _nodeCountStack;
 
         /// <summary>
@@ -226,7 +225,7 @@ namespace pwiz.Skyline.Model
         public IList<DocNode> Children
         {
             get { return _children; }
-            private set { _children = MakeReadOnly(value); }
+            private set { _children = value as DocNodeChildren ?? new DocNodeChildren(value); }
         }
 
         /// <summary>
@@ -308,12 +307,12 @@ namespace pwiz.Skyline.Model
         /// <returns>The child <see cref="DocNode"/>, or null if not found</returns>
         public DocNode FindNode(Identity id)
         {
-            foreach (DocNode node in Children)
+            int index = _children.IndexOf(id);
+            if (index < 0)
             {
-                if (ReferenceEquals(node.Id, id))
-                    return node;
+                return null;
             }
-            return null;
+            return _children[index];
         }
 
         /// <summary>
@@ -1078,7 +1077,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) 
-                && ArrayUtil.EqualsDeep(obj.Children, Children) 
+                && Equals(obj.Children, Children)
                 && AutoManageChildren == obj.AutoManageChildren;
         }
 
@@ -1093,7 +1092,7 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                return (base.GetHashCode()*397) ^ Children.GetHashCodeDeep();
+                return (base.GetHashCode()*397) ^ Children.GetHashCode();
             }
         }
 
