@@ -6071,4 +6071,7 @@ Are you sure you want to continue?</value>
   <data name="ExportLiveReportDlg_ShowPreview_Preview__" xml:space="preserve">
     <value>Preview: </value>
   </data>
+  <data name="SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files">
+    <value xml:space="preserve">Skyline Files</value>
+  </data>
 </root>

@@ -15024,6 +15024,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline Files.
+        /// </summary>
+        public static string SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files {
+            get {
+                return ResourceManager.GetString("SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline Documents.
         /// </summary>
         public static string SrmDocument_FILTER_DOC_Skyline_Documents {

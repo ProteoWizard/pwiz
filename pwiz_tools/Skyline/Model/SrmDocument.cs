@@ -186,6 +186,16 @@ namespace pwiz.Skyline.Model
             get { return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_Skyline_Documents, EXT); }
         }
 
+		public static string FILTER_DOC_AND_SKY_ZIP
+        {
+            // Used only in the open file dialog.
+            get
+            {
+                return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files, EXT,
+                                                 SrmDocumentSharing.EXT_SKY_ZIP);
+            }    
+        }
+
         public const double FORMAT_VERSION_0_1 = 0.1;
         public const double FORMAT_VERSION_0_2 = 0.2;
         public const double FORMAT_VERSION_0_8 = 0.8;

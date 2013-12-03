@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI
                 path = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
                                         Path.GetFileNameWithoutExtension(fileName) + "_" + // Not L10N
                                         DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + // Not L10N
-                                        SrmDocumentSharing.EXT);
+                                        SrmDocumentSharing.EXT_SKY_ZIP);
             }
             while (File.Exists(path));
             return path;
@@ -343,7 +343,7 @@ namespace pwiz.Skyline.FileUI
                                  {
                                      InitialDirectory = Settings.Default.LibraryDirectory,
                                      SupportMultiDottedExtensions = true,
-                                     DefaultExt = SrmDocumentSharing.EXT,
+                                     DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
                                      Filter =
                                          TextUtil.FileDialogFiltersAll(
                                              Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,

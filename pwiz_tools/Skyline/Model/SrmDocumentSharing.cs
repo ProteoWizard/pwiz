@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model
     internal class SrmDocumentSharing
     {
         public const string EXT = ".zip";
+        public const string EXT_SKY_ZIP = ".sky.zip";
 
         public static string FILTER_SHARING
         {
@@ -85,7 +86,11 @@ namespace pwiz.Skyline.Model
             WaitBroker.ProgressValue = 0;
             WaitBroker.Message = DefaultMessage;
 
-            string extractDir = Path.GetFileNameWithoutExtension(SharedPath) ?? string.Empty;
+            string extractDir = Path.GetFileName(SharedPath) ?? string.Empty;
+            if (extractDir.ToLower().EndsWith(EXT_SKY_ZIP))
+                extractDir = extractDir.Substring(0, extractDir.Length - EXT_SKY_ZIP.Length);
+            else if (extractDir.ToLower().EndsWith(EXT))
+                extractDir = extractDir.Substring(0, extractDir.Length - EXT.Length);
 
             using (ZipFile zip = ZipFile.Read(SharedPath))
             {

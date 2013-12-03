@@ -135,7 +135,7 @@ namespace pwiz.Skyline
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 DefaultExt = SrmDocument.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC, SrmDocumentSharing.FILTER_SHARING)
+                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING)
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -805,9 +805,10 @@ namespace pwiz.Skyline
             {
                 Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
                 InitialDirectory = Path.GetDirectoryName(fileName),
-                FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT,
+                FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP,
                 OverwritePrompt = true,
-                DefaultExt = SrmDocumentSharing.EXT,
+                DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
+                SupportMultiDottedExtensions = true,
                 Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
             })
             {
