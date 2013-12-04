@@ -165,7 +165,14 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public double Sum()
         {
-            return _list.Sum();
+            // ReSharper disable LoopCanBePartlyConvertedToQuery
+            double sum = 0;
+            foreach (double d in _list) // using LINQ Sum() is about 10x slower than foreach
+            {
+                sum += d;
+            }
+            // ReSharper restore LoopCanBePartlyConvertedToQuery
+            return sum;
         }
 
         /// <summary>
@@ -1474,7 +1481,8 @@ namespace pwiz.Skyline.Util
 
             double mean1 = Mean();
             double mean2 = s.Mean();
-            double denominator = 1;
+            double invdenominator = 1; // 1/denominator for normalization
+            int length = Length; // cache this - profiling shows a surprising cost for repeated access
 
             // Normalized cross-correlation = subtract the mean and divide by the standard deviation
             if (normalize)
@@ -1486,33 +1494,35 @@ namespace pwiz.Skyline.Util
                 foreach (double v in s._list)
                   sqsum2 += (v - mean2)*(v - mean2);
                 // sigma_1 * sigma_2 * n
-                denominator = Math.Sqrt(sqsum1*sqsum2);
-            }
-
-            for (int delay = -Length; delay <= Length; delay++)
-            {
-                double sxy = 0;
-                for (int i = 0; i < Length; i++)
-                {
-                    int j = i + delay;
-                    if (j < 0 || j >= Length)
-                        continue;
-
-                    if (normalize)
-                        sxy += (_list[i] - mean1) * (s._list[j] - mean2);
-                    else
-                        sxy += (_list[i]) * (s._list[j]);
-                }
-
+                double denominator = Math.Sqrt(sqsum1*sqsum2); // find the demominator
                 if (denominator > 0)
                 {
-                    result[delay] = sxy / denominator;
+                    invdenominator = 1.0/denominator; // for speed, we'll multiply by invdenominator rather than divide by denominator
                 }
                 else
                 {
-                    // e.g. if all datapoints are zero
-                    result[delay] = 0;
+                    // all datapoints are zero
+                    for (int delay = -length; delay <= length; delay++)
+                    {
+                        result[delay] = 0;
+                    }
+                    return result;
                 }
+            }
+
+            for (int delay = -length; delay <= length; delay++)
+            {
+                double sxy = 0;
+                int upper = Math.Min(length, length - delay); // i and i+delay must both be in range(0,length)
+                for (int i = Math.Max(0, -delay); i < upper; i++)  // i and i+delay must both be in range(0,length)
+                {
+                    if (normalize)
+                        sxy += (_list[i] - mean1) * (s._list[i + delay] - mean2);
+                    else
+                        sxy += (_list[i]) * (s._list[i + delay]);
+                }
+
+                result[delay] = sxy * invdenominator; 
             }
             return result;
         }
