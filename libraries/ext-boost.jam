@@ -350,12 +350,14 @@ rule init ( version : location : options * )
           thread_sources =
                 win32/thread
                 win32/tss_dll
+                future
               ;
         } else
         {
           thread_sources =
                 pthread/thread
                 pthread/once
+                future
               ;
         }
 
@@ -377,10 +379,59 @@ rule init ( version : location : options * )
             :   $(requirements)
                 <location-prefix>thread-$(version-tokens:J=_)
                 <use>boost
+                <toolset>gcc:<cxxflags>-Wextra
+                <toolset>gcc:<cxxflags>-pedantic
+                <toolset>gcc:<cxxflags>-Wno-long-long
+                #<toolset>gcc:<cxxflags>-ansi
+                #<toolset>gcc:<cxxflags>-fpermissive
+                <toolset>gcc:<cxxflags>-Wno-variadic-macros
+                #<toolset>gcc:<cxxflags>-Wunused-local-typedefs
+                <toolset>gcc:<cxxflags>-Wunused-function
+        
+                <toolset>darwin:<cxxflags>-Wextra
+                <toolset>darwin:<cxxflags>-pedantic
+                #<toolset>darwin:<cxxflags>-ansi
+                <toolset>darwin:<cxxflags>-fpermissive
+                <toolset>darwin:<cxxflags>-Wno-long-long
+                <toolset>darwin:<cxxflags>-Wno-variadic-macros
+                #<toolset>darwin:<cxxflags>-Wunused-local-typedefs
+                <toolset>darwin:<cxxflags>-Wunused-function
+        
+                #<toolset>pathscale:<cxxflags>-Wextra
+                <toolset>pathscale:<cxxflags>-Wno-long-long
+                <toolset>pathscale:<cxxflags>-pedantic
+        
+                <toolset>clang:<cxxflags>-Wextra
+                <toolset>clang:<cxxflags>-pedantic
+                #<toolset>clang:<cxxflags>-ansi
+                #<toolset>clang:<cxxflags>-fpermissive
+                <toolset>clang:<cxxflags>-Wno-long-long
+                <toolset>clang:<cxxflags>-Wunused-function
+                <toolset>clang:<cxxflags>-Wno-variadic-macros
+        
+                <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.6.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+                #<toolset>gcc:<cxxflags>-Wno-missing-field-initializers
+        
+                <toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor
+                <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+        
+                #<toolset>clang-2.8:<cxxflags>-Wno-delete-non-virtual-dtor
+                #<toolset>clang-2.8:<cxxflags>-Wno-unused-function
+                #<toolset>clang-2.9:<cxxflags>-Wno-delete-non-virtual-dtor
+                #<toolset>clang-2.9:<cxxflags>-Wno-unused-function
+                <toolset>clang-3.0:<cxxflags>-Wno-delete-non-virtual-dtor
+                #<toolset>clang-3.0:<cxxflags>-Wno-unused-function
+                #<toolset>clang-3.0:<cxxflags>-Wno-unused-variable
                 <link>shared:<define>BOOST_THREAD_DYN_LINK=1
                 <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
                 <link>static:<define>BOOST_THREAD_BUILD_LIB=1
                 <define>BOOST_THREAD_NO_LIB=1
+                <define>BOOST_THREAD_USES_CHRONO
                 $(alternate_thread_sources)
                 <link>static:<source>$(THIS_PATH)/tss_workaround.cpp
                 <library>date_time
