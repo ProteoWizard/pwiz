@@ -649,7 +649,8 @@ namespace freicore
 						{
 							fullAminoAcidList.push_back("n[144]");
 							tempSS << "n[144]";
-							string modString = "0," + lexical_cast<string>(firstAA[0]) + ",iTRAQ4plex";
+							//string modString = "0," + lexical_cast<string>(firstAA[0]) + ",iTRAQ4plex";
+							string modString = "-1,(,iTRAQ4plex";
 							iTraqMods.insert ( std::pair<int, string>(0,modString) );
 						}
 						
