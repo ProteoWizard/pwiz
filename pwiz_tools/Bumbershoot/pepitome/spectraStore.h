@@ -188,7 +188,7 @@ namespace pepitome
         ("Pyro-glu", -17.026549) ("Pyro_glu", -18.010565) ("Amide", -0.984016) \
         ("Phospho", 79.9663) ("Methyl", 14.0157) ("Carbamyl", 43.00581) \
         ("Gln->pyro-Glu", -17.0265) ("Glu->pyro-Glu", -18.0106) ("Carboxymethyl", 58.005479) \
-        ("Deamidated", 0.984016);
+        ("Deamidated", 0.984016) ("iTRAQ4plex", 144.102063 );
 
     // This is used to random access the library file. 
     struct NativeFileReader

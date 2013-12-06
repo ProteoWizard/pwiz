@@ -385,6 +385,29 @@ namespace freicore
 				return saltedDecoy;
 			}
         }
+		
+		inline string InsertItraqMods(const string& originalModString, map<int,string> addedMap)
+		{
+			//Mods=2/10,M,Oxidation/4,N,Deamidation
+			int modCount = addedMap.size();
+			vector<string> strs;
+			boost::split(strs,originalModString,boost::is_any_of("/"));
+			modCount += (strs.size()-1);
+			for (int x = 1; x < strs.size(); x++)
+			{
+				vector<string> elements;
+				boost::split(elements,strs[x],boost::is_any_of(","));
+				int index = lexical_cast<int>(elements[0]);
+				addedMap.insert ( std::pair<int, string>(index, strs[x]));
+			}
+			string modString = "Mods=" + lexical_cast<string>(modCount);
+			for (std::map<int, string>::iterator it=addedMap.begin(); it!=addedMap.end(); ++it)
+			{
+				modString += ("/" + it->second);
+			}
+			//cout << modString << endl;
+			return modString;
+		}
 
 		std::string LibraryBabelFish::mergeDatabaseWithContam(const std::string& database, const std::string& contam)
 		{
@@ -565,16 +588,17 @@ namespace freicore
 			boost::regex findPeptideRegex ("^Name: ([^/]+)/(\\d+)",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex findMwRegex ("MW: ([\\d\\.]+)",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex findPrecursorMzRegex ("PrecursorMZ: ([\\d\\.]+)",boost::regex_constants::icase|boost::regex_constants::perl);
-			boost::regex findCommentRegex ("(Comment: .*)(Protein=\\d/)([^ ]*)(.*Spec=)([^ ]*)(.*)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex findCommentRegex ("(Comment: .*)(Mods=[^ ]+)(.*)(Protein=\\d/)([^ ]*)(.*Spec=)([^ ]*)(.*)",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex aminoAcidRegex ("[a-zA-Z]\\[\\d+\\]|[a-zA-Z]",boost::regex_constants::icase|boost::regex_constants::perl);
 			boost::regex spectraRegex ("([\\d.]+)(\\t[\\d.]+)\\t\\[?([?a-zA-Z]\\d*)(i|[+-]\\d+i?)?\\^?(\\d+i?)?\\/?([^\\],\\t]+)?[^\\t]*(.+)",boost::regex_constants::icase|boost::regex_constants::perl);
-			boost::regex fullNameRegex ("(FullName: (?:[\\w\\-]\\.)?)[\\w\\[\\]]+(\\.?[\\w\\-]?\\/\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
+			boost::regex fullNameRegex ("(FullName: ([\\w\\-]\\.)?)[\\w\\[\\]]+(\\.?[\\w\\-]?\\/\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
 
 			ofstream outFile((libraryPath + ".tmp").c_str());
 			ifstream inFile(libraryPath.c_str());
 			int charge = -1;
 			string activeProtein = "";
 			string decoyPeptide;
+			string peptideShortName;
 			string peptideFullName;
 			stringstream outputStream;
 			stringstream decoyStream;
@@ -586,6 +610,7 @@ namespace freicore
 			map<string,double> decoyIons;
 			map<double,string> outputSpectra;
 			map<double,string> decoySpectra;
+			map<int,string> iTraqMods;
 			bool report = false;
 
 			getline(inFile,newLine);
@@ -615,19 +640,43 @@ namespace freicore
 					{
 						//calculate theoretical ions
 						vector<string> fullAminoAcidList;
-						vector<string> originalAminoAcidList;
 						boost::sregex_token_iterator aminoAcidLetter(sequence.begin(), sequence.end(), aminoAcidRegex, 0);
 						boost::sregex_token_iterator end;
-						for( ; aminoAcidLetter != end; ++aminoAcidLetter )
-							fullAminoAcidList.push_back(*aminoAcidLetter);						
+						stringstream tempSS;
+						string firstAA = (*aminoAcidLetter);
+						bool ignoreiTraq = !_iTraqMode || firstAA[0] == 'n';
+						if (!ignoreiTraq)
+						{
+							fullAminoAcidList.push_back("n[144]");
+							tempSS << "n[144]";
+							string modString = "0," + lexical_cast<string>(firstAA[0]) + ",iTRAQ4plex";
+							iTraqMods.insert ( std::pair<int, string>(0,modString) );
+						}
 						
-						for (size_t x=0; x < originalAminoAcidList.size(); x++)
+						int index = 0;
+						for( ; aminoAcidLetter != end; ++aminoAcidLetter )
+						{
+							string currentAA = *aminoAcidLetter;
+							if (currentAA[0] == 'K' && !ignoreiTraq)
+							{
+								currentAA = "K[272]";
+								string modString = lexical_cast<string>(index) + ",K,iTRAQ4plex";
+								iTraqMods.insert ( std::pair<int, string>(index, modString) );
+							}
+							fullAminoAcidList.push_back(currentAA);
+							tempSS << currentAA;
+							index++;
+						}
+						
+						peptideShortName = tempSS.str();
+						
+						/*for (size_t x=0; x < fullAminoAcidList.size(); x++)
 						{
 							ionDescriptions.push_back("b"+lexical_cast<string>(x+1));
 							ionDescriptions.push_back("a"+lexical_cast<string>(x+1));
 							ionDescriptions.push_back("y"+lexical_cast<string>(x+1));
 						}
-						ionDescriptions.push_back("p");	
+						ionDescriptions.push_back("p");	*/
 						{
 							map<string,double> tempMap = findIonWeights(sequence);
 							theoreticalIons.insert(tempMap.begin(), tempMap.end());
@@ -641,7 +690,7 @@ namespace freicore
 						}
 					
 						//create decoy peptide
-						decoyPeptide = reversePeptideSequence(fullAminoAcidList); //shufflePeptideSequence(fullAminoAcidList, theoreticalIons, ionDescriptions);
+						decoyPeptide = reversePeptideSequence(fullAminoAcidList);
 						if (decoyPeptide.length()<sequence.length())
 							decoyPeptide = "";
 						{
@@ -652,7 +701,7 @@ namespace freicore
 						decoyStream << "Name: " << decoyPeptide << "/" << newLine[newLine.length()-1] << endl;
 					
 						activeProtein = it->second;
-						outputStream << newLine << endl;
+						outputStream << "Name: " << peptideShortName << "/" << newLine[newLine.length()-1] << endl;
 						
 					}
 					else
@@ -680,24 +729,25 @@ namespace freicore
 						if (boost::regex_search (newLine, regex_matches, findCommentRegex, boost::regex_constants::format_perl))
 						{
 							//check for decoy indicator
-							if (regex_matches[3].str().length() >= decoy.length() && regex_matches[3].str().substr(0,decoy.length()) == decoy)
+							if (regex_matches[5].str().length() >= decoy.length() && regex_matches[5].str().substr(0,decoy.length()) == decoy)
 								isDecoy = true;
-
+							
+							string newModString = regex_matches[2];
+							if (_iTraqMode)
+								newModString = InsertItraqMods(regex_matches[2], iTraqMods);
 							//create decoy comment
-							decoyStream << regex_matches[1] << "OrigPeptide=" << peptideFullName << " " << regex_matches[2] << decoy << activeProtein << " Remark=DECOY" << regex_matches[4] << "Decoy" << regex_matches[6] << endl;
-							newLine = boost::regex_replace(newLine, findCommentRegex, regex_matches[1] + " " + regex_matches[2] + activeProtein + regex_matches[4] + regex_matches[5] + regex_matches[6]);							
+							decoyStream << regex_matches[1] << newModString << regex_matches[3] << "OrigPeptide=" << peptideFullName << " " << regex_matches[4] << decoy << activeProtein << " Remark=DECOY" << regex_matches[6] << "Decoy" << regex_matches[8] << endl;
+							outputStream << regex_matches[1] << newModString << regex_matches[3] << regex_matches[4] << activeProtein << regex_matches[6] << regex_matches[7] << regex_matches[8] << endl;						
 						}
-
-						outputStream << newLine << endl;
 					}
 					//Fullname Line
 					else if (boost::regex_search (newLine, fullNameRegex, boost::regex_constants::format_perl))
 					{
 						boost::match_results<std::string::const_iterator> regex_matches;
 						if (boost::regex_search (newLine, regex_matches, fullNameRegex, boost::regex_constants::format_perl))
-							decoyStream << regex_matches[1] << decoyPeptide << regex_matches[2] << endl;
-						peptideFullName = newLine.substr(10);
-						outputStream << newLine << endl;
+							decoyStream << regex_matches[1] << decoyPeptide << regex_matches[3] << endl;
+						peptideFullName = regex_matches[2] + peptideShortName + regex_matches[3];
+						outputStream << regex_matches[1] << peptideShortName << regex_matches[3] << endl;
 					}
 					//Fullname Line
 					else if (newLine.length()>5 && newLine.substr(0,5) == "LibID")
@@ -870,6 +920,7 @@ namespace freicore
 						decoyPeptide = "";
 						outputSpectra.clear();
 						decoySpectra.clear();
+						iTraqMods.clear();
 						outputStream.str("");
 						decoyStream.str("");
 						decoyIons.clear();
