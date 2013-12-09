@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Set test settings",
                                                      doc => doc.ChangeSettings(settings)));
 
-            WaitForCondition(() => SkylineWindow.Document.Settings.IsLoaded);
+            WaitForDocumentLoaded();
 
             // Add FASTA sequence
             RunUI(() => SkylineWindow.Paste(TEXT_FASTA_SPROT));

@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            return chromInfo.Ratios[indexIS];
+            return chromInfo.GetRatio(indexIS);
         }
 
         public class ScheduleTimes        

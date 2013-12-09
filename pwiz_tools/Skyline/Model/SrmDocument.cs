@@ -35,8 +35,10 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Results;
@@ -340,6 +342,18 @@ namespace pwiz.Skyline.Model
             return new HashSet<string>(regressionPeps);
         }
 
+        public bool IsLoaded
+        {
+            get
+            {
+                return (!Settings.HasResults || Settings.MeasuredResults.IsLoaded) &&
+                        (!Settings.HasLibraries || Settings.PeptideSettings.Libraries.IsLoaded) &&
+                        IrtDbManager.IsLoadedDocument(this) && 
+                        DocumentRetentionTimes.IsLoaded(Settings);
+                        // BackgroundProteome?
+            }
+        }
+
         public PeptideGroupDocNode FindPeptideGroup(PeptideGroup fastaSequence)
         {
             foreach (var peptideGroup in PeptideGroups)
@@ -403,6 +417,9 @@ namespace pwiz.Skyline.Model
             SrmDocument docClone = (SrmDocument)clone;
             docClone.RevisionIndex = RevisionIndex + 1;
 
+            // Make sure peptide standards lists are up to date
+            docClone.Settings = Settings.CachePeptideStandards(docClone.PeptideGroups);
+
             // If this document has associated results, update the results
             // for any peptides that have changed.
             if (!Settings.HasResults)
@@ -410,10 +427,15 @@ namespace pwiz.Skyline.Model
 
             // Store indexes to previous results in a dictionary for lookup
             var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
-            foreach (var nodePeptide in Peptides)
-                dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
+            // Unless the normalization standards have changed, which require recalculating of all ratios
+            if (ReferenceEquals(Settings.GetPeptideStandards(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON),
+                docClone.Settings.GetPeptideStandards(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON)))
+            {
+                foreach (var nodePeptide in Peptides)
+                    dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
+            }
 
-            return UpdateResultsSummaries(docClone.PeptideGroups, dictPeptideIdPeptide);
+            return docClone.UpdateResultsSummaries(docClone.PeptideGroups, dictPeptideIdPeptide);
         }
 
         /// <summary>
@@ -1040,10 +1062,12 @@ namespace pwiz.Skyline.Model
                     nodePeptide = new PeptideDocNode((Peptide)nodePeptide.Peptide.Copy(),
                                                         Settings,
                                                         nodePeptide.ExplicitMods,
-                                                        nodePeptide.Rank,   // Results
+                                                        nodePeptide.GlobalStandardType,
+                                                        nodePeptide.Rank,
                                                         Annotations.EMPTY,
-                                                        null, nodePeptide.Children.ToList().ConvertAll(node =>
-                                                                                                       (TransitionGroupDocNode)node).ToArray(), nodePeptide.AutoManageChildren);
+                                                        null,   // Results
+                                                        nodePeptide.Children.ToList().ConvertAll(node => (TransitionGroupDocNode)node).ToArray(),
+                                                        nodePeptide.AutoManageChildren);
                     nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL);
                     docResult = (SrmDocument)docResult.Insert(peptidePath, nodePeptide, true);
                 }
@@ -1199,6 +1223,7 @@ namespace pwiz.Skyline.Model
             public const string loss_neutral_mass = "loss_neutral_mass";
             public const string collision_energy = "collision_energy";
             public const string declustering_potential = "declustering_potential";
+            public const string standard_type = "standard_type";
 
             // Results
             public const string replicate = "replicate";
@@ -1311,7 +1336,12 @@ namespace pwiz.Skyline.Model
             if (children == null)
                 SetChildren(new PeptideGroupDocNode[0]);
             else
-                SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
+            {
+                // Make sure peptide standards lists are up to date
+                Settings = Settings.CachePeptideStandards(children);
+
+                SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));                
+            }
         }
 
         /// <summary>
@@ -1533,6 +1563,7 @@ namespace pwiz.Skyline.Model
             int? rank = reader.GetNullableIntAttribute(ATTR.rank);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
+            string standardType = reader.GetAttribute(ATTR.standard_type);
 
             Peptide peptide = new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
 
@@ -1572,7 +1603,7 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();
             }
 
-            return new PeptideDocNode(peptide, Settings, mods, rank,
+            return new PeptideDocNode(peptide, Settings, mods, standardType, rank,
                 annotations, results, children ?? new TransitionGroupDocNode[0], autoManageChildren);
         }
 
@@ -2338,6 +2369,8 @@ namespace pwiz.Skyline.Model
             }
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
+            if (node.GlobalStandardType != null)
+                writer.WriteAttribute(ATTR.standard_type, node.GlobalStandardType);
 
             double massH = Settings.GetPrecursorCalc(IsotopeLabelType.light, node.ExplicitMods).GetPrecursorMass(sequence);
             writer.WriteAttribute(ATTR.calc_neutral_pep_mass,

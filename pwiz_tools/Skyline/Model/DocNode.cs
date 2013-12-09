@@ -170,6 +170,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public abstract class DocNodeParent : DocNode
     {
+        private bool _ignoreChildrenChanging;
         private DocNodeChildren _children;
         private IList<int> _nodeCountStack;
 
@@ -809,6 +810,24 @@ namespace pwiz.Skyline.Model
             return traversal.Traverse(parent, childReplace, ReplaceChild, parent.ReplaceChild);
         }
 
+        public DocNodeParent ReplaceChildren(IEnumerable<NodeReplacement> replacements)
+        {
+            // Make bulk changes to node with children changing ignored
+            if (_ignoreChildrenChanging)
+            {
+                var result = this;
+                foreach (var nodeReplacement in replacements)
+                    result = result.ReplaceChild(nodeReplacement.ParentPath, nodeReplacement.Node);
+                return result;
+            }
+
+            // Turn off change events and do the replacements
+            var ingoring = ChangeProp(ImClone(this), im => im._ignoreChildrenChanging = true);
+            var replaced = ingoring.ReplaceChildren(replacements);
+            // Make a single change of all children with events on
+            return ChangeChildrenChecked(replaced.Children);
+        }
+
         /// <summary>
         /// Creates a clone of the current node with a modified copy of the
         /// child list, removing a specific child.
@@ -987,9 +1006,12 @@ namespace pwiz.Skyline.Model
         {
             DocNodeParent clone = ChangeProp(ImClone(this), im => im.Children = children);
             clone._nodeCountStack = counts;
-            var childrenNew = OnChangingChildren(clone);
-            if (!ArrayUtil.ReferencesEqual(childrenNew, clone.Children))
-                clone.Children = childrenNew;
+            if (!_ignoreChildrenChanging)
+            {
+                var childrenNew = OnChangingChildren(clone);
+                if (!ArrayUtil.ReferencesEqual(childrenNew, clone.Children))
+                    clone.Children = childrenNew;
+            }
             return clone;
         }
 
@@ -1097,6 +1119,18 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+    }
+
+    public struct NodeReplacement
+    {
+        public NodeReplacement(IdentityPath parentPath, DocNode node) : this()
+        {
+            ParentPath = parentPath;
+            Node = node;
+        }
+
+        public IdentityPath ParentPath { get; set; }
+        public DocNode Node { get; set; }
     }
 
     /// <summary>

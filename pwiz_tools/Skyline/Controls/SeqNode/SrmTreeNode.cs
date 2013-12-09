@@ -1272,6 +1272,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
     public class DisplaySettings
     {
+        public const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
+
         internal readonly bool _showBestReplicate;
         internal readonly int _resultsIndex;
 

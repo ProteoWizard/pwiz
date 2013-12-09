@@ -292,9 +292,6 @@
   <data name="add_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="PeptideLibStandard" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\peptidelibstandard.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="PeptideStandard" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptidestandard.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -4091,12 +4088,6 @@ Are you sure you want to continue?</value>
   <data name="GridViewDriver_GetValue_on_line__0__" xml:space="preserve">
     <value>on line {0}</value>
   </data>
-  <data name="RatioPropertyAccessor_PrecursorProperty_Total" xml:space="preserve">
-    <value>Total</value>
-  </data>
-  <data name="RatioPropertyAccessor_GetTransitionResultsHeader_Area_Ratio_To" xml:space="preserve">
-    <value>Area Ratio To</value>
-  </data>
   <data name="FileStreamManager_GetTempFileName_Win32_Error__0__" xml:space="preserve">
     <value>Win32 Error: {0}</value>
   </data>
@@ -4734,7 +4725,7 @@ Are you sure you want to continue?</value>
     <value>You must save this document before importing a peptide search.</value>
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
-    <value>&amp;Next ></value>
+    <value>&amp;Next &gt;</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_" xml:space="preserve">
     <value>The document specific spectral library does not have valid retention times.</value>
@@ -5077,9 +5068,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="PeptideLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\PeptideLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="TransitionGroupLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TransitionGroupLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -5930,22 +5918,22 @@ Are you sure you want to continue?</value>
   <data name="ExternalTool" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ExternalTool.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-    <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
+  <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
     <value>Not currently installed. Version: {0} is available</value>
   </data>
-    <data name="ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_" xml:space="preserve">
+  <data name="ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_" xml:space="preserve">
     <value>Version {0} currently installed. Version {1} is available.</value>
   </data>
-    <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
+  <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
     <value>Currently installed and fully updated (Version: {0}).</value>
   </data>
-    <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
+  <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
     <value>Cannot find a file with that identifier.</value>
   </data>
-    <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
+  <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
     <value>Downloading Updates</value>
   </data>
-    <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
     <value>Reinstall</value>
   </data>
   <data name="RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_" xml:space="preserve">
@@ -6073,5 +6061,71 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files">
     <value xml:space="preserve">Skyline Files</value>
+  </data>
+  <data name="PeptideIrt" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\peptideirt.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideIrtLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\peptideirtlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideQc" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\peptideqc.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideQcLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\peptideqclib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideStandardLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\peptidestandardlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
+    <value>Unexpected use of iRT calculator before successful initialization.</value>
+  </data>
+  <data name="IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_" xml:space="preserve">
+    <value>The calculator {0} requires all of its standard peptides in order to determine a regression.</value>
+  </data>
+  <data name="DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
+    <value>The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted.</value>
+  </data>
+  <data name="PeptideDecoyLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\peptidedecoylib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_QC" xml:space="preserve">
+    <value>QC</value>
+  </data>
+  <data name="PeptideDocNode_GetStandardTypeDisplayName_Normalization" xml:space="preserve">
+    <value>Normalization</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Clear_standard_type" xml:space="preserve">
+    <value>Clear standard type</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType_Set_standard_type_to__0_" xml:space="preserve">
+    <value>Set standard type to {0}</value>
+  </data>
+  <data name="ResultsGrid_ResultsGrid_Ratio_to_Global_Standards" xml:space="preserve">
+    <value>Ratio to Global Standards</value>
+  </data>
+  <data name="RatioPropertyAccessor_PeptideRatioProperty_Ratio__0__To_Global_Standards" xml:space="preserve">
+    <value>Ratio {0} To Global Standards</value>
+  </data>
+  <data name="RatioPropertyAccessor_PeptideRatioProperty_Ratio_To_Global_Standards" xml:space="preserve">
+    <value>Ratio To Global Standards</value>
+  </data>
+  <data name="RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To_Global_Standards" xml:space="preserve">
+    <value>Total Area Ratio To Global Standards</value>
+  </data>
+  <data name="RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To__0_" xml:space="preserve">
+    <value>Total Area Ratio To {0}</value>
+  </data>
+  <data name="RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_" xml:space="preserve">
+    <value>Area Ratio To {0}</value>
+  </data>
+  <data name="RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards" xml:space="preserve">
+    <value>Area Ratio To Global Standards</value>
+  </data>
+  <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards" xml:space="preserve">
+    <value>Peak Area Ratio To Global Standards</value>
   </data>
 </root>

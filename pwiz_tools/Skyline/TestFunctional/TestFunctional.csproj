@@ -107,6 +107,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NHibernate, Version=3.3.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -175,6 +176,7 @@
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
     <Compile Include="SplitGraphTest.cs" />
+    <Compile Include="StandardTypeTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -247,6 +249,7 @@
     <None Include="ReportSummaryTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="SplitGraphTest.zip" />
+    <None Include="StandardTypeTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />

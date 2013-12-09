@@ -25,6 +25,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public const String RETENTION_TIME = "0.##"; // Not L10N
         public const String PEAK_FOUND_RATIO = "0.##"; // Not L10N
         public const String STANDARD_RATIO = "0.####"; // Not L10N
+        public const String GLOBAL_STANDARD_RATIO = "0.######"; // Not L10N TODO: scientific notation
         public const String PEAK_AREA = "0"; // Not L10N
         public const String PEAK_AREA_NORMALIZED = "0.####%"; // Not L10N
         public const String OPT_PARAMETER = "0.#"; // Not L10N

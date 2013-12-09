@@ -3176,6 +3176,7 @@ namespace pwiz.Skyline
                 {
                     areaNormalizeContextMenuItem.DropDownItems.AddRange(new[]
                         {
+                            areaNormalizeGlobalContextMenuItem,
                             areaNormalizeMaximumContextMenuItem,
                             areaNormalizeTotalContextMenuItem,
                             (ToolStripItem)toolStripSeparator40,
@@ -3510,29 +3511,35 @@ namespace pwiz.Skyline
         private void areaNormalizeContextMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             ToolStripMenuItem menu = areaNormalizeContextMenuItem;
-            // Remove menu items up to the "Maximum" menu item.
-            while (!ReferenceEquals(areaNormalizeMaximumContextMenuItem, menu.DropDownItems[0]))
+            // Remove menu items up to the "Global Standards" menu item.
+            while (!ReferenceEquals(areaNormalizeGlobalContextMenuItem, menu.DropDownItems[0]))
                 menu.DropDownItems.RemoveAt(0);
             
             var areaView = AreaGraphController.AreaView;
-            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            var settings = DocumentUI.Settings;
+            var mods = settings.PeptideSettings.Modifications;
+            var standardTypes = mods.InternalStandardTypes;
 
             // Add the Heavy option to the areaNormalizeContextMenuItem if there are heavy modifications
-            if (DocumentUI.Settings.PeptideSettings.Modifications.HasHeavyModifications)
+            if (mods.HasHeavyModifications)
             {
                 for (int i = 0; i < standardTypes.Count; i++)
                 {
                     var handler = new SelectNormalizeHandler(this, i);
                     var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
                                    {
-                                       Checked =
-                                           (SequenceTree.RatioIndex == i &&
-                                            areaView == AreaNormalizeToView.area_ratio_view)
+                                       Checked = (SequenceTree.RatioIndex == i &&
+                                                  areaView == AreaNormalizeToView.area_ratio_view)
                                    };
                     menu.DropDownItems.Insert(i, item);
                 }
             }
 
+            bool globalStandard = settings.HasGlobalStandardArea;
+            areaNormalizeGlobalContextMenuItem.Visible = globalStandard;
+            areaNormalizeGlobalContextMenuItem.Checked = (areaView == AreaNormalizeToView.area_global_standard_view);
+            if (!globalStandard && areaView == AreaNormalizeToView.area_global_standard_view)
+                areaView = AreaNormalizeToView.none;
             areaNormalizeTotalContextMenuItem.Checked = (areaView == AreaNormalizeToView.area_percent_view);
             areaNormalizeMaximumContextMenuItem.Checked = (areaView == AreaNormalizeToView.area_maximum_view);
             areaNormalizeNoneContextMenuItem.Checked = (areaView == AreaNormalizeToView.none);
@@ -3557,6 +3564,11 @@ namespace pwiz.Skyline
         public void SetNormalizeIndex(int index)
         {
             new SelectNormalizeHandler(this, index).Select();
+        }
+
+        private void areaNormalizeGlobalContextMenuItem_Click(object sender, EventArgs e)
+        {
+            NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
         }
 
         private void areaNormalizeTotalContextMenuItem_Click(object sender, EventArgs e)
@@ -3648,7 +3660,7 @@ namespace pwiz.Skyline
             }
             else
             {
-                _resultsGridForm = new ResultsGridForm(this, SequenceTree);
+                _resultsGridForm = new ResultsGridForm(this);
             }
             _resultsGridForm.FormClosed += resultsGrid_FormClosed;
             _resultsGridForm.VisibleChanged += resultsGrid_VisibleChanged;

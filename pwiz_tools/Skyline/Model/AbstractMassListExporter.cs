@@ -180,18 +180,11 @@ namespace pwiz.Skyline.Model
 
             public RequiredPeptideSet(SrmDocument document, bool isPrecursorLimited)
             {
-                var settings = document.Settings;
-                if (settings.PeptideSettings.Prediction.RetentionTime == null)
-                    _peptides = new RequiredPeptide[0];
-                else
-                {
-                    var setRegression = document.GetRetentionTimeStandards();
-                    _peptides = (from nodePepGroup in document.PeptideGroups
-                                 from nodePep in nodePepGroup.Peptides
-                                 where setRegression.Contains(settings.GetModifiedSequence(nodePep))
-                                 select new RequiredPeptide(nodePepGroup, nodePep))
-                        .ToArray();
-                }
+                _peptides = (from nodePepGroup in document.PeptideGroups
+                             from nodePep in nodePepGroup.Peptides
+                             where nodePep.GlobalStandardType != null
+                             select new RequiredPeptide(nodePepGroup, nodePep))
+                    .ToArray();
                 _setPepIndexes = new HashSet<int>(_peptides.Select(pep => pep.PeptideNode.Peptide.GlobalIndex));
                 TransitionCount = _peptides.Sum(pep => isPrecursorLimited
                                                            ? pep.PeptideNode.TransitionGroupCount

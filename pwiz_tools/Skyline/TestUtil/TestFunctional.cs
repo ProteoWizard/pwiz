@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestUtil
                                   {
                                       act();
                                   }
-                                   catch(Exception e)
+                                  catch(Exception e)
                                   {
                                       Assert.Fail(e.ToString());
                                   }
@@ -358,7 +358,7 @@ namespace pwiz.SkylineTestUtil
 
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
-            WaitForConditionUI(millis, () => SkylineWindow.DocumentUI.Settings.IsLoaded);
+            WaitForConditionUI(millis, () => SkylineWindow.DocumentUI.IsLoaded);
             return SkylineWindow.Document;
         }
 

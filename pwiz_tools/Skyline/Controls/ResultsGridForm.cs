@@ -35,13 +35,13 @@ namespace pwiz.Skyline.Controls
 
         private int _resultsIndex;
 
-        public ResultsGridForm(IDocumentUIContainer documentUiContainer, SequenceTree sequenceTree)
+        public ResultsGridForm(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
             DataGridViewPasteHandler.Attach((SkylineWindow) documentUiContainer, resultsGrid);
-            resultsGrid.Init(documentUiContainer, sequenceTree);
+            resultsGrid.Init(documentUiContainer);
         }
 
         public int ResultsIndex

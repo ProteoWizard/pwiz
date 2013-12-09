@@ -80,36 +80,53 @@ namespace pwiz.Skyline.Model.Hibernate
 
         private static void AddRatioColumns(Configuration configuration, SrmSettings settings)
         {
-            var mods = settings.PeptideSettings.Modifications;
-            var standardTypes = mods.InternalStandardTypes;
-            var labelTypes = mods.GetModificationTypes().ToArray();
-            if (labelTypes.Length < 3)
-                return;
-
             var mappingPeptide = configuration.GetClassMapping(typeof(DbPeptideResult));
             var mappingPrec = configuration.GetClassMapping(typeof(DbPrecursorResult));
             var mappingTran = configuration.GetClassMapping(typeof(DbTransitionResult));
 
-            foreach (var standardType in standardTypes)
+            var mods = settings.PeptideSettings.Modifications;
+            var standardTypes = mods.InternalStandardTypes;
+            var labelTypes = mods.GetModificationTypes().ToArray();
+            if (labelTypes.Length > 2)
+            {
+                foreach (var standardType in standardTypes)
+                {
+                    foreach (var labelType in labelTypes)
+                    {
+                        if (ReferenceEquals(labelType, standardType))
+                            continue;
+
+                        AddColumn(mappingPeptide,
+                                  RatioPropertyAccessor.PeptideRatioProperty(labelType, standardType).ColumnName,
+                                  typeof (RatioPropertyAccessor));
+                        AddColumn(mappingPeptide,
+                                  RatioPropertyAccessor.PeptideRdotpProperty(labelType, standardType).ColumnName,
+                                  typeof (RatioPropertyAccessor));
+                    }
+
+                    // Only add TotalAreaRatioTo<label type> and AreaRatioTo<label type> columns
+                    // when there is more than one internal standard label type, because that
+                    // is the only time that data is added to these columns in the database.
+                    if (standardTypes.Count > 1)
+                    {
+                        AddColumn(mappingPrec, RatioPropertyAccessor.PrecursorRatioProperty(standardType).ColumnName,
+                                  typeof (RatioPropertyAccessor));
+                        AddColumn(mappingPrec, RatioPropertyAccessor.PrecursorRdotpProperty(standardType).ColumnName,
+                                  typeof (RatioPropertyAccessor));
+                        AddColumn(mappingTran, RatioPropertyAccessor.TransitionRatioProperty(standardType).ColumnName,
+                                  typeof (RatioPropertyAccessor));
+                    }
+                }
+            }
+
+            if (settings.HasGlobalStandardArea)
             {
                 foreach (var labelType in labelTypes)
                 {
-                    if (ReferenceEquals(labelType, standardType))
-                        continue;
-
-                    AddColumn(mappingPeptide, RatioPropertyAccessor.PeptideRatioProperty(labelType, standardType).ColumnName, typeof(RatioPropertyAccessor));
-                    AddColumn(mappingPeptide, RatioPropertyAccessor.PeptideRdotpProperty(labelType, standardType).ColumnName, typeof(RatioPropertyAccessor));
+                    AddColumn(mappingPeptide, RatioPropertyAccessor.PeptideRatioProperty(labelType, null).ColumnName, typeof(RatioPropertyAccessor));
                 }
-
-                // Only add TotalAreaRatioTo<label type> and AreaRatioTo<label type> columns
-                // when there is more than one internal standard label type, because that
-                // is the only time that data is added to these columns in the database.
-                if (standardTypes.Count > 1)
-                {
-                    AddColumn(mappingPrec, RatioPropertyAccessor.PrecursorRatioProperty(standardType).ColumnName, typeof(RatioPropertyAccessor));
-                    AddColumn(mappingPrec, RatioPropertyAccessor.PrecursorRdotpProperty(standardType).ColumnName, typeof(RatioPropertyAccessor));
-                    AddColumn(mappingTran, RatioPropertyAccessor.TransitionRatioProperty(standardType).ColumnName, typeof(RatioPropertyAccessor));
-                }
+                AddColumn(mappingPrec, RatioPropertyAccessor.PrecursorRatioProperty(null).ColumnName, typeof(RatioPropertyAccessor));
+                AddColumn(mappingTran, RatioPropertyAccessor.TransitionRatioProperty(null).ColumnName, typeof(RatioPropertyAccessor));
             }
         }
 

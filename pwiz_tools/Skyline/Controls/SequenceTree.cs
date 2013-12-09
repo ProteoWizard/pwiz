@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -80,6 +81,12 @@ namespace pwiz.Skyline.Controls
             tran_group,
             fragment,
             peptide_lib,
+            peptide_irt,
+            peptide_irt_lib,
+            peptide_standard,
+            peptide_standard_lib,
+            peptide_qc,
+            peptide_qc_lib,
             tran_group_lib,
             fragment_lib,
             peptide_decoy,
@@ -120,13 +127,19 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.TransitionGroup);
             ImageList.Images.Add(Resources.Fragment);
             ImageList.Images.Add(Resources.PeptideLib);
+            ImageList.Images.Add(Resources.PeptideIrt);
+            ImageList.Images.Add(Resources.PeptideIrtLib);
+            ImageList.Images.Add(Resources.PeptideStandard);
+            ImageList.Images.Add(Resources.PeptideStandardLib);
+            ImageList.Images.Add(Resources.PeptideQc);
+            ImageList.Images.Add(Resources.PeptideQcLib);
             ImageList.Images.Add(Resources.TransitionGroupLib);
             ImageList.Images.Add(Resources.FragmentLib);
             ImageList.Images.Add(Resources.PeptideDecoy);
             ImageList.Images.Add(Resources.TransitionGroupDecoy);
             ImageList.Images.Add(Resources.FragmentDecoy);
             ImageList.Images.Add(Resources.ProteinDecoy);
-            ImageList.Images.Add(Resources.PeptideLibDecoy);
+            ImageList.Images.Add(Resources.PeptideDecoyLib);
             ImageList.Images.Add(Resources.TransitionGroupLibDecoy);
             ImageList.Images.Add(Resources.FragmentLibDecoy);
 
@@ -301,6 +314,8 @@ namespace pwiz.Skyline.Controls
                         : 0;
                     var mods = settings.PeptideSettings.Modifications;
                     _ratioIndex = Math.Min(_ratioIndex, mods.InternalStandardTypes.Count-1);
+                    if (!settings.HasGlobalStandardArea && _ratioIndex == ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS)
+                        _ratioIndex = 0;
                 }
 
                 BeginUpdateMS();

@@ -558,7 +558,7 @@ namespace pwiz.Skyline
         {
             // Make sure results are loaded before performaing a Save As,
             // since the results cache must be copied to the new location.
-            if (!DocumentUI.Settings.IsLoaded)
+            if (!DocumentUI.IsLoaded)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name);
                 return false;
@@ -767,7 +767,7 @@ namespace pwiz.Skyline
         private void shareDocumentMenuItem_Click(object sender, EventArgs e)
         {
             var document = DocumentUI;
-            if (!document.Settings.IsLoaded)
+            if (!document.IsLoaded)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared);
                 return;
@@ -992,7 +992,7 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_);
                 return;
             }
-            if (!documentOrig.Settings.IsLoaded)
+            if (!documentOrig.IsLoaded)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_);
                 return;                
@@ -1780,7 +1780,7 @@ namespace pwiz.Skyline
         public void ShowPublishDlg(IPanoramaPublishClient publishClient)
         {
             var document = DocumentUI;
-            if (!document.Settings.IsLoaded)
+            if (!document.IsLoaded)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published);
                 return;

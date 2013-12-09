@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Databinding
     public class RatioPropertyDescriptor : PropertyDescriptor
     {
         public const string RATIO_PREFIX = "ratio_"; // Not L10N
+        public const string RATIO_GS_PREFIX = "ratio_gs_"; // Not L10N
         public const string RDOTP_PREFIX = "rdotp_"; // Not L10N
 
         private readonly Type _componentType;
@@ -92,7 +93,7 @@ namespace pwiz.Skyline.Model.Databinding
         protected bool Equals(RatioPropertyDescriptor other)
         {
             return base.Equals(other)
-                && _componentType.Equals(other._componentType)
+                && _componentType == other._componentType
                 && _getterFunc.Equals(other._getterFunc);
         }
 
@@ -119,6 +120,13 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static bool TryParseProperty(string propertyName, out string prefix, out IList<string> parts)
         {
+            if (propertyName.StartsWith(RATIO_GS_PREFIX))
+            {
+                prefix = RATIO_GS_PREFIX;
+                string labelType = propertyName.Substring(RATIO_GS_PREFIX.Length);
+                parts = labelType.Length > 0 ? ParsePropertyParts(propertyName, prefix) : new string[0];
+                return true;
+            }
             if (propertyName.StartsWith(RATIO_PREFIX))
             {
                 prefix = RATIO_PREFIX;
@@ -138,7 +146,8 @@ namespace pwiz.Skyline.Model.Databinding
 
         /// <summary>
         /// Create a property name by starting it with the given prefix, and following that with
-        /// the specified parts separated by ':'.
+        /// the specified parts separated by ':'.  Unless to the Global Standards, in which case
+        /// there will be only one part and no colon.
         /// </summary>
         public static string MakePropertyName(string prefix, params string[] parts)
         {
@@ -238,87 +247,131 @@ namespace pwiz.Skyline.Model.Databinding
             var modifications = document.Settings.PeptideSettings.Modifications;
             if (componentType == typeof(PeptideResult))
             {
-                if (parts.Count != 2)
+                string displayName;
+                Func<PeptideResult, double?> getterFunc;
+                if (parts.Count == 0)
                 {
                     return null;
                 }
-                var labelType = FindLabel(modifications.GetModificationTypes(), parts[0]);
-                var standardType = FindLabel(modifications.InternalStandardTypes, parts[1]);
-                string displayName;
-                Func<PeptideResult, double?> getterFunc;
-                if (prefix == RATIO_PREFIX)
+                string labelColumnPart = parts[0];
+                var labelType = FindLabel(modifications.GetModificationTypes(), labelColumnPart);
+                if (parts.Count == 1)
                 {
                     getterFunc = peptideResult =>
-                        RatioValue.GetRatio(FindPeptideLabelRatio(peptideResult, labelType, standardType).Ratio);
-                    displayName = string.Format("Ratio{0}To{1}", parts[0], parts[1]); // Not L10N
+                        RatioValue.GetRatio(FindPeptideLabelRatio(peptideResult, labelType, null).Ratio);
+                    displayName = string.Format("Ratio{0}ToGlobalStandards", labelColumnPart); // Not L10N
                 }
-                else if (prefix == RDOTP_PREFIX)
+                else if (parts.Count != 2)
                 {
-                    getterFunc = peptideResult =>
-                        RatioValue.GetDotProduct(FindPeptideLabelRatio(peptideResult, labelType, standardType).Ratio);
-                    displayName = string.Format("DotProduct{0}To{1}", parts[0], parts[1]); // Not L10N
+                    return null;
                 }
                 else
                 {
-                    return null;
+                    string standardColumnPart = parts[1];
+                    var standardType = FindLabel(modifications.InternalStandardTypes, standardColumnPart);
+                    if (prefix == RATIO_PREFIX)
+                    {
+                        getterFunc = peptideResult =>
+                            RatioValue.GetRatio(FindPeptideLabelRatio(peptideResult, labelType, standardType).Ratio);
+                        displayName = string.Format("Ratio{0}To{1}", labelColumnPart, standardColumnPart); // Not L10N
+                    }
+                    else if (prefix == RDOTP_PREFIX)
+                    {
+                        getterFunc = peptideResult =>
+                            RatioValue.GetDotProduct(FindPeptideLabelRatio(peptideResult, labelType, standardType).Ratio);
+                        displayName = string.Format("DotProduct{0}To{1}", labelColumnPart, standardColumnPart); // Not L10N
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
                 return MakeRatioProperty(propertyName, displayName, getterFunc);
             }
             if (componentType == typeof (PrecursorResult))
             {
-                if (parts.Count != 1)
-                {
-                    return null;
-                }
-                int ratioIndex =  IndexOf(modifications.InternalStandardTypes, parts[0]);
                 Func<PrecursorResult, double?> getterFunc;
                 string displayName;
-                if (prefix == RATIO_PREFIX)
+                if (parts.Count == 0)
                 {
-                    getterFunc = precursorResult =>
+                    if (prefix != RATIO_GS_PREFIX)
                     {
-                        if (ratioIndex < 0 || ratioIndex >= precursorResult.ChromInfo.Ratios.Count)
-                        {
-                            return null;
-                        }
-                        return RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[ratioIndex]);
-                    };
-                    displayName = "TotalAreaRatioTo" + parts[0];
+                        return null;
+                    }
+                    getterFunc = precursorResult => RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[precursorResult.ChromInfo.Ratios.Count - 1]);
+                    displayName = "TotalAreaRatioToGlobalStandards";
                 }
-                else if (prefix == RDOTP_PREFIX)
+                else if (parts.Count != 1)
                 {
-                    getterFunc = precursorResult =>
-                    {
-                        if (ratioIndex < 0 || ratioIndex >= precursorResult.ChromInfo.Ratios.Count)
-                        {
-                            return null;
-                        }
-                        return RatioValue.GetDotProduct(precursorResult.ChromInfo.Ratios[ratioIndex]);
-                    };
-                    displayName = "DotProductTo" + parts[0];
+                    return null;
                 }
                 else
                 {
-                    return null;
+                    string labelColumnPart = parts[0];
+                    int ratioIndex = IndexOf(modifications.InternalStandardTypes, labelColumnPart);
+                    if (prefix == RATIO_PREFIX)
+                    {
+                        getterFunc = precursorResult =>
+                        {
+                            if (ratioIndex < 0 || ratioIndex >= precursorResult.ChromInfo.Ratios.Count)
+                            {
+                                return null;
+                            }
+                            return RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[ratioIndex]);
+                        };
+                        displayName = string.Format("TotalAreaRatioTo{0}", labelColumnPart);
+                    }
+                    else if (prefix == RDOTP_PREFIX)
+                    {
+                        getterFunc = precursorResult =>
+                        {
+                            if (ratioIndex < 0 || ratioIndex >= precursorResult.ChromInfo.Ratios.Count)
+                            {
+                                return null;
+                            }
+                            return RatioValue.GetDotProduct(precursorResult.ChromInfo.Ratios[ratioIndex]);
+                        };
+                        displayName = string.Format("DotProductTo{0}", labelColumnPart);
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
                 return MakeRatioProperty(propertyName, displayName, getterFunc);
             }
             if (componentType == typeof (TransitionResult))
             {
-                if (prefix != RATIO_PREFIX || parts.Count != 1)
+                Func<TransitionResult, double?> getterFunc;
+                string displayName;
+                if (parts.Count == 0)
                 {
-                    return null;
-                }
-                int ratioIndex = IndexOf(modifications.InternalStandardTypes, parts[0]);
-                Func<TransitionResult, double?> getterFunc = transitionResult =>
-                {
-                    if (ratioIndex < 0 || ratioIndex >= transitionResult.ChromInfo.Ratios.Count)
+                    if (prefix != RATIO_GS_PREFIX)
                     {
                         return null;
                     }
-                    return transitionResult.ChromInfo.Ratios[ratioIndex];
-                };
-                string displayName = "AreaRatioTo" + parts[0];
+
+                    getterFunc = transitionResult => transitionResult.ChromInfo.Ratios[transitionResult.ChromInfo.Ratios.Count - 1];
+                    displayName = "AreaRatioToGlobalStandards";
+                }
+                else if (prefix != RATIO_PREFIX || parts.Count != 1)
+                {
+                    return null;
+                }
+                else
+                {
+                    string labelColumnPart = parts[0];
+                    int ratioIndex = IndexOf(modifications.InternalStandardTypes, labelColumnPart);
+                    getterFunc = transitionResult =>
+                    {
+                        if (ratioIndex < 0 || ratioIndex >= transitionResult.ChromInfo.Ratios.Count)
+                        {
+                            return null;
+                        }
+                        return transitionResult.ChromInfo.Ratios[ratioIndex];
+                    };
+                    displayName = string.Format("AreaRatioTo{0}", labelColumnPart);
+                }
                 return MakeRatioProperty(propertyName, displayName, getterFunc);
             }
             return null;
@@ -344,6 +397,14 @@ namespace pwiz.Skyline.Model.Databinding
                         propertyNames.Add(MakePropertyName(RDOTP_PREFIX, labelType, standardType));
                     }
                 }
+
+                if (document.Settings.HasGlobalStandardArea)
+                {
+                    foreach (var labelType in labelTypes)
+                    {
+                        propertyNames.Add(MakePropertyName(RATIO_GS_PREFIX, labelType));
+                    }
+                }
             }
             if (componentType == typeof (PrecursorResult) || componentType == typeof (TransitionResult))
             {
@@ -358,6 +419,11 @@ namespace pwiz.Skyline.Model.Databinding
                             propertyNames.Add(MakePropertyName(RDOTP_PREFIX, standardType));
                         }
                     }
+                }
+
+                if (document.Settings.HasGlobalStandardArea)
+                {
+                    propertyNames.Add(RATIO_GS_PREFIX);
                 }
             }
             return propertyNames.Distinct().Select(name => GetProperty(document, componentType, name));

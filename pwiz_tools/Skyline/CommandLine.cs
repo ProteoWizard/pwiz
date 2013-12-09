@@ -1110,7 +1110,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (_doc != null && !_doc.Settings.IsLoaded)
+            if (_doc != null && !_doc.IsLoaded)
             {
                 IProgressMonitor progressMonitor = new CommandWaitBroker(_out, new ProgressStatus(string.Empty));
                 var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor };

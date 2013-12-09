@@ -323,16 +323,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             string seq = peptide.Sequence;
             string seqModified = nodePeptide.ModifiedSequenceDisplay;
             string seqModKey = docInfo.Settings.GetModifiedSequence(nodePeptide);
-            string standardType = null;
-            if (docInfo.RetentionTimeStandards.Contains(seqModKey))
-                standardType = "iRT";   // Not L10N
             Assume.IsNotNull(seqModified);
             DbPeptide dbPeptide = new DbPeptide
             {
                 Protein = dbProtein,
                 Sequence = seq,
                 ModifiedSequence = seqModified,
-                StandardType = standardType,
+                StandardType = nodePeptide.GlobalStandardType,
                 BeginPos = peptide.Begin,
                 // Convert from a non-inclusive end to an inclusive end
                 EndPos = (peptide.End.HasValue ? peptide.End.Value - 1 : (int?) null),
@@ -433,6 +430,19 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         }
                     }
                 }
+            }
+
+            if (docInfo.Settings.HasGlobalStandardArea)
+            {
+                foreach (var labelType in labelTypes)
+                {
+                    var ratioValue = GetPeptideRatio(chromInfo, labelType, null);
+                    if (null != ratioValue)
+                    {
+                        peptideResult.LabelRatios[RatioPropertyAccessor.PeptideRatioProperty(labelType, null).ColumnName]
+                            = ratioValue.Ratio;
+                    }
+                }                
             }
         }
 
@@ -579,10 +589,18 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                 {
                                     precursorResult.LabelRatios[RatioPropertyAccessor.PrecursorRatioProperty(standardTypes[j]).ColumnName]
                                         = ratioValue.Ratio;
-                                    precursorResult.LabelRatios[
-                                        RatioPropertyAccessor.PrecursorRdotpProperty(standardTypes[j]).ColumnName]
+                                    precursorResult.LabelRatios[RatioPropertyAccessor.PrecursorRdotpProperty(standardTypes[j]).ColumnName]
                                         = ratioValue.DotProduct;
                                 }
+                            }
+                        }
+                        if (docInfo.Settings.HasGlobalStandardArea)
+                        {
+                            var ratioValue = chromInfo.Ratios.Last();
+                            if (null != ratioValue)
+                            {
+                                precursorResult.LabelRatios[RatioPropertyAccessor.PrecursorRatioProperty(null).ColumnName]
+                                    = ratioValue.Ratio;
                             }
                         }
                         // Area values get normalized to the total for the precursors of the same isotope
@@ -735,6 +753,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                 }
                             }
                         }
+                        if (docInfo.Settings.HasGlobalStandardArea)
+                        {
+                            var ratioValue = chromInfo.Ratios.Last();
+                            if (ratioValue.HasValue)
+                            {
+                                transitionResult.LabelRatios[RatioPropertyAccessor.TransitionRatioProperty(null).ColumnName]
+                                    = ratioValue.Value;
+                            }
+                        }
                         AddAnnotations(docInfo, transitionResult, chromInfo.Annotations);
                         if (!chromInfo.IsEmpty)
                         {
@@ -790,7 +817,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             public DocInfo(SrmDocument srmDocument)
             {
                 Settings = srmDocument.Settings;
-                RetentionTimeStandards = srmDocument.GetRetentionTimeStandards();
 
                 // Create replicate summaries
                 ReplicateSummaries = new List<ReplicateSummaryValues>();
@@ -831,7 +857,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             public SrmSettings Settings { get; private set; }
             public PeptidePrediction PeptidePrediction { get { return Settings.PeptideSettings.Prediction; } }
-            public HashSet<string> RetentionTimeStandards { get; private set; }
             public MeasuredResults MeasuredResults { get { return Settings.MeasuredResults; } }
             public List<ReplicateSummaryValues> ReplicateSummaries { get; private set; }
             public List<ReplicateResultFileMap> ReplicateResultFileMaps { get; private set; }

@@ -66,11 +66,15 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                if (AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view)
-                    return BarType.Cluster;
-                if (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view)
-                    return BarType.PercentStack;
-                return BarType.Stack;
+                switch (AreaGraphController.AreaView)
+                {
+                    case AreaNormalizeToView.area_ratio_view:
+                        return BarType.Cluster;
+                    case AreaNormalizeToView.area_percent_view:
+                        return BarType.PercentStack;
+                    default:
+                        return BarType.Stack;
+                }
             }
         }
 
@@ -219,37 +223,51 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     BarSettings.Type = BarType.Cluster;
             }
-            int ratioIndex = -1;
+            int ratioIndex = AreaGraphData.RATIO_INDEX_NONE;
             var standardType = IsotopeLabelType.light;
 
-            if (AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view)
+            var areaView = AreaGraphController.AreaView;
+            if (areaView == AreaNormalizeToView.area_ratio_view)
             {
                 ratioIndex = GraphSummary.RatioIndex;
                 standardType = document.Settings.PeptideSettings.Modifications.InternalStandardTypes[ratioIndex];                
             }
+            else if (areaView == AreaNormalizeToView.area_global_standard_view)
+            {
+                if (document.Settings.HasGlobalStandardArea)
+                    ratioIndex = ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS;
+                else
+                    areaView = AreaNormalizeToView.none;
+            }
 
             // Sets normalizeData to optimization, maximum_stack, maximum, total, or none
             AreaNormalizeToData normalizeData;
-            if (optimizationPresent && displayType == DisplayTypeChrom.single && 
-                AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view)
+            if (optimizationPresent && displayType == DisplayTypeChrom.single &&
+                areaView == AreaNormalizeToView.area_percent_view)
+            {
                 normalizeData = AreaNormalizeToData.optimization;
-            else if (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
+            }
+            else if (areaView == AreaNormalizeToView.area_maximum_view)
             {
                 normalizeData = BarSettings.Type == BarType.Stack
                                     ? AreaNormalizeToData.maximum_stack
                                     : AreaNormalizeToData.maximum;
             }
-            else if(BarSettings.Type == BarType.PercentStack)
+            else if (BarSettings.Type == BarType.PercentStack)
+            {
                 normalizeData = AreaNormalizeToData.total;
+            }
             else
+            {
                 normalizeData = AreaNormalizeToData.none;
+            }
 
             // Calculate graph data points
             // IsExpectedVisible depends on ExpectedVisible
             ExpectedVisible = AreaExpectedValue.none;
             if (parentGroupNode != null &&
                     displayType != DisplayTypeChrom.total &&
-                    AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view &&
+                    areaView != AreaNormalizeToView.area_ratio_view &&
                     !(optimizationPresent && displayType == DisplayTypeChrom.single))
             {
                 var displayTrans = GraphChromatogram.GetDisplayTransitions(parentGroupNode, displayType).ToArray();
@@ -269,14 +287,21 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
-            GraphData graphData = new AreaGraphData(document, parentNode, displayType, replicateGroupOp,
-                ratioIndex, normalizeData, expectedValue, PaneKey);
+            var graphData = new AreaGraphData(document,
+                                              parentNode,
+                                              displayType,
+                                              replicateGroupOp,
+                                              ratioIndex,
+                                              normalizeData,
+                                              expectedValue,
+                                              PaneKey);
+
             var aggregateOp = replicateGroupOp.AggregateOp;
             int countNodes = graphData.DocNodes.Count;
             if (countNodes == 0)
                 ExpectedVisible = AreaExpectedValue.none;
             CanShowDotProduct = ExpectedVisible != AreaExpectedValue.none &&
-                AreaGraphController.AreaView != AreaNormalizeToView.area_percent_view;
+                                areaView != AreaNormalizeToView.area_percent_view;
             CanShowPeakAreaLegend = countNodes != 0;
 
             InitFromData(graphData);
@@ -353,7 +378,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If showing ratios, do not add the standard type to the graph,
                     // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
-                    if (nodeGroup != null && ratioIndex != -1)
+                    if (nodeGroup != null && ratioIndex >= 0)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
                         if (ReferenceEquals(labelType, standardType))
@@ -409,14 +434,14 @@ namespace pwiz.Skyline.Controls.Graphs
                         // The Math.Min(sumArea, .999) makes sure that if graph is in normalized view
                         // height of the selection rectangle does not exceed 1, so that top of the rectangle
                         // can be viewed when y-axis scale maximum is at 1
-                        yValue = (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view ? Math.Min(sumArea, .999) : sumArea);
+                        yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(sumArea, .999) : sumArea);
                         break;
                     case BarType.PercentStack:
                         yValue = 99.99;
                         break;
                     default:
                         // Scale the selection box to fit exactly the bar height
-                        yValue = (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
+                        yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
                         break;
                 }
                 GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
@@ -455,7 +480,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
                 }
-                else if (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
+                else if (areaView == AreaNormalizeToView.area_maximum_view)
                 {
                     YAxis.Scale.Max = 1;
                     if (IsDotProductVisible)
@@ -498,9 +523,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         YAxis.Scale.MaxAuto = true;
                     }
-                    YAxis.Title.Text = aggregateOp.AnnotateTitle(AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view
-                          ? string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_, standardType.Title)
-                          : Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
+                    string yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
+                    switch (areaView)
+                    {
+                        case AreaNormalizeToView.area_ratio_view:
+                            yTitle = string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_,
+                                                   standardType.Title);
+                            break;
+                        case AreaNormalizeToView.area_global_standard_view:
+                            yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards;
+                            break;
+                    }
+                    YAxis.Title.Text = aggregateOp.AnnotateTitle(yTitle);
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -731,6 +765,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private class AreaGraphData : GraphData
         {
+            public const int RATIO_INDEX_NONE = -1;
+
             public static PointPair AreaPointPairMissing(int xValue)
             {
                 // Using PointPairBase.Missing caused too many problems in area graphs
@@ -1005,19 +1041,19 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (chromInfo == null)
                     return null;
-                if (_ratioIndex == -1)
-                {
+                if (_ratioIndex == RATIO_INDEX_NONE)
                     return chromInfo.Area;
-                }
-                var ratioValue = chromInfo.Ratios[_ratioIndex];
-                return ratioValue == null ? (float?) null : ratioValue.Ratio;
+                var ratioValue = chromInfo.GetRatio(_ratioIndex);
+                return ratioValue == null ? (float?)null : ratioValue.Ratio;
             }
 
             private float? GetValue(TransitionChromInfo chromInfo)
             {
                 if (chromInfo == null)
                     return null;
-                return (_ratioIndex == -1 ? chromInfo.Area : chromInfo.Ratios[_ratioIndex]);
+                if (_ratioIndex == RATIO_INDEX_NONE)
+                    return chromInfo.Area;
+                return chromInfo.GetRatio(_ratioIndex);
             }
         }
     }

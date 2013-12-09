@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = LabelType.GetHashCode();
-                result = (result*397) ^ StandardType.GetHashCode();
+                result = (result*397) ^ (StandardType == null ? 0 : StandardType.GetHashCode());
                 result = (result*397) ^ (Ratio == null ? 0 : Ratio.GetHashCode());
                 return result;
             }
@@ -202,6 +202,13 @@ namespace pwiz.Skyline.Model.Results
         public float? LibraryDotProduct { get; private set; }
         public float? IsotopeDotProduct { get; private set; }
         public Annotations Annotations { get; private set; }
+
+        public RatioValue GetRatio(int index)
+        {
+            return index != RATIO_INDEX_GLOBAL_STANDARDS
+                       ? _ratios[index]
+                       : _ratios[_ratios.Count - 1];
+        }
 
         /// <summary>
         /// Set if user action has explicitly set these values
@@ -373,6 +380,13 @@ namespace pwiz.Skyline.Model.Results
             private set { _ratios = MakeReadOnly(value); }
         }
         public float? Ratio { get { return _ratios[0]; } }
+
+        public float? GetRatio(int index)
+        {
+            return index != RATIO_INDEX_GLOBAL_STANDARDS
+                ? _ratios[index]
+                : _ratios[_ratios.Count - 1];
+        }
 
         public Annotations Annotations { get; private set; }
 
@@ -774,6 +788,8 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public abstract class ChromInfo : Immutable
     {
+        public const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
+
         protected ChromInfo(ChromFileInfoId fileId)
         {
             FileId = fileId;
@@ -811,7 +827,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("FileId = {0}", FileId.GlobalIndex); // Not L10N : For debugging
+            return String.Format("FileId = {0}", FileId.GlobalIndex); // Not L10N : For debugging
         }
 
         #endregion

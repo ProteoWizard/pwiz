@@ -807,6 +807,7 @@ namespace pwiz.Skyline
             manageUniquePeptidesMenuItem.Enabled = enabled;
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             modifyPeptideMenuItem.Enabled = nodePepTree != null;
+            setStandardTypeMenuItem.Enabled = HasSelectedTargetPeptides();
 
             // Update active replicate, if using best replicate
             if (nodePepTree != null && SequenceTree.ShowReplicate == ReplicateDisplay.best)
@@ -1646,6 +1647,83 @@ namespace pwiz.Skyline
             }
         }
 
+        private void setStandardTypeContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            bool isIrtPeptideSelected = IsIrtPeptideSelected();
+            noStandardContextMenuItem.Enabled =
+                qcStandardContextMenuItem.Enabled =
+                normStandardContextMenuItem.Enabled = !isIrtPeptideSelected;
+            irtStandardContextMenuItem.Visible = isIrtPeptideSelected;
+        }
+
+        private void setStandardTypeMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            bool isIrtPeptideSelected = IsIrtPeptideSelected();
+            noStandardMenuItem.Enabled =
+                qcStandardMenuItem.Enabled =
+                normStandardMenuItem.Enabled = !isIrtPeptideSelected;
+            irtStandardMenuItem.Visible = isIrtPeptideSelected;
+        }
+
+        private bool IsIrtPeptideSelected()
+        {
+            IList<IdentityPath> selPaths = SequenceTree.SelectedPaths;
+            return (from nodePath in selPaths
+                    where !Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID)
+                    select DocumentUI.FindNode(nodePath))
+                        .OfType<PeptideDocNode>()
+                        .Any(nodePep => Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT));
+        }
+
+        private void noStandardMenuItem_Click(object sender, EventArgs e)
+        {
+            SetStandardType(null);
+        }
+
+        private void qcStandardMenuItem_Click(object sender, EventArgs e)
+        {
+            SetStandardType(PeptideDocNode.STANDARD_TYPE_QC);
+        }
+
+        private void normStandardMenuItem_Click(object sender, EventArgs e)
+        {
+            SetStandardType(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON);
+        }
+
+        public void SetStandardType(string standardType)
+        {
+            IList<IdentityPath> selPaths = SequenceTree.SelectedPaths;
+            string message = standardType == null
+                ? Resources.SkylineWindow_SetStandardType_Clear_standard_type
+                : string.Format(Resources.SkylineWindow_SetStandardType_Set_standard_type_to__0_, PeptideDocNode.GetStandardTypeDisplayName(standardType));
+
+            ModifyDocument(message, doc => (SrmDocument) doc.ReplaceChildren(GetStandardTypeReplacements(doc, standardType, selPaths)));
+        }
+
+        private IEnumerable<NodeReplacement> GetStandardTypeReplacements(SrmDocument doc,
+                                                                         string standardType,
+                                                                         IEnumerable<IdentityPath> selPaths)
+        {
+            foreach (IdentityPath nodePath in selPaths)
+            {
+                if (Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID))
+                    continue;
+                var nodePep = doc.FindNode(nodePath) as PeptideDocNode;
+                if (nodePep == null || nodePep.IsDecoy || Equals(standardType, nodePep.GlobalStandardType))
+                    continue;
+                yield return new NodeReplacement(nodePath.Parent, nodePep.ChangeStandardType(standardType));
+            }
+        }
+
+        private bool HasSelectedTargetPeptides()
+        {
+            return SequenceTree.SelectedDocNodes.Any(nodeSel =>
+                {
+                    var nodePep = nodeSel as PeptideDocNode;
+                    return nodePep != null && !nodePep.IsDecoy;
+                });
+        }
+
         private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
         {
             ShowUniquePeptidesDlg();
@@ -1889,6 +1967,7 @@ namespace pwiz.Skyline
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
             removePeakContextMenuItem.Visible = (SequenceTree.SelectedNode is TransitionTreeNode && enabled);
             modifyPeptideContextMenuItem.Visible = (SequenceTree.SelectedNode is PeptideTreeNode && enabled);
+            setStandardTypeContextMenuItem.Visible = (HasSelectedTargetPeptides() && enabled);
         }
 
         private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildrenInternal(true); }
@@ -2924,16 +3003,27 @@ namespace pwiz.Skyline
                 Point pt = e.Location;
                 TreeNode nodeTree = SequenceTree.GetNodeAt(pt);
                 SequenceTree.SelectedNode = nodeTree;
-                SequenceTree.HideEffects();
-                var settings = DocumentUI.Settings;
-                // Show the ratios sub-menu when there are results and a choice of
-                // internal standard types.
-                ratiosContextMenuItem.Visible =
-                    settings.HasResults &&
-                    settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
-                    settings.PeptideSettings.Modifications.HasHeavyModifications;
-                contextMenuTreeNode.Show(SequenceTree, pt);
+
+                ShowTreeNodeContextMenu(pt);
             }
+        }
+
+        public ContextMenuStrip ContextMenuTreeNode { get { return contextMenuTreeNode; } }
+        public ToolStripMenuItem SetStandardTypeConextMenuItem { get { return setStandardTypeContextMenuItem; } }
+        public ToolStripMenuItem IrtStandardContextMenuItem { get { return irtStandardContextMenuItem; } }
+
+        public void ShowTreeNodeContextMenu(Point pt)
+        {
+            SequenceTree.HideEffects();
+            var settings = DocumentUI.Settings;
+            // Show the ratios sub-menu when there are results and a choice of
+            // internal standard types.
+            ratiosContextMenuItem.Visible =
+                settings.HasResults &&
+                    (settings.HasGlobalStandardArea ||
+                    (settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
+                     settings.PeptideSettings.Modifications.HasHeavyModifications));
+            contextMenuTreeNode.Show(SequenceTree, pt);
         }
 
         private void ratiosContextMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -2943,10 +3033,12 @@ namespace pwiz.Skyline
             var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             for (int i = 0; i < standardTypes.Count; i++)
             {
-                var handler = new SelectRatioHandler(this, i);
-                var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
-                    {Checked = (SequenceTree.RatioIndex == i)};
-                menu.DropDownItems.Add(item);
+                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, i);
+            }
+            if (DocumentUI.Settings.HasGlobalStandardArea)
+            {
+                SelectRatioHandler.Create(this, menu, ratiosToGlobalStandardsMenuItem.Text,
+                    ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS);
             }
         }
 
@@ -2976,6 +3068,14 @@ namespace pwiz.Skyline
                 _skyline.SequenceTree.RatioIndex = _ratioIndex;
                 if (_skyline._graphPeakArea != null)
                     _skyline._graphPeakArea.RatioIndex = _ratioIndex;                
+            }
+
+            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, int i)
+            {
+                var handler = new SelectRatioHandler(skylineWindow, i);
+                var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
+                { Checked = (skylineWindow.SequenceTree.RatioIndex == i) };
+                menu.DropDownItems.Add(item);
             }
         }
 

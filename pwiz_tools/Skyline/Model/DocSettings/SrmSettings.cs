@@ -25,6 +25,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -96,18 +97,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
 
-        public bool IsLoaded
-        {
-            get
-            {
-                return (!HasResults || MeasuredResults.IsLoaded) &&
-                       (!HasLibraries || PeptideSettings.Libraries.IsLoaded) &&
-                       (!HasRTPrediction || PeptideSettings.Prediction.RetentionTime.Calculator.IsUsable) && 
-                       DocumentRetentionTimes.IsLoaded(this);
-                // BackgroundProteome?
-            }
-        }
-
         public RelativeRT GetRelativeRT(IsotopeLabelType labelType, string seq, ExplicitMods mods)
         {
             if (labelType.IsLight)
@@ -149,7 +138,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             return relativeRT;
         }
-        
+
         // Cached calculators
         private ReadOnlyCollection<TypedMassCalc> _precursorMassCalcs;
         private ReadOnlyCollection<TypedMassCalc> _fragmentMassCalcs;
@@ -297,7 +286,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangePeptideSettings(PeptideSettings prop)
         {
-            SrmSettings settings = ChangeProp(ImClone(this), (im, v) => im.PeptideSettings = v, prop);
+            SrmSettings settings = ChangeProp(ImClone(this), im => im.PeptideSettings = prop);
 
             // If modifications have change, then new mass calculators are needed.
             if (!Equals(prop.Modifications, PeptideSettings.Modifications))
@@ -311,7 +300,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeTransitionSettings(TransitionSettings prop)
         {
-            SrmSettings settings = ChangeProp(ImClone(this), (im, v) => im.TransitionSettings = v, prop);
+            SrmSettings settings = ChangeProp(ImClone(this), im => im.TransitionSettings = prop);
 
             if (prop.Prediction.PrecursorMassType != TransitionSettings.Prediction.PrecursorMassType)
                 settings.CreatePrecursorMassCalcs();
@@ -323,17 +312,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeDataSettings(DataSettings prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.DataSettings = prop, prop);
+            return ChangeProp(ImClone(this), im => im.DataSettings = prop);
         }
 
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MeasuredResults = v, prop);
+            return ChangeProp(ImClone(this), im => im.MeasuredResults = prop);
         }
 
         public SrmSettings ChangeDocumentRetentionTimes(DocumentRetentionTimes prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.DocumentRetentionTimes = v, prop);
+            return ChangeProp(ImClone(this), im => im.DocumentRetentionTimes = prop);
         }
         
         public SrmSettings MakeSavable()
@@ -409,6 +398,99 @@ namespace pwiz.Skyline.Model.DocSettings
                                            select mod);
             }
             return calc;
+        }
+
+        /// <summary>
+        /// Cached standard types
+        /// </summary>
+        private ImmutableDictionary<string, ReadOnlyCollection<PeptideDocNode>> _cachedPeptideStandards;
+
+        public IEnumerable<PeptideDocNode> GetPeptideStandards(string standardType)
+        {
+            ReadOnlyCollection<PeptideDocNode> standardPeptides;
+            if (_cachedPeptideStandards == null || !_cachedPeptideStandards.TryGetValue(standardType, out standardPeptides))
+                return new PeptideDocNode[0];
+
+            return standardPeptides;
+        }
+
+        public SrmSettings CachePeptideStandards(IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes)
+        {
+            // Build an initial mutable dictionay and lists
+            var cachedPeptideStandards = new Dictionary<string, IList<PeptideDocNode>>();
+            foreach (var nodePepGroup in peptideGroupDocNodes)
+            {
+                foreach (var nodePep in nodePepGroup.Peptides)
+                {
+                    string standardType = nodePep.GlobalStandardType;
+                    if (standardType == null)
+                        continue;
+                    IList<PeptideDocNode> listPeptideAndGroup;
+                    if (!cachedPeptideStandards.TryGetValue(standardType, out listPeptideAndGroup))
+                    {
+                        listPeptideAndGroup = new List<PeptideDocNode>();
+                        cachedPeptideStandards.Add(standardType, listPeptideAndGroup);
+                    }
+                    listPeptideAndGroup.Add(nodePep);
+                }
+            }
+            // Create new read-only lists, if necessary
+            bool createdNewList = false;
+            var cachedPeptideStandardsRo = new Dictionary<string, ReadOnlyCollection<PeptideDocNode>>();
+            foreach (var pair in cachedPeptideStandards)
+            {
+                string standardType = pair.Key;
+                var peptidesNew = pair.Value;
+                ReadOnlyCollection<PeptideDocNode> peptides;
+                if (_cachedPeptideStandards == null ||
+                    !_cachedPeptideStandards.TryGetValue(standardType, out peptides) ||
+                    !ArrayUtil.EqualsDeep(peptides, peptidesNew))
+                {
+                    peptides = MakeReadOnly(peptidesNew);
+                    createdNewList = true;
+                }
+                cachedPeptideStandardsRo.Add(standardType, peptides);
+            }
+            // If no new lists and count of standards did not change, then nothing has changed
+            if (!createdNewList)
+            {
+                if (_cachedPeptideStandards == null || _cachedPeptideStandards.Count == cachedPeptideStandardsRo.Count)
+                    return this;
+            }
+            var prop = new ImmutableDictionary<string, ReadOnlyCollection<PeptideDocNode>>(cachedPeptideStandardsRo);
+            return ChangeProp(ImClone(this), im => im._cachedPeptideStandards = prop);
+        }
+
+        public bool HasGlobalStandardArea
+        {
+            get
+            {
+                return _cachedPeptideStandards != null &&
+                    _cachedPeptideStandards.ContainsKey(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON);
+            }
+        }
+
+        public double CalcGlobalStandardArea(int resultsIndex, ChromFileInfoId fileId)
+        {
+            double globalStandardArea = 0;
+            var peptideStandards = GetPeptideStandards(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON);
+            if (peptideStandards != null)
+            {
+                foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.TransitionGroups))
+                {
+                    var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
+                    if (chromInfos == null)
+                        continue;
+                    foreach (var groupChromInfo in chromInfos)
+                    {
+                        if (ReferenceEquals(fileId, groupChromInfo.FileId) &&
+                                groupChromInfo.OptimizationStep == 0 &&
+                                groupChromInfo.Area.HasValue)
+                            globalStandardArea += groupChromInfo.Area.Value;
+                    }
+                }
+            }
+            return globalStandardArea;
         }
 
         public bool LibrariesContainMeasurablePeptide(Peptide peptide, IList<int> precursorCharges, ExplicitMods mods)
@@ -1350,7 +1432,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return;
 
             DiffPeptides = true;
-            // DiffPeptideProps = true; Currently not possible
+            DiffPeptideProps = true;
             DiffTransitionGroups = true;
             DiffTransitionGroupProps = true;
             DiffTransitions = true;
@@ -1444,8 +1526,9 @@ namespace pwiz.Skyline.Model.DocSettings
                                   !ArrayUtil.EqualsDeep(newPep.Modifications.VariableModifications.ToArray(),
                                                         oldPep.Modifications.VariableModifications.ToArray());
 
-            // Currently no calculated values on peptides
-            DiffPeptideProps = false;
+            // Peptide standard types can change with iRT calculator
+            DiffPeptideProps = !ReferenceEquals(newPep.Prediction.RetentionTime,
+                                                oldPep.Prediction.RetentionTime);
 
             var oldLib = oldPep.Libraries;
             var newLib = newPep.Libraries;

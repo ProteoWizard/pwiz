@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model
 
         protected override bool IsComplete(SrmDocument docNew)
         {
-            return docNew.Settings.IsLoaded;
+            return docNew.IsLoaded;
         }
     }
 }

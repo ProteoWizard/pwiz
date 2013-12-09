@@ -32,22 +32,48 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideDocNode : DocNodeParent
     {
+        public const string STANDARD_TYPE_IRT = "iRT";  // Not L10N
+        public const string STANDARD_TYPE_QC = "QC";    // Not L10N
+        public const string STANDARD_TYPE_NORMALIZAITON = "Normalization";  // Not L10N
+
+        public static string GetStandardTypeDisplayName(string standardType)
+        {
+            switch (standardType)
+            {
+                case STANDARD_TYPE_IRT:
+                    return Resources.PeptideDocNode_GetStandardTypeDisplayName_iRT;
+                case STANDARD_TYPE_QC:
+                    return Resources.PeptideDocNode_GetStandardTypeDisplayName_QC;
+                case STANDARD_TYPE_NORMALIZAITON:
+                    return Resources.PeptideDocNode_GetStandardTypeDisplayName_Normalization;
+            }
+            return string.Empty;
+        }
+
         public PeptideDocNode(Peptide id, ExplicitMods mods = null)
-            : this(id, null, mods, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
+            : this(id, null, mods, null, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
 
         public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods,
             TransitionGroupDocNode[] children, bool autoManageChildren)
-            : this(id, settings, mods, null, Annotations.EMPTY, null, children, autoManageChildren)
+            : this(id, settings, mods, null, null, Annotations.EMPTY, null, children, autoManageChildren)
         {
         }
 
-        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, int? rank, Annotations annotations,
-            Results<PeptideChromInfo> results, TransitionGroupDocNode[] children, bool autoManageChildren)
+        public PeptideDocNode(Peptide id,
+                              SrmSettings settings,
+                              ExplicitMods mods,
+                              string standardType,
+                              int? rank,
+                              Annotations annotations,
+                              Results<PeptideChromInfo> results,
+                              TransitionGroupDocNode[] children,
+                              bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
         {
             ExplicitMods = mods;
+            GlobalStandardType = standardType;
             Rank = rank;
             Results = results;
             BestResult = CalcBestResult();
@@ -69,6 +95,8 @@ namespace pwiz.Skyline.Model
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
         public ExplicitMods ExplicitMods { get; private set; }
+
+        public string GlobalStandardType { get; private set; }
 
         public string ModifiedSequence { get; private set; }
 
@@ -370,7 +398,12 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeExplicitMods(ExplicitMods prop)
         {
             return ChangeProp(ImClone(this), im => im.ExplicitMods = prop);
-        }     
+        }
+
+        public PeptideDocNode ChangeStandardType(string prop)
+        {
+            return ChangeProp(ImClone(this), im => im.GlobalStandardType = prop);
+        }
 
         public PeptideDocNode ChangeRank(int? prop)
         {
@@ -515,8 +548,6 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
         {
-            Assume.IsFalse(diff.DiffPeptideProps); // No settings dependent properties yet.
-
             // If the peptide has explicit modifications, and the modifications have
             // changed, see if any of the explicit modifications have changed
             var explicitMods = ExplicitMods;
@@ -543,6 +574,22 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(explicitMods, ExplicitMods))
                 nodeResult = nodeResult.ChangeExplicitMods(explicitMods);
             nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
+
+            if (diff.DiffPeptideProps)
+            {
+                var rt = settingsNew.PeptideSettings.Prediction.RetentionTime;
+                bool isStandard = Equals(nodeResult.GlobalStandardType, STANDARD_TYPE_IRT);
+                if (rt != null)
+                {
+                    bool isStandardNew = rt.IsStandardPeptide(nodeResult);
+                    if (isStandard ^ isStandardNew)
+                        nodeResult = nodeResult.ChangeStandardType(isStandardNew ? STANDARD_TYPE_IRT : null);
+                }
+                else if (isStandard)
+                {
+                    nodeResult = nodeResult.ChangeStandardType(null);
+                }
+            }
 
             if (diff.DiffTransitionGroups && settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren)
             {
@@ -1053,9 +1100,14 @@ namespace pwiz.Skyline.Model
                         var infoNew = info;
                         var labelType = nodeTran.Transition.Group.LabelType;
 
-                        var ratios = new float?[standardTypes.Count];
-                        for (int i = 0; i < ratios.Length; i++)
+                        int count = standardTypes.Count;
+                        if (calc.HasGlobalArea)
+                            count++;
+                        var ratios = new float?[count];
+                        for (int i = 0; i < standardTypes.Count; i++)
                             ratios[i] = calc.CalcTransitionRatio(nodeTran, labelType, standardTypes[i]);
+                        if (calc.HasGlobalArea)
+                            ratios[count - 1] = calc.CalcTransitionGlobalRatio(nodeTran, labelType);
                         if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
                             infoNew = infoNew.ChangeRatios(ratios);
                         
@@ -1085,11 +1137,16 @@ namespace pwiz.Skyline.Model
                         var infoNew = info;
                         var labelType = nodeGroup.TransitionGroup.LabelType;
 
-                        var ratios = new RatioValue[standardTypes.Count];
-                        for (int i = 0; i < ratios.Length; i++)
+                        int count = standardTypes.Count;
+                        if (calc.HasGlobalArea)
+                            count++;
+                        var ratios = new RatioValue[count];
+                        for (int i = 0; i < standardTypes.Count; i++)
                         {
                             ratios[i] = calc.CalcTransitionGroupRatio(nodeGroup, labelType, standardTypes[i]);
                         }
+                        if (calc.HasGlobalArea)
+                            ratios[count - 1] = calc.CalcTransitionGroupGlobalRatio(nodeGroup, labelType);
                         if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
                             infoNew = infoNew.ChangeRatios(ratios);
 
@@ -1119,8 +1176,11 @@ namespace pwiz.Skyline.Model
             private int ResultsCount { get; set; }
             private int RetentionTimesMeasured { get; set; }
             private double RetentionTimeTotal { get; set; }
+            private double GlobalStandardArea { get; set; }
 
             private Dictionary<TransitionKey, float> TranAreas { get; set; }
+
+            public bool HasGlobalArea { get { return GlobalStandardArea > 0; }}
 
 // ReSharper disable UnusedParameter.Local
             public void AddChromInfo(TransitionGroupDocNode nodeGroup,
@@ -1131,8 +1191,13 @@ namespace pwiz.Skyline.Model
                     return;
 
                 Assume.IsTrue(FileId == null || ReferenceEquals(info.FileId, FileId));
+                var fileIdPrevious = FileId;
                 FileId = info.FileId;
                 FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
+
+                // First time through calculate the global standard area for this file
+                if (fileIdPrevious == null)
+                    GlobalStandardArea = Settings.CalcGlobalStandardArea(ResultsIndex, FileId);
 
                 ResultsCount++;
                 PeakCountRatioTotal += info.PeakCountRatio;
@@ -1167,6 +1232,7 @@ namespace pwiz.Skyline.Model
                     retentionTime = (float) (RetentionTimeTotal/RetentionTimesMeasured);
                 var mods = Settings.PeptideSettings.Modifications;
                 var listRatios = new List<PeptideLabelRatio>();
+                // First add ratios to reference peptides
                 foreach (var standardType in mods.InternalStandardTypes)
                 {
                     foreach (var labelType in mods.GetModificationTypes())
@@ -1178,8 +1244,27 @@ namespace pwiz.Skyline.Model
                         listRatios.Add(new PeptideLabelRatio(labelType, standardType, ratio));
                     }                    
                 }
+                // Then add ratios to global standards
+                foreach (var labelType in mods.GetModificationTypes())
+                {
+                    RatioValue ratio = CalcTransitionGroupGlobalRatio(-1, labelType);
+                    listRatios.Add(new PeptideLabelRatio(labelType, null, ratio));
+                }
 
                 return new PeptideChromInfo(FileId, peakCountRatio, retentionTime, listRatios.ToArray());
+            }
+
+            public float? CalcTransitionGlobalRatio(TransitionDocNode nodeTran,
+                                                    IsotopeLabelType labelType)
+            {
+                if (GlobalStandardArea == 0)
+                    return null;
+
+                float areaNum;
+                var keyNum = new TransitionKey(nodeTran.Key, labelType);
+                if (!TranAreas.TryGetValue(keyNum, out areaNum))
+                    return null;
+                return (float) (areaNum / GlobalStandardArea);
             }
 
             public float? CalcTransitionRatio(TransitionDocNode nodeTran,
@@ -1198,17 +1283,41 @@ namespace pwiz.Skyline.Model
                 return areaNum/areaDenom;
             }
 
+            public RatioValue CalcTransitionGroupGlobalRatio(TransitionGroupDocNode nodeGroup,
+                                                             IsotopeLabelType labelTypeNum)
+            {
+                return CalcTransitionGroupGlobalRatio(nodeGroup.TransitionGroup.PrecursorCharge,
+                                                      labelTypeNum);
+            }
+
+            private RatioValue CalcTransitionGroupGlobalRatio(int precursorCharge, IsotopeLabelType labelType)
+            {
+                if (GlobalStandardArea == 0)
+                    return null;
+
+                double num = 0;
+                foreach (var pair in GetAreaPairs(labelType))
+                {
+                    var key = pair.Key;
+                    if (precursorCharge != -1 && key.PrecursorCharge != precursorCharge)
+                        continue;
+                    num += pair.Value;
+                }
+
+                return new RatioValue(num / GlobalStandardArea);
+            }
+
             public RatioValue CalcTransitionGroupRatio(TransitionGroupDocNode nodeGroup,
-                                                   IsotopeLabelType labelTypeNum,
-                                                   IsotopeLabelType labelTypeDenom)
+                                                       IsotopeLabelType labelTypeNum,
+                                                       IsotopeLabelType labelTypeDenom)
             {
                 return CalcTransitionGroupRatio(nodeGroup.TransitionGroup.PrecursorCharge,
                                                 labelTypeNum, labelTypeDenom);
             }
 
             private RatioValue CalcTransitionGroupRatio(int precursorCharge,
-                                                    IsotopeLabelType labelTypeNum,
-                                                    IsotopeLabelType labelTypeDenom)
+                                                        IsotopeLabelType labelTypeNum,
+                                                        IsotopeLabelType labelTypeDenom)
             {
                 // Avoid 1.0 ratios for self-to-self
                 if (ReferenceEquals(labelTypeNum, labelTypeDenom))

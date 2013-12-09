@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Model
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
-            return chromInfo.Ratios[indexIS];
+            return chromInfo.GetRatio(indexIS);
         }
 
         private float? GetAverageResultValue(Func<TransitionChromInfo, float?> getVal)

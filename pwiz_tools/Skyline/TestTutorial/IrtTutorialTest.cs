@@ -268,6 +268,8 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(regressionDlg);
                 RunUI(peptideSettingsUI2.OkDialog);
                 WaitForClosedForm(peptideSettingsUI2);
+                // Make sure iRT calculator is loaded
+                WaitForDocumentLoaded();
             }
 
             // Export unscheduled transition list, p. 11

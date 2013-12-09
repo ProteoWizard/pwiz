@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public bool BestReplicate { get { return ResultFile.Replicate.ReplicateIndex == Peptide.DocNode.BestResult; } }
         public override string ToString()
         {
-            return string.Format("RT: {0:0.##}", ChromInfo.RetentionTime);
+            return string.Format("RT: {0:0.##}", ChromInfo.RetentionTime);  // Not L10N
         }
 
         public ResultFile ResultFile { get { return GetResultFile(); } }

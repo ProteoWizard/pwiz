@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class LiveResultsGrid : DataboundGridForm
     {
-        private SkylineDataSchema _dataSchema;
+        private readonly SkylineDataSchema _dataSchema;
         private IList<IdentityPath> _selectedIdentityPaths = ImmutableList.Empty<IdentityPath>();
         private SequenceTree _sequenceTree;
         private IList<AnnotationDef> _annotations;

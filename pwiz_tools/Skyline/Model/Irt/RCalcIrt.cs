@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
@@ -159,7 +160,7 @@ namespace pwiz.Skyline.Model.Irt
         private void RequireUsable()
         {
             if (!IsUsable)
-                throw new InvalidOperationException("Unexpected use of iRT calculator before successful initialization.");
+                throw new InvalidOperationException(Resources.RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_);
         }
 
         #region Property change methods
@@ -245,8 +246,8 @@ namespace pwiz.Skyline.Model.Irt
     public class IncompleteStandardException : CalculatorException
     {
         //This will only be thrown by ChooseRegressionPeptides so it is OK to have an error specific to regressions.
-        private const string ERROR =
-            "The calculator {0} requires all of its standard peptides in order to determine a regression.";
+        private static readonly string ERROR =
+            Resources.IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_;
 
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
@@ -259,8 +260,8 @@ namespace pwiz.Skyline.Model.Irt
 
     public class DatabaseNotConnectedException : CalculatorException
     {
-        private const string DBERROR =
-            "The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted.";
+        private static readonly string DBERROR =
+            Resources.DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_;
 
         private readonly RetentionScoreCalculatorSpec _calculator;
         public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }

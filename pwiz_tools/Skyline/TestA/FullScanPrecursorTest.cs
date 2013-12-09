@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestA
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             var mitoLibSpec = new BiblioSpecLiteSpec("mito2", testFilesDir.GetTestPath("mito2.blib"));
             doc = docContainer.ChangeLibSpecs(new [] { mitoLibSpec });
-            Assert.IsTrue(doc.Settings.IsLoaded);            
+            Assert.IsTrue(doc.IsLoaded);            
 
             // Switch to only precursor ions
             var docPrecOnly = doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(filter =>

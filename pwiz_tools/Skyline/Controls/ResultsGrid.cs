@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Controls
             DataError += ResultsGrid_DataError;
         }
 
-        public void Init(IDocumentUIContainer documentUiContainer, SequenceTree sequenceTree)
+        public void Init(IDocumentUIContainer documentUiContainer)
         {
             DocumentUiContainer = documentUiContainer;
             StateProvider = documentUiContainer as IStateProvider ??
@@ -1143,15 +1143,22 @@ namespace pwiz.Skyline.Controls
         private void UpdateRatioColumns()
         {
             var newRatioColumns = new Dictionary<string, DataGridViewColumn>();
-            var mods = DocumentUiContainer.DocumentUI.Settings.PeptideSettings.Modifications;
+            var settings = DocumentUiContainer.DocumentUI.Settings;
+            var mods = settings.PeptideSettings.Modifications;
             var standardTypes = mods.InternalStandardTypes;
             var labelTypes = mods.GetModificationTypes().ToArray();
-            if (labelTypes.Length > 2)
+            // Add special ratio columns in order after the default ratio columns
+            // for their element type.
+            int indexPeptideRatio = 0;
+            int indexInsert = Columns.IndexOf(RatioToStandardColumn) + 1;
+            if (labelTypes.Length == 2)
             {
-                // Add special ratio columns in order after the default ratio columns
-                // for their element type.
-                int indexPeptideRatio = 0;
-                int indexInsert = Columns.IndexOf(RatioToStandardColumn) + 1;
+                // Skip the light-to-heavy ratio, if it extists.  It will be handled by the
+                // Ratio To Standard column, and does not need a custom column created for it.
+                indexPeptideRatio++;
+            }
+            else if (labelTypes.Length > 2)
+            {
                 foreach (var standardType in standardTypes)
                 {
                     foreach (var labelType in labelTypes)
@@ -1188,6 +1195,30 @@ namespace pwiz.Skyline.Controls
                     }
                 }
             }
+            if (settings.HasGlobalStandardArea)
+            {
+                foreach (var labelType in labelTypes)
+                {
+                    indexInsert = EnsureRatioColumn(RatioPropertyAccessor.PeptideRatioProperty(labelType, null),
+                                        new RatioColumnTag(RatioPropertyAccessor.RatioTarget.peptide_result, indexPeptideRatio++),
+                                        indexInsert,
+                                        null,
+                                        newRatioColumns,
+                                        Formats.GLOBAL_STANDARD_RATIO);
+                }
+                indexInsert = EnsureRatioColumn(RatioPropertyAccessor.PrecursorRatioProperty(null),
+                                  new RatioColumnTag(RatioPropertyAccessor.RatioTarget.precursor_result, standardTypes.Count),
+                                  indexInsert,
+                                  null,
+                                  newRatioColumns,
+                                  Formats.GLOBAL_STANDARD_RATIO);
+                /* indexInsert = */ EnsureRatioColumn(RatioPropertyAccessor.TransitionRatioProperty(null),
+                                  new RatioColumnTag(RatioPropertyAccessor.RatioTarget.transition_result, standardTypes.Count),
+                                  indexInsert,
+                                  null,
+                                  newRatioColumns,
+                                  Formats.GLOBAL_STANDARD_RATIO);
+            }
             SynchronizeColumns(newRatioColumns, ref _ratioColumns);
         }
 
@@ -1216,8 +1247,12 @@ namespace pwiz.Skyline.Controls
             public int IndexRatio { get; private set; }
         }
 
-        private int EnsureRatioColumn(RatioPropertyAccessor.RatioPropertyName propertyName, RatioColumnTag tag,
-            int indexInsert, RatioPropertyAccessor.RatioPropertyName rdotpPropertyName, IDictionary<string, DataGridViewColumn> newRatioColumns)
+        private int EnsureRatioColumn(RatioPropertyAccessor.RatioPropertyName propertyName,
+                                      RatioColumnTag tag,
+                                      int indexInsert,
+                                      RatioPropertyAccessor.RatioPropertyName rdotpPropertyName,
+                                      IDictionary<string, DataGridViewColumn> newRatioColumns,
+                                      string format = Formats.STANDARD_RATIO)
         {
             DataGridViewColumn ratioColumn;
             if (!_ratioColumns.TryGetValue(propertyName.ColumnName, out ratioColumn))
@@ -1226,7 +1261,7 @@ namespace pwiz.Skyline.Controls
                 {
                     Name = propertyName.ColumnName,
                     HeaderText = propertyName.HeaderText,
-                    DefaultCellStyle = { Format = Formats.STANDARD_RATIO }
+                    DefaultCellStyle = { Format = format }
                 };
                 Columns.Insert(indexInsert++, ratioColumn);
             }
@@ -1241,7 +1276,7 @@ namespace pwiz.Skyline.Controls
                     {
                         Name = rdotpPropertyName.ColumnName,
                         HeaderText = rdotpPropertyName.HeaderText,
-                        DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                        DefaultCellStyle = {Format = format}
                     };
                     Columns.Insert(indexInsert++, dotProductColumn);
                 }

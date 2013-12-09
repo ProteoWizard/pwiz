@@ -1128,6 +1128,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Resources\PeptideLib.bmp" />
+    <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
+    <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
+    <EmbeddedResource Include="Resources\PeptideQc.bmp" />
+    <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1890,7 +1895,6 @@
     <EmbeddedResource Include="Resources\Keep.bmp" />
     <EmbeddedResource Include="Resources\Peak.bmp" />
     <EmbeddedResource Include="Resources\TransitionGroupLib.bmp" />
-    <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2013,7 +2017,7 @@
     </None>
     <None Include="Skyline_TemporaryKey.pfx" />
     <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
-    <EmbeddedResource Include="Resources\PeptideLibStandard.bmp" />
+    <EmbeddedResource Include="Resources\PeptideStandardLib.bmp" />
     <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
@@ -2024,7 +2028,7 @@
     <EmbeddedResource Include="Resources\TransitionGroupDecoy.bmp" />
     <EmbeddedResource Include="Resources\FindResults.ico" />
     <EmbeddedResource Include="Resources\Immediate.ico" />
-    <EmbeddedResource Include="Resources\PeptideLibDecoy.bmp" />
+    <EmbeddedResource Include="Resources\PeptideDecoyLib.bmp" />
     <EmbeddedResource Include="Resources\TransitionGroupLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\FragmentLibDecoy.bmp" />
     <EmbeddedResource Include="Resources\AllIonsStatusButton.bmp" />

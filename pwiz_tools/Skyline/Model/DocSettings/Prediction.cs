@@ -228,8 +228,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // unless the document has no results
             if (Conversion == null)
             {
-//                if (!document.Settings.HasResults)
-//                    return false;
+                if (!document.Settings.HasResults && _dictStandardPeptides != null)
+                    return false;
 
                 // If prediction settings have change, then do auto-recalc
                 if (previous == null || !ReferenceEquals(this,

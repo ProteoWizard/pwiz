@@ -120,7 +120,25 @@ namespace pwiz.Skyline.Controls.SeqNode
                                   ? SequenceTree.ImageId.peptide_lib_decoy
                                   : SequenceTree.ImageId.peptide_decoy);
             }
-            return (int) (nodePep.HasLibInfo
+            if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
+            {
+                return (int) (nodePep.HasLibInfo
+                                  ? SequenceTree.ImageId.peptide_irt_lib
+                                  : SequenceTree.ImageId.peptide_irt);
+            }
+            if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_QC))
+            {
+                return (int)(nodePep.HasLibInfo
+                                  ? SequenceTree.ImageId.peptide_qc_lib
+                                  : SequenceTree.ImageId.peptide_qc);
+            }
+            if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_NORMALIZAITON))
+            {
+                return (int)(nodePep.HasLibInfo
+                                  ? SequenceTree.ImageId.peptide_standard_lib
+                                  : SequenceTree.ImageId.peptide_standard);
+            }
+            return (int)(nodePep.HasLibInfo
                               ? SequenceTree.ImageId.peptide_lib
                               : SequenceTree.ImageId.peptide);
         }

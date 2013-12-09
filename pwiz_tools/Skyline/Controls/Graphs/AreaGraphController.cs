@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public enum GraphTypeArea { replicate, peptide }
 
-    public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, none }
+    public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, area_global_standard_view, none }
 
     public enum AreaScope{ document, protein }
 
