@@ -43,6 +43,8 @@ namespace pwiz.Skyline.Controls.Databinding
         private IList<IdentityPath> _selectedIdentityPaths = ImmutableList.Empty<IdentityPath>();
         private SequenceTree _sequenceTree;
         private IList<AnnotationDef> _annotations;
+        private readonly IDictionary<Type, string> _rowTypeToActiveView
+            = new Dictionary<Type, string>();
         public LiveResultsGrid(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -132,6 +134,11 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void UpdateViewContext()
         {
+            var oldViewInfo = bindingListSource.ViewInfo;
+            if (null != oldViewInfo)
+            {
+                _rowTypeToActiveView[oldViewInfo.ParentColumn.PropertyType] = oldViewInfo.Name;
+            }
             IList rowSource = null;
             Type rowType = null;
             string builtInViewName = null;
@@ -195,7 +202,19 @@ namespace pwiz.Skyline.Controls.Databinding
                 var builtInView = new ViewInfo(parentColumn, builtInViewSpec);
                 var viewContext = new SkylineViewContext(_dataSchema,
                     new[] {new RowSourceInfo(rowSource, builtInView)});
-                bindingListSource.SetViewContext(viewContext, builtInView);
+                string activeViewName;
+                _rowTypeToActiveView.TryGetValue(rowType, out activeViewName);
+                ViewInfo activeView = null;
+                if (null != activeViewName)
+                {
+                    var activeViewSpec = viewContext.CustomViews.FirstOrDefault(view => view.Name == activeViewName);
+                    if (null != activeViewSpec)
+                    {
+                        activeView = viewContext.GetViewInfo(activeViewSpec);
+                    }
+                }
+                activeView = activeView ?? builtInView;
+                bindingListSource.SetViewContext(viewContext, activeView);
             }
             bindingListSource.RowSource = rowSource;
         }
