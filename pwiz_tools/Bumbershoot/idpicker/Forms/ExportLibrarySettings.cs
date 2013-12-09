@@ -40,10 +40,13 @@ namespace IDPicker.Forms
     public partial class ExportLibrarySettings : Form
     {
         private ISession _session;
-        public ExportLibrarySettings(ISession session)
+        public ExportLibrarySettings(ISession session, int minimumSpectraPerDistinctMatch, bool psmMode = false)
         {
             InitializeComponent();
             _session = session;
+            SpectrumNumBox.Value = minimumSpectraPerDistinctMatch;
+            ExportPSMsPanel.Visible = psmMode;
+            ExportLibraryPanel.Visible = !psmMode;
         }
 
         private void ExportLibrarySettings_Load(object sender, EventArgs e)
@@ -91,8 +94,8 @@ namespace IDPicker.Forms
         {
             return new ExportForm.LibraryExportOptions
                                      {
-                                         precursorMzTolerance = (double) Math.Round(PrecursorNumBox.Value*2)/2,
-                                         fragmentMzTolerance = (double) Math.Round(FragmentNumBox.Value*2)/2,
+                                         precursorMzTolerance = (double) PrecursorNumBox.Value,
+                                         fragmentMzTolerance = (double) FragmentNumBox.Value,
                                          minimumSpectra = (int) Math.Round(SpectrumNumBox.Value),
                                          method = methodBox.Text,
                                          outputFormat = outputFormatBox.Text,

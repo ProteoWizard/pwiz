@@ -1691,9 +1691,8 @@ namespace IDPicker
             var exporter = new ExportForm();
             exporter.Show();
 
-            exporter.toLibrary(this,session);
+            exporter.toLibrary(this,session, basicFilter.MinimumSpectraPerDistinctMatch, basicFilter.MinimumSpectraPerDistinctPeptide);
         }
-        
 
         private void fileToolStripMenuRoot_DropDownOpening(object sender, EventArgs e)
         {
