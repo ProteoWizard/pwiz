@@ -727,7 +727,7 @@ void test_v3(SpectrumListPtr sl, int msLevel)
         // isolated precursor m/z on S line
         unit_assert_equal(precursor0.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>(), 612.19, 5e-2);
         // m/z of calculated accurate mass
-        unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 610.18, 5e-2);
+        unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 611.1855, 5e-2);
 
         // This test spectrum one charge state, so no possible charge states
         unit_assert(precursor0.selectedIons[0].cvParam(MS_possible_charge_state).value.empty());
@@ -801,7 +801,7 @@ void test_v3(SpectrumListPtr sl, int msLevel)
         // precursor m/z on S line
         unit_assert_equal(precursor1.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>(), 441.23, 5e-2);
         // m/z computed from accurate mass on Z line
-        unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 439.91142, 1e-4);
+        unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 440.2471843, 1e-4);
 
         // This test spectrum has two charge states, both known so no possible charges
         unit_assert(precursor1.selectedIons[0].cvParam(MS_possible_charge_state).value.empty());

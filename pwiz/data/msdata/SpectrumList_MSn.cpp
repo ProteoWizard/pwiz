@@ -439,7 +439,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   double calculateMassOverCharge(double mass, int charge, int charges_on_mass /* = 0 for neutral mass */) const
   {
     double neutralMass = mass - (charges_on_mass * Proton);
-    double mz = (neutralMass + ((charge - 1) * Proton)) / charge;
+    double mz = (neutralMass + (charge * Proton)) / charge;
     return mz;
   }
 
