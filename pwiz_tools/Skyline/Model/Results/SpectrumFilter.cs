@@ -139,6 +139,12 @@ namespace pwiz.Skyline.Model.Results
                                         nodePep.Peptide.Sequence,
                                         nodePep.ExplicitMods);
                                 }
+                                if (times.Length == 0)
+                                {
+                                    times = document.Settings.GetUnalignedRetentionTimes(
+                                        nodePep.Peptide.Sequence,
+                                        nodePep.ExplicitMods);
+                                }
                                 if (times.Length > 0)
                                 {
                                     minTime = Math.Max(minTime ?? 0, times.Min() - _fullScan.RetentionTimeFilterLength);
