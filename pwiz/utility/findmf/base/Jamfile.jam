@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: Jamfile.jam 1638 2009-12-18 23:26:34Z chambm $
 #
 #
 # Original author: Darren Kessner <darren@proteowizard.org>
@@ -21,12 +21,9 @@
 #
 
 
-build-project-if-exists misc ;
-build-project-if-exists math ;
-build-project-if-exists minimxml ;
-build-project-if-exists proteome ;
-build-project-if-exists chemistry ;
-build-project-if-exists vendor_api ;
-build-project-if-exists bindings ;
-build-project-if-exists findmf ;
+build-project-if-exists base ;
+build-project-if-exists filter ;
+build-project-if-exists ms ;
+build-project-if-exists resample ;
+
 

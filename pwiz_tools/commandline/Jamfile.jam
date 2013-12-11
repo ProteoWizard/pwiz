@@ -63,6 +63,15 @@ exe msaccess
     ;
 
 
+exe qtofpeakpicker
+    : qtofpeakpicker.cpp
+      /ext/boost//program_options
+      /ext/boost//filesystem
+      mstool-requirements
+    : <include>../../..
+    ;
+
+
 exe mspicture 
     : mspicture.cpp
       ../../pwiz/analysis/passive//pwiz_analysis_passive
