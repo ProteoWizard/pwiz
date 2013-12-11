@@ -38,13 +38,17 @@ namespace pwiz.Skyline.Model.Results
         private readonly double? _maxTime;
         private readonly SpectrumFilterPair[] _filterMzValues;
         private readonly bool _isWatersMse;
+        private readonly MsDataFileImpl _dataFile;
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
+        private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
+        private List<KeyValuePair<double, double>> _mseAccumulatorSpectrum; // for averaging Agilent stepped CE spectra
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
         public SpectrumFilter(SrmDocument document, MsDataFileImpl dataFile)
         {
+            _dataFile = dataFile; // useful for lookahead in averaging Agilent ramped CE scans
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
             _acquisitionMethod = _fullScan.AcquisitionMethod;
@@ -269,23 +273,93 @@ namespace pwiz.Skyline.Model.Results
 
         private int UpdateMseLevel(MsDataSpectrum dataSpectrum)
         {
-            if (_mseLastSpectrum != null && !ReferenceEquals(dataSpectrum, _mseLastSpectrum))
+            int returnval; // normally returns 1 or 2, but for Agilent ramped-CE averaging may return 0 when in midst of building the averaged spectrum
+            if (_mseLastSpectrum != null && !ReferenceEquals(dataSpectrum, _mseLastSpectrum)) // is this the same one we were just asked about?
             {
                 // Waters MSe is enumerated in two separate runs, first MS1 and then MS/MS
                 // Bruker MSe is enumerated in interleaved MS1 and MS/MS scans
-                if (!_isWatersMse)
+                // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...)
+                if (_dataFile.IsAgilentFile)
+                {
+                    if (1 == dataSpectrum.Level)
+                    {
+                        _mseLevel = 1; // expecting a series of scans
+                        returnval = 1; // report as MS1
+                    }
+                    else // build a list of ramping-CE MS2 scans to be eventually returned as a single averaged MS2 scan
+                    {
+                        if (1 == _mseLevel) // then we're just starting a CE step up sequence
+                        {
+                            _mseAccumulatorSpectrum = new List<KeyValuePair<double, double>>(dataSpectrum.Mzs.Length); // reset
+                        }
+                        _mseLevel++; // this will grow with each ramping-CE MS2 Scan we hold for averaging
+                        for (int i = 0; i < dataSpectrum.Mzs.Length; i++)
+                        {
+                            if (dataSpectrum.Intensities[i] > 0) // add this to the aggregate scan mz-intensity list
+                            {
+                                _mseAccumulatorSpectrum.Add(new KeyValuePair<double, double>(dataSpectrum.Mzs[i],dataSpectrum.Intensities[i])); // we'll sort on mz later
+                            }
+                        }
+                        // are we expecting another MS2 scan?  if so don't claim we're MS2 yet.  Otherwise combine the mse scans and return as MS2.
+                        if ((dataSpectrum.Index==(_dataFile.SpectrumCount-1))||(1==_dataFile.GetMsLevel(dataSpectrum.Index+1)))
+                        {
+                            int nSteps = _mseLevel - 1; // _mseLevel has been counting up with each MS2 scan in the sequence
+                            if ((nSteps > 1) && (_mseAccumulatorSpectrum.Count > 0))
+                            {
+                                // replace current scan's mz-intensity info with averaged (no need if we had just one mse scan)
+                                _mseAccumulatorSpectrum.Sort((a,b) => a.Key.CompareTo(b.Key)); // sort on m/z
+                                var mzList = new List<double>(_mseAccumulatorSpectrum.Count);
+                                var intensityList = new List<double>(_mseAccumulatorSpectrum.Count);
+                                double scale = 1.0 / nSteps;  // scale by number of CE levels  
+                                mzList.Add(_mseAccumulatorSpectrum[0].Key);
+                                intensityList.Add(_mseAccumulatorSpectrum[0].Value*scale);
+                                for (int i = 1; i < _mseAccumulatorSpectrum.Count; i++)
+                                {
+                                    if (_mseAccumulatorSpectrum[i - 1].Key == _mseAccumulatorSpectrum[i].Key) // mz match
+                                    {
+                                        intensityList[intensityList.Count-1] += _mseAccumulatorSpectrum[i - 1].Value*scale;
+                                    }
+                                    else
+                                    {
+                                        mzList.Add(_mseAccumulatorSpectrum[i].Key);
+                                        intensityList.Add(_mseAccumulatorSpectrum[i].Value*scale);
+                                    }
+                                }
+                                dataSpectrum.Mzs = mzList.ToArray();
+                                dataSpectrum.Intensities = intensityList.ToArray();
+                            }
+                            returnval = 2;  // ready for caller to process, report as MS2
+                        }
+                        else
+                        {
+                            returnval = 0;  // still aggregating, report as neither MS1 nor MS2
+                        }
+                    }
+                }
+                else if (!_isWatersMse)
                 {
                     // Alternate between 1 and 2
                     _mseLevel = (_mseLevel % 2) + 1;
+                    returnval = _mseLevel;
                 }
                 else if ((dataSpectrum.RetentionTime ?? 0) < (_mseLastSpectrum.RetentionTime ?? 0))
                 {
                     // level 1 followed by level 2, followed by data that should be ignored
                     _mseLevel++;
+                    returnval = _mseLevel;
                 }
+                else
+                {
+                    returnval = _mseLevel; 
+                }
+                _mseLastSpectrumLevel = returnval;
+            }
+            else
+            {
+                returnval = _mseLastSpectrumLevel; // we were just asked about this spectrum, no update this time
             }
             _mseLastSpectrum = dataSpectrum;
-            return _mseLevel;
+            return returnval;
         }
 
         public IEnumerable<ExtractedSpectrum> SrmSpectraFromMs1Scan(double? time,

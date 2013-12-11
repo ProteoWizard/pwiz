@@ -215,7 +215,7 @@ namespace pwiz.SkylineTestUtil
             MatchChromatograms(docResults, 0, 1, delta, missing);
         }
 
-        private static ChromatogramSet FindChromatogramSet(SrmDocument document, string path)
+        public static ChromatogramSet FindChromatogramSet(SrmDocument document, string path)
         {
             if (document.Settings.HasResults)
             {

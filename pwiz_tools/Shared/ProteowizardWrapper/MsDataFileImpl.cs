@@ -592,6 +592,7 @@ namespace pwiz.ProteowizardWrapper
                     var msDataSpectrum = new MsDataSpectrum
                                {
                                    Level = GetMsLevel(spectrum) ?? 0,
+                                   Index = spectrum.index,
                                    RetentionTime = GetStartTime(spectrum),
                                    Precursors = GetPrecursors(spectrum),
                                    Centroided = IsCentroided(spectrum),
@@ -806,6 +807,7 @@ namespace pwiz.ProteowizardWrapper
                 new MsPrecursor
                     {
                         PrecursorMz = GetPrecursorMz(p),
+                        PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
                         IsolationWindowTargetMz = GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                         IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
@@ -835,6 +837,14 @@ namespace pwiz.ProteowizardWrapper
             if (selectedIon == null)
                 return null;
             return selectedIon.cvParam(CVID.MS_selected_ion_m_z).value;
+        }
+
+        private static double? GetPrecursorCollisionEnergy(Precursor precursor)
+        {
+            var param = precursor.activation.cvParam(CVID.MS_collision_energy);
+            if (param.empty())
+                return null;
+            return (double)param.value;
         }
 
         private static double? GetIsolationWindowValue(Precursor precursor, CVID cvid)
@@ -881,6 +891,7 @@ namespace pwiz.ProteowizardWrapper
     public struct MsPrecursor
     {
         public double? PrecursorMz { get; set; }
+        public double? PrecursorCollisionEnergy  { get; set; }
         public double? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; }
         public double? IsolationWindowLower { get; set; }
@@ -915,6 +926,7 @@ namespace pwiz.ProteowizardWrapper
     public sealed class MsDataSpectrum
     {
         public int Level { get; set; }
+        public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }
         public MsPrecursor[] Precursors { get; set; }
         public bool Centroided { get; set; }

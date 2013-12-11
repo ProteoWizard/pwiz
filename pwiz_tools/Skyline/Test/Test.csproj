@@ -121,6 +121,7 @@
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
     <Compile Include="Reporting\ReportTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
+    <Compile Include="Results\AgilentMseTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
@@ -167,6 +168,7 @@
     <EmbeddedResource Include="Reporting\ResultSummaryPivot.skyr" />
     <EmbeddedResource Include="Reporting\LiveReportPivots.skyr" />
     <None Include="Results\AgilentMix.zip" />
+    <None Include="Results\AgilentMse.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />
     <None Include="Results\WatersCalcurve.zip" />

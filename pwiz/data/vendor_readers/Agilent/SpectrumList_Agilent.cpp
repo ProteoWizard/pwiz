@@ -175,6 +175,24 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             result->products.push_back(product);
     }
 
+    bool reportMS2ForAllIonsScan = false; // watching out for MS1 with nonzero collision energy - return as an MS2 with a huge window
+    if (1==msLevel)
+    { 
+        double collisionenergy = scanRecordPtr->getCollisionEnergy();
+        if (collisionenergy > 0)
+        {
+            // all-ions scan - report it as MS2 with a single precursor and a huge selection window
+            msLevel = 2;
+            result->set(MS_ms_level, msLevel);
+            reportMS2ForAllIonsScan = true;
+            Precursor precursor;
+            precursor.activation.set(MS_CID); // MSDR provides no access to this, so assume CID
+            precursor.activation.set(MS_collision_energy, collisionenergy, UO_electronvolt);
+            // note: can't give isolationWindow or precursor.selectedIons at (detailLevel <  DetailLevel_FullMetadata)
+            result->precursors.push_back(precursor);
+        }
+    }
+
     // past this point the full spectrum is required
     if ((int) detailLevel < (int) DetailLevel_FullMetadata)
         return result;
@@ -194,8 +212,21 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
 
     MassRange minMaxMz = spectrumPtr->getMeasuredMassRange();
     scan.scanWindows.push_back(ScanWindow(minMaxMz.start, minMaxMz.end, MS_m_z));
-
-    if (msLevel > 1 && mzOfInterest > 0)
+    
+    if (reportMS2ForAllIonsScan)
+    {
+        // claim a target window that encompasses all ions
+        Precursor& precursor = result->precursors.back();
+        double width = (minMaxMz.end-minMaxMz.start)*0.5;
+        precursor.isolationWindow.set(MS_isolation_window_target_m_z, minMaxMz.start+width, MS_m_z);
+        precursor.isolationWindow.set(MS_isolation_window_lower_offset, width, MS_m_z);
+        precursor.isolationWindow.set(MS_isolation_window_upper_offset, width, MS_m_z);
+        // to avoid an empty list, claim a selected ion right in the middle of the window
+        SelectedIon selectedIon;
+        selectedIon.set(MS_selected_ion_m_z, minMaxMz.start+width, MS_m_z); // arbitrary choice, but known to be in range
+        precursor.selectedIons.push_back(selectedIon);
+    }
+    else if (msLevel > 1 && mzOfInterest > 0)
     {
         Precursor& precursor = result->precursors.back();
         SelectedIon& selectedIon = precursor.selectedIons.back();
