@@ -90,9 +90,9 @@
             this.cboxMetaFile.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
             this.cboxMetaFile.Location = new System.Drawing.Point(15, 166);
             this.cboxMetaFile.Name = "cboxMetaFile";
-            this.cboxMetaFile.Size = new System.Drawing.Size(104, 17);
+            this.cboxMetaFile.Size = new System.Drawing.Size(89, 17);
             this.cboxMetaFile.TabIndex = 5;
-            this.cboxMetaFile.Text = "&Save as metafile";
+            this.cboxMetaFile.Text = "&Save as PDF";
             this.cboxMetaFile.UseVisualStyleBackColor = true;
             // 
             // btnCancel

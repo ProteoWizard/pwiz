@@ -258,6 +258,7 @@ lines(QCnum,fwhm3p[,i],lwd=2.0,col="red")
 lines(QCnum,fwhm3m[,i],lwd=2.0,col="red")
 lines(QCnum,fwhmline[,i],col="blue")
 #legend("topright", legend = c(paste("CV=",round(c[i],2))),bty="n")
+
 }
 
 for (i in 1:L2) {				#plots Peak Symmetry and CI lines
@@ -272,19 +273,67 @@ lines(QCnum,Psym3m[,i],lwd=2.0,col="red")
 lines(QCnum,Psym3p[,i],lwd=2.0,col="red")
 lines(QCnum,PsymMline[,i],col="blue")
 #legend("topright", legend = c(paste("CV=",round(c[i],2))),bty="n")
+
 }
-
-
-
-
+windows(5,5)
 if (Q4==1) 
 {
-	dev.copy(win.metafile,'QC.wmf')
+	pdf('QC.pdf')
+    for (i in 1:L2) {
+plot(QCnum,PA[,i],type='o',ylab="peak area",pch=22,lty=2,ylim=c(min(PA[,i]),max(PA[,i])))
+title(c(paste(main=pep[L*i], "\n", "CV%=", round(a[i],2))))   
+title(ylab="peak area")
+lines(QCnum,pep1m[,i],col="green")
+lines(QCnum,pep1p[,i],col="green")
+lines(QCnum,pep2m[,i],col="brown")
+lines(QCnum,pep2p[,i],col="brown")
+lines(QCnum,pep3p[,i],lwd=2.0,col="red")
+lines(QCnum,pep3m[,i],lwd=2.0,col="red")
+lines(QCnum,paline[,i],col="blue")
+#legend("topright", legend = c(paste("CV=",round(a[i],2))),bty="n")
+}
+  for (i in 1:L2) {
+plot(QCnum,RT[,i],type='o',ylab="RT (min)",pch=22,lty=2,ylim=c(min(RT[,i]),max(RT[,i])))
+title(c(paste(main=pep[L*i], "\n", "CV%=", round(b[i],2))))   
+lines(QCnum,RT1m[,i],col="green")
+lines(QCnum,RT1p[,i],col="green")
+lines(QCnum,RT2p[,i],col="brown")
+lines(QCnum,RT2m[,i],col="brown")
+lines(QCnum,RT3p[,i],lwd=2.0,col="red")
+lines(QCnum,RT3m[,i],lwd=2.0,col="red")
+lines(QCnum,RTline[,i],col="blue")
+#legend("topright", legend = c(paste("CV=",round(b[i],2))),bty="n")
+}
+  for (i in 1:L2) {
+plot(QCnum,fwhm[,i],type='o',ylab="fwhm (min)",pch=22,lty=2,ylim=c(min(fwhm[,i]),max(fwhm[,i])))
+title(c(paste(main=pep[L*i], "\n", "CV%=", round(c[i],2))))   
+lines(QCnum,fwhm1m[,i],col="green")
+lines(QCnum,fwhm1p[,i],col="green")
+lines(QCnum,fwhm2p[,i],col="brown")
+lines(QCnum,fwhm2m[,i],col="brown")
+lines(QCnum,fwhm3p[,i],lwd=2.0,col="red")
+lines(QCnum,fwhm3m[,i],lwd=2.0,col="red")
+lines(QCnum,fwhmline[,i],col="blue")
+#legend("topright", legend = c(paste("CV=",round(c[i],2))),bty="n")
+}
+  for (i in 1:L2) {
+
+plot(QCnum,Psym[,i],type='o',ylab="Peak Symmetry",pch=22,lty=2,ylim=c(min(Psym[,i]),max(Psym[,i])))
+title(c(paste(main=pep[L*i], "\n", "CV%=", round(d[i],2))))   
+lines(QCnum,Psym1p[,i],col="green")
+lines(QCnum,Psym1m[,i],col="green")
+lines(QCnum,Psym2p[,i],col="brown")
+lines(QCnum,Psym2m[,i],col="brown")
+lines(QCnum,Psym3m[,i],lwd=2.0,col="red")
+lines(QCnum,Psym3p[,i],lwd=2.0,col="red")
+lines(QCnum,PsymMline[,i],col="blue")
+#legend("topright", legend = c(paste("CV=",round(c[i],2))),bty="n")
+}
 	dev.off()
+    
 }
 
 
-windows(5,5)
 
 
 for (i in 1:L2) {                          # Finding the number of NonConformers +/- 3s for PAs
@@ -340,7 +389,6 @@ dev.set(3)
 library(qcc)
 
 if (Q6==1){
-
 Exp=c(sum(E),sum(F),sum(G),sum(H),sum(M)) 
 metrics=c("peak area", "RT", "fwhm", "Peak Symmetry", "MMA") 
 names(Exp)=metrics 
@@ -350,7 +398,6 @@ dev.set(2)
 } 
 
 if (Q6==0){
-
 Exp=c(sum(E),sum(F),sum(G),sum(H)) 
 metrics=c("peak area", "RT", "fwhm", "Peak Symmetry") 
 names(Exp)=metrics 
@@ -358,13 +405,13 @@ PChart=pareto.chart(Exp,ylab="# of NonConformers ±3s")
 dev.set(2) 
 }
 
+
 if (Q6==1)
 {
 windows(5,5)
 MA=t(MA)
 boxplot(MA,main="Mass Measurement Accuracy (MMA)",pars=list(boxwex=0.5,staplewex=0.2,outwex=0.2), col="red",xlab="QC Run Num", ylab="MMA (ppm)")
 }
-
 
 identify(QCnum,fwhm[,1])
 }
