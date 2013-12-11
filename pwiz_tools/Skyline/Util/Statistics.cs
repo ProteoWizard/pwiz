@@ -1477,12 +1477,11 @@ namespace pwiz.Skyline.Util
             if (Length != s.Length)
                 return null;
 
-            var result = new Dictionary<int, double>();
-
             double mean1 = Mean();
             double mean2 = s.Mean();
             double invdenominator = 1; // 1/denominator for normalization
             int length = Length; // cache this - profiling shows a surprising cost for repeated access
+            var result = new Dictionary<int, double>(1 + (2 * length));
 
             // Normalized cross-correlation = subtract the mean and divide by the standard deviation
             if (normalize)
@@ -1504,7 +1503,7 @@ namespace pwiz.Skyline.Util
                     // all datapoints are zero
                     for (int delay = -length; delay <= length; delay++)
                     {
-                        result[delay] = 0;
+                        result.Add(delay,0);
                     }
                     return result;
                 }
@@ -1522,7 +1521,7 @@ namespace pwiz.Skyline.Util
                         sxy += (_list[i]) * (s._list[i + delay]);
                 }
 
-                result[delay] = sxy * invdenominator; 
+                result.Add(delay, sxy * invdenominator); 
             }
             return result;
         }
