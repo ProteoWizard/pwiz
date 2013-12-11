@@ -15574,11 +15574,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please check the External Tools Store on the Skyline web site for the most recent version of the QuaSAR external tool..
+        /// </summary>
+        public static string ToolDescription_RunTool_Please_check_the_External_Tools_Store_on_the_Skyline_web_site_for_the_most_recent_version_of_the_QuaSAR_external_tool_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunTool_Please_check_the_External_Tools_Store_on_the_Skyline_web_" +
+                        "site_for_the_most_recent_version_of_the_QuaSAR_external_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please reconfigure that tool, it failed to execute. .
         /// </summary>
         public static string ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__ {
             get {
                 return ResourceManager.GetString("ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Support for the GenePattern version of QuaSAR has been discontinued..
+        /// </summary>
+        public static string ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_di" +
+                        "scontinued_", resourceCulture);
             }
         }
         

@@ -46,6 +46,8 @@ namespace pwiz.SkylineTestFunctional
         {
             Settings.Default.ToolList.Clear();
 
+            TestQuasarDeprecated();
+
             TestHttpPost();
 
             TestEmptyOpen();
@@ -124,6 +126,22 @@ namespace pwiz.SkylineTestFunctional
         private const string FOLDEREXAMPLE3 = @"Test folder\further\example3"; // Not L10N
         private const string FOLDER_NAME = "Test folder";
         private const string FURTHER = "further";
+
+        private void TestQuasarDeprecated()
+        {
+            Settings.Default.ToolList.Add(ToolList.DEPRECATED_QUASAR);
+
+            RunUI(SkylineWindow.PopulateToolsMenu);
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, TextUtil.LineSeparate(
+                            Resources.ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_,
+                            Resources.ToolDescription_RunTool_Please_check_the_External_Tools_Store_on_the_Skyline_web_site_for_the_most_recent_version_of_the_QuaSAR_external_tool_));
+                messageDlg.OkDialog();
+            });
+
+            Settings.Default.ToolList.Clear();
+        }
 
         private void TestHttpPost()
         {            

@@ -31,6 +31,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -198,6 +199,13 @@ namespace pwiz.Skyline.Model.Tools
 
             if (IsWebPage)
             {
+                if (Equals(Title, ToolList.DEPRECATED_QUASAR.Title) && Equals(Command, ToolList.DEPRECATED_QUASAR.Command))
+                {
+                    MessageDlg.Show(parent, TextUtil.LineSeparate(
+                        Resources.ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_,
+                        Resources.ToolDescription_RunTool_Please_check_the_External_Tools_Store_on_the_Skyline_web_site_for_the_most_recent_version_of_the_QuaSAR_external_tool_));
+                    return;
+                }
                 var webHelpers = WebHelpers ?? new WebHelpers();
 
                 if (String.IsNullOrEmpty(ReportTitle))
