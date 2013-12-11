@@ -21,7 +21,6 @@
 
 #include "pwiz/utility/findmf/base/filter/gaussfilter.h"
 
-
 #include "pwiz/utility/findmf/base/base/base.h"
 #include "pwiz/utility/findmf/base/base/cumsum.h"
 #include "pwiz/utility/findmf/base/resample/masscomparefunctors.h"

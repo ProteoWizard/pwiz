@@ -24,7 +24,7 @@
 
 #include "pwiz/utility/findmf/base/base/constants.h"
 #include "pwiz/utility/findmf/base/base/base.h"
-#include "pwiz/utility/findmf/base/stats/scale.h"
+#include "pwiz/utility/findmf/base/base/scale.h"
 
 namespace ralab{
   namespace base{

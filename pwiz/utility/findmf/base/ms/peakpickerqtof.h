@@ -30,7 +30,7 @@
 #include "pwiz/utility/findmf/base/filter/gaussfilter.h"
 #include "pwiz/utility/findmf/base/base/interpolate.h"
 #include "pwiz/utility/findmf/base/resample/determinebinwidth.h"
-#include "pwiz/utility/findmf/base/utils/copyif.h"
+#include "pwiz/utility/findmf/base/base/copyif.h"
 
 namespace ralab{
   namespace base{
