@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Reflection;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -34,7 +35,7 @@ namespace pwiz.SkylineTestUtil
 
         public static String GetProjectDirectory(this TestContext testContext, string relativePath)
         {
-            for (String directory = Environment.CurrentDirectory;
+            for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     directory != null && directory.Length > 10;
                     directory = Path.GetDirectoryName(directory))
             {
